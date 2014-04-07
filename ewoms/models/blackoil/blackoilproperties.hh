@@ -26,8 +26,8 @@
 #define EWOMS_BLACK_OIL_PROPERTIES_HH
 
 #include <ewoms/models/common/multiphasebaseproperties.hh>
-#include <ewoms/vtk/vtkcompositionmodule.hh>
-#include <ewoms/vtk/vtkblackoilmodule.hh>
+#include <ewoms/io/vtkcompositionmodule.hh>
+#include <ewoms/io/vtkblackoilmodule.hh>
 
 namespace Opm {
 namespace Properties {

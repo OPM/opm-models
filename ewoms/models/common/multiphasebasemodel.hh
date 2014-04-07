@@ -192,13 +192,13 @@ public:
         storage = this->gridView_.comm().sum(storage);
     }
 
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        ParentType::registerVtkModules_();
+        ParentType::registerOutputModules_();
 
         // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(new Ewoms::VtkTemperatureModule<TypeTag>(this->problem_));
+        this->outputModules_.push_back(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->problem_));
+        this->outputModules_.push_back(new Ewoms::VtkTemperatureModule<TypeTag>(this->problem_));
     }
 
 private:

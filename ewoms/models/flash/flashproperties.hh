@@ -27,9 +27,9 @@
 #define EWOMS_FLASH_PROPERTIES_HH
 
 #include <ewoms/models/common/multiphasebaseproperties.hh>
-#include <ewoms/vtk/vtkcompositionmodule.hh>
-#include <ewoms/vtk/vtkenergymodule.hh>
-#include <ewoms/vtk/vtkdiffusionmodule.hh>
+#include <ewoms/io/vtkcompositionmodule.hh>
+#include <ewoms/io/vtkenergymodule.hh>
+#include <ewoms/io/vtkdiffusionmodule.hh>
 
 namespace Opm {
 namespace Properties {

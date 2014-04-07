@@ -23,7 +23,8 @@
 #ifndef EWOMS_VTK_COMPOSITION_MODULE_HH
 #define EWOMS_VTK_COMPOSITION_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include "vtkmultiwriter.hh"
+#include "baseoutputmodule.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -67,9 +68,9 @@ namespace Ewoms {
  * - FugacityCoefficient of all components in all phases
  */
 template <class TypeTag>
-class VtkCompositionModule : public VtkBaseOutputModule<TypeTag>
+class VtkCompositionModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -100,27 +101,22 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMoleFractions,
                              "Include mole fractions in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMassFractions,
-                             "Include total mass fractions in the VTK output "
-                             "files");
+                             "Include total mass fractions in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions,
-                             "Include total mole fractions in the VTK output "
-                             "files");
+                             "Include total mole fractions in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteMolarities,
-                             "Include component molarities in the VTK output "
-                             "files");
+                             "Include component molarities in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacities,
-                             "Include component fugacities in the VTK output "
-                             "files");
+                             "Include component fugacities in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs,
-                             "Include component fugacity coefficients in the "
-                             "VTK output files");
+                             "Include component fugacity coefficients in the VTK output files");
     }
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
         if (moleFracOutput_())
             this->resizePhaseComponentBuffer_(moleFrac_);
@@ -203,29 +199,28 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
         if (moleFracOutput_())
-            this->commitPhaseComponentBuffer_(writer, "moleFrac_%s^%s",
-                                              moleFrac_);
+            this->commitPhaseComponentBuffer_(baseWriter, "moleFrac_%s^%s", moleFrac_);
         if (massFracOutput_())
-            this->commitPhaseComponentBuffer_(writer, "massFrac_%s^%s",
-                                              massFrac_);
+            this->commitPhaseComponentBuffer_(baseWriter, "massFrac_%s^%s", massFrac_);
         if (molarityOutput_())
-            this->commitPhaseComponentBuffer_(writer, "molarity_%s^%s",
-                                              molarity_);
+            this->commitPhaseComponentBuffer_(baseWriter, "molarity_%s^%s", molarity_);
         if (totalMassFracOutput_())
-            this->commitComponentBuffer_(writer, "totalMassFrac^%s",
-                                         totalMassFrac_);
+            this->commitComponentBuffer_(baseWriter, "totalMassFrac^%s", totalMassFrac_);
         if (totalMoleFracOutput_())
-            this->commitComponentBuffer_(writer, "totalMoleFrac^%s",
-                                         totalMoleFrac_);
+            this->commitComponentBuffer_(baseWriter, "totalMoleFrac^%s", totalMoleFrac_);
 
         if (fugacityOutput_())
-            this->commitComponentBuffer_(writer, "fugacity^%s", fugacity_);
+            this->commitComponentBuffer_(baseWriter, "fugacity^%s", fugacity_);
         if (fugacityCoeffOutput_())
-            this->commitPhaseComponentBuffer_(writer, "fugacityCoeff_%s^%s",
-                                              fugacityCoeff_);
+            this->commitPhaseComponentBuffer_(baseWriter, "fugacityCoeff_%s^%s", fugacityCoeff_);
     }
 
 private:

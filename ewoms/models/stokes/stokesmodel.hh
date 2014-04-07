@@ -241,6 +241,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { numComponents = FluidSystem::numComponents };
 
+    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
 public:
@@ -312,26 +313,29 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::addOutputVtkFields
+     * \copydoc FvBaseDiscretization::addOutputFields
      */
-    template <class MultiWriter>
-    void addOutputVtkFields(MultiWriter &writer) const
+    void addOutputFields(BaseOutputWriter &writer) const
     {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
-        typedef Dune::BlockVector<Dune::FieldVector<double, dimWorld> > VelocityField;
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&writer);
+        if (!vtkWriter)
+            return; // TODO (?): print warning
+
+        typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
+        typedef BaseOutputWriter::VectorBuffer VectorBuffer;
 
         // create the required scalar fields
-        unsigned numVertices = this->gridView_.size(dimWorld);
-        ScalarField &pressure = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &density = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &temperature = *writer.allocateManagedBuffer(numVertices);
-        ScalarField &viscosity = *writer.allocateManagedBuffer(numVertices);
-        VelocityField &velocity
-            = *writer.template allocateManagedBuffer<double, dimWorld>(
-                   numVertices);
-        ScalarField *moleFraction[numComponents];
+        unsigned numVertices = this->gridView_.size(/*codim=*/dimWorld);
+        ScalarBuffer &pressure = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        ScalarBuffer &density = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        ScalarBuffer &temperature = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        ScalarBuffer &viscosity = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        VectorBuffer &velocity
+            = *vtkWriter->allocateManagedVectorBuffer(/*numOuter=*/numVertices,
+                                                      /*numInner=*/dimWorld);
+        ScalarBuffer *moleFraction[numComponents];
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            moleFraction[compIdx] = writer.allocateManagedBuffer(numVertices);
+            moleFraction[compIdx] = vtkWriter->allocateManagedScalarBuffer(numVertices);
 
         // iterate over grid
         ElementContext elemCtx(this->problem_);
@@ -344,7 +348,7 @@ public:
 
             elemCtx.updateAll(*elemIt);
 
-            int numScv = elemCtx.numDof(/*timeIdx=*/0);
+            int numScv = elemCtx.numPrimaryDof(/*timeIdx=*/0);
             for (int dofIdx = 0; dofIdx < numScv; ++dofIdx)
             {
                 int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
@@ -355,7 +359,14 @@ public:
                 density[globalIdx] = fluidState.density(phaseIdx);
                 temperature[globalIdx] = fluidState.temperature(phaseIdx);
                 viscosity[globalIdx] = fluidState.viscosity(phaseIdx);
-                velocity[globalIdx] = volVars.velocityCenter();
+
+                // this seems to be a bug in Dune's dense vector
+                // classes: It is possible to assign a DynamicVector
+                // from a scalar and also to add a FieldVector to it,
+                // but it is impossible to directly copy a FieldVector
+                // into a DynamicVector...
+                velocity[globalIdx] = 0;
+                velocity[globalIdx] += volVars.velocityCenter();
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                     (*moleFraction[compIdx])[globalIdx]
@@ -367,30 +378,30 @@ public:
 
         tmp.str("");
         tmp << "pressure_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(pressure, tmp.str());
+        vtkWriter->attachScalarVertexData(pressure, tmp.str());
 
         tmp.str("");
         tmp << "density_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(density, tmp.str());
+        vtkWriter->attachScalarVertexData(density, tmp.str());
 
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             tmp.str("");
             tmp << "moleFraction_" << FluidSystem::phaseName(phaseIdx) << "^"
                 << FluidSystem::componentName(compIdx);
-            writer.attachVertexData(*moleFraction[compIdx], tmp.str());
+            vtkWriter->attachScalarVertexData(*moleFraction[compIdx], tmp.str());
         }
 
         tmp.str("");
         tmp << "temperature_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(temperature, tmp.str());
+        vtkWriter->attachScalarVertexData(temperature, tmp.str());
 
         tmp.str("");
         tmp << "viscosity_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(viscosity, tmp.str());
+        vtkWriter->attachScalarVertexData(viscosity, tmp.str());
 
         tmp.str("");
         tmp << "velocity_" << FluidSystem::phaseName(phaseIdx);
-        writer.attachVertexData(velocity, tmp.str(), dimWorld);
+        vtkWriter->attachVectorVertexData(velocity, tmp.str());
     }
 };
 } // namespace Ewoms

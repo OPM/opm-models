@@ -23,7 +23,8 @@
 #ifndef EWOMS_VTK_ENERGY_MODULE_HH
 #define EWOMS_VTK_ENERGY_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include "vtkmultiwriter.hh"
+#include "baseoutputmodule.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -61,9 +62,9 @@ namespace Ewoms {
  * - Lumped heat conductivity (solid phase plus all fluid phases)
  */
 template <class TypeTag>
-class VtkEnergyModule : public VtkBaseOutputModule<TypeTag>
+class VtkEnergyModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -106,7 +107,7 @@ public:
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
         if (enthalpyOutput_())
             this->resizePhaseBuffer_(enthalpy_);
@@ -147,20 +148,22 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
         if (solidHeatCapacityOutput_())
-            this->commitScalarBuffer_(writer, "heatCapacitySolid",
-                                      solidHeatCapacity_);
+            this->commitScalarBuffer_(baseWriter, "heatCapacitySolid", solidHeatCapacity_);
         if (heatConductivityOutput_())
-            this->commitScalarBuffer_(writer, "heatConductivity",
-                                      heatConductivity_);
+            this->commitScalarBuffer_(baseWriter, "heatConductivity", heatConductivity_);
 
         if (enthalpyOutput_())
-            this->commitPhaseBuffer_(writer, "enthalpy_%s", enthalpy_);
+            this->commitPhaseBuffer_(baseWriter, "enthalpy_%s", enthalpy_);
         if (internalEnergyOutput_())
-            this->commitPhaseBuffer_(writer, "internalEnergy_%s",
-                                     internalEnergy_);
+            this->commitPhaseBuffer_(baseWriter, "internalEnergy_%s", internalEnergy_);
     }
 
 private:

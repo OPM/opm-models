@@ -31,7 +31,7 @@
 #include "discretefracturelocalresidual.hh"
 
 #include <ewoms/models/immiscible/immisciblemodel.hh>
-#include <ewoms/vtk/vtkdiscretefracturemodule.hh>
+#include <ewoms/io/vtkdiscretefracturemodule.hh>
 
 #include <string>
 
@@ -131,11 +131,11 @@ public:
     static std::string name()
     { return "discretefracture"; }
 
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        ParentType::registerVtkModules_();
+        ParentType::registerOutputModules_();
 
-        this->vtkOutputModules_.push_back(
+        this->outputModules_.push_back(
             new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->problem_));
     }
 };

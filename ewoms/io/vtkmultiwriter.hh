@@ -25,7 +25,10 @@
 #ifndef EWOMS_VTK_MULTI_WRITER_HH
 #define EWOMS_VTK_MULTI_WRITER_HH
 
-#include "vtknestedfunction.hh"
+#include "vtkscalarfunction.hh"
+#include "vtkvectorfunction.hh"
+
+#include <ewoms/io/baseoutputwriter.hh>
 
 #include <opm/material/Valgrind.hpp>
 
@@ -52,20 +55,27 @@ namespace Ewoms {
  * multiple time steps or grid refinements within a time step.)
  */
 template <class GridView>
-class VtkMultiWriter
+class VtkMultiWriter : public BaseOutputWriter
 {
     enum { dim = GridView::dimension };
 
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout>
-    VertexMapper;
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout>
-    ElementMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> VertexMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
 
 public:
+    typedef BaseOutputWriter::Scalar Scalar;
+    typedef BaseOutputWriter::Vector Vector;
+    typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
+    typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+
     typedef Dune::VTKWriter<GridView> VtkWriter;
-    VtkMultiWriter(const GridView &gridView, const std::string &simName = "",
+
+    VtkMultiWriter(const GridView &gridView,
+                   const std::string &simName = "",
                    std::string multiFileName = "")
-        : gridView_(gridView), elementMapper_(gridView), vertexMapper_(gridView)
+        : gridView_(gridView)
+        , elementMapper_(gridView)
+        , vertexMapper_(gridView)
     {
         simName_ = (simName.empty()) ? "sim" : simName;
         multiFileName_ = multiFileName;
@@ -130,16 +140,27 @@ public:
      * The buffer will be deleted automatically after the data has
      * been written by to disk.
      */
-    template <class Scalar = double, int nComp = 1>
-    Dune::BlockVector<Dune::FieldVector<Scalar, nComp> > *
-    allocateManagedBuffer(int nEntities)
+    ScalarBuffer *allocateManagedScalarBuffer(int numEntities)
     {
-        typedef Dune::BlockVector<Dune::FieldVector<Scalar, nComp> > VectorField;
+        ScalarBuffer *buf = new ScalarBuffer(numEntities);
+        managedScalarBuffers_.push_back(buf);
+        return buf;
+    }
 
-        ManagedVectorField_<VectorField> *vfs
-            = new ManagedVectorField_<VectorField>(nEntities);
-        managedObjects_.push_back(vfs);
-        return &(vfs->vf);
+    /*!
+     * \brief Allocate a managed buffer for a vector field
+     *
+     * The buffer will be deleted automatically after the data has
+     * been written by to disk.
+     */
+    VectorBuffer *allocateManagedVectorBuffer(int numOuter, int numInner)
+    {
+        VectorBuffer *buf = new VectorBuffer(numOuter);
+        for (int i = 0; i < numOuter; ++ i)
+            (*buf)[i].resize(numInner);
+
+        managedVectorBuffers_.push_back(buf);
+        return buf;
     }
 
     /*!
@@ -158,15 +179,17 @@ public:
      * In both cases, modifying the buffer between the call to this
      * method and endWrite() results in _undefined behavior_.
      */
-    template <class DataBuffer>
-    void attachVertexData(DataBuffer &buf, std::string name, int nComps = 1)
+    void attachScalarVertexData(ScalarBuffer &buf, std::string name)
     {
-        sanitizeBuffer_(buf, nComps);
+        sanitizeScalarBuffer_(buf);
 
         typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
-        typedef Ewoms::VtkNestedFunction<GridView, VertexMapper, DataBuffer> VtkFn;
-        FunctionPtr fnPtr(new VtkFn(name, gridView_, vertexMapper_, buf,
-                                    /*codim=*/dim, nComps));
+        typedef Ewoms::VtkScalarFunction<GridView, VertexMapper> VtkFn;
+        FunctionPtr fnPtr(new VtkFn(name,
+                                    gridView_,
+                                    vertexMapper_,
+                                    buf,
+                                    /*codim=*/dim));
         curWriter_->addVertexData(fnPtr);
     }
 
@@ -185,15 +208,76 @@ public:
      * In both cases, modifying the buffer between the call to this
      * method and endWrite() results in _undefined behaviour_.
      */
-    template <class DataBuffer>
-    void attachElementData(DataBuffer &buf, std::string name, int nComps = 1)
+    void attachScalarElementData(ScalarBuffer &buf, std::string name)
     {
-        sanitizeBuffer_(buf, nComps);
+        sanitizeScalarBuffer_(buf);
 
         typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
-        typedef Ewoms::VtkNestedFunction<GridView, ElementMapper, DataBuffer> VtkFn;
-        FunctionPtr fnPtr(new VtkFn(name, gridView_, elementMapper_, buf,
-                                    /*codim=*/0, nComps));
+        typedef Ewoms::VtkScalarFunction<GridView, ElementMapper> VtkFn;
+        FunctionPtr fnPtr(new VtkFn(name,
+                                    gridView_,
+                                    elementMapper_,
+                                    buf,
+                                    /*codim=*/0));
+        curWriter_->addCellData(fnPtr);
+    }
+
+    /*!
+     * \brief Add a finished vertex centered vector field to the
+     *        output.
+     *
+     * If the buffer is managed by the VtkMultiWriter, it must have
+     * been created using allocateManagedBuffer() and may not be used
+     * anywhere after calling this method. After the data is written
+     * to disk, it will be deleted automatically.
+     *
+     * If the buffer is not managed by the MultiWriter, the buffer
+     * must exist at least until the call to endWrite()
+     * finishes.
+     *
+     * In both cases, modifying the buffer between the call to this
+     * method and endWrite() results in _undefined behavior_.
+     */
+    void attachVectorVertexData(VectorBuffer &buf, std::string name)
+    {
+        sanitizeVectorBuffer_(buf);
+
+        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
+        typedef Ewoms::VtkVectorFunction<GridView, VertexMapper> VtkFn;
+        FunctionPtr fnPtr(new VtkFn(name,
+                                    gridView_,
+                                    vertexMapper_,
+                                    buf,
+                                    /*codim=*/dim));
+        curWriter_->addVertexData(fnPtr);
+    }
+
+    /*!
+     * \brief Add a element centered quantity to the output.
+     *
+     * If the buffer is managed by the VtkMultiWriter, it must have
+     * been created using createField() and may not be used by
+     * anywhere after calling this method. After the data is written
+     * to disk, it will be deleted automatically.
+     *
+     * If the buffer is not managed by the MultiWriter, the buffer
+     * must exist at least until the call to endWrite()
+     * finishes.
+     *
+     * In both cases, modifying the buffer between the call to this
+     * method and endWrite() results in _undefined behaviour_.
+     */
+    void attachVectorElementData(VectorBuffer &buf, std::string name)
+    {
+        sanitizeVectorBuffer_(buf);
+
+        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
+        typedef Ewoms::VtkVectorFunction<GridView, ElementMapper> VtkFn;
+        FunctionPtr fnPtr(new VtkFn(name,
+                                    gridView_,
+                                    elementMapper_,
+                                    buf,
+                                    /*codim=*/0));
         curWriter_->addCellData(fnPtr);
     }
 
@@ -232,9 +316,13 @@ public:
 
         // discard managed objects and the current VTK writer
         delete curWriter_;
-        while (managedObjects_.begin() != managedObjects_.end()) {
-            delete managedObjects_.front();
-            managedObjects_.pop_front();
+        while (managedScalarBuffers_.begin() != managedScalarBuffers_.end()) {
+            delete managedScalarBuffers_.front();
+            managedScalarBuffers_.pop_front();
+        }
+        while (managedVectorBuffers_.begin() != managedVectorBuffers_.end()) {
+            delete managedVectorBuffers_.front();
+            managedVectorBuffers_.pop_front();
         }
 
         // temporarily write the closing XML mumbo-jumbo to the mashup
@@ -376,11 +464,24 @@ private:
 
     // make sure the field is well defined if running under valgrind
     // and make sure that all values can be displayed by paraview
-    template <class DataBuffer>
-    void sanitizeBuffer_(DataBuffer &b, unsigned nComps)
+    void sanitizeScalarBuffer_(ScalarBuffer &b)
     {
+        for (unsigned j = 0; j < b.size(); ++j) {
+            Valgrind::CheckDefined(b[j]);
+
+            // set values which are too small to 0 to avoid
+            // problems with paraview
+            if (std::abs(b[j]) < std::numeric_limits<float>::min()) {
+                b[j] = 0.0;
+            }
+        }
+    }
+
+    void sanitizeVectorBuffer_(VectorBuffer &b)
+    {
+        size_t nComps = b[0].size();
         for (size_t i = 0; i < b.size(); ++i) {
-            for (unsigned j = 0; j < nComps; ++j) {
+            for (size_t j = 0; j < nComps; ++j) {
                 Valgrind::CheckDefined(b[i][j]);
 
                 // set values which are too small to 0 to avoid
@@ -391,39 +492,6 @@ private:
             }
         }
     }
-
-    //////////////////////////////
-    // HACK: when ever we attach some data we need to copy the
-    //       vector field (that's because Dune::VTKWriter is not
-    //       able to write fields one at a time and using
-    //       VTKWriter::add*Data doesn't copy the data's
-    //       representation so that once we arrive at the point
-    //       where we want to write the data to disk, it might
-    //       exist anymore). The problem we encounter there is
-    //       that add*Data accepts arbitrary types as vector
-    //       fields, but we need a single type for the linked list
-    //       which keeps track of the data added. The trick we use
-    //       here is to define a non-template base class with a
-    //       virtual destructor for the type given to the linked
-    //       list and a derived template class which actually
-    //       knows the type of the vector field it must delete.
-    class ManagedObject_
-    {
-    public:
-        virtual ~ManagedObject_()
-        {}
-    };
-
-    template <class VF>
-    class ManagedVectorField_ : public ManagedObject_
-    {
-    public:
-        ManagedVectorField_(int size) : vf(size)
-        {}
-        VF vf;
-    };
-    // end hack
-    ////////////////////////////////////
 
     const GridView gridView_;
     ElementMapper elementMapper_;
@@ -441,7 +509,8 @@ private:
     std::string curOutFileName_;
     int curWriterNum_;
 
-    std::list<ManagedObject_ *> managedObjects_;
+    std::list<ScalarBuffer *> managedScalarBuffers_;
+    std::list<VectorBuffer *> managedVectorBuffers_;
 };
 } // namespace Ewoms
 

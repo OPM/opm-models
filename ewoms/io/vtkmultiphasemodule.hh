@@ -23,7 +23,8 @@
 #ifndef EWOMS_VTK_MULTI_PHASE_MODULE_HH
 #define EWOMS_VTK_MULTI_PHASE_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include "vtkmultiwriter.hh"
+#include "baseoutputmodule.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -85,9 +86,9 @@ namespace Ewoms {
  * - Norm of the intrinsic permeability of the medium
  */
 template<class TypeTag>
-class VtkMultiPhaseModule : public VtkBaseOutputModule<TypeTag>
+class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -95,25 +96,24 @@ class VtkMultiPhaseModule : public VtkBaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
 
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
     enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
+    typedef typename ParentType::VectorBuffer VectorBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
 
-    typedef Dune::FieldVector<Scalar, dim> VelocityVector;
-    typedef Dune::BlockVector<VelocityVector> VelocityField;
-    typedef std::array<VelocityField, numPhases> PhaseVectorField;
+    typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
 
 public:
     VtkMultiPhaseModule(const Problem &problem)
         : ParentType(problem)
-    {
-    }
+    {}
 
     /*!
      * \brief Register all run-time parameters for the multi-phase VTK output module.
@@ -148,7 +148,7 @@ public:
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
         if (pressureOutput_()) this->resizePhaseBuffer_(pressure_);
         if (densityOutput_()) this->resizePhaseBuffer_(density_);
@@ -165,7 +165,10 @@ public:
             Scalar nDof = this->problem_.model().numDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 velocity_[phaseIdx].resize(nDof);
-                velocity_[phaseIdx] = 0;
+                for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+                    velocity_[phaseIdx][dofIdx].resize(dimWorld);
+                    velocity_[phaseIdx][dofIdx] = 0.0;
+                }
             }
             this->resizePhaseBuffer_(velocityWeight_);
         }
@@ -174,8 +177,12 @@ public:
             Scalar nDof = this->problem_.model().numDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 potentialGradient_[phaseIdx].resize(nDof);
-                potentialGradient_[phaseIdx] = 0;
+                for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+                    potentialGradient_[phaseIdx][dofIdx].resize(dimWorld);
+                    potentialGradient_[phaseIdx][dofIdx] = 0.0;
+                }
             }
+
             this->resizePhaseBuffer_(potentialWeight_);
         }
     }
@@ -226,11 +233,11 @@ public:
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = fluxVars.extrusionFactor();
 
-                    Dune::FieldVector<Scalar, dim> pGrad(fluxVars.potentialGrad(phaseIdx));
-                    pGrad *= weight;
-
-                    potentialGradient_[phaseIdx][I] += pGrad;
                     potentialWeight_[phaseIdx][I] += weight;
+
+                    auto pGrad = fluxVars.potentialGrad(phaseIdx);
+                    pGrad *= weight;
+                    potentialGradient_[phaseIdx][I] += pGrad;
                 } // end for all phases
             } // end for all faces
         }
@@ -252,7 +259,9 @@ public:
                     assert(fluxVars.extrusionFactor() > 0);
                     weight *= fluxVars.extrusionFactor();
 
-                    Dune::FieldVector<Scalar, dim> v(fluxVars.filterVelocity(phaseIdx));
+                    auto v(fluxVars.filterVelocity(phaseIdx));
+                    if (std::abs(v.two_norm()) > 1e-20)
+                        weight /= v.two_norm();
                     v *= weight;
 
                     velocity_[phaseIdx][I] += v;
@@ -268,27 +277,32 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
         if (pressureOutput_())
-            this->commitPhaseBuffer_(writer, "pressure_%s", pressure_);
+            this->commitPhaseBuffer_(baseWriter, "pressure_%s", pressure_);
         if (densityOutput_())
-            this->commitPhaseBuffer_(writer, "density_%s", density_);
+            this->commitPhaseBuffer_(baseWriter, "density_%s", density_);
         if (saturationOutput_())
-            this->commitPhaseBuffer_(writer, "saturation_%s", saturation_);
+            this->commitPhaseBuffer_(baseWriter, "saturation_%s", saturation_);
         if (mobilityOutput_())
-            this->commitPhaseBuffer_(writer, "mobility_%s", mobility_);
+            this->commitPhaseBuffer_(baseWriter, "mobility_%s", mobility_);
         if (relativePermeabilityOutput_())
-            this->commitPhaseBuffer_(writer, "relativePerm_%s", relativePermeability_);
+            this->commitPhaseBuffer_(baseWriter, "relativePerm_%s", relativePermeability_);
         if (viscosityOutput_())
-            this->commitPhaseBuffer_(writer, "viscosity_%s", viscosity_);
+            this->commitPhaseBuffer_(baseWriter, "viscosity_%s", viscosity_);
         if (averageMolarMassOutput_())
-            this->commitPhaseBuffer_(writer, "averageMolarMass_%s", averageMolarMass_);
+            this->commitPhaseBuffer_(baseWriter, "averageMolarMass_%s", averageMolarMass_);
 
         if (porosityOutput_())
-            this->commitScalarBuffer_(writer, "porosity", porosity_);
+            this->commitScalarBuffer_(baseWriter, "porosity", porosity_);
         if (intrinsicPermeabilityOutput_())
-            this->commitScalarBuffer_(writer, "intrinsicPerm", intrinsicPermeability_);
+            this->commitScalarBuffer_(baseWriter, "intrinsicPerm", intrinsicPermeability_);
 
         if (velocityOutput_()) {
             int nDof = this->problem_.model().numDof();
@@ -297,12 +311,12 @@ public:
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
                 for (int i = 0; i < nDof; ++i)
-                    velocity_[phaseIdx][i] /= velocityWeight_[phaseIdx][i];
+                        velocity_[phaseIdx][i] /= velocityWeight_[phaseIdx][i];
                 // commit the phase velocity
                 char name[512];
                 snprintf(name, 512, "filterVelocity_%s", FluidSystem::phaseName(phaseIdx));
 
-                DiscVtkBaseOutputModule::attachDofData_(writer, velocity_[phaseIdx], name, dim);
+                DiscBaseOutputModule::attachVectorDofData_(baseWriter, velocity_[phaseIdx], name);
             }
         }
 
@@ -318,10 +332,9 @@ public:
                 char name[512];
                 snprintf(name, 512, "gradP_%s", FluidSystem::phaseName(phaseIdx));
 
-                DiscVtkBaseOutputModule::attachDofData_(writer,
-                                                        potentialGradient_[phaseIdx],
-                                                        name,
-                                                        dim);
+                DiscBaseOutputModule::attachVectorDofData_(baseWriter,
+                                                           potentialGradient_[phaseIdx],
+                                                           name);
             }
         }
     }
@@ -371,10 +384,10 @@ private:
     ScalarBuffer porosity_;
     ScalarBuffer intrinsicPermeability_;
 
-    PhaseVectorField velocity_;
+    PhaseVectorBuffer velocity_;
     PhaseBuffer velocityWeight_;
 
-    PhaseVectorField potentialGradient_;
+    PhaseVectorBuffer potentialGradient_;
     PhaseBuffer potentialWeight_;
 };
 

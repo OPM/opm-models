@@ -24,7 +24,8 @@
 #ifndef EWOMS_VTK_DIFFUSION_MODULE_HH
 #define EWOMS_VTK_DIFFUSION_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include "vtkmultiwriter.hh"
+#include "baseoutputmodule.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -60,9 +61,9 @@ namespace Ewoms {
  *   components in all fluid phases
  */
 template <class TypeTag>
-class VtkDiffusionModule : public VtkBaseOutputModule<TypeTag>
+class VtkDiffusionModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -102,7 +103,7 @@ public:
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
         if (tortuosityOutput_())
             this->resizePhaseBuffer_(tortuosity_);
@@ -141,15 +142,20 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
         if (tortuosityOutput_())
-            this->commitPhaseBuffer_(writer, "tortuosity", tortuosity_);
+            this->commitPhaseBuffer_(baseWriter, "tortuosity", tortuosity_);
         if (diffusionCoefficientOutput_())
-            this->commitPhaseComponentBuffer_(writer, "diffusionCoefficient",
+            this->commitPhaseComponentBuffer_(baseWriter, "diffusionCoefficient",
                                               diffusionCoefficient_);
         if (effectiveDiffusionCoefficientOutput_())
-            this->commitPhaseComponentBuffer_(writer,
+            this->commitPhaseComponentBuffer_(baseWriter,
                                               "effectiveDiffusionCoefficient",
                                               effectiveDiffusionCoefficient_);
     }

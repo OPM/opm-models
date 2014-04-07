@@ -328,9 +328,9 @@ public:
     bool phaseIsConsidered(int phaseIdx) const
     { return phaseIdx == wPhaseIdx; }
 
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        ParentType::registerVtkModules_();
+        ParentType::registerOutputModules_();
     }
 
     mutable Scalar referencePressure_;

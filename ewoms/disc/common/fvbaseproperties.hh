@@ -30,7 +30,7 @@
 #include "fvbaseproperties.hh"
 
 #include <ewoms/common/basicproperties.hh>
-#include <ewoms/vtk/vtkprimaryvarsmodule.hh>
+#include <ewoms/io/vtkprimaryvarsmodule.hh>
 #include <ewoms/linear/paralleliterativebackend.hh>
 
 namespace Opm {
@@ -129,7 +129,7 @@ NEW_PROP_TAG(DiscBaseVolumeVariables);
 NEW_PROP_TAG(DiscFluxVariables);
 
 //! The part of the VTK ouput modules which is specific to the spatial discretization
-NEW_PROP_TAG(DiscVtkBaseOutputModule);
+NEW_PROP_TAG(DiscBaseOutputModule);
 
 //! The class to create grid communication handles
 NEW_PROP_TAG(GridCommHandleFactory);

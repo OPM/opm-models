@@ -23,7 +23,8 @@
 #ifndef EWOMS_VTK_BLACK_OIL_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include "vtkmultiwriter.hh"
+#include "baseoutputmodule.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -58,9 +59,9 @@ namespace Ewoms {
  * \brief VTK output module for the black oil model's parameters.
  */
 template <class TypeTag>
-class VtkBlackOilModule : public VtkBaseOutputModule<TypeTag>
+class VtkBlackOilModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -105,7 +106,7 @@ public:
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
         if (gasDissolutionFactorOutput_())
             this->resizeScalarBuffer_(gasDissolutionFactor_);
@@ -147,17 +148,21 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
         if (gasDissolutionFactorOutput_())
-            this->commitScalarBuffer_(writer, "R_s", gasDissolutionFactor_);
+            this->commitScalarBuffer_(baseWriter, "R_s", gasDissolutionFactor_);
         if (gasFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(writer, "B_g", gasFormationVolumeFactor_);
+            this->commitScalarBuffer_(baseWriter, "B_g", gasFormationVolumeFactor_);
         if (oilFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(writer, "B_o", oilFormationVolumeFactor_);
+            this->commitScalarBuffer_(baseWriter, "B_o", oilFormationVolumeFactor_);
         if (oilSaturationPressureOutput_())
-            this->commitScalarBuffer_(writer, "pressure_sat,o",
-                                      oilSaturationPressure_);
+            this->commitScalarBuffer_(baseWriter, "pressure_sat,o", oilSaturationPressure_);
     }
 
 private:

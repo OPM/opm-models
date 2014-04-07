@@ -18,10 +18,12 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkNestedFunction
+ * \copydoc Ewoms::VtkVectorFunction
  */
-#ifndef VTK_NESTED_FUNCTION_HH
-#define VTK_NESTED_FUNCTION_HH
+#ifndef VTK_VECTOR_FUNCTION_HH
+#define VTK_VECTOR_FUNCTION_HH
+
+#include <ewoms/io/baseoutputwriter.hh>
 
 #include <dune/grid/io/file/vtk/function.hh>
 #include <dune/istl/bvector.hh>
@@ -33,6 +35,7 @@
 
 #include <string>
 #include <limits>
+#include <vector>
 
 namespace Ewoms {
 
@@ -40,28 +43,37 @@ namespace Ewoms {
  * \brief Provides a vector-valued function using Dune::FieldVectors
  *        as elements.
  */
-template <class GridView, class Mapper, class Buffer>
-class VtkNestedFunction : public Dune::VTKFunction<GridView>
+template <class GridView, class Mapper>
+class VtkVectorFunction : public Dune::VTKFunction<GridView>
 {
     enum { dim = GridView::dimension };
     typedef typename GridView::ctype ctype;
     typedef typename GridView::template Codim<0>::Entity Element;
 
+    typedef BaseOutputWriter::Vector Vector;
+    typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+
 public:
-    VtkNestedFunction(std::string name, const GridView &gridView,
-                      const Mapper &mapper, const Buffer &buf, int codim,
-                      int numComp)
-        : name_(name), gridView_(gridView), mapper_(mapper), buf_(buf),
-          codim_(codim), numComp_(numComp)
+    VtkVectorFunction(std::string name,
+                      const GridView &gridView,
+                      const Mapper &mapper,
+                      const VectorBuffer &buf,
+                      int codim)
+        : name_(name)
+        , gridView_(gridView)
+        , mapper_(mapper)
+        , buf_(buf)
+        , codim_(codim)
     { assert(int(buf_.size()) == mapper_.size()); }
 
     virtual std::string name() const
     { return name_; }
 
     virtual int ncomps() const
-    { return numComp_; }
+    { return buf_[0].size(); }
 
-    virtual double evaluate(int mycomp, const Element &e,
+    virtual double evaluate(int mycomp,
+                            const Element &e,
                             const Dune::FieldVector<ctype, dim> &xi) const
     {
         int idx;
@@ -112,9 +124,8 @@ private:
     const std::string name_;
     const GridView gridView_;
     const Mapper &mapper_;
-    const Buffer &buf_;
+    const VectorBuffer &buf_;
     int codim_;
-    int numComp_;
 };
 
 } // namespace Ewoms

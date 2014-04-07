@@ -23,7 +23,8 @@
 #ifndef EWOMS_VTK_PRIMARY_VARS_MODULE_HH
 #define EWOMS_VTK_PRIMARY_VARS_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include <ewoms/io/baseoutputmodule.hh>
+#include <ewoms/io/vtkmultiwriter.hh>
 
 #include <ewoms/common/parametersystem.hh>
 #include <opm/core/utility/PropertySystem.hpp>
@@ -48,9 +49,9 @@ namespace Ewoms {
  * \brief VTK output module for the fluid composition
  */
 template<class TypeTag>
-class VtkPrimaryVarsModule : public VtkBaseOutputModule<TypeTag>
+class VtkPrimaryVarsModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -83,12 +84,13 @@ public:
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
         if (primaryVarsOutput_())
             this->resizeEqBuffer_(primaryVars_);
         if (processRankOutput_())
-            this->resizeScalarBuffer_(processRank_, /*type=*/ParentType::ElementBuffer);
+            this->resizeScalarBuffer_(processRank_,
+                                      /*bufferType=*/ParentType::ElementBuffer);
     }
 
     /*!
@@ -99,13 +101,15 @@ public:
     {
         const auto &elementMapper = elemCtx.problem().elementMapper();
         auto elemIdx = elementMapper.map(elemCtx.element());
-        if (processRankOutput_()) processRank_[elemIdx] = this->problem_.gridView().comm().rank();
+        if (processRankOutput_() && !processRank_.empty())
+            processRank_[elemIdx] = this->problem_.gridView().comm().rank();
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                if (primaryVarsOutput_()) primaryVars_[eqIdx][I] = priVars[eqIdx];
+                if (primaryVarsOutput_() && !primaryVars_[eqIdx].empty())
+                    primaryVars_[eqIdx][I] = priVars[eqIdx];
             }
         }
     }
@@ -113,11 +117,17 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
-        if (primaryVarsOutput_()) this->commitPriVarsBuffer_(writer, "PV_%s", primaryVars_);
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
+        if (primaryVarsOutput_())
+            this->commitPriVarsBuffer_(baseWriter, "PV_%s", primaryVars_);
         if (processRankOutput_())
-            this->commitScalarBuffer_(writer,
+            this->commitScalarBuffer_(baseWriter,
                                       "process rank",
                                       processRank_,
                                       /*bufferType=*/ParentType::ElementBuffer);

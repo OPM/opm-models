@@ -38,9 +38,9 @@
 #include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
-#include <ewoms/vtk/vtkcompositionmodule.hh>
-#include <ewoms/vtk/vtkenergymodule.hh>
-#include <ewoms/vtk/vtkdiffusionmodule.hh>
+#include <ewoms/io/vtkcompositionmodule.hh>
+#include <ewoms/io/vtkenergymodule.hh>
+#include <ewoms/io/vtkdiffusionmodule.hh>
 #include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
 
 #include <dune/common/fvector.hh>
@@ -441,17 +441,17 @@ public:
     /*!
      * \internal
      */
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        ParentType::registerVtkModules_();
+        ParentType::registerOutputModules_();
 
-        this->vtkOutputModules_.push_back(
+        this->outputModules_.push_back(
             new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
         if (enableDiffusion)
-            this->vtkOutputModules_.push_back(
+            this->outputModules_.push_back(
                 new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(
+            this->outputModules_.push_back(
                 new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 

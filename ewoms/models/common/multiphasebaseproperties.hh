@@ -27,8 +27,8 @@
 #define EWOMS_MULTI_PHASE_BASE_PROPERTIES_HH
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
-#include <ewoms/vtk/vtkmultiphasemodule.hh>
-#include <ewoms/vtk/vtktemperaturemodule.hh>
+#include <ewoms/io/vtkmultiphasemodule.hh>
+#include <ewoms/io/vtktemperaturemodule.hh>
 
 namespace Opm {
 namespace Properties {

@@ -19,37 +19,50 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvVtkBaseOutputModule
+ * \copydoc Ewoms::VcfvBaseOutputModule
  */
 #ifndef EWOMS_VCFV_VTK_BASE_OUTPUT_MODULE_HH
 #define EWOMS_VCFV_VTK_BASE_OUTPUT_MODULE_HH
 
 #include "vcfvproperties.hh"
 
-#include <ewoms/io/vtkmultiwriter.hh>
+#include <ewoms/io/baseoutputwriter.hh>
 
 #include <string>
+#include <vector>
 
 namespace Ewoms {
 /*!
- * \ingroup VcfvVtkBaseOutputModule
+ * \ingroup VcfvBaseOutputModule
  *
- * \brief Implements the discretization specific parts of writing VTK files.
+ * \brief Implements the discretization specific parts of writing files.
  */
 template<class TypeTag>
-class VcfvVtkBaseOutputModule
+class VcfvBaseOutputModule
 {
 public:
+    typedef BaseOutputWriter::Scalar Scalar;
+    typedef BaseOutputWriter::Vector Vector;
+    typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
+    typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+
     /*!
      * \brief Add a buffer where the data is associated with the
      *        degrees of freedom to the current VTK output file.
      */
-    template <class MultiWriter, class Buffer>
-    static void attachDofData_(MultiWriter &writer,
-                               Buffer &buffer,
-                               const std::string &name,
-                               int numComponents)
-    { writer.attachVertexData(buffer, name.c_str(), numComponents); }
+    static void attachScalarDofData_(BaseOutputWriter &baseWriter,
+                                     ScalarBuffer &buffer,
+                                     const std::string &name)
+    { baseWriter.attachScalarVertexData(buffer, name.c_str()); }
+
+    /*!
+     * \brief Add a buffer where the data is associated with the
+     *        degrees of freedom to the current VTK output file.
+     */
+    static void attachVectorDofData_(BaseOutputWriter &baseWriter,
+                                     VectorBuffer &buffer,
+                                     const std::string &name)
+    { baseWriter.attachVectorVertexData(buffer, name.c_str()); }
 };
 
 } // namespace Ewoms

@@ -34,8 +34,10 @@
 #include "blackoillocalresidual.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
-#include <ewoms/vtk/vtkcompositionmodule.hh>
-#include <ewoms/vtk/vtkblackoilmodule.hh>
+#include <ewoms/io/vtkcompositionmodule.hh>
+#include <ewoms/io/vtkblackoilmodule.hh>
+#warning TODO
+//#include <ewoms/io/eclipseoutputblackoilmodule.hh>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 #include <sstream>
@@ -297,13 +299,17 @@ public:
 //protected:
 //    friend typename GET_PROP_TYPE(TypeTag, Discretization);
 
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        ParentType::registerVtkModules_();
+        ParentType::registerOutputModules_();
 
-        // add the VTK output modules available on all model
-        this->vtkOutputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->problem_));
-        this->vtkOutputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+        // add the VTK output modules which make sense for the blackoil model
+        this->outputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->problem_));
+        this->outputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+
+        // add the output module for the Eclipse binary output
+#warning TODO
+        //this->outputModules_.push_back(new Ewoms::EclipseOutputBlackoilModule<TypeTag>(this->problem_));
     }
 
 private:

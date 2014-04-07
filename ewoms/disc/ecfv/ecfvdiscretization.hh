@@ -27,7 +27,7 @@
 #include "ecfvproperties.hh"
 #include "ecfvstencil.hh"
 #include "ecfvgridcommhandlefactory.hh"
-#include "ecfvvtkbaseoutputmodule.hh"
+#include "ecfvbaseoutputmodule.hh"
 
 #include <ewoms/linear/elementborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
@@ -56,10 +56,10 @@ SET_TYPE_PROP(EcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, Ele
 //! The concrete class which manages the spatial discretization
 SET_TYPE_PROP(EcfvDiscretization, Discretization, Ewoms::EcfvDiscretization<TypeTag>);
 
-//! The base class for the VTK output modules
-//! (decides whether to write element or vertex based fields)
-SET_TYPE_PROP(EcfvDiscretization, DiscVtkBaseOutputModule,
-              Ewoms::EcfvVtkBaseOutputModule<TypeTag>);
+//! The base class for the output modules (decides whether to write
+//! element or vertex based fields)
+SET_TYPE_PROP(EcfvDiscretization, DiscBaseOutputModule,
+              Ewoms::EcfvBaseOutputModule<TypeTag>);
 
 //! The class to create grid communication handles
 SET_TYPE_PROP(EcfvDiscretization, GridCommHandleFactory,

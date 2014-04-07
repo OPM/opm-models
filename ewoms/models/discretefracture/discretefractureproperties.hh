@@ -28,7 +28,7 @@
 
 #include <ewoms/models/immiscible/immiscibleproperties.hh>
 
-#include <ewoms/vtk/vtkdiscretefracturemodule.hh>
+#include <ewoms/io/vtkdiscretefracturemodule.hh>
 
 namespace Opm {
 namespace Properties {

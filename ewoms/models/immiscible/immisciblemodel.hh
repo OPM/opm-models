@@ -36,7 +36,7 @@
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/models/common/energymodule.hh>
-#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/io/vtkenergymodule.hh>
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/GasPhase.hpp>
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
@@ -338,12 +338,12 @@ public:
         return 1.0;
     }
 
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        ParentType::registerVtkModules_();
+        ParentType::registerOutputModules_();
 
         if (enableEnergy)
-            this->vtkOutputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+            this->outputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
     }
 
 private:

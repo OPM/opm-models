@@ -18,29 +18,26 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkTemperatureModule
+ * \copydoc Ewoms::VtkPhasePresenceModule
  */
-#ifndef EWOMS_VTK_TEMPERATURE_MODULE_HH
-#define EWOMS_VTK_TEMPERATURE_MODULE_HH
+#ifndef EWOMS_VTK_PHASE_PRESENCE_MODULE_HH
+#define EWOMS_VTK_PHASE_PRESENCE_MODULE_HH
 
-#include <ewoms/vtk/vtkbaseoutputmodule.hh>
+#include "vtkmultiwriter.hh"
+#include "baseoutputmodule.hh"
 
 #include <ewoms/common/parametersystem.hh>
 #include <opm/core/utility/PropertySystem.hpp>
 
 namespace Opm {
 namespace Properties {
-// create new type tag for the VTK temperature output
-NEW_TYPE_TAG(VtkTemperature);
+// create new type tag for the VTK primary variables output
+NEW_TYPE_TAG(VtkPhasePresence);
 
-// create the property tags needed for the temperature module
-NEW_PROP_TAG(VtkWriteTemperature);
-NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
-NEW_PROP_TAG(VtkWriteInternalEnergies);
-NEW_PROP_TAG(VtkWriteEnthalpies);
+// create the property tags needed for the primary variables module
+NEW_PROP_TAG(VtkWritePhasePresence);
 
-// set default values for what quantities to output
-SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
+SET_BOOL_PROP(VtkPhasePresence, VtkWritePhasePresence, false);
 } // namespace Properties
 } // namespace Opm
 
@@ -48,45 +45,44 @@ namespace Ewoms {
 /*!
  * \ingroup Vtk
  *
- * \brief VTK output module for the temperature in which assume
- *        thermal equilibrium
+ * \brief VTK output module for the fluid composition
  */
 template<class TypeTag>
-class VtkTemperatureModule : public VtkBaseOutputModule<TypeTag>
+class VtkPhasePresenceModule : public BaseOutputModule<TypeTag>
 {
-    typedef VtkBaseOutputModule<TypeTag> ParentType;
+    typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-
-    typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+    typedef typename ParentType::ScalarBuffer ScalarBuffer;
+
 
 public:
-    VtkTemperatureModule(const Problem &problem)
+    VtkPhasePresenceModule(const Problem &problem)
         : ParentType(problem)
-    {
-    }
+    { }
 
     /*!
      * \brief Register all run-time parameters for the Vtk output module.
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteTemperature,
-                             "Include the temperature in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePhasePresence,
+                             "Include the phase presence pseudo primary "
+                             "variable in the VTK output files");
     }
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
      *        write to the VTK file.
      */
-    void allocBuffers(VtkMultiWriter &writer)
+    void allocBuffers()
     {
-        if (temperatureOutput_()) this->resizeScalarBuffer_(temperature_);
+        if (phasePresenceOutput_()) this->resizeScalarBuffer_(phasePresence_);
     }
 
     /*!
@@ -95,28 +91,36 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
-            const auto &fs = volVars.fluidState();
+        if (!phasePresenceOutput_())
+            return;
 
-            if (temperatureOutput_()) temperature_[I] = fs.temperature(/*phaseIdx=*/0);
+        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
+            // calculate the phase presence
+            int phasePresence = elemCtx.primaryVars(i, /*timeIdx=*/0).phasePresence();
+            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            phasePresence_[I] = phasePresence;
         }
     }
 
     /*!
-     * \brief Add all buffers to the VTK output writer.
+     * \brief Add all buffers to the output writer.
      */
-    void commitBuffers(VtkMultiWriter &writer)
+    void commitBuffers(BaseOutputWriter &baseWriter)
     {
-        if (temperatureOutput_()) this->commitScalarBuffer_(writer, "temperature", temperature_);
+        VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
+        if (!vtkWriter) {
+            return;
+        }
+
+        if (phasePresenceOutput_())
+            this->commitScalarBuffer_(baseWriter, "phase presence", phasePresence_);
     }
 
 private:
-    static bool temperatureOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTemperature); }
+    static bool phasePresenceOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePhasePresence); }
 
-    ScalarBuffer temperature_;
+    ScalarBuffer phasePresence_;
 };
 
 } // namespace Ewoms

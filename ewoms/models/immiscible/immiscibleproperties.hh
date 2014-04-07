@@ -27,7 +27,7 @@
 #define EWOMS_IMMISCIBLE_PROPERTIES_HH
 
 #include <ewoms/models/common/multiphasebaseproperties.hh>
-#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/io/vtkenergymodule.hh>
 
 namespace Opm {
 namespace Properties {

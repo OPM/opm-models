@@ -18,12 +18,13 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkBaseOutputModule
+ * \copydoc Ewoms::BaseOutputModule
  */
-#ifndef EWOMS_VTK_BASE_OUTPUT_MODULE_HH
-#define EWOMS_VTK_BASE_OUTPUT_MODULE_HH
+#ifndef EWOMS_BASE_OUTPUT_MODULE_HH
+#define EWOMS_BASE_OUTPUT_MODULE_HH
 
-#include <ewoms/io/vtkmultiwriter.hh>
+#include "baseoutputwriter.hh"
+
 #include <ewoms/common/parametersystem.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
@@ -39,6 +40,7 @@
 
 #include <cstdio>
 
+
 namespace Opm {
 namespace Properties {
 // forward definition of property tags
@@ -51,20 +53,20 @@ NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(ElementContext);
-NEW_PROP_TAG(VtkMultiWriter);
 NEW_PROP_TAG(FluidSystem);
-NEW_PROP_TAG(DiscVtkBaseOutputModule);
+NEW_PROP_TAG(DiscBaseOutputModule);
 }} // namespace Properties, Opm
 
 namespace Ewoms {
 /*!
- * \brief A the base class for VTK writer modules.
+ * \brief The base class for writer modules.
  *
  * This class also provides some convenience methods for buffer
- * management and is the base class for all other VTK writer modules.
+ * management and is the base class for all other output writer
+ * modules.
  */
 template<class TypeTag>
-class VtkBaseOutputModule
+class BaseOutputModule
 {
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
@@ -72,9 +74,7 @@ class VtkBaseOutputModule
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
-
-    typedef typename Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -82,36 +82,47 @@ class VtkBaseOutputModule
     enum { dim = GridView::dimension };
 
 public:
-    typedef std::vector<Dune::FieldVector<Scalar, 1> > ScalarBuffer;
+    typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
+    typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+
     typedef std::array<ScalarBuffer, numEq> EqBuffer;
     typedef std::array<ScalarBuffer, numPhases> PhaseBuffer;
     typedef std::array<ScalarBuffer, numComponents> ComponentBuffer;
-    typedef std::array<ComponentBuffer, numPhases> PhaseComponentBuffer;
+    typedef std::array<std::array<ScalarBuffer, numComponents>, numPhases> PhaseComponentBuffer;
 
-    VtkBaseOutputModule(const Problem &problem)
+    typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
+
+    BaseOutputModule(const Problem &problem)
         : problem_(problem)
-    {
-    }
+    {}
 
-    virtual ~VtkBaseOutputModule()
+    virtual ~BaseOutputModule()
     {}
 
     /*!
      * \brief Allocate memory for the scalar fields we would like to
-     *        write to the VTK file.
+     *        write to disk.
+     *
+     * The module can dynamically cast the writer to the desired
+     * concrete class. If the writer is incompatible with the module,
+     * this method should become a no-op.
      */
-    virtual void allocBuffers(VtkMultiWriter &writer) = 0;
+    virtual void allocBuffers() = 0;
 
     /*!
      * \brief Modify the internal buffers according to the volume
      *        variables seen on an element
+     *
+     * The module can dynamically cast the writer to the desired
+     * concrete class. If the writer is incompatible with the module,
+     * this method should become a no-op.
      */
     virtual void processElement(const ElementContext &elemCtx) = 0;
 
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    virtual void commitBuffers(VtkMultiWriter &writer) = 0;
+    virtual void commitBuffers(BaseOutputWriter &writer) = 0;
 
 protected:
     enum BufferType {
@@ -240,29 +251,27 @@ protected:
     }
 
     /*!
-     * \brief Add a phase-specific buffer to the VTK result file.
+     * \brief Add a phase-specific buffer to the result file.
      */
-    template <class MultiWriter>
-    void commitScalarBuffer_(MultiWriter &writer,
+    void commitScalarBuffer_(BaseOutputWriter &baseWriter,
                              const char *name,
                              ScalarBuffer &buffer,
                              BufferType bufferType = DofBuffer)
     {
         if (bufferType == DofBuffer)
-            DiscVtkBaseOutputModule::attachDofData_(writer, buffer, name, 1);
+            DiscBaseOutputModule::attachScalarDofData_(baseWriter, buffer, name);
         else if (bufferType == VertexBuffer)
-            attachVertexData_(writer, buffer, name, 1);
+            attachScalarVertexData_(baseWriter, buffer, name);
         else if (bufferType == ElementBuffer)
-            attachElementData_(writer, buffer, name, 1);
+            attachScalarElementData_(baseWriter, buffer, name);
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
     }
 
     /*!
-     * \brief Add a buffer with as many variables as PDEs to the VTK result file.
+     * \brief Add a buffer with as many variables as PDEs to the result file.
      */
-    template <class MultiWriter>
-    void commitPriVarsBuffer_(MultiWriter &writer,
+    void commitPriVarsBuffer_(BaseOutputWriter &baseWriter,
                               const char *pattern,
                               EqBuffer &buffer,
                               BufferType bufferType = DofBuffer)
@@ -273,21 +282,20 @@ protected:
             snprintf(name, 512, pattern, eqName.c_str());
 
             if (bufferType == DofBuffer)
-                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscBaseOutputModule::attachScalarDofData_(baseWriter, buffer[i], name);
             else if (bufferType == VertexBuffer)
-                attachVertexData_(writer, buffer[i], name, 1);
+                attachScalarVertexData_(baseWriter, buffer[i], name);
             else if (bufferType == ElementBuffer)
-                attachElementData_(writer, buffer[i], name, 1);
+                attachScalarElementData_(baseWriter, buffer[i], name);
             else
                 OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
     /*!
-     * \brief Add a buffer with as many variables as PDEs to the VTK result file.
+     * \brief Add a buffer with as many variables as PDEs to the result file.
      */
-    template <class MultiWriter>
-    void commitEqBuffer_(MultiWriter &writer,
+    void commitEqBuffer_(BaseOutputWriter &baseWriter,
                          const char *pattern,
                          EqBuffer &buffer,
                          BufferType bufferType = DofBuffer)
@@ -299,21 +307,20 @@ protected:
             snprintf(name, 512, pattern, oss.str().c_str());
 
             if (bufferType == DofBuffer)
-                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscBaseOutputModule::attachScalarDofData_(baseWriter, buffer[i], name);
             else if (bufferType == VertexBuffer)
-                attachVertexData_(writer, buffer[i], name, 1);
+                attachScalarVertexData_(baseWriter, buffer[i], name);
             else if (bufferType == ElementBuffer)
-                attachElementData_(writer, buffer[i], name, 1);
+                attachScalarElementData_(baseWriter, buffer[i], name);
             else
                 OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
     /*!
-     * \brief Add a phase-specific buffer to the VTK result file.
+     * \brief Add a phase-specific buffer to the result file.
      */
-    template <class MultiWriter>
-    void commitPhaseBuffer_(MultiWriter &writer,
+    void commitPhaseBuffer_(BaseOutputWriter &baseWriter,
                             const char *pattern,
                             PhaseBuffer &buffer,
                             BufferType bufferType = DofBuffer)
@@ -323,21 +330,20 @@ protected:
             snprintf(name, 512, pattern, FluidSystem::phaseName(i));
 
             if (bufferType == DofBuffer)
-                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscBaseOutputModule::attachScalarDofData_(baseWriter, buffer[i], name);
             else if (bufferType == VertexBuffer)
-                attachVertexData_(writer, buffer[i], name, 1);
+                attachScalarVertexData_(baseWriter, buffer[i], name);
             else if (bufferType == ElementBuffer)
-                attachElementData_(writer, buffer[i], name, 1);
+                attachScalarElementData_(baseWriter, buffer[i], name);
             else
                 OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
     }
 
     /*!
-     * \brief Add a component-specific buffer to the VTK result file.
+     * \brief Add a component-specific buffer to the result file.
      */
-    template <class MultiWriter>
-    void commitComponentBuffer_(MultiWriter &writer,
+    void commitComponentBuffer_(BaseOutputWriter &baseWriter,
                                 const char *pattern,
                                 ComponentBuffer &buffer,
                                 BufferType bufferType = DofBuffer)
@@ -347,11 +353,11 @@ protected:
             snprintf(name, 512, pattern, FluidSystem::componentName(i));
 
             if (bufferType == DofBuffer)
-                DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i], name, 1);
+                DiscBaseOutputModule::attachScalarDofData_(baseWriter, buffer[i], name);
             else if (bufferType == VertexBuffer)
-                attachVertexData_(writer, buffer[i], name, 1);
+                attachScalarVertexData_(baseWriter, buffer[i], name);
             else if (bufferType == ElementBuffer)
-                attachElementData_(writer, buffer[i], name, 1);
+                attachScalarElementData_(baseWriter, buffer[i], name);
             else
                 OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
         }
@@ -360,8 +366,7 @@ protected:
     /*!
      * \brief Add a phase and component specific quantities to the output.
      */
-    template <class MultiWriter>
-    void commitPhaseComponentBuffer_(MultiWriter &writer,
+    void commitPhaseComponentBuffer_(BaseOutputWriter &baseWriter,
                                      const char *pattern,
                                      PhaseComponentBuffer &buffer,
                                      BufferType bufferType = DofBuffer)
@@ -374,11 +379,11 @@ protected:
                          FluidSystem::componentName(j));
 
                 if (bufferType == DofBuffer)
-                    DiscVtkBaseOutputModule::attachDofData_(writer, buffer[i][j], name, 1);
+                    DiscBaseOutputModule::attachScalarDofData_(baseWriter, buffer[i][j], name);
                 else if (bufferType == VertexBuffer)
-                    attachVertexData_(writer, buffer[i][j], name, 1);
+                    attachScalarVertexData_(baseWriter, buffer[i][j], name);
                 else if (bufferType == ElementBuffer)
-                    attachElementData_(writer, buffer[i][j], name, 1);
+                    attachScalarElementData_(baseWriter, buffer[i][j], name);
                 else
                     OPM_THROW(std::logic_error,
                               "bufferType must be one of Dof, Vertex or Element");
@@ -386,19 +391,25 @@ protected:
         }
     }
 
-    template <class MultiWriter, class Buffer>
-    void attachElementData_(MultiWriter &writer,
-                            Buffer &buffer,
-                            const char *name,
-                            int numComponents)
-    { writer.attachElementData(buffer, name, numComponents); }
+    void attachScalarElementData_(BaseOutputWriter &baseWriter,
+                                  ScalarBuffer &buffer,
+                                  const char *name)
+    { baseWriter.attachScalarElementData(buffer, name); }
 
-    template <class MultiWriter, class Buffer>
-    void attachVertexData_(MultiWriter &writer,
-                           Buffer &buffer,
-                           const char *name,
-                           int numComponents)
-    { writer.attachVertexData(buffer, name, numComponents); }
+    void attachScalarVertexData_(BaseOutputWriter &baseWriter,
+                                 ScalarBuffer &buffer,
+                                 const char *name)
+    { baseWriter.attachScalarVertexData(buffer, name); }
+
+    void attachVectorElementData_(BaseOutputWriter &baseWriter,
+                                  VectorBuffer &buffer,
+                                  const char *name)
+    { baseWriter.attachVectorElementData(buffer, name); }
+
+    void attachVectorVertexData_(BaseOutputWriter &baseWriter,
+                                 VectorBuffer &buffer,
+                                 const char *name)
+    { baseWriter.attachVectorVertexData(buffer, name); }
 
     const Problem &problem_;
 };

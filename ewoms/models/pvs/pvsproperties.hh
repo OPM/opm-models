@@ -29,10 +29,10 @@
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
 #include <ewoms/models/common/energymodule.hh>
-#include <ewoms/vtk/vtkcompositionmodule.hh>
-#include <ewoms/vtk/vtkphasepresencemodule.hh>
-#include <ewoms/vtk/vtkdiffusionmodule.hh>
-#include <ewoms/vtk/vtkenergymodule.hh>
+#include <ewoms/io/vtkcompositionmodule.hh>
+#include <ewoms/io/vtkphasepresencemodule.hh>
+#include <ewoms/io/vtkdiffusionmodule.hh>
+#include <ewoms/io/vtkenergymodule.hh>
 
 namespace Opm {
 namespace Properties {

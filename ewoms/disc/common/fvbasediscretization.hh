@@ -262,7 +262,7 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
     typedef typename GET_PROP_TYPE(TypeTag, GradientCalculator) GradientCalculator;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVtkBaseOutputModule) DiscVtkBaseOutputModule;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
@@ -297,9 +297,9 @@ public:
 
     ~FvBaseDiscretization()
     {
-        // delete all VTK output modules
-        auto modIt = vtkOutputModules_.begin();
-        const auto &modEndIt = vtkOutputModules_.end();
+        // delete all output modules
+        auto modIt = outputModules_.begin();
+        const auto &modEndIt = outputModules_.end();
         for (; modIt != modEndIt; ++modIt)
             delete *modIt;
 
@@ -327,7 +327,7 @@ public:
         FluxVariables::registerParameters();
         NewtonMethod::registerParameters();
 
-        // register runtime parameters of the VTK output modules
+        // register runtime parameters of the output modules
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
@@ -367,7 +367,7 @@ public:
         for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
             solution_[timeIdx] = solution_[/*timeIdx=*/0];
 
-        asImp_().registerVtkModules_();
+        asImp_().registerOutputModules_();
     }
 
     /*!
@@ -944,20 +944,17 @@ public:
 
     /*!
      * \brief Add the vector fields for analysing the convergence of
-     *        the newton method to the a VTK multi writer.
+     *        the newton method to the a VTK writer.
      *
-     * \tparam MultiWriter The type of the VTK multi writer
-     *
-     * \param writer  The VTK multi writer object on which the fields should be added.
-     * \param u       The solution function
-     * \param deltaU  The delta of the solution function before and after the Newton update
+     * \param writer The writer object to which the fields should be added.
+     * \param u The solution function
+     * \param deltaU The delta of the solution function before and after the Newton update
      */
-    template <class MultiWriter>
-    void addConvergenceVtkFields(MultiWriter &writer,
+    void addConvergenceVtkFields(Ewoms::VtkMultiWriter<GridView> &writer,
                                  const SolutionVector &u,
                                  const GlobalEqVector &deltaU) const
     {
-        typedef Dune::BlockVector<Dune::FieldVector<double, 1> > ScalarField;
+        typedef std::vector<double> ScalarBuffer;
 
         GlobalEqVector globalResid(u.size());
         asImp_().globalResidual(globalResid, u);
@@ -966,16 +963,16 @@ public:
         unsigned numDof = asImp_().numDof();
 
         // global defect of the two auxiliary equations
-        ScalarField* def[numEq];
-        ScalarField* delta[numEq];
-        ScalarField* priVars[numEq];
-        ScalarField* priVarWeight[numEq];
-        ScalarField* relError = writer.allocateManagedBuffer(numDof);
+        ScalarBuffer* def[numEq];
+        ScalarBuffer* delta[numEq];
+        ScalarBuffer* priVars[numEq];
+        ScalarBuffer* priVarWeight[numEq];
+        ScalarBuffer* relError = writer.allocateManagedScalarBuffer(numDof);
         for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
-            priVars[pvIdx] = writer.allocateManagedBuffer(numDof);
-            priVarWeight[pvIdx] = writer.allocateManagedBuffer(numDof);
-            delta[pvIdx] = writer.allocateManagedBuffer(numDof);
-            def[pvIdx] = writer.allocateManagedBuffer(numDof);
+            priVars[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
+            priVarWeight[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
+            delta[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
+            def[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
         }
 
         for (unsigned globalIdx = 0; globalIdx < numDof; ++ globalIdx)
@@ -993,56 +990,46 @@ public:
             (*relError)[globalIdx] = asImp_().relativeDofError(globalIdx, uOld, uNew);
         }
 
-        DiscVtkBaseOutputModule::attachDofData_(writer, *relError, "relErr", /*numComponents=*/1);
+        DiscBaseOutputModule::attachScalarDofData_(writer, *relError, "relErr");
 
         for (int i = 0; i < numEq; ++i) {
             std::ostringstream oss;
             oss.str(""); oss << "priVar_" << asImp_().primaryVarName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer,
-                                                    *priVars[i],
-                                                    oss.str(),
-                                                    /*numComponents=*/1);
+            DiscBaseOutputModule::attachScalarDofData_(writer,
+                                                       *priVars[i],
+                                                       oss.str());
 
             oss.str(""); oss << "delta_" << asImp_().primaryVarName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer,
-                                                    *delta[i],
-                                                    oss.str(),
-                                                    /*numComponents=*/1);
+            DiscBaseOutputModule::attachScalarDofData_(writer,
+                                                       *delta[i],
+                                                       oss.str());
 
             oss.str(""); oss << "weight_" << asImp_().primaryVarName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer,
-                                                    *priVarWeight[i],
-                                                    oss.str(),
-                                                    /*numComponents=*/1);
+            DiscBaseOutputModule::attachScalarDofData_(writer,
+                                                       *priVarWeight[i],
+                                                       oss.str());
 
             oss.str(""); oss << "defect_" << asImp_().eqName(i);
-            DiscVtkBaseOutputModule::attachDofData_(writer,
-                                                    *def[i],
-                                                    oss.str(),
-                                                    /*numComponents=*/1);
+            DiscBaseOutputModule::attachScalarDofData_(writer,
+                                                       *def[i],
+                                                       oss.str());
         }
 
-        asImp_().addOutputVtkFields(writer);
+        asImp_().prepareOutputFields();
+        asImp_().appendOutputFields(writer);
     }
 
     /*!
-     * \brief Append the quantities relevant for the current solution to a VTK multi writer.
-     *
-     * This should be overwritten by the actual model if any secondary
-     * variables should be written out. Read: This should _always_ be
-     * overwritten by well behaved models!
-     *
-     * \tparam MultiWriter The type of the VTK multi writer
-     *
-     * \param writer The VTK multi writer where the fields should be added.
+     * \brief Prepare the quantities relevant for the current solution
+     *        to be appended to the output writers.
      */
-    template <class MultiWriter>
-    void addOutputVtkFields(MultiWriter &writer) const
+    void prepareOutputFields() const
     {
-        auto modIt = vtkOutputModules_.begin();
-        const auto &modEndIt = vtkOutputModules_.end();
-        for (; modIt != modEndIt; ++modIt)
-            (*modIt)->allocBuffers(writer);
+        auto modIt = outputModules_.begin();
+        const auto &modEndIt = outputModules_.end();
+        for (; modIt != modEndIt; ++modIt) {
+            (*modIt)->allocBuffers();
+        }
 
         // iterate over grid
         ElementContext elemCtx(problem_);
@@ -1057,12 +1044,20 @@ public:
             elemCtx.updateVolVars(/*timeIdx=*/0);
             elemCtx.updateFluxVars(/*timeIdx=*/0);
 
-            modIt = vtkOutputModules_.begin();
+            modIt = outputModules_.begin();
             for (; modIt != modEndIt; ++modIt)
                 (*modIt)->processElement(elemCtx);
         }
+    }
 
-        modIt = vtkOutputModules_.begin();
+    /*!
+     * \brief Append the quantities relevant for the current solution
+     *        to an output writer.
+     */
+    void appendOutputFields(BaseOutputWriter &writer) const
+    {
+        auto modIt = outputModules_.begin();
+        const auto &modEndIt = outputModules_.end();
         for (; modIt != modEndIt; ++modIt)
             (*modIt)->commitBuffers(writer);
     }
@@ -1084,17 +1079,17 @@ protected:
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints); }
 
     /*!
-     * \brief Register all VTK output modules which make sense for the model.
+     * \brief Register all output modules which make sense for the model.
      *
      * This method is supposed to be overloaded by the actual models,
      * or else only the primary variables can be written to the result
      * files.
      */
-    void registerVtkModules_()
+    void registerOutputModules_()
     {
-        // add the VTK output modules available on all model
-        auto *vtkMod = new Ewoms::VtkPrimaryVarsModule<TypeTag>(problem_);
-        this->vtkOutputModules_.push_back(vtkMod);
+        // add the output modules available on all model
+        auto *mod = new Ewoms::VtkPrimaryVarsModule<TypeTag>(problem_);
+        this->outputModules_.push_back(mod);
     }
 
     /*!
@@ -1222,7 +1217,7 @@ protected:
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
 
-    std::list<VtkBaseOutputModule<TypeTag>*> vtkOutputModules_;
+    std::list<BaseOutputModule<TypeTag>*> outputModules_;
 
     std::vector<double> dofTotalVolume_;
 };
