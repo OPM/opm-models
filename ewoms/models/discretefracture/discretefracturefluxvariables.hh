@@ -112,7 +112,7 @@ public:
             fractureVolumeFlux_[phaseIdx] = 0;
             for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
                 fractureVolumeFlux_[phaseIdx]
-                    = (fractureFilterVelocity_[phaseIdx][dimIdx] * distDirection[dimIdx])
+                    += (fractureFilterVelocity_[phaseIdx][dimIdx] * distDirection[dimIdx])
                       * (fractureWidth_ / 2.0) / scvf.area();
         }
     }
