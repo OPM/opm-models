@@ -1230,7 +1230,7 @@ protected:
 
     std::list<VtkBaseOutputModule<TypeTag>*> vtkOutputModules_;
 
-    std::vector<Scalar> dofTotalVolume_;
+    std::vector<double> dofTotalVolume_;
 };
 } // namespace Ewoms
 

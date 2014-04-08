@@ -109,9 +109,11 @@ public:
             // divide the volume flux by two. This is required because
             // a fracture is always shared by two sub-control-volume
             // faces.
-            fractureVolumeFlux_[phaseIdx]
-                = (fractureFilterVelocity_[phaseIdx] * distDirection)
-                  * (fractureWidth_ / 2.0) / scvf.area();
+            fractureVolumeFlux_[phaseIdx] = 0;
+            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                fractureVolumeFlux_[phaseIdx]
+                    = (fractureFilterVelocity_[phaseIdx][dimIdx] * distDirection[dimIdx])
+                      * (fractureWidth_ / 2.0) / scvf.area();
         }
     }
 

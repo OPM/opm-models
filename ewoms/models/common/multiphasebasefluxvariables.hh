@@ -101,7 +101,11 @@ public:
                     continue;
                 }
 
-                if (potentialGrad(phaseIdx) * scvf.normal() > 0) {
+                Scalar tmp = 0;
+                for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    tmp += potentialGrad(phaseIdx)[dimIdx] * scvf.normal()[dimIdx];
+
+                if (tmp > 0) {
                     upstreamScvIdx_[phaseIdx] = this->exteriorIndex();
                     downstreamScvIdx_[phaseIdx] = this->interiorIndex();
                 }

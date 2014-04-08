@@ -44,6 +44,7 @@ class FvBaseGradientCalculator
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
 
     // maximum number of flux approximation points. to calculate this,
     // we assume that the geometry with the most pointsq is a cube.
@@ -77,13 +78,20 @@ public:
             const auto &interiorPos = stencil.subControlVolume(scvf.interiorIndex()).globalPos();
             const auto &exteriorPos = stencil.subControlVolume(scvf.exteriorIndex()).globalPos();
 
-            auto tmp(interiorPos);
-            tmp -= scvf.integrationPos();
-            interiorDistance_[fapIdx] = std::abs(tmp*normal);
+            interiorDistance_[fapIdx] = 0;
+            exteriorDistance_[fapIdx] = 0;
+            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+                interiorDistance_[fapIdx] +=
+                    (interiorPos[dimIdx] - scvf.integrationPos()[dimIdx])
+                    * normal[dimIdx];
 
-            tmp = exteriorPos;
-            tmp -= scvf.integrationPos();
-            exteriorDistance_[fapIdx] = std::abs(tmp*normal);
+                exteriorDistance_[fapIdx] +=
+                    (exteriorPos[dimIdx] - scvf.integrationPos()[dimIdx])
+                    * normal[dimIdx];
+            }
+
+            interiorDistance_[fapIdx] = std::abs(interiorDistance_[fapIdx]);
+            exteriorDistance_[fapIdx] = std::abs(exteriorDistance_[fapIdx]);
         }
     }
 
@@ -138,14 +146,11 @@ public:
         const auto &face = stencil.interiorFace(fapIdx);
         const auto &normal = face.normal();
 
-        Scalar dy =
-            quantityCallback(face.exteriorIndex()) - quantityCallback(face.interiorIndex());
+        Scalar dy = quantityCallback(face.exteriorIndex()) - quantityCallback(face.interiorIndex());
+        Scalar dx = exteriorDistance_[fapIdx] + interiorDistance_[fapIdx];
 
-        Scalar dx =
-            exteriorDistance_[fapIdx] + interiorDistance_[fapIdx];
-
-        quantityGrad = normal;
-        quantityGrad *= dy/dx;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            quantityGrad[dimIdx] = normal[dimIdx]*dy/dx;
     }
 
     /*!

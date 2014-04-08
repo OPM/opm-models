@@ -106,7 +106,11 @@ public:
             = stencil.subControlVolume(insideScvIdx).geometry().center();
         const auto &scvPos = context.element().geometry().corner(insideScvIdx);
         distVec.axpy(-1, scvPos);
-        Scalar dist = std::abs(distVec * normal);
+
+        Scalar dist = 0.0;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            dist += distVec[dimIdx] * normal[dimIdx];
+        dist = std::abs(dist);
 
         DimVector gradv[dimWorld];
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
@@ -119,7 +123,9 @@ public:
         }
 
         // specify the mass fluxes over the boundary
-        Scalar volumeFlux = (velocity*normal);
+        Scalar volumeFlux = 0;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            volumeFlux += velocity[dimIdx]*normal[dimIdx];
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updatePhase(fluidState, phaseIdx);
@@ -140,9 +146,11 @@ public:
             }
 
             // the momentum flux due to viscous forces
-            (*this)[momentum0EqIdx + axisIdx]
-                = -insideVolVars.fluidState().viscosity(phaseIdx)
-                  * (tmp * normal);
+            Scalar tmp2 = 0.0;
+            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                tmp2 += tmp[dimIdx]*normal[dimIdx];
+
+            (*this)[momentum0EqIdx + axisIdx] = -insideVolVars.fluidState().viscosity(phaseIdx) * tmp2;
         }
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volumeFlux);

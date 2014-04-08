@@ -258,7 +258,12 @@ protected:
             }
 
             calculateDarcyVelocity_(phaseIdx);
-            volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+
+            Scalar tmp = 0;
+            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                tmp += filterVelocity_[phaseIdx][dimIdx] * normal[dimIdx];
+
+            volumeFlux_[phaseIdx] = tmp;
         }
     }
 

@@ -737,7 +737,10 @@ protected:
 
         // scalar product of temperature gradient and scvf normal
         const auto &face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(faceIdx);
-        temperatureGradNormal_ = (face.normal()*temperatureGrad);
+
+        temperatureGradNormal_ = 0;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            temperatureGradNormal_ += (face.normal()[dimIdx]*temperatureGrad[dimIdx]);
 
         const auto &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
         const auto &volVarsInside = elemCtx.volVars(fluxVars.interiorIndex(), timeIdx);
@@ -767,7 +770,10 @@ protected:
         DimVector distVec = face.integrationPos();
         distVec -= insideScv.geometry().center();
 
-        Scalar dist = distVec * face.normal();
+        Scalar tmp = 0;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            tmp += distVec[dimIdx] * face.normal()[dimIdx];
+        Scalar dist = tmp;
 
         // if the following assertation triggers, the center of the
         // center of the interior SCV was not inside the element!
@@ -775,8 +781,8 @@ protected:
 
         // calculate the temperature gradient using two-point gradient
         // appoximation
-        temperatureGradNormal_ = (fs.temperature(/*phaseIdx=*/0)
-                                  - fsInside.temperature(/*phaseIdx=*/0)) / dist;
+        temperatureGradNormal_ =
+            (fs.temperature(/*phaseIdx=*/0) - fsInside.temperature(/*phaseIdx=*/0)) / dist;
 
         // take the value for heat conductivity from the interior finite volume
         heatConductivity_ = volVarsInside.heatConductivity();
