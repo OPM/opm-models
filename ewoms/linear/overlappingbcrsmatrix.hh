@@ -27,6 +27,8 @@
 #include <ewoms/linear/globalindices.hh>
 #include <ewoms/parallel/mpibuffer.hh>
 
+#include <opm/material/Valgrind.hpp>
+
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/io.hh>
 

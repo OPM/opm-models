@@ -24,10 +24,10 @@
 #ifndef EWOMS_STOKES_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_STOKES_BOUNDARY_RATE_VECTOR_HH
 
-#include <dune/common/fvector.hh>
-
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
+
+#include <dune/common/fvector.hh>
 
 #include "stokesvolumevariables.hh"
 
