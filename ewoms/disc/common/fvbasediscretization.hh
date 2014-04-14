@@ -343,17 +343,11 @@ public:
     {
         asImp_().updateBoundary_();
 
-        if (enableHints_() && !enableVolumeVariablesCache()) {
-            OPM_THROW(std::runtime_error,
-                      "Using thermodynamic hints requires to also enable "
-                      "the volume variable cache!\n");
-        }
-
         int nDofs = asImp_().numDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDofs);
 
-            if (enableVolumeVariablesCache()) {
+            if (storeVolumeVariables_()) {
                 volVarsCache_[timeIdx].resize(nDofs);
                 volVarsCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
             }
@@ -398,7 +392,7 @@ public:
      */
     const VolumeVariables *thermodynamicHint(int globalIdx, int timeIdx) const
     {
-        if (!enableHints_())
+        if (!enableThermodynamicHints_())
             return 0;
 
         if (volVarsCacheUpToDate_[timeIdx][globalIdx])
@@ -426,7 +420,7 @@ public:
      */
     const VolumeVariables *cachedVolumeVariables(int globalIdx, int timeIdx) const
     {
-        if (!enableVolumeVariablesCache() ||
+        if (!enableVolumeVariablesCache_() ||
             !volVarsCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
@@ -445,7 +439,7 @@ public:
                                      int globalIdx,
                                      int timeIdx) const
     {
-        if (!enableVolumeVariablesCache())
+        if (!storeVolumeVariables_())
             return;
 
         volVarsCache_[timeIdx][globalIdx] = volVars;
@@ -462,7 +456,7 @@ public:
     void invalidateVolumeVariablesCacheEntry(int globalIdx,
                                              int timeIdx) const
     {
-        if (!enableVolumeVariablesCache())
+        if (!storeVolumeVariables_())
             return;
 
         volVarsCacheUpToDate_[timeIdx][globalIdx] = false;
@@ -478,7 +472,7 @@ public:
      */
     void shiftVolumeVariablesCache(int numSlots = 1)
     {
-        if (!enableVolumeVariablesCache())
+        if (!storeVolumeVariables_())
             return;
 
         for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
@@ -1079,14 +1073,14 @@ public:
     const GridView &gridView() const
     { return problem_.gridView(); }
 
-    /*!
-     * \brief Returns if the volume variables are cached by the model.
-     */
-    static bool enableVolumeVariablesCache()
+protected:
+    static bool storeVolumeVariables_()
+    { return enableVolumeVariablesCache_() || enableThermodynamicHints_(); }
+
+    static bool enableVolumeVariablesCache_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableVolumeVariablesCache); }
 
-protected:
-    static bool enableHints_()
+    static bool enableThermodynamicHints_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints); }
 
     /*!
@@ -1185,7 +1179,7 @@ protected:
                               Dune::InteriorBorder_InteriorBorder_Interface,
                               Dune::ForwardCommunication);
 
-        if (enableVolumeVariablesCache()) {
+        if (storeVolumeVariables_()) {
             // invalidate all cached volume variables
             for (int timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
                 std::fill(volVarsCacheUpToDate_[timeIdx].begin(),
@@ -1235,3 +1229,4 @@ protected:
 } // namespace Ewoms
 
 #endif
+
