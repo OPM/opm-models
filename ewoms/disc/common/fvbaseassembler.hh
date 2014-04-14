@@ -48,6 +48,7 @@ class FvBaseAssembler
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
@@ -111,7 +112,7 @@ public:
 
     FvBaseAssembler()
     {
-        problemPtr_ = 0;
+        simulatorPtr_ = 0;
         elementCtx_ = 0;
 
         matrix_ = 0;
@@ -145,17 +146,17 @@ public:
     /*!
      * \brief Initialize the jacobian assembler.
      *
-     * At this point we can assume that all objects in the problem and
-     * the model have been allocated. We can not assume that they are
-     * fully initialized, though.
+     * At this point we can assume that all objects in the simulator
+     * have been allocated. We cannot assume that they are fully
+     * initialized, though.
      *
-     * \copydetails Doxygen::problemParam
+     * \copydetails Doxygen::simulatorParam
      */
-    void init(Problem& problem)
+    void init(Simulator& simulator)
     {
-        problemPtr_ = &problem;
+        simulatorPtr_ = &simulator;
         delete elementCtx_;
-        elementCtx_ = new ElementContext(problem);
+        elementCtx_ = new ElementContext(simulator);
 
         // initialize the BCRS matrix
         createMatrix_();
@@ -165,7 +166,7 @@ public:
         *matrix_ = 0;
         reuseLinearization_ = false;
 
-        int numDof = problem.model().numDof();
+        int numDof = model_().numDof();
         int numElems = gridView_().size(/*codim=*/0);
 
         residual_.resize(numDof);
@@ -211,7 +212,7 @@ public:
         }
         catch (Opm::NumericalProblem &e)
         {
-            std::cout << "rank " << problem_().gridView().comm().rank()
+            std::cout << "rank " << simulator_().gridView().comm().rank()
                       << " caught an exception while assembling:" << e.what()
                       << "\n"  << std::flush;
             succeeded = 0;
@@ -227,7 +228,7 @@ public:
             greenElems_ = gridView_().comm().sum(greenElems_);
             relinearizationAccuracy_ = gridView_().comm().max(nextRelinearizationAccuracy_);
 
-            problem_().newtonMethod().endIterMsg()
+            model_().newtonMethod().endIterMsg()
                 << ", relinearized "
                 << totalElems_ - greenElems_ << " of " << totalElems_
                 << " elements (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
@@ -570,18 +571,27 @@ private:
     static bool enablePartialRelinearization_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
 
+    Simulator &simulator_()
+    { return *simulatorPtr_; }
+    const Simulator &simulator_() const
+    { return *simulatorPtr_; }
+
     Problem &problem_()
-    { return *problemPtr_; }
+    { return simulator_().problem(); }
     const Problem &problem_() const
-    { return *problemPtr_; }
-    const Model &model_() const
-    { return problem_().model(); }
+    { return simulator_().problem(); }
+
     Model &model_()
-    { return problem_().model(); }
+    { return simulator_().model(); }
+    const Model &model_() const
+    { return simulator_().model(); }
+
     const GridView &gridView_() const
-    { return model_().gridView(); }
+    { return problem_().gridView(); }
+
     const ElementMapper &elementMapper_() const
     { return model_().elementMapper(); }
+
     const DofMapper &dofMapper_() const
     { return model_().dofMapper(); }
 
@@ -694,7 +704,7 @@ private:
 
         // if we can "recycle" the current linearization, we do it
         // here and be done with it...
-        Scalar curDt = problem_().timeManager().timeStepSize();
+        Scalar curDt = problem_().simulator().timeStepSize();
         if (reuseLinearization_) {
             int numDof = storageJacobian_.size();
             for (int i = 0; i < numDof; ++i) {
@@ -804,7 +814,7 @@ private:
         }
     }
 
-    Problem *problemPtr_;
+    Simulator *simulatorPtr_;
     ElementContext *elementCtx_;
 
     // the jacobian matrix

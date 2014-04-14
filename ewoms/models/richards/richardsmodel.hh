@@ -213,7 +213,7 @@ class RichardsModel
 {
     typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
@@ -225,8 +225,8 @@ class RichardsModel
     enum { dimWorld = GridView::dimensionworld };
 
 public:
-    RichardsModel(Problem &problem)
-        : ParentType(problem)
+    RichardsModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!

@@ -24,6 +24,7 @@
 #ifndef EWOMS_CUBE_GRID_CREATOR_HH
 #define EWOMS_CUBE_GRID_CREATOR_HH
 
+#include <ewoms/io/basegridcreator.hh>
 #include <ewoms/common/basicproperties.hh>
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -46,8 +47,7 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-} // namespace Properties
-} // namespace Opm
+}} // namespace Opm, Properties
 
 namespace Ewoms {
 /*!
@@ -58,7 +58,7 @@ namespace Ewoms {
  * cube in 3D.
  */
 template <class TypeTag>
-class CubeGridCreator
+class CubeGridCreator : public BaseGridCreator<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
@@ -130,8 +130,8 @@ public:
     /*!
      * \brief Returns a reference to the grid.
      */
-    static Grid &grid()
-    { return *cubeGrid_; }
+    static GridPointer &gridPointer()
+    { return cubeGrid_; }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
@@ -139,6 +139,7 @@ public:
      */
     static void loadBalance()
     { cubeGrid_->loadBalance(); }
+
     /*!
      * \brief Destroys the grid
      *

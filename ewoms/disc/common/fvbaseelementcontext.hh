@@ -57,6 +57,7 @@ class FvBaseElementContext
     typedef std::vector<DofStore_> DofVarsVector;
     typedef std::vector<FluxVariables> FluxVarsVector;
 
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
@@ -82,13 +83,12 @@ public:
     /*!
      * \brief The constructor.
      */
-    explicit FvBaseElementContext(const Problem &problem)
-        : gridView_(problem.gridView())
+    explicit FvBaseElementContext(const Simulator &simulator)
+        : gridView_(simulator.gridView())
         , stencil_(gridView_)
     {
-        // remember the problem object
-        problemPtr_ = &problem;
-        modelPtr_ = &problem.model();
+        // remember the simulator object
+        simulatorPtr_ = &simulator;
     }
 
     /*!
@@ -251,16 +251,22 @@ public:
     }
 
     /*!
+     * \brief Return a reference to the simulator.
+     */
+    const Simulator &simulator() const
+    { return *simulatorPtr_; }
+
+    /*!
      * \brief Return a reference to the problem.
      */
     const Problem &problem() const
-    { return *problemPtr_; }
+    { return simulatorPtr_->problem(); }
 
     /*!
      * \brief Return a reference to the model.
      */
     const Model &model() const
-    { return *modelPtr_; }
+    { return simulatorPtr_->model(); }
 
     /*!
      * \brief Return a reference to the grid view.
@@ -541,8 +547,7 @@ protected:
 
     FluxVarsVector *fluxVarsEval_;
 
-    const Problem *problemPtr_;
-    const Model *modelPtr_;
+    const Simulator *simulatorPtr_;
     const Element *elemPtr_;
     const GridView gridView_;
     Stencil stencil_;

@@ -137,7 +137,7 @@ NEW_PROP_TAG(GridCommHandleFactory);
 // high-level simulation control
 
 //! Manages the simulation time
-NEW_PROP_TAG(TimeManager);
+NEW_PROP_TAG(Simulator);
 
 //! Specify whether the linear system of equations of the last
 //! iteration of a time step should be re-used as the jacobian of the

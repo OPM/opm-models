@@ -32,6 +32,7 @@
 #include <ewoms/version.hh>
 #include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/parametersystem.hh>
+#include <ewoms/common/simulator.hh>
 
 #include <dune/grid/io/file/dgfparser.hh>
 #include <dune/common/parametertreeparser.hh>
@@ -56,7 +57,7 @@ NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridCreator);
 NEW_PROP_TAG(Problem);
-NEW_PROP_TAG(TimeManager);
+NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
@@ -80,7 +81,7 @@ int setupParameters_(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
 
     // first, get the MPI rank of the current process
@@ -110,7 +111,7 @@ int setupParameters_(int argc, char **argv)
                          "be attempted [s]");
 
     GridCreator::registerParameters();
-    TimeManager::registerParameters();
+    Simulator::registerParameters();
 
     ////////////////////////////////////////////////////////////
     // set the parameter values
@@ -179,9 +180,7 @@ template <class TypeTag>
 int start(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
     // initialize MPI, finalize is done automatically on exit
     const Ewoms::MpiHelper mpiHelper(argc, argv);
@@ -197,19 +196,19 @@ int start(int argc, char **argv)
             return 0;
 
         // read the initial time step and the end time
-        double tEnd;
-        double dt;
+        double endTime;
+        double initialTimeStepSize;
 
-        tEnd = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
-        if (tEnd < -1e50) {
+        endTime = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
+        if (endTime < -1e50) {
             if (myRank == 0)
                 Parameters::printUsage<TypeTag>(argv[0],
                                                 "Mandatory parameter '--end-time' not specified!");
             return 1;
         }
 
-        dt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
-        if (dt < -1e50) {
+        initialTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+        if (initialTimeStepSize < -1e50) {
             if (myRank == 0)
                 Parameters::printUsage<TypeTag>(argv[0],
                                                 "Mandatory parameter '--initial-time-step-size' "
@@ -218,12 +217,12 @@ int start(int argc, char **argv)
         }
 
         // deal with the restart stuff
-        bool restart = false;
-        Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
-        if (restartTime > -1e100)
-            restart = true;
+        bool doRestart = false;
+        Scalar startTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
+        if (startTime > -1e100)
+            doRestart = true;
         else
-            restartTime = 0.0;
+            startTime = 0.0;
 
         if (myRank == 0)
             std::cout << "eWoms " << EWOMS_VERSION
@@ -265,63 +264,36 @@ int start(int argc, char **argv)
                 Opm::Properties::printValues<TypeTag>();
         }
 
-        // try to create a grid (from the given grid file)
-        if (myRank == 0)
-            std::cout << "Creating the grid\n"
-                      << std::flush;
-        try
-        { GridCreator::makeGrid(); }
-        catch (const Dune::Exception &e)
-        {
-            std::cout << "Creation of the grid failed: " << e.what() << "\n"
-                      << std::flush;
-            return 1;
-        }
-        if (myRank == 0)
-            std::cout << "Distributing the grid\n"
-                      << std::flush;
-        GridCreator::loadBalance();
-
         // instantiate and run the concrete problem. make sure to
         // deallocate the problem and before the time manager and the
         // grid
-        TimeManager timeManager;
-        {
-            if (myRank == 0)
-                std::cout << "Initializing the problem \"" << Problem::name() << "\"\n"
-                          << std::flush;
-            Problem problem(timeManager);
-            timeManager.init(problem, restartTime, dt, tEnd, restart);
-            timeManager.run();
-        }
+        Simulator simulator;
+        simulator.init(startTime, initialTimeStepSize, endTime, doRestart);
+        simulator.run();
 
         if (myRank == 0) {
             std::cout << "eWoms reached the destination. If it took a wrong "
                       << "corner, change your booking and try again.\n"
                       << std::flush;
         }
-        GridCreator::deleteGrid();
         return 0;
     }
     catch (std::exception &e)
     {
         if (myRank == 0)
             std::cout << e.what() << ". Abort!\n" << std::flush;
-        GridCreator::deleteGrid();
         return 1;
     }
     catch (Dune::Exception &e)
     {
         if (myRank == 0)
             std::cout << "Dune reported an error: " << e.what() << std::endl  << std::flush;
-        GridCreator::deleteGrid();
         return 2;
     }
     catch (...)
     {
         if (myRank == 0)
             std::cout << "Unknown exception thrown!\n" << std::flush;
-        GridCreator::deleteGrid();
         return 3;
     }
 }

@@ -53,7 +53,7 @@ class VtkPrimaryVarsModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
@@ -65,8 +65,8 @@ class VtkPrimaryVarsModule : public BaseOutputModule<TypeTag>
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    VtkPrimaryVarsModule(const Problem &problem)
-        : ParentType(problem)
+    VtkPrimaryVarsModule(const Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!
@@ -99,10 +99,10 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        const auto &elementMapper = elemCtx.problem().elementMapper();
+        const auto &elementMapper = elemCtx.model().elementMapper();
         auto elemIdx = elementMapper.map(elemCtx.element());
         if (processRankOutput_() && !processRank_.empty())
-            processRank_[elemIdx] = this->problem_.gridView().comm().rank();
+            processRank_[elemIdx] = this->simulator_.gridView().comm().rank();
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);

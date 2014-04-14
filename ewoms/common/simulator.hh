@@ -20,10 +20,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::TimeManager
+ * \copydoc Ewoms::Simulator
  */
-#ifndef EWOMS_TIME_MANAGER_HH
-#define EWOMS_TIME_MANAGER_HH
+#ifndef EWOMS_SIMULATOR_HH
+#define EWOMS_SIMULATOR_HH
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/parallel/mpihelper.hh>
@@ -35,41 +35,44 @@
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(GridCreator);
+NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(Model);
 NEW_PROP_TAG(Problem);
-}
-}
+}}
 
 namespace Ewoms {
 /*!
- * \ingroup TimeManager
- * \brief Simplify the handling of time dependent problems.
+ * \ingroup Simulator
  *
- * This class manages a sequence of "episodes" which determine the
- * boundary conditions of a problem. This approach is handy if the
- * problem is not static, i.e. that boundary conditions change
- * over time.
+ * \brief Manages the initializing and running of time dependent
+ *        problems.
  *
- * This class is a low level way to simplify time management for the
- * simulation. It doesn't manage any user data, but only keeps track
- * about what the current "episode" of the simulation is. An episode
- * is a span of simulated time at which the problem behaves in a
- * specific way. It is characerized by the (simulation) time it
- * starts, its length and a consecutive index starting at 0.
+ * This class instantiates the grid, the model and the problem to be
+ * simlated and runs the simulation loop. The time axis is treated as
+ * a sequence of "episodes" which are defined as time intervals for
+ * which the problem exhibits boundary conditions and source terms
+ * that do not depend on time.
  */
 template <class TypeTag>
-class TimeManager
+class Simulator
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
-    TimeManager(const TimeManager &)
-    {}
 
 public:
-    TimeManager(bool verbose = true)
+    // do not allow to copy simulators around
+    Simulator(const Simulator &) = delete;
+
+    Simulator(bool verbose = true)
+        : model_(0)
+        , problem_(0)
     {
-        verbose_ = verbose
-                   && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
+        verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
         episodeIdx_ = 0;
         episodeStartTime_ = 0;
@@ -82,41 +85,122 @@ public:
         finished_ = false;
 
         episodeLength_ = 1e100;
+
+        try {
+            // try to create a grid (from the given grid file)
+            if (verbose_)
+                std::cout << "Creating the grid\n"
+                          << std::flush;
+            GridCreator::makeGrid();
+        }
+        catch (const Dune::Exception &e) {
+            std::cout << "Creation of the grid failed: " << e.what() << "\n"
+                      << std::flush;
+            throw;
+        }
+
+        if (verbose_)
+            std::cout << "Distributing the grid\n"
+                      << std::flush;
+        GridCreator::loadBalance();
+
+        if (verbose_)
+            std::cout << "Allocating the problem and the model\n"
+                      << std::flush;
+        model_ = new Model(*this);
+        problem_ = new Problem(*this);
+    }
+
+    ~Simulator()
+    {
+        delete problem_;
+        delete model_;
+        GridCreator::deleteGrid();
     }
 
     /*!
      * \brief Registers all runtime parameters used by the simulation.
      */
     static void registerParameters()
-    { Problem::registerParameters(); }
+    {
+        GridCreator::registerParameters();
+        Model::registerParameters();
+        Problem::registerParameters();
+    }
 
     /*!
-     * \brief Initialize the model and problem and write the initial
-     *        condition to disk.
-     *
-     * \param problem The physical problem which needs to be solved
-     * \param tStart The start time \f$\mathrm{[s]}\f$ of the simulation
-     *               (typically 0)
-     * \param dtInitial The initial time step size \f$\mathrm{[s]}\f$
-     * \param tEnd The time at which the simulation is finished
-     *             \f$\mathrm{[s]}\f$
-     * \param restart Specifies whether a restart file should be
-     *                loaded or if the problem should provide the
-     *                initial condition.
+     * \brief Return the grid view for which the simulation is done
      */
-    void init(Problem &problem, Scalar tStart, Scalar dtInitial, Scalar tEnd, bool restart = false)
-    {
-        problem_ = &problem;
-        time_ = tStart;
-        timeStepSize_ = dtInitial;
-        endTime_ = tEnd;
+    GridView gridView()
+    { return GridCreator::gridView(); }
 
-        // initialize the problem
+    /*!
+     * \brief Return the grid view for which the simulation is done
+     */
+    const GridView gridView() const
+    { return GridCreator::gridView(); }
+
+    /*!
+     * \brief Return the physical model used in the simulation
+     */
+    Model &model()
+    { return *model_; }
+
+    /*!
+     * \brief Return the physical model used in the simulation
+     */
+    const Model &model() const
+    { return *model_; }
+
+    /*!
+     * \brief Return the object which specifies the pysical setup of
+     *        the simulation
+     */
+    Problem &problem()
+    { return *problem_; }
+
+    /*!
+     * \brief Return the object which specifies the pysical setup of
+     *        the simulation
+     */
+    const Problem &problem() const
+    { return *problem_; }
+
+    /*!
+     * \brief Apply the initial condition and write it to disk.
+     *
+     * This method also deserializes a previously saved state of the
+     * simulation from disk if instructed to do so.
+     *
+     * \param startTime The time \f$\mathrm{[s]}\f$ for the
+     *                  simulation's initial solution (typically 0)
+     * \param initialTimeStepSize The initial time step size \f$\mathrm{[s]}\f$
+     * \param endTime The time at which the simulation is finished
+     *                \f$\mathrm{[s]}\f$
+     * \param doRestart Specifies whether a restart file should be
+     *                  loaded or if the problem should provide the
+     *                  initial condition.
+     */
+    void init(Scalar startTime, Scalar initialTimeStepSize, Scalar endTime, bool doRestart = false)
+    {
+        time_ = startTime;
+        timeStepSize_ = initialTimeStepSize;
+        endTime_ = endTime;
+
+        // apply the initial solution
+        if (verbose_)
+            std::cout << "Applying the initial solution of the \"" << Problem::name() << "\" problem\n"
+                      << std::flush;
         problem_->init();
 
         // restart problem if necessary
-        if (restart)
-            problem_->restart(tStart);
+        if (doRestart) {
+            if (verbose_)
+                std::cout << "Loading the previously saved state at t=" << startTime << "\n"
+                          << std::flush;
+
+            problem_->restart(startTime);
+        }
         else {
             // write initial condition (if problem is not restarted)
             time_ -= timeStepSize_;
@@ -125,11 +209,6 @@ public:
             time_ += timeStepSize_;
         }
     }
-
-    /*!
-     *  \name Simulated time and time step management
-     * \{
-     */
 
     /*!
      * \brief Set the current simulated time, don't change the current
@@ -189,10 +268,10 @@ public:
      * size won't exceed the episode or the end of the simulation,
      * though.
      *
-     * \param dt The new value for the time step size \f$\mathrm{[s]}\f$
+     * \param timeStepSize The new value for the time step size \f$\mathrm{[s]}\f$
      */
-    void setTimeStepSize(Scalar dt)
-    { timeStepSize_ = dt; }
+    void setTimeStepSize(Scalar timeStepSize)
+    { timeStepSize_ = timeStepSize; }
 
     /*!
      * \brief Returns the time step length \f$\mathrm{[s]}\f$ so that we
@@ -201,10 +280,10 @@ public:
      */
     Scalar timeStepSize() const
     {
-        Scalar dtMax = std::max(1e-9, maxTimeStepSize());
-        Scalar dt = std::max(1e-9, timeStepSize_);
+        Scalar maximumTimeStepSize = std::max(1e-9, maxTimeStepSize());
+        Scalar timeStepSize = std::max(1e-9, timeStepSize_);
 
-        return std::min(dt, dtMax);
+        return std::min(timeStepSize, maximumTimeStepSize);
     }
 
     /*!
@@ -232,7 +311,7 @@ public:
      */
     bool finished() const
     {
-        assert(timeStepSize_ > 0.0);
+        assert(timeStepSize_ >= 0.0);
         return finished_ || this->time() + std::max(std::abs(this->time()), timeStepSize_)*1e-8 >= endTime();
     }
 
@@ -251,8 +330,8 @@ public:
     }
 
     /*!
-     * \brief Aligns dt to the episode boundary or the end time of the
-     *        simulation.
+     * \brief Aligns the time step size to the episode boundary and to
+     *        the end time of the simulation.
      */
     Scalar maxTimeStepSize() const
     {
@@ -263,26 +342,17 @@ public:
                         std::max<Scalar>(0.0, endTime() - this->time()));
     }
 
-    /*
-     * \}
-     */
-
-    /*!
-     * \name Episode management
-     * \{
-     */
-
     /*!
      * \brief Change the current episode of the simulation.
      *
-     * \param tStart Time when the episode began \f$\mathrm{[s]}\f$
-     * \param len    Length of the episode \f$\mathrm{[s]}\f$
+     * \param episodeStartTime Time when the episode began \f$\mathrm{[s]}\f$
+     * \param episodeLength Length of the episode \f$\mathrm{[s]}\f$
      */
-    void startNextEpisode(Scalar tStart, Scalar len)
+    void startNextEpisode(Scalar episodeStartTime, Scalar episodeLength)
     {
         ++episodeIdx_;
-        episodeStartTime_ = tStart;
-        episodeLength_ = len;
+        episodeStartTime_ = episodeStartTime;
+        episodeLength_ = episodeLength;
     }
 
     /*!
@@ -425,7 +495,7 @@ public:
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
                           << "Wall time:" << timer_.elapsed()
-                          << ", time:" << this->time() << ", time step size:" << dt
+                          << ", time:" << this->time() << ", time step size:" << timeStepSize()
                           << "\n" << std::flush;
             }
         }
@@ -442,16 +512,16 @@ public:
      *
      * \tparam Restarter The type of the object which takes care to serialize
      *                   data
-     * \param res The serializer object
+     * \param restarter The serializer object
      */
     template <class Restarter>
-    void serialize(Restarter &res)
+    void serialize(Restarter &restarter)
     {
-        res.serializeSectionBegin("TimeManager");
-        res.serializeStream() << episodeIdx_ << " " << episodeStartTime_ << " "
+        restarter.serializeSectionBegin("Simulator");
+        restarter.serializeStream() << episodeIdx_ << " " << episodeStartTime_ << " "
                               << episodeLength_ << " " << time_ << " "
                               << timeStepIdx_ << " ";
-        res.serializeSectionEnd();
+        restarter.serializeSectionEnd();
     }
 
     /*!
@@ -459,23 +529,21 @@ public:
      *
      * \tparam Restarter The type of the object which takes care to deserialize
      *                   data
-     * \param res The deserializer object
+     * \param restarter The deserializer object
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter &restarter)
     {
-        res.deserializeSectionBegin("TimeManager");
-        res.deserializeStream() >> episodeIdx_ >> episodeStartTime_
+        restarter.deserializeSectionBegin("Simulator");
+        restarter.deserializeStream() >> episodeIdx_ >> episodeStartTime_
             >> episodeLength_ >> time_ >> timeStepIdx_;
-        res.deserializeSectionEnd();
+        restarter.deserializeSectionEnd();
     }
 
-    /*
-     * \}
-     */
-
 private:
+    Model *model_;
     Problem *problem_;
+
     int episodeIdx_;
     Scalar episodeStartTime_;
     Scalar episodeLength_;

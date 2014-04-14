@@ -72,7 +72,7 @@ class VtkCompositionModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
@@ -87,8 +87,8 @@ class VtkCompositionModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
 
 public:
-    VtkCompositionModule(const Problem &problem)
-        : ParentType(problem)
+    VtkCompositionModule(const Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!

@@ -28,6 +28,7 @@
 #include <opm/core/utility/PropertySystem.hpp>
 #include <opm/material/Valgrind.hpp>
 
+#include <ewoms/io/basegridcreator.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/gridfactory.hh>
 
@@ -60,7 +61,7 @@ namespace Ewoms {
  * This file format is used to specify grids with fractures.
  */
 template <class TypeTag>
-class ArtGridCreator
+class ArtGridCreator : public BaseGridCreator<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef Dune::FieldVector<double, 2> GlobalPosition;
@@ -286,11 +287,11 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the grid.
+     * \brief Returns a pointer to the grid.
      */
-    static Grid &grid()
+    static GridPointer &gridPointer()
     {
-        return *gridPtr_;
+        return gridPtr_;
     }
 
     /*!

@@ -43,6 +43,7 @@ class NcpNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -56,7 +57,7 @@ public:
     /*!
      * \copydoc FvBaseNewtonMethod::FvBaseNewtonMethod(Problem &)
      */
-    NcpNewtonMethod(Problem &problem) : ParentType(problem)
+    NcpNewtonMethod(Simulator &simulator) : ParentType(simulator)
     {
         choppedIterations_
             = EWOMS_GET_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations);

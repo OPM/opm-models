@@ -61,7 +61,7 @@ class MultiPhaseBaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
 
@@ -71,10 +71,10 @@ class MultiPhaseBaseProblem
 
 public:
     /*!
-     * \copydoc Problem::FvBaseProblem(TimeManager &, const GridView &)
+     * \copydoc Problem::FvBaseProblem(Simulator &)
      */
-    MultiPhaseBaseProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView)
+    MultiPhaseBaseProblem(Simulator &simulator)
+        : ParentType(simulator)
     { init_(); }
 
     /*!

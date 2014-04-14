@@ -51,7 +51,7 @@ namespace Properties {
 NEW_TYPE_TAG(ParallelIterativeLinearSolver);
 
 // forward declaration of the required property tags
-NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(JacobianMatrix);
 NEW_PROP_TAG(GlobalEqVector);
@@ -166,7 +166,7 @@ class ParallelIterativeSolverBackend
 {
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) Implementation;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
@@ -193,7 +193,7 @@ class ParallelIterativeSolverBackend
     enum { dimWorld = GridView::dimensionworld };
 
 public:
-    ParallelIterativeSolverBackend(const Problem &problem) : problem_(problem)
+    ParallelIterativeSolverBackend(const Simulator &simulator) : simulator_(simulator)
     {
         overlappingMatrix_ = 0;
         overlappingb_ = 0;
@@ -280,7 +280,7 @@ public:
 
         // make sure that the preconditioner is also ready on all peer
         // ranks.
-        preconditionerIsReady = problem_.gridView().comm().min(preconditionerIsReady);
+        preconditionerIsReady = simulator_.gridView().comm().min(preconditionerIsReady);
         if (!preconditionerIsReady) {
             Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
             return false;
@@ -308,7 +308,7 @@ public:
             int nativeIdx = overlap.domesticToNative(localIdx);
             for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
                 residWeightVec[localIdx][eqIdx]
-                    = this->problem_.model().eqWeight(nativeIdx, eqIdx);
+                    = this->simulator_.model().eqWeight(nativeIdx, eqIdx);
             }
         }
 
@@ -318,7 +318,7 @@ public:
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
             new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
-                problem_.gridView().comm(),
+                simulator_.gridView().comm(),
                 residWeightVec,
                 /*fixPointTolerance=*/linearSolverFixPointTolerance,
                 /*residualReductionTolerance=*/linearSolverTolerance,
@@ -337,11 +337,11 @@ public:
         int solverSucceeded = 1;
         try {
             solver.apply(*overlappingx_, *overlappingb_, result);
-            solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
+            solverSucceeded = simulator_.gridView().comm().min(solverSucceeded);
         }
         catch (const Dune::Exception &) {
             solverSucceeded = 0;
-            solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
+            solverSucceeded = simulator_.gridView().comm().min(solverSucceeded);
         }
 
         // free the unneeded memory of the sequential preconditioner
@@ -372,8 +372,8 @@ private:
 
     void prepare_(const Matrix &M)
     {
-        BorderListCreator borderListCreator(problem_.gridView(),
-                                            problem_.model().dofMapper());
+        BorderListCreator borderListCreator(simulator_.gridView(),
+                                            simulator_.model().dofMapper());
 
         std::set<Ewoms::Linear::Index> blackList;
         borderListCreator.createBlackList(blackList);
@@ -407,32 +407,31 @@ private:
     void writeOverlapToVTK_()
     {
         for (int lookedAtRank = 0;
-             lookedAtRank < problem_.gridView().comm().size(); ++lookedAtRank) {
+             lookedAtRank < simulator_.gridView().comm().size(); ++lookedAtRank) {
             std::cout << "writing overlap for rank " << lookedAtRank << "\n"  << std::flush;
             typedef Dune::BlockVector<Dune::FieldVector<Scalar, 1> > VtkField;
-            int n = problem_.gridView().size(/*codim=*/dimWorld);
+            int n = simulator_.gridView().size(/*codim=*/dimWorld);
             VtkField isInOverlap(n);
             VtkField rankField(n);
             isInOverlap = 0.0;
             rankField = 0.0;
             assert(rankField.two_norm() == 0.0);
             assert(isInOverlap.two_norm() == 0.0);
-            auto vIt = problem_.gridView().template begin</*codim=*/dimWorld>();
-            const auto &vEndIt
-                = problem_.gridView().template end</*codim=*/dimWorld>();
+            auto vIt = simulator_.gridView().template begin</*codim=*/dimWorld>();
+            const auto &vEndIt = simulator_.gridView().template end</*codim=*/dimWorld>();
             const auto &overlap = overlappingMatrix_->overlap();
             for (; vIt != vEndIt; ++vIt) {
-                int nativeIdx = problem_.vertexMapper().map(*vIt);
+                int nativeIdx = simulator_.model().vertexMapper().map(*vIt);
                 int localIdx = overlap.foreignOverlap().nativeToLocal(nativeIdx);
                 if (localIdx < 0)
                     continue;
-                rankField[nativeIdx] = problem_.gridView().comm().rank();
+                rankField[nativeIdx] = simulator_.gridView().comm().rank();
                 if (overlap.peerHasIndex(lookedAtRank, localIdx))
                     isInOverlap[nativeIdx] = 1.0;
             };
 
             typedef Dune::VTKWriter<GridView> VtkWriter;
-            VtkWriter writer(problem_.gridView(), Dune::VTK::conforming);
+            VtkWriter writer(simulator_.gridView(), Dune::VTK::conforming);
             writer.addVertexData(isInOverlap, "overlap");
             writer.addVertexData(rankField, "rank");
 
@@ -442,7 +441,7 @@ private:
         }
     }
 
-    const Problem &problem_;
+    const Simulator &simulator_;
 
     OverlappingMatrix *overlappingMatrix_;
     OverlappingVector *overlappingb_;

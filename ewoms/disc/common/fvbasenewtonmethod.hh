@@ -102,6 +102,7 @@ class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
     typedef Ewoms::NewtonMethod<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
@@ -113,17 +114,15 @@ class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    FvBaseNewtonMethod(Problem &problem)
-        : ParentType(problem)
+    FvBaseNewtonMethod(Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!
      * \brief Register all run-time parameters of the Newton method.
      */
     static void registerParameters()
-    {
-        ParentType::registerParameters();
-    }
+    { ParentType::registerParameters(); }
 
 protected:
     friend class Ewoms::NewtonMethod<TypeTag>;
@@ -216,13 +215,13 @@ protected:
     }
 
     /*!
-     * \brief Returns a reference to the problem.
+     * \brief Returns a reference to the model.
      */
     Model &model_()
     { return ParentType::model(); }
 
     /*!
-     * \brief Returns a reference to the problem.
+     * \brief Returns a reference to the model.
      */
     const Model &model_() const
     { return ParentType::model(); }

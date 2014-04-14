@@ -90,7 +90,7 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
@@ -111,8 +111,8 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
     typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
 
 public:
-    VtkMultiPhaseModule(const Problem &problem)
-        : ParentType(problem)
+    VtkMultiPhaseModule(const Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -162,7 +162,7 @@ public:
         if (intrinsicPermeabilityOutput_()) this->resizeScalarBuffer_(intrinsicPermeability_);
 
         if (velocityOutput_()) {
-            Scalar nDof = this->problem_.model().numDof();
+            Scalar nDof = this->simulator_.model().numDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 velocity_[phaseIdx].resize(nDof);
                 for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
@@ -174,7 +174,7 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            Scalar nDof = this->problem_.model().numDof();
+            Scalar nDof = this->simulator_.model().numDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 potentialGradient_[phaseIdx].resize(nDof);
                 for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
@@ -200,7 +200,7 @@ public:
 
             if (porosityOutput_()) porosity_[I] = volVars.porosity();
             if (intrinsicPermeabilityOutput_()) {
-                const auto &K = elemCtx.problem().intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
+                const auto &K = volVars.intrinsicPermeability();
                 intrinsicPermeability_[I] = K[0][0];
             }
 
@@ -223,7 +223,7 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            // calculate velocities if requested by the problem
+            // calculate velocities if requested
             for (int faceIdx = 0; faceIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ faceIdx) {
                 const auto &fluxVars = elemCtx.fluxVars(faceIdx, /*timeIdx=*/0);
 
@@ -243,7 +243,7 @@ public:
         }
 
         if (velocityOutput_()) {
-            // calculate velocities if requested by the problem
+            // calculate velocities if requested
             for (int faceIdx = 0; faceIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ faceIdx) {
                 const auto &fluxVars = elemCtx.fluxVars(faceIdx, /*timeIdx=*/0);
 
@@ -305,7 +305,7 @@ public:
             this->commitScalarBuffer_(baseWriter, "intrinsicPerm", intrinsicPermeability_);
 
         if (velocityOutput_()) {
-            int nDof = this->problem_.model().numDof();
+            int nDof = this->simulator_.model().numDof();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
@@ -321,7 +321,7 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            int nDof = this->problem_.model().numDof();
+            int nDof = this->simulator_.model().numDof();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the

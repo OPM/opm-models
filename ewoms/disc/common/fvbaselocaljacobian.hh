@@ -77,6 +77,7 @@ class FvBaseLocalJacobian
 private:
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -105,15 +106,11 @@ private:
 
 public:
     FvBaseLocalJacobian()
-    {
-        internalElemContext_ = 0;
-        newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
-    }
+        : internalElemContext_(0)
+    { newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance); }
 
     ~FvBaseLocalJacobian()
-    {
-        delete internalElemContext_;
-    }
+    { delete internalElemContext_; }
 
     /*!
      * \brief Register all run-time parameters for the local jacobian.
@@ -131,13 +128,13 @@ public:
      * At this point we can assume that everything has been allocated,
      * although some objects may not yet be completely initialized.
      *
-     * \param prob The problem which we want to simulate.
+     * \param simulator The simulator object of the simulation.
      */
-    void init(Problem &prob)
+    void init(Simulator &simulator)
     {
-        problemPtr_ = &prob;
-        modelPtr_ = &prob.model();
-        internalElemContext_ = new ElementContext(prob);
+        simulatorPtr_ = &simulator;
+        delete internalElemContext_;
+        internalElemContext_ = new ElementContext(simulator);
     }
 
     /*!
@@ -284,10 +281,12 @@ protected:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
+    const Simulator &simulator_() const
+    { return *simulatorPtr_; }
     const Problem &problem_() const
-    { return *problemPtr_; }
+    { return simulatorPtr_->problem(); }
     const Model &model_() const
-    { return *modelPtr_; }
+    { return simulatorPtr_->model(); }
 
     /*!
      * \brief Returns the numeric difference method which is applied.
@@ -483,7 +482,7 @@ protected:
         }
     }
 
-    Problem *problemPtr_;
+    Simulator *simulatorPtr_;
     Model *modelPtr_;
 
     static Scalar newtonTolerance_;

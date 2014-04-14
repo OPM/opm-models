@@ -27,9 +27,11 @@
 
 #include <dune/grid/io/file/dgfparser.hh>
 
+#include <ewoms/io/basegridcreator.hh>
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
+#include <type_traits>
 #include <string>
 
 namespace Opm {
@@ -37,17 +39,18 @@ namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
-}
-} // namespace Opm
+}} // namespace Opm, Properties
 
 namespace Ewoms {
 /*!
  * \brief Provides a grid creator which reads Dune Grid Format (DGF) files
  */
 template <class TypeTag>
-class DgfGridCreator
+class DgfGridCreator : public BaseGridCreator<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+
     typedef Dune::GridPtr<Grid> GridPointer;
 
 public:
@@ -81,17 +84,11 @@ public:
     }
 
     /*!
-     * \brief Returns a reference to the grid.
-     */
-    static Grid &grid()
-    { return *gridPtr_; }
-
-    /*!
      * \brief Returns a reference to the grid pointer.
      *
      * This method is specific to the DgfGridCreator!
      */
-    static GridPointer &gridPtr()
+    static GridPointer &gridPointer()
     { return gridPtr_; }
 
     /*!

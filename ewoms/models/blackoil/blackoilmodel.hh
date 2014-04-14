@@ -169,7 +169,7 @@ class BlackOilModel
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
@@ -178,8 +178,8 @@ class BlackOilModel
     enum { numComponents = FluidSystem::numComponents };
 
 public:
-    BlackOilModel(Problem &problem)
-        : ParentType(problem)
+    BlackOilModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -304,12 +304,12 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which make sense for the blackoil model
-        this->outputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->problem_));
-        this->outputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+        this->outputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
+        this->outputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
 
         // add the output module for the Eclipse binary output
 #warning TODO
-        //this->outputModules_.push_back(new Ewoms::EclipseOutputBlackoilModule<TypeTag>(this->problem_));
+        //this->outputModules_.push_back(new Ewoms::EclipseOutputBlackoilModule<TypeTag>(this->simulator_));
     }
 
 private:

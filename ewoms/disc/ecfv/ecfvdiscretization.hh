@@ -94,15 +94,15 @@ class EcfvDiscretization : public FvBaseDiscretization<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     enum { dim = GridView::dimension };
 
 
 public:
-    EcfvDiscretization(Problem &problem)
-        : ParentType(problem)
+    EcfvDiscretization(Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!
@@ -122,7 +122,7 @@ public:
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper &dofMapper() const
-    { return this->problem_.elementMapper(); }
+    { return this->simulator_.problem().elementMapper(); }
 
     /*!
      * \brief Syncronize the values of the primary variables on the

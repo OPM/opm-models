@@ -41,7 +41,7 @@
 
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/linear/nullborderlistcreator.hh>
-#include <ewoms/common/timemanager.hh>
+#include <ewoms/common/simulator.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -61,11 +61,7 @@ class FvBaseDiscretization;
 namespace Opm {
 namespace Properties {
 //! Set the default type for the time manager
-SET_TYPE_PROP(FvBaseDiscretization, TimeManager, Ewoms::TimeManager<TypeTag>);
-
-//! Use the leaf grid view if not defined otherwise
-SET_TYPE_PROP(FvBaseDiscretization, GridView,
-              typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView);
+SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
 
 //! Mapper for the grid view's vertices.
 SET_TYPE_PROP(FvBaseDiscretization, VertexMapper,
@@ -247,6 +243,7 @@ class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
@@ -264,10 +261,10 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
-    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
@@ -290,9 +287,10 @@ public:
     // this constructor required to be explicitly specified because
     // we've defined a constructor above which deletes all implicitly
     // generated constructors in C++.
-    FvBaseDiscretization(Problem &problem)
-        : problem_(problem)
-        , gridView_(problem.gridView())
+    FvBaseDiscretization(Simulator &simulator)
+        : simulator_(simulator)
+        , gridView_(simulator.gridView())
+        , newtonMethod_(simulator)
     {}
 
     ~FvBaseDiscretization()
@@ -336,8 +334,6 @@ public:
 
     /*!
      * \brief Apply the initial conditions to the model.
-     *
-     * \copydetails Doxygen::problemParam
      */
     void init()
     {
@@ -355,9 +351,9 @@ public:
 
         dofTotalVolume_.resize(nDofs);
 
-        localJacobian_.init(problem_);
+        localJacobian_.init(simulator_);
         jacAsm_ = new JacobianAssembler();
-        jacAsm_->init(problem_);
+        jacAsm_->init(simulator_);
 
         asImp_().applyInitialSolution_();
         asImp_().syncOverlap();
@@ -369,6 +365,18 @@ public:
 
         asImp_().registerOutputModules_();
     }
+
+    /*!
+     * \brief Returns the newton method object
+     */
+    NewtonMethod &newtonMethod()
+    { return newtonMethod_; }
+
+    /*!
+     * \copydoc newtonMethod()
+     */
+    const NewtonMethod &newtonMethod() const
+    { return newtonMethod_; }
 
     /*!
      * \brief Return the thermodynamic hint for a entity on the grid
@@ -515,7 +523,7 @@ public:
 
         LocalBlockVector residual, storageTerm;
 
-        ElementContext elemCtx(problem_);
+        ElementContext elemCtx(simulator_);
         ElementIterator elemIt = gridView_.template begin<0>();
         const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -561,7 +569,7 @@ public:
     {
         storage = 0;
 
-        ElementContext elemCtx(problem_);
+        ElementContext elemCtx(simulator_);
         ElementIterator elemIt = gridView_.template begin<0>();
         const ElementIterator elemEndIt = gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -875,13 +883,13 @@ public:
      * \brief Mapper for vertices to indices.
      */
     const VertexMapper &vertexMapper() const
-    { return problem_.vertexMapper(); }
+    { return simulator_.problem().vertexMapper(); }
 
     /*!
      * \brief Mapper for elements to indices.
      */
     const ElementMapper &elementMapper() const
-    { return problem_.elementMapper(); }
+    { return simulator_.problem().elementMapper(); }
 
     /*!
      * \brief Resets the Jacobian matrix assembler, so that the
@@ -891,7 +899,7 @@ public:
     {
         delete jacAsm_;
         jacAsm_ = new JacobianAssembler;
-        jacAsm_->init(problem_);
+        jacAsm_->init(simulator_);
     }
 
     /*!
@@ -1032,7 +1040,7 @@ public:
         }
 
         // iterate over grid
-        ElementContext elemCtx(problem_);
+        ElementContext elemCtx(simulator_);
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
@@ -1066,7 +1074,7 @@ public:
      * \brief Reference to the grid view of the spatial domain.
      */
     const GridView &gridView() const
-    { return problem_.gridView(); }
+    { return gridView_; }
 
 protected:
     static bool storeVolumeVariables_()
@@ -1088,7 +1096,7 @@ protected:
     void registerOutputModules_()
     {
         // add the output modules available on all model
-        auto *mod = new Ewoms::VtkPrimaryVarsModule<TypeTag>(problem_);
+        auto *mod = new Ewoms::VtkPrimaryVarsModule<TypeTag>(simulator_);
         this->outputModules_.push_back(mod);
     }
 
@@ -1137,7 +1145,7 @@ protected:
         // initialize the volume of the FV boxes to zero
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
-        ElementContext elemCtx(problem_);
+        ElementContext elemCtx(simulator_);
 
         // iterate through the grid and evaluate the initial condition
         ElementIterator it = gridView_.template begin</*codim=*/0>();
@@ -1159,7 +1167,7 @@ protected:
 
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
-                problem_.initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
+                simulator_.problem().initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
                 Valgrind::CheckDefined(uCur[globalIdx]);
 
                 dofTotalVolume_[globalIdx] +=
@@ -1197,10 +1205,12 @@ protected:
 
     // the problem we want to solve. defines the constitutive
     // relations, matxerial laws, etc.
-    Problem &problem_;
+    Simulator &simulator_;
 
     // the representation of the spatial domain of the problem
     GridView gridView_;
+
+    NewtonMethod newtonMethod_;
 
     // calculates the local jacobian matrix for a given element
     LocalJacobian localJacobian_;

@@ -99,13 +99,14 @@ class VcfvDiscretization : public FvBaseDiscretization<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
     enum { dim = GridView::dimension };
 
 
 public:
-    VcfvDiscretization(Problem &problem)
-        : ParentType(problem)
+    VcfvDiscretization(Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!
@@ -125,7 +126,7 @@ public:
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper &dofMapper() const
-    { return this->problem_.vertexMapper(); }
+    { return this->simulator_.problem().vertexMapper(); }
 
     /*!
      * \brief Serializes the current state of the model.

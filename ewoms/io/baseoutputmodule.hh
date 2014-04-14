@@ -49,7 +49,7 @@ NEW_PROP_TAG(NumComponents);
 NEW_PROP_TAG(NumEq);
 
 NEW_PROP_TAG(Model);
-NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(ElementContext);
@@ -68,7 +68,7 @@ namespace Ewoms {
 template<class TypeTag>
 class BaseOutputModule
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -92,8 +92,8 @@ public:
 
     typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
 
-    BaseOutputModule(const Problem &problem)
-        : problem_(problem)
+    BaseOutputModule(const Simulator &simulator)
+        : simulator_(simulator)
     {}
 
     virtual ~BaseOutputModule()
@@ -144,11 +144,11 @@ protected:
     {
         Scalar n;
         if (bufferType == VertexBuffer)
-            n = problem_.gridView().size(dim);
+            n = simulator_.gridView().size(dim);
         else if (bufferType == ElementBuffer)
-            n = problem_.gridView().size(0);
+            n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = problem_.model().numDof();
+            n = simulator_.model().numDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -165,11 +165,11 @@ protected:
     {
         Scalar n;
         if (bufferType == VertexBuffer)
-            n = problem_.gridView().size(dim);
+            n = simulator_.gridView().size(dim);
         else if (bufferType == ElementBuffer)
-            n = problem_.gridView().size(0);
+            n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = problem_.model().numDof();
+            n = simulator_.model().numDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -188,11 +188,11 @@ protected:
     {
         Scalar n;
         if (bufferType == VertexBuffer)
-            n = problem_.gridView().size(dim);
+            n = simulator_.gridView().size(dim);
         else if (bufferType == ElementBuffer)
-            n = problem_.gridView().size(0);
+            n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = problem_.model().numDof();
+            n = simulator_.model().numDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -211,11 +211,11 @@ protected:
     {
         Scalar n;
         if (bufferType == VertexBuffer)
-            n = problem_.gridView().size(dim);
+            n = simulator_.gridView().size(dim);
         else if (bufferType == ElementBuffer)
-            n = problem_.gridView().size(0);
+            n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = problem_.model().numDof();
+            n = simulator_.model().numDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -234,11 +234,11 @@ protected:
     {
         Scalar n;
         if (bufferType == VertexBuffer)
-            n = problem_.gridView().size(dim);
+            n = simulator_.gridView().size(dim);
         else if (bufferType == ElementBuffer)
-            n = problem_.gridView().size(0);
+            n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = problem_.model().numDof();
+            n = simulator_.model().numDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -278,7 +278,7 @@ protected:
     {
         char name[512];
         for (int i = 0; i < numEq; ++i) {
-            std::string eqName = problem_.model().primaryVarName(i);
+            std::string eqName = simulator_.model().primaryVarName(i);
             snprintf(name, 512, pattern, eqName.c_str());
 
             if (bufferType == DofBuffer)
@@ -411,7 +411,7 @@ protected:
                                  const char *name)
     { baseWriter.attachVectorVertexData(buffer, name); }
 
-    const Problem &problem_;
+    const Simulator &simulator_;
 };
 
 } // namespace Ewoms

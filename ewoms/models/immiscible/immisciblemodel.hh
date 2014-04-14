@@ -197,6 +197,7 @@ class ImmiscibleModel
     typedef Ewoms::MultiPhaseBaseModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -216,8 +217,8 @@ class ImmiscibleModel
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    ImmiscibleModel(Problem &problem)
-        : ParentType(problem)
+    ImmiscibleModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -343,7 +344,7 @@ public:
         ParentType::registerOutputModules_();
 
         if (enableEnergy)
-            this->outputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+            this->outputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
 private:

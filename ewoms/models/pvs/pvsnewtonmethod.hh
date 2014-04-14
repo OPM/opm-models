@@ -39,23 +39,13 @@ template <class TypeTag>
 class PvsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
 public:
-    PvsNewtonMethod(Problem &problem) : ParentType(problem)
+    PvsNewtonMethod(Simulator &simulator) : ParentType(simulator)
     {}
-
-    /*!
-     * \copydoc NewtonMethod::converged
-     */
-    bool converged() const
-    {
-        //        if (this->problem().model().switched())
-        //            return false;
-
-        return ParentType::converged();
-    }
 
     // HACK which is necessary because GCC 4.4 does not support
     // being a friend of typedefs

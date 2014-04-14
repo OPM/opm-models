@@ -232,7 +232,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -245,8 +245,8 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
 public:
-    StokesModel(Problem &problem)
-        : ParentType(problem)
+    StokesModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -338,7 +338,7 @@ public:
             moleFraction[compIdx] = vtkWriter->allocateManagedScalarBuffer(numVertices);
 
         // iterate over grid
-        ElementContext elemCtx(this->problem_);
+        ElementContext elemCtx(this->simulator_);
 
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();

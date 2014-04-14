@@ -52,6 +52,9 @@ namespace Properties {
 //! are attached
 NEW_TYPE_TAG(NewtonMethod);
 
+//! The simulation management class of the simulation
+NEW_PROP_TAG(Simulator);
+
 //! The physical model which we would like to solve
 NEW_PROP_TAG(Problem);
 
@@ -69,9 +72,6 @@ NEW_PROP_TAG(SolutionVector);
 
 //! Vector containing a quantity of for equation on the whole grid
 NEW_PROP_TAG(GlobalEqVector);
-
-//! Specifies the class of the physical problem
-NEW_PROP_TAG(Problem);
 
 //! The class which linearizes the non-linear system of equations
 NEW_PROP_TAG(JacobianAssembler);
@@ -144,6 +144,7 @@ class NewtonMethod
 {
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
 
@@ -158,9 +159,9 @@ class NewtonMethod
     typedef Dune::CollectiveCommunication<Communicator> CollectiveCommunication;
 
 public:
-    NewtonMethod(Problem &problem)
-        : problem_(problem), endIterMsgStream_(std::ostringstream::out),
-          linearSolver_(problem), comm_(Dune::MPIHelper::getCommunicator()),
+    NewtonMethod(Simulator &simulator)
+        : simulator_(simulator), endIterMsgStream_(std::ostringstream::out),
+          linearSolver_(simulator), comm_(Dune::MPIHelper::getCommunicator()),
           convergenceWriter_(asImp_())
     {
         lastError_ = 1e100;
@@ -205,28 +206,28 @@ public:
     { return error_ <= tolerance_(); }
 
     /*!
-     * \brief Returns a reference to the current numeric problem.
+     * \brief Returns a reference to the object describing the current physical problem.
      */
     Problem &problem()
-    { return problem_; }
+    { return simulator_.problem(); }
 
     /*!
-     * \brief Returns a reference to the current numeric problem.
+     * \brief Returns a reference to the object describing the current physical problem.
      */
     const Problem &problem() const
-    { return problem_; }
+    { return simulator_.problem(); }
 
     /*!
      * \brief Returns a reference to the numeric model.
      */
     Model &model()
-    { return problem().model(); }
+    { return simulator_.model(); }
 
     /*!
      * \brief Returns a reference to the numeric model.
      */
     const Model &model() const
-    { return problem().model(); }
+    { return simulator_.model(); }
 
     /*!
      * \brief Returns the number of iterations done since the Newton method
@@ -670,7 +671,7 @@ protected:
     void succeeded_()
     {}
 
-    Problem &problem_;
+    Simulator &simulator_;
 
     Dune::Timer assembleTimer_;
     Dune::Timer solveTimer_;

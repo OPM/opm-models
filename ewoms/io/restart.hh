@@ -89,12 +89,13 @@ public:
     /*!
      * \brief Write the current state of the model to disk.
      */
-    template <class Problem>
-    void serializeBegin(Problem &problem)
+    template <class Simulator>
+    void serializeBegin(Simulator &simulator)
     {
-        const std::string magicCookie = magicRestartCookie_(problem.gridView());
-        fileName_ = restartFileName_(problem.gridView(), problem.name(),
-                                     problem.timeManager().time());
+        const std::string magicCookie = magicRestartCookie_(simulator.gridView());
+        fileName_ = restartFileName_(simulator.gridView(),
+                                     simulator.problem().name(),
+                                     simulator.time());
 
         // open output file and write magic cookie
         outStream_.open(fileName_.c_str());
@@ -158,10 +159,10 @@ public:
      * \brief Start reading a restart file at a certain simulated
      *        time.
      */
-    template <class Problem>
-    void deserializeBegin(Problem &problem, double t)
+    template <class Simulator>
+    void deserializeBegin(Simulator &simulator, double t)
     {
-        fileName_ = restartFileName_(problem.gridView(), problem.name(), t);
+        fileName_ = restartFileName_(simulator.gridView(), simulator.problem().name(), t);
 
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
@@ -180,7 +181,7 @@ public:
         }
         inStream_.seekg(0, std::ios::beg);
 
-        const std::string magicCookie = magicRestartCookie_(problem.gridView());
+        const std::string magicCookie = magicRestartCookie_(simulator.gridView());
 
         deserializeSectionBegin(magicCookie);
         deserializeSectionEnd();

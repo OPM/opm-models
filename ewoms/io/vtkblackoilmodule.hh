@@ -63,7 +63,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
@@ -78,8 +78,8 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
 public:
-    VtkBlackOilModule(const Problem &problem)
-        : ParentType(problem)
+    VtkBlackOilModule(const Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!

@@ -176,7 +176,7 @@ class FlashModel
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -191,8 +191,8 @@ class FlashModel
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    FlashModel(Problem &problem)
-        : ParentType(problem)
+    FlashModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -303,13 +303,13 @@ public:
 
         // add the VTK output modules meaninful for the model
         this->outputModules_.push_back(
-            new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+            new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
             this->outputModules_.push_back(
-                new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
+                new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
             this->outputModules_.push_back(
-                new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+                new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 };
 

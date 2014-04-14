@@ -45,7 +45,7 @@ class StokesProblem : public Ewoms::FvBaseProblem<TypeTag>
     typedef Ewoms::FvBaseProblem<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams)
         HeatConductionLawParams;
@@ -57,10 +57,11 @@ class StokesProblem : public Ewoms::FvBaseProblem<TypeTag>
 
 public:
     /*!
-     * \copydoc FvBaseProblem::FvBaseProblem(TimeManager &, const GridView &)
+     * \copydoc FvBaseProblem::FvBaseProblem(Simulator &, const GridView &)
      */
-    StokesProblem(TimeManager &timeManager, const GridView &gridView)
-        : ParentType(timeManager, gridView), gravity_(0)
+    StokesProblem(Simulator &simulator)
+        : ParentType(simulator)
+        , gravity_(0)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             gravity_[dim - 1] = -9.81;

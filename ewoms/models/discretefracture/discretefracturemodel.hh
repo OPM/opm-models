@@ -101,11 +101,11 @@ template <class TypeTag>
 class DiscreteFractureModel : public ImmiscibleModel<TypeTag>
 {
     typedef ImmiscibleModel<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
 public:
-    DiscreteFractureModel(Problem &problem)
-        : ParentType(problem)
+    DiscreteFractureModel(Simulator &simulator)
+        : ParentType(simulator)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableVolumeVariablesCache)) {
             OPM_THROW(std::runtime_error,
@@ -136,7 +136,7 @@ public:
         ParentType::registerOutputModules_();
 
         this->outputModules_.push_back(
-            new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->problem_));
+            new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->simulator_));
     }
 };
 } // namespace Ewoms

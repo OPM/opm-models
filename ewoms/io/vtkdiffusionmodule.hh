@@ -65,7 +65,7 @@ class VtkDiffusionModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -78,8 +78,8 @@ class VtkDiffusionModule : public BaseOutputModule<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
 public:
-    VtkDiffusionModule(const Problem &problem)
-        : ParentType(problem)
+    VtkDiffusionModule(const Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!

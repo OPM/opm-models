@@ -57,11 +57,10 @@ private:
 
     typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
 
-    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, TimeManager) TimeManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
@@ -90,19 +89,17 @@ public:
     /*!
      * \copydoc Doxygen::defaultProblemConstructor
      *
-     * \param timeManager The time manager of the simulation
+     * \param simulator The time manager of the simulation
      * \param gridView The view on the DUNE grid which ought to be
      *                 used (normally the leaf grid view)
      */
-    FvBaseProblem(TimeManager &timeManager, const GridView &gridView)
-        : gridView_(gridView)
-        , elementMapper_(gridView)
-        , vertexMapper_(gridView)
+    FvBaseProblem(Simulator &simulator)
+        : gridView_(simulator.gridView())
+        , elementMapper_(gridView_)
+        , vertexMapper_(gridView_)
         , boundingBoxMin_(std::numeric_limits<double>::max())
         , boundingBoxMax_(-std::numeric_limits<double>::max())
-        , timeManager_(&timeManager)
-        , model_(asImp_())
-        , newtonMethod_(asImp_())
+        , simulator_(simulator)
         , defaultVtkWriter_(gridView_, Implementation::name())
     {
         // calculate the bounding box of the local partition of the grid view
@@ -139,7 +136,7 @@ public:
     }
 
     /*!
-     * \brief Called by the Ewoms::TimeManager in order to
+     * \brief Called by the Ewoms::Simulator in order to
      *        initialize the problem.
      *
      * If you overload this method don't forget to call
@@ -284,13 +281,13 @@ public:
     // \{
 
     /*!
-     * \brief Called by the time manager before the time integration.
+     * \brief Called by the simulator before the time integration.
      */
     void preTimeStep()
     {}
 
     /*!
-     * \brief Called by Ewoms::TimeManager in order to do a time
+     * \brief Called by Ewoms::Simulator in order to do a time
      *        integration on the model.
      */
     void timeIntegration()
@@ -298,35 +295,35 @@ public:
         int maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
         Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
 
-        // if the time step size of the time manager is smaller than
+        // if the time step size of the simulator is smaller than
         // the specified minimum size and we're not going to finish
         // the simulation or an episode, try with the minimum size.
-        if (timeManager().timeStepSize() < minTimeStepSize &&
-            !timeManager().episodeWillBeOver() &&
-            !timeManager().willBeFinished())
+        if (simulator().timeStepSize() < minTimeStepSize &&
+            !simulator().episodeWillBeOver() &&
+            !simulator().willBeFinished())
         {
-            timeManager().setTimeStepSize(minTimeStepSize);
+            simulator().setTimeStepSize(minTimeStepSize);
         }
 
         for (int i = 0; i < maxFails; ++i) {
-            bool converged = model_.update(newtonMethod_);
+            bool converged = model().update(newtonMethod());
             if (converged) {
-                assembleTime_ += newtonMethod_.assembleTime();
-                solveTime_ += newtonMethod_.solveTime();
-                updateTime_ += newtonMethod_.updateTime();
+                assembleTime_ += newtonMethod().assembleTime();
+                solveTime_ += newtonMethod().solveTime();
+                updateTime_ += newtonMethod().updateTime();
 
                 return;
             }
 
-            assembleTime_ += newtonMethod_.assembleTime();
-            solveTime_ += newtonMethod_.solveTime();
-            updateTime_ += newtonMethod_.updateTime();
+            assembleTime_ += newtonMethod().assembleTime();
+            solveTime_ += newtonMethod().solveTime();
+            updateTime_ += newtonMethod().updateTime();
 
-            Scalar dt = timeManager().timeStepSize();
+            Scalar dt = simulator().timeStepSize();
             Scalar nextDt = dt / 2;
             if (nextDt < minTimeStepSize)
                 break; // give up: we can't make the time step smaller anymore!
-            timeManager().setTimeStepSize(nextDt);
+            simulator().setTimeStepSize(nextDt);
 
             // update failed
             if (gridView().comm().rank() == 0)
@@ -339,30 +336,18 @@ public:
                    "Newton solver didn't converge after "
                    << maxFails
                    << " time-step divisions. dt="
-                   << timeManager().timeStepSize());
+                   << simulator().timeStepSize());
     }
 
     /*!
-     * \brief Returns the newton method object
-     */
-    NewtonMethod &newtonMethod()
-    { return newtonMethod_; }
-
-    /*!
-     * \copydoc newtonMethod()
-     */
-    const NewtonMethod &newtonMethod() const
-    { return newtonMethod_; }
-
-    /*!
-     * \brief Called by Ewoms::TimeManager whenever a solution for a
+     * \brief Called by Ewoms::Simulator whenever a solution for a
      *        time step has been computed and the simulation time has
      *        been updated.
      */
     Scalar nextTimeStepSize()
     {
         return std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
-                        newtonMethod_.suggestTimeStepSize(timeManager().timeStepSize()));
+                        newtonMethod().suggestTimeStepSize(simulator().timeStepSize()));
     }
 
     /*!
@@ -375,8 +360,8 @@ public:
      */
     bool shouldWriteRestartFile() const
     {
-        return timeManager().timeStepIndex() > 0 &&
-            (timeManager().timeStepIndex() % 10 == 0);
+        return simulator().timeStepIndex() > 0 &&
+            (simulator().timeStepIndex() % 10 == 0);
     }
 
     /*!
@@ -391,19 +376,19 @@ public:
     { return true; }
 
     /*!
-     * \brief Called by the time manager after the time integration to
+     * \brief Called by the simulator after the time integration to
      *        do some post processing on the solution.
      */
     void postTimeStep()
     { }
 
     /*!
-     * \brief Called by the time manager after everything which can be
+     * \brief Called by the simulator after everything which can be
      *        done about the current time step is finished and the
      *        model should be prepared to do the next time integration.
      */
     void advanceTimeLevel()
-    { model_.advanceTimeLevel(); }
+    { model().advanceTimeLevel(); }
 
     /*!
      * \brief Called when the end of an simulation episode is reached.
@@ -461,28 +446,40 @@ public:
     { return elementMapper_; }
 
     /*!
-     * \brief Returns TimeManager object used by the simulation
+     * \brief Returns Simulator object used by the simulation
      */
-    TimeManager &timeManager()
-    { return *timeManager_; }
+    Simulator &simulator()
+    { return simulator_; }
 
     /*!
-     * \copydoc timeManager()
+     * \copydoc simulator()
      */
-    const TimeManager &timeManager() const
-    { return *timeManager_; }
+    const Simulator &simulator() const
+    { return simulator_; }
 
     /*!
      * \brief Returns numerical model used for the problem.
      */
     Model &model()
-    { return model_; }
+    { return simulator_.model(); }
 
     /*!
      * \copydoc model()
      */
     const Model &model() const
-    { return model_; }
+    { return simulator_.model(); }
+
+    /*!
+     * \brief Returns object which implements the Newton method.
+     */
+    NewtonMethod &newtonMethod()
+    { return model().newtonMethod(); }
+
+    /*!
+     * \brief Returns object which implements the Newton method.
+     */
+    const NewtonMethod &newtonMethod() const
+    { return model().newtonMethod(); }
     // \}
 
     /*!
@@ -503,13 +500,13 @@ public:
     {
         typedef Ewoms::Restart Restarter;
         Restarter res;
-        res.serializeBegin(asImp_());
+        res.serializeBegin(simulator_);
         if (gridView().comm().rank() == 0)
             std::cout << "Serialize to file '" << res.fileName() << "'"
-                      << ", next time step size: " << asImp_().timeManager().timeStepSize()
+                      << ", next time step size: " << asImp_().simulator().timeStepSize()
                       << "\n" << std::flush;
 
-        timeManager().serialize(res);
+        simulator().serialize(res);
         asImp_().serialize(res);
         res.serializeEnd();
     }
@@ -547,10 +544,10 @@ public:
 
         Restarter res;
 
-        res.deserializeBegin(asImp_(), tRestart);
+        res.deserializeBegin(simulator_, tRestart);
         if (gridView().comm().rank() == 0)
             std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
-        timeManager().deserialize(res);
+        simulator().deserialize(res);
         asImp_().deserialize(res);
         res.deserializeEnd();
     }
@@ -589,7 +586,7 @@ public:
                           << "\n" << std::flush;
 
             // calculate the time _after_ the time was updated
-            Scalar t = timeManager().time() + timeManager().timeStepSize();
+            Scalar t = simulator().time() + simulator().timeStepSize();
             defaultVtkWriter_.beginWrite(t);
             model().prepareOutputFields();
             model().appendOutputFields(defaultVtkWriter_);
@@ -621,9 +618,7 @@ private:
     GlobalPosition boundingBoxMax_;
 
     // Attributes required for the actual simulation
-    TimeManager *timeManager_;
-    Model model_;
-    NewtonMethod newtonMethod_;
+    Simulator &simulator_;
     mutable VtkMultiWriter defaultVtkWriter_;
 
     // CPU time keeping

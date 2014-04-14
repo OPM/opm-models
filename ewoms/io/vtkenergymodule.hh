@@ -66,7 +66,7 @@ class VtkEnergyModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
@@ -79,8 +79,8 @@ class VtkEnergyModule : public BaseOutputModule<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
 public:
-    VtkEnergyModule(const Problem &problem)
-        : ParentType(problem)
+    VtkEnergyModule(const Simulator &simulator)
+        : ParentType(simulator)
     {
     }
 

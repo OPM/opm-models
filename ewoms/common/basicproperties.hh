@@ -132,6 +132,12 @@ SET_TYPE_PROP(NumericModel, GridCreator, Ewoms::DgfGridCreator<TypeTag>);
 //! Set a value for the GridFile property
 SET_STRING_PROP(NumericModel, GridFile, "");
 
+//! Use the leaf grid view by default.
+//!
+//! Except for spatial refinement, there is rarly a reason to use
+//! anything else...
+SET_TYPE_PROP(NumericModel, GridView, typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView);
+
 //! Set a value for the ParameterFile property
 SET_STRING_PROP(NumericModel, ParameterFile, "");
 

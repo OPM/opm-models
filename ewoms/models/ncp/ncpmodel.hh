@@ -216,6 +216,7 @@ class NcpModel
     typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -242,8 +243,8 @@ class NcpModel
     typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
 public:
-    NcpModel(Problem &problem)
-        : ParentType(problem)
+    NcpModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -446,13 +447,13 @@ public:
         ParentType::registerOutputModules_();
 
         this->outputModules_.push_back(
-            new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+            new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
             this->outputModules_.push_back(
-                new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
+                new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
             this->outputModules_.push_back(
-                new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+                new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
     mutable Scalar referencePressure_;

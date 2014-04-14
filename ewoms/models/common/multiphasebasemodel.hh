@@ -119,6 +119,7 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -132,8 +133,8 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     enum { numComponents = FluidSystem::numComponents };
 
 public:
-    MultiPhaseBaseModel(Problem &problem)
-        : ParentType(problem)
+    MultiPhaseBaseModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -162,7 +163,7 @@ public:
         storage = 0;
         EqVector tmp;
 
-        ElementContext elemCtx(this->problem_);
+        ElementContext elemCtx(this->simulator_);
         ElementIterator elemIt = this->gridView_.template begin<0>();
         const ElementIterator elemEndIt = this->gridView_.template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -197,8 +198,8 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules available on all model
-        this->outputModules_.push_back(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->problem_));
-        this->outputModules_.push_back(new Ewoms::VtkTemperatureModule<TypeTag>(this->problem_));
+        this->outputModules_.push_back(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->simulator_));
+        this->outputModules_.push_back(new Ewoms::VtkTemperatureModule<TypeTag>(this->simulator_));
     }
 
 private:

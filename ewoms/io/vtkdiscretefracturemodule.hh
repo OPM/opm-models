@@ -77,10 +77,11 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
+    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
@@ -98,8 +99,8 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::PhaseVectorBuffer PhaseVectorBuffer;
 
 public:
-    VtkDiscreteFractureModule(const Problem &problem)
-        : ParentType(problem)
+    VtkDiscreteFractureModule(const Simulator &simulator)
+        : ParentType(simulator)
     { }
 
     /*!
@@ -148,7 +149,7 @@ public:
             this->resizeScalarBuffer_(fractureVolumeFraction_);
 
         if (velocityOutput_()) {
-            int nDof = this->problem_.model().numDof();
+            int nDof = this->simulator_.model().numDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 fractureVelocity_[phaseIdx].resize(nDof);
                 for (int dofIdx = 0; dofIdx < nDof; ++dofIdx) {
@@ -166,7 +167,7 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        const auto &fractureMapper = elemCtx.problem().fractureMapper();
+        const auto &fractureMapper = GridCreator::fractureMapper();
 
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
@@ -197,7 +198,7 @@ public:
         }
 
         if (velocityOutput_()) {
-            // calculate velocities if requested by the problem
+            // calculate velocities if requested by the simulator
             for (int scvfIdx = 0; scvfIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ scvfIdx) {
                 const auto &fluxVars = elemCtx.fluxVars(scvfIdx, /*timeIdx=*/0);
 
@@ -258,12 +259,12 @@ public:
             // divide the fracture volume by the total volume of the finite
             // volumes
             for (unsigned I = 0; I < fractureVolumeFraction_.size(); ++I)
-                fractureVolumeFraction_[I] /= this->problem_.model().dofTotalVolume(I);
+                fractureVolumeFraction_[I] /= this->simulator_.model().dofTotalVolume(I);
             this->commitScalarBuffer_(baseWriter, "fractureVolumeFraction", fractureVolumeFraction_);
         }
 
         if (velocityOutput_()) {
-            int nDof = this->problem_.model().numDof();
+            int nDof = this->simulator_.model().numDof();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the

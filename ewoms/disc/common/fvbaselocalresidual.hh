@@ -516,7 +516,7 @@ protected:
                                     /*timeIdx=*/1);
 
             tmp -= tmp2;
-            tmp *= scvVolume / elemCtx.problem().timeManager().timeStepSize();
+            tmp *= scvVolume / elemCtx.simulator().timeStepSize();
 
             storage[dofIdx] += tmp;
             residual[dofIdx] += tmp;

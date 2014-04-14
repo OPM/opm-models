@@ -215,6 +215,7 @@ class PvsModel
     typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -238,8 +239,8 @@ class PvsModel
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    PvsModel(Problem &problem)
-        : ParentType(problem)
+    PvsModel(Simulator &simulator)
+        : ParentType(simulator)
     {}
 
     /*!
@@ -468,7 +469,7 @@ public:
         numSwitched_ = 0;
 
         std::vector<bool> visited(this->numDof(), false);
-        ElementContext elemCtx(this->problem_);
+        ElementContext elemCtx(this->simulator_);
 
         ElementIterator elemIt = this->gridView_.template begin<0>();
         ElementIterator elemEndIt = this->gridView_.template end<0>();
@@ -518,7 +519,7 @@ public:
         numSwitched_ = this->gridView_.comm().sum(numSwitched_);
 
         if (verbosity_ > 0)
-            this->problem_.newtonMethod().endIterMsg()
+            this->simulator_.model().newtonMethod().endIterMsg()
                 << ", num switched=" << numSwitched_;
     }
 
@@ -564,15 +565,15 @@ public:
 
         // add the VTK output modules which are meaningful for the model
         this->outputModules_.push_back(
-            new Ewoms::VtkPhasePresenceModule<TypeTag>(this->problem_));
+            new Ewoms::VtkPhasePresenceModule<TypeTag>(this->simulator_));
         this->outputModules_.push_back(
-            new Ewoms::VtkCompositionModule<TypeTag>(this->problem_));
+            new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
             this->outputModules_.push_back(
-                new Ewoms::VtkDiffusionModule<TypeTag>(this->problem_));
+                new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
             this->outputModules_.push_back(
-                new Ewoms::VtkEnergyModule<TypeTag>(this->problem_));
+                new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
     mutable Scalar referencePressure_;

@@ -51,7 +51,7 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -63,7 +63,7 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
-    RichardsNewtonMethod(Problem &problem) : ParentType(problem)
+    RichardsNewtonMethod(Simulator &simulator) : ParentType(simulator)
     {}
 
     // HACK necessary for GCC 4.4
@@ -81,8 +81,9 @@ protected:
                  const GlobalEqVector &deltaU,
                  const GlobalEqVector &previousResidual)
     {
-        const auto &assembler = this->problem().model().jacobianAssembler();
-        const auto &problem = this->problem();
+        const auto &assembler = this->simulator_.model().jacobianAssembler();
+        const auto &simulator = this->simulator_;
+        const auto &problem = simulator.problem();
 
         ParentType::update_(uCurrentIter, uLastIter, deltaU, previousResidual);
 
@@ -91,11 +92,10 @@ protected:
             return;
 
         // clamp saturation change to at most 20% per iteration
-        ElementContext elemCtx(problem);
+        ElementContext elemCtx(simulator);
 
-        ElementIterator elemIt = problem.gridView().template begin<0>();
-        const ElementIterator &elemEndIt
-            = problem.gridView().template end<0>();
+        ElementIterator elemIt = simulator.gridView().template begin<0>();
+        const ElementIterator &elemEndIt = simulator.gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
                 // don't look at green elements, since they
@@ -118,7 +118,7 @@ protected:
                 Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
                 // set the temperatures
-                Scalar T = elemCtx.problem().temperature(elemCtx, dofIdx, /*timeIdx=*/0);
+                Scalar T = problem.temperature(elemCtx, dofIdx, /*timeIdx=*/0);
                 fs.setTemperature(T);
 
                 /////////
