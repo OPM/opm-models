@@ -106,7 +106,13 @@ class DiscreteFractureModel : public ImmiscibleModel<TypeTag>
 public:
     DiscreteFractureModel(Problem &problem)
         : ParentType(problem)
-    {}
+    {
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableVolumeVariablesCache)) {
+            OPM_THROW(std::runtime_error,
+                      "The discrete fracture model does not work in conjunction "
+                      "with volume variables caching");
+        }
+    }
 
     /*!
      * \brief Register all run-time parameters for the immiscible model.
