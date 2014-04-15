@@ -13,6 +13,8 @@ set (ewoms_CONFIG_VAR
 set (ewoms_DEPS
 	# compile with C++0x/11 support if available
 	"CXX11Features REQUIRED"
+	# external libraries
+	"ERT"
 	# DUNE prerequisites
 	"dune-common REQUIRED"
 	"dune-localfunctions REQUIRED"
@@ -21,6 +23,8 @@ set (ewoms_DEPS
 	"dune-istl REQUIRED"
 	"opm-core REQUIRED"
 	"opm-material REQUIRED"
+	"opm-parser"
+	"dune-cornerpoint"
 	# valgrind client requests
 	"Valgrind"
 	# quadruple precision floating point calculations
