@@ -37,7 +37,10 @@ macro(EwomsAddTest TestName)
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
 
-  if (NOT CURTEST_ONLY_COMPILE)
+  if (CURTEST_ONLY_COMPILE)
+    add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+    target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})
+  else()
     set(SKIP_CUR_TEST "1")
     # the "x " is a hack which is required to prevent CMake from
     # evaluating the condition in the string. (which might
