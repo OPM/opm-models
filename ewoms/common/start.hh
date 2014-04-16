@@ -239,12 +239,18 @@ int start(int argc, char **argv)
         if (myRank == 0) {
             std::string endParametersSeparator("# [end of parameters]\n");
             if (printParams) {
-                if (printParams == 1 || !isatty(fileno(stdout)))
+                bool printSeparator = false;
+                if (printParams == 1 || !isatty(fileno(stdout))) {
                     Ewoms::Parameters::printValues<TypeTag>();
+                    printSeparator = true;
+                }
                 else
                     // always print the list of specified but unused parameters
-                    Ewoms::Parameters::printUnused<TypeTag>();
-                std::cout << endParametersSeparator;
+                    printSeparator =
+                        printSeparator ||
+                        Ewoms::Parameters::printUnused<TypeTag>();
+                if (printSeparator)
+                    std::cout << endParametersSeparator;
             }
             else
                 // always print the list of specified but unused parameters
