@@ -5,6 +5,8 @@
 set (ewoms_CONFIG_VAR
 	HAVE_QUAD
 	HAVE_VALGRIND
+  HAVE_OPM_PARSER
+  HAVE_DUNE_CORNERPOINT
 	)
 
 # dependencies
