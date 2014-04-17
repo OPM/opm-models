@@ -123,7 +123,6 @@ EwomsAddTest(test_stokes SOURCES tests/test_stokes.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUND)
 
-  ONLY_COMPILE
 # test for the parallelization of the element centered finite volume
 # discretization (using the non-isothermal NCP model and BiCGSTAB +
 # ILU0)
