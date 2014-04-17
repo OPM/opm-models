@@ -280,10 +280,11 @@ public:
      */
     Scalar timeStepSize() const
     {
-        Scalar maximumTimeStepSize = std::max(1e-9, maxTimeStepSize());
-        Scalar timeStepSize = std::max(1e-9, timeStepSize_);
+        Scalar maximumTimeStepSize =
+            std::min(episodeMaxTimeStepSize(),
+                     std::max<Scalar>(0.0, endTime() - this->time()));
 
-        return std::min(timeStepSize, maximumTimeStepSize);
+        return std::min(timeStepSize_, maximumTimeStepSize);
     }
 
     /*!
@@ -312,7 +313,8 @@ public:
     bool finished() const
     {
         assert(timeStepSize_ >= 0.0);
-        return finished_ || this->time() + std::max(std::abs(this->time()), timeStepSize_)*1e-8 >= endTime();
+        return finished_
+            || (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8 >= endTime());
     }
 
     /*!
@@ -322,11 +324,9 @@ public:
     bool willBeFinished() const
     {
         return
-            finished_
-            || this->time()
-               + std::max(std::abs(this->time()), timeStepSize_)*1e-8
-               + timeStepSize_
-               >= endTime();
+            finished_ ||
+            (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8 + timeStepSize_
+             >= endTime());
     }
 
     /*!
@@ -413,7 +413,7 @@ public:
     bool episodeWillBeOver() const
     {
         return
-            this->time() + timeStepSize_
+            this->time() + timeStepSize()
             >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
     }
 
