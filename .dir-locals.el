@@ -1,5 +1,6 @@
 ;; <http://www.gnu.org/software/emacs/manual/html_node/emacs/Directory-Variables.html>
-((c-mode . (
+
+((c++-mode . (
             ; indentation of blocks is 4 characters ...
             (c-basic-offset . 4)
             ; ... and we use SPACES, _not_ TABULATORS!
