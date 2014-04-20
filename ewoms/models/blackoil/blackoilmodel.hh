@@ -24,7 +24,7 @@
 #ifndef EWOMS_BLACK_OIL_MODEL_HH
 #define EWOMS_BLACK_OIL_MODEL_HH
 
-#include "blackoilproperties.hh"
+#include "blackoilproblem.hh"
 #include "blackoilindices.hh"
 #include "blackoilfluxvariables.hh"
 #include "blackoilprimaryvariables.hh"
@@ -32,6 +32,7 @@
 #include "blackoilratevector.hh"
 #include "blackoilboundaryratevector.hh"
 #include "blackoillocalresidual.hh"
+#include "blackoilproperties.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/io/vtkcompositionmodule.hh>
@@ -61,6 +62,9 @@ SET_TYPE_PROP(BlackOilModel, LocalResidual,
 
 //! The Model property
 SET_TYPE_PROP(BlackOilModel, Model, Ewoms::BlackOilModel<TypeTag>);
+
+//! The Problem property
+SET_TYPE_PROP(BlackOilModel, BaseProblem, Ewoms::BlackOilProblem<TypeTag>);
 
 //! The BlackOilFluidState property
 SET_PROP(BlackOilModel, BlackOilFluidState)
