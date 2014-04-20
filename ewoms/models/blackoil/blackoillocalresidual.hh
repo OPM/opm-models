@@ -66,6 +66,7 @@ public:
                     += volVars.porosity()
                        * volVars.fluidState().saturation(phaseIdx)
                        * volVars.fluidState().molarity(phaseIdx, compIdx);
+                assert(std::isfinite(storage[conti0EqIdx + compIdx]));
             }
         }
     }
@@ -92,6 +93,8 @@ public:
                 flux[conti0EqIdx + compIdx]
                     += fluxVars.volumeFlux(phaseIdx)
                        * up.fluidState().molarity(phaseIdx, compIdx);
+
+                assert(std::isfinite(flux[conti0EqIdx + compIdx]));
             }
         }
     }

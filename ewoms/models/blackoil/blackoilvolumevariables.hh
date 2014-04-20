@@ -230,6 +230,22 @@ public:
 
         // update the quantities specific for the velocity model
         VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+
+#ifndef NDEBUG
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            assert(std::isfinite(fluidState_.density(phaseIdx)));
+            assert(std::isfinite(fluidState_.saturation(phaseIdx)));
+            assert(std::isfinite(fluidState_.temperature(phaseIdx)));
+            assert(std::isfinite(fluidState_.pressure(phaseIdx)));
+            assert(std::isfinite(fluidState_.viscosity(phaseIdx)));
+            assert(std::isfinite(relativePermeability_[phaseIdx]));
+            for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
+                assert(std::isfinite(fluidState_.moleFraction(phaseIdx, compIdx)));
+            }
+        }
+        assert(std::isfinite(intrinsicPerm_.frobenius_norm()));
+        assert(std::isfinite(porosity_));
+#endif
     }
 
     /*!
