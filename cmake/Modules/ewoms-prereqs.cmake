@@ -5,6 +5,7 @@
 set (ewoms_CONFIG_VAR
 	HAVE_QUAD
 	HAVE_VALGRIND
+  HAVE_ERT
   HAVE_OPM_PARSER
   HAVE_DUNE_CORNERPOINT
 	)
@@ -13,6 +14,8 @@ set (ewoms_CONFIG_VAR
 set (ewoms_DEPS
 	# compile with C++0x/11 support if available
 	"CXX11Features REQUIRED"
+	# the boost headers
+	"Boost 1.44.0 REQUIRED"
 	# external libraries
 	"ERT"
 	# DUNE prerequisites
