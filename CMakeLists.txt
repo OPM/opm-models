@@ -127,7 +127,6 @@ EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUN
 # discretization (using the non-isothermal NCP model and BiCGSTAB +
 # ILU0)
 EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
-  SOURCES tests/co2injection_ncp_ni_ecfv.cc
   EXE_NAME co2injection_ncp_ni_ecfv
   NO_COMPILE
 	PROCESSORS 4
@@ -137,7 +136,6 @@ EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)
 EwomsAddTest(obstacle_immiscible_parallel
-  SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
 	PROCESSORS 4
@@ -147,7 +145,6 @@ EwomsAddTest(obstacle_immiscible_parallel
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
 EwomsAddTest(lens_parallel
-  SOURCES tests/lens_immiscible.cc
   EXE_NAME lens_immiscible
   NO_COMPILE
 	PROCESSORS 4
@@ -155,14 +152,12 @@ EwomsAddTest(lens_parallel
   DRIVER_ARGS --parallel-simulation=4 lens_immiscible --end-time=250 --initial-time-step-size=250)
 
 EwomsAddTest(obstacle_immiscible_parameters
-  SOURCES tests/obstacle_immiscible.cc
   EXE_NAME obstacle_immiscible
   NO_COMPILE
 	DEPENDS obstacle_immiscible
   DRIVER_ARGS --parameters obstacle_immiscible)
 
 EwomsAddTest(obstacle_pvs_restart
-  SOURCES tests/obstacle_pvs.cc
   EXE_NAME obstacle_pvs
   NO_COMPILE
 	DEPENDS obstacle_pvs
