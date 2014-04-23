@@ -230,8 +230,8 @@ public:
             problem_().newtonMethod().endIterMsg()
                 << ", relinearized "
                 << totalElems_ - greenElems_ << " of " << totalElems_
-                << " (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
-                << " elements and achieved an accuracy of " << relinearizationAccuracy_;
+                << " elements (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
+                << " and achieved an accuracy of " << relinearizationAccuracy_;
         }
 
         // reset all degree of freedom colors to green
