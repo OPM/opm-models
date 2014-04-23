@@ -197,6 +197,9 @@ SET_SCALAR_PROP(FvBaseDiscretization, BaseEpsilon, 0.9123e-10);
 //! use forward differences to calculate the jacobian by default
 SET_INT_PROP(FvBaseDiscretization, NumericDifferenceMethod, +1);
 
+//! Enable the VTK output by default
+SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
+
 // disable linearization recycling by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 

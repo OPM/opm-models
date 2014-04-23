@@ -79,23 +79,22 @@ public:
     {
         if (!asImp_().shouldWriteOutput())
             return;
-        
+
         // calculate the time _after_ the time was updated
         Scalar t = this->simulator().time() + this->simulator().timeStepSize();
 
         // prepare the Eclipse and the VTK writers
         if (enableEclipseOutput_())
             eclipseWriter_.beginWrite(t);
-        this->defaultVtkWriter().beginWrite(t);
-        
-        this->model().prepareOutputFields();
-        this->model().appendOutputFields(this->defaultVtkWriter());
-        if (enableEclipseOutput_())
-            this->model().appendOutputFields(eclipseWriter_);
 
-        this->defaultVtkWriter().endWrite();
-        if (enableEclipseOutput_())
-            eclipseWriter_.endWrite();       
+        // use the generic code to prepare the output fields and to
+        // write the desired VTK files.
+        ParentType::writeOutput(verbose);
+
+        if (enableEclipseOutput_()) {
+            this->model().appendOutputFields(eclipseWriter_);
+            eclipseWriter_.endWrite();
+        }
     }
 
 private:

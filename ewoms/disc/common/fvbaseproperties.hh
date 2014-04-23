@@ -139,6 +139,14 @@ NEW_PROP_TAG(GridCommHandleFactory);
 //! Manages the simulation time
 NEW_PROP_TAG(Simulator);
 
+/*!
+ * \brief Global switch to enable or disable the writing of VTK output files
+ *
+ * If writing VTK files is disabled, then the WriteVtk$FOO options do
+ * not have any effect...
+ */
+NEW_PROP_TAG(EnableVtkOutput);
+
 //! Specify whether the linear system of equations of the last
 //! iteration of a time step should be re-used as the jacobian of the
 //! first iteration of the next time step.

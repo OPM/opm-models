@@ -100,7 +100,7 @@ public:
         , boundingBoxMin_(std::numeric_limits<double>::max())
         , boundingBoxMax_(-std::numeric_limits<double>::max())
         , simulator_(simulator)
-        , defaultVtkWriter_(gridView_, Implementation::name())
+        , defaultVtkWriter_(0)
     {
         // calculate the bounding box of the local partition of the grid view
         VertexIterator vIt = gridView_.template begin<dim>();
@@ -117,6 +117,9 @@ public:
             boundingBoxMin_[i] = gridView_.comm().min(boundingBoxMin_[i]);
             boundingBoxMax_[i] = gridView_.comm().max(boundingBoxMax_[i]);
         }
+
+        if (enableVtkOutput_())
+            defaultVtkWriter_ = new VtkMultiWriter(gridView_, Implementation::name());
     }
 
     /*!
@@ -527,7 +530,8 @@ public:
     template <class Restarter>
     void serialize(Restarter &res)
     {
-        defaultVtkWriter_.serialize(res);
+        if (enableVtkOutput_())
+            defaultVtkWriter_->serialize(res);
         model().serialize(res);
     }
 
@@ -565,7 +569,8 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
-        defaultVtkWriter_.deserialize(res);
+        if (enableVtkOutput_())
+            defaultVtkWriter_->deserialize(res);
         model().deserialize(res);
     }
 
@@ -579,18 +584,26 @@ public:
      */
     void writeOutput(bool verbose = true)
     {
-        // write the current result to disk
-        if (asImp_().shouldWriteOutput()) {
-            if (verbose && gridView().comm().rank() == 0)
-                std::cout << "Writing result file for \"" << asImp_().name() << "\""
-                          << "\n" << std::flush;
+        if (!asImp_().shouldWriteOutput())
+            // skip if the implementation says we should not write
+            // anything
+            return;
 
-            // calculate the time _after_ the time was updated
-            Scalar t = simulator().time() + simulator().timeStepSize();
-            defaultVtkWriter_.beginWrite(t);
-            model().prepareOutputFields();
-            model().appendOutputFields(defaultVtkWriter_);
-            defaultVtkWriter_.endWrite();
+        if (verbose && gridView().comm().rank() == 0)
+            std::cout << "Writing visualization results for the current time step.\n"
+                      << std::flush;
+
+        // calculate the time _after_ the time was updated
+        Scalar t = simulator().time() + simulator().timeStepSize();
+
+        if (enableVtkOutput_())
+            defaultVtkWriter_->beginWrite(t);
+
+        model().prepareOutputFields();
+
+        if (enableVtkOutput_()) {
+            model().appendOutputFields(*defaultVtkWriter_);
+            defaultVtkWriter_->endWrite();
         }
     }
 
@@ -602,6 +615,9 @@ public:
     { return defaultVtkWriter_; }
 
 private:
+    bool enableVtkOutput_() const
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput); }
+
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
@@ -619,7 +635,7 @@ private:
 
     // Attributes required for the actual simulation
     Simulator &simulator_;
-    mutable VtkMultiWriter defaultVtkWriter_;
+    mutable VtkMultiWriter *defaultVtkWriter_;
 
     // CPU time keeping
     Scalar assembleTime_;

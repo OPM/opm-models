@@ -144,6 +144,9 @@ public:
     {
         ParentType::registerParameters();
 
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput,
+                             "Global switch for VTK files to disk");
+
         // register runtime parameters of the VTK output modules
         Ewoms::VtkMultiPhaseModule<TypeTag>::registerParameters();
         Ewoms::VtkTemperatureModule<TypeTag>::registerParameters();
