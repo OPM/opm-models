@@ -18,17 +18,17 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::ArtGridCreator
+ * \copydoc Ewoms::ArtGridManager
  */
-#ifndef EWOMS_ART_GRID_CREATOR_HH
-#define EWOMS_ART_GRID_CREATOR_HH
+#ifndef EWOMS_ART_GRID_MANAGER_HH
+#define EWOMS_ART_GRID_MANAGER_HH
 
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <opm/core/utility/PropertySystem.hpp>
 #include <opm/material/Valgrind.hpp>
 
-#include <ewoms/io/basegridcreator.hh>
+#include <ewoms/io/basegridmanager.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/gridfactory.hh>
 
@@ -48,7 +48,7 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
-NEW_PROP_TAG(GridCreator);
+NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(EnableFractures);
 } // namespace Properties
@@ -61,18 +61,21 @@ namespace Ewoms {
  * This file format is used to specify grids with fractures.
  */
 template <class TypeTag>
-class ArtGridCreator : public BaseGridCreator<TypeTag>
+class ArtGridManager : public BaseGridManager<TypeTag>
 {
+    typedef BaseGridManager<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+
     typedef Dune::FieldVector<double, 2> GlobalPosition;
     typedef Ewoms::FractureMapper<TypeTag> FractureMapper;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef std::shared_ptr<Grid> GridPointer;
+    typedef std::shared_ptr<const Grid> GridConstPointer;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid creator.
+     * \brief Register all run-time parameters for the grid manager.
      */
     static void registerParameters()
     {
@@ -83,7 +86,8 @@ public:
     /*!
      * \brief Create the Grid
      */
-    static void makeGrid()
+    ArtGridManager(Simulator &simulator)
+        : ParentType(simulator)
     {
         enum ParseMode { Vertex, Edge, Element, Finished };
         const std::string artFileName
@@ -284,52 +288,49 @@ public:
             fractureMapper_.addFractureEdge(artToDuneVertexIndex[feIt->first],
                                             artToDuneVertexIndex[feIt->second]);
         }
+
+        this->finalizeInit_();
     }
 
     /*!
      * \brief Returns a pointer to the grid.
      */
-    static GridPointer &gridPointer()
-    {
-        return gridPtr_;
-    }
+    GridPointer gridPointer()
+    { return gridPtr_; }
+
+    /*!
+     * \brief Returns a pointer to the grid.
+     */
+    GridConstPointer gridPointer() const
+    { return gridPtr_; }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
      *        computation.
      */
-    static void loadBalance()
-    {
-        gridPtr_->loadBalance();
-    }
-
-    /*!
-     * \brief Destroys the grid
-     *
-     * This is required to guarantee that the grid is deleted before
-     * MPI_Comm_free is called.
-     */
-    static void deleteGrid()
-    { gridPtr_ = GridPointer((Grid *)0); }
+    void loadBalance()
+    { gridPtr_->loadBalance(); }
 
     /*!
      * \brief Returns the fracture mapper
      *
      * The fracture mapper determines the topology of the fractures.
      */
-    static FractureMapper &fractureMapper()
+    FractureMapper &fractureMapper()
+    { return fractureMapper_; }
+
+    /*!
+     * \brief Returns the fracture mapper
+     *
+     * The fracture mapper determines the topology of the fractures.
+     */
+    const FractureMapper &fractureMapper() const
     { return fractureMapper_; }
 
 private:
-    static GridPointer gridPtr_;
-    static FractureMapper fractureMapper_;
+    GridPointer gridPtr_;
+    FractureMapper fractureMapper_;
 };
-
-template <class TypeTag>
-typename Ewoms::ArtGridCreator<TypeTag>::GridPointer ArtGridCreator<TypeTag>::gridPtr_;
-template <class TypeTag>
-typename Ewoms::ArtGridCreator<TypeTag>::FractureMapper
-ArtGridCreator<TypeTag>::fractureMapper_;
 } // namespace Ewoms
 
-#endif // EWOMS_ART_GRID_CREATOR_HH
+#endif // EWOMS_ART_GRID_MANAGER_HH

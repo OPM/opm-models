@@ -18,16 +18,16 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::DgfGridCreator
+ * \copydoc Ewoms::DgfGridManager
  */
-#ifndef EWOMS_DGF_GRID_CREATOR_HH
-#define EWOMS_DGF_GRID_CREATOR_HH
+#ifndef EWOMS_DGF_GRID_MANAGER_HH
+#define EWOMS_DGF_GRID_MANAGER_HH
 
 #include <ewoms/parallel/mpihelper.hh>
 
 #include <dune/grid/io/file/dgfparser.hh>
 
-#include <ewoms/io/basegridcreator.hh>
+#include <ewoms/io/basegridmanager.hh>
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
@@ -43,19 +43,21 @@ NEW_PROP_TAG(GridGlobalRefinements);
 
 namespace Ewoms {
 /*!
- * \brief Provides a grid creator which reads Dune Grid Format (DGF) files
+ * \brief Provides a grid manager which reads Dune Grid Format (DGF) files
  */
 template <class TypeTag>
-class DgfGridCreator : public BaseGridCreator<TypeTag>
+class DgfGridManager : public BaseGridManager<TypeTag>
 {
+    typedef BaseGridManager<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef Dune::GridPtr<Grid> GridPointer;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid creator.
+     * \brief Register all run-time parameters for the grid manager.
      */
     static void registerParameters()
     {
@@ -69,34 +71,21 @@ public:
     /*!
      * \brief Load the grid from the file.
      */
-    static void makeGrid()
+    DgfGridManager(Simulator &simulator)
+        : ParentType(simulator)
     {
-        const std::string dgfFileName
-            = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
-        unsigned numRefinments
-            = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
+        unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        gridPtr_ = GridPointer(dgfFileName.c_str(),
-                               Dune::MPIHelper::getCommunicator());
+        initialized_ = false;
+        gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
+        initialized_ = true;
+
         if (numRefinments > 0)
             gridPtr_->globalRefine(numRefinments);
-        initialized_ = true;
+
+        this->finalizeInit_();
     }
-
-    /*!
-     * \brief Returns a reference to the grid pointer.
-     *
-     * This method is specific to the DgfGridCreator!
-     */
-    static GridPointer &gridPointer()
-    { return gridPtr_; }
-
-    /*!
-     * \brief Distribute the grid (and attached data) over all
-     *        processes.
-     */
-    static void loadBalance()
-    { gridPtr_.loadBalance(); }
 
     /*!
      * \brief Destroys the grid
@@ -104,23 +93,39 @@ public:
      * This is required to guarantee that the grid is deleted before
      * MPI_Comm_free is called.
      */
-    static void deleteGrid()
+    ~DgfGridManager()
     {
         if (initialized_)
             delete gridPtr_.release();
-        initialized_ = false;
     }
 
+    /*!
+     * \brief Returns a reference to the grid pointer.
+     */
+    GridPointer &gridPointer()
+    { return gridPtr_; }
+
+    /*!
+     * \brief Returns a reference to the grid pointer.
+     */
+    const GridPointer &gridPointer() const
+    { return gridPtr_; }
+
+
+    /*!
+     * \brief Distributes the grid on all processes of a parallel
+     *        computation.
+     *
+     * This grid manager plays nice and also distributes the data of
+     * the DGF...
+     */
+    void loadBalance()
+    { gridPtr_.loadBalance(); }
+
 private:
-    static GridPointer gridPtr_;
-    static bool initialized_;
+    GridPointer gridPtr_;
+    bool initialized_;
 };
-
-template <class TypeTag>
-typename DgfGridCreator<TypeTag>::GridPointer DgfGridCreator<TypeTag>::gridPtr_;
-
-template <class TypeTag>
-bool DgfGridCreator<TypeTag>::initialized_ = false;
 
 } // namespace Ewoms
 

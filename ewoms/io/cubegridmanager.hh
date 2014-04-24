@@ -1,5 +1,6 @@
 /*
   Copyright (C) 2012-2013 by Andreas Lauser
+  Copyright (C) 2012 by Markus Wolff
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,37 +19,24 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::LensGridCreator
+ * \copydoc Ewoms::CubeGridManager
  */
-#ifndef EWOMS_LENS_GRID_CREATOR_HH
-#define EWOMS_LENS_GRID_CREATOR_HH
+#ifndef EWOMS_CUBE_GRID_MANAGER_HH
+#define EWOMS_CUBE_GRID_MANAGER_HH
 
-#include <ewoms/parallel/mpihelper.hh>
-#include <ewoms/io/basegridcreator.hh>
+#include <ewoms/io/basegridmanager.hh>
+#include <ewoms/common/basicproperties.hh>
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
-#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
+
 #include <dune/common/fvector.hh>
-#include <dune/common/version.hh>
-
-#include <vector>
-
-namespace Ewoms {
-template <class TypeTag>
-class LensProblem;
-
-template <class TypeTag>
-class LensGridCreator;
-} // namespace Ewoms
 
 namespace Opm {
 namespace Properties {
-NEW_TYPE_TAG(LensGridCreator);
-
-// declare the properties required by the for the lens grid creator
-NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(Grid);
 
 NEW_PROP_TAG(DomainSizeX);
 NEW_PROP_TAG(DomainSizeY);
@@ -59,32 +47,33 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-
-// set the Grid and GridCreator properties
-SET_TYPE_PROP(LensGridCreator, Grid, Dune::YaspGrid<2>);
-SET_TYPE_PROP(LensGridCreator, GridCreator, Ewoms::LensGridCreator<TypeTag>);
 }} // namespace Opm, Properties
 
 namespace Ewoms {
 /*!
- * \ingroup TestProblems
+ * \brief Provides a grid manager which a regular grid made of
+ *        quadrilaterals.
  *
- * \brief Helper class for grid instantiation of the lens problem.
+ * A quadirlateral is a line segment in 1D, a rectangle in 2D and a
+ * cube in 3D.
  */
 template <class TypeTag>
-class LensGridCreator : public BaseGridCreator<TypeTag>
+class CubeGridManager : public BaseGridManager<TypeTag>
 {
+    typedef BaseGridManager<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-
-public:
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
 
-private:
-    static const int dim = Grid::dimension;
+    typedef Dune::shared_ptr<Grid> GridPointer;
+    typedef Dune::shared_ptr<const Grid> GridConstPointer;
+    typedef typename Grid::ctype CoordScalar;
+    enum { dimWorld = Grid::dimensionworld };
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid creator.
+     * \brief Register all run-time parameters for the grid manager.
      */
     static void registerParameters()
     {
@@ -95,13 +84,13 @@ public:
                              "The size of the domain in x direction");
         EWOMS_REGISTER_PARAM(TypeTag, int, CellsX,
                              "The number of intervalls in x direction");
-        if (dim > 1) {
+        if (dimWorld > 1) {
             EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeY,
                                  "The size of the domain in y direction");
             EWOMS_REGISTER_PARAM(TypeTag, int, CellsY,
                                  "The number of intervalls in y direction");
         }
-        if (dim > 2) {
+        if (dimWorld > 2) {
             EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ,
                                  "The size of the domain in z direction");
             EWOMS_REGISTER_PARAM(TypeTag, int, CellsZ,
@@ -110,75 +99,57 @@ public:
     }
 
     /*!
-     * \brief Create the grid for the lens problem
+     * \brief Create the grid
      */
-    static void makeGrid()
+    CubeGridManager(Simulator &simulator)
+        : ParentType(simulator)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-        std::bitset<dim> isPeriodic(false);
-        std::array<int, dim> cellRes;
-#else
-        Dune::FieldVector<bool, dim> isPeriodic(false);
-        Dune::FieldVector<int, dim> cellRes;
-#endif
+        Dune::array<unsigned int, dimWorld> cellRes;
+        GlobalPosition upperRight(0.0);
+        GlobalPosition lowerLeft(0.0);
 
-        Dune::FieldVector<Scalar, dim> upperRight;
-        Dune::FieldVector<Scalar, dim> lowerLeft;
+        for (unsigned i = 0; i < dimWorld; ++i)
+            cellRes[i] = 0;
 
-        grid_ = 0;
-
-        lowerLeft[1] = 0.0;
         upperRight[0] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeX);
-        upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
-
         cellRes[0] = EWOMS_GET_PARAM(TypeTag, int, CellsX);
-        cellRes[1] = EWOMS_GET_PARAM(TypeTag, int, CellsY);
-        if (dim == 3) {
+        if (dimWorld > 1) {
+            upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
+            cellRes[1] = EWOMS_GET_PARAM(TypeTag, int, CellsY);
+        }
+        if (dimWorld > 2) {
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = EWOMS_GET_PARAM(TypeTag, int, CellsZ);
         }
-
         unsigned numRefinements
             = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        grid_ = new Dune::YaspGrid<dim>(
-#ifdef HAVE_MPI
-            /*mpiCommunicator=*/Dune::MPIHelper::getCommunicator(),
-#endif
-            /*upperRightCorner=*/upperRight,
-            /*numCells=*/cellRes, isPeriodic,
-            /*overlap=*/1);
-        grid_->globalRefine(numRefinements);
+        cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft,
+                                                                      upperRight,
+                                                                      cellRes);
+        cubeGrid_->globalRefine(numRefinements);
+
+        this->finalizeInit_();
     }
 
-    /*!
-     * \brief Return a reference to the grid.
-     */
-    static Grid* gridPointer()
-    { return grid_; }
+    ~CubeGridManager()
+    { cubeGrid_.reset(); }
 
     /*!
-     * \brief Distribute the grid (and attached data) over all
-     *        processes.
+     * \brief Returns a pointer to the grid.
      */
-    static void loadBalance()
-    { grid_->loadBalance(); }
+    GridPointer gridPointer()
+    { return cubeGrid_; }
 
     /*!
-     * \brief Destroy the grid
-     *
-     * This is required to guarantee that the grid is deleted before
-     * MPI_Comm_free is called.
+     * \brief Returns a pointer to the grid.
      */
-    static void deleteGrid()
-    { delete grid_; }
+    GridConstPointer gridPointer() const
+    { return cubeGrid_; }
 
-private:
-    static Grid *grid_;
+protected:
+    GridPointer cubeGrid_;
 };
-
-template <class TypeTag>
-typename LensGridCreator<TypeTag>::Grid *LensGridCreator<TypeTag>::grid_;
 
 } // namespace Ewoms
 

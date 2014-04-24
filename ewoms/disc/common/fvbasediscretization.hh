@@ -40,7 +40,7 @@
 #include "fvbasefluxvariables.hh"
 
 #include <ewoms/parallel/gridcommhandles.hh>
-#include <ewoms/linear/nullborderlistcreator.hh>
+#include <ewoms/linear/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
 
 #include <dune/common/fvector.hh>

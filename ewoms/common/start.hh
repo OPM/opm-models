@@ -55,7 +55,7 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
-NEW_PROP_TAG(GridCreator);
+NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(EndTime);
@@ -80,7 +80,7 @@ template <class TypeTag>
 int setupParameters_(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
 
@@ -110,7 +110,7 @@ int setupParameters_(int argc, char **argv)
                          "The time time at which a simulation restart should "
                          "be attempted [s]");
 
-    GridCreator::registerParameters();
+    GridManager::registerParameters();
     Simulator::registerParameters();
 
     ////////////////////////////////////////////////////////////

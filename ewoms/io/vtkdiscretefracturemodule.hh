@@ -81,7 +81,7 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
@@ -167,7 +167,7 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        const auto &fractureMapper = GridCreator::fractureMapper();
+        const auto &fractureMapper = elemCtx.simulator().gridManager().fractureMapper();
 
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);

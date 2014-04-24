@@ -21,8 +21,8 @@
  * \file
  * \copydoc Ewoms::Linear::NullBorderListCreator
  */
-#ifndef EWOMS_NULL_BORDER_LIST_CREATOR_HH
-#define EWOMS_NULL_BORDER_LIST_CREATOR_HH
+#ifndef EWOMS_NULL_BORDER_LIST_MANAGER_HH
+#define EWOMS_NULL_BORDER_LIST_MANAGER_HH
 
 #include "overlaptypes.hh"
 
@@ -39,9 +39,9 @@
 namespace Ewoms {
 namespace Linear {
 /*!
- * \brief This is a grid creator which does not create any border list.
+ * \brief This is a grid manager which does not create any border list.
  *
- * This means that discretizations using this grid creator cannot be
+ * This means that discretizations using this grid manager cannot be
  * used for parallel computations!
  */
 template <class GridView, class DofMapper>

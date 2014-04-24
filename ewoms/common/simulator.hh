@@ -35,7 +35,7 @@
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(GridCreator);
+NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(Model);
 NEW_PROP_TAG(Problem);
@@ -58,7 +58,7 @@ template <class TypeTag>
 class Simulator
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridCreator) GridCreator;
+    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -86,23 +86,16 @@ public:
 
         episodeLength_ = 1e100;
 
-        try {
-            // try to create a grid (from the given grid file)
-            if (verbose_)
-                std::cout << "Creating the grid\n"
-                          << std::flush;
-            GridCreator::makeGrid();
-        }
-        catch (const Dune::Exception &e) {
-            std::cout << "Creation of the grid failed: " << e.what() << "\n"
+        if (verbose_)
+            std::cout << "Allocating the grid\n"
                       << std::flush;
-            throw;
-        }
+
+        gridManager_ = new GridManager(*this);
 
         if (verbose_)
             std::cout << "Distributing the grid\n"
                       << std::flush;
-        GridCreator::loadBalance();
+        gridManager_->loadBalance();
 
         if (verbose_)
             std::cout << "Allocating the problem and the model\n"
@@ -115,7 +108,7 @@ public:
     {
         delete problem_;
         delete model_;
-        GridCreator::deleteGrid();
+        delete gridManager_;
     }
 
     /*!
@@ -123,22 +116,34 @@ public:
      */
     static void registerParameters()
     {
-        GridCreator::registerParameters();
+        GridManager::registerParameters();
         Model::registerParameters();
         Problem::registerParameters();
     }
 
     /*!
-     * \brief Return the grid view for which the simulation is done
+     * \brief Return a reference to the grid manager of simulation
      */
-    GridView gridView()
-    { return GridCreator::gridView(); }
+    GridManager &gridManager()
+    { return *gridManager_; }
+
+    /*!
+     * \brief Return a reference to the grid manager of simulation
+     */
+    const GridManager &gridManager() const
+    { return *gridManager_; }
 
     /*!
      * \brief Return the grid view for which the simulation is done
      */
-    const GridView gridView() const
-    { return GridCreator::gridView(); }
+    GridView &gridView()
+    { return gridManager_->gridView(); }
+
+    /*!
+     * \brief Return the grid view for which the simulation is done
+     */
+    const GridView &gridView() const
+    { return gridManager_->gridView(); }
 
     /*!
      * \brief Return the physical model used in the simulation
@@ -541,6 +546,7 @@ public:
     }
 
 private:
+    GridManager *gridManager_;
     Model *model_;
     Problem *problem_;
 

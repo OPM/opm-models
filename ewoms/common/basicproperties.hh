@@ -29,7 +29,7 @@
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/io/dgfgridcreator.hh>
+#include <ewoms/io/dgfgridmanager.hh>
 
 namespace Opm {
 namespace Properties {
@@ -62,14 +62,14 @@ NEW_PROP_TAG(ParameterTree);
 //! Property which defines the group that is queried for parameters by default
 NEW_PROP_TAG(ModelParameterGroup);
 
-//! Property which provides a GridCreator (manages grids)
-NEW_PROP_TAG(GridCreator);
+//! Property which provides a GridManager (manages grids)
+NEW_PROP_TAG(GridManager);
 
 //! Property provides the name of the file from which the grid ought to be
 //! loaded from
 NEW_PROP_TAG(GridFile);
 
-//! Property which tells the GridCreator how often the grid should be refined
+//! Property which tells the GridManager how often the grid should be refined
 //! after creation.
 NEW_PROP_TAG(GridGlobalRefinements);
 
@@ -126,8 +126,8 @@ SET_PROP(NumericModel, ParameterTree)
 //! use the global group as default for the model's parameter group
 SET_STRING_PROP(NumericModel, ModelParameterGroup, "");
 
-//! Use the DgfGridCreator by default
-SET_TYPE_PROP(NumericModel, GridCreator, Ewoms::DgfGridCreator<TypeTag>);
+//! Use the DgfGridManager by default
+SET_TYPE_PROP(NumericModel, GridManager, Ewoms::DgfGridManager<TypeTag>);
 
 //! Set a value for the GridFile property
 SET_STRING_PROP(NumericModel, GridFile, "");

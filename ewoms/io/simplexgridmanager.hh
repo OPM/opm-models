@@ -19,10 +19,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::SimplexGridCreator
+ * \copydoc Ewoms::SimplexGridManager
  */
-#ifndef EWOMS_SIMPLEX_GRID_CREATOR_HH
-#define EWOMS_SIMPLEX_GRID_CREATOR_HH
+#ifndef EWOMS_SIMPLEX_GRID_MANAGER_HH
+#define EWOMS_SIMPLEX_GRID_MANAGER_HH
 
 #include <ewoms/common/basicproperties.hh>
 #include <opm/core/utility/PropertySystem.hpp>
@@ -45,28 +45,30 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-} // namespace Properties
-} // namespace Opm
+}} // namespace Opm,Properties
 
 namespace Ewoms {
 /*!
- * \brief Provides a grid creator which a regular grid made of
+ * \brief Provides a grid manager which a regular grid made of
  *        simplices.
  */
 template <class TypeTag>
-class SimplexGridCreator
+class SimplexGridManager
 {
+    typedef BaseGridManager<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    typedef Dune::shared_ptr<Grid> GridPointer;
 
+    typedef Dune::shared_ptr<Grid> GridPointer;
+    typedef Dune::shared_ptr<const Grid> GridConstPointer;
     typedef typename Grid::ctype CoordScalar;
     enum { dimWorld = Grid::dimensionworld };
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid creator.
+     * \brief Register all run-time parameters for the grid manager.
      */
     static void registerParameters()
     {
@@ -94,7 +96,8 @@ public:
     /*!
      * \brief Create the Grid
      */
-    static void makeGrid()
+    SimplexGridManager(Simulator &simulator)
+        : ParentType(simulator)
     {
         Dune::array<unsigned, dimWorld> cellRes;
         GlobalPosition upperRight;
@@ -113,55 +116,32 @@ public:
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = EWOMS_GET_PARAM(TypeTag, int, CellsZ);
         }
-        unsigned numRefinments
-            = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        simplexGrid_
-            = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft,
-                                                                   upperRight,
-                                                                   cellRes);
+        simplexGrid_ = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft,
+                                                                            upperRight,
+                                                                            cellRes);
+
+        unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
         simplexGrid_->globalRefine(numRefinments);
 
-        initialized_ = true;
+        this->finalizeInit_();
     }
 
     /*!
-     * \brief Returns a reference to the grid.
+     * \brief Returns a pointer to the grid.
      */
-    static Grid &grid()
-    { return *simplexGrid_; }
+    GridPointer gridPointer()
+    { return simplexGrid_; }
 
     /*!
-     * \brief Distributes the grid on all processes of a parallel
-     *        computation.
+     * \brief Returns a pointer to the grid.
      */
-    static void loadBalance()
-    { simplexGrid_->loadBalance(); }
-
-    /*!
-     * \brief Destroys the grid
-     *
-     * This is required to guarantee that the grid is deleted before
-     * MPI_Comm_free is called.
-     */
-    static void deleteGrid()
-    {
-        if (initialized_)
-            simplexGrid_.reset();
-        initialized_ = false;
-    }
+    GridConstPointer gridPointer() const
+    { return simplexGrid_; }
 
 private:
-    static bool initialized_;
-    static GridPointer simplexGrid_;
+    GridPointer simplexGrid_;
 };
-
-template <class TypeTag>
-typename SimplexGridCreator<TypeTag>::GridPointer
-SimplexGridCreator<TypeTag>::simplexGrid_;
-
-template <class TypeTag>
-bool SimplexGridCreator<TypeTag>::initialized_ = false;
 } // namespace Ewoms
 
 #endif
