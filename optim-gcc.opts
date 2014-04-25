@@ -8,6 +8,7 @@ CXX_OPTS=" \
     -fstrict-overflow \
     -ffast-math \
     -fno-finite-math-only \
+    --param inline-unit-growth=7000 \
     -O3 \
     -march=native \
     -DNDEBUG=1"
