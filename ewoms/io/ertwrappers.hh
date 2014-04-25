@@ -47,7 +47,8 @@
 
 namespace Ewoms {
 /*!
- * \brief This is a smart pointer class for ERT's ecl_kw_type structure.
+ * \brief This is a smart pointer class for ERT's ecl_kw_type
+ *        structure.
  */
 template <typename T>
 class ErtKeyword
@@ -139,10 +140,8 @@ private:
 };
 
 /*!
- * \brief This is a smart pointer class for ERT's ecl_grid_type structure.
- *
- * The class is shamelessly ripped of from opm-core and is required to
- * make writing Eclipse files exception safe...
+ * \brief This is a smart pointer class for ERT's ecl_grid_type
+ *        structure.
  */
 class ErtGrid
 {
@@ -212,6 +211,97 @@ public:
 private:
     ErtHandleType *ertHandle_;
 };
+
+/*!
+ * \brief This is a smart pointer class for ERT's ecl_rst_file_type
+ *        structure.
+ */
+class ErtRestartFile
+{
+public:
+    ErtRestartFile(const ErtRestartFile &) = delete;
+
+    template <class Simulator>
+    ErtRestartFile(const Simulator &simulator, int reportStepIdx)
+    {
+        std::string caseName = simulator.gridManager().caseName();
+
+        restartFileName_ = ecl_util_alloc_filename("./",
+                                                   caseName.c_str(),
+                                                   /*type=*/ECL_UNIFIED_RESTART_FILE,
+                                                   /*writeFormatedOutput=*/false,
+                                                   reportStepIdx);
+
+        if (reportStepIdx == 0) {
+            restartFileHandle_ = ecl_rst_file_open_write(restartFileName_);
+        }
+        else {
+            restartFileHandle_ = ecl_rst_file_open_append(restartFileName_);
+        }
+    }
+
+    ~ErtRestartFile()
+    {
+        ecl_rst_file_close(restartFileHandle_);
+        free(restartFileName_);
+    }
+
+    template <class Simulator>
+    void writeHeader(const Simulator &simulator, int reportStepIdx)
+    {
+        const auto eclipseGrid = simulator.gridManager().eclipseGrid();
+        double secondsElapsed = simulator.time() - simulator.startTime();
+        double daysElapsed = secondsElapsed/(24*60*60);
+        ecl_rst_file_fwrite_header(restartFileHandle_,
+                                   reportStepIdx,
+                                   simulator.time(),
+                                   daysElapsed,
+                                   eclipseGrid->getNX(),
+                                   eclipseGrid->getNY(),
+                                   eclipseGrid->getNZ(),
+                                   eclipseGrid->getNumActive(),
+                                   /*activePhases=*/
+                                   ECL_OIL_PHASE
+                                   | ECL_WATER_PHASE
+                                   | ECL_GAS_PHASE);
+    }
+
+    ecl_rst_file_type *ertHandle() const
+    { return restartFileHandle_; }
+
+private:
+    char *restartFileName_;
+    ecl_rst_file_type *restartFileHandle_;
+};
+
+/**
+ * \brief The ErtSolution class wraps the actions that must be done to the
+ *        restart file while writing solution variables; it is not a handle on
+ *        its own.
+ */
+class ErtSolution
+{
+public:
+    ErtSolution(const ErtSolution&) = delete;
+
+    ErtSolution(ErtRestartFile &restartHandle)
+        : restartHandle_(&restartHandle)
+    {  ecl_rst_file_start_solution(restartHandle_->ertHandle()); }
+
+    ~ErtSolution()
+    { ecl_rst_file_end_solution(restartHandle_->ertHandle()); }
+
+    template <typename T>
+    void add(const ErtKeyword<T> &ertKeyword)
+    { ecl_rst_file_add_kw(restartHandle_->ertHandle(), ertKeyword.ertHandle()); }
+
+    ecl_rst_file_type *ertHandle() const
+    { return restartHandle_->ertHandle(); }
+
+private:
+    ErtRestartFile *restartHandle_;
+};
+
 
 } // namespace Ewoms
 

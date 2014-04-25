@@ -39,16 +39,20 @@ namespace Properties {
 NEW_TYPE_TAG(EclipseOutputBlackOil);
 
 // create the property tags needed for the multi phase module
-NEW_PROP_TAG(EclipseOutputWriteGasFormationFactor);
+NEW_PROP_TAG(EclipseOutputWriteSaturations);
+NEW_PROP_TAG(EclipseOutputWritePressures);
+NEW_PROP_TAG(EclipseOutputWriteGasDissolutionFactor);
 NEW_PROP_TAG(EclipseOutputWriteGasFormationVolumeFactor);
 NEW_PROP_TAG(EclipseOutputWriteOilFormationVolumeFactor);
 NEW_PROP_TAG(EclipseOutputWriteOilSaturationPressure);
 
 // set default values for what quantities to output
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteGasFormationFactor, false);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteGasFormationVolumeFactor, false);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilFormationVolumeFactor, false);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilSaturationPressure, false);
+SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteSaturations, true);
+SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWritePressures, true);
+SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteGasDissolutionFactor, true);
+SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteGasFormationVolumeFactor, true);
+SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilFormationVolumeFactor, true);
+SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilSaturationPressure, true);
 }} // namespace Opm, Properties
 
 namespace Ewoms {
@@ -72,7 +76,10 @@ class EclipseOutputBlackOilModule : public BaseOutputModule<TypeTag>
 
     typedef Ewoms::EclipseWriter<TypeTag> EclipseWriter;
 
+    enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
     enum { gasCompIdx = FluidSystem::gasCompIdx };
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
@@ -88,18 +95,24 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationFactor,
-                             "Include the gas formation factor in the VTK "
-                             "output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteSaturations,
+                             "Include the saturations of all fluid phases in the "
+                             "Eclipse output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWritePressures,
+                             "Include the absolute pressures of all fluid phases in the "
+                             "Eclipse output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteGasDissolutionFactor,
+                             "Include the gas dissolution factor in the "
+                             "Eclipse output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationVolumeFactor,
                              "Include the gas formation volume factor in the "
-                             "VTK output files");
+                             "Eclipse output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteOilFormationVolumeFactor,
                              "Include the oil formation volume factor in the "
-                             "VTK output files");
+                             "Eclipse output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteOilSaturationPressure,
                              "Include the saturation pressure of oil in the "
-                             "VTK output files");
+                             "Eclipse output files");
     }
 
     /*!
@@ -108,9 +121,15 @@ public:
      */
     void allocBuffers()
     {
-#warning TODO
-#if 0
         auto bufferType = ParentType::ElementBuffer;
+        if (saturationsOutput_()) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+                this->resizeScalarBuffer_(saturation_[phaseIdx], bufferType);
+        }
+        if (pressuresOutput_()) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+                this->resizeScalarBuffer_(pressure_[phaseIdx], bufferType);
+        }
         if (gasDissolutionFactorOutput_())
             this->resizeScalarBuffer_(gasDissolutionFactor_, bufferType);
         if (gasFormationVolumeFactorOutput_())
@@ -119,7 +138,6 @@ public:
             this->resizeScalarBuffer_(oilFormationVolumeFactor_, bufferType);
         if (oilSaturationPressureOutput_())
             this->resizeScalarBuffer_(oilSaturationPressure_, bufferType);
-#endif
     }
 
     /*!
@@ -128,8 +146,6 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-#warning TODO
-#if 0
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             const auto &fs
                 = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
@@ -137,6 +153,14 @@ public:
             Scalar po = fs.pressure(oilPhaseIdx);
             Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
 
+            if (saturationsOutput_()) {
+                for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+                    saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
+            }
+            if (pressuresOutput_()) {
+                for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+                    pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
+            }
             if (gasDissolutionFactorOutput_())
                 gasDissolutionFactor_[I] = FluidSystem::gasDissolutionFactor(po);
             if (gasFormationVolumeFactorOutput_())
@@ -149,7 +173,6 @@ public:
                 oilSaturationPressure_[I]
                     = FluidSystem::oilSaturationPressure(X_oG);
         }
-#endif
     }
 
     /*!
@@ -160,8 +183,17 @@ public:
         if (!dynamic_cast<EclipseWriter*>(&writer))
             return; // this module only consideres eclipse writers...
 
-#warning TODO
-/*
+        typename ParentType::BufferType bufferType = ParentType::ElementBuffer;
+        if (saturationsOutput_()) {
+            this->commitScalarBuffer_(writer, "SOIL", saturation_[oilPhaseIdx], bufferType);
+            this->commitScalarBuffer_(writer, "SGAS", saturation_[gasPhaseIdx], bufferType);
+            this->commitScalarBuffer_(writer, "SWAT", saturation_[waterPhaseIdx], bufferType);
+        }
+        if (pressuresOutput_()) {
+            this->commitScalarBuffer_(writer, "PRESSURE", pressure_[oilPhaseIdx], bufferType);
+            this->commitScalarBuffer_(writer, "PGAS", pressure_[gasPhaseIdx], bufferType);
+            this->commitScalarBuffer_(writer, "PWAT", pressure_[waterPhaseIdx], bufferType);
+        }
         if (gasDissolutionFactorOutput_())
             this->commitScalarBuffer_(writer, "RS", gasDissolutionFactor_, bufferType);
         if (gasFormationVolumeFactorOutput_())
@@ -169,15 +201,18 @@ public:
         if (oilFormationVolumeFactorOutput_())
             this->commitScalarBuffer_(writer, "BP", oilFormationVolumeFactor_, bufferType);
         if (oilSaturationPressureOutput_())
-            this->commitScalarBuffer_(writer, "PRESSURE", oilSaturationPressure_);
-*/
+            this->commitScalarBuffer_(writer, "PSAT", oilSaturationPressure_);
     }
 
 private:
-#warning TODO
-/*
+    static bool saturationsOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteSaturations); }
+
+    static bool pressuresOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWritePressures); }
+
     static bool gasDissolutionFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationFactor); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteGasDissolutionFactor); }
 
     static bool gasFormationVolumeFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationVolumeFactor); }
@@ -187,7 +222,9 @@ private:
 
     static bool oilSaturationPressureOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteOilSaturationPressure); }
-*/
+
+    ScalarBuffer saturation_[numPhases];
+    ScalarBuffer pressure_[numPhases];
     ScalarBuffer gasDissolutionFactor_;
     ScalarBuffer gasFormationVolumeFactor_;
     ScalarBuffer oilFormationVolumeFactor_;
