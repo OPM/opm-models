@@ -78,6 +78,7 @@ public:
         episodeStartTime_ = 0;
 
         time_ = 0.0;
+        startTime_ = 0.0;
         endTime_ = -1e100;
 
         timeStepSize_ = 1.0;
@@ -189,6 +190,7 @@ public:
     void init(Scalar startTime, Scalar initialTimeStepSize, Scalar endTime, bool doRestart = false)
     {
         time_ = startTime;
+        startTime_ = startTime;
         timeStepSize_ = initialTimeStepSize;
         endTime_ = endTime;
 
@@ -215,6 +217,21 @@ public:
         }
     }
 
+
+    /*!
+     * \brief Set the time of the start of the simulation.
+     *
+     * \param t The time \f$\mathrm{[s]}\f$ which should be jumped to
+     */
+    void setStartTime(Scalar t)
+    { startTime_ = t; }
+
+    /*!
+     * \brief Return the time of the start of the simulation.
+     */
+    Scalar startTime() const
+    { return startTime_; }
+
     /*!
      * \brief Set the current simulated time, don't change the current
      *        time step index.
@@ -238,18 +255,12 @@ public:
 
     /*!
      * \brief Return the time \f$\mathrm{[s]}\f$ before the time integration.
-     * To get the time after the time integration you have to add timeStepSize()
-     * to time().
+     *
+     * To get the time after the time integration, you have to add
+     * timeStepSize() to time().
      */
     Scalar time() const
     { return time_; }
-
-    /*!
-     * \brief Returns the number of (simulated) seconds which the simulation
-     *        runs.
-     */
-    Scalar endTime() const
-    { return endTime_; }
 
     /*!
      * \brief Set the time of simulated seconds at which the simulation runs.
@@ -258,6 +269,13 @@ public:
      */
     void setEndTime(Scalar t)
     { endTime_ = t; }
+
+    /*!
+     * \brief Returns the number of (simulated) seconds which the simulation
+     *        runs.
+     */
+    Scalar endTime() const
+    { return endTime_; }
 
     /*!
      * \brief Returns the current wall time (cpu time).
@@ -555,6 +573,7 @@ private:
     Scalar episodeLength_;
 
     Dune::Timer timer_;
+    Scalar startTime_;
     Scalar time_;
     Scalar endTime_;
 
