@@ -194,7 +194,7 @@ public:
 
         // apply the initial solution
         if (verbose_)
-            std::cout << "Applying the initial solution of the \"" << Problem::name() << "\" problem\n"
+            std::cout << "Applying the initial solution of the \"" << problem_->name() << "\" problem\n"
                       << std::flush;
         problem_->init();
 

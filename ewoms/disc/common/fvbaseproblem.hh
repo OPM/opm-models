@@ -119,7 +119,7 @@ public:
         }
 
         if (enableVtkOutput_())
-            defaultVtkWriter_ = new VtkMultiWriter(gridView_, Implementation::name());
+            defaultVtkWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
     }
 
     /*!
@@ -413,7 +413,7 @@ public:
      * It is highly recommend to overwrite this method in the concrete
      * problem which is simulated.
      */
-    static std::string name()
+    std::string name() const
     { return "sim"; }
 
     /*!
