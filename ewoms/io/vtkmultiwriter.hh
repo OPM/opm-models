@@ -118,8 +118,7 @@ public:
     }
 
     /*!
-     * \brief Called when ever a new time step or a new grid
-     *        must be written.
+     * \brief Called whenever a new time step must be written.
      */
     void beginWrite(double t)
     {
