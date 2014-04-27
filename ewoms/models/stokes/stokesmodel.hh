@@ -313,9 +313,15 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::addOutputFields
+     * \copydoc FvBaseDiscretization::prepareOutputFields
      */
-    void addOutputFields(BaseOutputWriter &writer) const
+    void prepareOutputFields() const
+    { }
+
+    /*!
+     * \copydoc FvBaseDiscretization::appendOutputFields
+     */
+    void appendOutputFields(BaseOutputWriter &writer) const
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&writer);
         if (!vtkWriter)

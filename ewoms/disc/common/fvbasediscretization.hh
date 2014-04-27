@@ -331,6 +331,7 @@ public:
         // register runtime parameters of the output modules
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVolumeVariablesCache, "Turn on caching of local quantities");
     }
