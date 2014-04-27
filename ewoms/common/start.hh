@@ -303,7 +303,7 @@ int start(int argc, char **argv)
         GridCreator::deleteGrid();
         return 0;
     }
-    catch (std::runtime_error &e)
+    catch (std::exception &e)
     {
         if (myRank == 0)
             std::cout << e.what() << ". Abort!\n" << std::flush;
