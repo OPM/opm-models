@@ -31,7 +31,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <cstdio>
+#include <type_traits>
 
 namespace Opm {
 namespace Properties {
@@ -56,6 +56,11 @@ SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilSaturationPressure, tr
 }} // namespace Opm, Properties
 
 namespace Ewoms {
+
+// forward declaration
+template <class TypeTag>
+class EcfvDiscretization;
+
 /*!
  * \ingroup EclipseOutput
  *
@@ -68,6 +73,7 @@ class EclipseOutputBlackOilModule : public BaseOutputModule<TypeTag>
     typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
@@ -121,6 +127,9 @@ public:
      */
     void allocBuffers()
     {
+        if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
+            return;
+
         auto bufferType = ParentType::ElementBuffer;
         if (saturationsOutput_()) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
@@ -146,6 +155,9 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
+            return;
+
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             const auto &fs
                 = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
@@ -180,6 +192,9 @@ public:
      */
     void commitBuffers(BaseOutputWriter &writer)
     {
+        if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
+            return;
+
         if (!dynamic_cast<EclipseWriter*>(&writer))
             return; // this module only consideres eclipse writers...
 

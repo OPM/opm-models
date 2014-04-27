@@ -46,6 +46,34 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Ewoms {
+
+// forward definition of the EclGridManager class. We need this for
+// specialization...
+template <class TypeTag>
+class EclGridManager;
+
+/// \cond 0
+
+// required to make the compiler happy if the grid manager is not EclGridManager...
+
+template <class GridManager>
+std::string getErtCaseName__(const GridManager &gridManager)
+{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write Eclipse files"); }
+
+template <class TypeTag>
+std::string getErtCaseName__(const EclGridManager<TypeTag> &gridManager)
+{ return gridManager.caseName(); }
+
+template <class GridManager>
+const Opm::EclipseGridConstPtr getEclipseGrid__(const GridManager &gridManager)
+{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write Eclipse files"); }
+
+template <class TypeTag>
+const Opm::EclipseGridConstPtr getEclipseGrid__(const EclGridManager<TypeTag> &gridManager)
+{ return gridManager.eclipseGrid(); }
+
+/// \endcond
+
 /*!
  * \brief This is a smart pointer class for ERT's ecl_kw_type
  *        structure.
@@ -224,7 +252,7 @@ public:
     template <class Simulator>
     ErtRestartFile(const Simulator &simulator, int reportStepIdx)
     {
-        std::string caseName = simulator.gridManager().caseName();
+        std::string caseName = getErtCaseName__(simulator.gridManager());
 
         restartFileName_ = ecl_util_alloc_filename("./",
                                                    caseName.c_str(),
@@ -249,7 +277,7 @@ public:
     template <class Simulator>
     void writeHeader(const Simulator &simulator, int reportStepIdx)
     {
-        const auto eclipseGrid = simulator.gridManager().eclipseGrid();
+        const auto eclipseGrid = getEclipseGrid__(simulator.gridManager());
         double secondsElapsed = simulator.time() - simulator.startTime();
         double daysElapsed = secondsElapsed/(24*60*60);
         ecl_rst_file_fwrite_header(restartFileHandle_,
