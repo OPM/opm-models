@@ -30,7 +30,7 @@
 #ifndef EWOMS_ERT_WRAPPERS_HH
 #define EWOMS_ERT_WRAPPERS_HH
 
-#if HAVE_ERT && HAVE_DUNE_CORNERPOINT
+#if HAVE_ERT
 
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_endian_flip.h>
@@ -330,9 +330,8 @@ private:
     ErtRestartFile *restartHandle_;
 };
 
-
 } // namespace Ewoms
 
-#endif // HAVE_ERT && HAVE_DUNE_CORNERPOINT
+#endif // HAVE_ERT
 
 #endif // EWOMS_ERT_WRAPPERS_HH
