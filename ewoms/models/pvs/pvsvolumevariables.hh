@@ -175,14 +175,15 @@ public:
 
             int auxIdx = 0;
             int switchIdx = 0;
-            for (; switchIdx < numPhases; ++switchIdx) {
+            for (; switchIdx < numPhases - 1; ++switchIdx) {
                 int compIdx = switchIdx + 1;
                 int switchPhaseIdx = switchIdx;
                 if (switchIdx >= lowestPresentPhaseIdx)
                     switchPhaseIdx += 1;
 
                 if (!priVars.phaseIsPresent(switchPhaseIdx)) {
-                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx,
+                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx,
+                                               compIdx,
                                                priVars[switch0Idx + switchIdx]);
                     ++auxIdx;
                 }
