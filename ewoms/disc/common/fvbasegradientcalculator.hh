@@ -211,7 +211,8 @@ public:
         // of the domain.
         Scalar dx = 2*distVec.two_norm();
 
-        quantityGrad = normal;
+        for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
+            quantityGrad[dimIdx] = normal[dimIdx];
         quantityGrad *= dy/dx;
     }
 
