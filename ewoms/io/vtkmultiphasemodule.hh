@@ -281,9 +281,8 @@ public:
     void commitBuffers(BaseOutputWriter &baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
-        if (!vtkWriter) {
+        if (!vtkWriter)
             return;
-        }
 
         if (pressureOutput_())
             this->commitPhaseBuffer_(baseWriter, "pressure_%s", pressure_);
