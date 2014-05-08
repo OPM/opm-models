@@ -66,9 +66,9 @@ set(BUILD_TESTING "ON" CACHE BOOL "Build the tests" FORCE)
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
-file(GLOB grids "tests/grids/*.dgf" "tests/grids/*.art")
-foreach(file ${grids})
-  file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/grids)
+file(GLOB datafiles "tests/data/*")
+foreach(file ${datafiles})
+  file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 endforeach()
 
 if (NOT MY_BUILD_TESTING)
