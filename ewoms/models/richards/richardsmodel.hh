@@ -39,7 +39,7 @@
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
 #include <opm/material/fluidsystems/GasPhase.hpp>
-#include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
+#include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 
 #include <dune/common/unused.hh>
 
@@ -58,6 +58,23 @@ NEW_TYPE_TAG(Richards, INHERITS_FROM(MultiPhaseBaseModel));
 
 //! By default, assume that the first phase is the liquid one
 SET_INT_PROP(Richards, LiquidPhaseIndex, 0);
+
+//! By default, assume that the non-liquid phase is gaseos
+SET_INT_PROP(Richards, GasPhaseIndex, 1 - GET_PROP_VALUE(TypeTag, LiquidPhaseIndex));
+
+/*!
+ * \brief By default, assume that component which the liquid is made of has
+ *        the same index as the liquid phase.
+ *
+ * This is a convention which works for most fluid systems shipped
+ * with eWoms by default, but it cannot generally correct because the
+ * liquid can be composed of different components. (e.g., do you
+ * prefer Ethanol of H2O??)
+ */
+SET_INT_PROP(Richards, LiquidComponentIndex, GET_PROP_VALUE(TypeTag, LiquidPhaseIndex));
+
+//! By default, assume that the gas component is the other than the liquid one
+SET_INT_PROP(Richards, GasComponentIndex, 1 - GET_PROP_VALUE(TypeTag, LiquidComponentIndex));
 
 //! The local residual operator
 SET_TYPE_PROP(Richards,
@@ -98,7 +115,7 @@ SET_TYPE_PROP(Richards, Indices, Ewoms::RichardsIndices);
  * of the liquid phase is _much_ lower than the viscosity of the
  * wetting phase.
  */
-SET_PROP(Richards, WettingPhase)
+SET_PROP(Richards, WettingFluid)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -108,14 +125,14 @@ public:
 };
 
 /*!
- * \brief The wetting phase used.
+ * \brief The non-wetting phase used.
  *
  * By default we use the null-phase, i.e. this has to be defined by
  * the problem for the program to work. This doed not need to be
  * specified by the problem for the Richards model to work because the
  * Richards model does not conserve the non-wetting phase.
  */
-SET_PROP(Richards, NonwettingPhase)
+SET_PROP(Richards, NonWettingFluid)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -129,7 +146,7 @@ public:
  *
  * By default this uses the immiscible twophase fluid system. The
  * actual fluids used are specified using in the problem definition by
- * the WettingPhase and NonwettingPhase properties. Be aware that
+ * the WettingFluid and NonWettingFluid properties. Be aware that
  * using different fluid systems in conjunction with the Richards
  * model only makes very limited sense.
  */
@@ -137,12 +154,11 @@ SET_PROP(Richards, FluidSystem)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, WettingPhase) WettingPhase;
-    typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
+    typedef typename GET_PROP_TYPE(TypeTag, WettingFluid) WettingFluid;
+    typedef typename GET_PROP_TYPE(TypeTag, NonWettingFluid) NonWettingFluid;
 
 public:
-    typedef Opm::FluidSystems::TwoPImmiscible<Scalar, WettingPhase,
-                                              NonwettingPhase> type;
+    typedef Opm::FluidSystems::TwoPhaseImmiscible<Scalar, WettingFluid, NonWettingFluid> type;
 };
 
 } // namespace Properties
@@ -221,13 +237,36 @@ class RichardsModel
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { numPhases = FluidSystem::numPhases };
+    enum { numComponents = FluidSystem::numComponents };
+
+    enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex) };
+
+    enum { liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex) };
+    enum { gasCompIdx = GET_PROP_VALUE(TypeTag, GasComponentIndex) };
+
     enum { dimWorld = GridView::dimensionworld };
+
+    // some consistency checks
+    static_assert(numPhases == 2,
+                  "Exactly two fluids are required for this model");
+    static_assert(numComponents == 2,
+                  "Exactly two components are required for this model");
+    static_assert(liquidPhaseIdx != gasPhaseIdx,
+                  "The liquid and the gas phases must be different");
+    static_assert(liquidCompIdx != gasCompIdx,
+                  "The liquid and the gas components must be different");
 
 public:
     RichardsModel(Simulator &simulator)
         : ParentType(simulator)
-    {}
+    {
+        // the liquid phase must be liquid, the gas phase must be
+        // gaseous. Think about it!
+        assert(FluidSystem::isLiquid(liquidPhaseIdx));
+        assert(!FluidSystem::isLiquid(gasPhaseIdx));
+    }
 
     /*!
      * \copydoc FvBaseDiscretization::registerParameters
@@ -258,7 +297,7 @@ public:
     {
         std::ostringstream oss;
         if (pvIdx == Indices::pressureWIdx)
-            oss << "pressure_" << FluidSystem::phaseName(wPhaseIdx);
+            oss << "pressure_" << FluidSystem::phaseName(liquidPhaseIdx);
         else
             assert(0);
 
@@ -271,8 +310,8 @@ public:
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
-        if (eqIdx == Indices::contiWEqIdx)
-            oss << "continuity_" << FluidSystem::phaseName(wPhaseIdx);
+        if (eqIdx == Indices::contiEqIdx)
+            oss << "continuity_" << FluidSystem::phaseName(liquidPhaseIdx);
         else
             assert(0);
 
@@ -296,7 +335,7 @@ public:
      */
     Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
-        int DUNE_UNUSED compIdx = eqIdx - Indices::contiWEqIdx;
+        int DUNE_UNUSED compIdx = eqIdx - Indices::contiEqIdx;
         assert(0 <= compIdx && compIdx <= FluidSystem::numPhases);
 
         // make all kg equal
@@ -326,7 +365,7 @@ public:
      * \copydoc FvBaseDiscretization::phaseIsConsidered
      */
     bool phaseIsConsidered(int phaseIdx) const
-    { return phaseIdx == wPhaseIdx; }
+    { return phaseIdx == liquidPhaseIdx; }
 
     void registerOutputModules_()
     {

@@ -59,8 +59,8 @@ class RichardsPrimaryVariables
     // primary variable indices
     enum { pressureWIdx = Indices::pressureWIdx };
 
-    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
-    enum { nonWettingPhaseIdx = 1 - wPhaseIdx };
+    enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex) };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -105,15 +105,15 @@ public:
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
         fs.setTemperature(T);
-        fs.setSaturation(wPhaseIdx, Sw);
-        fs.setSaturation(nonWettingPhaseIdx, 1 - Sw);
+        fs.setSaturation(liquidPhaseIdx, Sw);
+        fs.setSaturation(gasPhaseIdx, 1 - Sw);
 
         // set phase pressures
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-        fs.setPressure(wPhaseIdx, pw);
-        fs.setPressure(nonWettingPhaseIdx, pw + (pC[nonWettingPhaseIdx] - pC[wPhaseIdx]));
+        fs.setPressure(liquidPhaseIdx, pw);
+        fs.setPressure(gasPhaseIdx, pw + (pC[gasPhaseIdx] - pC[liquidPhaseIdx]));
 
         assignNaive(fs);
     }
@@ -133,15 +133,15 @@ public:
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
         fs.setTemperature(T);
-        fs.setSaturation(wPhaseIdx, 1 - Sn);
-        fs.setSaturation(nonWettingPhaseIdx, Sn);
+        fs.setSaturation(liquidPhaseIdx, 1 - Sn);
+        fs.setSaturation(gasPhaseIdx, Sn);
 
         // set phase pressures
         PhaseVector pC;
         MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-        fs.setPressure(nonWettingPhaseIdx, pn);
-        fs.setPressure(nonWettingPhaseIdx, pn + (pC[wPhaseIdx] - pC[nonWettingPhaseIdx]));
+        fs.setPressure(gasPhaseIdx, pn);
+        fs.setPressure(gasPhaseIdx, pn + (pC[liquidPhaseIdx] - pC[gasPhaseIdx]));
 
         assignNaive(fs);
     }
@@ -183,7 +183,7 @@ public:
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
-        (*this)[pressureWIdx] = fluidState.pressure(wPhaseIdx);
+        (*this)[pressureWIdx] = fluidState.pressure(liquidPhaseIdx);
     }
 };
 

@@ -37,7 +37,7 @@ struct RichardsIndices
     static const int pressureWIdx = 0;
 
     //! Equation index for the mass conservation of the wetting phase
-    static const int contiWEqIdx = 0;
+    static const int contiEqIdx = 0;
 
     //! The number of equations
     static const int numEq = 1;

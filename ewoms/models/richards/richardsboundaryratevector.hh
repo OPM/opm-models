@@ -46,8 +46,8 @@ class RichardsBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    enum { contiWEqIdx = Indices::contiWEqIdx };
-    enum { wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
 
 public:
     RichardsBoundaryRateVector() : ParentType()
@@ -87,7 +87,7 @@ public:
         ////////
         (*this) = 0.0;
 
-        int phaseIdx = wPhaseIdx;
+        int phaseIdx = liquidPhaseIdx;
         Scalar density;
         if (fluidState.pressure(phaseIdx)
             > insideVolVars.fluidState().pressure(phaseIdx))
@@ -97,7 +97,7 @@ public:
 
         // add advective flux of current component in current
         // phase
-        (*this)[contiWEqIdx] += fluxVars.volumeFlux(phaseIdx) * density;
+        (*this)[contiEqIdx] += fluxVars.volumeFlux(phaseIdx) * density;
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++i) {

@@ -43,8 +43,8 @@ class RichardsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { contiWEqIdx = Indices::contiWEqIdx,
-           wPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { contiEqIdx = Indices::contiEqIdx,
+           liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
 
 public:
     /*!
@@ -58,8 +58,8 @@ public:
         const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
-        storage[contiWEqIdx] = volVars.fluidState().density(wPhaseIdx)
-                               * volVars.fluidState().saturation(wPhaseIdx)
+        storage[contiEqIdx] = volVars.fluidState().density(liquidPhaseIdx)
+                               * volVars.fluidState().saturation(liquidPhaseIdx)
                                * volVars.porosity();
     }
 
@@ -76,15 +76,15 @@ public:
         // data attached to upstream and the downstream DOFs
         // of the current phase
         const VolumeVariables &up
-            = elemCtx.volVars(fluxVarsEval.upstreamIndex(wPhaseIdx), timeIdx);
+            = elemCtx.volVars(fluxVarsEval.upstreamIndex(liquidPhaseIdx), timeIdx);
         const VolumeVariables &dn
-            = elemCtx.volVars(fluxVarsEval.downstreamIndex(wPhaseIdx), timeIdx);
+            = elemCtx.volVars(fluxVarsEval.downstreamIndex(liquidPhaseIdx), timeIdx);
 
-        flux[contiWEqIdx] = fluxVars.volumeFlux(wPhaseIdx)
-                            * (fluxVars.upstreamWeight(wPhaseIdx)
-                               * up.fluidState().density(wPhaseIdx)
-                               + fluxVars.downstreamWeight(wPhaseIdx)
-                                 * dn.fluidState().density(wPhaseIdx));
+        flux[contiEqIdx] = fluxVars.volumeFlux(liquidPhaseIdx)
+                            * (fluxVars.upstreamWeight(liquidPhaseIdx)
+                               * up.fluidState().density(liquidPhaseIdx)
+                               + fluxVars.downstreamWeight(liquidPhaseIdx)
+                                 * dn.fluidState().density(liquidPhaseIdx));
     }
 
     /*!

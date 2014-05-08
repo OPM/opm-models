@@ -43,7 +43,7 @@ NEW_PROP_TAG(WettingPhase);
 //! The non-wetting phase for two-phase models
 NEW_PROP_TAG(NonwettingPhase);
 
-// these properties only make sense for the ImmiscibleOnePhase type tag
+// these properties only make sense for the ImmiscibleSinglePhase type tag
 
 //! The fluid used by the model
 NEW_PROP_TAG(Fluid);

@@ -40,8 +40,8 @@
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/GasPhase.hpp>
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
-#include <opm/material/fluidsystems/1pFluidSystem.hpp>
-#include <opm/material/fluidsystems/2pImmiscibleFluidSystem.hpp>
+#include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
+#include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 
 #include <dune/common/unused.hh>
 
@@ -58,7 +58,7 @@ namespace Properties {
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(ImmiscibleModel, INHERITS_FROM(MultiPhaseBaseModel, VtkEnergy));
 //! The type tag for single-phase immiscible problems
-NEW_TYPE_TAG(ImmiscibleOnePhaseModel, INHERITS_FROM(ImmiscibleModel));
+NEW_TYPE_TAG(ImmiscibleSinglePhaseModel, INHERITS_FROM(ImmiscibleModel));
 //! The type tag for two-phase immiscible problems
 NEW_TYPE_TAG(ImmiscibleTwoPhaseModel, INHERITS_FROM(ImmiscibleModel));
 
@@ -95,15 +95,15 @@ SET_BOOL_PROP(ImmiscibleModel, EnableEnergy, false);
 /////////////////////
 
 //! The fluid system to use by default
-SET_PROP(ImmiscibleOnePhaseModel, FluidSystem)
+SET_PROP(ImmiscibleSinglePhaseModel, FluidSystem)
 { private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Fluid) Fluid;
 public:
-    typedef Opm::FluidSystems::OneP<Scalar , Fluid> type;
+    typedef Opm::FluidSystems::SinglePhase<Scalar , Fluid> type;
 };
 
-SET_PROP(ImmiscibleOnePhaseModel, Fluid)
+SET_PROP(ImmiscibleSinglePhaseModel, Fluid)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -114,9 +114,9 @@ public:
 
 // disable output of a few quantities which make sense in a
 // multi-phase but not in a single-phase context
-SET_BOOL_PROP(ImmiscibleOnePhaseModel, VtkWriteSaturations, false);
-SET_BOOL_PROP(ImmiscibleOnePhaseModel, VtkWriteMobilities, false);
-SET_BOOL_PROP(ImmiscibleOnePhaseModel, VtkWriteRelativePermeabilities, false);
+SET_BOOL_PROP(ImmiscibleSinglePhaseModel, VtkWriteSaturations, false);
+SET_BOOL_PROP(ImmiscibleSinglePhaseModel, VtkWriteMobilities, false);
+SET_BOOL_PROP(ImmiscibleSinglePhaseModel, VtkWriteRelativePermeabilities, false);
 
 /////////////////////
 // set slightly different properties for the two-phase case
@@ -147,7 +147,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, NonwettingPhase) NonwettingPhase;
 
 public:
-    typedef Opm::FluidSystems::TwoPImmiscible<Scalar, WettingPhase,
+    typedef Opm::FluidSystems::TwoPhaseImmiscible<Scalar, WettingPhase,
                                               NonwettingPhase> type;
 };
 

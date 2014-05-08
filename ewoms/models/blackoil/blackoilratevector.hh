@@ -98,13 +98,15 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
+    void setVolumetricRate(const FluidState &fluidState,
+                           int phaseIdx,
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx]
-                = fluidState.density(phaseIdx, compIdx)
-                  * fluidState.massFraction(phaseIdx, compIdx) * volume;
+            (*this)[conti0EqIdx + compIdx] =
+                fluidState.density(phaseIdx)
+                * fluidState.massFraction(phaseIdx, compIdx)
+                * volume;
     }
 };
 

@@ -39,7 +39,7 @@
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/heatconduction/FluidConduction.hpp>
-#include <opm/material/fluidsystems/1pFluidSystem.hpp>
+#include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 #include <ewoms/linear/superlubackend.hh>
@@ -125,7 +125,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Opm::FluidSystems::OneP<Scalar, Fluid> type;
+    typedef Opm::FluidSystems::SinglePhase<Scalar, Fluid> type;
 };
 
 //! The fluid that is used in the single-phase fluidsystem.
