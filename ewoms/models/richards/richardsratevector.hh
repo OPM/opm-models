@@ -108,11 +108,10 @@ public:
     void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
                            Scalar volume)
     {
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[contiEqIdx + compIdx] =
-                fluidState.density(phaseIdx)
-                * fluidState.massFraction(phaseIdx, liquidCompIdx)
-                * volume;
+       (*this)[contiEqIdx] =
+            fluidState.density(phaseIdx)
+            * fluidState.massFraction(phaseIdx, liquidCompIdx)
+            * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }
