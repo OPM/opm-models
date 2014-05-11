@@ -279,15 +279,49 @@ public:
     { return 1.0; }
 
     /*!
-     * \name Simulation steering
+     * \brief Called at the beginning of an simulation episode.
      */
-    // \{
+    void beginEpisode()
+    { }
 
     /*!
-     * \brief Called by the simulator before the time integration.
+     * \brief Called by the simulator before each time integration.
      */
-    void preTimeStep()
-    {}
+    void beginTimeStep()
+    { }
+
+    /*!
+     * \brief Called by the simulator before each Newton-Raphson iteration.
+     */
+    void beginIteration()
+    { }
+
+    /*!
+     * \brief Called by the simulator after each Newton-Raphson update.
+     */
+    void endIteration()
+    { }
+
+    /*!
+     * \brief Called by the simulator after each time integration.
+     *
+     * This method is intended to do some post processing of the
+     * solution. (e.g., some additional output)
+     */
+    void endTimeStep()
+    { }
+
+    /*!
+     * \brief Called when the end of an simulation episode is reached.
+     *
+     * Typically, a new episode is started in this method.
+     */
+    void endEpisode()
+    {
+        std::cerr << "The end of an episode is reached, but the problem "
+                  << "does not override the endEpisode() method. "
+                  << "Doing nothing!\n";
+    }
 
     /*!
      * \brief Called by Ewoms::Simulator in order to do a time
@@ -379,32 +413,12 @@ public:
     { return true; }
 
     /*!
-     * \brief Called by the simulator after the time integration to
-     *        do some post processing on the solution.
-     */
-    void postTimeStep()
-    { }
-
-    /*!
      * \brief Called by the simulator after everything which can be
      *        done about the current time step is finished and the
      *        model should be prepared to do the next time integration.
      */
     void advanceTimeLevel()
     { model().advanceTimeLevel(); }
-
-    /*!
-     * \brief Called when the end of an simulation episode is reached.
-     *
-     * Typically, a new episode is started in this method.
-     */
-    void episodeEnd()
-    {
-        std::cerr << "The end of an episode is reached, but the problem "
-                  << "does not override the episodeEnd() method. "
-                  << "Doing nothing!\n";
-    }
-    // \}
 
     /*!
      * \brief The problem name.
@@ -486,11 +500,6 @@ public:
     // \}
 
     /*!
-     * \name Restart mechanism
-     */
-    // \{
-
-    /*!
      * \brief This method writes the complete state of the simulation
      *        to the harddisk.
      *
@@ -539,16 +548,16 @@ public:
      * \brief Load a previously saved state of the whole simulation
      *        from disk.
      *
-     * \param tRestart The simulation time on which the program was
-     *                 written to disk.
+     * \param restartTime The simulation time on which the program was
+     *                    written to disk.
      */
-    void restart(Scalar tRestart)
+    void restart(Scalar restartTime)
     {
         typedef Ewoms::Restart Restarter;
 
         Restarter res;
 
-        res.deserializeBegin(simulator_, tRestart);
+        res.deserializeBegin(simulator_, restartTime);
         if (gridView().comm().rank() == 0)
             std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
         simulator().deserialize(res);
@@ -574,13 +583,11 @@ public:
         model().deserialize(res);
     }
 
-    // \}
-
     /*!
      * \brief Write the relevant secondary variables of the current
      *        solution into an VTK output file.
      *
-     * \param verbose If true, then a message will be printed to stdout if a file is written
+     * \param verbose Specify if a message should be printed whenever a file is written
      */
     void writeOutput(bool verbose = true)
     {

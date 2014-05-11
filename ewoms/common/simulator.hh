@@ -423,6 +423,12 @@ public:
     { return episodeLength_; }
 
     /*!
+     * \brief Returns true if the current episode has just been started
+     */
+    bool episodeBegins() const
+    { return this->time() >= episodeStartTime_ + std::max(episodeStartTime_, episodeLength())*1e-8; }
+
+    /*!
      * \brief Returns true if the current episode is finished at the
      *        current time.
      */
@@ -476,15 +482,20 @@ public:
 
         // do the time steps
         while (!finished()) {
+            if (episodeBegins())
+                // notify the problem that a new episode has just been
+                // started.
+                problem_->beginEpisode();
+
             // pre-process the current solution
-            problem_->preTimeStep();
+            problem_->beginTimeStep();
 
             // execute the time integration scheme
             problem_->timeIntegration();
             Scalar dt = timeStepSize();
 
             // post-process the current solution
-            problem_->postTimeStep();
+            problem_->endTimeStep();
 
             // write the result to disk
             if (problem_->shouldWriteOutput())
@@ -499,10 +510,19 @@ public:
 
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
-                problem_->model().jacobianAssembler().setLinearizationReusable(false);
+                // make the linearization not usable for the first
+                // iteration of the next time step at the end of each
+                // episode. Strictly speaking, this is a layering
+                // violation as the simulator is not supposed to know
+                // any specifics of the non-linear solver, but this
+                // call is too easy to forget within the problem's
+                // endEpisode(), so we do it here anyway!
+                model_->jacobianAssembler().setLinearizationReusable(false);
 
-                // define what to do at the end of an episode in the problem
-                problem_->episodeEnd();
+                // Notify the problem about the end of the current
+                // episode. This needs to define what to the next
+                // episode or an exception is thrown...
+                problem_->endEpisode();
             }
             else {
                 // notify the problem that the timestep is done and ask it

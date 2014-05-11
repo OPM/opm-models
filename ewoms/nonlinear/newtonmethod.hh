@@ -481,7 +481,10 @@ protected:
      * \brief Indicates the beginning of a Newton iteration.
      */
     void beginIteration_()
-    { lastError_ = error_; }
+    {
+        problem().beginIteration();
+        lastError_ = error_;
+    }
 
     /*!
      * \brief Assemble the global linear system of equations.
@@ -612,6 +615,7 @@ protected:
                        const SolutionVector &previousSolution)
     {
         ++numIterations_;
+        problem().endIteration();
 
         if (asImp_().verbose_()) {
             std::cout << "Newton iteration " << numIterations_ << ""
