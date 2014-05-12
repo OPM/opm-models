@@ -237,16 +237,16 @@ class RichardsModel
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { numPhases = FluidSystem::numPhases };
-    enum { numComponents = FluidSystem::numComponents };
+     static const int numPhases = FluidSystem::numPhases;
+     static const int numComponents = FluidSystem::numComponents;
 
-    enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
-    enum { gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex) };
+    static const int liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex);
+    static const int gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex);
 
-    enum { liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex) };
-    enum { gasCompIdx = GET_PROP_VALUE(TypeTag, GasComponentIndex) };
+    static const int liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex);
+    static const int gasCompIdx = GET_PROP_VALUE(TypeTag, GasComponentIndex);
 
-    enum { dimWorld = GridView::dimensionworld };
+    static const int dimWorld = GridView::dimensionworld;
 
     // some consistency checks
     static_assert(numPhases == 2,
