@@ -426,14 +426,14 @@ public:
      * \brief Returns true if the current episode has just been started
      */
     bool episodeBegins() const
-    { return this->time() >= episodeStartTime_ + std::max(episodeStartTime_, episodeLength())*1e-8; }
+    { return this->time() < episodeStartTime_ + episodeLength()*1e-8; }
 
     /*!
      * \brief Returns true if the current episode is finished at the
      *        current time.
      */
     bool episodeIsOver() const
-    { return this->time() >= episodeStartTime_ + episodeLength() * (1 - 1e-8); }
+    { return this->time() > episodeStartTime_ + episodeLength()*(1 - 1e-8); }
 
     /*!
      * \brief Returns true if the current episode will be finished
