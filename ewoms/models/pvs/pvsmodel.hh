@@ -26,7 +26,6 @@
 
 #include "pvsproperties.hh"
 #include "pvslocalresidual.hh"
-#include "pvsmodel.hh"
 #include "pvsnewtonmethod.hh"
 #include "pvsprimaryvariables.hh"
 #include "pvsratevector.hh"

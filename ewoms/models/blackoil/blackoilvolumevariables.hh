@@ -55,7 +55,6 @@ class BlackOilVolumeVariables
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { saturation0Idx = Indices::saturation0Idx };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
     enum { gasCompIdx = FluidSystem::gasCompIdx };
@@ -82,35 +81,42 @@ public:
 
         fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
 
-        // material law parameters
-        typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams =
-            problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
-        // update the saturations
-        Scalar sumSat = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
-            fluidState_.setSaturation(phaseIdx,
-                                      priVars[saturation0Idx + phaseIdx]);
-            sumSat += priVars[saturation0Idx + phaseIdx];
-        }
-        fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
+        // extract the water and the gas saturations for convenience
+        Scalar Sw = priVars[Indices::waterSaturationIdx];
 
-        // update the pressures
-        Scalar p0 = priVars[0];
+        Scalar Sg = 0.0;
+        if (priVars.switchingVariableIsGasSaturation())
+            Sg = priVars[Indices::switchIdx];
+
+        fluidState_.setSaturation(waterPhaseIdx, Sw);
+        fluidState_.setSaturation(gasPhaseIdx, Sg);
+        fluidState_.setSaturation(oilPhaseIdx, 1 - Sw - Sg);
+
+        // reference phase (-> gas) pressure
+        Scalar pg = priVars[Indices::gasPressureIdx];
+
+        // now we compute all phase pressures
+        typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         Scalar pC[numPhases];
+        const auto &materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
+            fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
+            if (fluidState_.pressure(phaseIdx) < 1e5) {
+                OPM_THROW(Opm::NumericalProblem,
+                          "All pressures must be at least 1 bar.");
+            }
         }
+
+        // oil phase pressure
+        Scalar po = fluidState_.pressure(oilPhaseIdx);
 
         // update phase compositions. first, set everything to 0, then
         // make the gas/water phases consist of only the gas/water
-        // components and calculate the composition of the liquid oil
-        // phase from the gas formation factor plus the gas/oil
-        // formation volume factors and the reference densities
+        // components
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
@@ -120,118 +126,82 @@ public:
 
         // retrieve the relevant parameters from the fluid
         // system.
-        Scalar p = fluidState_.pressure(oilPhaseIdx);
-        Scalar Bg = FluidSystem::gasFormationVolumeFactor(p);
-        Scalar Bo = FluidSystem::oilFormationVolumeFactor(p);
-        Scalar Rs = FluidSystem::gasDissolutionFactor(p);
-        Scalar rhoo = FluidSystem::surfaceDensity(oilPhaseIdx) / Bo;
+        Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
+        Scalar Bg = FluidSystem::gasFormationVolumeFactor(pg);
+        Scalar Rs = FluidSystem::gasDissolutionFactor(pg);
+
+        Scalar rhorefo = FluidSystem::surfaceDensity(oilPhaseIdx);
         Scalar rhorefg = FluidSystem::surfaceDensity(gasPhaseIdx);
+
+        Scalar rhoo = rhorefo / Bo;
         Scalar rhog = rhorefg / Bg;
+
         Scalar MG = FluidSystem::molarMass(gasPhaseIdx);
         Scalar MO = FluidSystem::molarMass(oilPhaseIdx);
 
-        // calculate composition of oil phase in terms of mass
-        // fractions.
-        Scalar XoG = Rs * rhorefg / rhoo;
-        Scalar XoO = 1 - XoG;
+        if (priVars.switchingVariableIsGasSaturation()) {
+            // we need to calculate the composition of the
+            // gas-saturated oil phase
+            //
+            // for this, we first calculate composition of the
+            // saturated oil phase in terms of mass fractions.
+            Scalar XoG = Rs * rhorefg / rhoo;
 
-        if (XoG < 0 || XoO < 0) {
-            OPM_THROW(Opm::NumericalProblem,
-                      "Only positive values are allowed for the mass fractions "
-                      "of the oil and the gas components in the oil phase. "
-                      "(X_o^G=" << XoG << ", X_o^O=" << XoO << ")");
+            // Then we convert these to mole fractions. This assumes
+            // that the gas and water phases are immiscible and only
+            // consist of their respective components.
+            Scalar avgMolarMass = MO / (1 + XoG * (MO / MG - 1));
+            Scalar xoG = XoG * avgMolarMass / MG;
+            Scalar xoO = 1 - xoG;
+
+            // now we can finally set the oil-phase composition
+            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
+            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, xoO);
         }
+        else {
+            // if the switching variable is not the gas saturation, it
+            // is the mole fraction of the gas component in the oil
+            // phase.
+            Scalar xoG = priVars[Indices::switchIdx];
 
-        // handle undersaturated oil. We interpret negative gas
-        // saturations as the amount of gas that needs to get out pf
-        // the oil. The saturation of the oil phase is then given by 1
-        // minus the water saturation
-        Scalar Sg = fluidState_.saturation(gasPhaseIdx);
-        Scalar Sw = fluidState_.saturation(waterPhaseIdx);
-        if (Sg < 0) {
-            Scalar So = 1 - Sw;
-
-            if (So > 0) {
-                // Calculate the total partial mass density of the gas and
-                // oil components in the saturated oil phase
-                Scalar rho_oGSat = So * XoG * rhoo;
-
-                // Calculate the amount of gas that cannot be subtracted
-                // from the oil and thus needs to be accounted for in the
-                // gas saturation
-                Scalar rho_GInPhase
-                    = std::max(0.0, std::abs(Sg) * rhog - rho_oGSat);
-
-                // calculate the composition of the undersaturated oil phase
-                Scalar rho_oG = std::max(0.0, rho_oGSat - std::abs(Sg) * rhog);
-
-                // convert to mass fractions
-                XoG = rho_oG / (So * rhoo);
-                XoO = 1 - XoG;
-
-                // calculate the bubble pressure of the oil with the new
-                // composition
-                Scalar pBubb = FluidSystem::oilSaturationPressure(XoG);
-
-                // calculate the density of the oil at the saturation pressure
-                rhoo = FluidSystem::surfaceDensity(oilPhaseIdx)
-                       / FluidSystem::oilFormationVolumeFactor(p);
-                // compress to the actual pressure of the system
-                rhoo *= 1.0 + FluidSystem::oilCompressibility()
-                              * (fluidState_.pressure(oilPhaseIdx) - pBubb);
-
-                // convert the "residual gas" into a saturation
-                Sg = -rho_GInPhase / rhog;
-            }
-
-            // update the saturations. Gas phase is not present!
-            fluidState_.setSaturation(gasPhaseIdx, Sg);
-            fluidState_.setSaturation(oilPhaseIdx, So);
+            // this makes setting the oil-phase composition simple
+            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
+            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
-
-        // convert mass to mole fractions
-        Scalar avgMolarMass = MO / (1 + XoG * (MO / MG - 1));
-        Scalar xoG = XoG * avgMolarMass / MG;
-        Scalar xoO = 1 - xoG;
-
-        // set the oil-phase composition
-        fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
-        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, xoO);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
-        rhoo = FluidSystem::density(fluidState_, paramCache, oilPhaseIdx);
 
-        // set the phase densities for the phases
+        // set the phase densities
         fluidState_.setDensity(waterPhaseIdx,
-                               FluidSystem::density(fluidState_, paramCache,
-                                                    waterPhaseIdx));
+                               FluidSystem::density(fluidState_, paramCache, waterPhaseIdx));
         fluidState_.setDensity(gasPhaseIdx, rhog);
-        fluidState_.setDensity(oilPhaseIdx, rhoo);
+        fluidState_.setDensity(oilPhaseIdx,
+                               FluidSystem::density(fluidState_, paramCache, oilPhaseIdx));
 
+        // compute the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // compute and set the viscosity
-            Scalar mu
-                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
         // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_,
-                                            materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
-        // retrieve the porosity from the problem
+        // retrieve the porosity from the problem ...
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
 
-        // intrinsic permeability
+        // ... as well as the intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
-        // update the quantities specific for the velocity model
+        // update the quantities which are required by the chosen
+        // velocity model
         VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
 
 #ifndef NDEBUG
+        // some safety checks in debug mode
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             assert(std::isfinite(fluidState_.density(phaseIdx)));
             assert(std::isfinite(fluidState_.saturation(phaseIdx)));

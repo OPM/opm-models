@@ -32,6 +32,7 @@
 #include "blackoilratevector.hh"
 #include "blackoilboundaryratevector.hh"
 #include "blackoillocalresidual.hh"
+#include "blackoilnewtonmethod.hh"
 #include "blackoilproperties.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
@@ -65,6 +66,9 @@ NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
 //! Set the local residual function
 SET_TYPE_PROP(BlackOilModel, LocalResidual,
               Ewoms::BlackOilLocalResidual<TypeTag>);
+
+//! Use the black-oil specific newton method
+SET_TYPE_PROP(BlackOilModel, NewtonMethod, Ewoms::BlackOilNewtonMethod<TypeTag>);
 
 //! The Model property
 SET_TYPE_PROP(BlackOilModel, Model, Ewoms::BlackOilModel<TypeTag>);
@@ -246,15 +250,12 @@ public:
     {
         std::ostringstream oss;
 
-        if (pvIdx == Indices::pressure0Idx) {
-            oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-        }
-        else if (Indices::saturation0Idx <= pvIdx
-                 && pvIdx <= Indices::saturation0Idx + numPhases - 1)
-        {
-            int phaseIdx = pvIdx - Indices::saturation0Idx;
-            oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
-        }
+        if (pvIdx == Indices::gasPressureIdx)
+            oss << "pressure_" << FluidSystem::phaseName(FluidSystem::gasPhaseIdx);
+        else if (pvIdx == Indices::waterSaturationIdx)
+            oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
+        else if (pvIdx == Indices::switchIdx)
+            oss << "switching";
         else
             assert(false);
 
@@ -281,9 +282,8 @@ public:
      */
     Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
-        if (Indices::pressure0Idx == pvIdx) {
+        if (Indices::gasPressureIdx == pvIdx)
             return 10/referencePressure_;
-        }
 
         return 1;
     }
@@ -313,10 +313,37 @@ public:
         for (size_t dofIdx = 0; dofIdx < this->numDof(); ++ dofIdx) {
             if (this->dofTotalVolume(dofIdx) > 0) {
                 referencePressure_ =
-                    this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
+                    this->solution(/*timeIdx=*/0)[dofIdx][Indices::gasPressureIdx];
                 break;
             }
         }
+    }
+
+    /*!
+     * \internal
+     * \brief Do the primary variable switching after a Newton iteration.
+     *
+     * This is an internal method that needs to be public because it
+     * gets called by the Newton method after an update.
+     */
+    void switchPrimaryVars_()
+    {
+        numSwitched_ = 0;
+
+        int numDof = this->numDof();
+        for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
+            auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
+            if (priVars.adaptSwitchingVariable())
+                ++numSwitched_;
+        }
+
+        // make sure that if there was a variable switch in an
+        // other partition we will also set the switch flag
+        // for our partition.
+        numSwitched_ = this->gridView_.comm().sum(numSwitched_);
+
+        this->simulator_.model().newtonMethod().endIterMsg()
+            << ", num switched=" << numSwitched_;
     }
 
 // HACK: this should be made private and the BaseModel should be
@@ -345,6 +372,7 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseOutput); }
 
     mutable Scalar referencePressure_;
+    int numSwitched_;
 };
 } // namespace Ewoms
 
