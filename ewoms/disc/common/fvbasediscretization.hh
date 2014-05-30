@@ -36,6 +36,7 @@
 #include "fvbasediscretization.hh"
 #include "fvbasegradientcalculator.hh"
 #include "fvbasenewtonmethod.hh"
+#include "fvbaseprimaryvariables.hh"
 #include "fvbasevolumevariables.hh"
 #include "fvbasefluxvariables.hh"
 
@@ -151,9 +152,7 @@ SET_TYPE_PROP(FvBaseDiscretization, GlobalEqVector,
 /*!
  * \brief An object representing a local set of primary variables.
  */
-SET_TYPE_PROP(FvBaseDiscretization, PrimaryVariables,
-              Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                                GET_PROP_VALUE(TypeTag, NumEq)>);
+SET_TYPE_PROP(FvBaseDiscretization, PrimaryVariables, Ewoms::FvBasePrimaryVariables<TypeTag>);
 
 /*!
  * \brief The type of a solution for the whole grid at a fixed time.
@@ -710,7 +709,7 @@ public:
     {
 #if HAVE_VALGRIND
         for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i)
-            Valgrind::CheckDefined(asImp_().solution(/*timeIdx=*/0)[i]);
+            asImp_().solution(/*timeIdx=*/0)[i].checkDefined();
 #endif // HAVE_VALGRIND
 
         asImp_().updateBegin();
@@ -1172,7 +1171,7 @@ protected:
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
                 simulator_.problem().initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
-                Valgrind::CheckDefined(uCur[globalIdx]);
+                uCur[globalIdx].checkDefined();
 
                 dofTotalVolume_[globalIdx] +=
                     elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();

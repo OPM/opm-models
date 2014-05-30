@@ -26,9 +26,11 @@
 
 #include "ncpproperties.hh"
 
+#include <ewoms/disc/common/fvbaseprimaryvariables.hh>
+#include <ewoms/models/common/energymodule.hh>
+
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <ewoms/models/common/energymodule.hh>
 
 #include <dune/common/fvector.hh>
 
@@ -44,14 +46,11 @@ namespace Ewoms {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class NcpPrimaryVariables
-    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq)>
+class NcpPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef FvBasePrimaryVariables<TypeTag> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;

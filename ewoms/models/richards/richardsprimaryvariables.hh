@@ -24,12 +24,14 @@
 #ifndef EWOMS_RICHARDS_PRIMARY_VARIABLES_HH
 #define EWOMS_RICHARDS_PRIMARY_VARIABLES_HH
 
-#include <dune/common/fvector.hh>
+#include "richardsproperties.hh"
+
+#include <ewoms/disc/common/fvbaseprimaryvariables.hh>
 
 #include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 
-#include "richardsproperties.hh"
+#include <dune/common/fvector.hh>
 
 namespace Ewoms {
 
@@ -42,13 +44,10 @@ namespace Ewoms {
  * contents from an aribitatry fluid state.
  */
 template <class TypeTag>
-class RichardsPrimaryVariables
-    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
-                               GET_PROP_VALUE(TypeTag, NumEq)>
+class RichardsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
+    typedef FvBasePrimaryVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
