@@ -335,7 +335,6 @@ public:
     template <typename T>
     void add(std::shared_ptr<const ErtKeyword<T>> ertKeyword)
     {
-        std::cout << "add ERT keyword " << ertKeyword->name() << "\n";
         attachedKeywords_.push_back(ertKeyword);
         ecl_rst_file_add_kw(restartHandle_->ertHandle(), ertKeyword->ertHandle());
     }

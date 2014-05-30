@@ -90,6 +90,8 @@ public:
         }
 
         timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+        timeStepIdx_ = 0;
+        startTime_ = time();
         endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
 
         episodeIdx_ = 0;
