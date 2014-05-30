@@ -58,9 +58,6 @@ NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(Simulator);
-NEW_PROP_TAG(EndTime);
-NEW_PROP_TAG(RestartTime);
-NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
@@ -102,15 +99,7 @@ int setupParameters_(int argc, char **argv)
     EWOMS_REGISTER_PARAM(TypeTag, int, PrintParameters,
                          "Print the values of the run-time parameters at the "
                          "start of the simulation");
-    EWOMS_REGISTER_PARAM(TypeTag, Scalar, EndTime,
-                         "The time at which the simulation is finished [s]");
-    EWOMS_REGISTER_PARAM(TypeTag, Scalar, InitialTimeStepSize,
-                         "The size of the initial time step [s]");
-    EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestartTime,
-                         "The time time at which a simulation restart should "
-                         "be attempted [s]");
 
-    GridManager::registerParameters();
     Simulator::registerParameters();
 
     ////////////////////////////////////////////////////////////
@@ -216,14 +205,6 @@ int start(int argc, char **argv)
             return 1;
         }
 
-        // deal with the restart stuff
-        bool doRestart = false;
-        Scalar startTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
-        if (startTime > -1e100)
-            doRestart = true;
-        else
-            startTime = 0.0;
-
         if (myRank == 0)
             std::cout << "eWoms " << EWOMS_VERSION
 #ifdef EWOMS_CODENAME
@@ -268,7 +249,6 @@ int start(int argc, char **argv)
         // deallocate the problem and before the time manager and the
         // grid
         Simulator simulator;
-        simulator.init(startTime, initialTimeStepSize, endTime, doRestart);
         simulator.run();
 
         if (myRank == 0) {

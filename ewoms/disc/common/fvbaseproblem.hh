@@ -500,30 +500,6 @@ public:
     // \}
 
     /*!
-     * \brief This method writes the complete state of the simulation
-     *        to the harddisk.
-     *
-     * The file will start with the prefix returned by the name()
-     * method, has the current time of the simulation clock in it's
-     * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
-     * file.)  See Ewoms::Restart for details.
-     */
-    void serialize()
-    {
-        typedef Ewoms::Restart Restarter;
-        Restarter res;
-        res.serializeBegin(simulator_);
-        if (gridView().comm().rank() == 0)
-            std::cout << "Serialize to file '" << res.fileName() << "'"
-                      << ", next time step size: " << asImp_().simulator().timeStepSize()
-                      << "\n" << std::flush;
-
-        simulator().serialize(res);
-        asImp_().serialize(res);
-        res.serializeEnd();
-    }
-
-    /*!
      * \brief This method writes the complete state of the problem
      *        to the harddisk.
      *
@@ -541,28 +517,6 @@ public:
     {
         if (enableVtkOutput_())
             defaultVtkWriter_->serialize(res);
-        model().serialize(res);
-    }
-
-    /*!
-     * \brief Load a previously saved state of the whole simulation
-     *        from disk.
-     *
-     * \param restartTime The simulation time on which the program was
-     *                    written to disk.
-     */
-    void restart(Scalar restartTime)
-    {
-        typedef Ewoms::Restart Restarter;
-
-        Restarter res;
-
-        res.deserializeBegin(simulator_, restartTime);
-        if (gridView().comm().rank() == 0)
-            std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
-        simulator().deserialize(res);
-        asImp_().deserialize(res);
-        res.deserializeEnd();
     }
 
     /*!
@@ -580,7 +534,6 @@ public:
     {
         if (enableVtkOutput_())
             defaultVtkWriter_->deserialize(res);
-        model().deserialize(res);
     }
 
     /*!

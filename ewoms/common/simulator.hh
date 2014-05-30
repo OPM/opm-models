@@ -25,8 +25,10 @@
 #ifndef EWOMS_SIMULATOR_HH
 #define EWOMS_SIMULATOR_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/parallel/mpihelper.hh>
+#include <ewoms/io/restart.hh>
+
+#include <opm/core/utility/PropertySystem.hpp>
 
 #include <dune/common/timer.hh>
 
@@ -39,6 +41,9 @@ NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(Model);
 NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(EndTime);
+NEW_PROP_TAG(RestartTime);
+NEW_PROP_TAG(InitialTimeStepSize);
 }}
 
 namespace Ewoms {
@@ -74,18 +79,25 @@ public:
     {
         verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
+        // deal with the restart stuff
+        Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
+        if (restartTime > -1e100) {
+            time_ = restartTime;
+            doRestart_ = true;
+        }
+        else {
+            time_ = 0.0;
+            doRestart_ = false;
+        }
+
+        timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+        endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
+
         episodeIdx_ = 0;
+        episodeLength_ = 1e100;
         episodeStartTime_ = 0;
 
-        time_ = 0.0;
-        startTime_ = 0.0;
-        endTime_ = -1e100;
-
-        timeStepSize_ = 1.0;
-        timeStepIdx_ = 0;
         finished_ = false;
-
-        episodeLength_ = 1e100;
 
         if (verbose_)
             std::cout << "Allocating the grid\n"
@@ -117,6 +129,14 @@ public:
      */
     static void registerParameters()
     {
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, EndTime,
+                             "The time at which the simulation is finished [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, InitialTimeStepSize,
+                             "The size of the initial time step [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestartTime,
+                             "The time time at which a simulation restart should "
+                             "be attempted [s]");
+
         GridManager::registerParameters();
         Model::registerParameters();
         Problem::registerParameters();
@@ -171,52 +191,6 @@ public:
      */
     const Problem &problem() const
     { return *problem_; }
-
-    /*!
-     * \brief Apply the initial condition and write it to disk.
-     *
-     * This method also deserializes a previously saved state of the
-     * simulation from disk if instructed to do so.
-     *
-     * \param startTime The time \f$\mathrm{[s]}\f$ for the
-     *                  simulation's initial solution (typically 0)
-     * \param initialTimeStepSize The initial time step size \f$\mathrm{[s]}\f$
-     * \param endTime The time at which the simulation is finished
-     *                \f$\mathrm{[s]}\f$
-     * \param doRestart Specifies whether a restart file should be
-     *                  loaded or if the problem should provide the
-     *                  initial condition.
-     */
-    void init(Scalar startTime, Scalar initialTimeStepSize, Scalar endTime, bool doRestart = false)
-    {
-        time_ = startTime;
-        startTime_ = startTime;
-        timeStepSize_ = initialTimeStepSize;
-        endTime_ = endTime;
-
-        // apply the initial solution
-        if (verbose_)
-            std::cout << "Applying the initial solution of the \"" << problem_->name() << "\" problem\n"
-                      << std::flush;
-        problem_->init();
-
-        // restart problem if necessary
-        if (doRestart) {
-            if (verbose_)
-                std::cout << "Loading the previously saved state at t=" << startTime << "\n"
-                          << std::flush;
-
-            problem_->restart(startTime);
-        }
-        else {
-            // write initial condition (if problem is not restarted)
-            time_ -= timeStepSize_;
-            if (problem_->shouldWriteOutput())
-                problem_->writeOutput();
-            time_ += timeStepSize_;
-        }
-    }
-
 
     /*!
      * \brief Set the time of the start of the simulation.
@@ -478,7 +452,7 @@ public:
      */
     void run()
     {
-        timer_.reset();
+        init_();
 
         // do the time steps
         while (!finished()) {
@@ -533,7 +507,7 @@ public:
 
             // write restart file if mandated by the problem
             if (problem_->shouldWriteRestartFile())
-                problem_->serialize();
+                serialize();
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
@@ -547,9 +521,57 @@ public:
     }
 
     /*!
-     * \name Saving/restoring the object state
+     * \name Saving/restoring the simulation state
      * \{
      */
+
+    /*!
+     * \brief This method writes the complete state of the simulation
+     *        to the harddisk.
+     *
+     * The file will start with the prefix returned by the name()
+     * method, has the current time of the simulation clock in it's
+     * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
+     * file.)  See Ewoms::Restart for details.
+     */
+    void serialize()
+    {
+        typedef Ewoms::Restart Restarter;
+        Restarter res;
+        res.serializeBegin(*this);
+        if (gridView().comm().rank() == 0)
+            std::cout << "Serialize to file '" << res.fileName() << "'"
+                      << ", next time step size: " << timeStepSize()
+                      << "\n" << std::flush;
+
+        this->serialize(res);
+        problem_->serialize(res);
+        model_->serialize(res);
+        res.serializeEnd();
+    }
+
+    /*!
+     * \brief Load a previously saved state of the whole simulation
+     *        from disk.
+     *
+     * \param restartTime The simulation time on which the program was
+     *                    written to disk.
+     */
+    void restart(Scalar restartTime)
+    {
+        typedef Ewoms::Restart Restarter;
+
+        Restarter res;
+
+        res.deserializeBegin(*this, restartTime);
+        if (gridView().comm().rank() == 0)
+            std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
+        this->deserialize(res);
+        problem_->deserialize(res);
+        model_->deserialize(res);
+        res.deserializeEnd();
+    }
+
     /*!
      * \brief Write the time manager's state to a restart file.
      *
@@ -561,9 +583,13 @@ public:
     void serialize(Restarter &restarter)
     {
         restarter.serializeSectionBegin("Simulator");
-        restarter.serializeStream() << episodeIdx_ << " " << episodeStartTime_ << " "
-                              << episodeLength_ << " " << time_ << " "
-                              << timeStepIdx_ << " ";
+        restarter.serializeStream()
+            << episodeIdx_ << " "
+            << episodeStartTime_ << " "
+            << episodeLength_ << " "
+            << startTime_ << " "
+            << time_ << " "
+            << timeStepIdx_ << " ";
         restarter.serializeSectionEnd();
     }
 
@@ -578,12 +604,50 @@ public:
     void deserialize(Restarter &restarter)
     {
         restarter.deserializeSectionBegin("Simulator");
-        restarter.deserializeStream() >> episodeIdx_ >> episodeStartTime_
-            >> episodeLength_ >> time_ >> timeStepIdx_;
+        restarter.deserializeStream()
+            >> episodeIdx_
+            >> episodeStartTime_
+            >> episodeLength_
+            >> startTime_
+            >> time_
+            >> timeStepIdx_;
         restarter.deserializeSectionEnd();
     }
 
 private:
+    /*!
+     * \brief Apply the initial condition and write it to disk.
+     *
+     * This method also deserializes a previously saved state of the
+     * simulation from disk if instructed to do so.
+     */
+    void init_()
+    {
+        timer_.reset();
+
+        // apply the initial solution
+        if (verbose_)
+            std::cout << "Applying the initial solution of the \"" << problem_->name() << "\" problem\n"
+                      << std::flush;
+        problem_->init();
+
+        // try restart the simulation if requested
+        if (doRestart_) {
+            if (verbose_)
+                std::cout << "Loading the previously saved state for t=" << time_ << "\n"
+                          << std::flush;
+
+            restart(time_);
+        }
+        else {
+            // write initial condition (if problem is not restarted)
+            time_ -= timeStepSize_;
+            if (problem_->shouldWriteOutput())
+                problem_->writeOutput();
+            time_ += timeStepSize_;
+        }
+    }
+
     GridManager *gridManager_;
     Model *model_;
     Problem *problem_;
@@ -601,6 +665,7 @@ private:
     int timeStepIdx_;
     bool finished_;
     bool verbose_;
+    bool doRestart_;
 };
 } // namespace Ewoms
 
