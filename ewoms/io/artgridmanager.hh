@@ -71,7 +71,6 @@ class ArtGridManager : public BaseGridManager<TypeTag>
     typedef Dune::FieldVector<double, 2> GlobalPosition;
     typedef Ewoms::FractureMapper<TypeTag> FractureMapper;
     typedef std::shared_ptr<Grid> GridPointer;
-    typedef std::shared_ptr<const Grid> GridConstPointer;
 
 public:
     /*!
@@ -293,16 +292,16 @@ public:
     }
 
     /*!
-     * \brief Returns a pointer to the grid.
+     * \brief Returns a reference to the grid.
      */
-    GridPointer gridPointer()
-    { return gridPtr_; }
+    Grid& grid()
+    { return *gridPtr_; }
 
     /*!
-     * \brief Returns a pointer to the grid.
+     * \brief Returns a reference to the grid.
      */
-    GridConstPointer gridPointer() const
-    { return gridPtr_; }
+    const Grid& grid() const
+    { return *gridPtr_; }
 
     /*!
      * \brief Distributes the grid on all processes of a parallel

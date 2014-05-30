@@ -27,6 +27,7 @@
 #include <ewoms/common/parametersystem.hh>
 
 #include <type_traits>
+#include <memory>
 
 namespace Opm {
 namespace Properties {
@@ -132,9 +133,6 @@ public:
         : simulator_(simulator)
     {}
 
-    ~BaseGridManager()
-    { delete gridView_; }
-
     /*!
      * \brief Returns a reference to the grid view to be used.
      */
@@ -148,29 +146,17 @@ public:
     { return *gridView_; }
 
     /*!
-     * \brief Returns a reference to the grid.
-     */
-    Grid &grid()
-    { return *asImp_().gridPointer(); }
-
-    /*!
-     * \brief Returns a reference to the grid.
-     */
-    const Grid &grid() const
-    { return *asImp_().gridPointer(); }
-
-    /*!
      * \brief Distribute the grid (and attached data) over all
      *        processes.
      */
     void loadBalance()
-    { grid().loadBalance(); }
+    { asImp_().grid().loadBalance(); }
 
 protected:
     // this method should be called after the grid has been allocated
     void finalizeInit_()
     {
-        gridView_ = new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_()));
+        gridView_.reset(new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_())));
     }
 
 private:
@@ -181,7 +167,7 @@ private:
     { return *static_cast<const Implementation*>(this); }
 
     Simulator &simulator_;
-    GridView *gridView_;
+    std::unique_ptr<GridView> gridView_;
 };
 
 } // namespace Ewoms

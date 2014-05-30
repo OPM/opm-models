@@ -77,9 +77,7 @@ public:
         const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
         unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        initialized_ = false;
         gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
-        initialized_ = true;
 
         if (numRefinments > 0)
             gridPtr_->globalRefine(numRefinments);
@@ -88,29 +86,28 @@ public:
     }
 
     /*!
-     * \brief Destroys the grid
-     *
-     * This is required to guarantee that the grid is deleted before
-     * MPI_Comm_free is called.
+     * \brief Returns a reference to the grid.
      */
-    ~DgfGridManager()
-    {
-        if (initialized_)
-            delete gridPtr_.release();
-    }
+    Grid& grid()
+    { return *gridPtr_; }
 
     /*!
-     * \brief Returns a reference to the grid pointer.
+     * \brief Returns a reference to the grid.
      */
-    GridPointer &gridPointer()
+    const Grid& grid() const
+    { return *gridPtr_; }
+
+    /*!
+     * \brief Returns a reference to the DGF grid pointer.
+     */
+    GridPointer& dgfGridPointer()
     { return gridPtr_; }
 
     /*!
-     * \brief Returns a reference to the grid pointer.
+     * \brief Returns a constant reference to the DGF grid pointer.
      */
-    const GridPointer &gridPointer() const
+    const GridPointer& dgfGridPointer() const
     { return gridPtr_; }
-
 
     /*!
      * \brief Distributes the grid on all processes of a parallel
@@ -124,7 +121,6 @@ public:
 
 private:
     GridPointer gridPtr_;
-    bool initialized_;
 };
 
 } // namespace Ewoms

@@ -31,6 +31,8 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/common/fvector.hh>
 
+#include <memory>
+
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
@@ -61,7 +63,6 @@ class SimplexGridManager
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
 
     typedef Dune::shared_ptr<Grid> GridPointer;
-    typedef Dune::shared_ptr<const Grid> GridConstPointer;
     typedef typename Grid::ctype CoordScalar;
     enum { dimWorld = Grid::dimensionworld };
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
@@ -128,16 +129,16 @@ public:
     }
 
     /*!
-     * \brief Returns a pointer to the grid.
+     * \brief Returns a reference to the grid.
      */
-    GridPointer gridPointer()
+    Grid& grid()
     { return simplexGrid_; }
 
     /*!
-     * \brief Returns a pointer to the grid.
+     * \brief Returns a reference to the grid.
      */
-    GridConstPointer gridPointer() const
-    { return simplexGrid_; }
+    const Grid& grid() const
+    { return *simplexGrid_; }
 
 private:
     GridPointer simplexGrid_;

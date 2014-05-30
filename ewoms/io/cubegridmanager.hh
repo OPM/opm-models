@@ -33,6 +33,8 @@
 
 #include <dune/common/fvector.hh>
 
+#include <memory>
+
 namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
@@ -54,7 +56,7 @@ namespace Ewoms {
  * \brief Provides a grid manager which a regular grid made of
  *        quadrilaterals.
  *
- * A quadirlateral is a line segment in 1D, a rectangle in 2D and a
+ * A quadrilateral is a line segment in 1D, a rectangle in 2D and a
  * cube in 3D.
  */
 template <class TypeTag>
@@ -66,7 +68,6 @@ class CubeGridManager : public BaseGridManager<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
 
     typedef Dune::shared_ptr<Grid> GridPointer;
-    typedef Dune::shared_ptr<const Grid> GridConstPointer;
     typedef typename Grid::ctype CoordScalar;
     enum { dimWorld = Grid::dimensionworld };
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
@@ -132,20 +133,17 @@ public:
         this->finalizeInit_();
     }
 
-    ~CubeGridManager()
-    { cubeGrid_.reset(); }
+    /*!
+     * \brief Returns a reference to the grid.
+     */
+    Grid& grid()
+    { return *cubeGrid_; }
 
     /*!
-     * \brief Returns a pointer to the grid.
+     * \brief Returns a reference to the grid.
      */
-    GridPointer gridPointer()
-    { return cubeGrid_; }
-
-    /*!
-     * \brief Returns a pointer to the grid.
-     */
-    GridConstPointer gridPointer() const
-    { return cubeGrid_; }
+    const Grid& grid() const
+    { return *cubeGrid_; }
 
 protected:
     GridPointer cubeGrid_;
