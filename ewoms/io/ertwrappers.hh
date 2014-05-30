@@ -74,12 +74,18 @@ const Opm::EclipseGridConstPtr getEclipseGrid__(const EclGridManager<TypeTag> &g
 
 /// \endcond
 
+class ErtBaseKeyword
+{
+public:
+    virtual ~ErtBaseKeyword() {}
+};
+
 /*!
  * \brief This is a smart pointer class for ERT's ecl_kw_type
  *        structure.
  */
 template <typename T>
-class ErtKeyword
+class ErtKeyword : public ErtBaseKeyword
 {
 public:
 #if HAVE_ERT
@@ -130,6 +136,7 @@ public:
             ecl_kw_free(ertHandle_);
         }
 
+        name_ = name;
         ertHandle_ = ecl_kw_alloc(name.c_str(),
                                   data.size(),
                                   ertType_());
@@ -142,8 +149,13 @@ public:
         for (int i = 0; i < numEntries; ++i) {
             target[i] = static_cast<T>(data[i]);
         }
+
+        Valgrind::CheckDefined(target, numEntries);
 #endif
     }
+
+    const std::string &name() const
+    { return name_; }
 
     ErtHandleType *ertHandle() const
     { return ertHandle_; }
@@ -164,6 +176,7 @@ private:
     }
 #endif
 
+    std::string name_;
     ErtHandleType *ertHandle_;
 };
 
@@ -320,14 +333,19 @@ public:
     { ecl_rst_file_end_solution(restartHandle_->ertHandle()); }
 
     template <typename T>
-    void add(const ErtKeyword<T> &ertKeyword)
-    { ecl_rst_file_add_kw(restartHandle_->ertHandle(), ertKeyword.ertHandle()); }
+    void add(std::shared_ptr<const ErtKeyword<T>> ertKeyword)
+    {
+        std::cout << "add ERT keyword " << ertKeyword->name() << "\n";
+        attachedKeywords_.push_back(ertKeyword);
+        ecl_rst_file_add_kw(restartHandle_->ertHandle(), ertKeyword->ertHandle());
+    }
 
     ecl_rst_file_type *ertHandle() const
     { return restartHandle_->ertHandle(); }
 
 private:
     ErtRestartFile *restartHandle_;
+    std::list<std::shared_ptr<const ErtBaseKeyword>> attachedKeywords_;
 };
 
 } // namespace Ewoms
