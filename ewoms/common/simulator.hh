@@ -33,6 +33,7 @@
 #include <dune/common/timer.hh>
 
 #include <iostream>
+#include <memory>
 
 namespace Opm {
 namespace Properties {
@@ -74,8 +75,6 @@ public:
     Simulator(const Simulator &) = delete;
 
     Simulator(bool verbose = true)
-        : model_(0)
-        , problem_(0)
     {
         verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
@@ -103,7 +102,7 @@ public:
             std::cout << "Allocating the grid\n"
                       << std::flush;
 
-        gridManager_ = new GridManager(*this);
+        gridManager_.reset(new GridManager(*this));
 
         if (verbose_)
             std::cout << "Distributing the grid\n"
@@ -113,15 +112,8 @@ public:
         if (verbose_)
             std::cout << "Allocating the problem and the model\n"
                       << std::flush;
-        model_ = new Model(*this);
-        problem_ = new Problem(*this);
-    }
-
-    ~Simulator()
-    {
-        delete problem_;
-        delete model_;
-        delete gridManager_;
+        model_.reset(new Model(*this));
+        problem_.reset(new Problem(*this));
     }
 
     /*!
@@ -648,9 +640,9 @@ private:
         }
     }
 
-    GridManager *gridManager_;
-    Model *model_;
-    Problem *problem_;
+    std::unique_ptr<GridManager> gridManager_;
+    std::unique_ptr<Model> model_;
+    std::unique_ptr<Problem> problem_;
 
     int episodeIdx_;
     Scalar episodeStartTime_;
