@@ -166,24 +166,33 @@ public:
             Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
 
             if (saturationsOutput_()) {
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+                for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                     saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
+                    Valgrind::CheckDefined(saturation_[phaseIdx][I]);
+                }
             }
             if (pressuresOutput_()) {
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)
+                for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                     pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
+                    Valgrind::CheckDefined(pressure_[phaseIdx][I]);
+                }
             }
-            if (gasDissolutionFactorOutput_())
+            if (gasDissolutionFactorOutput_()) {
                 gasDissolutionFactor_[I] = FluidSystem::gasDissolutionFactor(po);
-            if (gasFormationVolumeFactorOutput_())
-                gasFormationVolumeFactor_[I]
-                    = FluidSystem::gasFormationVolumeFactor(po);
-            if (oilFormationVolumeFactorOutput_())
-                oilFormationVolumeFactor_[I]
-                    = FluidSystem::oilFormationVolumeFactor(po);
-            if (oilSaturationPressureOutput_())
-                oilSaturationPressure_[I]
-                    = FluidSystem::oilSaturationPressure(X_oG);
+                Valgrind::CheckDefined(gasDissolutionFactor_[I]);
+            }
+            if (gasFormationVolumeFactorOutput_()) {
+                gasFormationVolumeFactor_[I] = FluidSystem::gasFormationVolumeFactor(po);
+                Valgrind::CheckDefined(gasFormationVolumeFactor_[I]);
+            }
+            if (oilFormationVolumeFactorOutput_()) {
+                oilFormationVolumeFactor_[I] = FluidSystem::oilFormationVolumeFactor(po);
+                Valgrind::CheckDefined(oilFormationVolumeFactor_[I]);
+            }
+            if (oilSaturationPressureOutput_()) {
+                oilSaturationPressure_[I] = FluidSystem::oilSaturationPressure(X_oG);
+                Valgrind::CheckDefined(oilSaturationPressure_[I]);
+            }
         }
     }
 
