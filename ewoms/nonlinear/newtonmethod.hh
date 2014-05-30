@@ -39,6 +39,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <unistd.h>
+
 namespace Ewoms {
 // forward declaration of classes
 template <class TypeTag>
@@ -247,7 +249,11 @@ public:
         // Clear the current line using an ansi escape
         // sequence.  For an explanation see
         // http://en.wikipedia.org/wiki/ANSI_escape_code
-        const char clearRemainingLine[] = { 0x1b, '[', 'K', 0 };
+        const char *clearRemainingLine = "\n";
+        if (isatty(fileno(stdout))) {
+            const char blubb[] = { 0x1b, '[', 'K', '\r', 0 };
+            clearRemainingLine = blubb;
+        }
 
         SolutionVector &currentSolution = model().solution(/*historyIdx=*/0);
         SolutionVector previousSolution(currentSolution);
@@ -273,7 +279,8 @@ public:
             previousSolution = currentSolution;
 
             if (asImp_().verbose_()) {
-                std::cout << "\rAssemble: r(x^k) = dS/dt + div F - q;   M = grad r"
+                std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad r"
+                          << clearRemainingLine
                           << std::flush;
             }
 
@@ -302,7 +309,7 @@ public:
             };
 
             if (asImp_().verbose_()) {
-                std::cout << "\rSolve: M deltax^k = r"
+                std::cout << "Solve: M deltax^k = r"
                           << clearRemainingLine
                           << std::flush;
             }
@@ -325,7 +332,7 @@ public:
 
             // update the solution
             if (asImp_().verbose_()) {
-                std::cout << "\rUpdate: x^(k+1) = x^k - deltax^k"
+                std::cout << "Update: x^(k+1) = x^k - deltax^k"
                           << clearRemainingLine
                           << std::flush;
             }
@@ -344,9 +351,8 @@ public:
 
 
                 // clear current line on terminal
-                if (asImp_().verbose_())
-                    std::cout << "\r"
-                              << clearRemainingLine
+                if (asImp_().verbose_() && isatty(fileno(stdout)))
+                    std::cout << clearRemainingLine
                               << std::flush;
 
                 // tell the implementation that we're done with this
