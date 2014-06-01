@@ -304,8 +304,8 @@ public:
     bool finished() const
     {
         assert(timeStepSize_ >= 0.0);
-        return finished_
-            || (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8 >= endTime());
+        Scalar eps = std::max(std::abs(this->time()), timeStepSize())*1e-8;
+        return finished_ || (this->time() + eps >= endTime());
     }
 
     /*!
@@ -356,7 +356,7 @@ public:
     void startNextEpisode(Scalar len = 1e100)
     {
         ++episodeIdx_;
-        episodeStartTime_ = time_;
+        episodeStartTime_ = startTime_ + time_;
         episodeLength_ = len;
     }
 
@@ -394,14 +394,14 @@ public:
      * \brief Returns true if the current episode has just been started
      */
     bool episodeBegins() const
-    { return this->time() < episodeStartTime_ + episodeLength()*1e-8; }
+    { return startTime() + this->time() < episodeStartTime_ + episodeLength()*1e-8; }
 
     /*!
      * \brief Returns true if the current episode is finished at the
      *        current time.
      */
     bool episodeIsOver() const
-    { return this->time() > episodeStartTime_ + episodeLength()*(1 - 1e-8); }
+    { return startTime() + this->time() > episodeStartTime_ + episodeLength()*(1 - 1e-8); }
 
     /*!
      * \brief Returns true if the current episode will be finished
@@ -409,8 +409,7 @@ public:
      */
     bool episodeWillBeOver() const
     {
-        return
-            this->time() + timeStepSize() >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
+        return this->time() + timeStepSize() >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
     }
 
     /*!
@@ -428,9 +427,7 @@ public:
 
         // make sure that we don't exceed the end of the
         // current episode.
-        return std::max<Scalar>(0.0,
-                                episodeLength()
-                                - (this->time() - episodeStartTime()));
+        return std::max<Scalar>(0.0, episodeLength() - (this->time() - episodeStartTime()));
     }
 
     /*
@@ -468,7 +465,7 @@ public:
             if (problem_->shouldWriteOutput())
                 problem_->writeOutput();
 
-            // prepare the model for the next time integration
+            // do the next time integration
             problem_->advanceTimeLevel();
 
             // advance the simulated time by the current time step size
