@@ -54,9 +54,6 @@ namespace Opm {
 // forward declaration of property tags
 namespace Properties {
 NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(Grid);
-NEW_PROP_TAG(GridManager);
-NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
@@ -76,8 +73,6 @@ namespace Ewoms {
 template <class TypeTag>
 int setupParameters_(int argc, char **argv)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
 
