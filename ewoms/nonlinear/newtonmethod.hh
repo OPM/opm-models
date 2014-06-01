@@ -120,8 +120,7 @@ NEW_PROP_TAG(NewtonMaxIterations);
 
 // set default values for the properties
 SET_TYPE_PROP(NewtonMethod, NewtonMethod, Ewoms::NewtonMethod<TypeTag>);
-SET_TYPE_PROP(NewtonMethod, NewtonConvergenceWriter,
-              Ewoms::NullConvergenceWriter<TypeTag>);
+SET_TYPE_PROP(NewtonMethod, NewtonConvergenceWriter, Ewoms::NullConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonWriteConvergence, false);
 SET_BOOL_PROP(NewtonMethod, NewtonVerbose, true);
 SET_SCALAR_PROP(NewtonMethod, NewtonTolerance, 1e-8);
@@ -271,22 +270,22 @@ public:
         // execute the method as long as the implementation thinks
         // that we should do another iteration
         while (asImp_().proceed_()) {
-            // notify the implementation that we're about to start
-            // a new iteration
-            asImp_().beginIteration_();
-
-            // make the current solution to the old one
-            previousSolution = currentSolution;
-
-            if (asImp_().verbose_()) {
-                std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad r"
-                          << clearRemainingLine
-                          << std::flush;
-            }
-
             // linearize the problem at the current solution
             try
             {
+                // notify the implementation that we're about to start
+                // a new iteration
+                asImp_().beginIteration_();
+
+                // make the current solution to the old one
+                previousSolution = currentSolution;
+
+                if (asImp_().verbose_()) {
+                    std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad r"
+                              << clearRemainingLine
+                              << std::flush;
+                }
+
                 assembleTimer_.start();
                 asImp_().linearize_();
                 assembleTimer_.stop();
@@ -363,7 +362,7 @@ public:
             {
                 updateTimer_.stop();
                 if (asImp_().verbose_())
-                    std::cout << "Newton: Caught exception during update: \""
+                    std::cout << "Newton: Caught Dune exception during update: \""
                               << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
