@@ -60,7 +60,7 @@
  * \endcode
  */
 #define EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
-    Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>(     \
+    ::Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>( \
         #ParamName, #ParamName, Description)
 
 /*!
@@ -73,7 +73,7 @@
  * will be thrown.
  */
 #define EWOMS_END_PARAM_REGISTRATION(TypeTag)                                  \
-    Ewoms::Parameters::endParamRegistration<TypeTag>()
+    ::Ewoms::Parameters::endParamRegistration<TypeTag>()
 
 /*!
  * \ingroup Parameter
@@ -91,13 +91,13 @@
  * \endcode
  */
 #define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)                         \
-    (Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(#ParamName,   \
-                                                                 #ParamName))
+    (::Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, \
+                                                                   #ParamName))
 
 //!\cond SKIP_THIS
-#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                        \
-    (Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(              \
-        #ParamName, #ParamName,                                                \
+#define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                 \
+    (::Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(     \
+        #ParamName, #ParamName,                                         \
         /*errorIfNotRegistered=*/false))
 
 namespace Ewoms {
@@ -180,16 +180,16 @@ SET_PROP(ParameterSystem, ParameterMetaData)
         return obj_;
     }
 
-    static std::map<std::string, Ewoms::Parameters::ParamInfo> &registry()
+    static std::map<std::string, ::Ewoms::Parameters::ParamInfo> &registry()
     {
-        static std::map<std::string, Ewoms::Parameters::ParamInfo> obj_;
+        static std::map<std::string, ::Ewoms::Parameters::ParamInfo> obj_;
         return obj_;
     }
 
-    static std::list<Ewoms::Parameters::ParamRegFinalizerBase_ *> &
+    static std::list<::Ewoms::Parameters::ParamRegFinalizerBase_ *> &
     registrationFinalizers()
     {
-        static std::list<Ewoms::Parameters::ParamRegFinalizerBase_ *> obj_;
+        static std::list<::Ewoms::Parameters::ParamRegFinalizerBase_ *> obj_;
         return obj_;
     }
 
