@@ -186,10 +186,10 @@ SET_PROP(ParameterSystem, ParameterMetaData)
         return obj_;
     }
 
-    static std::list<::Ewoms::Parameters::ParamRegFinalizerBase_ *> &
+    static std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> &
     registrationFinalizers()
     {
-        static std::list<::Ewoms::Parameters::ParamRegFinalizerBase_ *> obj_;
+        static std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> obj_;
         return obj_;
     }
 
