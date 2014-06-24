@@ -40,10 +40,10 @@ NEW_PROP_TAG(MaterialLaw);
 
 namespace Ewoms {
 template <class TypeTag>
-class DarcyVolumeVariables;
+class DarcyIntensiveQuantities;
 
 template <class TypeTag>
-class DarcyFluxVariables;
+class DarcyExtensiveQuantities;
 
 template <class TypeTag>
 class DarcyBaseProblem;
@@ -55,8 +55,8 @@ class DarcyBaseProblem;
 template <class TypeTag>
 struct DarcyVelocityModule
 {
-    typedef DarcyVolumeVariables<TypeTag> VelocityVolumeVariables;
-    typedef DarcyFluxVariables<TypeTag> VelocityFluxVariables;
+    typedef DarcyIntensiveQuantities<TypeTag> VelocityIntensiveQuantities;
+    typedef DarcyExtensiveQuantities<TypeTag> VelocityExtensiveQuantities;
     typedef DarcyBaseProblem<TypeTag> VelocityBaseProblem;
 
     /*!
@@ -77,10 +77,10 @@ class DarcyBaseProblem
 
 /*!
  * \ingroup DarcyVelocity
- * \brief Provides the volume variables for the Darcy velocity module
+ * \brief Provides the intensive quantities for the Darcy velocity module
  */
 template <class TypeTag>
-class DarcyVolumeVariables
+class DarcyIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 protected:
@@ -120,12 +120,12 @@ protected:
  * closure relation.
  */
 template <class TypeTag>
-class DarcyFluxVariables
+class DarcyExtensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
 
@@ -172,12 +172,12 @@ protected:
     {
         const auto &problem = elemCtx.problem();
 
-        const auto &volVarsI = elemCtx.volVars(asImp_().interiorIndex(), timeIdx);
-        const auto &volVarsJ = elemCtx.volVars(asImp_().exteriorIndex(), timeIdx);
+        const auto &intQuantsI = elemCtx.intensiveQuantities(asImp_().interiorIndex(), timeIdx);
+        const auto &intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
 
         // calculate the intrinsic permeability
-        const auto &Ki = volVarsI.intrinsicPermeability();
-        const auto &Kj = volVarsJ.intrinsicPermeability();
+        const auto &Ki = intQuantsI.intrinsicPermeability();
+        const auto &Kj = intQuantsJ.intrinsicPermeability();
         problem.meanK(K_, Ki, Kj);
         Valgrind::CheckDefined(K_);
 
@@ -197,7 +197,7 @@ protected:
                 continue;
             }
 
-            const auto &up = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
+            const auto &up = elemCtx.intensiveQuantities(asImp_().upstreamIndex(phaseIdx), timeIdx);
             mobility_[phaseIdx] = up.mobility(phaseIdx);
 
             calculateDarcyVelocity_(phaseIdx);
@@ -218,11 +218,11 @@ protected:
         const auto &elemCtx = context.elementContext();
         const auto &problem = elemCtx.problem();
         int interiorScvIdx = asImp_().interiorIndex();
-        const auto &volVarsInterior = elemCtx.volVars(interiorScvIdx, timeIdx);
-        const auto &fsInterior = volVarsInterior.fluidState();
+        const auto &intQuantsInterior = elemCtx.intensiveQuantities(interiorScvIdx, timeIdx);
+        const auto &fsInterior = intQuantsInterior.fluidState();
 
         // calculate the intrinsic permeability
-        K_ = volVarsInterior.intrinsicPermeability();
+        K_ = intQuantsInterior.intrinsicPermeability();
 
         const auto &boundaryFace = context.stencil(timeIdx).boundaryFace(bfIdx);
         const auto &normal = boundaryFace.normal();
@@ -254,7 +254,7 @@ protected:
                     / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
             }
             else {
-                mobility_[phaseIdx] = volVarsInterior.mobility(phaseIdx);
+                mobility_[phaseIdx] = intQuantsInterior.mobility(phaseIdx);
             }
 
             calculateDarcyVelocity_(phaseIdx);

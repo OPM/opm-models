@@ -20,7 +20,7 @@
  * \file
  *
  * \brief This method contains all callback classes for quantities
- *        that are required by some flux variables
+ *        that are required by some extensive quantities
  */
 #ifndef EWOMS_QUANTITY_CALLBACKS_HH
 #define EWOMS_QUANTITY_CALLBACKS_HH
@@ -52,7 +52,7 @@ public:
      * i.e. that the temperature of all phases is equal.
      */
     Scalar operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().temperature(/*phaseIdx=*/0); }
+    { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().temperature(/*phaseIdx=*/0); }
 
 private:
     const ElementContext& elemCtx_;
@@ -93,7 +93,7 @@ public:
     Scalar operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
     }
 
 private:
@@ -140,7 +140,7 @@ public:
     Scalar operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
     }
 
     Scalar boundaryValue() const
@@ -190,7 +190,7 @@ public:
     Scalar operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_);
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_);
     }
 
 private:
@@ -233,7 +233,7 @@ public:
     Scalar operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_);
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_);
     }
 
 private:
@@ -276,7 +276,7 @@ public:
     Scalar operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_);
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_);
     }
 
 private:
@@ -310,7 +310,7 @@ public:
      *        degree of freedom within an element context.
      */
     const DimVector &operator()(int dofIdx) const
-    { return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).velocityCenter(); }
+    { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter(); }
 
 private:
     const ElementContext& elemCtx_;
@@ -356,7 +356,7 @@ public:
     Scalar operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(dimIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_];
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_];
     }
 
 private:
@@ -412,7 +412,7 @@ public:
     {
         Valgrind::CheckDefined(phaseIdx_);
         Valgrind::CheckDefined(compIdx_);
-        return elemCtx_.volVars(dofIdx, /*timeIdx=*/0).fluidState().moleFraction(phaseIdx_, compIdx_);
+        return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().moleFraction(phaseIdx_, compIdx_);
     }
 
 private:

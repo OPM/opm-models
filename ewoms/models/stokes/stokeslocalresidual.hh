@@ -25,8 +25,8 @@
 #ifndef EWOMS_STOKES_LOCAL_RESIDUAL_HH
 #define EWOMS_STOKES_LOCAL_RESIDUAL_HH
 
-#include "stokesvolumevariables.hh"
-#include "stokesfluxvariables.hh"
+#include "stokesintensivequantities.hh"
+#include "stokesextensivequantities.hh"
 #include "stokesproperties.hh"
 
 #include <opm/material/Valgrind.hpp>
@@ -53,8 +53,8 @@ class StokesLocalResidual
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
@@ -88,8 +88,8 @@ public:
                         int dofIdx,
                         int timeIdx) const
     {
-        const auto &volVars = elemCtx.volVars(dofIdx, timeIdx);
-        const auto &fs = volVars.fluidState();
+        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto &fs = intQuants.fluidState();
 
         // mass storage
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -100,11 +100,11 @@ public:
         // momentum balance
         for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx) {
             storage[momentum0EqIdx + axisIdx] =
-                fs.density(phaseIdx) * volVars.velocity()[axisIdx];
+                fs.density(phaseIdx) * intQuants.velocity()[axisIdx];
         }
         Valgrind::CheckDefined(storage);
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(dofIdx, timeIdx), phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
         Valgrind::CheckDefined(storage);
     }
 
@@ -127,31 +127,31 @@ public:
     void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
                           int scvfIdx, int timeIdx) const
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
         // data attached to upstream DOF
-        const VolumeVariables &up
-            = elemCtx.volVars(fluxVars.upstreamIndex(phaseIdx), timeIdx);
+        const IntensiveQuantities &up =
+            elemCtx.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
 
-        auto normal = fluxVars.normal();
+        auto normal = extQuants.normal();
 
         // mass fluxes
-        Scalar vTimesN = fluxVars.velocity() * normal;
+        Scalar vTimesN = extQuants.velocity() * normal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            flux[conti0EqIdx + compIdx]
-                = up.fluidState().molarity(phaseIdx, compIdx) * vTimesN;
+            flux[conti0EqIdx + compIdx] = up.fluidState().molarity(phaseIdx, compIdx) * vTimesN;
 
         // momentum flux
-        Scalar mu = up.fluidState().viscosity(phaseIdx)
-                    + fluxVars.eddyViscosity();
+        Scalar mu =
+            up.fluidState().viscosity(phaseIdx)
+            + extQuants.eddyViscosity();
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // deal with the surface forces, i.e. the $\div[ \mu
             // (\grad[v] + \grad[v^T])]$ term on the right hand side
             // of the equation
             DimVector tmp;
             for (int j = 0; j < dimWorld; ++j) {
-                tmp[j] = fluxVars.velocityGrad(/*velocityComp=*/axisIdx)[j];
-                tmp[j] += fluxVars.velocityGrad(/*velocityComp=*/j)[axisIdx];
+                tmp[j] = extQuants.velocityGrad(/*velocityComp=*/axisIdx)[j];
+                tmp[j] += extQuants.velocityGrad(/*velocityComp=*/j)[axisIdx];
             }
 
             flux[momentum0EqIdx + axisIdx] = -mu * (tmp * normal);
@@ -160,8 +160,8 @@ public:
             // div[v]$ to the Stokes equation, transforming it to
             // Navier-Stokes.
             if (enableNavierTerm_()) {
-                flux[momentum0EqIdx + axisIdx] += up.velocity()[axisIdx]
-                                                  * (up.velocity() * normal);
+                flux[momentum0EqIdx + axisIdx] +=
+                    up.velocity()[axisIdx] * (up.velocity() * normal);
             }
         }
 
@@ -187,16 +187,16 @@ public:
                        int timeIdx) const
     {
         assert(timeIdx == 0);
-        const auto &volVars = elemCtx.volVars(dofIdx, timeIdx);
+        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         // retrieve the source term intrinsic to the problem
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(source);
 
-        const auto &gravity = volVars.gravity();
-        const auto &gradp = volVars.pressureGradient();
-        Scalar density = volVars.fluidState().density(phaseIdx);
+        const auto &gravity = intQuants.gravity();
+        const auto &gradp = intQuants.pressureGradient();
+        Scalar density = intQuants.fluidState().density(phaseIdx);
 
         assert(std::isfinite(gradp.two_norm()));
         assert(std::isfinite(density));
@@ -206,10 +206,10 @@ public:
         Valgrind::CheckDefined(gradp);
         Valgrind::CheckDefined(density);
 
-        // deal with the pressure and volume terms
+        // deal with the pressure and volumetric terms
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            source[momentum0EqIdx + axisIdx] += gradp[axisIdx]
-                                                - density * gravity[axisIdx];
+            source[momentum0EqIdx + axisIdx] +=
+                gradp[axisIdx] - density * gravity[axisIdx];
     }
 
 private:

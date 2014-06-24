@@ -27,11 +27,11 @@
 
 #include "ncpproperties.hh"
 #include "ncplocalresidual.hh"
-#include "ncpfluxvariables.hh"
+#include "ncpextensivequantities.hh"
 #include "ncpprimaryvariables.hh"
 #include "ncpboundaryratevector.hh"
 #include "ncpratevector.hh"
-#include "ncpvolumevariables.hh"
+#include "ncpintensivequantities.hh"
 #include "ncpnewtonmethod.hh"
 #include "ncpindices.hh"
 
@@ -109,11 +109,11 @@ SET_TYPE_PROP(NcpModel, BoundaryRateVector, Ewoms::NcpBoundaryRateVector<TypeTag
 //! the PrimaryVariables property
 SET_TYPE_PROP(NcpModel, PrimaryVariables, Ewoms::NcpPrimaryVariables<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(NcpModel, VolumeVariables, Ewoms::NcpVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(NcpModel, IntensiveQuantities, Ewoms::NcpIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(NcpModel, FluxVariables, Ewoms::NcpFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(NcpModel, ExtensiveQuantities, Ewoms::NcpExtensiveQuantities<TypeTag>);
 
 //! truncate the newton update for the first 3 iterations of a time step
 SET_INT_PROP(NcpModel, NcpNewtonNumChoppedIterations, 3);
@@ -197,10 +197,6 @@ namespace Ewoms {
  * This model uses
  * \f[ \Phi(a,b) = \min \{a,  b \}\;, \f]
  * because of its piecewise linearity.
- *
- * These equations are then discretized using a fully-implicit vertex
- * centered finite volume scheme for spatial discretization and the
- * implicit Euler method as temporal discretization.
  *
  * The model assumes local thermodynamic equilibrium and uses the
  * following primary variables:
@@ -295,13 +291,10 @@ public:
         std::ostringstream oss;
         if (pvIdx == pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-        else if (saturation0Idx <= pvIdx && pvIdx < saturation0Idx
-                                                    + (numPhases - 1))
-            oss << "saturation_"
-                << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - saturation0Idx);
+        else if (saturation0Idx <= pvIdx && pvIdx < saturation0Idx + (numPhases - 1))
+            oss << "saturation_" << FluidSystem::phaseName(/*phaseIdx=*/pvIdx - saturation0Idx);
         else if (fugacity0Idx <= pvIdx && pvIdx < fugacity0Idx + numComponents)
-            oss << "fugacity^"
-                << FluidSystem::componentName(pvIdx - fugacity0Idx);
+            oss << "fugacity^" << FluidSystem::componentName(pvIdx - fugacity0Idx);
         else
             assert(false);
 
@@ -319,11 +312,9 @@ public:
 
         std::ostringstream oss;
         if (conti0EqIdx <= eqIdx && eqIdx < conti0EqIdx + numComponents)
-            oss << "continuity^"
-                << FluidSystem::componentName(eqIdx - conti0EqIdx);
+            oss << "continuity^" << FluidSystem::componentName(eqIdx - conti0EqIdx);
         else if (ncp0EqIdx <= eqIdx && eqIdx < ncp0EqIdx + numPhases)
-            oss << "ncp_"
-                << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - ncp0EqIdx);
+            oss << "ncp_" << FluidSystem::phaseName(/*phaseIdx=*/eqIdx - ncp0EqIdx);
         else
             assert(false);
 
@@ -360,12 +351,12 @@ public:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    const auto &fs = elemCtx.volVars(dofIdx, /*timeIdx=*/0).fluidState();
+                    const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
 
-                    minActivityCoeff_[globalIdx][compIdx]
-                        = std::min(minActivityCoeff_[globalIdx][compIdx],
-                                   fs.fugacityCoefficient(phaseIdx, compIdx)
-                                   * fs.pressure(phaseIdx));
+                    minActivityCoeff_[globalIdx][compIdx] =
+                        std::min(minActivityCoeff_[globalIdx][compIdx],
+                                 fs.fugacityCoefficient(phaseIdx, compIdx)
+                                 * fs.pressure(phaseIdx));
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 };
             };
@@ -392,8 +383,7 @@ public:
             return fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
-            static const Scalar pressureBaseWeight
-                = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
+            static const Scalar pressureBaseWeight = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
             return pressureBaseWeight / referencePressure_;
         }
 
@@ -403,8 +393,8 @@ public:
 #endif
 
         // saturation
-        static const Scalar saturationsBaseWeight
-            = GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
+        static const Scalar saturationsBaseWeight =
+            GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
         return saturationsBaseWeight;
     }
 

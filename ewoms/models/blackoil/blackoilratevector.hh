@@ -29,7 +29,7 @@
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
-#include "blackoilvolumevariables.hh"
+#include "blackoilintensivequantities.hh"
 
 namespace Ewoms {
 

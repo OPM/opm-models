@@ -26,8 +26,8 @@
 
 #include "discretefractureproperties.hh"
 #include "discretefractureprimaryvariables.hh"
-#include "discretefracturevolumevariables.hh"
-#include "discretefracturefluxvariables.hh"
+#include "discretefractureintensivequantities.hh"
+#include "discretefractureextensivequantities.hh"
 #include "discretefracturelocalresidual.hh"
 
 #include <ewoms/models/immiscible/immisciblemodel.hh>
@@ -59,24 +59,23 @@ SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Ewoms::DiscreteFractureLocal
 SET_TYPE_PROP(DiscreteFractureModel, PrimaryVariables,
               Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(DiscreteFractureModel, VolumeVariables,
-              Ewoms::DiscreteFractureVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(DiscreteFractureModel, IntensiveQuantities,
+              Ewoms::DiscreteFractureIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(DiscreteFractureModel, FluxVariables, Ewoms::DiscreteFractureFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(DiscreteFractureModel, ExtensiveQuantities, Ewoms::DiscreteFractureExtensiveQuantities<TypeTag>);
 
-//! For the discrete fracture model, we need to use two-point flux
-//! appoximation or it will converge very poorly
+//! For the discrete fracture model, we need to use two-point flux approximation or it
+//! will converge very poorly
 SET_BOOL_PROP(DiscreteFractureModel, UseTwoPointGradients, true);
 
-// The volume variable cache cannot be used by the discrete fracture
-// model, because the volume variables of a control sub-control volume
-// are not identical to the volume variables of the other volume
-// variables of the same of the same control volume. This is because
-// the fracture properties (volume, permeability, etc) are specific
-// for each sub control volume...
-SET_BOOL_PROP(DiscreteFractureModel, EnableVolumeVariablesCache, false);
+// The intensive quantity cache cannot be used by the discrete fracture model, because
+// the intensive quantities of a control degree of freedom are not identical to the
+// intensive quantities of the other intensive quantities of the same of the same degree
+// of freedom. This is because the fracture properties (volume, permeability, etc) are
+// specific for each...
+SET_BOOL_PROP(DiscreteFractureModel, EnableIntensiveQuantityCache, false);
 }} // namespace Properties, Opm
 
 namespace Ewoms {
@@ -107,10 +106,10 @@ public:
     DiscreteFractureModel(Simulator &simulator)
         : ParentType(simulator)
     {
-        if (EWOMS_GET_PARAM(TypeTag, bool, EnableVolumeVariablesCache)) {
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache)) {
             OPM_THROW(std::runtime_error,
                       "The discrete fracture model does not work in conjunction "
-                      "with volume variables caching");
+                      "with intensive quantities caching");
         }
     }
 

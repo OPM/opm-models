@@ -141,9 +141,8 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                globalMolarities[compIdx]
-                    += fsFlash.saturation(phaseIdx)
-                       * fsFlash.molarity(phaseIdx, compIdx);
+                globalMolarities[compIdx] +=
+                    fsFlash.saturation(phaseIdx) * fsFlash.molarity(phaseIdx, compIdx);
             }
         }
 
@@ -164,8 +163,7 @@ public:
     { return phasePresence_; }
 
     /*!
-     * \brief Set which fluid phases are present in a given control
-     *        volume.
+     * \brief Set which fluid phases are present in a given control volume.
      *
      * \param value The new phase presence. The phase with index i is
      *              present if the i-th bit of \c value is 1.
@@ -303,13 +301,11 @@ public:
                 ++phaseIdx;
 
             if (phaseIsPresent(phaseIdx)) {
-                (*this)[switch0Idx + switchIdx]
-                    = fluidState.saturation(phaseIdx);
+                (*this)[switch0Idx + switchIdx] = fluidState.saturation(phaseIdx);
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
             else {
-                (*this)[switch0Idx + switchIdx]
-                    = fluidState.moleFraction(lowestPhaseIdx, compIdx);
+                (*this)[switch0Idx + switchIdx] = fluidState.moleFraction(lowestPhaseIdx, compIdx);
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
         }
@@ -318,8 +314,7 @@ public:
         // the phase with the lowest index
         for (int compIdx = numPhases - 1; compIdx < numComponents - 1;
              ++compIdx) {
-            (*this)[switch0Idx + compIdx]
-                = fluidState.moleFraction(lowestPhaseIdx, compIdx + 1);
+            (*this)[switch0Idx + compIdx] = fluidState.moleFraction(lowestPhaseIdx, compIdx + 1);
             Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);
         }
     }

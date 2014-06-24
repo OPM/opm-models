@@ -94,8 +94,8 @@ public:
     }
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quantities relevant for
+     *        an element
      */
     void processElement(const ElementContext &elemCtx)
     {

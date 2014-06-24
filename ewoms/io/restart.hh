@@ -167,8 +167,7 @@ public:
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
         if (!inStream_.good()) {
-            OPM_THROW(std::runtime_error, "Restart file '"
-                                          << fileName_
+            OPM_THROW(std::runtime_error, "Restart file '" << fileName_
                                           << "' could not be opened properly");
         }
 
@@ -176,8 +175,8 @@ public:
         inStream_.seekg(0, std::ios::end);
         int pos = inStream_.tellg();
         if (pos == 0) {
-            OPM_THROW(std::runtime_error, "Restart file '" << fileName_
-                                                           << "' is empty");
+            OPM_THROW(std::runtime_error,
+                      "Restart file '" << fileName_ << "' is empty");
         }
         inStream_.seekg(0, std::ios::beg);
 
@@ -205,8 +204,8 @@ public:
         std::string buf;
         std::getline(inStream_, buf);
         if (buf != cookie)
-            OPM_THROW(std::runtime_error, "Could not start section '" << cookie
-                                                                      << "'");
+            OPM_THROW(std::runtime_error,
+                      "Could not start section '" << cookie << "'");
     }
 
     /*!

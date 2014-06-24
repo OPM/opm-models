@@ -29,7 +29,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include "stokesvolumevariables.hh"
+#include "stokesintensivequantities.hh"
 
 namespace Ewoms {
 
@@ -96,14 +96,13 @@ public:
 
         int insideScvIdx = context.interiorScvIndex(bfIdx, timeIdx);
         //const auto &insideScv = stencil.subControlVolume(insideScvIdx);
-        const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
+        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         // the outer unit normal
         const auto &normal = scvf.normal();
 
         // distance between the center of the SCV and center of the boundary face
-        DimVector distVec
-            = stencil.subControlVolume(insideScvIdx).geometry().center();
+        DimVector distVec = stencil.subControlVolume(insideScvIdx).geometry().center();
         const auto &scvPos = context.element().geometry().corner(insideScvIdx);
         distVec.axpy(-1, scvPos);
 
@@ -118,7 +117,7 @@ public:
             // segment's integration point.
             gradv[axisIdx] = normal;
             gradv[axisIdx] *= (velocity[axisIdx]
-                               - insideVolVars.velocity()[axisIdx]) / dist;
+                               - insideIntQuants.velocity()[axisIdx]) / dist;
             Valgrind::CheckDefined(gradv[axisIdx]);
         }
 
@@ -132,9 +131,10 @@ public:
         Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[conti0EqIdx + compIdx]
-                = volumeFlux * molarDensity
-                  * fluidState.moleFraction(phaseIdx, compIdx);
+            (*this)[conti0EqIdx + compIdx] =
+                volumeFlux
+                * molarDensity
+                * fluidState.moleFraction(phaseIdx, compIdx);
         }
 
         // calculate the momentum flux over the boundary
@@ -150,7 +150,7 @@ public:
             for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
                 tmp2 += tmp[dimIdx]*normal[dimIdx];
 
-            (*this)[momentum0EqIdx + axisIdx] = -insideVolVars.fluidState().viscosity(phaseIdx) * tmp2;
+            (*this)[momentum0EqIdx + axisIdx] = -insideIntQuants.fluidState().viscosity(phaseIdx) * tmp2;
         }
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volumeFlux);
@@ -172,19 +172,17 @@ public:
     void setInFlow(const Context &context, int bfIdx, int timeIdx,
                    const DimVector &velocity, const FluidState &fluidState)
     {
-        const auto &volVars = context.volVars(bfIdx, timeIdx);
+        const auto &intQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
 
         // don't let mass flow out
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx]
-                = std::min(0.0, (*this)[conti0EqIdx + compIdx]);
+            (*this)[conti0EqIdx + compIdx] = std::min(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow out
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            (*this)[momentum0EqIdx + axisIdx]
-                = std::min(0.0, (*this)[momentum0EqIdx + axisIdx]);
+            (*this)[momentum0EqIdx + axisIdx] = std::min(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
     /*!
@@ -195,22 +193,20 @@ public:
     template <class Context>
     void setOutFlow(const Context &context, int spaceIdx, int timeIdx)
     {
-        const auto &volVars = context.volVars(spaceIdx, timeIdx);
+        const auto &intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
 
-        DimVector velocity = volVars.velocity();
-        const auto &fluidState = volVars.fluidState();
+        DimVector velocity = intQuants.velocity();
+        const auto &fluidState = intQuants.fluidState();
 
         setFreeFlow(context, spaceIdx, timeIdx, velocity, fluidState);
 
         // don't let mass flow in
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx]
-                = std::max(0.0, (*this)[conti0EqIdx + compIdx]);
+            (*this)[conti0EqIdx + compIdx] = std::max(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow in
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            (*this)[momentum0EqIdx + axisIdx]
-                = std::max(0.0, (*this)[momentum0EqIdx + axisIdx]);
+            (*this)[momentum0EqIdx + axisIdx] = std::max(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
     /*!
@@ -223,8 +219,8 @@ public:
     {
         static DimVector v0(0.0);
 
-        const auto &volVars = context.volVars(spaceIdx, timeIdx);
-        const auto &fluidState = volVars.fluidState(); // don't care
+        const auto &intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
+        const auto &fluidState = intQuants.fluidState(); // don't care
 
         // no flow of mass and no slip for the momentum
         setFreeFlow(context, spaceIdx, timeIdx,

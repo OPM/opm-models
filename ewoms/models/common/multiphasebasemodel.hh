@@ -27,7 +27,7 @@
 #include <ewoms/parallel/mpihelper.hh>
 #include "multiphasebaseproperties.hh"
 #include "multiphasebaseproblem.hh"
-#include "multiphasebasefluxvariables.hh"
+#include "multiphasebaseextensivequantities.hh"
 
 #include <ewoms/models/common/velocity.hh>
 #include <ewoms/disc/vcfv/vcfvdiscretization.hh>
@@ -171,13 +171,13 @@ public:
                 continue; // ignore ghost and overlap elements
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateVolVars(/*timeIdx=*/0);
+            elemCtx.updateIntQuants(/*timeIdx=*/0);
 
             const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
             for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                 const auto &scv = stencil.subControlVolume(dofIdx);
-                const auto &volVars = elemCtx.volVars(dofIdx, /*timeIdx=*/0);
+                const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                 tmp = 0;
                 this->localResidual().addPhaseStorage(tmp,
@@ -185,7 +185,7 @@ public:
                                                       dofIdx,
                                                       /*timeIdx=*/0,
                                                       phaseIdx);
-                tmp *= scv.volume()*volVars.extrusionFactor();
+                tmp *= scv.volume()*intQuants.extrusionFactor();
                 storage += tmp;
             }
         };

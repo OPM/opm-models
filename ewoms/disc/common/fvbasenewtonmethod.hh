@@ -90,8 +90,7 @@ namespace Ewoms {
  * \ingroup Discretization
  * \ingroup Newton
  *
- * \brief A Newton method for models using a finite volume
- *        discretization.
+ * \brief A Newton method for models using a finite volume discretization.
  *
  * This class is sufficient for most models which use an Element or a
  * Vertex Centered Finite Volume discretization.
@@ -187,7 +186,7 @@ protected:
             currentSolution[i] = previousSolution[i];
             currentSolution[i] -= solutionUpdate[i];
 
-            this->model_().invalidateVolumeVariablesCacheEntry(i, /*timeIdx=*/0);
+            this->model_().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
         }
     }
 

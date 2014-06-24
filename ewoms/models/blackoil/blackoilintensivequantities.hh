@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilVolumeVariables
+ * \copydoc Ewoms::BlackOilIntensiveQuantities
  */
-#ifndef EWOMS_BLACK_OIL_VOLUME_VARIABLES_HH
-#define EWOMS_BLACK_OIL_VOLUME_VARIABLES_HH
+#ifndef EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
+#define EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
 
 #include "blackoilproperties.hh"
 
@@ -32,17 +32,17 @@
 namespace Ewoms {
 /*!
  * \ingroup BlackOilModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the black-oil model.
  */
 template <class TypeTag>
-class BlackOilVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+class BlackOilIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -65,11 +65,11 @@ class BlackOilVolumeVariables
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
-    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
+    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
 
 public:
     /*!
-     * \copydoc VolumeVariables::update
+     * \copydoc IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
@@ -198,7 +198,7 @@ public:
 
         // update the quantities which are required by the chosen
         // velocity model
-        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
 #ifndef NDEBUG
         // some safety checks in debug mode
@@ -219,25 +219,25 @@ public:
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::fluidState
+     * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
+     * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::relativePermeability
+     * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::mobility
+     * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
     Scalar mobility(int phaseIdx) const
     {
@@ -245,7 +245,7 @@ public:
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::porosity
+     * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
     Scalar porosity() const
     { return porosity_; }

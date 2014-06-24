@@ -177,10 +177,10 @@ public:
         // calculate the local residual
         localResidual_.eval(residual_, residualStorage_, elemCtx);
 
-        // save all flux variables calculated using the unmodified
-        // primary variables. This automatically makes these flux
-        // variables the evaluation point.
-        elemCtx.saveFluxVars();
+        // save all extensive quantities calculated using the unmodified primary
+        // variables. This automatically makes these the extensive quantities of the
+        // evaluation point.
+        elemCtx.saveExtensiveQuantities();
 
         // calculate the local jacobian matrix
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
@@ -194,7 +194,7 @@ public:
             }
         }
 
-        // restore flux variables.
+        // restore extensive quantities.
         //elemCtx.restoreScvfVars(); // not necessary
     }
 
@@ -382,7 +382,7 @@ protected:
     {
         // save all quantities which depend on the specified primary
         // variable at the given sub control volume
-        elemCtx.saveVolVars(dofIdx);
+        elemCtx.saveIntQuants(dofIdx);
 
         PrimaryVariables priVars(elemCtx.primaryVars(dofIdx, /*timeIdx=*/0));
         Scalar eps = asImp_().numericEpsilon(elemCtx, dofIdx, pvIdx);
@@ -397,8 +397,8 @@ protected:
             delta += eps;
 
             // calculate the residual
-            elemCtx.updateVolVars(priVars, dofIdx, /*timeIdx=*/0);
-            elemCtx.updateAllFluxVars();
+            elemCtx.updateIntQuants(priVars, dofIdx, /*timeIdx=*/0);
+            elemCtx.updateAllExtensiveQuantities();
             localResidual_.eval(derivResidual_, derivStorage_, elemCtx);
         }
         else {
@@ -419,8 +419,8 @@ protected:
 
             // calculate residual again, this time we use the local
             // residual's internal storage.
-            elemCtx.updateVolVars(priVars, dofIdx, /*timeIdx=*/0);
-            elemCtx.updateAllFluxVars();
+            elemCtx.updateIntQuants(priVars, dofIdx, /*timeIdx=*/0);
+            elemCtx.updateAllExtensiveQuantities();
             localResidual_.eval(elemCtx);
 
             derivResidual_ -= localResidual_.residual();
@@ -443,7 +443,7 @@ protected:
 
         // restore the original state of the element's volume
         // variables
-        elemCtx.restoreVolVars(dofIdx);
+        elemCtx.restoreIntQuants(dofIdx);
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < derivResidual_.size(); ++i)

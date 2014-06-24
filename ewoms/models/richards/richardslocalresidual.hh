@@ -24,9 +24,9 @@
 #ifndef EWOMS_RICHARDS_LOCAL_RESIDUAL_HH
 #define EWOMS_RICHARDS_LOCAL_RESIDUAL_HH
 
-#include "richardsvolumevariables.hh"
+#include "richardsintensivequantities.hh"
 
-#include "richardsfluxvariables.hh"
+#include "richardsextensivequantities.hh"
 
 namespace Ewoms {
 
@@ -39,12 +39,12 @@ class RichardsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-    enum { contiEqIdx = Indices::contiEqIdx,
-           liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { contiEqIdx = Indices::contiEqIdx };
+    enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
 
 public:
     /*!
@@ -55,12 +55,13 @@ public:
                         int dofIdx,
                         int timeIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
+        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
-        storage[contiEqIdx] = volVars.fluidState().density(liquidPhaseIdx)
-                               * volVars.fluidState().saturation(liquidPhaseIdx)
-                               * volVars.porosity();
+        storage[contiEqIdx] =
+            intQuants.fluidState().density(liquidPhaseIdx)
+            * intQuants.fluidState().saturation(liquidPhaseIdx)
+            * intQuants.porosity();
     }
 
     /*!
@@ -69,22 +70,24 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
     {
-        const auto &fluxVarsEval = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
-        // const auto &fluxVarsEval = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &extQuantsEval = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
+        // const auto &extQuantsEval = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
         // data attached to upstream and the downstream DOFs
         // of the current phase
-        const VolumeVariables &up
-            = elemCtx.volVars(fluxVarsEval.upstreamIndex(liquidPhaseIdx), timeIdx);
-        const VolumeVariables &dn
-            = elemCtx.volVars(fluxVarsEval.downstreamIndex(liquidPhaseIdx), timeIdx);
+        const IntensiveQuantities &up =
+            elemCtx.intensiveQuantities(extQuantsEval.upstreamIndex(liquidPhaseIdx), timeIdx);
+        const IntensiveQuantities &dn =
+            elemCtx.intensiveQuantities(extQuantsEval.downstreamIndex(liquidPhaseIdx), timeIdx);
 
-        flux[contiEqIdx] = fluxVars.volumeFlux(liquidPhaseIdx)
-                            * (fluxVars.upstreamWeight(liquidPhaseIdx)
-                               * up.fluidState().density(liquidPhaseIdx)
-                               + fluxVars.downstreamWeight(liquidPhaseIdx)
-                                 * dn.fluidState().density(liquidPhaseIdx));
+        flux[contiEqIdx] =
+            extQuants.volumeFlux(liquidPhaseIdx)
+            * (extQuants.upstreamWeight(liquidPhaseIdx)
+               * up.fluidState().density(liquidPhaseIdx)
+               +
+               extQuants.downstreamWeight(liquidPhaseIdx)
+               * dn.fluidState().density(liquidPhaseIdx));
     }
 
     /*!

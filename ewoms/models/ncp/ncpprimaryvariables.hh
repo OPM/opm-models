@@ -117,9 +117,8 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                globalMolarities[compIdx]
-                    += fluidState.saturation(phaseIdx)
-                       * fluidState.molarity(phaseIdx, compIdx);
+                globalMolarities[compIdx] +=
+                    fluidState.saturation(phaseIdx) * fluidState.molarity(phaseIdx, compIdx);
             }
         }
 
@@ -129,8 +128,7 @@ public:
         // NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);
 
         // run the flash calculation
-        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams,
-                                              globalMolarities);
+        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
 
         // use the result to assign the primary variables
         assignNaive(fsFlash);
@@ -148,8 +146,7 @@ public:
 
         // assign fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[fugacity0Idx + compIdx]
-                = fluidState.fugacity(/*phaseIdx=*/0, compIdx);
+            (*this)[fugacity0Idx + compIdx] = fluidState.fugacity(/*phaseIdx=*/0, compIdx);
         }
 
         // assign pressure of first phase

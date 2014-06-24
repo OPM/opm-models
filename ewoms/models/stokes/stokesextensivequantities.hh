@@ -20,10 +20,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::StokesFluxVariables
+ * \copydoc Ewoms::StokesExtensiveQuantities
  */
-#ifndef EWOMS_STOKES_FLUX_VARIABLES_HH
-#define EWOMS_STOKES_FLUX_VARIABLES_HH
+#ifndef EWOMS_STOKES_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_STOKES_EXTENSIVE_QUANTITIES_HH
 
 #include "stokesproperties.hh"
 
@@ -38,18 +38,17 @@ namespace Ewoms {
 
 /*!
  * \ingroup StokesModel
- * \ingroup FluxVariables
+ * \ingroup ExtensiveQuantities
  *
- * \brief Contains the data which is required to calculate the mass
- *        and momentum fluxes over the face of a sub-control volume
- *        for the Stokes model.
+ * \brief Contains the data which is required to calculate the mass and momentum fluxes
+ *        over the face of a sub-control-volume for the Stokes model.
  *
  * This means pressure gradients, phase densities, viscosities, etc.
  * at the integration point of the sub-control-volume face
  */
 template <class TypeTag>
-class StokesFluxVariables
-    : public EnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+class StokesExtensiveQuantities
+    : public EnergyExtensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -61,24 +60,24 @@ class StokesFluxVariables
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef Ewoms::EnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the flux variables.
+     * \brief Register all run-time parameters for the extensive quantities.
      */
     static void registerParameters()
     {}
 
     /*!
-     * \brief Update all quantities which are required on an
-     *        intersection between two finite volumes.
+     * \brief Update all quantities which are required on an intersection between two
+     *        finite volumes.
      *
      * \param elemCtx The current execution context.
      * \param scvfIdx The local index of the sub-control volume face.
      * \param timeIdx The index relevant for the time discretization.
-     * \param isBoundaryFace Specifies whether the sub-control-volume
-     *                       face is on the domain boundary or not.
+     * \param isBoundaryFace Specifies whether the sub-control-volume face is on the
+     *                       domain boundary or not.
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace=false)
     {
@@ -132,7 +131,7 @@ public:
         if (volumeFlux_ < 0)
             std::swap(upstreamIdx_, downstreamIdx_);
 
-        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
+        EnergyExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
 
         Valgrind::CheckDefined(density_);
         Valgrind::CheckDefined(viscosity_);
@@ -142,7 +141,7 @@ public:
     }
 
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::updateBoundary
+     * \copydoc MultiPhaseBaseExtensiveQuantities::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
@@ -271,7 +270,7 @@ public:
     { return 1.0; }
 
     /*!
-     * \brief Returns normal vector of the face of the flux variables.
+     * \brief Returns normal vector of the face of the extensive quantities.
      */
     const DimVector &normal() const
     { return normal_; }

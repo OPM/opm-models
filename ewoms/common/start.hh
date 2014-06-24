@@ -116,8 +116,7 @@ int setupParameters_(int argc, char **argv)
         return /*status=*/1;
     }
 
-    std::string paramFileName
-        = EWOMS_GET_PARAM_(TypeTag, std::string, ParameterFile);
+    std::string paramFileName = EWOMS_GET_PARAM_(TypeTag, std::string, ParameterFile);
     if (paramFileName != "") {
         ////////////////////////////////////////////////////////////
         // add the parameters specified using an .ini file

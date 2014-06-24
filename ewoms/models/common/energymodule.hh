@@ -62,8 +62,8 @@ class EnergyModule<TypeTag, /*enableEnergy=*/false>
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename FluidSystem::ParameterCache ParameterCache;
 
@@ -143,7 +143,7 @@ public:
     /*!
      * \brief Add the rate of the conductive heat flux to a rate vector.
      */
-    static Scalar heatConductionRate(const FluxVariables &fluxVars)
+    static Scalar heatConductionRate(const ExtensiveQuantities &extQuants)
     { return 0.0; }
 
     /*!
@@ -151,7 +151,7 @@ public:
      * vector
      */
     static void addPhaseStorage(EqVector &storage,
-                                const VolumeVariables &volVars,
+                                const IntensiveQuantities &intQuants,
                                 int phaseIdx)
     {}
 
@@ -161,7 +161,7 @@ public:
      */
     template <class Scv>
     static void addFracturePhaseStorage(EqVector &storage,
-                                        const VolumeVariables &volVars,
+                                        const IntensiveQuantities &intQuants,
                                         const Scv &scv,
                                         int phaseIdx)
     {}
@@ -171,7 +171,7 @@ public:
      * vector
      */
     static void addSolidHeatStorage(EqVector &storage,
-                                    const VolumeVariables &volVars)
+                                    const IntensiveQuantities &intQuants)
     {}
 
     /*!
@@ -224,8 +224,8 @@ class EnergyModule<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename FluidSystem::ParameterCache ParameterCache;
@@ -306,10 +306,10 @@ public:
 
     /*!
      * \brief Returns the rate of the conductive heat flux for a given flux
-     * integration point.
+     *        integration point.
      */
-    static Scalar heatConductionRate(const FluxVariables &fluxVars)
-    { return -fluxVars.temperatureGradNormal() * fluxVars.heatConductivity(); }
+    static Scalar heatConductionRate(const ExtensiveQuantities &extQuants)
+    { return -extQuants.temperatureGradNormal() * extQuants.heatConductivity(); }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges
@@ -344,12 +344,14 @@ public:
      * vector
      */
     static void addPhaseStorage(EqVector &storage,
-                                const VolumeVariables &volVars, int phaseIdx)
+                                const IntensiveQuantities &intQuants, int phaseIdx)
     {
-        const auto &fs = volVars.fluidState();
-        storage[energyEqIdx] += fs.density(phaseIdx)
-                                * fs.internalEnergy(phaseIdx)
-                                * fs.saturation(phaseIdx) * volVars.porosity();
+        const auto &fs = intQuants.fluidState();
+        storage[energyEqIdx] +=
+            fs.density(phaseIdx)
+            * fs.internalEnergy(phaseIdx)
+            * fs.saturation(phaseIdx)
+            * intQuants.porosity();
     }
 
     /*!
@@ -358,93 +360,88 @@ public:
      */
     template <class Scv>
     static void addFracturePhaseStorage(EqVector &storage,
-                                        const VolumeVariables &volVars,
+                                        const IntensiveQuantities &intQuants,
                                         const Scv &scv, int phaseIdx)
     {
-        const auto &fs = volVars.fractureFluidState();
+        const auto &fs = intQuants.fractureFluidState();
         storage[energyEqIdx] +=
             fs.density(phaseIdx)
             * fs.internalEnergy(phaseIdx)
             * fs.saturation(phaseIdx)
-            * volVars.fracturePorosity()
-            * volVars.fractureVolume()/scv.volume();
+            * intQuants.fracturePorosity()
+            * intQuants.fractureVolume()/scv.volume();
     }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation
      * vector
      */
-    static void addSolidHeatStorage(EqVector &storage,
-                                    const VolumeVariables &volVars)
+    static void addSolidHeatStorage(EqVector &storage, const IntensiveQuantities &intQuants)
     {
-        storage[energyEqIdx]
-            += volVars.heatCapacitySolid()
-               * volVars.fluidState().temperature(/*phaseIdx=*/0);
+        storage[energyEqIdx] +=
+            intQuants.heatCapacitySolid() * intQuants.fluidState().temperature(/*phaseIdx=*/0);
     }
 
     /*!
-     * \brief Evaluates the advective energy fluxes over a face of a
-     *        subcontrol volume and adds the result in the flux
-     *        vector.
+     * \brief Evaluates the advective energy fluxes for a flux integration point and adds
+     *        the result in the flux vector.
      *
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addAdvectiveFlux(RateVector &flux, const Context &context,
-                                 int spaceIdx, int timeIdx)
+    static void addAdvectiveFlux(RateVector &flux, const Context &context, int spaceIdx, int timeIdx)
     {
-        const auto &fluxVars = context.fluxVars(spaceIdx, timeIdx);
-        const auto &evalPointFluxVars
-            = context.evalPointFluxVars(spaceIdx, timeIdx);
+        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
+        const auto &evalPointExtQuants = context.evalPointExtensiveQuantities(spaceIdx, timeIdx);
 
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!context.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            // volume variables of the upstream and the downstream DOFs
-            const VolumeVariables &up
-                = context.volVars(evalPointFluxVars.upstreamIndex(phaseIdx),
-                                  timeIdx);
+            // intensive quantities of the upstream and the downstream DOFs
+            const IntensiveQuantities &up =
+                context.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
 
-            flux[energyEqIdx] += fluxVars.volumeFlux(phaseIdx)
-                                 * up.fluidState().enthalpy(phaseIdx)
-                                 * up.fluidState().density(phaseIdx);
+            flux[energyEqIdx] +=
+                extQuants.volumeFlux(phaseIdx)
+                * up.fluidState().enthalpy(phaseIdx)
+                * up.fluidState().density(phaseIdx);
         }
     }
 
     /*!
-     * \brief Evaluates the advective energy fluxes over a fracture
-     *        which should be attributed to a face of a subcontrol
-     *        volume and adds the result in the flux vector.
+     * \brief Evaluates the advective energy fluxes over a fracture which should be
+     *        attributed to a face of a subcontrol volume and adds the result in the flux
+     *        vector.
      */
     template <class Context>
     static void handleFractureFlux(RateVector &flux, const Context &context,
                                    int spaceIdx, int timeIdx)
     {
         const auto &scvf = context.stencil(timeIdx).interiorFace(spaceIdx);
-        const auto &fluxVars = context.fluxVars(spaceIdx, timeIdx);
-        const auto &evalPointFluxVars
-            = context.evalPointFluxVars(spaceIdx, timeIdx);
+        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
+        const auto &evalPointExtQuants =
+            context.evalPointExtensiveQuantities(spaceIdx, timeIdx);
 
         // reduce the heat flux in the matrix by the half the width
         // occupied by the fracture
         flux[energyEqIdx] *=
-            1 - fluxVars.fractureWidth()/(2*scvf.area());
+            1 - extQuants.fractureWidth()/(2*scvf.area());
 
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!context.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            // volume variables of the upstream and the downstream DOFs
-            const VolumeVariables &up
-                = context.volVars(evalPointFluxVars.upstreamIndex(phaseIdx),
-                                  timeIdx);
+            // intensive quantities of the upstream and the downstream DOFs
+            const IntensiveQuantities &up =
+                context.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
 
-            flux[energyEqIdx] += fluxVars.fractureVolumeFlux(phaseIdx)
-                                 * up.fluidState().enthalpy(phaseIdx)
-                                 * up.fluidState().density(phaseIdx);
+            flux[energyEqIdx] +=
+                extQuants.fractureVolumeFlux(phaseIdx)
+                * up.fluidState().enthalpy(phaseIdx)
+                * up.fluidState().density(phaseIdx);
         }
     }
 
@@ -458,11 +455,12 @@ public:
     static void addDiffusiveFlux(RateVector &flux, const Context &context,
                                  int spaceIdx, int timeIdx)
     {
-        const auto &fluxVars = context.fluxVars(spaceIdx, timeIdx);
+        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
         // diffusive heat flux
-        flux[energyEqIdx] += -fluxVars.temperatureGradNormal()
-                             * fluxVars.heatConductivity();
+        flux[energyEqIdx] +=
+            - extQuants.temperatureGradNormal()
+            * extQuants.heatConductivity();
     }
 };
 
@@ -503,18 +501,18 @@ protected:
 
 /*!
  * \ingroup Energy
- * \class Ewoms::EnergyVolumeVariables
+ * \class Ewoms::EnergyIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the energy equation.
  */
 template <class TypeTag, bool enableEnergy>
-class EnergyVolumeVariables;
+class EnergyIntensiveQuantities;
 
 /*!
- * \copydoc Ewoms::EnergyVolumeVariables
+ * \copydoc Ewoms::EnergyIntensiveQuantities
  */
 template <class TypeTag>
-class EnergyVolumeVariables<TypeTag, /*enableEnergy=*/false>
+class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -552,10 +550,7 @@ protected:
     static void updateTemperatures_(FluidState &fluidState,
                                     const Context &context, int spaceIdx,
                                     int timeIdx)
-    {
-        fluidState.setTemperature(
-            context.problem().temperature(context, spaceIdx, timeIdx));
-    }
+    { fluidState.setTemperature(context.problem().temperature(context, spaceIdx, timeIdx)); }
 
     /*!
      * \brief Update the quantities required to calculate
@@ -571,10 +566,10 @@ protected:
 };
 
 /*!
- * \copydoc Ewoms::EnergyVolumeVariables
+ * \copydoc Ewoms::EnergyIntensiveQuantities
  */
 template <class TypeTag>
-class EnergyVolumeVariables<TypeTag, /*enableEnergy=*/true>
+class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -595,10 +590,7 @@ protected:
     static void updateTemperatures_(FluidState &fluidState,
                                     const Context &context, int spaceIdx,
                                     int timeIdx)
-    {
-        fluidState.setTemperature(
-            context.primaryVars(spaceIdx, timeIdx)[temperatureIdx]);
-    }
+    { fluidState.setTemperature(context.primaryVars(spaceIdx, timeIdx)[temperatureIdx]); }
 
     /*!
      * \brief Update the quantities required to calculate
@@ -625,8 +617,7 @@ protected:
         const auto &heatCondParams = problem.heatConductionParams(elemCtx, dofIdx, timeIdx);
 
         heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, dofIdx, timeIdx);
-        heatConductivity_
-            = HeatConductionLaw::heatConductivity(heatCondParams, fs);
+        heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, fs);
 
         Valgrind::CheckDefined(heatCapacitySolid_);
         Valgrind::CheckDefined(heatConductivity_);
@@ -656,18 +647,18 @@ private:
 
 /*!
  * \ingroup Energy
- * \class Ewoms::EnergyFluxVariables
+ * \class Ewoms::EnergyExtensiveQuantities
  *
  * \brief Provides the quantities required to calculate energy fluxes.
  */
 template <class TypeTag, bool enableEnergy>
-class EnergyFluxVariables;
+class EnergyExtensiveQuantities;
 
 /*!
- * \copydoc Ewoms::EnergyFluxVariables
+ * \copydoc Ewoms::EnergyExtensiveQuantities
  */
 template <class TypeTag>
-class EnergyFluxVariables<TypeTag, /*enableEnergy=*/false>
+class EnergyExtensiveQuantities<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -707,10 +698,10 @@ public:
 };
 
 /*!
- * \copydoc Ewoms::EnergyFluxVariables
+ * \copydoc Ewoms::EnergyExtensiveQuantities
  */
 template <class TypeTag>
-class EnergyFluxVariables<TypeTag, /*enableEnergy=*/true>
+class EnergyExtensiveQuantities<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -742,13 +733,13 @@ protected:
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             temperatureGradNormal_ += (face.normal()[dimIdx]*temperatureGrad[dimIdx]);
 
-        const auto &fluxVars = elemCtx.fluxVars(faceIdx, timeIdx);
-        const auto &volVarsInside = elemCtx.volVars(fluxVars.interiorIndex(), timeIdx);
-        const auto &volVarsOutside = elemCtx.volVars(fluxVars.exteriorIndex(), timeIdx);
+        const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, timeIdx);
+        const auto &intQuantsInside = elemCtx.intensiveQuantities(extQuants.interiorIndex(), timeIdx);
+        const auto &intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
 
         // arithmetic mean
-        heatConductivity_ = 0.5 * (volVarsInside.heatConductivity()
-                                   + volVarsOutside.heatConductivity());
+        heatConductivity_ =
+            0.5 * (intQuantsInside.heatConductivity() + intQuantsOutside.heatConductivity());
         Valgrind::CheckDefined(heatConductivity_);
     }
 
@@ -763,8 +754,8 @@ protected:
         int insideScvIdx = face.interiorIndex();
         const auto &insideScv = elemCtx.stencil(timeIdx).subControlVolume(insideScvIdx);
 
-        const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
-        const auto &fsInside = volVarsInside.fluidState();
+        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
+        const auto &fsInside = intQuantsInside.fluidState();
 
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = face.integrationPos();
@@ -785,7 +776,7 @@ protected:
             (fs.temperature(/*phaseIdx=*/0) - fsInside.temperature(/*phaseIdx=*/0)) / dist;
 
         // take the value for heat conductivity from the interior finite volume
-        heatConductivity_ = volVarsInside.heatConductivity();
+        heatConductivity_ = intQuantsInside.heatConductivity();
     }
 
 public:

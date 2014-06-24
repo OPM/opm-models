@@ -67,7 +67,7 @@ class RichardsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) EnergyModule;
 
     typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
 
@@ -156,9 +156,8 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                globalMolarities[compIdx]
-                    += fluidState.molarity(phaseIdx, compIdx)
-                       * fluidState.saturation(phaseIdx);
+                globalMolarities[compIdx] +=
+                    fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
             }
         }
 

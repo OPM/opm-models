@@ -173,7 +173,7 @@ protected:
                 pW = std::max(pwMin, std::min(pW, pwMax));
                 uCurrentIter[globI][pressureWIdx] = pW;
 
-                this->model_().invalidateVolumeVariablesCacheEntry(globI, /*timeIdx=*/0);
+                this->model_().invalidateIntensiveQuantitiesCacheEntry(globI, /*timeIdx=*/0);
             }
         }
     }

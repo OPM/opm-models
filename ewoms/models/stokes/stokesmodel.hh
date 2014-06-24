@@ -30,8 +30,8 @@
 #include "stokesindices.hh"
 #include "stokeslocalresidual.hh"
 #include "stokesmodel.hh"
-#include "stokesvolumevariables.hh"
-#include "stokesfluxvariables.hh"
+#include "stokesintensivequantities.hh"
+#include "stokesextensivequantities.hh"
 #include "stokesboundaryratevector.hh"
 
 
@@ -108,11 +108,11 @@ SET_TAG_PROP(StokesModel, LinearSolverSplice, SuperLULinearSolver);
 //! the Model property
 SET_TYPE_PROP(StokesModel, Model, Ewoms::StokesModel<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(StokesModel, VolumeVariables, Ewoms::StokesVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(StokesModel, IntensiveQuantities, Ewoms::StokesIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(StokesModel, FluxVariables, Ewoms::StokesFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(StokesModel, ExtensiveQuantities, Ewoms::StokesExtensiveQuantities<TypeTag>);
 
 //! the BoundaryRateVector property
 SET_TYPE_PROP(StokesModel, BoundaryRateVector, Ewoms::StokesBoundaryRateVector<TypeTag>);
@@ -265,12 +265,10 @@ public:
         std::ostringstream oss;
         if (pvIdx == Indices::pressureIdx)
             oss << "pressure";
-        else if (Indices::moleFrac1Idx <= pvIdx && pvIdx < Indices::moleFrac1Idx
-                                                           + numComponents - 1)
+        else if (Indices::moleFrac1Idx <= pvIdx && pvIdx < Indices::moleFrac1Idx + numComponents - 1)
             oss << "moleFraction^"
                 << FluidSystem::componentName(pvIdx - Indices::moleFrac1Idx + 1);
-        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx
-                                                           + dimWorld)
+        else if (Indices::velocity0Idx <= pvIdx && pvIdx < Indices::velocity0Idx + dimWorld)
             oss << "velocity_" << pvIdx - Indices::velocity0Idx;
         else
             assert(false);
@@ -284,12 +282,11 @@ public:
     std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
-                                                     + numComponents)
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
             oss << "continuity^"
                 << FluidSystem::componentName(eqIdx - Indices::conti0EqIdx);
-        else if (Indices::momentum0EqIdx <= eqIdx
-                 && eqIdx < Indices::momentum0EqIdx + dimWorld)
+        else if (Indices::momentum0EqIdx <= eqIdx &&
+                 eqIdx < Indices::momentum0EqIdx + dimWorld)
             oss << "momentum_" << eqIdx - Indices::momentum0EqIdx;
         else
             assert(false);
@@ -336,9 +333,8 @@ public:
         ScalarBuffer &density = *vtkWriter->allocateManagedScalarBuffer(numVertices);
         ScalarBuffer &temperature = *vtkWriter->allocateManagedScalarBuffer(numVertices);
         ScalarBuffer &viscosity = *vtkWriter->allocateManagedScalarBuffer(numVertices);
-        VectorBuffer &velocity
-            = *vtkWriter->allocateManagedVectorBuffer(/*numOuter=*/numVertices,
-                                                      /*numInner=*/dimWorld);
+        VectorBuffer &velocity = *vtkWriter->allocateManagedVectorBuffer(/*numOuter=*/numVertices,
+                                                                         /*numInner=*/dimWorld);
         ScalarBuffer *moleFraction[numComponents];
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             moleFraction[compIdx] = vtkWriter->allocateManagedScalarBuffer(numVertices);
@@ -358,8 +354,8 @@ public:
             for (int dofIdx = 0; dofIdx < numScv; ++dofIdx)
             {
                 int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
-                const auto &volVars = elemCtx.volVars(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
-                const auto &fluidState = volVars.fluidState();
+                const auto &intQuants = elemCtx.intensiveQuantities(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+                const auto &fluidState = intQuants.fluidState();
 
                 pressure[globalIdx] = fluidState.pressure(phaseIdx);
                 density[globalIdx] = fluidState.density(phaseIdx);
@@ -372,11 +368,10 @@ public:
                 // but it is impossible to directly copy a FieldVector
                 // into a DynamicVector...
                 velocity[globalIdx] = 0;
-                velocity[globalIdx] += volVars.velocityCenter();
+                velocity[globalIdx] += intQuants.velocityCenter();
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                    (*moleFraction[compIdx])[globalIdx]
-                        = fluidState.moleFraction(phaseIdx, compIdx);
+                    (*moleFraction[compIdx])[globalIdx] = fluidState.moleFraction(phaseIdx, compIdx);
             };
         }
 

@@ -91,8 +91,7 @@ public:
     static const bool is_modulo = false;
 
     static const bool traps = std::numeric_limits<double>::traps;
-    static const bool tinyness_before
-        = std::numeric_limits<double>::tinyness_before;
+    static const bool tinyness_before = std::numeric_limits<double>::tinyness_before;
     static const float_round_style round_style = round_to_nearest;
 };
 

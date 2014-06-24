@@ -27,11 +27,11 @@
 #include "richardsproperties.hh"
 #include "richardsindices.hh"
 #include "richardslocalresidual.hh"
-#include "richardsfluxvariables.hh"
+#include "richardsextensivequantities.hh"
 #include "richardsratevector.hh"
 #include "richardsboundaryratevector.hh"
 #include "richardsprimaryvariables.hh"
-#include "richardsvolumevariables.hh"
+#include "richardsintensivequantities.hh"
 #include "richardsnewtonmethod.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
@@ -93,11 +93,11 @@ SET_TYPE_PROP(Richards, BoundaryRateVector, Ewoms::RichardsBoundaryRateVector<Ty
 //! the PrimaryVariables property
 SET_TYPE_PROP(Richards, PrimaryVariables, Ewoms::RichardsPrimaryVariables<TypeTag>);
 
-//! The class for the volume averaged quantities
-SET_TYPE_PROP(Richards, VolumeVariables, Ewoms::RichardsVolumeVariables<TypeTag>);
+//! The class for the intensive quantities
+SET_TYPE_PROP(Richards, IntensiveQuantities, Ewoms::RichardsIntensiveQuantities<TypeTag>);
 
 //! The class for the quantities required for the flux calculation
-SET_TYPE_PROP(Richards, FluxVariables, Ewoms::RichardsFluxVariables<TypeTag>);
+SET_TYPE_PROP(Richards, ExtensiveQuantities, Ewoms::RichardsExtensiveQuantities<TypeTag>);
 
 //! The class of the Newton method
 SET_TYPE_PROP(Richards, NewtonMethod, Ewoms::RichardsNewtonMethod<TypeTag>);

@@ -35,16 +35,16 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    enum { conti0EqIdx = Indices::conti0EqIdx,
-           numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-           numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
 public:
     /*!
@@ -55,17 +55,16 @@ public:
                         int dofIdx,
                         int timeIdx) const
     {
-        // retrieve the volume variables for the SCV at the specified
-        // point in time
-        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
+        // retrieve the intensive quantities for the SCV at the specified point in time
+        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         storage = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                storage[conti0EqIdx + compIdx]
-                    += volVars.porosity()
-                       * volVars.fluidState().saturation(phaseIdx)
-                       * volVars.fluidState().molarity(phaseIdx, compIdx);
+                storage[conti0EqIdx + compIdx] +=
+                    intQuants.porosity()
+                    * intQuants.fluidState().saturation(phaseIdx)
+                    * intQuants.fluidState().molarity(phaseIdx, compIdx);
                 assert(std::isfinite(storage[conti0EqIdx + compIdx]));
             }
         }
@@ -77,22 +76,19 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const FluxVariables &evalPointFluxVars
-            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const ExtensiveQuantities &evalPointExtQuants =
+            elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
         flux = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
-                const VolumeVariables &up
-                    = elemCtx.volVars(upIdx, /*timeIdx=*/0);
+                int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+                const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
-                // add advective flux of current component in current
-                // phase
-                flux[conti0EqIdx + compIdx]
-                    += fluxVars.volumeFlux(phaseIdx)
-                       * up.fluidState().molarity(phaseIdx, compIdx);
+                // add advective flux of current component in current phase
+                flux[conti0EqIdx + compIdx] +=
+                    extQuants.volumeFlux(phaseIdx) * up.fluidState().molarity(phaseIdx, compIdx);
 
                 assert(std::isfinite(flux[conti0EqIdx + compIdx]));
             }

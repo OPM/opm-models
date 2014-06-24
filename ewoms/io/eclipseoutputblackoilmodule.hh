@@ -150,8 +150,8 @@ public:
     }
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quanties relevant
+     *        for an element
      */
     void processElement(const ElementContext &elemCtx)
     {
@@ -159,8 +159,7 @@ public:
             return;
 
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            const auto &fs
-                = elemCtx.volVars(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
+            const auto &fs = elemCtx.intensiveQuantities(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
             int I = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
             Scalar po = fs.pressure(oilPhaseIdx);
             Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);

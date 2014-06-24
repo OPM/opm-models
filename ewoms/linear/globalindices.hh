@@ -181,15 +181,12 @@ public:
      */
     void print() const
     {
-        std::cout << "(domestic index, global index, "
-                     "domestic->global->domestic) list for rank " << myRank_
-                  << "\n";
+        std::cout << "(domestic index, global index, domestic->global->domestic)"
+                  << " list for rank " << myRank_ << "\n";
 
-        for (int domIdx = 0; domIdx < domesticToGlobal_.size(); ++domIdx) {
+        for (int domIdx = 0; domIdx < domesticToGlobal_.size(); ++domIdx)
             std::cout << "(" << domIdx << ", " << domesticToGlobal(domIdx)
-                      << ", " << globalToDomestic(domesticToGlobal(domIdx))
-                      << ") ";
-        };
+                      << ", " << globalToDomestic(domesticToGlobal(domIdx)) << ") ";
         std::cout << "\n" << std::flush;
     }
 
@@ -314,10 +311,8 @@ protected:
 
             int nativeIdx = borderIt->localIdx;
             int localIdx = foreignOverlap_.nativeToLocal(nativeIdx);
-            if (localIdx >= 0 && foreignOverlap_.masterRank(localIdx)
-                                 == borderPeer) {
+            if (localIdx >= 0 && foreignOverlap_.masterRank(localIdx) == borderPeer)
                 receiveBorderIndex(borderPeer);
-            }
         }
 #endif // HAVE_MPI
     }

@@ -30,7 +30,7 @@
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/Valgrind.hpp>
 
-#include "flashvolumevariables.hh"
+#include "flashintensivequantities.hh"
 
 namespace Ewoms {
 
@@ -105,9 +105,10 @@ public:
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx]
-                = fluidState.density(phaseIdx, compIdx)
-                  * fluidState.moleFraction(phaseIdx, compIdx) * volume;
+            (*this)[conti0EqIdx + compIdx] =
+                fluidState.density(phaseIdx, compIdx)
+                * fluidState.moleFraction(phaseIdx, compIdx)
+                * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }

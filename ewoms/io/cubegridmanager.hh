@@ -122,9 +122,8 @@ public:
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = EWOMS_GET_PARAM(TypeTag, int, CellsZ);
         }
-        unsigned numRefinements
-            = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
+        unsigned numRefinements = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
         cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft,
                                                                       upperRight,
                                                                       cellRes);

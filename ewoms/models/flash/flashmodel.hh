@@ -29,8 +29,8 @@
 #include "flashlocalresidual.hh"
 #include "flashratevector.hh"
 #include "flashboundaryratevector.hh"
-#include "flashvolumevariables.hh"
-#include "flashfluxvariables.hh"
+#include "flashintensivequantities.hh"
+#include "flashextensivequantities.hh"
 #include "flashindices.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
@@ -82,23 +82,22 @@ SET_TYPE_PROP(FlashModel, RateVector, Ewoms::FlashRateVector<TypeTag>);
 //! the BoundaryRateVector property
 SET_TYPE_PROP(FlashModel, BoundaryRateVector, Ewoms::FlashBoundaryRateVector<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(FlashModel, VolumeVariables, Ewoms::FlashVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(FlashModel, IntensiveQuantities, Ewoms::FlashIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(FlashModel, FluxVariables, Ewoms::FlashFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(FlashModel, ExtensiveQuantities, Ewoms::FlashExtensiveQuantities<TypeTag>);
 
 //! The indices required by the flash-baseed isothermal compositional model
 SET_TYPE_PROP(FlashModel, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
 
-// The volume variable updates tend to be _very_ expensive for this
+// The updates of intensive quantities tend to be _very_ expensive for this
 // model, so let's try to minimize the number of required ones
-SET_BOOL_PROP(FlashModel, EnableVolumeVariablesCache, true);
+SET_BOOL_PROP(FlashModel, EnableIntensiveQuantityCache, true);
 
-// since thermodynamic hints are basically free if the volume
-// variables cache is enabled, and this model usually shows quite a
-// performance improvment if they are enabled, let's enable them by
-// default.
+// since thermodynamic hints are basically free if the cache for intensive quantities is
+// enabled, and this model usually shows quite a performance improvment if they are
+// enabled, let's enable them by default.
 SET_BOOL_PROP(FlashModel, EnableThermodynamicHints, true);
 
 // disable molecular diffusion by default

@@ -465,8 +465,7 @@ protected:
      */
     bool verbose_() const
     {
-        return EWOMS_GET_PARAM(TypeTag, bool, NewtonVerbose) && comm_.rank()
-                                                                == 0;
+        return (0 == EWOMS_GET_PARAM(TypeTag, bool, NewtonVerbose) && comm_.rank());
     }
 
     /*!
@@ -552,11 +551,9 @@ protected:
         // allowed one
         if (error_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError))
             OPM_THROW(Opm::NumericalProblem,
-                      "Newton: Error "
-                      << error_
+                      "Newton: Error " << error_
                       << " is larger than maximum allowed error of "
-                      << EWOMS_GET_PARAM(TypeTag, Scalar,
-                                         NewtonMaxError));
+                      << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError));
     }
 
     /*!
@@ -591,7 +588,7 @@ protected:
             currentSolution[i] = previousSolution[i];
             currentSolution[i] -= solutionUpdate[i];
 
-            this->model().invalidateVolumeVariablesCacheEntry(i, /*timeIdx=*/0);
+            this->model().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
         }
     }
 

@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseFluxVariables
+ * \copydoc Ewoms::FvBaseExtensiveQuantities
  */
-#ifndef EWOMS_FV_BASE_FLUX_VARIABLES_HH
-#define EWOMS_FV_BASE_FLUX_VARIABLES_HH
+#ifndef EWOMS_FV_BASE_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_FV_BASE_EXTENSIVE_QUANTITIES_HH
 
 #include "fvbaseproperties.hh"
 
@@ -36,7 +36,7 @@ namespace Ewoms {
  *        of the conserved quantities.
  */
 template <class TypeTag>
-class FvBaseFluxVariables
+class FvBaseExtensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -44,17 +44,17 @@ class FvBaseFluxVariables
 
 public:
     /*!
-     * \brief Register all run-time parameters for the flux variables.
+     * \brief Register all run-time parameters for the extensive quantities.
      */
     static void registerParameters()
     { }
 
     /*!
-     * \brief Update the flux variables for a given sub-control-volume-face.
+     * \brief Update the extensive quantities for a given sub-control-volume face.
      *
      * \param elemCtx Reference to the current element context.
-     * \param scvfIdx The local index of the sub-control-volume face for which
-     *                the flux variables should be calculated.
+     * \param scvfIdx The local index of the sub-control-volume face for which the
+     *                extensive quantities should be calculated.
      * \param timeIdx The index used by the time discretization.
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
@@ -64,19 +64,19 @@ public:
         exteriorScvIdx_ = scvf.exteriorIndex();
 
         extrusionFactor_ =
-            (elemCtx.volVars(interiorScvIdx_, timeIdx).extrusionFactor()
-             + elemCtx.volVars(exteriorScvIdx_, timeIdx).extrusionFactor()) / 2;
+            (elemCtx.intensiveQuantities(interiorScvIdx_, timeIdx).extrusionFactor()
+             + elemCtx.intensiveQuantities(exteriorScvIdx_, timeIdx).extrusionFactor()) / 2;
         Valgrind::CheckDefined(extrusionFactor_);
         assert(extrusionFactor_ > 0);
     }
 
 
     /*!
-     * \brief Update the flux variables for a given boundary face.
+     * \brief Update the extensive quantities for a given boundary face.
      *
      * \param context Reference to the current execution context.
      * \param bfIdx The local index of the boundary face for which
-     *              the flux variables should be calculated.
+     *              the extensive quantities should be calculated.
      * \param timeIdx The index used by the time discretization.
      * \param fluidState The FluidState on the domain boundary.
      * \param paramCache The FluidSystem's parameter cache.
@@ -92,33 +92,33 @@ public:
         interiorScvIdx_ = dofIdx;
         exteriorScvIdx_ = dofIdx;
 
-        extrusionFactor_ = context.volVars(bfIdx, timeIdx).extrusionFactor();
+        extrusionFactor_ = context.intensiveQuantities(bfIdx, timeIdx).extrusionFactor();
         Valgrind::CheckDefined(extrusionFactor_);
         assert(extrusionFactor_ > 0);
     }
 
     /*!
-     * \brief Returns th extrusion factor for the sub-control volume face
+     * \brief Returns th extrusion factor for the sub-control-volume face
      */
     Scalar extrusionFactor() const
     { return extrusionFactor_; }
 
     /*!
-     * \brief Return the local index of the control volume which is on
-     *        the "interior" of the sub-control volume face.
+     * \brief Return the local index of the control volume which is on the "interior" of
+     *        the sub-control volume face.
      */
     short interiorIndex() const
     { return interiorScvIdx_; }
 
     /*!
-     * \brief Return the local index of the control volume which is on
-     *        the "exterior" of the sub-control volume face.
+     * \brief Return the local index of the control volume which is on the "exterior" of
+     *        the sub-control volume face.
      */
     short exteriorIndex() const
     { return exteriorScvIdx_; }
 
 private:
-    // local indices of the interior and the exterior sub-control volumes
+    // local indices of the interior and the exterior sub-control-volumes
     short interiorScvIdx_;
     short exteriorScvIdx_;
 

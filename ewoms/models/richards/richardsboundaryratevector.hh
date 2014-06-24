@@ -27,7 +27,7 @@
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
-#include "richardsvolumevariables.hh"
+#include "richardsintensivequantities.hh"
 
 namespace Ewoms {
 
@@ -40,7 +40,7 @@ template <class TypeTag>
 class RichardsBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -78,9 +78,9 @@ public:
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
-        FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
-        const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
+        ExtensiveQuantities extQuants;
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -89,15 +89,14 @@ public:
 
         int phaseIdx = liquidPhaseIdx;
         Scalar density;
-        if (fluidState.pressure(phaseIdx)
-            > insideVolVars.fluidState().pressure(phaseIdx))
+        if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
             density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         else
-            density = insideVolVars.fluidState().density(phaseIdx);
+            density = insideIntQuants.fluidState().density(phaseIdx);
 
         // add advective flux of current component in current
         // phase
-        (*this)[contiEqIdx] += fluxVars.volumeFlux(phaseIdx) * density;
+        (*this)[contiEqIdx] += extQuants.volumeFlux(phaseIdx) * density;
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++i) {

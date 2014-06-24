@@ -43,8 +43,8 @@ class FvBaseBoundaryContext
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, GradientCalculator) GradientCalculator;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -185,26 +185,26 @@ public:
     { return elemCtx_.globalSpaceIndex(interiorScvIndex(boundaryFaceIdx, timeIdx), timeIdx); }
 
     /*!
-     * \brief Return the volume variables for the finite volume in the
+     * \brief Return the intensive quantities for the finite volume in the
      *        interiour of a boundary segment
      *
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const VolumeVariables &volVars(int boundaryFaceIdx, int timeIdx) const
+    const IntensiveQuantities &intensiveQuantities(int boundaryFaceIdx, int timeIdx) const
     {
         short interiorScvIdx = this->interiorScvIndex(boundaryFaceIdx, timeIdx);
-        return elemCtx_.volVars(interiorScvIdx, timeIdx);
+        return elemCtx_.intensiveQuantities(interiorScvIdx, timeIdx);
     }
 
     /*!
-     * \brief Return the flux variables for a given boundary face.
+     * \brief Return the extensive quantities for a given boundary face.
      *
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const FluxVariables &fluxVars(int boundaryFaceIdx, int timeIdx) const
-    { return elemCtx_.boundaryFluxVars(boundaryFaceIdx, timeIdx); }
+    const ExtensiveQuantities &extensiveQuantities(int boundaryFaceIdx, int timeIdx) const
+    { return elemCtx_.boundaryExtensiveQuantities(boundaryFaceIdx, timeIdx); }
 
     /*!
      * \brief Return the intersection for the neumann segment

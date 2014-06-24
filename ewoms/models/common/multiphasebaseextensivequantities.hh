@@ -19,15 +19,15 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::MultiPhaseBaseFluxVariables
+ * \copydoc Ewoms::MultiPhaseBaseExtensiveQuantities
  */
-#ifndef EWOMS_MULTI_PHASE_BASE_FLUX_VARIABLES_HH
-#define EWOMS_MULTI_PHASE_BASE_FLUX_VARIABLES_HH
+#ifndef EWOMS_MULTI_PHASE_BASE_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_MULTI_PHASE_BASE_EXTENSIVE_QUANTITIES_HH
 
 #include "multiphasebaseproperties.hh"
 
 #include <ewoms/models/common/quantitycallbacks.hh>
-#include <ewoms/disc/common/fvbasefluxvariables.hh>
+#include <ewoms/disc/common/fvbaseextensivequantities.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
@@ -40,17 +40,17 @@ namespace Ewoms {
  *        the filter velocities for multi-phase flow in porous media
  */
 template <class TypeTag>
-class MultiPhaseBaseFluxVariables
-    : public GET_PROP_TYPE(TypeTag, DiscFluxVariables)
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityFluxVariables
+class MultiPhaseBaseExtensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscExtensiveQuantities)
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityExtensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscFluxVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscExtensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -58,11 +58,11 @@ class MultiPhaseBaseFluxVariables
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
-    typedef typename VelocityModule::VelocityFluxVariables VelocityFluxVariables;
+    typedef typename VelocityModule::VelocityExtensiveQuantities VelocityExtensiveQuantities;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the flux variables.
+     * \brief Register all run-time parameters for the extensive quantities.
      */
     static void registerParameters()
     {
@@ -70,11 +70,11 @@ public:
     }
 
     /*!
-     * \brief Update the flux variables for a given sub-control-volume-face.
+     * \brief Update the extensive quantities for a given sub-control-volume-face.
      *
      * \param elemCtx Reference to the current element context.
      * \param scvfIdx The local index of the sub-control-volume face for
-     *                which the flux variables should be calculated.
+     *                which the extensive quantities should be calculated.
      * \param timeIdx The index used by the time discretization.
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
@@ -89,8 +89,8 @@ public:
         // determine the upstream indices. since this is a semi-smooth
         // non-linear solver, make upstream only look at the
         // evaluation point for the upstream decision
-        const auto &evalFluxVars = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
-        if (&evalFluxVars == this) {
+        const auto &evalExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
+        if (&evalExtQuants == this) {
             // we _are_ the evaluation point. Check whether the
             // pressure potential is in the same direction as the face
             // normal or in the opposite one
@@ -120,21 +120,21 @@ public:
             // just take the up-/downstream indices from the
             // evaluation point.
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                upstreamScvIdx_[phaseIdx] = evalFluxVars.upstreamIndex(phaseIdx);
-                downstreamScvIdx_[phaseIdx] = evalFluxVars.downstreamIndex(phaseIdx);
+                upstreamScvIdx_[phaseIdx] = evalExtQuants.upstreamIndex(phaseIdx);
+                downstreamScvIdx_[phaseIdx] = evalExtQuants.downstreamIndex(phaseIdx);
             }
         }
 
-        VelocityFluxVariables::calculateVelocities_(elemCtx, scvfIdx, timeIdx);
+        VelocityExtensiveQuantities::calculateVelocities_(elemCtx, scvfIdx, timeIdx);
     }
 
 
     /*!
-     * \brief Update the flux variables for a given boundary face.
+     * \brief Update the extensive quantities for a given boundary face.
      *
      * \param context Reference to the current execution context.
      * \param bfIdx The local index of the boundary face for which
-     *              the flux variables should be calculated.
+     *              the extensive quantities should be calculated.
      * \param timeIdx The index used by the time discretization.
      * \param fluidState The FluidState on the domain boundary.
      * \param paramCache The FluidSystem's parameter cache.
@@ -149,7 +149,7 @@ public:
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
 
         calculateBoundaryGradients_(context, bfIdx, timeIdx, fluidState, paramCache);
-        VelocityFluxVariables::calculateBoundaryVelocities_(context,
+        VelocityExtensiveQuantities::calculateBoundaryVelocities_(context,
                                                             bfIdx,
                                                             timeIdx,
                                                             fluidState,
@@ -166,8 +166,8 @@ public:
     { return potentialGrad_[phaseIdx]; }
 
     /*!
-     * \brief Return the local index of the upstream control volume
-     *        for a given phase as a function of the normal flux.
+     * \brief Return the local index of the upstream control volume for a given phase as
+     *        a function of the normal flux.
      *
      * \param phaseIdx The index of the fluid phase for which the upstream
      *                 direction is requested.
@@ -235,8 +235,8 @@ private:
             g /= 2;
             Valgrind::CheckDefined(g);
 
-            const auto &volVarsIn = elemCtx.volVars(this->interiorIndex(), timeIdx);
-            const auto &volVarsEx = elemCtx.volVars(this->exteriorIndex(), timeIdx);
+            const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorIndex(), timeIdx);
+            const auto &intQuantsEx = elemCtx.intensiveQuantities(this->exteriorIndex(), timeIdx);
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
             {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx))
@@ -245,10 +245,10 @@ private:
                 // calculate the phase density at the integration
                 // point. we only do this if the repective phase is
                 // present in both cells
-                Scalar mobilityI = volVarsIn.mobility(phaseIdx);
-                Scalar mobilityJ = volVarsEx.mobility(phaseIdx);
-                Scalar rhoI = volVarsIn.fluidState().density(phaseIdx);
-                Scalar rhoJ = volVarsEx.fluidState().density(phaseIdx);
+                Scalar mobilityI = intQuantsIn.mobility(phaseIdx);
+                Scalar mobilityJ = intQuantsEx.mobility(phaseIdx);
+                Scalar rhoI = intQuantsIn.fluidState().density(phaseIdx);
+                Scalar rhoJ = intQuantsEx.fluidState().density(phaseIdx);
                 Scalar fI = std::max(0.0, std::min(mobilityI*1e5, 1.0));
                 Scalar fJ = std::max(0.0, std::min(mobilityJ*1e5, 1.0));
                 if (fabs(fI + fJ) < 1e-20)
@@ -317,7 +317,7 @@ private:
 
                 // calculate volumetric gravity acceleration force
                 DimVector f(g);
-                f *= context.volVars(bfIdx, timeIdx).fluidState().density(phaseIdx);
+                f *= context.intensiveQuantities(bfIdx, timeIdx).fluidState().density(phaseIdx);
 
                 // calculate the final potential gradient
                 potentialGrad_[phaseIdx] -= f;

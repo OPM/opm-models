@@ -147,10 +147,10 @@ public:
     {
         // retrieve the parameter once to make sure that its value does
         // not contain a syntax error.
-        ParamType __attribute__((unused)) dummy
-            = get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName_.data(),
-                                               paramName_.data(),
-                                               /*errorIfNotRegistered=*/true);
+        ParamType __attribute__((unused)) dummy =
+            get<TypeTag, ParamType, PropTag>(/*propTagName=*/paramName_.data(),
+                                             paramName_.data(),
+                                             /*errorIfNotRegistered=*/true);
     }
 
 private:
@@ -387,8 +387,7 @@ void printUsage(const std::string &progName, const std::string &errorMsg = "",
 template <class TypeTag>
 std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = true)
 {
-    Dune::ParameterTree &paramTree
-        = GET_PROP(TypeTag, ParameterMetaData)::tree();
+    Dune::ParameterTree &paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
 
     if (handleHelp) {
         for (int i = 1; i < argc; ++i) {
@@ -641,9 +640,10 @@ public:
     static const ParamType &get(const char *propTagName, const char *paramName,
                                 bool errorIfNotRegistered = true)
     {
-        static const ParamType &value
-            = retrieve_<ParamType, PropTag>(propTagName, paramName,
-                                            errorIfNotRegistered);
+        static const ParamType &value =
+            retrieve_<ParamType, PropTag>(propTagName,
+                                          paramName,
+                                          errorIfNotRegistered);
         return value;
     }
 
@@ -683,16 +683,14 @@ private:
 
         if (b->propertyName != propertyName) {
             OPM_THROW(std::logic_error,
-                      "GET_*_PARAM for parameter '"
-                      << paramName
+                      "GET_*_PARAM for parameter '" << paramName
                       << "' called for at least two different properties ('"
                       << b->propertyName << "' and '" << propertyName << "')");
         }
 
         if (b->paramTypeName != paramTypeName) {
             OPM_THROW(std::logic_error,
-                      "GET_*_PARAM for parameter '"
-                      << paramName
+                      "GET_*_PARAM for parameter '" << paramName
                       << "' called with at least two different types ("
                       << b->paramTypeName << " and " << paramTypeName << ")");
         }
@@ -719,8 +717,7 @@ private:
 
             if (ParamsMeta::registry().find(paramName) == ParamsMeta::registry().end())
                 OPM_THROW(std::runtime_error,
-                          "Accessing parameter "
-                          << paramName
+                          "Accessing parameter " << paramName
                           << " without prior registration is not allowed.");
         }
 
@@ -741,9 +738,8 @@ private:
 
         // retrieve actual parameter from the parameter tree
         const ParamType defaultValue = GET_PROP_VALUE_(TypeTag, PropTag);
-        static ParamType value
-            = ParamsMeta::tree().template get<ParamType>(canonicalName,
-                                                         defaultValue);
+        static ParamType value =
+            ParamsMeta::tree().template get<ParamType>(canonicalName, defaultValue);
 
         return value;
     }
@@ -798,9 +794,10 @@ void endParamRegistration()
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())
-        OPM_THROW(std::logic_error, "Parameter registration was already "
-                                    "closed. It is only possible to close it "
-                                    "once.");
+        OPM_THROW(std::logic_error,
+                  "Parameter registration was already "
+                  "closed. It is only possible to close it "
+                  "once.");
 
     ParamsMeta::registrationOpen() = false;
 

@@ -19,12 +19,12 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureFluxVariables
+ * \copydoc Ewoms::DiscreteFractureExtensiveQuantities
  */
-#ifndef EWOMS_DISCRETE_FRACTURE_FLUX_VARIABLES_HH
-#define EWOMS_DISCRETE_FRACTURE_FLUX_VARIABLES_HH
+#ifndef EWOMS_DISCRETE_FRACTURE_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_DISCRETE_FRACTURE_EXTENSIVE_QUANTITIES_HH
 
-#include <ewoms/models/immiscible/immisciblefluxvariables.hh>
+#include <ewoms/models/immiscible/immiscibleextensivequantities.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -33,16 +33,14 @@ namespace Ewoms {
 
 /*!
  * \ingroup DiscreteFractureModel
- * \ingroup FluxVariables
+ * \ingroup ExtensiveQuantities
  *
- * \brief This class provides the data all quantities that are required to
- *        calculate the fluxes of the fluid phases over a face of a
- *        finite volume for the discrete-fracture immiscible multi-phase model.
+ * \brief This class expresses all intensive quantities of the discrete fracture model.
  */
 template <class TypeTag>
-class DiscreteFractureFluxVariables : public ImmiscibleFluxVariables<TypeTag>
+class DiscreteFractureExtensiveQuantities : public ImmiscibleExtensiveQuantities<TypeTag>
 {
-    typedef ImmiscibleFluxVariables<TypeTag> ParentType;
+    typedef ImmiscibleExtensiveQuantities<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -57,13 +55,13 @@ class DiscreteFractureFluxVariables : public ImmiscibleFluxVariables<TypeTag>
 
 public:
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::update()
+     * \copydoc MultiPhaseBaseExtensiveQuantities::update()
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
 
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
+        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         const auto &stencil = elemCtx.stencil(timeIdx);
         const auto &scvf = stencil.interiorFace(scvfIdx);
         int insideScvIdx = scvf.interiorIndex();
@@ -77,11 +75,11 @@ public:
             return;
 
         // average the intrinsic permeability of the fracture
-        const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
-        const auto &volVarsOutside = elemCtx.volVars(outsideScvIdx, timeIdx);
+        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
+        const auto &intQuantsOutside = elemCtx.intensiveQuantities(outsideScvIdx, timeIdx);
         elemCtx.problem().meanK(fractureIntrinsicPermeability_,
-                                volVarsInside.fractureIntrinsicPermeability(),
-                                volVarsOutside.fractureIntrinsicPermeability());
+                                intQuantsInside.fractureIntrinsicPermeability(),
+                                intQuantsOutside.fractureIntrinsicPermeability());
 
         auto distDirection = elemCtx.pos(outsideScvIdx, timeIdx);
         distDirection -= elemCtx.pos(insideScvIdx, timeIdx);
@@ -92,14 +90,13 @@ public:
                                                outsideScvIdx, timeIdx);
         assert(fractureWidth_ < scvf.area());
 
-        const auto &evalPointFluxVars
-            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            const auto &pGrad = fluxVars.potentialGrad(phaseIdx);
+            const auto &pGrad = extQuants.potentialGrad(phaseIdx);
 
-            int upstreamIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
-            const auto &up = elemCtx.volVars(upstreamIdx, timeIdx);
+            int upstreamIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+            const auto &up = elemCtx.intensiveQuantities(upstreamIdx, timeIdx);
 
             // multiply with the fracture mobility of the upstream vertex
             fractureIntrinsicPermeability_.mv(pGrad,
@@ -111,9 +108,9 @@ public:
             // faces.
             fractureVolumeFlux_[phaseIdx] = 0;
             for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-                fractureVolumeFlux_[phaseIdx]
-                    += (fractureFilterVelocity_[phaseIdx][dimIdx] * distDirection[dimIdx])
-                      * (fractureWidth_ / 2.0) / scvf.area();
+                fractureVolumeFlux_[phaseIdx] +=
+                    (fractureFilterVelocity_[phaseIdx][dimIdx] * distDirection[dimIdx])
+                    * (fractureWidth_ / 2.0) / scvf.area();
         }
     }
 

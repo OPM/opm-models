@@ -291,12 +291,9 @@ private:
             int peerRank = *peerIt;
 
             int numEntries = overlap_->foreignOverlapSize(peerRank);
-            numIndicesSendBuff_[peerRank]
-                = std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
-            indicesSendBuff_[peerRank]
-                = std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numEntries));
-            valuesSendBuff_[peerRank]
-                = std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numEntries));
+            numIndicesSendBuff_[peerRank] = std::make_shared<MpiBuffer<int> >(1);
+            indicesSendBuff_[peerRank] = std::make_shared<MpiBuffer<Index> >(numEntries);
+            valuesSendBuff_[peerRank] = std::make_shared<MpiBuffer<FieldVector> >(numEntries);
 
             // fill the indices buffer with global indices
             MpiBuffer<Index> &indicesSendBuff = *indicesSendBuff_[peerRank];
@@ -353,8 +350,7 @@ private:
             // domestic ones
             MpiBuffer<Index> &indicesSendBuff = *indicesSendBuff_[peerRank];
             for (unsigned i = 0; i < indicesSendBuff.size(); ++i) {
-                indicesSendBuff[i]
-                    = overlap_->globalToDomestic(indicesSendBuff[i]);
+                indicesSendBuff[i] = overlap_->globalToDomestic(indicesSendBuff[i]);
             }
         }
 
@@ -405,11 +401,8 @@ private:
             // then, create the MPI buffers
             frontIndicesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
                 new MpiBuffer<Index>(numFrontRows));
-            frontValuesRecvBuff_[peerRank]
-                = std::shared_ptr<MpiBuffer<FieldVector> >(
-                    new MpiBuffer<FieldVector>(numFrontRows));
-            MpiBuffer<Index> &frontIndicesRecvBuff
-                = *frontIndicesRecvBuff_[peerRank];
+            frontValuesRecvBuff_[peerRank] = std::make_shared<MpiBuffer<FieldVector> >(numFrontRows);
+            MpiBuffer<Index> &frontIndicesRecvBuff = *frontIndicesRecvBuff_[peerRank];
 
             // next, receive the actual indices
             frontIndicesRecvBuff.receive(peerRank);
@@ -432,11 +425,9 @@ private:
 
             // convert the global indices of the send buffer to
             // domestic ones
-            MpiBuffer<Index> &frontIndicesSendBuff
-                = *frontIndicesSendBuff_[peerRank];
+            MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
             for (unsigned i = 0; i < frontIndicesSendBuff.size(); ++i) {
-                frontIndicesSendBuff[i]
-                    = overlap_->globalToDomestic(frontIndicesSendBuff[i]);
+                frontIndicesSendBuff[i] = overlap_->globalToDomestic(frontIndicesSendBuff[i]);
             }
         }
 #endif // HAVE_MPI
@@ -447,9 +438,8 @@ private:
         // copy the values into the send buffer
         const MpiBuffer<Index> &indices = *indicesSendBuff_[peerRank];
         MpiBuffer<FieldVector> &values = *valuesSendBuff_[peerRank];
-        for (unsigned i = 0; i < indices.size(); ++i) {
+        for (unsigned i = 0; i < indices.size(); ++i)
             values[i] = (*this)[indices[i]];
-        }
 
         values.send(peerRank);
     }

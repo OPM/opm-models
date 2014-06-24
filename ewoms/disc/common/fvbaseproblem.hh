@@ -40,13 +40,11 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief Base class for all problems which use a finite volume
- *        spatial discretization.
+ * \brief Base class for all problems which use a finite volume spatial discretization.
  *
- * \note All quantities are specified assuming a threedimensional
- *       world. Problems discretized using 2D grids are assumed to be
- *       extruded by \f$1 m\f$ and 1D grids are assumed to have a
- *       cross section of \f$1m \times 1m\f$.
+ * \note All quantities are specified assuming a threedimensional world. Problems
+ *       discretized using 2D grids are assumed to be extruded by \f$1 m\f$ and 1D grids
+ *       are assumed to have a cross section of \f$1m \times 1m\f$.
  */
 template<class TypeTag>
 class FvBaseProblem
@@ -371,8 +369,7 @@ public:
 
         OPM_THROW(std::runtime_error,
                    "Newton solver didn't converge after "
-                   << maxFails
-                   << " time-step divisions. dt="
+                   << maxFails << " time-step divisions. dt="
                    << simulator().timeStepSize());
     }
 

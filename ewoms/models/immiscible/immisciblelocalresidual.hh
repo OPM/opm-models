@@ -41,16 +41,16 @@ class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
-    enum { conti0EqIdx = Indices::conti0EqIdx,
-           numPhases = GET_PROP_VALUE(TypeTag, NumPhases),
-           enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
@@ -69,16 +69,17 @@ public:
                          int timeIdx,
                          int phaseIdx) const
     {
-        // retrieve the volume variables for the SCV at the specified
+        // retrieve the intensive quantities for the SCV at the specified
         // point in time
-        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
-        const auto &fs = volVars.fluidState();
+        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto &fs = intQuants.fluidState();
 
-        storage[conti0EqIdx + phaseIdx] = volVars.porosity()
-                                          * fs.saturation(phaseIdx)
-                                          * fs.density(phaseIdx);
+        storage[conti0EqIdx + phaseIdx] =
+            intQuants.porosity()
+            * fs.saturation(phaseIdx)
+            * fs.density(phaseIdx);
 
-        EnergyModule::addPhaseStorage(storage, volVars, phaseIdx);
+        EnergyModule::addPhaseStorage(storage, intQuants, phaseIdx);
     }
 
     /*!
@@ -93,7 +94,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(dofIdx, timeIdx));
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
     }
 
     /*!
@@ -108,17 +109,17 @@ public:
     }
 
     /*!
-     * \brief Add the advective mass flux of all components over
-     *        a face of a sub-control volume.
+     * \brief Add the advective mass flux at a given flux integration point
      *
      * \copydetails computeFlux
      */
-    void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          int scvfIdx, int timeIdx) const
+    void addAdvectiveFlux(RateVector &flux,
+                          const ElementContext &elemCtx,
+                          int scvfIdx,
+                          int timeIdx) const
     {
-        const FluxVariables &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const FluxVariables &evalPointFluxVars
-            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const ExtensiveQuantities &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -129,25 +130,25 @@ public:
             // using the evaluation point and *not* the current local
             // solution. (although the actual secondary variables must
             // obviously be calculated using the current solution.)
-            int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
+            int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
 
-            const VolumeVariables &up = elemCtx.volVars(upIdx, /*timeIdx=*/0);
+            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
-            assert(std::isfinite(fluxVars.volumeFlux(phaseIdx)));
+            assert(std::isfinite(extQuants.volumeFlux(phaseIdx)));
             assert(std::isfinite(up.fluidState().density(phaseIdx)));
 
             // add advective flux of current component in current
             // phase
-            flux[conti0EqIdx + phaseIdx] += fluxVars.volumeFlux(phaseIdx)
-                                            * up.fluidState().density(phaseIdx);
+            flux[conti0EqIdx + phaseIdx] +=
+                extQuants.volumeFlux(phaseIdx)
+                * up.fluidState().density(phaseIdx);
         }
 
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \brief Adds the diffusive flux of all conservation quantitis to
-     *        the flux vector over the face of a sub-control volume.
+     * \brief Adds the diffusive flux at a given flux integration point.
      *
      * For the immiscible model, this is a no-op for mass fluxes. For
      * energy it adds the contribution of heat conduction to the

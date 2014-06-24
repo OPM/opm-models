@@ -46,8 +46,7 @@ NEW_TYPE_TAG(FvBaseDiscretization,
                            VtkPrimaryVars));
 
 
-//! set the splices for the vertex-centered finite volume
-//! discretization
+//! set the splices for the finite volume discretizations
 NEW_PROP_TAG(LinearSolverSplice);
 SET_SPLICES(FvBaseDiscretization, LinearSolverSplice);
 
@@ -107,9 +106,9 @@ NEW_PROP_TAG(SolutionVector);
 //! A vector of primary variables within a sub-control volume
 NEW_PROP_TAG(PrimaryVariables);
 //! The secondary variables within a sub-control volume
-NEW_PROP_TAG(VolumeVariables);
-//! The discretization specific part of the volume variables
-NEW_PROP_TAG(DiscVolumeVariables);
+NEW_PROP_TAG(IntensiveQuantities);
+//! The discretization specific part of the intensive quantities
+NEW_PROP_TAG(DiscIntensiveQuantities);
 
 //! The secondary variables of all degrees of freedom in an element's stencil
 NEW_PROP_TAG(ElementContext);
@@ -118,15 +117,15 @@ NEW_PROP_TAG(BoundaryContext);
 //! The secondary variables of a constraint degree of freedom
 NEW_PROP_TAG(ConstraintsContext);
 //! Data required to calculate a flux over a face
-NEW_PROP_TAG(FluxVariables);
+NEW_PROP_TAG(ExtensiveQuantities);
 //! Calculates gradients of arbitrary quantities at flux integration points
 NEW_PROP_TAG(GradientCalculator);
 
-//! The part of the volume variables which is specific to the spatial discretization
-NEW_PROP_TAG(DiscBaseVolumeVariables);
+//! The part of the intensive quantities which is specific to the spatial discretization
+NEW_PROP_TAG(DiscBaseIntensiveQuantities);
 
-//! The part of the flux variables which is specific to the spatial discretization
-NEW_PROP_TAG(DiscFluxVariables);
+//! The part of the extensive quantities which is specific to the spatial discretization
+NEW_PROP_TAG(DiscExtensiveQuantities);
 
 //! The part of the VTK ouput modules which is specific to the spatial discretization
 NEW_PROP_TAG(DiscBaseOutputModule);
@@ -190,7 +189,7 @@ NEW_PROP_TAG(MaxTimeStepDivisions);
 NEW_PROP_TAG(NumericDifferenceMethod);
 
 /*!
- * \brief Specify whether all volume variables for the grid should be
+ * \brief Specify whether all intensive quantities for the grid should be
  *        cached in the discretization.
  *
  * This potentially reduces the CPU time, but comes at the cost of
@@ -198,13 +197,13 @@ NEW_PROP_TAG(NumericDifferenceMethod);
  * may cause the simulation to exhibit worse cache coherence behavior
  * which eats some of the computational benefits again.
  */
-NEW_PROP_TAG(EnableVolumeVariablesCache);
+NEW_PROP_TAG(EnableIntensiveQuantityCache);
 
 /*!
  * \brief Specify whether to use the already calculated solutions as
- *        starting values of the volume variables.
+ *        starting values of the intensive quantities.
  *
- * This only makes sense if the calculation of the volume variables is
+ * This only makes sense if the calculation of the intensive quantities is
  * very expensive (e.g. for non-linear fugacity functions where the
  * solver converges faster).
  */

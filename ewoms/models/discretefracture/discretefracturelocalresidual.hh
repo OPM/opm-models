@@ -74,28 +74,28 @@ public:
         int globalIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
 
         if (!fractureMapper.isFractureVertex(globalIdx)) {
-            // don't do anything in addition to the immiscible model
-            // for finite volumes that do not feature fractures
+            // don't do anything in addition to the immiscible model for degrees of
+            // freedom that do not feature fractures
             storage += phaseStorage;
             return;
         }
 
-        const auto &volVars = elemCtx.volVars(dofIdx, timeIdx);
+        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
         const auto &scv = elemCtx.stencil(timeIdx).subControlVolume(dofIdx);
 
         // reduce the matrix storage by the fracture volume
-        phaseStorage *= 1 - volVars.fractureVolume()/scv.volume();
+        phaseStorage *= 1 - intQuants.fractureVolume()/scv.volume();
 
         // add the storage term inside the fractures
-        const auto &fsFracture = volVars.fractureFluidState();
+        const auto &fsFracture = intQuants.fractureFluidState();
 
         phaseStorage[conti0EqIdx + phaseIdx] +=
-            volVars.fracturePorosity()*
+            intQuants.fracturePorosity()*
             fsFracture.saturation(phaseIdx) *
             fsFracture.density(phaseIdx) *
-            volVars.fractureVolume()/scv.volume();
+            intQuants.fractureVolume()/scv.volume();
 
-        EnergyModule::addFracturePhaseStorage(phaseStorage, volVars, scv,
+        EnergyModule::addFracturePhaseStorage(phaseStorage, intQuants, scv,
                                               phaseIdx);
 
         // add the result to the overall storage term
@@ -110,12 +110,11 @@ public:
     {
         ParentType::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &evalPointFluxVars
-            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
-        int i = fluxVars.interiorIndex();
-        int j = fluxVars.exteriorIndex();
+        int i = extQuants.interiorIndex();
+        int j = extQuants.exteriorIndex();
         int I = elemCtx.globalSpaceIndex(i, timeIdx);
         int J = elemCtx.globalSpaceIndex(j, timeIdx);
         const auto &fractureMapper = elemCtx.problem().fractureMapper();
@@ -136,15 +135,14 @@ public:
             // face that is occupied by the fracture. As usual, the
             // fracture is shared between two SCVs, so the its width
             // needs to be divided by two.
-            flux[conti0EqIdx + phaseIdx] *= 1 - fluxVars.fractureWidth()
-                                                / (2 * scvfArea);
+            flux[conti0EqIdx + phaseIdx] *=
+                1 - extQuants.fractureWidth() / (2 * scvfArea);
 
-            // volume variables of the upstream and the downstream DOFs
-            int upIdx = evalPointFluxVars.upstreamIndex(phaseIdx);
-            const auto &up = elemCtx.volVars(upIdx, timeIdx);
-            flux[conti0EqIdx + phaseIdx]
-                += fluxVars.fractureVolumeFlux(phaseIdx)
-                   * up.fractureFluidState().density(phaseIdx);
+            // intensive quantities of the upstream and the downstream DOFs
+            int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+            const auto &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+            flux[conti0EqIdx + phaseIdx] +=
+                extQuants.fractureVolumeFlux(phaseIdx) * up.fractureFluidState().density(phaseIdx);
         }
 
         EnergyModule::handleFractureFlux(flux, elemCtx, scvfIdx, timeIdx);

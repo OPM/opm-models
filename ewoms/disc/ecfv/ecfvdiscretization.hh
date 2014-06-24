@@ -82,7 +82,7 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief The base class for the element centered finite volume discretization scheme.
+ * \brief The base class for the element-centered finite-volume discretization scheme.
  */
 template<class TypeTag>
 class EcfvDiscretization : public FvBaseDiscretization<TypeTag>

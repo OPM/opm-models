@@ -121,16 +121,16 @@ public:
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                globalMolarities[compIdx]
-                    += fluidState.molarity(phaseIdx, compIdx)
-                       * fluidState.saturation(phaseIdx);
+                globalMolarities[compIdx] +=
+                    fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
             }
         }
 
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
         fsFlash.assign(fluidState);
         typename FluidSystem::ParameterCache paramCache;
-        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, paramCache,
+        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash,
+                                                     paramCache,
                                                      matParams,
                                                      globalMolarities);
 

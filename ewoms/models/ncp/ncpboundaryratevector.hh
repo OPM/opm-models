@@ -41,7 +41,7 @@ template <class TypeTag>
 class NcpBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -83,9 +83,9 @@ public:
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
-        FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
-        const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
+        ExtensiveQuantities extQuants;
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -98,53 +98,48 @@ public:
                                  * FluidSystem::molarMass(compIdx);
 
             Scalar density;
-            if (fluidState.pressure(phaseIdx)
-                > insideVolVars.fluidState().pressure(phaseIdx))
+            if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else
-                density = insideVolVars.fluidState().density(phaseIdx);
+                density = insideIntQuants.fluidState().density(phaseIdx);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar molarity;
-                if (fluidState.pressure(phaseIdx)
-                    > insideVolVars.fluidState().pressure(phaseIdx)) {
-                    molarity = fluidState.moleFraction(phaseIdx, compIdx)
-                               * density / meanMBoundary;
+                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx)) {
+                    molarity =
+                        fluidState.moleFraction(phaseIdx, compIdx)
+                        * density
+                        / meanMBoundary;
                     Valgrind::CheckDefined(molarity);
                 }
                 else {
-                    molarity
-                        = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
+                    molarity = insideIntQuants.fluidState().molarity(phaseIdx, compIdx);
                     Valgrind::CheckDefined(molarity);
                 }
 
-                Valgrind::CheckDefined(fluxVars.volumeFlux(phaseIdx));
+                Valgrind::CheckDefined(extQuants.volumeFlux(phaseIdx));
 
                 // add advective flux of current component in current
                 // phase
-                (*this)[conti0EqIdx + compIdx] += fluxVars.volumeFlux(phaseIdx)
+                (*this)[conti0EqIdx + compIdx] += extQuants.volumeFlux(phaseIdx)
                                                   * molarity;
             }
 
             if (enableEnergy) {
                 Scalar specificEnthalpy;
-                if (fluidState.pressure(phaseIdx)
-                    > insideVolVars.fluidState().pressure(phaseIdx))
-                    specificEnthalpy
-                        = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
+                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
+                    specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
                 else
-                    specificEnthalpy
-                        = insideVolVars.fluidState().enthalpy(phaseIdx);
+                    specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar phaseEnthalpyRate
-                    = density * fluxVars.volumeFlux(phaseIdx) * specificEnthalpy;
+                Scalar phaseEnthalpyRate = density * extQuants.volumeFlux(phaseIdx) * specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, phaseEnthalpyRate);
             }
         }
 
         EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(
-                                                   fluxVars));
+                                                   extQuants));
 
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++i) {

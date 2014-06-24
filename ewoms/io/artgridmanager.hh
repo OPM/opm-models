@@ -89,8 +89,7 @@ public:
         : ParentType(simulator)
     {
         enum ParseMode { Vertex, Edge, Element, Finished };
-        const std::string artFileName
-            = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
+        const std::string artFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
         std::vector<GlobalPosition> vertexPos;
         std::vector<std::pair<int, int> > edges;
         std::vector<std::pair<int, int> > fractureEdges;
@@ -99,7 +98,7 @@ public:
         if (!inStream.is_open()) {
             OPM_THROW(std::runtime_error,
                       "File '" << artFileName
-                               << "' does not exist or is not readable");
+                      << "' does not exist or is not readable");
         }
         std::string curLine;
         ParseMode curParseMode = Vertex;
@@ -204,8 +203,9 @@ public:
                     edgeIndices.push_back(tmp2);
                     assert(tmp2 < edges.size());
                 }
-                assert(edgeIndices.size()
-                       == 3); // so far, we only support triangles
+
+                // so far, we only support triangles
+                assert(edgeIndices.size() == 3);
 
                 // extract the vertex indices of the element
                 std::vector<unsigned int> vertIndices;

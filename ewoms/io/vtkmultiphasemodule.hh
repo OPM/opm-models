@@ -188,19 +188,19 @@ public:
     }
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quantities seen on
+     *        an element
      */
     void processElement(const ElementContext &elemCtx)
     {
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
-            const auto &fs = volVars.fluidState();
+            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto &fs = intQuants.fluidState();
 
-            if (porosityOutput_()) porosity_[I] = volVars.porosity();
+            if (porosityOutput_()) porosity_[I] = intQuants.porosity();
             if (intrinsicPermeabilityOutput_()) {
-                const auto &K = volVars.intrinsicPermeability();
+                const auto &K = intQuants.intrinsicPermeability();
                 intrinsicPermeability_[I] = K[0][0];
             }
 
@@ -212,9 +212,9 @@ public:
                 if (saturationOutput_())
                     saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
                 if (mobilityOutput_())
-                    mobility_[phaseIdx][I] = volVars.mobility(phaseIdx);
+                    mobility_[phaseIdx][I] = intQuants.mobility(phaseIdx);
                 if (relativePermeabilityOutput_())
-                    relativePermeability_[phaseIdx][I] = volVars.relativePermeability(phaseIdx);
+                    relativePermeability_[phaseIdx][I] = intQuants.relativePermeability(phaseIdx);
                 if (viscosityOutput_())
                     viscosity_[phaseIdx][I] = fs.viscosity(phaseIdx);
                 if (averageMolarMassOutput_())
@@ -225,17 +225,17 @@ public:
         if (potentialGradientOutput_()) {
             // calculate velocities if requested
             for (int faceIdx = 0; faceIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ faceIdx) {
-                const auto &fluxVars = elemCtx.fluxVars(faceIdx, /*timeIdx=*/0);
+                const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, /*timeIdx=*/0);
 
-                int i = fluxVars.interiorIndex();
+                int i = extQuants.interiorIndex();
                 int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Scalar weight = fluxVars.extrusionFactor();
+                    Scalar weight = extQuants.extrusionFactor();
 
                     potentialWeight_[phaseIdx][I] += weight;
 
-                    auto pGrad = fluxVars.potentialGrad(phaseIdx);
+                    auto pGrad = extQuants.potentialGrad(phaseIdx);
                     pGrad *= weight;
                     potentialGradient_[phaseIdx][I] += pGrad;
                 } // end for all phases
@@ -245,21 +245,21 @@ public:
         if (velocityOutput_()) {
             // calculate velocities if requested
             for (int faceIdx = 0; faceIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ faceIdx) {
-                const auto &fluxVars = elemCtx.fluxVars(faceIdx, /*timeIdx=*/0);
+                const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, /*timeIdx=*/0);
 
-                int i = fluxVars.interiorIndex();
+                int i = extQuants.interiorIndex();
                 int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
-                int j = fluxVars.exteriorIndex();
+                int j = extQuants.exteriorIndex();
                 int J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Scalar weight = std::max(1e-16, std::abs(fluxVars.volumeFlux(phaseIdx)));
-                    Valgrind::CheckDefined(fluxVars.extrusionFactor());
-                    assert(fluxVars.extrusionFactor() > 0);
-                    weight *= fluxVars.extrusionFactor();
+                    Scalar weight = std::max(1e-16, std::abs(extQuants.volumeFlux(phaseIdx)));
+                    Valgrind::CheckDefined(extQuants.extrusionFactor());
+                    assert(extQuants.extrusionFactor() > 0);
+                    weight *= extQuants.extrusionFactor();
 
-                    auto v(fluxVars.filterVelocity(phaseIdx));
+                    auto v(extQuants.filterVelocity(phaseIdx));
                     if (std::abs(v.two_norm()) > 1e-20)
                         weight /= v.two_norm();
                     v *= weight;

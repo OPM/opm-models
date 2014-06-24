@@ -90,15 +90,15 @@ public:
     }
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quantities relevant
+     *        for an element
      */
     void processElement(const ElementContext &elemCtx)
     {
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
-            const auto &fs = volVars.fluidState();
+            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto &fs = intQuants.fluidState();
 
             if (temperatureOutput_())
                 temperature_[I] = fs.temperature(/*phaseIdx=*/0);

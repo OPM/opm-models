@@ -39,9 +39,8 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief The common code for the assemblers of the global Jacobian
- *        matrix of models using an implicit finite volumes
- *        discretization scheme.
+ * \brief The common code for the assemblers of the global Jacobian matrix of models
+ *        using an implicit finite volumes discretization scheme.
  */
 template<class TypeTag>
 class FvBaseAssembler
@@ -229,8 +228,7 @@ public:
             relinearizationAccuracy_ = gridView_().comm().max(nextRelinearizationAccuracy_);
 
             model_().newtonMethod().endIterMsg()
-                << ", relinearized "
-                << totalElems_ - greenElems_ << " of " << totalElems_
+                << ", relinearized " << totalElems_ - greenElems_ << " of " << totalElems_
                 << " elements (" << 100*Scalar(totalElems_ - greenElems_)/totalElems_ << "%)"
                 << " and achieved an accuracy of " << relinearizationAccuracy_;
         }
@@ -676,8 +674,8 @@ private:
         // of freedom
         for (unsigned rowIdx = 0; rowIdx < matrix_->N(); ++rowIdx) {
             if (dofColor_[rowIdx] == Green)
-                continue; // the equations for this control volume are
-                          // already below the treshold
+                // the equations for this control volume are already below the treshold
+                continue;
 
             // here we have yellow or red degrees of freedom...
 
@@ -715,13 +713,11 @@ private:
                 storageJacobian_[i] *= oldDt_/curDt;
                 J_i_i += storageJacobian_[i];
 
-                // use the flux term plus the source term as the new
-                // residual (since the delta in the d(storage)/dt is 0
-                // for the first iteration and the residual is
-                // approximately 0 in the last iteration, the flux
-                // term plus the source term must be equal to the
-                // negative change of the storage term of the last
-                // iteration of the last time step...)
+                // use the flux term plus the source term as the new residual (since the
+                // delta in the d(storage)/dt is 0 for the first iteration and the
+                // residual is approximately 0 in the last iteration, the flux term plus
+                // the source term must be equal to the negative change of the storage
+                // term of the last iteration of the last time step...)
                 residual_[i] = storageTerm_[i];
                 residual_[i] *= -1;
             };

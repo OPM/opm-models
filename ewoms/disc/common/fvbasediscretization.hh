@@ -37,8 +37,8 @@
 #include "fvbasegradientcalculator.hh"
 #include "fvbasenewtonmethod.hh"
 #include "fvbaseprimaryvariables.hh"
-#include "fvbasevolumevariables.hh"
-#include "fvbasefluxvariables.hh"
+#include "fvbaseintensivequantities.hh"
+#include "fvbaseextensivequantities.hh"
 
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
@@ -85,8 +85,8 @@ public:
 
 SET_TYPE_PROP(FvBaseDiscretization, DiscLocalResidual, Ewoms::FvBaseLocalResidual<TypeTag>);
 
-SET_TYPE_PROP(FvBaseDiscretization, DiscVolumeVariables, Ewoms::FvBaseVolumeVariables<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, DiscFluxVariables, Ewoms::FvBaseFluxVariables<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, DiscIntensiveQuantities, Ewoms::FvBaseIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtensiveQuantities<TypeTag>);
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
@@ -161,11 +161,11 @@ SET_TYPE_PROP(FvBaseDiscretization, SolutionVector,
               Dune::BlockVector<typename GET_PROP_TYPE(TypeTag, PrimaryVariables)>);
 
 /*!
- * \brief The volume variable class.
+ * \brief The class representing intensive quantities.
  *
  * This should almost certainly be overloaded by the model...
  */
-SET_TYPE_PROP(FvBaseDiscretization, VolumeVariables, Ewoms::FvBaseVolumeVariables<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, IntensiveQuantities, Ewoms::FvBaseIntensiveQuantities<TypeTag>);
 
 /*!
  * \brief The element context
@@ -208,21 +208,19 @@ SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
 
-// by default, disable the volume variable cache. If the volume
-// variables are relatively cheap to calculate, the cache basically
-// does not yield any performance impact because of the volume
-// variable cache will cause additional pressure on the CPU caches...
-SET_BOOL_PROP(FvBaseDiscretization, EnableVolumeVariablesCache, false);
+// by default, disable the intensive quantity cache. If the intensive quantities are
+// relatively cheap to calculate, the cache basically does not yield any performance
+// impact because of the intensive quantity cache will cause additional pressure on the
+// CPU caches...
+SET_BOOL_PROP(FvBaseDiscretization, EnableIntensiveQuantityCache, false);
 
-// do not use thermodynamic hints by default. If you enable this, make
-// sure to also enable the volume variable cache above to avoid
-// getting an exception...
+// do not use thermodynamic hints by default. If you enable this, make sure to also
+// enable the intensive quantity cache above to avoid getting an exception...
 SET_BOOL_PROP(FvBaseDiscretization, EnableThermodynamicHints, false);
 
-// if the deflection of the newton method is large, we do not need to
-// solve the linear approximation accurately. Assuming that the value
-// for the current solution is quite close to the final value, a
-// reduction of 3 orders of magnitude in the defect should be
+// if the deflection of the newton method is large, we do not need to solve the linear
+// approximation accurately. Assuming that the value for the current solution is quite
+// close to the final value, a reduction of 3 orders of magnitude in the defect should be
 // sufficient...
 SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverTolerance, 1e-3);
 
@@ -257,8 +255,8 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, GradientCalculator) GradientCalculator;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
@@ -274,7 +272,7 @@ class FvBaseDiscretization
         dim = GridView::dimension
     };
 
-    typedef std::vector<VolumeVariables> VolumeVariablesVector;
+    typedef std::vector<IntensiveQuantities> IntensiveQuantitiesVector;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
@@ -323,8 +321,8 @@ public:
         LocalJacobian::registerParameters();
         LocalResidual::registerParameters();
         GradientCalculator::registerParameters();
-        VolumeVariables::registerParameters();
-        FluxVariables::registerParameters();
+        IntensiveQuantities::registerParameters();
+        ExtensiveQuantities::registerParameters();
         NewtonMethod::registerParameters();
 
         // register runtime parameters of the output modules
@@ -332,7 +330,7 @@ public:
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVolumeVariablesCache, "Turn on caching of local quantities");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
     }
 
     /*!
@@ -346,9 +344,9 @@ public:
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDofs);
 
-            if (storeVolumeVariables_()) {
-                volVarsCache_[timeIdx].resize(nDofs);
-                volVarsCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
+            if (storeIntensiveQuantities_()) {
+                intensiveQuantityCache_[timeIdx].resize(nDofs);
+                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
             }
         }
 
@@ -382,118 +380,113 @@ public:
     { return newtonMethod_; }
 
     /*!
-     * \brief Return the thermodynamic hint for a entity on the grid
-     *        at given time.
+     * \brief Return the thermodynamic hint for a entity on the grid at given time.
      *
-     * The hint is defined as a VolumeVariables object which is
-     * supposed to be "close" to the VolumeVariables of the current
-     * solution. It can be used as a good starting point for
-     * non-linear solvers when having to solve non-linear relations
-     * while updating the VolumeVariable. (This may yield a major
-     * performance boost depending on how the physical models
-     * require.)
+     * The hint is defined as a IntensiveQuantities object which is supposed to be
+     * "close" to the IntensiveQuantities of the current solution. It can be used as a
+     * good starting point for non-linear solvers when having to solve non-linear
+     * relations while updating the intensive quantities. (This may yield a major
+     * performance boost depending on how the physical models require.)
      *
-     * \attention If no up-to date volume variables are available, or
-     *            if hints have been disabled, this method will return
-     *            0.
+     * \attention If no up-to date intensive quantities are available, or if hints have been
+     *            disabled, this method will return 0.
      *
-     * \param globalIdx The global space index for the entity where a
-     *                  hint is requested.
+     * \param globalIdx The global space index for the entity where a hint is requested.
      * \param timeIdx The index used by the time discretization.
      */
-    const VolumeVariables *thermodynamicHint(int globalIdx, int timeIdx) const
+    const IntensiveQuantities *thermodynamicHint(int globalIdx, int timeIdx) const
     {
         if (!enableThermodynamicHints_())
             return 0;
 
-        if (volVarsCacheUpToDate_[timeIdx][globalIdx])
-            return &volVarsCache_[timeIdx][globalIdx];
+        if (intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
+            return &intensiveQuantityCache_[timeIdx][globalIdx];
 
-        // use the volume variables for the first up-to-date time index as hint
+        // use the intensive quantities for the first up-to-date time index as hint
         for (int timeIdx2 = 0; timeIdx2 < historySize; ++timeIdx2)
-            if (volVarsCacheUpToDate_[timeIdx2][globalIdx])
-                return &volVarsCache_[timeIdx2][globalIdx];
+            if (intensiveQuantityCacheUpToDate_[timeIdx2][globalIdx])
+                return &intensiveQuantityCache_[timeIdx2][globalIdx];
 
-        // no suitable up-to-date volume variables...
+        // no suitable up-to-date intensive quantities...
         return 0;
     }
 
     /*!
-     * \brief Return the cached volume variables for a entity on the
+     * \brief Return the cached intensive quantities for a entity on the
      *        grid at given time.
      *
-     * \attention If no up-to date volume variables are available,
+     * \attention If no up-to date intensive quantities are available,
      *            this method will return 0.
      *
      * \param globalIdx The global space index for the entity where a
      *                  hint is requested.
      * \param timeIdx The index used by the time discretization.
      */
-    const VolumeVariables *cachedVolumeVariables(int globalIdx, int timeIdx) const
+    const IntensiveQuantities *cachedIntensiveQuantities(int globalIdx, int timeIdx) const
     {
-        if (!enableVolumeVariablesCache_() ||
-            !volVarsCacheUpToDate_[timeIdx][globalIdx])
+        if (!enableIntensiveQuantitiesCache_() ||
+            !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
-        return &volVarsCache_[timeIdx][globalIdx];
+        return &intensiveQuantityCache_[timeIdx][globalIdx];
     }
 
     /*!
-     * \brief Update the volume variable cache for a entity on the grid at given time.
+     * \brief Update the intensive quantity cache for a entity on the grid at given time.
      *
-     * \param volVars The VolumeVariables object hint for a given degree of freedom.
+     * \param intQuants The IntensiveQuantities object hint for a given degree of freedom.
      * \param globalIdx The global space index for the entity where a
      *                  hint is to be set.
      * \param timeIdx The index used by the time discretization.
      */
-    void updateCachedVolumeVariables(const VolumeVariables &volVars,
-                                     int globalIdx,
-                                     int timeIdx) const
+    void updateCachedIntensiveQuantities(const IntensiveQuantities &intQuants,
+                                         int globalIdx,
+                                         int timeIdx) const
     {
-        if (!storeVolumeVariables_())
+        if (!storeIntensiveQuantities_())
             return;
 
-        volVarsCache_[timeIdx][globalIdx] = volVars;
-        volVarsCacheUpToDate_[timeIdx][globalIdx] = true;
+        intensiveQuantityCache_[timeIdx][globalIdx] = intQuants;
+        intensiveQuantityCacheUpToDate_[timeIdx][globalIdx] = true;
     }
 
     /*!
-     * \brief Invalidate the cache for a given volume variables object.
+     * \brief Invalidate the cache for a given intensive quantities object.
      *
      * \param globalIdx The global space index for the entity where a
      *                  hint is to be set.
      * \param timeIdx The index used by the time discretization.
      */
-    void invalidateVolumeVariablesCacheEntry(int globalIdx,
-                                             int timeIdx) const
+    void invalidateIntensiveQuantitiesCacheEntry(int globalIdx,
+                                                 int timeIdx) const
     {
-        if (!storeVolumeVariables_())
+        if (!storeIntensiveQuantities_())
             return;
 
-        volVarsCacheUpToDate_[timeIdx][globalIdx] = false;
+        intensiveQuantityCacheUpToDate_[timeIdx][globalIdx] = false;
     }
 
     /*!
-     * \brief Move the volume variables for a given time index to the back.
+     * \brief Move the intensive quantities for a given time index to the back.
      *
      * This method should only be called by the time discretization.
      *
      * \param numSlots The number of time step slots for which the
      *                 hints should be shifted.
      */
-    void shiftVolumeVariablesCache(int numSlots = 1)
+    void shiftIntensiveQuantityCache(int numSlots = 1)
     {
-        if (!storeVolumeVariables_())
+        if (!storeIntensiveQuantities_())
             return;
 
         for (int timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
-            volVarsCache_[timeIdx + numSlots] = volVarsCache_[timeIdx];
-            volVarsCacheUpToDate_[timeIdx + numSlots] = volVarsCacheUpToDate_[timeIdx];
+            intensiveQuantityCache_[timeIdx + numSlots] = intensiveQuantityCache_[timeIdx];
+            intensiveQuantityCacheUpToDate_[timeIdx + numSlots] = intensiveQuantityCacheUpToDate_[timeIdx];
         }
 
         // invalidate the cache for the most recent time index
-        std::fill(volVarsCacheUpToDate_[/*timeIdx=*/0].begin(),
-                  volVarsCacheUpToDate_[/*timeIdx=*/0].end(),
+        std::fill(intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].begin(),
+                  intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].end(),
                   false);
     }
 
@@ -580,7 +573,7 @@ public:
                 continue; // ignore ghost and overlap elements
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateVolVars(/*timeIdx=*/0);
+            elemCtx.updateIntQuants(/*timeIdx=*/0);
             localResidual().evalStorage(elemCtx, /*timeIdx=*/0);
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i)
@@ -657,12 +650,12 @@ public:
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.
      *
-     * \param globalVertexIdx The global index of the control volume
+     * \param globalDofIdx The global index of the degree of freedom
      * \param pvIdx The index of the primary variable
      */
-    Scalar primaryVarWeight(int globalVertexIdx, int pvIdx) const
+    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
-        Scalar absPv = std::abs(asImp_().solution(/*timeIdx=*/1)[globalVertexIdx][pvIdx]);
+        Scalar absPv = std::abs(asImp_().solution(/*timeIdx=*/1)[globalDofIdx][pvIdx]);
         return 1.0/std::max(absPv, 1.0);
     }
 
@@ -768,8 +761,8 @@ public:
         // Reset the current solution to the one of the
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
-        volVarsCache_[/*timeIdx=*/0] = volVarsCache_[/*timeIdx=*/1];
-        volVarsCacheUpToDate_[/*timeIdx=*/0] = volVarsCacheUpToDate_[/*timeIdx=*/1];
+        intensiveQuantityCache_[/*timeIdx=*/0] = intensiveQuantityCache_[/*timeIdx=*/1];
+        intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
 
         solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
         jacAsm_->relinearizeAll();
@@ -787,9 +780,9 @@ public:
         // make the current solution the previous one.
         solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
 
-        // shift the volume variables cache by one position in the
+        // shift the intensive quantities cache by one position in the
         // history
-        asImp_().shiftVolumeVariablesCache(/*numSlots=*/1);
+        asImp_().shiftIntensiveQuantityCache(/*numSlots=*/1);
     }
 
     /*!
@@ -946,7 +939,7 @@ public:
 
     /*!
      * \brief Update the weights of all primary variables within an
-     *        element given the complete set of volume variables
+     *        element given the complete set of intensive quantities
      *
      * \copydetails Doxygen::ecfvElemCtxParam
      */
@@ -1052,8 +1045,8 @@ public:
                 continue;
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateVolVars(/*timeIdx=*/0);
-            elemCtx.updateFluxVars(/*timeIdx=*/0);
+            elemCtx.updateIntQuants(/*timeIdx=*/0);
+            elemCtx.updateExtensiveQuantities(/*timeIdx=*/0);
 
             modIt = outputModules_.begin();
             for (; modIt != modEndIt; ++modIt)
@@ -1080,11 +1073,11 @@ public:
     { return gridView_; }
 
 protected:
-    static bool storeVolumeVariables_()
-    { return enableVolumeVariablesCache_() || enableThermodynamicHints_(); }
+    static bool storeIntensiveQuantities_()
+    { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
 
-    static bool enableVolumeVariablesCache_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableVolumeVariablesCache); }
+    static bool enableIntensiveQuantitiesCache_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache); }
 
     static bool enableThermodynamicHints_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints); }
@@ -1185,11 +1178,11 @@ protected:
                               Dune::InteriorBorder_InteriorBorder_Interface,
                               Dune::ForwardCommunication);
 
-        if (storeVolumeVariables_()) {
-            // invalidate all cached volume variables
+        if (storeIntensiveQuantities_()) {
+            // invalidate all cached intensive quantities
             for (int timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
-                std::fill(volVarsCacheUpToDate_[timeIdx].begin(),
-                          volVarsCacheUpToDate_[timeIdx].end(),
+                std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                          intensiveQuantityCacheUpToDate_[timeIdx].end(),
                           false);
             }
         }
@@ -1224,8 +1217,8 @@ protected:
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step
     mutable SolutionVector solution_[historySize];
-    mutable VolumeVariablesVector volVarsCache_[historySize];
-    mutable std::vector<bool> volVarsCacheUpToDate_[historySize];
+    mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
+    mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;

@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsVolumeVariables
+ * \copydoc Ewoms::RichardsIntensiveQuantities
  */
-#ifndef EWOMS_RICHARDS_VOLUME_VARIABLES_HH
-#define EWOMS_RICHARDS_VOLUME_VARIABLES_HH
+#ifndef EWOMS_RICHARDS_INTENSIVE_QUANTITIES_HH
+#define EWOMS_RICHARDS_INTENSIVE_QUANTITIES_HH
 
 #include "richardsproperties.hh"
 
@@ -35,16 +35,16 @@ namespace Ewoms {
 
 /*!
  * \ingroup RichardsModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
- * \brief Volume averaged quantities required by the Richards model.
+ * \brief Intensive quantities required by the Richards model.
  */
 template <class TypeTag>
-class RichardsVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+class RichardsIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -61,7 +61,7 @@ class RichardsVolumeVariables
     enum { gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex) };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
+    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
@@ -70,7 +70,7 @@ public:
     typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
 
     /*!
-     * \copydoc VolumeVariables::update
+     * \copydoc IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
@@ -138,35 +138,35 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::fluidState
+     * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::porosity
+     * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
     Scalar porosity() const
     { return porosity_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
+     * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::relativePermeability
+     * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::mobility
+     * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
     Scalar mobility(int phaseIdx) const
     {

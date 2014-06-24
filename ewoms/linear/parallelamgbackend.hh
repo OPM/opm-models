@@ -229,15 +229,11 @@ public:
         // set the weighting of the residuals
         OverlappingVector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
-        const auto &foreignOverlap
-            = overlappingMatrix_->overlap().foreignOverlap();
-        for (unsigned localIdx = 0;
-             localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
+        const auto &foreignOverlap = overlappingMatrix_->overlap().foreignOverlap();
+        for (unsigned localIdx = 0; localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
             int nativeIdx = foreignOverlap.localToNative(localIdx);
-            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
-                residWeightVec[localIdx][eqIdx]
-                    = this->problem_.model().eqWeight(nativeIdx, eqIdx);
-            }
+            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx)
+                residWeightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
         }
 
         Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonTolerance) / 100.0;
@@ -318,9 +314,10 @@ private:
         }
 
         // create the overlapping Jacobian matrix
-        overlappingMatrix_
-            = new OverlappingMatrix(M, borderListCreator.borderList(),
-                                    blackList, overlapSize);
+        overlappingMatrix_ = new OverlappingMatrix(M,
+                                                   borderListCreator.borderList(),
+                                                   blackList,
+                                                   overlapSize);
 
         // create the overlapping vectors for the residual and the
         // solution

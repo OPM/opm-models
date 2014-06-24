@@ -422,8 +422,7 @@ protected:
         auto peerIt = peerSet_.begin();
         const auto &peerEndIt = peerSet_.end();
         for (; peerIt != peerEndIt; ++peerIt) {
-            const auto &overlapWithPeer
-                = domesticOverlapWithPeer_.find(*peerIt)->second;
+            const auto &overlapWithPeer = domesticOverlapWithPeer_.find(*peerIt)->second;
 
             auto idxIt = overlapWithPeer.begin();
             const auto &idxEndIt = overlapWithPeer.end();
@@ -440,8 +439,7 @@ protected:
     void sendIndicesToPeer_(int peerRank)
     {
 #if HAVE_MPI
-        const auto &foreignOverlap
-            = foreignOverlap_.foreignOverlapWithPeer(peerRank);
+        const auto &foreignOverlap = foreignOverlap_.foreignOverlapWithPeer(peerRank);
 
         // first, send a message containing the number of additional
         // indices stemming from the overlap (i.e. without the border
@@ -452,8 +450,7 @@ protected:
         numIndicesSendBuffer_[peerRank]->send(peerRank);
 
         // create MPI buffers
-        indicesSendBuffer_[peerRank]
-            = new MpiBuffer<IndexDistanceNpeers>(numIndices);
+        indicesSendBuffer_[peerRank] = new MpiBuffer<IndexDistanceNpeers>(numIndices);
 
         // then send the additional indices themselfs
         auto overlapIt = foreignOverlap.begin();
@@ -524,8 +521,7 @@ protected:
             assert(!(borderDistance == 0 && !foreignOverlap_.isLocal(domesticIdx)));
             assert(!(borderDistance > 0 && foreignOverlap_.isLocal(domesticIdx)));
 
-            borderDistance_[domesticIdx]
-                = std::min(borderDistance, borderDistance_[domesticIdx]);
+            borderDistance_[domesticIdx] = std::min(borderDistance, borderDistance_[domesticIdx]);
         }
 #endif // HAVE_MPI
     }
@@ -540,8 +536,7 @@ protected:
     //
     // by default, this method does nothing
     void setupDebugMapping_()
-    {
-    }
+    {}
 
     // this method is intended to map domestic indices to the ones
     // used by a sequential grid.

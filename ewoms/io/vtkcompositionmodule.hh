@@ -136,31 +136,28 @@ public:
     }
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quantities relevant
+     *        for an element
      */
     void processElement(const ElementContext &elemCtx)
     {
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
-            const auto &fs = volVars.fluidState();
+            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto &fs = intQuants.fluidState();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     if (moleFracOutput_())
-                        moleFrac_[phaseIdx][compIdx][I]
-                            = fs.moleFraction(phaseIdx, compIdx);
+                        moleFrac_[phaseIdx][compIdx][I] = fs.moleFraction(phaseIdx, compIdx);
                     if (massFracOutput_())
-                        massFrac_[phaseIdx][compIdx][I]
-                            = fs.massFraction(phaseIdx, compIdx);
+                        massFrac_[phaseIdx][compIdx][I] = fs.massFraction(phaseIdx, compIdx);
                     if (molarityOutput_())
-                        molarity_[phaseIdx][compIdx][I]
-                            = fs.molarity(phaseIdx, compIdx);
+                        molarity_[phaseIdx][compIdx][I] = fs.molarity(phaseIdx, compIdx);
 
                     if (fugacityCoeffOutput_())
-                        fugacityCoeff_[phaseIdx][compIdx][I]
-                            = fs.fugacityCoefficient(phaseIdx, compIdx);
+                        fugacityCoeff_[phaseIdx][compIdx][I] =
+                            fs.fugacityCoefficient(phaseIdx, compIdx);
                 }
             }
 
@@ -190,8 +187,7 @@ public:
                     totalMoleFrac_[compIdx][I] = compMoles / totalMoles;
                 }
                 if (fugacityOutput_())
-                    fugacity_[compIdx][I]
-                        = volVars.fluidState().fugacity(/*phaseIdx=*/0, compIdx);
+                    fugacity_[compIdx][I] = intQuants.fluidState().fugacity(/*phaseIdx=*/0, compIdx);
             }
         }
     }

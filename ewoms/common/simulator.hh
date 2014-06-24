@@ -316,8 +316,8 @@ public:
     {
         return
             finished_ ||
-            (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8 + timeStepSize_
-             >= endTime());
+            (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8
+             + timeStepSize_ >= endTime());
     }
 
     /*!
@@ -410,8 +410,7 @@ public:
     bool episodeWillBeOver() const
     {
         return
-            this->time() + timeStepSize()
-            >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
+            this->time() + timeStepSize() >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
     }
 
     /*!

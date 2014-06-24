@@ -104,8 +104,7 @@ public:
     { }
 
     /*!
-     * \brief Register all run-time parameters for the multi-phase VTK output
-     * module.
+     * \brief Register all run-time parameters for the multi-phase VTK output module.
      */
     static void registerParameters()
     {
@@ -162,8 +161,8 @@ public:
     }
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quantities relevant for
+     *        an element
      */
     void processElement(const ElementContext &elemCtx)
     {
@@ -174,13 +173,13 @@ public:
             if (!fractureMapper.isFractureVertex(I))
                 continue;
 
-            const auto &volVars = elemCtx.volVars(i, /*timeIdx=*/0);
-            const auto &fs = volVars.fractureFluidState();
+            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto &fs = intQuants.fractureFluidState();
 
             if (porosityOutput_())
-                fracturePorosity_[I] = volVars.fracturePorosity();
+                fracturePorosity_[I] = intQuants.fracturePorosity();
             if (intrinsicPermeabilityOutput_()) {
-                const auto &K = volVars.fractureIntrinsicPermeability();
+                const auto &K = intQuants.fractureIntrinsicPermeability();
                 fractureIntrinsicPermeability_[I] = K[0][0];
             }
 
@@ -188,38 +187,36 @@ public:
                 if (saturationOutput_())
                     fractureSaturation_[phaseIdx][I] = fs.saturation(phaseIdx);
                 if (mobilityOutput_())
-                    fractureMobility_[phaseIdx][I] = volVars.fractureMobility(phaseIdx);
+                    fractureMobility_[phaseIdx][I] = intQuants.fractureMobility(phaseIdx);
                 if (relativePermeabilityOutput_())
-                    fractureRelativePermeability_[phaseIdx][I]
-                        = volVars.fractureRelativePermeability(phaseIdx);
+                    fractureRelativePermeability_[phaseIdx][I] =
+                        intQuants.fractureRelativePermeability(phaseIdx);
                 if (volumeFractionOutput_())
-                    fractureVolumeFraction_[I] += volVars.fractureVolume();
+                    fractureVolumeFraction_[I] += intQuants.fractureVolume();
             }
         }
 
         if (velocityOutput_()) {
             // calculate velocities if requested by the simulator
             for (int scvfIdx = 0; scvfIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ scvfIdx) {
-                const auto &fluxVars = elemCtx.fluxVars(scvfIdx, /*timeIdx=*/0);
+                const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, /*timeIdx=*/0);
 
-                int i = fluxVars.interiorIndex();
+                int i = extQuants.interiorIndex();
                 int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
-                int j = fluxVars.exteriorIndex();
+                int j = extQuants.exteriorIndex();
                 int J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
 
                 if (!fractureMapper.isFractureEdge(I, J))
                     continue;
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Scalar weight
-                        = std::max(1e-16, std::abs(fluxVars.fractureVolumeFlux(
-                                              phaseIdx)));
-                    Valgrind::CheckDefined(fluxVars.extrusionFactor());
-                    assert(fluxVars.extrusionFactor() > 0);
-                    weight *= fluxVars.extrusionFactor();
+                    Scalar weight = std::max(1e-16, std::abs(extQuants.fractureVolumeFlux(phaseIdx)));
+                    Valgrind::CheckDefined(extQuants.extrusionFactor());
+                    assert(extQuants.extrusionFactor() > 0);
+                    weight *= extQuants.extrusionFactor();
 
-                    Dune::FieldVector<Scalar, dim> v(fluxVars.fractureFilterVelocity(phaseIdx));
+                    Dune::FieldVector<Scalar, dim> v(extQuants.fractureFilterVelocity(phaseIdx));
                     v *= weight;
 
                     for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
@@ -229,8 +226,8 @@ public:
 
                     fractureVelocityWeight_[phaseIdx][I] += weight;
                     fractureVelocityWeight_[phaseIdx][J] += weight;
-                } // end for all phases
-            }     // end for all faces
+                }
+            }
         }
     }
 
@@ -256,8 +253,7 @@ public:
         if (intrinsicPermeabilityOutput_())
             this->commitScalarBuffer_(baseWriter, "fractureIntrinsicPerm", fractureIntrinsicPermeability_);
         if (volumeFractionOutput_()) {
-            // divide the fracture volume by the total volume of the finite
-            // volumes
+            // divide the fracture volume by the total volume of the finite volumes
             for (unsigned I = 0; I < fractureVolumeFraction_.size(); ++I)
                 fractureVolumeFraction_[I] /= this->simulator_.model().dofTotalVolume(I);
             this->commitScalarBuffer_(baseWriter, "fractureVolumeFraction", fractureVolumeFraction_);
@@ -270,8 +266,8 @@ public:
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
                 for (int dofIdx = 0; dofIdx < nDof; ++dofIdx)
-                    fractureVelocity_[phaseIdx][dofIdx]
-                        /= std::max<Scalar>(1e-20, fractureVelocityWeight_[phaseIdx][dofIdx]);
+                    fractureVelocity_[phaseIdx][dofIdx] /=
+                        std::max<Scalar>(1e-20, fractureVelocityWeight_[phaseIdx][dofIdx]);
                 // commit the phase velocity
                 char name[512];
                 snprintf(name, 512, "fractureFilterVelocity_%s", FluidSystem::phaseName(phaseIdx));

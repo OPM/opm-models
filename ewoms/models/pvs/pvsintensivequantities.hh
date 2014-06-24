@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsVolumeVariables
+ * \copydoc Ewoms::PvsIntensiveQuantities
  */
-#ifndef EWOMS_PVS_VOLUME_VARIABLES_HH
-#define EWOMS_PVS_VOLUME_VARIABLES_HH
+#ifndef EWOMS_PVS_INTENSIVE_QUANTITIES_HH
+#define EWOMS_PVS_INTENSIVE_QUANTITIES_HH
 
 #include "pvsproperties.hh"
 
@@ -41,20 +41,20 @@
 namespace Ewoms {
 /*!
  * \ingroup PvsModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the compositional multi-phase primary
  *        variable switching model.
  */
 template <class TypeTag>
-class PvsVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public DiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+class PvsIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public DiffusionIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
+    , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -81,16 +81,16 @@ class PvsVolumeVariables
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
-    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef Ewoms::DiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
-    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
+    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
 
 public:
     //! The type of the object returned by the fluidState() method
     typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::update
+     * \copydoc ImmiscibleIntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
@@ -99,7 +99,7 @@ public:
         ParentType::update(elemCtx,
                            dofIdx,
                            timeIdx);
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         const auto &problem = elemCtx.problem();
@@ -233,37 +233,37 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
-        // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        // update the diffusion specific quantities of the intensive quantities
+        DiffusionIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         fluidState_.checkDefined();
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::fluidState
+     * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
+     * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::relativePermeability
+     * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::mobility
+     * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
     Scalar mobility(int phaseIdx) const
     {
@@ -271,7 +271,7 @@ public:
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::porosity
+     * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
     Scalar porosity() const
     { return porosity_; }

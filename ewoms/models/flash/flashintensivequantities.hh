@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashVolumeVariables
+ * \copydoc Ewoms::FlashIntensiveQuantities
  */
-#ifndef EWOMS_FLASH_VOLUME_VARIABLES_HH
-#define EWOMS_FLASH_VOLUME_VARIABLES_HH
+#ifndef EWOMS_FLASH_INTENSIVE_QUANTITIES_HH
+#define EWOMS_FLASH_INTENSIVE_QUANTITIES_HH
 
 #include "flashproperties.hh"
 #include "flashindices.hh"
@@ -38,19 +38,18 @@ namespace Ewoms {
 
 /*!
  * \ingroup FlashModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
- * \brief Contains the quantities which are constant within a finite
- *        volume for the flash-based compositional multi-phase model.
+ * \brief Contains the intensive quantities of the flash-based compositional multi-phase model
  */
 template <class TypeTag>
-class FlashVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public DiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+class FlashIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public DiffusionIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
+    , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -74,9 +73,9 @@ class FlashVolumeVariables
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
-    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef Ewoms::DiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
-    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
+    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -84,7 +83,7 @@ public:
                                          /*storeEnthalpy=*/enableEnergy> FluidState;
 
     /*!
-     * \copydoc VolumeVariables::update
+     * \copydoc IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
@@ -93,7 +92,7 @@ public:
         ParentType::update(elemCtx,
                            dofIdx,
                            timeIdx);
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         const auto &problem = elemCtx.problem();
@@ -103,9 +102,9 @@ public:
             // than the epsilon value used by the newton solver to
             // calculate the partial derivatives
             const auto &model = elemCtx.model();
-            flashTolerance
-                = model.localJacobian().baseEpsilon()
-                  / (100 * 18e-3); // assume the molar weight of water
+
+            // assume 18g/mol as the molar weight of water
+            flashTolerance = model.localJacobian().baseEpsilon() / (100 * 18e-3);
         }
 
         // extract the total molar densities of the components
@@ -137,8 +136,7 @@ public:
 
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar mu
-                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
@@ -159,35 +157,35 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
-        // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        // update the diffusion specific quantities of the intensive quantities
+        DiffusionIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::fluidState
+     * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::intrinsicPermeability
+     * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::relativePermeability
+     * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::mobility
+     * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
     Scalar mobility(int phaseIdx) const
     {
@@ -195,7 +193,7 @@ public:
     }
 
     /*!
-     * \copydoc ImmiscibleVolumeVariables::porosity
+     * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
     Scalar porosity() const
     { return porosity_; }

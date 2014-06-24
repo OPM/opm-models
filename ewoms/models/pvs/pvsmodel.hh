@@ -30,8 +30,8 @@
 #include "pvsprimaryvariables.hh"
 #include "pvsratevector.hh"
 #include "pvsboundaryratevector.hh"
-#include "pvsvolumevariables.hh"
-#include "pvsfluxvariables.hh"
+#include "pvsintensivequantities.hh"
+#include "pvsextensivequantities.hh"
 #include "pvsindices.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
@@ -82,11 +82,11 @@ SET_TYPE_PROP(PvsModel, RateVector, Ewoms::PvsRateVector<TypeTag>);
 //! the BoundaryRateVector property
 SET_TYPE_PROP(PvsModel, BoundaryRateVector, Ewoms::PvsBoundaryRateVector<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(PvsModel, VolumeVariables, Ewoms::PvsVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(PvsModel, IntensiveQuantities, Ewoms::PvsIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(PvsModel, FluxVariables, Ewoms::PvsFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(PvsModel, ExtensiveQuantities, Ewoms::PvsExtensiveQuantities<TypeTag>);
 
 //! The indices required by the isothermal PVS model
 SET_TYPE_PROP(PvsModel, Indices, Ewoms::PvsIndices<TypeTag, /*PVIdx=*/0>);
@@ -221,7 +221,7 @@ class PvsModel
 
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -486,24 +486,23 @@ public:
                     continue;
                 visited[globalIdx] = true;
 
-                // compute the volume variables of the current
-                // sub-control volume
+                // compute the intensive quantities of the current degree of freedom
                 auto &priVars = this->solution(/*timeIdx=*/0)[globalIdx];
-                elemCtx.updateVolVars(priVars, dofIdx, /*timeIdx=*/0);
-                const VolumeVariables &volVars = elemCtx.volVars(dofIdx, /*timeIdx=*/0);
+                elemCtx.updateIntQuants(priVars, dofIdx, /*timeIdx=*/0);
+                const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                 // evaluate primary variable switch
                 short oldPhasePresence = priVars.phasePresence();
 
                 // set the primary variables and the new phase state
                 // from the current fluid state
-                priVars.assignNaive(volVars.fluidState());
+                priVars.assignNaive(intQuants.fluidState());
 
                 if (oldPhasePresence != priVars.phasePresence()) {
                     if (verbosity_ > 1)
                         printSwitchedPhases_(elemCtx,
                                              dofIdx,
-                                             volVars.fluidState(),
+                                             intQuants.fluidState(),
                                              oldPhasePresence,
                                              priVars);
                     this->jacobianAssembler().markDofRed(globalIdx);

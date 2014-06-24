@@ -19,29 +19,32 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsFluxVariables
+ * \copydoc Ewoms::BlackOilExtensiveQuantities
  */
-#ifndef EWOMS_RICHARDS_FLUX_VARIABLES_HH
-#define EWOMS_RICHARDS_FLUX_VARIABLES_HH
+#ifndef EWOMS_BLACK_OIL_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_BLACK_OIL_EXTENSIVE_QUANTITIES_HH
 
-#include "richardsproperties.hh"
+#include "blackoilproperties.hh"
 
-#include <ewoms/models/common/multiphasebasefluxvariables.hh>
+#include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 
 namespace Ewoms {
 
 /*!
- * \ingroup RichardsModel
- * \ingroup FluxVariables
+ * \ingroup BlackOilModel
+ * \ingroup ExtensiveQuantities
  *
- * \brief Calculates and stores the data which is required to
- *        calculate the flux of fluid over a face of a finite volume.
+ * \brief This template class contains the data which is required to
+ *        calculate the fluxes of the fluid phases over a face of a
+ *        finite volume for the black-oil model.
+ *
+ * This means pressure and concentration gradients, phase densities at
+ * the intergration point, etc.
  */
 template <class TypeTag>
-class RichardsFluxVariables
-    : public MultiPhaseBaseFluxVariables<TypeTag>
-{
-};
+class BlackOilExtensiveQuantities
+    : public MultiPhaseBaseExtensiveQuantities<TypeTag>
+{};
 
 } // namespace Ewoms
 

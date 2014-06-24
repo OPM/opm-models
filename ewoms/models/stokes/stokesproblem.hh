@@ -106,8 +106,7 @@ public:
     }
 
     /*!
-     * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
-     *        with no pores in the sub-control volume.
+     * \brief Returns the heat capacity [J/(K m^3)] of the solid phase disconsidering pores.
      *
      * \copydoc Doxygen::contextParams
      */

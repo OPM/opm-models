@@ -26,9 +26,9 @@
 
 #include "blackoilproblem.hh"
 #include "blackoilindices.hh"
-#include "blackoilfluxvariables.hh"
+#include "blackoilextensivequantities.hh"
 #include "blackoilprimaryvariables.hh"
-#include "blackoilvolumevariables.hh"
+#include "blackoilintensivequantities.hh"
 #include "blackoilratevector.hh"
 #include "blackoilboundaryratevector.hh"
 #include "blackoillocalresidual.hh"
@@ -96,11 +96,11 @@ SET_TYPE_PROP(BlackOilModel, BoundaryRateVector, Ewoms::BlackOilBoundaryRateVect
 //! the PrimaryVariables property
 SET_TYPE_PROP(BlackOilModel, PrimaryVariables, Ewoms::BlackOilPrimaryVariables<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(BlackOilModel, VolumeVariables, Ewoms::BlackOilVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(BlackOilModel, IntensiveQuantities, Ewoms::BlackOilIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(BlackOilModel, FluxVariables, Ewoms::BlackOilFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(BlackOilModel, ExtensiveQuantities, Ewoms::BlackOilExtensiveQuantities<TypeTag>);
 
 //! The indices required by the model
 SET_TYPE_PROP(BlackOilModel, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);

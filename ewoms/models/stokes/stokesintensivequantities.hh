@@ -20,10 +20,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::StokesVolumeVariables
+ * \copydoc Ewoms::StokesIntensiveQuantities
  */
-#ifndef EWOMS_STOKES_VOLUME_VARIABLES_HH
-#define EWOMS_STOKES_VOLUME_VARIABLES_HH
+#ifndef EWOMS_STOKES_INTENSIVE_QUANTITIES_HH
+#define EWOMS_STOKES_INTENSIVE_QUANTITIES_HH
 
 #include "stokesproperties.hh"
 
@@ -39,16 +39,16 @@ namespace Ewoms {
 
 /*!
  * \ingroup StokesModel
- * \ingroup VolumeVariables
- * \brief Contains the quantities which are are constant within a
- *        finite volume in the Stokes model.
+ * \ingroup IntensiveQuantities
+ *
+ * \brief Contains the intensive quantities of the Stokes model.
  */
 template <class TypeTag>
-class StokesVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+class StokesIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -67,17 +67,17 @@ class StokesVolumeVariables
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
-    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
 
 public:
     /*!
-     * \copydoc VolumeVariables::update
+     * \copydoc IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
@@ -106,7 +106,7 @@ public:
         fluidState_.setViscosity(phaseIdx, FluidSystem::viscosity(fluidState_, paramCache, phaseIdx));
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // the effective velocity of the control volume
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
@@ -118,7 +118,7 @@ public:
     }
 
     /*!
-     * \copydoc VolumeVariables::updateScvGradients
+     * \copydoc IntensiveQuantities::updateScvGradients
      */
     void updateScvGradients(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
@@ -129,7 +129,7 @@ public:
             const auto &feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
             Valgrind::CheckDefined(feGrad);
             DimVector tmp(feGrad);
-            tmp *= elemCtx.volVars(i, timeIdx).fluidState().pressure(phaseIdx);
+            tmp *= elemCtx.intensiveQuantities(i, timeIdx).fluidState().pressure(phaseIdx);
             Valgrind::CheckDefined(tmp);
 
             pressureGrad_ += tmp;
@@ -142,9 +142,7 @@ public:
 
         Dune::GeometryType geomType = scvLocalGeom.type();
         static const int quadratureOrder = 2;
-        const auto &rule
-            = Dune::QuadratureRules<Scalar, dimWorld>::rule(geomType,
-                                                            quadratureOrder);
+        const auto &rule = Dune::QuadratureRules<Scalar, dimWorld>::rule(geomType, quadratureOrder);
 
         // integrate the veloc over the sub-control volume
         velocity_ = 0.0;
@@ -152,8 +150,7 @@ public:
             const auto &posScvLocal = it->position();
             const auto &posElemLocal = scvLocalGeom.global(posScvLocal);
 
-            DimVector velocityAtPos
-                = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
+            DimVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
             Scalar weight = it->weight();
             Scalar detjac = 1.0;
             // scvLocalGeom.integrationElement(posScvLocal) *
@@ -226,7 +223,7 @@ private:
 
         DimVector result(0.0);
         for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); dofIdx++) {
-            result.axpy(shapeValue[dofIdx][0], elemCtx.volVars(dofIdx, timeIdx).velocityCenter());
+            result.axpy(shapeValue[dofIdx][0], elemCtx.intensiveQuantities(dofIdx, timeIdx).velocityCenter());
         }
 
         return result;

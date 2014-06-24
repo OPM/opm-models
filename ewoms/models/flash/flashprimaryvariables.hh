@@ -116,9 +116,8 @@ public:
         // determine the phase presence.
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                this->operator[](cTot0Idx + compIdx)
-                    += fluidState.molarity(phaseIdx, compIdx)
-                       * fluidState.saturation(phaseIdx);
+                this->operator[](cTot0Idx + compIdx) +=
+                    fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
             }
         }
     }

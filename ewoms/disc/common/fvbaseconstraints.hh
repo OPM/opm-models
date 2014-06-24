@@ -36,8 +36,7 @@ NEW_PROP_TAG(NumEq);
 
 namespace Ewoms {
 /*!
- * \brief Class to specify constraints for a finite volume
- *        spatial discretization.
+ * \brief Class to specify constraints for a finite volume spatial discretization.
  */
 template <class TypeTag>
 class FvBaseConstraints : public GET_PROP_TYPE(TypeTag, PrimaryVariables)

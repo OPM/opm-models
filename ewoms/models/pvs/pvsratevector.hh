@@ -39,8 +39,8 @@ namespace Ewoms {
  *
  * \brief Implements a vector representing molar, mass or volumetric rates.
  *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * This class is basically a Dune::FieldVector which can be set using either mass, molar
+ * or volumetric rates.
  */
 template <class TypeTag>
 class PvsRateVector
@@ -109,9 +109,10 @@ public:
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx]
-                = fluidState.density(phaseIdx, compIdx)
-                  * fluidState.moleFraction(phaseIdx, compIdx) * volume;
+            (*this)[conti0EqIdx + compIdx] =
+                fluidState.density(phaseIdx, compIdx)
+                * fluidState.moleFraction(phaseIdx, compIdx)
+                * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }

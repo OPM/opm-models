@@ -19,60 +19,59 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpFluxVariables
+ * \copydoc Ewoms::PvsExtensiveQuantities
  */
-#ifndef EWOMS_NCP_FLUX_VARIABLES_HH
-#define EWOMS_NCP_FLUX_VARIABLES_HH
+#ifndef EWOMS_PVS_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_PVS_EXTENSIVE_QUANTITIES_HH
 
-#include "ncpproperties.hh"
+#include "pvsproperties.hh"
 
+#include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
-#include <ewoms/models/common/multiphasebasefluxvariables.hh>
 
 namespace Ewoms {
 
 /*!
- * \ingroup NcpModel
- * \ingroup FluxVariables
+ * \ingroup PvsModel
+ * \ingroup ExtensiveQuantities
  *
- * \brief This template class contains the data which is required to
- *        calculate all fluxes of components over a face of a finite
- *        volume for the compositional NCP model.
+ * \brief Contains all data which is required to calculate all fluxes at a flux
+ *        integration point for the primary variable switching model.
  *
  * This means pressure and concentration gradients, phase densities at
- * the intergration point, etc.
+ * the integration point, etc.
  */
 template <class TypeTag>
-class NcpFluxVariables
-    : public MultiPhaseBaseFluxVariables<TypeTag>
-    , public EnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    , public DiffusionFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
+class PvsExtensiveQuantities
+    : public MultiPhaseBaseExtensiveQuantities<TypeTag>
+    , public EnergyExtensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public DiffusionExtensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion)>
 {
-    typedef MultiPhaseBaseFluxVariables<TypeTag> ParentType;
+    typedef MultiPhaseBaseExtensiveQuantities<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef Ewoms::DiffusionFluxVariables<TypeTag, enableDiffusion> DiffusionFluxVariables;
+    typedef Ewoms::DiffusionExtensiveQuantities<TypeTag, enableDiffusion> DiffusionExtensiveQuantities;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::update
+     * \copydoc ParentType::update
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
-        DiffusionFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
-        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
+        DiffusionExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
+        EnergyExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::updateBoundary
+     * \copydoc ParentType::updateBoundary
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
@@ -81,9 +80,9 @@ public:
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx,
                                                 fluidState, paramCache);
-        DiffusionFluxVariables::updateBoundary_(context, bfIdx, timeIdx,
+        DiffusionExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx,
                                                 fluidState);
-        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
+        EnergyExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };
 

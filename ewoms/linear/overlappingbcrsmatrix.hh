@@ -378,8 +378,7 @@ private:
             }
 
             (*rowSizesSendBuff_[peerRank])[overlapOffset] = numCols;
-            (*rowIndicesSendBuff_[peerRank])[overlapOffset]
-                = overlap_->domesticToGlobal(localRowIdx);
+            (*rowIndicesSendBuff_[peerRank])[overlapOffset] = overlap_->domesticToGlobal(localRowIdx);
             numEntries += numCols;
 
             Valgrind::CheckDefined((*rowSizesSendBuff_[peerRank])[overlapOffset]);
@@ -603,8 +602,7 @@ private:
 
         MpiBuffer<Index> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
         MpiBuffer<Index> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
-        MpiBuffer<Index> &mpiColIndicesRecvBuff
-            = *entryColIndicesRecvBuff_[peerRank];
+        MpiBuffer<Index> &mpiColIndicesRecvBuff = *entryColIndicesRecvBuff_[peerRank];
 
         mpiRecvBuff.receive(peerRank);
 

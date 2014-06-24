@@ -53,15 +53,17 @@ public:
     {
         innerOperator_ = new InnerOperator(matrix);
         innerScalarProduct_ = new InnerScalarProduct;
-        innerPreCond_ = new InnerPreConditioner(matrix,
-                                                /*relaxation=*/1.0);
+        innerPreCond_ = new InnerPreConditioner(matrix, /*relaxation=*/1.0);
 
         Scalar tolerance = 1e-6;
         int maxIter = 10;
         int verbosity = 0;
-        innerSolver_
-            = new InnerSolver(*innerOperator_, *innerScalarProduct_,
-                              *innerPreCond_, tolerance, maxIter, verbosity);
+        innerSolver_ = new InnerSolver(*innerOperator_,
+                                       *innerScalarProduct_,
+                                       *innerPreCond_,
+                                       tolerance,
+                                       maxIter,
+                                       verbosity);
     }
 
     ~SolverPreconditioner()

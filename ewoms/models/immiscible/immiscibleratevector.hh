@@ -29,7 +29,7 @@
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
-#include "immisciblevolumevariables.hh"
+#include "immiscibleintensivequantities.hh"
 
 namespace Ewoms {
 /*!
@@ -143,9 +143,10 @@ public:
                            Scalar volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx]
-                = fluidState.density(phaseIdx, compIdx)
-                  * fluidState.massFraction(phaseIdx, compIdx) * volume;
+            (*this)[conti0EqIdx + compIdx] =
+                fluidState.density(phaseIdx, compIdx)
+                * fluidState.massFraction(phaseIdx, compIdx)
+                * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
     }

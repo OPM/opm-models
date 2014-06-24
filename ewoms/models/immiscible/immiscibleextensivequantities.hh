@@ -19,20 +19,20 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleFluxVariables
+ * \copydoc Ewoms::ImmiscibleExtensiveQuantities
  */
-#ifndef EWOMS_IMMISCIBLE_FLUX_VARIABLES_HH
-#define EWOMS_IMMISCIBLE_FLUX_VARIABLES_HH
+#ifndef EWOMS_IMMISCIBLE_EXTENSIVE_QUANTITIES_HH
+#define EWOMS_IMMISCIBLE_EXTENSIVE_QUANTITIES_HH
 
 #include "immiscibleproperties.hh"
 
-#include <ewoms/models/common/multiphasebasefluxvariables.hh>
+#include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 #include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
- * \ingroup FluxVariables
+ * \ingroup ExtensiveQuantities
  *
  * \brief This class provides the data all quantities that are required to
  *        calculate the fluxes of the fluid phases over a face of a
@@ -42,21 +42,21 @@ namespace Ewoms {
  * the intergration point, etc.
  */
 template <class TypeTag>
-class ImmiscibleFluxVariables
-    : public MultiPhaseBaseFluxVariables<TypeTag>
-    , public EnergyFluxVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+class ImmiscibleExtensiveQuantities
+    : public MultiPhaseBaseExtensiveQuantities<TypeTag>
+    , public EnergyExtensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
-    typedef MultiPhaseBaseFluxVariables<TypeTag> ParentType;
+    typedef MultiPhaseBaseExtensiveQuantities<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Ewoms::EnergyFluxVariables<TypeTag, enableEnergy> EnergyFluxVariables;
+    typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::registerParameters()
+     * \copydoc MultiPhaseBaseExtensiveQuantities::registerParameters()
      */
     static void registerParameters()
     {
@@ -64,16 +64,16 @@ public:
     }
 
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::update()
+     * \copydoc MultiPhaseBaseExtensiveQuantities::update()
      */
     void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
-        EnergyFluxVariables::update_(elemCtx, scvfIdx, timeIdx);
+        EnergyExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
-     * \copydoc MultiPhaseBaseFluxVariables::updateBoundary()
+     * \copydoc MultiPhaseBaseExtensiveQuantities::updateBoundary()
      */
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
@@ -81,7 +81,7 @@ public:
                         typename FluidSystem::ParameterCache &paramCache)
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
-        EnergyFluxVariables::updateBoundary_(context, bfIdx, timeIdx, fluidState);
+        EnergyExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };
 

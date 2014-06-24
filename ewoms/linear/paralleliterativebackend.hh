@@ -242,8 +242,7 @@ public:
      */
     bool solve(const Matrix &M, Vector &x, Vector &b)
     {
-        Scalar oldSingularLimit
-            = Dune::FMatrixPrecision<Scalar>::singular_limit();
+        Scalar oldSingularLimit = Dune::FMatrixPrecision<Scalar>::singular_limit();
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-50);
 
         if (!overlappingMatrix_) {
@@ -307,8 +306,8 @@ public:
         for (unsigned localIdx = 0; localIdx < unsigned(overlap.numLocal()); ++localIdx) {
             int nativeIdx = overlap.domesticToNative(localIdx);
             for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
-                residWeightVec[localIdx][eqIdx]
-                    = this->simulator_.model().eqWeight(nativeIdx, eqIdx);
+                residWeightVec[localIdx][eqIdx] =
+                    this->simulator_.model().eqWeight(nativeIdx, eqIdx);
             }
         }
 
@@ -380,9 +379,10 @@ private:
 
         // create the overlapping Jacobian matrix
         int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
-        overlappingMatrix_
-            = new OverlappingMatrix(M, borderListCreator.borderList(),
-                                    blackList, overlapSize);
+        overlappingMatrix_ = new OverlappingMatrix(M,
+                                                   borderListCreator.borderList(),
+                                                   blackList,
+                                                   overlapSize);
 
         // create the overlapping vectors for the residual and the
         // solution
@@ -480,13 +480,11 @@ private:
         {                                                                          \
             Scalar tolerance = EWOMS_GET_PARAM(TypeTag, Scalar,                    \
                                                LinearSolverTolerance);             \
-            int maxIter                                                            \
-                = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);        \
+            int maxIter = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);\
                                                                                    \
             int verbosity = 0;                                                     \
             if (parOperator.overlap().myRank() == 0)                               \
-                verbosity                                                          \
-                    = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);        \
+                verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);  \
             solver_ = new ParallelSolver(parOperator, parScalarProduct,            \
                                          parPreCond, tolerance, maxIter,           \
                                          verbosity);                               \
@@ -538,8 +536,7 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
         void prepare(JacobianMatrix &matrix)                                    \
         {                                                                       \
             int order = EWOMS_GET_PARAM(TypeTag, int, PreconditionerOrder);     \
-            Scalar relaxationFactor                                             \
-                = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);   \
+            Scalar relaxationFactor = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);   \
             seqPreCond_ = new SequentialPreconditioner(matrix, order,           \
                                                        relaxationFactor);       \
         }                                                                       \
@@ -580,8 +577,7 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
                                                                                 \
         void prepare(JacobianMatrix &matrix)                                    \
         {                                                                       \
-            Scalar relaxationFactor                                             \
-                = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);   \
+            Scalar relaxationFactor= EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);\
             seqPreCond_ = new SequentialPreconditioner(matrix,                  \
                                                        relaxationFactor);       \
         }                                                                       \

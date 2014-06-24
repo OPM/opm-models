@@ -41,10 +41,10 @@ NEW_PROP_TAG(MaterialLaw);
 
 namespace Ewoms {
 template <class TypeTag>
-class ForchheimerVolumeVariables;
+class ForchheimerIntensiveQuantities;
 
 template <class TypeTag>
-class ForchheimerFluxVariables;
+class ForchheimerExtensiveQuantities;
 
 template <class TypeTag>
 class ForchheimerBaseProblem;
@@ -56,8 +56,8 @@ class ForchheimerBaseProblem;
 template <class TypeTag>
 struct ForchheimerVelocityModule
 {
-    typedef ForchheimerVolumeVariables<TypeTag> VelocityVolumeVariables;
-    typedef ForchheimerFluxVariables<TypeTag> VelocityFluxVariables;
+    typedef ForchheimerIntensiveQuantities<TypeTag> VelocityIntensiveQuantities;
+    typedef ForchheimerExtensiveQuantities<TypeTag> VelocityExtensiveQuantities;
     typedef ForchheimerBaseProblem<TypeTag> VelocityBaseProblem;
 
     /*!
@@ -109,17 +109,17 @@ public:
     Scalar mobilityPassabilityRatio(Context &context, int spaceIdx, int timeIdx,
                                     int phaseIdx) const
     {
-        return 1.0 / context.volVars(spaceIdx, timeIdx).fluidState().viscosity(
+        return 1.0 / context.intensiveQuantities(spaceIdx, timeIdx).fluidState().viscosity(
                          phaseIdx);
     }
 };
 
 /*!
  * \ingroup ForchheimerVelocity
- * \brief Provides the volume variables for the Forchheimer module
+ * \brief Provides the intensive quantities for the Forchheimer module
  */
 template <class TypeTag>
-class ForchheimerVolumeVariables
+class ForchheimerIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -209,14 +209,14 @@ private:
 
  */
 template <class TypeTag>
-class ForchheimerFluxVariables
+class ForchheimerExtensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -226,23 +226,20 @@ class ForchheimerFluxVariables
 
 public:
     /*!
-     * \brief Returns the intrinsic permeability tensor for a given
-     *        sub-control volume face.
+     * \brief Returns the relevant intrinsic permeability tensor.
      */
     const DimMatrix &intrinsicPermability() const
     { return K_; }
 
     /*!
-     * \brief Return the Ergun coefficent at the face's integration
-     *        point.
+     * \brief Return the Ergun coefficent at the face's integration point.
      */
     Scalar ergunCoefficient() const
     { return ergunCoefficient_; }
 
     /*!
-     * \brief Return the ratio of the mobility divided by the
-     *        passability at the face's integration point for a given
-     *        fluid phase.
+     * \brief Return the ratio of the mobility divided by the passability at the face's
+     *        integration point for a given fluid phase.
      *
      * Usually, that's the inverse of the viscosity.
      */
@@ -259,8 +256,8 @@ public:
     { return filterVelocity_[phaseIdx]; }
 
     /*!
-     * \brief Return the volume flux of a fluid phase at the
-     *        face's integration point \f$[m^3/s]\f$
+     * \brief Return the volume flux of a fluid phase at the flux integration point
+     *        \f$[m^3/s]\f$
      *
      * \param phaseIdx The index of the fluid phase
      */
@@ -279,12 +276,12 @@ protected:
     {
         const auto &problem = elemCtx.problem();
 
-        const auto &volVarsI = elemCtx.volVars(asImp_().interiorIndex(), timeIdx);
-        const auto &volVarsJ = elemCtx.volVars(asImp_().exteriorIndex(), timeIdx);
+        const auto &intQuantsI = elemCtx.intensiveQuantities(asImp_().interiorIndex(), timeIdx);
+        const auto &intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
 
         // calculate the intrinsic permeability
-        const auto &Ki = volVarsI.intrinsicPermeability();
-        const auto &Kj = volVarsJ.intrinsicPermeability();
+        const auto &Ki = intQuantsI.intrinsicPermeability();
+        const auto &Kj = intQuantsJ.intrinsicPermeability();
         problem.meanK(K_, Ki, Kj);
         Valgrind::CheckDefined(K_);
 
@@ -297,15 +294,12 @@ protected:
         const auto &normal = scvf.normal();
         Valgrind::CheckDefined(normal);
 
-        // obtain the Ergun coefficient from the volume
-        // variables. Until a better method comes along, we use
-        // arithmetic averaging.
-        ergunCoefficient_
-            = (volVarsI.ergunCoefficient() + volVarsJ.ergunCoefficient()) / 2;
+        // obtain the Ergun coefficient from the intensive quantity object. Until a
+        // better method comes along, we use arithmetic averaging.
+        ergunCoefficient_ = (intQuantsI.ergunCoefficient() + intQuantsJ.ergunCoefficient()) / 2;
 
         ///////////////
-        // calculate the weights of the upstream and the downstream
-        // control volumes
+        // calculate the weights of the upstream and the downstream control volumes
         ///////////////
         for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
@@ -314,12 +308,10 @@ protected:
                 continue;
             }
 
-            const auto &up
-                = elemCtx.volVars(asImp_().upstreamIndex(phaseIdx), timeIdx);
+            const auto &up = elemCtx.intensiveQuantities(asImp_().upstreamIndex(phaseIdx), timeIdx);
             density_[phaseIdx] = up.fluidState().density(phaseIdx);
             mobility_[phaseIdx] = up.mobility(phaseIdx);
-            mobilityPassabilityRatio_[phaseIdx]
-                = up.mobilityPassabilityRatio(phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] = up.mobilityPassabilityRatio(phaseIdx);
 
             calculateForchheimerVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
@@ -339,11 +331,11 @@ protected:
         const auto &elemCtx = context.elementContext();
         const auto &problem = elemCtx.problem();
         int insideScvIdx = asImp_().interiorIndex();
-        const auto &volVarsInside = elemCtx.volVars(insideScvIdx, timeIdx);
-        const auto &fsInside = volVarsInside.fluidState();
+        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
+        const auto &fsInside = intQuantsInside.fluidState();
 
         // calculate the intrinsic permeability
-        K_ = volVarsInside.intrinsicPermeability();
+        K_ = intQuantsInside.intrinsicPermeability();
 
         assert(isDiagonal_(K_));
         sqrtK_ = 0.0;
@@ -352,20 +344,17 @@ protected:
 
         const auto &boundaryFace = context.stencil(timeIdx).boundaryFace(bfIdx);
         const auto &normal = boundaryFace.normal();
-        const auto &matParams
-            = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
+        const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
 
         Scalar kr[numPhases];
         MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
 
-        // obtain the Ergun coefficient. Because we are on the
-        // boundary here, we will take the Ergun coefficient of
-        // the interior sub-control volume
-        ergunCoefficient_ = volVarsInside.ergunCoefficient();
+        // obtain the Ergun coefficient. Because we are on the boundary here, we will
+        // take the Ergun coefficient of the interior
+        ergunCoefficient_ = intQuantsInside.ergunCoefficient();
 
         ///////////////
-        // calculate the weights of the upstream and the downstream
-        // control volumes
+        // calculate the weights of the upstream and the downstream degrees of freedom
         ///////////////
         for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
@@ -379,21 +368,18 @@ protected:
             if (fsInside.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
                 // the outside of the domain has higher pressure. we
                 // need to calculate the mobility
-                mobility_[phaseIdx]
-                    = kr[phaseIdx]
-                      / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-                density_[phaseIdx]
-                    = FluidSystem::density(fluidState, paramCache, phaseIdx);
+                mobility_[phaseIdx] =
+                    kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+                density_[phaseIdx] = FluidSystem::density(fluidState, paramCache, phaseIdx);
             }
             else {
-                mobility_[phaseIdx] = volVarsInside.mobility(phaseIdx);
+                mobility_[phaseIdx] = intQuantsInside.mobility(phaseIdx);
                 density_[phaseIdx] = fsInside.density(phaseIdx);
             }
 
             // take the mobility/passability ratio of the phase from the inside
             // SCV
-            mobilityPassabilityRatio_[phaseIdx]
-                = volVarsInside.mobilityPassabilityRatio(phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] = intQuantsInside.mobilityPassabilityRatio(phaseIdx);
 
             calculateForchheimerVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
@@ -530,8 +516,7 @@ protected:
     // filter velocities of all phases [m/s]
     DimVector filterVelocity_[numPhases];
 
-    // the volumetric flux of all fluid phases over the control
-    // volume's face [m^3/s]
+    // the volumetric flux of all fluid phases over at the flux integration point [m^3/s]
     Scalar volumeFlux_[numPhases];
 };
 

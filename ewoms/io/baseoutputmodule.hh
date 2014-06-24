@@ -110,8 +110,8 @@ public:
     virtual void allocBuffers() = 0;
 
     /*!
-     * \brief Modify the internal buffers according to the volume
-     *        variables seen on an element
+     * \brief Modify the internal buffers according to the intensive quanties relevant
+     *        for an element
      *
      * The module can dynamically cast the writer to the desired
      * concrete class. If the writer is incompatible with the module,

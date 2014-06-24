@@ -59,8 +59,7 @@ public:
      */
     NcpNewtonMethod(Simulator &simulator) : ParentType(simulator)
     {
-        choppedIterations_
-            = EWOMS_GET_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations);
+        choppedIterations_ = EWOMS_GET_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations);
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
     }
 
@@ -122,7 +121,7 @@ private:
             for (int j = 0; j < numEq; ++j) {
                 uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
             }
-            this->model_().invalidateVolumeVariablesCacheEntry(i, /*timeIdx=*/0);
+            this->model_().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
         }
 
         // put crash barriers along the update path at the
@@ -151,8 +150,7 @@ private:
                 // allow the mole fraction of the component to change
                 // at most 70% (assuming composition independent
                 // fugacity coefficients)
-                Scalar minPhi
-                    = this->problem().model().minActivityCoeff(i, compIdx);
+                Scalar minPhi = this->problem().model().minActivityCoeff(i, compIdx);
                 Scalar maxDelta = 0.7 * minPhi;
 
                 clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);

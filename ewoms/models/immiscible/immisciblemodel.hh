@@ -27,9 +27,9 @@
 #include <ewoms/parallel/mpihelper.hh>
 #include "immiscibleproperties.hh"
 #include "immiscibleindices.hh"
-#include "immisciblefluxvariables.hh"
+#include "immiscibleextensivequantities.hh"
 #include "immiscibleprimaryvariables.hh"
-#include "immisciblevolumevariables.hh"
+#include "immiscibleintensivequantities.hh"
 #include "immiscibleratevector.hh"
 #include "immiscibleboundaryratevector.hh"
 #include "immisciblelocalresidual.hh"
@@ -78,11 +78,11 @@ SET_TYPE_PROP(ImmiscibleModel, BoundaryRateVector, Ewoms::ImmiscibleBoundaryRate
 //! the PrimaryVariables property
 SET_TYPE_PROP(ImmiscibleModel, PrimaryVariables, Ewoms::ImmisciblePrimaryVariables<TypeTag>);
 
-//! the VolumeVariables property
-SET_TYPE_PROP(ImmiscibleModel, VolumeVariables, Ewoms::ImmiscibleVolumeVariables<TypeTag>);
+//! the IntensiveQuantities property
+SET_TYPE_PROP(ImmiscibleModel, IntensiveQuantities, Ewoms::ImmiscibleIntensiveQuantities<TypeTag>);
 
-//! the FluxVariables property
-SET_TYPE_PROP(ImmiscibleModel, FluxVariables, Ewoms::ImmiscibleFluxVariables<TypeTag>);
+//! the ExtensiveQuantities property
+SET_TYPE_PROP(ImmiscibleModel, ExtensiveQuantities, Ewoms::ImmiscibleExtensiveQuantities<TypeTag>);
 
 //! The indices required by the isothermal immiscible multi-phase model
 SET_TYPE_PROP(ImmiscibleModel, Indices, Ewoms::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
@@ -274,10 +274,8 @@ public:
 
         std::ostringstream oss;
 
-        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
-                                                     + numComponents)
-            oss << "conti_"
-                << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
+        if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
+            oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else
             assert(false);
 

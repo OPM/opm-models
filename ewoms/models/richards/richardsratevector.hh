@@ -29,7 +29,7 @@
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
-#include "richardsvolumevariables.hh"
+#include "richardsintensivequantities.hh"
 
 namespace Ewoms {
 
@@ -38,8 +38,8 @@ namespace Ewoms {
  *
  * \brief Implements a vector representing mass, molar or volumetric rates.
  *
- * This class is basically a Dune::FieldVector which can be set using
- * either mass, molar or volumetric rates.
+ * This class is basically a Dune::FieldVector which can be set using either mass, molar
+ * or volumetric rates.
  */
 template <class TypeTag>
 class RichardsRateVector
@@ -48,7 +48,7 @@ class RichardsRateVector
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) EnergyModule;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) EnergyModule;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { contiEqIdx = Indices::contiEqIdx };

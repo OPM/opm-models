@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleVolumeVariables
+ * \copydoc Ewoms::ImmiscibleIntensiveQuantities
  */
-#ifndef EWOMS_IMMISCIBLE_VOLUME_VARIABLES_HH
-#define EWOMS_IMMISCIBLE_VOLUME_VARIABLES_HH
+#ifndef EWOMS_IMMISCIBLE_INTENSIVE_QUANTITIES_HH
+#define EWOMS_IMMISCIBLE_INTENSIVE_QUANTITIES_HH
 
 #include "immiscibleproperties.hh"
 
@@ -35,18 +35,18 @@
 namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume for the immiscible multi-phase model.
  */
 template <class TypeTag>
-class ImmiscibleVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+class ImmiscibleIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -65,14 +65,14 @@ class ImmiscibleVolumeVariables
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
-    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
-    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
+    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
     typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!
-     * \copydoc VolumeVariables::update
+     * \copydoc IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
@@ -82,7 +82,7 @@ public:
                            dofIdx,
                            timeIdx);
 
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -114,8 +114,7 @@ public:
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity
-            Scalar mu
-                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
 
             // compute and set the density
@@ -135,10 +134,10 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
     }
 
     /*!
@@ -148,8 +147,7 @@ public:
     { return fluidState_; }
 
     /*!
-     * \brief Returns the intrinsic permeability tensor for the sub-control
-     * volume
+     * \brief Returns the intrinsic permeability tensor a degree of freedom.
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }

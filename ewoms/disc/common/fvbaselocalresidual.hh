@@ -42,8 +42,8 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief Element-wise caculation of the residual matrix for models
- *        based on a finite volume spatial discretization.
+ * \brief Element-wise caculation of the residual matrix for models based on a finite
+ *        volume spatial discretization.
  *
  * \copydetails Doxygen::typeTagTParam
  */
@@ -211,8 +211,8 @@ public:
         // evaluate the constraint DOFs
         asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
-        // make the residual volume specific (i.e., make it incorrect
-        // mass per cubic meter instead of total mass)
+        // make the residual volume specific (i.e., make it incorrect mass per cubic
+        // meter instead of total mass)
         for (int dofIdx=0;
              dofIdx < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
              ++dofIdx)
@@ -230,9 +230,8 @@ public:
     }
 
     /*!
-     * \brief Calculate the amount of all conservation quantities
-     *        stored in all element's sub-control volumes for a given
-     *        history index.
+     * \brief Calculate the amount of all conservation quantities stored in all element's
+     *        sub-control volumes for a given history index.
      *
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
@@ -251,12 +250,11 @@ public:
     }
 
     /*!
-     * \brief Calculate the amount of all conservation quantities
-     *        stored in all element's sub-control volumes for a given
-     *        history index.
+     * \brief Calculate the amount of all conservation quantities stored in all element's
+     *        sub-control volumes for a given history index.
      *
-     * This is used to figure out how much of each conservation
-     * quantity is inside the element.
+     * This is used to figure out how much of each conservation quantity is inside the
+     * element.
      *
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::ecfvElemCtxParam
@@ -277,7 +275,7 @@ public:
                                     timeIdx);
             storage[dofIdx] *=
                 elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
-                * elemCtx.volVars(dofIdx, timeIdx).extrusionFactor();
+                * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
         }
     }
 
@@ -304,7 +302,7 @@ public:
 
             Valgrind::SetUndefined(flux);
             asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx, timeIdx);
-            flux *= elemCtx.fluxVars(scvfIdx, timeIdx).extrusionFactor()*face.area();
+            flux *= elemCtx.extensiveQuantities(scvfIdx, timeIdx).extrusionFactor()*face.area();
             Valgrind::CheckDefined(flux);
 
             // The balance equation for a finite volume is given by
@@ -317,10 +315,9 @@ public:
             //
             // dStorage/dt + Flux - Source = 0
             //
-            // Since the mass flux as calculated by computeFlux() goes
-            // out of sub-control volume i and into sub-control volume
-            // j, we need to add the flux to finite volume i and
-            // subtract it from finite volume j
+            // Since the mass flux as calculated by computeFlux() goes out of sub-control
+            // volume i and into sub-control volume j, we need to add the flux to finite
+            // volume i and subtract it from finite volume j
             if (i < stencil.numPrimaryDof())
                 residual[i] += flux;
             if (j < stencil.numPrimaryDof())
@@ -431,10 +428,10 @@ protected:
 
         const auto &stencil = boundaryCtx.stencil(timeIdx);
         int dofIdx = stencil.boundaryFace(boundaryFaceIdx).interiorIndex();
-        const auto &insideVolVars = boundaryCtx.elementContext().volVars(dofIdx, timeIdx);
+        const auto &insideIntQuants = boundaryCtx.elementContext().intensiveQuantities(dofIdx, timeIdx);
         values *=
             stencil.boundaryFace(boundaryFaceIdx).area()
-            * insideVolVars.extrusionFactor();
+            * insideIntQuants.extrusionFactor();
 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             residual[dofIdx][eqIdx] += values[eqIdx];
@@ -492,11 +489,11 @@ protected:
         EqVector tmp(0), tmp2(0);
         RateVector sourceRate;
 
-        // evaluate the volume terms (storage + source terms)
+        // evaluate the volumetric terms (storage + source terms)
         for (int dofIdx=0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
         {
             Scalar extrusionFactor =
-                elemCtx.volVars(dofIdx, /*timeIdx=*/0).extrusionFactor();
+                elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
             Scalar scvVolume =
                 elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
 

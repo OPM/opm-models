@@ -19,29 +19,29 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureVolumeVariables
+ * \copydoc Ewoms::DiscreteFractureIntensiveQuantities
  */
-#ifndef EWOMS_DISCRETE_FRACTURE_VOLUME_VARIABLES_HH
-#define EWOMS_DISCRETE_FRACTURE_VOLUME_VARIABLES_HH
+#ifndef EWOMS_DISCRETE_FRACTURE_INTENSIVE_QUANTITIES_HH
+#define EWOMS_DISCRETE_FRACTURE_INTENSIVE_QUANTITIES_HH
 
 #include "discretefractureproperties.hh"
 
-#include <ewoms/models/immiscible/immisciblevolumevariables.hh>
+#include <ewoms/models/immiscible/immiscibleintensivequantities.hh>
 
 namespace Ewoms {
 
 /*!
  * \ingroup DiscreteFractureModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the discret fracture immiscible multi-phase
  *        model.
  */
 template <class TypeTag>
-class DiscreteFractureVolumeVariables : public ImmiscibleVolumeVariables<TypeTag>
+class DiscreteFractureIntensiveQuantities : public ImmiscibleIntensiveQuantities<TypeTag>
 {
-    typedef ImmiscibleVolumeVariables<TypeTag> ParentType;
+    typedef ImmiscibleIntensiveQuantities<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -65,7 +65,7 @@ class DiscreteFractureVolumeVariables : public ImmiscibleVolumeVariables<TypeTag
 
 public:
     /*!
-     * \copydoc VolumeVariables::update
+     * \copydoc IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx, int vertexIdx, int timeIdx)
     {
@@ -81,8 +81,7 @@ public:
         Valgrind::SetUndefined(fractureIntrinsicPermeability_);
         Valgrind::SetUndefined(fractureRelativePermeabilities_);
 
-        // do nothing if there is no fracture within the current finite
-        // volume
+        // do nothing if there is no fracture within the current degree of freedom
         if (!fractureMapper.isFractureVertex(globalVertexIdx)) {
             fractureVolume_ = 0;
             return;
@@ -157,8 +156,7 @@ public:
 
         // Make sure that the wetting saturation in the fracture does
         // not get negative
-        Scalar SwFracture
-            = std::max(0.0, fractureFluidState_.saturation(wettingPhaseIdx));
+        Scalar SwFracture = std::max(0.0, fractureFluidState_.saturation(wettingPhaseIdx));
         fractureFluidState_.setSaturation(wettingPhaseIdx, SwFracture);
         fractureFluidState_.setSaturation(nonWettingPhaseIdx, 1 - SwFracture);
 

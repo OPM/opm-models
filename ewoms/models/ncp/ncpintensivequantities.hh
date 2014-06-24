@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpVolumeVariables
+ * \copydoc Ewoms::NcpIntensiveQuantities
  */
-#ifndef EWOMS_NCP_VOLUME_VARIABLES_HH
-#define EWOMS_NCP_VOLUME_VARIABLES_HH
+#ifndef EWOMS_NCP_INTENSIVE_QUANTITIES_HH
+#define EWOMS_NCP_INTENSIVE_QUANTITIES_HH
 
 #include "ncpproperties.hh"
 
@@ -37,19 +37,19 @@
 namespace Ewoms {
 /*!
  * \ingroup NcpModel
- * \ingroup VolumeVariables
+ * \ingroup IntensiveQuantities
  *
  * \brief Contains the quantities which are are constant within a
  *        finite volume in the compositional multi-phase NCP model.
  */
 template <class TypeTag>
-class NcpVolumeVariables
-    : public GET_PROP_TYPE(TypeTag, DiscVolumeVariables)
-    , public DiffusionVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
-    , public EnergyVolumeVariables<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityVolumeVariables
+class NcpIntensiveQuantities
+    : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
+    , public DiffusionIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
+    , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
+    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, DiscVolumeVariables) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -75,16 +75,16 @@ class NcpVolumeVariables
                                          /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef Ewoms::DiffusionVolumeVariables<TypeTag, enableDiffusion> DiffusionVolumeVariables;
-    typedef Ewoms::EnergyVolumeVariables<TypeTag, enableEnergy> EnergyVolumeVariables;
-    typedef typename VelocityModule::VelocityVolumeVariables VelocityVolumeVariables;
+    typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
+    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
+    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
 
 public:
-    NcpVolumeVariables()
+    NcpIntensiveQuantities()
     {}
 
     /*!
-     * \brief VolumeVariables::update
+     * \brief IntensiveQuantities::update
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
@@ -109,7 +109,7 @@ public:
         Valgrind::CheckDefined(sumSat);
 
         // set the fluid phase temperature
-        EnergyVolumeVariables::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // retrieve capillary pressure parameters
         const auto &problem = elemCtx.problem();
@@ -136,8 +136,7 @@ public:
             if (hint) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     // use the hint for the initial mole fraction!
-                    Scalar moleFracIJ
-                        = hint->fluidState().moleFraction(phaseIdx, compIdx);
+                    Scalar moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
 
                     // set initial guess of the component's mole fraction
                     fluidState_.setMoleFraction(phaseIdx, compIdx, moleFracIJ);
@@ -165,8 +164,7 @@ public:
         // dynamic viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // viscosities
-            Scalar mu
-                = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }
 
@@ -174,49 +172,49 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityVolumeVariables::update_(elemCtx, dofIdx, timeIdx);
+        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
-        EnergyVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
-        // update the diffusion specific quantities of the volume variables
-        DiffusionVolumeVariables::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+        // update the diffusion specific quantities of the intensive quantities
+        DiffusionIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         checkDefined();
     }
 
     /*!
-     * \brief ImmiscibleVolumeVariables::fluidState
+     * \brief ImmiscibleIntensiveQuantities::fluidState
      */
     const FluidState &fluidState() const
     { return fluidState_; }
 
     /*!
-     * \brief ImmiscibleVolumeVariables::intrinsicPermeability
+     * \brief ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
     const DimMatrix &intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
-     * \brief ImmiscibleVolumeVariables::relativePermeability
+     * \brief ImmiscibleIntensiveQuantities::relativePermeability
      */
     Scalar relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
-     * \brief ImmiscibleVolumeVariables::mobility
+     * \brief ImmiscibleIntensiveQuantities::mobility
      */
     Scalar mobility(int phaseIdx) const
     { return relativePermeability(phaseIdx) / fluidState_.viscosity(phaseIdx); }
 
     /*!
-     * \brief ImmiscibleVolumeVariables::porosity
+     * \brief ImmiscibleIntensiveQuantities::porosity
      */
     Scalar porosity() const
     { return porosity_; }
 
     /*!
-     * \brief VolumeVariables::checkDefined
+     * \brief IntensiveQuantities::checkDefined
      */
     void checkDefined() const
     {

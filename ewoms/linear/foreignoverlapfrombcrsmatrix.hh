@@ -191,8 +191,7 @@ public:
      */
     const OverlapWithPeer &foreignOverlapWithPeer(int peerRank) const
     {
-        assert(foreignOverlapByRank_.find(peerRank)
-               != foreignOverlapByRank_.end());
+        assert(foreignOverlapByRank_.find(peerRank) != foreignOverlapByRank_.end());
         return foreignOverlapByRank_.find(peerRank)->second;
     }
 
@@ -321,15 +320,12 @@ public:
         auto it = foreignOverlapByRank_.begin();
         const auto &endIt = foreignOverlapByRank_.end();
         for (; it != endIt; ++it) {
-            std::cout << "Overlap rows(distance) for rank " << it->first
-                      << ": ";
+            std::cout << "Overlap rows(distance) for rank " << it->first << ": ";
 
             auto rowIt = it->second.begin();
             const auto &rowEndIt = it->second.end();
-            for (; rowIt != rowEndIt; ++rowIt) {
-                std::cout << rowIt->index << "(" << rowIt->borderDistance
-                          << ") ";
-            };
+            for (; rowIt != rowEndIt; ++rowIt)
+                std::cout << rowIt->index << "(" << rowIt->borderDistance << ") ";
             std::cout << "\n" << std::flush;
         }
     }
@@ -559,8 +555,7 @@ protected:
 
                 // check if the index is already in the overlap for
                 // the peer
-                const auto &distIt
-                    = foreignOverlapByLocalIndex_[localIdx].find(peerRank);
+                const auto &distIt = foreignOverlapByLocalIndex_[localIdx].find(peerRank);
                 if (distIt != foreignOverlapByLocalIndex_[localIdx].end())
                     continue;
 
@@ -569,8 +564,7 @@ protected:
                 auto seedIt = seedList.begin();
                 const auto &seedEndIt = seedList.end();
                 for (; seedIt != seedEndIt; ++seedIt) {
-                    if (seedIt->index == localIdx && seedIt->peerRank
-                                                     == peerRank) {
+                    if (seedIt->index == localIdx && seedIt->peerRank == peerRank) {
                         inSeedList = true;
                         break;
                     }

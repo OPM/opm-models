@@ -44,7 +44,7 @@ class PvsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -67,17 +67,19 @@ public:
                          int timeIdx,
                          int phaseIdx) const
     {
-        const VolumeVariables &volVars = elemCtx.volVars(dofIdx, timeIdx);
-        const auto &fs = volVars.fluidState();
+        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto &fs = intQuants.fluidState();
 
         // compute storage term of all components within all phases
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             int eqIdx = conti0EqIdx + compIdx;
-            storage[eqIdx] += fs.molarity(phaseIdx, compIdx)
-                              * fs.saturation(phaseIdx) * volVars.porosity();
+            storage[eqIdx] +=
+                fs.molarity(phaseIdx, compIdx)
+                * fs.saturation(phaseIdx)
+                * intQuants.porosity();
         }
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.volVars(dofIdx, timeIdx), phaseIdx);
+        EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
     }
 
     /*!
@@ -92,7 +94,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage, elemCtx.volVars(dofIdx, timeIdx));
+        EnergyModule::addSolidHeatStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
     }
 
     /*!
@@ -115,9 +117,8 @@ public:
     void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
                           int scvfIdx, int timeIdx) const
     {
-        const auto &fluxVars = elemCtx.fluxVars(scvfIdx, timeIdx);
-        const auto &evalPointFluxVars
-            = elemCtx.evalPointFluxVars(scvfIdx, timeIdx);
+        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -125,22 +126,21 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream DOFs
             // of the current phase
-            const VolumeVariables &up
-                = elemCtx.volVars(evalPointFluxVars.upstreamIndex(phaseIdx),
-                                  timeIdx);
-            const VolumeVariables &dn
-                = elemCtx.volVars(evalPointFluxVars.downstreamIndex(phaseIdx),
-                                  timeIdx);
+            const IntensiveQuantities &up =
+                elemCtx.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
+            const IntensiveQuantities &dn =
+                elemCtx.intensiveQuantities(evalPointExtQuants.downstreamIndex(phaseIdx), timeIdx);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 int eqIdx = conti0EqIdx + compIdx;
 
-                flux[eqIdx]
-                    += fluxVars.volumeFlux(phaseIdx)
-                       * (fluxVars.upstreamWeight(phaseIdx)
-                          * up.fluidState().molarity(phaseIdx, compIdx)
-                          + fluxVars.downstreamWeight(phaseIdx)
-                            * dn.fluidState().molarity(phaseIdx, compIdx));
+                flux[eqIdx] +=
+                    extQuants.volumeFlux(phaseIdx)
+                    * (extQuants.upstreamWeight(phaseIdx)
+                       * up.fluidState().molarity(phaseIdx, compIdx)
+                       +
+                       extQuants.downstreamWeight(phaseIdx)
+                       * dn.fluidState().molarity(phaseIdx, compIdx));
 
                 Valgrind::CheckDefined(flux[eqIdx]);
             }

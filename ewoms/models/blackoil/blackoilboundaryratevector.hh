@@ -27,7 +27,7 @@
 #include <opm/material/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
-#include "blackoilvolumevariables.hh"
+#include "blackoilintensivequantities.hh"
 
 namespace Ewoms {
 
@@ -40,7 +40,7 @@ template <class TypeTag>
 class BlackOilBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
 {
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -58,19 +58,18 @@ public:
     {}
 
     /*!
-     * \copydoc
-     * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
     BlackOilBoundaryRateVector(Scalar value) : ParentType(value)
     {}
 
     /*!
-     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const
-     * ImmiscibleBoundaryRateVector &)
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &)
      */
     BlackOilBoundaryRateVector(const BlackOilBoundaryRateVector &value)
         : ParentType(value)
     {}
+
 
     /*!
      * \copydoc ImmiscibleBoundaryRateVector::setFreeFlow
@@ -82,9 +81,9 @@ public:
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
-        FluxVariables fluxVars;
-        fluxVars.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
-        const auto &insideVolVars = context.volVars(bfIdx, timeIdx);
+        ExtensiveQuantities extQuants;
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -97,28 +96,24 @@ public:
                                  * FluidSystem::molarMass(compIdx);
 
             Scalar density;
-            if (fluidState.pressure(phaseIdx)
-                > insideVolVars.fluidState().pressure(phaseIdx))
+            if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else
-                density = insideVolVars.fluidState().density(phaseIdx);
+                density = insideIntQuants.fluidState().density(phaseIdx);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar molarity;
-                if (fluidState.pressure(phaseIdx)
-                    > insideVolVars.fluidState().pressure(phaseIdx)) {
-                    molarity = fluidState.moleFraction(phaseIdx, compIdx)
-                               * density / meanMBoundary;
-                }
-                else {
-                    molarity
-                        = insideVolVars.fluidState().molarity(phaseIdx, compIdx);
-                }
+                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
+                    molarity =
+                        fluidState.moleFraction(phaseIdx, compIdx)
+                        * density
+                        / meanMBoundary;
+                else
+                    molarity = insideIntQuants.fluidState().molarity(phaseIdx, compIdx);
 
                 // add advective flux of current component in current
                 // phase
-                (*this)[conti0EqIdx + compIdx] += fluxVars.volumeFlux(phaseIdx)
-                                                  * molarity;
+                (*this)[conti0EqIdx + compIdx] += extQuants.volumeFlux(phaseIdx) * molarity;
             }
         }
 

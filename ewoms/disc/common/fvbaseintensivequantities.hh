@@ -19,10 +19,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseVolumeVariables
+ * \copydoc Ewoms::FvBaseIntensiveQuantities
  */
-#ifndef EWOMS_FV_BASE_VOLUME_VARIABLES_HH
-#define EWOMS_FV_BASE_VOLUME_VARIABLES_HH
+#ifndef EWOMS_FV_BASE_INTENSIVE_QUANTITIES_HH
+#define EWOMS_FV_BASE_INTENSIVE_QUANTITIES_HH
 
 #include "fvbaseproperties.hh"
 
@@ -33,23 +33,23 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief Base class for the model specific class which provides
- *        access to all volume averaged quantities.
+ * \brief Base class for the model specific class which provides access to all intensive
+ *        (i.e., volume averaged) quantities.
  */
 template <class TypeTag>
-class FvBaseVolumeVariables
+class FvBaseIntensiveQuantities
 {
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
     // default constructor
-    FvBaseVolumeVariables()
+    FvBaseIntensiveQuantities()
     { evalPoint_ = 0; }
 
     // copy constructor
-    FvBaseVolumeVariables(const FvBaseVolumeVariables &v)
+    FvBaseIntensiveQuantities(const FvBaseIntensiveQuantities &v)
     {
         evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
@@ -58,7 +58,7 @@ public:
     /*!
      * \brief Assignment operator
      */
-    FvBaseVolumeVariables &operator=(const FvBaseVolumeVariables &v)
+    FvBaseIntensiveQuantities &operator=(const FvBaseIntensiveQuantities &v)
     {
         evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
@@ -67,7 +67,7 @@ public:
     }
 
     /*!
-     * \brief Register all run-time parameters for the volume variables.
+     * \brief Register all run-time parameters for the intensive quantities.
      */
     static void registerParameters()
     { }
@@ -77,7 +77,7 @@ public:
      *
      * The evaluation point is only used by semi-smooth models.
      *
-     * \param ep A pointer to the VolumeVariables object of the evaluation point
+     * \param ep A pointer to the IntensiveQuantities object of the evaluation point
      */
     void setEvalPoint(const Implementation *ep)
     {
@@ -98,25 +98,23 @@ public:
      *
      * \param elemCtx The execution context from which the method is called.
      * \param dofIdx The index of the sub-control volume for which the
-     *               volume variables should be calculated.
+     *               intensive quantities should be calculated.
      * \param timeIdx The index for the time discretization for which
-     *                the volume variables should be calculated
+     *                the intensive quantities should be calculated
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,
                 int timeIdx)
-    {
-        extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, dofIdx, timeIdx);
-    }
+    { extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, dofIdx, timeIdx); }
 
     /*!
      * \brief Update all gradients for a given control volume.
      *
      * \param elemCtx The execution context from which the method is called.
      * \param dofIdx The index of the sub-control volume for which the
-     *               volume variables should be calculated.
+     *               intensive quantities should be calculated.
      * \param timeIdx The index for the time discretization for which
-     *                the volume variables should be calculated
+     *                the intensive quantities should be calculated
      */
     void updateScvGradients(const ElementContext &elemCtx,
                             int dofIdx,
@@ -124,7 +122,7 @@ public:
     { }
 
     /*!
-     * \brief Return how much the sub-control volume is extruded.
+     * \brief Return how much a given sub-control volume is extruded.
      *
      * This means the factor by which a lower-dimensional (1D or 2D)
      * entity needs to be expanded to get a full dimensional cell. The
@@ -137,7 +135,7 @@ public:
 
     /*!
      * \brief If running in valgrind this makes sure that all
-     *        quantities in the volume variables are defined.
+     *        quantities in the intensive quantities are defined.
      */
     void checkDefined() const
     {

@@ -35,27 +35,27 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief This class stores an array of VolumeVariables objects, one
- *        volume variables object for each of the element's vertices
+ * \brief This class stores an array of IntensiveQuantities objects, one
+ *        intensive quantities object for each of the element's vertices
  */
 template<class TypeTag>
 class FvBaseElementContext
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, VolumeVariables) VolumeVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, FluxVariables) FluxVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
 
     // the history size of the time discretization in number of steps
     enum { timeDiscHistorySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize) };
 
     struct DofStore_ {
-        VolumeVariables volVars[timeDiscHistorySize];
+        IntensiveQuantities intensiveQuantities[timeDiscHistorySize];
         PrimaryVariables priVars[timeDiscHistorySize];
-        const VolumeVariables *thermodynamicHint[timeDiscHistorySize];
+        const IntensiveQuantities *thermodynamicHint[timeDiscHistorySize];
     };
     typedef std::vector<DofStore_> DofVarsVector;
-    typedef std::vector<FluxVariables> FluxVarsVector;
+    typedef std::vector<ExtensiveQuantities> ExtensiveQuantitiesVector;
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -92,7 +92,7 @@ public:
     }
 
     /*!
-     * \brief Construct all volume and flux variables of an element
+     * \brief Construct all volume and extensive quantities of an element
      *        from scratch.
      *
      * \param elem The DUNE Codim<0> entity for which the volume
@@ -101,8 +101,8 @@ public:
     void updateAll(const Element &elem)
     {
         updateStencil(elem);
-        updateAllVolVars();
-        updateAllFluxVars();
+        updateAllIntQuants();
+        updateAllExtensiveQuantities();
     }
 
     /*!
@@ -126,7 +126,7 @@ public:
         // resize the arrays containing the flux and the volume
         // variables
         dofVars_.resize(stencil_.numDof());
-        fluxVars_.resize(stencil_.numInteriorFaces());
+        extensiveQuantities_.resize(stencil_.numInteriorFaces());
     }
 
     /*!
@@ -145,26 +145,26 @@ public:
     }
 
     /*!
-     * \brief Compute the volume variables of all sub-control volumes
+     * \brief Compute the intensive quantities of all sub-control volumes
      *        of the current element for all time indices.
      */
-    void updateAllVolVars()
+    void updateAllIntQuants()
     {
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
-            updateVolVars(timeIdx);
+            updateIntQuants(timeIdx);
         dofIdxSaved_ = -1;
     }
 
     /*!
-     * \brief Compute the volume variables of all sub-control volumes
+     * \brief Compute the intensive quantities of all sub-control volumes
      *        of the current element for a single time index.
      *
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    void updateVolVars(int timeIdx)
+    void updateIntQuants(int timeIdx)
     {
-        // update the volume variables for the whole history
+        // update the intensive quantities for the whole history
         const SolutionVector &globalSol = model().solution(timeIdx);
 
         // update the non-gradient quantities
@@ -176,77 +176,77 @@ public:
             dofVars_[dofIdx].thermodynamicHint[timeIdx] =
                 model().thermodynamicHint(globalIdx, timeIdx);
 
-            const auto *cachedVolVars = model().cachedVolumeVariables(globalIdx, timeIdx);
-            if (cachedVolVars) {
+            const auto *cachedIntQuants = model().cachedIntensiveQuantities(globalIdx, timeIdx);
+            if (cachedIntQuants) {
                 dofVars_[dofIdx].priVars[timeIdx] = volSol;
-                dofVars_[dofIdx].volVars[timeIdx] = *cachedVolVars;
+                dofVars_[dofIdx].intensiveQuantities[timeIdx] = *cachedIntQuants;
             }
             else {
-                updateSingleVolVars_(volSol, dofIdx, timeIdx);
-                model().updateCachedVolumeVariables(dofVars_[dofIdx].volVars[timeIdx],
-                                                    globalIdx,
-                                                    timeIdx);
+                updateSingleIntQuants_(volSol, dofIdx, timeIdx);
+                model().updateCachedIntensiveQuantities(dofVars_[dofIdx].intensiveQuantities[timeIdx],
+                                                        globalIdx,
+                                                        timeIdx);
             }
         }
 
         // update gradients
         for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            dofVars_[dofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
-                                                                 dofIdx,
-                                                                 timeIdx);
+            dofVars_[dofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
+                                                                             dofIdx,
+                                                                             timeIdx);
         }
     }
 
     /*!
-     * \brief Compute the volume variables of a single sub-control
+     * \brief Compute the intensive quantities of a single sub-control
      *        volume of the current element for a single time index.
      *
      * \param priVars The PrimaryVariables which should be used to
-     *                calculate the volume variables.
+     *                calculate the intensive quantities.
      * \param dofIdx The local index in the current element of the
      *               sub-control volume which should be updated.
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    void updateVolVars(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
+    void updateIntQuants(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
     {
-        updateSingleVolVars_(priVars, dofIdx, timeIdx);
+        updateSingleIntQuants_(priVars, dofIdx, timeIdx);
 
         // update gradients inside a sub control volume
         int nDof = numDof(/*timeIdx=*/0);
         for (int gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
-            dofVars_[gradDofIdx].volVars[timeIdx].updateScvGradients(/*context=*/*this,
-                                                                     gradDofIdx,
-                                                                     timeIdx);
+            dofVars_[gradDofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
+                                                                                 gradDofIdx,
+                                                                                 timeIdx);
         }
     }
 
     /*!
-     * \brief Compute the flux variables of all sub-control volume
+     * \brief Compute the extensive quantities of all sub-control volume
      *        faces of the current element for all time indices.
      */
-    void updateAllFluxVars()
+    void updateAllExtensiveQuantities()
     {
-        updateFluxVars(/*timeIdx=*/0);
+        updateExtensiveQuantities(/*timeIdx=*/0);
     }
 
     /*!
-     * \brief Compute the flux variables of all sub-control volume
+     * \brief Compute the extensive quantities of all sub-control volume
      *        faces of the current element for a single time index.
      *
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    void updateFluxVars(int timeIdx)
+    void updateExtensiveQuantities(int timeIdx)
     {
-        fluxVarsEval_ = &fluxVars_;
+        extensiveQuantitiesEval_ = &extensiveQuantities_;
 
         gradientCalculator_.prepare(/*context=*/*this, timeIdx);
 
         for (int fluxIdx = 0; fluxIdx < numInteriorFaces(timeIdx); fluxIdx++) {
-            fluxVars_[fluxIdx].update(/*context=*/ *this,
-                                      /*localIndex=*/fluxIdx,
-                                      timeIdx);
+            extensiveQuantities_[fluxIdx].update(/*context=*/ *this,
+                                                 /*localIndex=*/fluxIdx,
+                                                 timeIdx);
         }
     }
 
@@ -358,46 +358,46 @@ public:
     { return element().hasBoundaryIntersections(); }
 
     /*!
-     * \brief Save the current flux variables and use them as the
+     * \brief Save the current extensive quantities and use them as the
      *        evaluation point.
      */
-    void saveFluxVars()
+    void saveExtensiveQuantities()
     {
-        fluxVarsSaved_ = fluxVars_;
+        extensiveQuantitiesSaved_ = extensiveQuantities_;
 
         // change evaluation point
-        fluxVarsEval_ = &fluxVarsSaved_;
+        extensiveQuantitiesEval_ = &extensiveQuantitiesSaved_;
     }
 
     /*!
-     * \brief Restore current flux variables from the saved ones.
+     * \brief Restore current extensive quantities from the saved ones.
      */
-    void restoreFluxVars()
+    void restoreExtensiveQuantities()
     {
-        //fluxVarsSaved_ = fluxVars_; // not needed
+        //extensiveQuantitiesSaved_ = extensiveQuantities_; // not needed
 
         // change evaluation point
-        fluxVarsEval_ = &fluxVars_;
+        extensiveQuantitiesEval_ = &extensiveQuantities_;
     }
 
     /*!
-     * \brief Return a reference to the volume variables of a
+     * \brief Return a reference to the intensive quantities of a
      *        sub-control volume at a given time.
      *
      * If the time step index is not given, return the volume
      * variables for the current time.
      *
      * \param dofIdx The local index of the sub-control volume for
-     *               which the volume variables are requested
+     *               which the intensive quantities are requested
      * \param timeIdx The index of the time step for which the
-     *                    volume variables are requested. 0 means
+     *                    intensive quantities are requested. 0 means
      *                    current time step, 1 previous time step,
      *                    2 next-to-previous, etc.
      */
-    const VolumeVariables &volVars(int dofIdx, int timeIdx) const
+    const IntensiveQuantities &intensiveQuantities(int dofIdx, int timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return dofVars_[dofIdx].volVars[timeIdx];
+        return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
     /*!
@@ -410,18 +410,18 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const VolumeVariables *thermodynamicHint(int dofIdx, int timeIdx) const
+    const IntensiveQuantities *thermodynamicHint(int dofIdx, int timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].thermodynamicHint[timeIdx];
     }
     /*!
-     * \copydoc volVars()
+     * \copydoc intensiveQuantities()
      */
-    VolumeVariables &volVars(int dofIdx, int timeIdx)
+    IntensiveQuantities &intensiveQuantities(int dofIdx, int timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
-        return dofVars_[dofIdx].volVars[timeIdx];
+        return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
     /*!
@@ -447,31 +447,31 @@ public:
     }
 
     /*!
-     * \brief Returns the volume variables at the evaluation point.
+     * \brief Returns the intensive quantities at the evaluation point.
      *
      * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      */
-    void saveVolVars(int dofIdx)
+    void saveIntQuants(int dofIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(/*timeIdx=*/0));
 
         dofIdxSaved_ = dofIdx;
-        volVarsSaved_ = dofVars_[dofIdx].volVars[/*timeIdx=*/0];
+        intensiveQuantitiesSaved_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
         priVarsSaved_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
     }
 
     /*!
-     * \brief Restores the volume variables at the evaluation point.
+     * \brief Restores the intensive quantities at the evaluation point.
      *
      * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      */
-    void restoreVolVars(int dofIdx)
+    void restoreIntQuants(int dofIdx)
     {
         dofIdxSaved_ = -1;
         dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
-        dofVars_[dofIdx].volVars[/*timeIdx=*/0] = volVarsSaved_;
+        dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesSaved_;
     }
 
     /*!
@@ -482,35 +482,35 @@ public:
     { return gradientCalculator_; }
 
     /*!
-     * \brief Return a reference to the flux variables of a
+     * \brief Return a reference to the extensive quantities of a
      *        sub-control volume face.
      *
      * \param fluxIdx The local index of the sub-control volume face for
-     *               which the flux variables are requested
+     *               which the extensive quantities are requested
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const FluxVariables &fluxVars(int fluxIdx, int timeIdx) const
-    { return fluxVars_[fluxIdx]; }
+    const ExtensiveQuantities &extensiveQuantities(int fluxIdx, int timeIdx) const
+    { return extensiveQuantities_[fluxIdx]; }
 
     /*!
-     * \brief Return a reference to the flux variables of a
+     * \brief Return a reference to the extensive quantities of a
      *        sub-control volume face for the evaluation point.
      *
      * \param fluxIdx The local index of the sub-control volume face for
-     *               which the flux variables are requested
+     *               which the extensive quantities are requested
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const FluxVariables &evalPointFluxVars(int fluxIdx, int timeIdx) const
+    const ExtensiveQuantities &evalPointExtensiveQuantities(int fluxIdx, int timeIdx) const
     {
         if (timeIdx != 0)
-            return fluxVars(fluxIdx, timeIdx);
-        return (*fluxVarsEval_)[fluxIdx];
+            return extensiveQuantities(fluxIdx, timeIdx);
+        return (*extensiveQuantitiesEval_)[fluxIdx];
     }
 
     /*!
-     * \brief Returns the volume variables for history index 0 at the
+     * \brief Returns the intensive quantities for history index 0 at the
      *        evaluation point.
      *
      * \param dofIdx The local index of the degree of freedom
@@ -518,34 +518,34 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const VolumeVariables &evalPointVolVars(int dofIdx, int timeIdx) const
+    const IntensiveQuantities &evalPointIntensiveQuantities(int dofIdx, int timeIdx) const
     {
         if (timeIdx != 0)
-            return volVars(dofIdx, timeIdx);
+            return intensiveQuantities(dofIdx, timeIdx);
         if (dofIdxSaved_ == dofIdx)
-            return volVarsSaved_;
-        return volVars(dofIdx, /*timeIdx=*/0);
+            return intensiveQuantitiesSaved_;
+        return intensiveQuantities(dofIdx, /*timeIdx=*/0);
     }
 
 protected:
-    void updateSingleVolVars_(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
+    void updateSingleIntQuants_(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
     {
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
-        dofVars_[dofIdx].volVars[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
+        dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
     }
 
     DofVarsVector dofVars_;
 
     int dofIdxSaved_;
-    VolumeVariables volVarsSaved_;
+    IntensiveQuantities intensiveQuantitiesSaved_;
     PrimaryVariables priVarsSaved_;
 
     GradientCalculator gradientCalculator_;
 
-    FluxVarsVector fluxVars_;
-    FluxVarsVector fluxVarsSaved_;
+    ExtensiveQuantitiesVector extensiveQuantities_;
+    ExtensiveQuantitiesVector extensiveQuantitiesSaved_;
 
-    FluxVarsVector *fluxVarsEval_;
+    ExtensiveQuantitiesVector *extensiveQuantitiesEval_;
 
     const Simulator *simulatorPtr_;
     const Element *elemPtr_;

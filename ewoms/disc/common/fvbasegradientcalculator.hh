@@ -61,9 +61,8 @@ public:
     { }
 
     /*!
-     * \brief Precomputes the common values to calculate gradients and
-     *        values of quantities at every interior flux
-     *        approximation point.
+     * \brief Precomputes the common values to calculate gradients and values of
+     *        quantities at every interior flux approximation point.
      *
      * \param elemCtx The current execution context
      * \param timeIdx The index used by the time discretization.
@@ -203,12 +202,11 @@ public:
         DimVector distVec(face.integrationPos());
         distVec -= stencil.subControlVolume(face.interiorIndex()).center();
 
-        // we assume that the value on the boundary belongs equivalent
-        // to a finite volume which is equivalent to the finite volume
-        // on the interior of the face, but mirrored on the boundary
-        // face. This means the distance is twice the one between the
-        // integration point and the center of the FV on the interior
-        // of the domain.
+        // we assume that the value on the boundary belongs equivalent to a finite volume
+        // which is equivalent to the finite volume on the interior of the face, but
+        // mirrored on the boundary face. This means the distance is twice the one
+        // between the integration point and the center of the FV on the interior of the
+        // domain.
         Scalar dx = 2*distVec.two_norm();
 
         for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
