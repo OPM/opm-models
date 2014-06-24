@@ -151,7 +151,7 @@ public:
     void updateAllIntQuants()
     {
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
-            updateIntQuants(timeIdx);
+            updateIntensiveQuantities(timeIdx);
         dofIdxSaved_ = -1;
     }
 
@@ -162,7 +162,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    void updateIntQuants(int timeIdx)
+    void updateIntensiveQuantities(int timeIdx)
     {
         // update the intensive quantities for the whole history
         const SolutionVector &globalSol = model().solution(timeIdx);
@@ -208,7 +208,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    void updateIntQuants(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
+    void updateIntensiveQuantities(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
     {
         updateSingleIntQuants_(priVars, dofIdx, timeIdx);
 

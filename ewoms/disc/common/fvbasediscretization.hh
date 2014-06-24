@@ -573,7 +573,7 @@ public:
                 continue; // ignore ghost and overlap elements
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateIntQuants(/*timeIdx=*/0);
+            elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
             localResidual().evalStorage(elemCtx, /*timeIdx=*/0);
 
             for (int i = 0; i < elemIt->template count<dim>(); ++i)
@@ -1045,7 +1045,7 @@ public:
                 continue;
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateIntQuants(/*timeIdx=*/0);
+            elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
             elemCtx.updateExtensiveQuantities(/*timeIdx=*/0);
 
             modIt = outputModules_.begin();

@@ -397,7 +397,7 @@ protected:
             delta += eps;
 
             // calculate the residual
-            elemCtx.updateIntQuants(priVars, dofIdx, /*timeIdx=*/0);
+            elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
             elemCtx.updateAllExtensiveQuantities();
             localResidual_.eval(derivResidual_, derivStorage_, elemCtx);
         }
@@ -419,7 +419,7 @@ protected:
 
             // calculate residual again, this time we use the local
             // residual's internal storage.
-            elemCtx.updateIntQuants(priVars, dofIdx, /*timeIdx=*/0);
+            elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
             elemCtx.updateAllExtensiveQuantities();
             localResidual_.eval(elemCtx);
 

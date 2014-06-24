@@ -171,7 +171,7 @@ public:
                 continue; // ignore ghost and overlap elements
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateIntQuants(/*timeIdx=*/0);
+            elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
 
             const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 

@@ -488,7 +488,7 @@ public:
 
                 // compute the intensive quantities of the current degree of freedom
                 auto &priVars = this->solution(/*timeIdx=*/0)[globalIdx];
-                elemCtx.updateIntQuants(priVars, dofIdx, /*timeIdx=*/0);
+                elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
                 const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                 // evaluate primary variable switch
