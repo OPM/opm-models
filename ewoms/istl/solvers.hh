@@ -64,7 +64,6 @@
 #include <dune/common/timer.hh>
 #include <dune/common/ftraits.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/common/static_assert.hh>
 
 #include <algorithm>
 #include <memory>
@@ -191,10 +190,11 @@ public:
     LoopSolver(L &op, P &prec, double reduction, int maxit, int verbose)
         : ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P have to have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(Dune::SolverCategory::sequential),
-                           "L has to be sequential!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P have to have the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L has to be sequential!");
 
         this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(
             new ResidReductionCriterion<X>(_sp, reduction)));
@@ -224,10 +224,10 @@ public:
     LoopSolver(L &op, S &sp, P &prec, double reduction, int maxit, int verbose)
         : _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
-                           "L and S must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
+                      "L and S must have the same category!");
 
         this->setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(
             new ResidReductionCriterion<X>(_sp, reduction)));
@@ -344,11 +344,11 @@ public:
     GradientSolver(L &op, P &prec, double reduction, int maxit, int verbose)
         : ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P have to have the same category!");
-        dune_static_assert(static_cast<int>(L::category) ==
-                           static_cast<int>(Dune::SolverCategory::sequential),
-                           "L has to be sequential!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P have to have the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L has to be sequential!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -364,10 +364,10 @@ public:
                    int verbose)
         : _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P have to have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
-                           "L and S have to have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P have to have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
+                      "L and S have to have the same category!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -469,11 +469,11 @@ public:
     CGSolver(L &op, P &prec, double reduction, int maxit, int verbose)
         : ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) ==
-                           static_cast<int>(Dune::SolverCategory::sequential),
-                           "L must be sequential!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L must be sequential!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -488,10 +488,10 @@ public:
     CGSolver(L &op, S &sp, P &prec, double reduction, int maxit, int verbose)
         : _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
-                           "L and S must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
+                      "L and S must have the same category!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -615,11 +615,11 @@ public:
     BiCGSTABSolver(L &op, P &prec, double reduction, int maxit, int verbose)
         : ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must be of the same category!");
-        dune_static_assert(static_cast<int>(L::category) ==
-                           static_cast<int>(Dune::SolverCategory::sequential),
-                           "L must be sequential!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must be of the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L must be sequential!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -635,10 +635,10 @@ public:
                    int verbose)
         : _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
-                           "L and S must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
+                      "L and S must have the same category!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -854,11 +854,11 @@ public:
     MINRESSolver(L &op, P &prec, double reduction, int maxit, int verbose)
         : ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) ==
-                           static_cast<int>(Dune::SolverCategory::sequential),
-                           "L must be sequential!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L must be sequential!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -873,10 +873,10 @@ public:
     MINRESSolver(L &op, S &sp, P &prec, double reduction, int maxit, int verbose)
         : _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose)
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
-                           "L and S must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
+                      "L and S must have the same category!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -1098,11 +1098,11 @@ public:
         : _A_(op), _M(prec), ssp(), _sp(ssp), _restart(restart), _maxit(maxit),
           _verbose(verbose), _recalc_defect(recalc_defect)
     {
-        dune_static_assert(static_cast<int>(P::category) == static_cast<int>(L::category),
-                           "P and L must be the same category!");
-        dune_static_assert(static_cast<int>(L::category) ==
-                           static_cast<int>(Dune::SolverCategory::sequential),
-                           "L must be sequential!");
+        static_assert(static_cast<int>(P::category) == static_cast<int>(L::category),
+                      "P and L must be the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L must be sequential!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -1123,10 +1123,10 @@ public:
         : _A_(op), _M(prec), _sp(sp), _restart(restart), _maxit(maxit),
           _verbose(verbose), _recalc_defect(recalc_defect)
     {
-        dune_static_assert(static_cast<int>(P::category) == static_cast<int>(L::category),
-                           "P and L must have the same category!");
-        dune_static_assert(static_cast<int>(P::category) == static_cast<int>(S::category),
-                           "P and S must have the same category!");
+        static_assert(static_cast<int>(P::category) == static_cast<int>(L::category),
+                      "P and L must have the same category!");
+        static_assert(static_cast<int>(P::category) == static_cast<int>(S::category),
+                      "P and S must have the same category!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -1390,11 +1390,11 @@ public:
         : ssp(), _op(op), _prec(prec), _sp(ssp), _maxit(maxit),
           _verbose(verbose), _restart(std::min(maxit, restart))
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P have to have the same category!");
-        dune_static_assert(static_cast<int>(L::category) ==
-                           static_cast<int>(Dune::SolverCategory::sequential),
-                           "L has to be sequential!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P have to have the same category!");
+        static_assert(static_cast<int>(L::category) ==
+                      static_cast<int>(Dune::SolverCategory::sequential),
+                      "L has to be sequential!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
@@ -1414,10 +1414,10 @@ public:
         : _op(op), _prec(prec), _sp(sp), _maxit(maxit), _verbose(verbose),
           _restart(std::min(maxit, restart))
     {
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
-                           "L and P must have the same category!");
-        dune_static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
-                           "L and S must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(P::category),
+                      "L and P must have the same category!");
+        static_assert(static_cast<int>(L::category) == static_cast<int>(S::category),
+                      "L and S must have the same category!");
 
         auto crit =
             Dune::shared_ptr<ConvergenceCriterion>(new ResidReductionCriterion<X>(_sp, reduction));
