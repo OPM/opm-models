@@ -5,19 +5,12 @@
 set (ewoms_CONFIG_VAR
 	HAVE_QUAD
 	HAVE_VALGRIND
-  HAVE_ERT
-  HAVE_OPM_PARSER
-  HAVE_DUNE_CORNERPOINT
 	)
 
 # dependencies
 set (ewoms_DEPS
 	# compile with C++0x/11 support if available
 	"CXX11Features REQUIRED"
-	# the boost headers
-	"Boost 1.44.0 REQUIRED"
-	# external libraries
-	"ERT"
 	# DUNE prerequisites
 	"dune-common REQUIRED"
 	"dune-localfunctions REQUIRED"
@@ -26,8 +19,6 @@ set (ewoms_DEPS
 	"dune-istl REQUIRED"
 	"opm-core REQUIRED"
 	"opm-material REQUIRED"
-	"opm-parser"
-	"dune-cornerpoint"
 	# valgrind client requests
 	"Valgrind"
 	# quadruple precision floating point calculations
