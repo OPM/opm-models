@@ -230,8 +230,7 @@ public:
             if (isIt->neighbor()) {
                 elements_.push_back(isIt->outside());
                 subControlVolumes_.push_back(SubControlVolume(isIt->outside()));
-                interiorFaces_.push_back(SubControlVolumeFace(*isIt,
-                                                              subControlVolumes_.size() - 1));
+                interiorFaces_.push_back(SubControlVolumeFace(*isIt, subControlVolumes_.size() - 1));
             }
             else {
                 boundaryFaces_.push_back(SubControlVolumeFace(*isIt, - 10000));

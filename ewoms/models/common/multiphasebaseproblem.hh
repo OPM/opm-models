@@ -89,16 +89,24 @@ public:
     }
 
     /*!
-     * \brief Averages the intrinsic permeability Tensor.
+     * \brief Returns the intrinsic permeability of an intersection.
      *
-     * \param result averaged intrinsic permeability
-     * \param K1 intrinsic permeability of the first node
-     * \param K2 intrinsic permeability of the second node
+     * This method is specific to the finite volume discretizations. If left unspecified,
+     * it calls the intrinsicPermeability() method for the intersection's interior and
+     * exterior finite volumes and averages them harmonically. Note that if this function
+     * is defined, the intrinsicPermeability() method does not need to be defined by the
+     * problem (if a finite-volume discretization is used).
      */
-    void meanK(DimMatrix &result,
-               const DimMatrix &K1,
-               const DimMatrix &K2) const
+    template <class Context>
+    void intersectionIntrinsicPermeability(DimMatrix &result,
+                                           const Context &context,
+                                           int intersectionIdx, int timeIdx) const
     {
+        const auto &scvf = context.stencil(timeIdx).interiorFace(intersectionIdx);
+
+        const DimMatrix &K1 = asImp_().intrinsicPermeability(context, scvf.interiorIndex(), timeIdx);
+        const DimMatrix &K2 = asImp_().intrinsicPermeability(context, scvf.exteriorIndex(), timeIdx);
+
         // entry-wise harmonic mean. this is almost certainly wrong if
         // you have off-main diagonal entries in your permeabilities!
         for (int i = 0; i < dimWorld; ++i)

@@ -29,6 +29,7 @@
 #include "discretefractureintensivequantities.hh"
 #include "discretefractureextensivequantities.hh"
 #include "discretefracturelocalresidual.hh"
+#include "discretefractureproblem.hh"
 
 #include <ewoms/models/immiscible/immisciblemodel.hh>
 #include <ewoms/io/vtkdiscretefracturemodule.hh>
@@ -48,6 +49,9 @@ NEW_TYPE_TAG(DiscreteFractureModel, INHERITS_FROM(ImmiscibleTwoPhaseModel, VtkDi
 //! The class for the model
 SET_TYPE_PROP(DiscreteFractureModel, Model, Ewoms::DiscreteFractureModel<TypeTag>);
 
+//! The class for the model
+SET_TYPE_PROP(DiscreteFractureModel, BaseProblem, Ewoms::DiscreteFractureProblem<TypeTag>);
+
 //! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
 SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Ewoms::DiscreteFractureLocalResidual<TypeTag>);
 
@@ -64,7 +68,8 @@ SET_TYPE_PROP(DiscreteFractureModel, IntensiveQuantities,
               Ewoms::DiscreteFractureIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
-SET_TYPE_PROP(DiscreteFractureModel, ExtensiveQuantities, Ewoms::DiscreteFractureExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(DiscreteFractureModel, ExtensiveQuantities,
+              Ewoms::DiscreteFractureExtensiveQuantities<TypeTag>);
 
 //! For the discrete fracture model, we need to use two-point flux approximation or it
 //! will converge very poorly

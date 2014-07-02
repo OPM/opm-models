@@ -280,9 +280,7 @@ protected:
         const auto &intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
 
         // calculate the intrinsic permeability
-        const auto &Ki = intQuantsI.intrinsicPermeability();
-        const auto &Kj = intQuantsJ.intrinsicPermeability();
-        problem.meanK(K_, Ki, Kj);
+        problem.intersectionIntrinsicPermeability(K_, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(K_);
 
         assert(isDiagonal_(K_));

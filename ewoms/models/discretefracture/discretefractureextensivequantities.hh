@@ -75,11 +75,8 @@ public:
             return;
 
         // average the intrinsic permeability of the fracture
-        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
-        const auto &intQuantsOutside = elemCtx.intensiveQuantities(outsideScvIdx, timeIdx);
-        elemCtx.problem().meanK(fractureIntrinsicPermeability_,
-                                intQuantsInside.fractureIntrinsicPermeability(),
-                                intQuantsOutside.fractureIntrinsicPermeability());
+        elemCtx.problem().fractureFaceIntrinsicPermeability(fractureIntrinsicPermeability_,
+                                                            elemCtx, scvfIdx, timeIdx);
 
         auto distDirection = elemCtx.pos(outsideScvIdx, timeIdx);
         distDirection -= elemCtx.pos(insideScvIdx, timeIdx);

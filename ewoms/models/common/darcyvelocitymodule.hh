@@ -172,18 +172,12 @@ protected:
     {
         const auto &problem = elemCtx.problem();
 
-        const auto &intQuantsI = elemCtx.intensiveQuantities(asImp_().interiorIndex(), timeIdx);
-        const auto &intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
-
-        // calculate the intrinsic permeability
-        const auto &Ki = intQuantsI.intrinsicPermeability();
-        const auto &Kj = intQuantsJ.intrinsicPermeability();
-        problem.meanK(K_, Ki, Kj);
-        Valgrind::CheckDefined(K_);
-
         const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const DimVector &normal = scvf.normal();
         Valgrind::CheckDefined(normal);
+
+        problem.intersectionIntrinsicPermeability(K_, elemCtx, scvfIdx, timeIdx);
+        Valgrind::CheckDefined(K_);
 
         ///////////////
         // calculate the weights of the upstream and the downstream
