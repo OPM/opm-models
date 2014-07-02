@@ -41,7 +41,11 @@ include (CMakeLists_files.cmake)
 
 macro (config_hook)
 	opm_need_version_of ("dune-common")
+	opm_need_version_of ("dune-grid")
 endmacro (config_hook)
+
+macro (files_hook)
+endmacro (files_hook)
 
 macro (prereqs_hook)
 endmacro (prereqs_hook)
