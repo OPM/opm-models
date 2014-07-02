@@ -37,22 +37,22 @@ macro(EwomsAddTest TestName)
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
 
-  if (CURTEST_ONLY_COMPILE)
-    add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
-    target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})
-  else()
-    set(SKIP_CUR_TEST "1")
-    # the "x " is a hack which is required to prevent CMake from
-    # evaluating the condition in the string. (which might
-    # evaluate to an empty string even though "${CURTEST_CONDITION}"
-    # is not empty.)
-    if ("x ${CURTEST_CONDITION}" STREQUAL "x ")
-      set(SKIP_CUR_TEST "0")
-    elseif(${CURTEST_CONDITION})
-      set(SKIP_CUR_TEST "0")
-    endif()
+  set(SKIP_CUR_TEST "1")
+  # the "x " is a hack which is required to prevent CMake from
+  # evaluating the condition in the string. (which might
+  # evaluate to an empty string even though "${CURTEST_CONDITION}"
+  # is not empty.)
+  if ("x ${CURTEST_CONDITION}" STREQUAL "x ")
+    set(SKIP_CUR_TEST "0")
+  elseif(${CURTEST_CONDITION})
+    set(SKIP_CUR_TEST "0")
+  endif()
 
-    if (NOT SKIP_CUR_TEST)
+  if (NOT SKIP_CUR_TEST)
+    if (CURTEST_ONLY_COMPILE)
+      add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+      target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})
+    else()
       if (NOT CURTEST_NO_COMPILE)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
         target_link_libraries (${CURTEST_EXE_NAME} ${${project}_LIBRARIES})

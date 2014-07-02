@@ -132,7 +132,7 @@ EwomsAddTest(ecl_blackoil
   SOURCES tests/ecl_blackoil.cc
   EXE_NAME ecl_blackoil
   ONLY_COMPILE
-  CONDITION HAVE_DUNE_CORNERPOINT_FOUND AND HAVE_ERT)
+  CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
 
 # test for the parallelization of the element centered finite volume
 # discretization (using the non-isothermal NCP model and BiCGSTAB +
