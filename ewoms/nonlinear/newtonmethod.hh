@@ -465,7 +465,7 @@ protected:
      */
     bool verbose_() const
     {
-        return (0 == EWOMS_GET_PARAM(TypeTag, bool, NewtonVerbose) && comm_.rank());
+        return EWOMS_GET_PARAM(TypeTag, bool, NewtonVerbose) && (comm_.rank() == 0);
     }
 
     /*!
