@@ -39,13 +39,13 @@ namespace Properties {
 NEW_TYPE_TAG(VtkBlackOil);
 
 // create the property tags needed for the multi phase module
-NEW_PROP_TAG(VtkWriteGasFormationFactor);
+NEW_PROP_TAG(VtkWriteGasDissolutionFactor);
 NEW_PROP_TAG(VtkWriteGasFormationVolumeFactor);
 NEW_PROP_TAG(VtkWriteOilFormationVolumeFactor);
 NEW_PROP_TAG(VtkWriteOilSaturationPressure);
 
 // set default values for what quantities to output
-SET_BOOL_PROP(VtkBlackOil, VtkWriteGasFormationFactor, false);
+SET_BOOL_PROP(VtkBlackOil, VtkWriteGasDissolutionFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteGasFormationVolumeFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteOilFormationVolumeFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteOilSaturationPressure, false);
@@ -88,14 +88,14 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteGasFormationFactor,
-                             "Include the gas formation factor in the VTK "
-                             "output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteGasDissolutionFactor,
+                             "Include the gas dissolution factor (R_S) of saturated oil "
+                             "in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor,
-                             "Include the gas formation volume factor in the "
+                             "Include the gas formation volume factor (B_g) in the "
                              "VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor,
-                             "Include the oil formation volume factor in the "
+                             "Include the oil formation volume factor (B_o) in the "
                              "VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilSaturationPressure,
                              "Include the saturation pressure of oil in the "
@@ -162,7 +162,7 @@ public:
 
 private:
     static bool gasDissolutionFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationFactor); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasDissolutionFactor); }
 
     static bool gasFormationVolumeFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor); }
