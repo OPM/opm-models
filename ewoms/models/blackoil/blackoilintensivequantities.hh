@@ -75,9 +75,7 @@ public:
                 int dofIdx,
                 int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           dofIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx);
 
         fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
 
@@ -114,49 +112,22 @@ public:
         // oil phase pressure
         Scalar po = fluidState_.pressure(oilPhaseIdx);
 
-        // update phase compositions. first, set everything to 0, then
-        // make the gas/water phases consist of only the gas/water
-        // components
+        // update phase compositions. first, set everything to 0...
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
+
         // set composition of gas and water phases
         fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
         fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
 
-        // retrieve the relevant parameters from the fluid
-        // system.
-        Scalar Bo = FluidSystem::oilFormationVolumeFactor(po);
-        Scalar Bg = FluidSystem::gasFormationVolumeFactor(pg);
-        Scalar Rs = FluidSystem::gasDissolutionFactor(pg);
-
-        Scalar rhorefo = FluidSystem::surfaceDensity(oilPhaseIdx);
-        Scalar rhorefg = FluidSystem::surfaceDensity(gasPhaseIdx);
-
-        Scalar rhoo = rhorefo / Bo;
-        Scalar rhog = rhorefg / Bg;
-
-        Scalar MG = FluidSystem::molarMass(gasPhaseIdx);
-        Scalar MO = FluidSystem::molarMass(oilPhaseIdx);
-
+        // for the oil phase, the switching primary variable needs to be considered
         if (priVars.switchingVariableIsGasSaturation()) {
-            // we need to calculate the composition of the
-            // gas-saturated oil phase
-            //
-            // for this, we first calculate composition of the
-            // saturated oil phase in terms of mass fractions.
-            Scalar XoG = Rs * rhorefg / rhoo;
+            // we take the composition of the gas-saturated oil phase
+            Scalar xoG = FluidSystem::saturatedOilGasMoleFraction(po);
 
-            // Then we convert these to mole fractions. This assumes
-            // that the gas and water phases are immiscible and only
-            // consist of their respective components.
-            Scalar avgMolarMass = MO / (1 + XoG * (MO / MG - 1));
-            Scalar xoG = XoG * avgMolarMass / MG;
-            Scalar xoO = 1 - xoG;
-
-            // now we can finally set the oil-phase composition
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
-            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, xoO);
+            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
         else {
             // if the switching variable is not the gas saturation, it
@@ -164,7 +135,6 @@ public:
             // phase.
             Scalar xoG = priVars[Indices::switchIdx];
 
-            // this makes setting the oil-phase composition simple
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
@@ -176,7 +146,8 @@ public:
         // set the phase densities
         fluidState_.setDensity(waterPhaseIdx,
                                FluidSystem::density(fluidState_, paramCache, waterPhaseIdx));
-        fluidState_.setDensity(gasPhaseIdx, rhog);
+        fluidState_.setDensity(gasPhaseIdx,
+                               FluidSystem::density(fluidState_, paramCache, gasPhaseIdx));
         fluidState_.setDensity(oilPhaseIdx,
                                FluidSystem::density(fluidState_, paramCache, oilPhaseIdx));
 
