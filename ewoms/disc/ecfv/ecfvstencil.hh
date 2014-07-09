@@ -28,14 +28,8 @@
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/intersectioniterator.hh>
-#include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/type.hh>
-#include <dune/localfunctions/lagrange/pqkfactory.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/version.hh>
-
-#include <opm/core/utility/Exceptions.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
 
 #include <vector>
 

@@ -495,7 +495,8 @@ protected:
             Scalar extrusionFactor =
                 elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
             Scalar scvVolume =
-                elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
+               elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
+            Valgrind::CheckDefined(scvVolume);
 
             // mass balance within the element. this is the
             // \f$\frac{m}{\partial t}\f$ term if using implicit
@@ -507,16 +508,22 @@ protected:
                                     elemCtx,
                                     dofIdx,
                                     /*timeIdx=*/0);
+            Valgrind::CheckDefined(tmp);
+
             asImp_().computeStorage(tmp2,
                                     elemCtx,
                                     dofIdx,
                                     /*timeIdx=*/1);
+            Valgrind::CheckDefined(tmp2);
 
             tmp -= tmp2;
             tmp *= scvVolume / elemCtx.simulator().timeStepSize();
 
             storage[dofIdx] += tmp;
             residual[dofIdx] += tmp;
+
+            Valgrind::CheckDefined(storage[dofIdx]);
+            Valgrind::CheckDefined(residual[dofIdx]);
 
             // subtract the source term from the residual
             asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
