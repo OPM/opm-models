@@ -114,8 +114,8 @@ public:
                              "Include the gas formation volume factor in the "
                              "Eclipse output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteOilFormationVolumeFactor,
-                             "Include the oil formation volume factor in the "
-                             "Eclipse output files");
+                             "Include the oil formation volume factor of saturated oil "
+                             "in the Eclipse output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteOilSaturationPressure,
                              "Include the saturation pressure of oil in the "
                              "Eclipse output files");
@@ -143,8 +143,8 @@ public:
             this->resizeScalarBuffer_(gasDissolutionFactor_, bufferType);
         if (gasFormationVolumeFactorOutput_())
             this->resizeScalarBuffer_(gasFormationVolumeFactor_, bufferType);
-        if (oilFormationVolumeFactorOutput_())
-            this->resizeScalarBuffer_(oilFormationVolumeFactor_, bufferType);
+        if (saturatedOilFormationVolumeFactorOutput_())
+            this->resizeScalarBuffer_(saturatedOilFormationVolumeFactor_, bufferType);
         if (oilSaturationPressureOutput_())
             this->resizeScalarBuffer_(oilSaturationPressure_, bufferType);
     }
@@ -162,7 +162,7 @@ public:
             const auto &fs = elemCtx.intensiveQuantities(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
             int I = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
             Scalar po = fs.pressure(oilPhaseIdx);
-            Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
+            Scalar XoG = fs.massFraction(oilPhaseIdx, gasCompIdx);
 
             if (saturationsOutput_()) {
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
@@ -184,12 +184,12 @@ public:
                 gasFormationVolumeFactor_[I] = FluidSystem::gasFormationVolumeFactor(po);
                 Valgrind::CheckDefined(gasFormationVolumeFactor_[I]);
             }
-            if (oilFormationVolumeFactorOutput_()) {
-                oilFormationVolumeFactor_[I] = FluidSystem::oilFormationVolumeFactor(po);
-                Valgrind::CheckDefined(oilFormationVolumeFactor_[I]);
+            if (saturatedOilFormationVolumeFactorOutput_()) {
+                saturatedOilFormationVolumeFactor_[I] = FluidSystem::saturatedOilFormationVolumeFactor(po);
+                Valgrind::CheckDefined(saturatedOilFormationVolumeFactor_[I]);
             }
             if (oilSaturationPressureOutput_()) {
-                oilSaturationPressure_[I] = FluidSystem::oilSaturationPressure(X_oG);
+                oilSaturationPressure_[I] = FluidSystem::oilSaturationPressure(XoG);
                 Valgrind::CheckDefined(oilSaturationPressure_[I]);
             }
         }
@@ -221,8 +221,8 @@ public:
             this->commitScalarBuffer_(writer, "RS", gasDissolutionFactor_, bufferType);
         if (gasFormationVolumeFactorOutput_())
             this->commitScalarBuffer_(writer, "BG", gasFormationVolumeFactor_, bufferType);
-        if (oilFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(writer, "BP", oilFormationVolumeFactor_, bufferType);
+        if (saturatedOilFormationVolumeFactorOutput_())
+            this->commitScalarBuffer_(writer, "BP", saturatedOilFormationVolumeFactor_, bufferType);
         if (oilSaturationPressureOutput_())
             this->commitScalarBuffer_(writer, "PSAT", oilSaturationPressure_);
     }
@@ -240,7 +240,7 @@ private:
     static bool gasFormationVolumeFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationVolumeFactor); }
 
-    static bool oilFormationVolumeFactorOutput_()
+    static bool saturatedOilFormationVolumeFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteOilFormationVolumeFactor); }
 
     static bool oilSaturationPressureOutput_()
@@ -250,7 +250,7 @@ private:
     ScalarBuffer pressure_[numPhases];
     ScalarBuffer gasDissolutionFactor_;
     ScalarBuffer gasFormationVolumeFactor_;
-    ScalarBuffer oilFormationVolumeFactor_;
+    ScalarBuffer saturatedOilFormationVolumeFactor_;
     ScalarBuffer oilSaturationPressure_;
 };
 } // namespace Ewoms

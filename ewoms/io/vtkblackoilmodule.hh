@@ -101,8 +101,8 @@ public:
                              "Include the gas formation volume factor (B_g) in the "
                              "VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor,
-                             "Include the oil formation volume factor (B_o) in the "
-                             "VTK output files");
+                             "Include the oil formation volume factor (B_o) of gas saturated "
+                             "oil in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilSaturationPressure,
                              "Include the saturation pressure of oil in the "
                              "VTK output files");
@@ -120,8 +120,8 @@ public:
             this->resizeScalarBuffer_(saturatedOilGasDissolutionFactor_);
         if (gasFormationVolumeFactorOutput_())
             this->resizeScalarBuffer_(gasFormationVolumeFactor_);
-        if (oilFormationVolumeFactorOutput_())
-            this->resizeScalarBuffer_(oilFormationVolumeFactor_);
+        if (saturatedOilFormationVolumeFactorOutput_())
+            this->resizeScalarBuffer_(saturatedOilFormationVolumeFactor_);
         if (oilSaturationPressureOutput_())
             this->resizeScalarBuffer_(oilSaturationPressure_);
     }
@@ -146,8 +146,8 @@ public:
                 saturatedOilGasDissolutionFactor_[I] = FluidSystem::gasDissolutionFactor(po);
             if (gasFormationVolumeFactorOutput_())
                 gasFormationVolumeFactor_[I] = FluidSystem::gasFormationVolumeFactor(po);
-            if (oilFormationVolumeFactorOutput_())
-                oilFormationVolumeFactor_[I] = FluidSystem::oilFormationVolumeFactor(po);
+            if (saturatedOilFormationVolumeFactorOutput_())
+                saturatedOilFormationVolumeFactor_[I] = FluidSystem::saturatedOilFormationVolumeFactor(po);
             if (oilSaturationPressureOutput_())
                 oilSaturationPressure_[I] = FluidSystem::oilSaturationPressure(X_oG);
         }
@@ -168,8 +168,8 @@ public:
             this->commitScalarBuffer_(baseWriter, "R_s,sat", saturatedOilGasDissolutionFactor_);
         if (gasFormationVolumeFactorOutput_())
             this->commitScalarBuffer_(baseWriter, "B_g", gasFormationVolumeFactor_);
-        if (oilFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(baseWriter, "B_o", oilFormationVolumeFactor_);
+        if (saturatedOilFormationVolumeFactorOutput_())
+            this->commitScalarBuffer_(baseWriter, "B_o", saturatedOilFormationVolumeFactor_);
         if (oilSaturationPressureOutput_())
             this->commitScalarBuffer_(baseWriter, "pressure_sat,o", oilSaturationPressure_);
     }
@@ -184,7 +184,7 @@ private:
     static bool gasFormationVolumeFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor); }
 
-    static bool oilFormationVolumeFactorOutput_()
+    static bool saturatedOilFormationVolumeFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor); }
 
     static bool oilSaturationPressureOutput_()
@@ -193,7 +193,7 @@ private:
     ScalarBuffer gasDissolutionFactor_;
     ScalarBuffer saturatedOilGasDissolutionFactor_;
     ScalarBuffer gasFormationVolumeFactor_;
-    ScalarBuffer oilFormationVolumeFactor_;
+    ScalarBuffer saturatedOilFormationVolumeFactor_;
     ScalarBuffer oilSaturationPressure_;
 };
 } // namespace Ewoms
