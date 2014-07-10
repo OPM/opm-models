@@ -576,8 +576,9 @@ public:
             elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
             localResidual().evalStorage(elemCtx, /*timeIdx=*/0);
 
-            for (int i = 0; i < elemIt->template count<dim>(); ++i)
-                storage += localResidual().storageTerm()[i];
+            int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+            for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
+                storage += localResidual().storageTerm()[dofIdx];
         };
 
         storage = gridView_.comm().sum(storage);
