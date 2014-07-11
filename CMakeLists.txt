@@ -112,7 +112,8 @@ EwomsAddTest(fracture_discretefracture
   DRIVER_ARGS --simulation fracture_discretefracture --end-time=1000)
 EwomsAddTest(groundwater_immiscible SOURCES tests/groundwater_immiscible.cc)
 EwomsAddTest(infiltration_pvs SOURCES tests/infiltration_pvs.cc)
-EwomsAddTest(lens_immiscible SOURCES tests/lens_immiscible.cc)
+EwomsAddTest(lens_immiscible_vcfv SOURCES tests/lens_immiscible_vcfv.cc)
+EwomsAddTest(lens_immiscible_ecfv SOURCES tests/lens_immiscible_ecfv.cc)
 EwomsAddTest(lens_richards SOURCES tests/lens_richards.cc)
 EwomsAddTest(obstacle_immiscible SOURCES tests/obstacle_immiscible.cc)
 EwomsAddTest(obstacle_ncp SOURCES tests/obstacle_ncp.cc)
@@ -155,8 +156,15 @@ EwomsAddTest(obstacle_immiscible_parallel
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
-EwomsAddTest(lens_parallel
-  EXE_NAME lens_immiscible
+EwomsAddTest(lens_parallel_vcfv
+  EXE_NAME lens_immiscible_vcfv
+  NO_COMPILE
+	PROCESSORS 4
+  CONDITION MPI_FOUND
+  DRIVER_ARGS --parallel-simulation=4 lens_immiscible --end-time=250 --initial-time-step-size=250)
+
+EwomsAddTest(lens_parallel_ecfv
+  EXE_NAME lens_immiscible_ecfv
   NO_COMPILE
 	PROCESSORS 4
   CONDITION MPI_FOUND
