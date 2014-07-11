@@ -98,8 +98,13 @@ NEW_PROP_TAG(NewtonWriteConvergence);
 //! gets written out to disk for every Newton iteration
 NEW_PROP_TAG(ConvergenceWriter);
 
-//! The value for the error below which convergence is declared
-NEW_PROP_TAG(NewtonTolerance);
+/*!
+ * \brief The value for the error below which convergence is declared
+ *
+ * This value can (and for the porous media models will) be changed to account for grid
+ * scaling and other effects.
+ */
+NEW_PROP_TAG(NewtonRawTolerance);
 
 //! The maximum error which may occur in a simulation before the
 //! Newton method for the time step is aborted
@@ -123,7 +128,7 @@ SET_TYPE_PROP(NewtonMethod, NewtonMethod, Ewoms::NewtonMethod<TypeTag>);
 SET_TYPE_PROP(NewtonMethod, NewtonConvergenceWriter, Ewoms::NullConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonWriteConvergence, false);
 SET_BOOL_PROP(NewtonMethod, NewtonVerbose, true);
-SET_SCALAR_PROP(NewtonMethod, NewtonTolerance, 1e-8);
+SET_SCALAR_PROP(NewtonMethod, NewtonRawTolerance, 1e-8);
 // set the abortion tolerace to some very large value. if not
 // overwritten at run-time this basically disables abortions
 SET_SCALAR_PROP(NewtonMethod, NewtonMaxError, 1e100);
@@ -167,6 +172,7 @@ public:
     {
         lastError_ = 1e100;
         error_ = 1e100;
+        tolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRawTolerance);
 
         numIterations_ = 0;
     }
@@ -190,8 +196,8 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, int, NewtonMaxIterations,
                              "The maximum number of Newton iterations per time "
                              "step");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonTolerance,
-                             "The maximum error tolerated by the Newton "
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonRawTolerance,
+                             "The maximum raw error tolerated by the Newton"
                              "method for considering a solution to be "
                              "converged");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonMaxError,
@@ -204,7 +210,7 @@ public:
      *        tolerance.
      */
     bool converged() const
-    { return error_ <= tolerance_(); }
+    { return error_ <= tolerance(); }
 
     /*!
      * \brief Returns a reference to the object describing the current physical problem.
@@ -236,6 +242,20 @@ public:
      */
     int numIterations() const
     { return numIterations_; }
+
+    /*!
+     * \brief Return the current tolerance at which the Newton method considers itself to
+     *        be converged.
+     */
+    Scalar tolerance() const
+    { return tolerance_; }
+
+    /*!
+     * \brief Set the current tolerance at which the Newton method considers itself to
+     *        be converged.
+     */
+    void setTolerance(Scalar value)
+    { tolerance_ = value; }
 
     /*!
      * \brief Run the Newton method.
@@ -677,6 +697,13 @@ protected:
     void succeeded_()
     {}
 
+    // optimal number of iterations we want to achieve
+    int targetIterations_() const
+    { return EWOMS_GET_PARAM(TypeTag, int, NewtonTargetIterations); }
+    // maximum number of iterations we do before giving up
+    int maxIterations_() const
+    { return EWOMS_GET_PARAM(TypeTag, int, NewtonMaxIterations); }
+
     Simulator &simulator_;
 
     Dune::Timer assembleTimer_;
@@ -685,18 +712,9 @@ protected:
 
     std::ostringstream endIterMsgStream_;
 
-    // errors and tolerance
     Scalar error_;
     Scalar lastError_;
-    Scalar tolerance_() const
-    { return EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance); }
-
-    // optimal number of iterations we want to achieve
-    int targetIterations_() const
-    { return EWOMS_GET_PARAM(TypeTag, int, NewtonTargetIterations); }
-    // maximum number of iterations we do before giving up
-    int maxIterations_() const
-    { return EWOMS_GET_PARAM(TypeTag, int, NewtonMaxIterations); }
+    Scalar tolerance_;
 
     // actual number of iterations done so far
     int numIterations_;

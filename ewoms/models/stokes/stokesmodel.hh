@@ -95,8 +95,8 @@ SET_TYPE_PROP(StokesModel,
               BaseProblem,
               Ewoms::StokesProblem<TypeTag>);
 
-//! Increase the tolerance of the newton method to 10^-7
-SET_SCALAR_PROP(StokesModel, NewtonTolerance, 1e-7);
+//! Increase the raw tolerance of the newton method to 10^-7
+SET_SCALAR_PROP(StokesModel, NewtonRawTolerance, 1e-7);
 
 #if HAVE_SUPERLU
 SET_TAG_PROP(StokesModel, LinearSolverSplice, SuperLULinearSolver);

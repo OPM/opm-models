@@ -80,11 +80,6 @@ NEW_PROP_TAG(PreconditionerWrapper);
 NEW_PROP_TAG(LinearSolverOverlapSize);
 
 /*!
- * \brief Maximum accepted error of the solution of the non-linear solver.
- */
-NEW_PROP_TAG(NewtonTolerance);
-
-/*!
  * \brief Maximum accepted error of the solution of the linear solver.
  */
 NEW_PROP_TAG(LinearSolverTolerance);
@@ -193,7 +188,8 @@ class ParallelIterativeSolverBackend
     enum { dimWorld = GridView::dimensionworld };
 
 public:
-    ParallelIterativeSolverBackend(const Simulator &simulator) : simulator_(simulator)
+    ParallelIterativeSolverBackend(const Simulator &simulator)
+        : simulator_(simulator)
     {
         overlappingMatrix_ = 0;
         overlappingb_ = 0;
@@ -312,7 +308,7 @@ public:
         }
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance) / 100.0;
+        Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 100.0;
         Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
@@ -328,8 +324,7 @@ public:
 
         // tell the linear solver to use it
         typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(
-            Dune::shared_ptr<ConvergenceCriterion>(convCrit));
+        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
         // run the linear solver and have some fun
         Dune::InverseOperatorResult result;

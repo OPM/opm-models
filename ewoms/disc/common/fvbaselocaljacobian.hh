@@ -107,7 +107,7 @@ private:
 public:
     FvBaseLocalJacobian()
         : internalElemContext_(0)
-    { newtonTolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance); }
+    { }
 
     ~FvBaseLocalJacobian()
     { delete internalElemContext_; }
@@ -485,7 +485,6 @@ protected:
     Simulator *simulatorPtr_;
     Model *modelPtr_;
 
-    static Scalar newtonTolerance_;
     ElementContext *internalElemContext_;
 
     LocalBlockMatrix jacobian_;
@@ -500,8 +499,6 @@ protected:
     LocalResidual localResidual_;
 };
 
-template <class TypeTag>
-typename FvBaseLocalJacobian<TypeTag>::Scalar FvBaseLocalJacobian<TypeTag>::newtonTolerance_;
 } // namespace Ewoms
 
 #endif

@@ -236,7 +236,7 @@ public:
                 residWeightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
         }
 
-        Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonTolerance) / 100.0;
+        Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonRawTolerance) / 100.0;
         Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =

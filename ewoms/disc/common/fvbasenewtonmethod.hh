@@ -169,9 +169,8 @@ protected:
             // not be bullet proof, but it is a heuristic that usually
             // works.
             Scalar linearTol =
-                this->error_
-                * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-            Scalar newtonTol = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
+                this->error_ * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
+            Scalar newtonTol = this->tolerance();
 
             Scalar relinearizationTol = 0.01*linearTol;
             if (relinearizationTol < newtonTol/10)
