@@ -52,19 +52,24 @@
 
 #include <iostream>
 
+namespace Ewoms {
+namespace Linear {
+template <class TypeTag>
+class ParallelAmgBackend;
+}}
+
 namespace Opm {
 namespace Properties {
-NEW_TYPE_TAG(ParallelAmgBackend, INHERITS_FROM(ParallelIterativeLinearSolver));
+NEW_TYPE_TAG(ParallelAmgLinearSolver, INHERITS_FROM(ParallelIterativeLinearSolver));
 
 NEW_PROP_TAG(AmgCoarsenTarget);
 
-// use the AMG preconditioner wrapper.
-// NEW_PROP_TAG(ParallelAmgBackend, PreconditionerWrapper,
-// ParallelAmgPreconditionerWrapper);
-
 //! The target number of DOFs per processor for the parallel algebraic
 //! multi-grid solver
-SET_INT_PROP(ParallelAmgBackend, AmgCoarsenTarget, 5000);
+SET_INT_PROP(ParallelAmgLinearSolver, AmgCoarsenTarget, 5000);
+
+SET_TYPE_PROP(ParallelAmgLinearSolver, LinearSolverBackend,
+              Ewoms::Linear::ParallelAmgBackend<TypeTag>);
 } // namespace Properties
 } // namespace Opm
 
@@ -81,11 +86,11 @@ class ParallelAmgBackend
 {
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) Implementation;
 
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
-    typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, BorderListCreator) BorderListCreator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
@@ -108,11 +113,15 @@ class ParallelAmgBackend
     typedef Dune::OverlappingSchwarzOperator<Matrix, Vector, Vector,
                                              OwnerOverlapCopyCommunication>
     FineOperator;
-    typedef Dune::OverlappingSchwarzScalarProduct<Vector, OwnerOverlapCopyCommunication>
-    FineScalarProduct;
-    typedef Dune::BlockPreconditioner<Vector, Vector, OwnerOverlapCopyCommunication,
+    typedef Dune::OverlappingSchwarzScalarProduct<Vector,
+                                                  OwnerOverlapCopyCommunication>   FineScalarProduct;
+    typedef Dune::BlockPreconditioner<Vector,
+                                      Vector,
+                                      OwnerOverlapCopyCommunication,
                                       SequentialSmoother> ParallelSmoother;
-    typedef Dune::Amg::AMG<FineOperator, Vector, ParallelSmoother,
+    typedef Dune::Amg::AMG<FineOperator,
+                           Vector,
+                           ParallelSmoother,
                            OwnerOverlapCopyCommunication> AMG;
 #else
     typedef Dune::MatrixAdapter<Matrix, Vector, Vector> FineOperator;
@@ -122,7 +131,8 @@ class ParallelAmgBackend
 #endif
 
 public:
-    ParallelAmgBackend(const Problem &problem) : problem_(problem)
+    ParallelAmgBackend(const Simulator &simulator)
+        : simulator_(simulator)
     {
         overlappingMatrix_ = nullptr;
         overlappingb_ = nullptr;
@@ -165,7 +175,7 @@ public:
     bool solve(const Matrix &M, Vector &x, const Vector &b)
     {
         int verbosity = 0;
-        if (problem_.gridView().comm().rank() == 0)
+        if (simulator_.gridManager().gridView().comm().rank() == 0)
             verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
         /////////////
@@ -210,7 +220,7 @@ public:
         /////////////
         // set-up the linear solver
         /////////////
-        if (verbosity > 1 && problem_.gridView().comm().rank() == 0)
+        if (verbosity > 1 && simulator_.gridManager().gridView().comm().rank() == 0)
             std::cout << "Creating the solver\n" << std::flush;
 
         typedef Ewoms::BiCGSTABSolver<Vector> SolverType;
@@ -229,19 +239,21 @@ public:
         // set the weighting of the residuals
         OverlappingVector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
-        const auto &foreignOverlap = overlappingMatrix_->overlap().foreignOverlap();
-        for (unsigned localIdx = 0; localIdx < unsigned(foreignOverlap.numLocal()); ++localIdx) {
-            int nativeIdx = foreignOverlap.localToNative(localIdx);
-            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx)
-                residWeightVec[localIdx][eqIdx] = this->problem_.model().eqWeight(nativeIdx, eqIdx);
+        const auto &overlap = overlappingMatrix_->overlap();
+        for (unsigned localIdx = 0; localIdx < unsigned(overlap.numLocal()); ++localIdx) {
+            int nativeIdx = overlap.domesticToNative(localIdx);
+            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
+                residWeightVec[localIdx][eqIdx] =
+                    this->simulator_.model().eqWeight(nativeIdx, eqIdx);
+            }
         }
 
-        Scalar linearSolverAbsTolerance = GET_PROP_VALUE(TypeTag, NewtonRawTolerance) / 100.0;
+        Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 100.0;
         Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
-            new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
-                problem_.gridView().comm(),
+            new Ewoms::WeightedResidualReductionCriterion<Vector, Comm>(
+                simulator_.gridView().comm(),
                 residWeightVec,
                 /*fixPointTolerance=*/linearSolverFixPointTolerance,
                 /*residualReductionTolerance=*/linearSolverTolerance,
@@ -251,21 +263,20 @@ public:
         /////
 
         // tell the linear solver to use it
-        typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(
-            Dune::shared_ptr<ConvergenceCriterion>(convCrit));
+        typedef Ewoms::ConvergenceCriterion<Vector> ConvergenceCriterion;
+        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
 
         Dune::InverseOperatorResult result;
         int solverSucceeded = 1;
         try
         {
             solver.apply(*overlappingx_, *overlappingb_, result);
-            solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
+            solverSucceeded = simulator_.gridManager().gridView().comm().min(solverSucceeded);
         }
         catch (const Dune::Exception &)
         {
             solverSucceeded = 0;
-            solverSucceeded = problem_.gridView().comm().min(solverSucceeded);
+            solverSucceeded = simulator_.gridManager().gridView().comm().min(solverSucceeded);
         }
 
         if (!solverSucceeded)
@@ -286,34 +297,14 @@ private:
 
     void prepare_(const Matrix &M)
     {
-        int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
+        BorderListCreator borderListCreator(simulator_.gridView(),
+                                            simulator_.model().dofMapper());
 
-        int verbosity = 0;
-        if (problem_.gridView().comm().rank() == 0) {
-            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
-
-            if (verbosity > 1)
-                std::cout << "Creating algebraic overlap of size "
-                          << overlapSize << "\n";
-        }
-
-        Linear::VertexBorderListFromGrid<GridView, VertexMapper> borderListCreator(
-            problem_.gridView(), problem_.vertexMapper());
-
-        // blacklist all entries that belong to ghost and overlap vertices
         std::set<Ewoms::Linear::Index> blackList;
-        auto vIt = problem_.gridView().template begin<dimWorld>();
-        const auto &vEndIt = problem_.gridView().template end<dimWorld>();
-        for (; vIt != vEndIt; ++vIt) {
-            if (vIt->partitionType() != Dune::InteriorEntity
-                && vIt->partitionType() != Dune::BorderEntity) {
-                // we blacklist everything except interior and border
-                // vertices
-                blackList.insert(problem_.vertexMapper().map(*vIt));
-            }
-        }
+        borderListCreator.createBlackList(blackList);
 
         // create the overlapping Jacobian matrix
+        int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
         overlappingMatrix_ = new OverlappingMatrix(M,
                                                    borderListCreator.borderList(),
                                                    blackList,
@@ -323,6 +314,8 @@ private:
         // solution
         overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
         overlappingx_ = new OverlappingVector(*overlappingb_);
+
+        // writeOverlapToVTK_();
 
 #if HAVE_MPI
         // create and initialize DUNE's OwnerOverlapCopyCommunication
@@ -381,10 +374,10 @@ private:
             return;
 
         int verbosity = 0;
-        if (problem_.gridView().comm().rank() == 0)
+        if (simulator_.gridManager().gridView().comm().rank() == 0)
             verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
-        int rank = problem_.gridView().comm().rank();
+        int rank = simulator_.gridManager().gridView().comm().rank();
         if (verbosity > 1 && rank == 0)
             std::cout << "Setting up the AMG preconditioner\n";
 
@@ -425,7 +418,7 @@ private:
 #endif
     }
 
-    const Problem &problem_;
+    const Simulator &simulator_;
 
     AMG *amg_;
 
