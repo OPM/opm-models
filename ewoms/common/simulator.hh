@@ -116,6 +116,10 @@ public:
                       << std::flush;
         model_.reset(new Model(*this));
         problem_.reset(new Problem(*this));
+
+        // finish the initialization of the model and the problem
+        model_->finishInit();
+        problem_->finishInit();
     }
 
     /*!
@@ -442,7 +446,32 @@ public:
      */
     void run()
     {
-        init_();
+        // try restart the simulation if requested
+        if (doRestart_) {
+            Ewoms::Restart res;
+            res.deserializeBegin(*this, time_);
+            if (verbose_)
+                std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
+            this->deserialize(res);
+            problem_->deserialize(res);
+            model_->deserialize(res);
+            res.deserializeEnd();
+        }
+        else {
+            // if no restart is done, apply the initial solution
+            if (verbose_)
+                std::cout << "Applying the initial solution of the \"" << problem_->name()
+                          << "\" problem\n" << std::flush;
+            model_->applyInitialSolution();
+
+            // write initial condition (if problem is not restarted)
+            time_ -= timeStepSize_;
+            if (problem_->shouldWriteOutput())
+                problem_->writeOutput();
+            time_ += timeStepSize_;
+        }
+
+        timer_.reset();
 
         // do the time steps
         while (!finished()) {
@@ -541,28 +570,6 @@ public:
     }
 
     /*!
-     * \brief Load a previously saved state of the whole simulation
-     *        from disk.
-     *
-     * \param restartTime The simulation time on which the program was
-     *                    written to disk.
-     */
-    void restart(Scalar restartTime)
-    {
-        typedef Ewoms::Restart Restarter;
-
-        Restarter res;
-
-        res.deserializeBegin(*this, restartTime);
-        if (gridView().comm().rank() == 0)
-            std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
-        this->deserialize(res);
-        problem_->deserialize(res);
-        model_->deserialize(res);
-        res.deserializeEnd();
-    }
-
-    /*!
      * \brief Write the time manager's state to a restart file.
      *
      * \tparam Restarter The type of the object which takes care to serialize
@@ -606,36 +613,14 @@ public:
 
 private:
     /*!
-     * \brief Apply the initial condition and write it to disk.
+     * \brief Load a previously saved state of the whole simulation
+     *        from disk.
      *
-     * This method also deserializes a previously saved state of the
-     * simulation from disk if instructed to do so.
+     * \param restartTime The simulation time on which the program was
+     *                    written to disk.
      */
-    void init_()
+    void restart_(Scalar restartTime)
     {
-        timer_.reset();
-
-        // apply the initial solution
-        if (verbose_)
-            std::cout << "Applying the initial solution of the \"" << problem_->name() << "\" problem\n"
-                      << std::flush;
-        problem_->init();
-
-        // try restart the simulation if requested
-        if (doRestart_) {
-            if (verbose_)
-                std::cout << "Loading the previously saved state for t=" << time_ << "\n"
-                          << std::flush;
-
-            restart(time_);
-        }
-        else {
-            // write initial condition (if problem is not restarted)
-            time_ -= timeStepSize_;
-            if (problem_->shouldWriteOutput())
-                problem_->writeOutput();
-            time_ += timeStepSize_;
-        }
     }
 
     std::unique_ptr<GridManager> gridManager_;

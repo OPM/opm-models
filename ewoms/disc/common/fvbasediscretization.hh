@@ -92,8 +92,7 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtens
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
 
 SET_TYPE_PROP(FvBaseDiscretization, DiscLocalJacobian, Ewoms::FvBaseLocalJacobian<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, LocalJacobian,
-              typename GET_PROP_TYPE(TypeTag, DiscLocalJacobian));
+SET_TYPE_PROP(FvBaseDiscretization, LocalJacobian, typename GET_PROP_TYPE(TypeTag, DiscLocalJacobian));
 
 
 //! Set the type of a global jacobian matrix from the solution types
@@ -291,7 +290,22 @@ public:
         : simulator_(simulator)
         , gridView_(simulator.gridView())
         , newtonMethod_(simulator)
-    {}
+        , jacAsm_(new JacobianAssembler())
+    {
+        asImp_().updateBoundary_();
+
+        int nDofs = asImp_().numDof();
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution_[timeIdx].resize(nDofs);
+
+            if (storeIntensiveQuantities_()) {
+                intensiveQuantityCache_[timeIdx].resize(nDofs);
+                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
+            }
+        }
+
+        asImp_().registerOutputModules_();
+    }
 
     ~FvBaseDiscretization()
     {
@@ -303,14 +317,6 @@ public:
 
         delete jacAsm_;
     }
-
-    /*!
-     * \brief Returns true iff a fluid phase is used by the model.
-     *
-     * \param phaseIdx The index of the fluid phase in question
-     */
-    bool phaseIsConsidered(int phaseIdx) const
-    { return true; }
 
     /*!
      * \brief Register all run-time parameters for the model.
@@ -336,27 +342,96 @@ public:
     /*!
      * \brief Apply the initial conditions to the model.
      */
-    void init()
+    void finishInit()
     {
-        asImp_().updateBoundary_();
-
+        // initialize the volume of the finite volumes to zero
         int nDofs = asImp_().numDof();
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].resize(nDofs);
+        dofTotalVolume_.resize(nDofs);
+        std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
-            if (storeIntensiveQuantities_()) {
-                intensiveQuantityCache_[timeIdx].resize(nDofs);
-                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
+        ElementContext elemCtx(simulator_);
+
+        // iterate through the grid and evaluate the initial condition
+        ElementIterator it = gridView_.template begin</*codim=*/0>();
+        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
+        for (; it != eendit; ++it) {
+            // ignore everything which is not in the interior if the
+            // current process' piece of the grid
+            if (it->partitionType() != Dune::InteriorEntity)
+                continue;
+
+            // deal with the current element
+            elemCtx.updateStencil(*it);
+
+            // loop over all element vertices, i.e. sub control volumes
+            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
+            {
+                // map the local degree of freedom index to the global one
+                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+
+                dofTotalVolume_[globalIdx] +=
+                    elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();
             }
         }
 
-        dofTotalVolume_.resize(nDofs);
+        const auto sumHandle =
+            GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
+                                                              asImp_().dofMapper());
+        gridView_.communicate(*sumHandle,
+                              Dune::InteriorBorder_InteriorBorder_Interface,
+                              Dune::ForwardCommunication);
 
         localJacobian_.init(simulator_);
-        jacAsm_ = new JacobianAssembler();
         jacAsm_->init(simulator_);
 
-        asImp_().applyInitialSolution_();
+        if (storeIntensiveQuantities_()) {
+            // invalidate all cached intensive quantities
+            for (int timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
+                std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                          intensiveQuantityCacheUpToDate_[timeIdx].end(),
+                          false);
+            }
+        }
+    }
+
+    /*!
+     * \brief Applies the initial solution for all degrees of freedom to which the model
+     *        applies.
+     */
+    void applyInitialSolution()
+    {
+        // first set the whole domain to zero
+        SolutionVector &uCur = asImp_().solution(/*timeIdx=*/0);
+        uCur = Scalar(0.0);
+
+        ElementContext elemCtx(simulator_);
+
+        // iterate through the grid and evaluate the initial condition
+        ElementIterator it = gridView_.template begin</*codim=*/0>();
+        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
+        for (; it != eendit; ++it) {
+            // ignore everything which is not in the interior if the
+            // current process' piece of the grid
+            if (it->partitionType() != Dune::InteriorEntity)
+                continue;
+
+            // deal with the current element
+            elemCtx.updateStencil(*it);
+
+            // loop over all element vertices, i.e. sub control volumes
+            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
+            {
+                // map the local degree of freedom index to the global one
+                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+
+                // let the problem do the dirty work of nailing down
+                // the initial solution.
+                simulator_.problem().initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
+                uCur[globalIdx].checkDefined();
+            }
+        }
+
+        // synchronize the ghost DOFs (if necessary)
         asImp_().syncOverlap();
 
         // also set the solution of the "previous" time steps to the
@@ -364,7 +439,6 @@ public:
         for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
             solution_[timeIdx] = solution_[/*timeIdx=*/0];
 
-        asImp_().registerOutputModules_();
     }
 
     /*!
@@ -1074,6 +1148,55 @@ public:
     { return gridView_; }
 
 protected:
+    /*!
+     * \brief Finalize the initialization of the discretization
+     *
+     * This method requires the model to be constructed.
+     */
+    void finishInit_()
+    {
+        // initialize the volume of the finite volumes to zero
+        int nDofs = asImp_().numDof();
+        dofTotalVolume_.resize(nDofs);
+        std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
+
+        ElementContext elemCtx(simulator_);
+
+        // iterate through the grid and evaluate the initial condition
+        ElementIterator it = gridView_.template begin</*codim=*/0>();
+        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
+        for (; it != eendit; ++it) {
+            // ignore everything which is not in the interior if the
+            // current process' piece of the grid
+            if (it->partitionType() != Dune::InteriorEntity)
+                continue;
+
+            // deal with the current element
+            elemCtx.updateStencil(*it);
+
+            // loop over all element vertices, i.e. sub control volumes
+            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
+            {
+                // map the local degree of freedom index to the global one
+                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+
+                dofTotalVolume_[globalIdx] +=
+                    elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();
+            }
+        }
+
+        const auto sumHandle =
+            GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
+                                                              asImp_().dofMapper());
+        gridView_.communicate(*sumHandle,
+                              Dune::InteriorBorder_InteriorBorder_Interface,
+                              Dune::ForwardCommunication);
+
+        localJacobian_.init(simulator_);
+        jacAsm_ = new JacobianAssembler();
+        jacAsm_->init(simulator_);
+    }
+
     static bool storeIntensiveQuantities_()
     { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
 
@@ -1126,65 +1249,6 @@ protected:
             for (int dofIdx = 0; dofIdx < stencil.numPrimaryDof(); ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
                 onBoundary_[globalIdx] = true;
-            }
-        }
-    }
-
-    /*!
-     * \brief Applies the initial solution for all vertices of the grid.
-     */
-    void applyInitialSolution_()
-    {
-        // first set the whole domain to zero
-        SolutionVector &uCur = asImp_().solution(/*timeIdx=*/0);
-        uCur = Scalar(0.0);
-
-        // initialize the volume of the FV boxes to zero
-        std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
-
-        ElementContext elemCtx(simulator_);
-
-        // iterate through the grid and evaluate the initial condition
-        ElementIterator it = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
-        for (; it != eendit; ++it) {
-            // ignore everything which is not in the interior if the
-            // current process' piece of the grid
-            if (it->partitionType() != Dune::InteriorEntity)
-                continue;
-
-            // deal with the current element
-            elemCtx.updateStencil(*it);
-
-            // loop over all element vertices, i.e. sub control volumes
-            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
-            {
-                // map the local degree of freedom index to the global one
-                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-                // let the problem do the dirty work of nailing down
-                // the initial solution.
-                simulator_.problem().initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
-                uCur[globalIdx].checkDefined();
-
-                dofTotalVolume_[globalIdx] +=
-                    elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();
-            }
-        }
-
-        const auto sumHandle =
-            GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
-                                                              asImp_().dofMapper());
-        gridView_.communicate(*sumHandle,
-                              Dune::InteriorBorder_InteriorBorder_Interface,
-                              Dune::ForwardCommunication);
-
-        if (storeIntensiveQuantities_()) {
-            // invalidate all cached intensive quantities
-            for (int timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
-                std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
-                          intensiveQuantityCacheUpToDate_[timeIdx].end(),
-                          false);
             }
         }
     }

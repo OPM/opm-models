@@ -137,41 +137,15 @@ public:
     }
 
     /*!
-     * \brief Called by the Ewoms::Simulator in order to
-     *        initialize the problem.
+     * \brief Called by the Ewoms::Simulator in order to initialize the problem.
      *
-     * If you overload this method don't forget to call
-     * ParentType::init()
+     * If you overload this method don't forget to call ParentType::finishInit()
      */
-    void init()
+    void finishInit()
     {
-        // set the initial condition of the model
-        model().init();
-
         assembleTime_ = 0.0;
         solveTime_ = 0.0;
         updateTime_ = 0.0;
-    }
-
-
-    /*!
-     * \brief Called after the simulation has been finished
-     *        sucessfully.
-     */
-    void finalize()
-    {
-        if (gridView().comm().rank() == 0) {
-            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
-            int numCores = this->gridView().comm().size();
-            std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
-                      << "Timing receipt [s] (solve total/assemble/linear solve/update): "
-                      << totalTime  << " (" << totalTime*numCores
-                      << " cummulative, " << numCores <<" processes) / "
-                      << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
-                      << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
-                      << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
-                      << "\n" << std::flush;
-        }
     }
 
     /*!
@@ -319,6 +293,25 @@ public:
         std::cerr << "The end of an episode is reached, but the problem "
                   << "does not override the endEpisode() method. "
                   << "Doing nothing!\n";
+    }
+
+    /*!
+     * \brief Called after the simulation has been run sucessfully.
+     */
+    void finalize()
+    {
+        if (gridView().comm().rank() == 0) {
+            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
+            int numCores = this->gridView().comm().size();
+            std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
+                      << "Timing receipt [s] (solve total/assemble/linear solve/update): "
+                      << totalTime  << " (" << totalTime*numCores
+                      << " cummulative, " << numCores <<" processes) / "
+                      << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
+                      << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
+                      << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
+                      << "\n" << std::flush;
+        }
     }
 
     /*!

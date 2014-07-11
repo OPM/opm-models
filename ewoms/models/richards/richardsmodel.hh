@@ -277,14 +277,6 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::init
-     */
-    void init()
-    {
-        ParentType::init();
-    }
-
-    /*!
      * \copydoc FvBaseDiscretization::name
      */
     static std::string name()

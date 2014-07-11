@@ -264,11 +264,12 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::init
+     * \copydoc FvBaseDiscretization::finishInit()
      */
-    void init()
+    void finishInit()
     {
-        ParentType::init();
+        ParentType::finishInit();
+
         minActivityCoeff_.resize(this->numDof());
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
     }

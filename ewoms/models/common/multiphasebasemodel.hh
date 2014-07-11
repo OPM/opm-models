@@ -135,7 +135,7 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
 public:
     MultiPhaseBaseModel(Simulator &simulator)
         : ParentType(simulator)
-    {}
+    { }
 
     /*!
      * \brief Register all run-time parameters for the immiscible model.
@@ -148,6 +148,16 @@ public:
         Ewoms::VtkMultiPhaseModule<TypeTag>::registerParameters();
         Ewoms::VtkTemperatureModule<TypeTag>::registerParameters();
     }
+
+    /*!
+
+    /*!
+     * \brief Returns true iff a fluid phase is used by the model.
+     *
+     * \param phaseIdx The index of the fluid phase in question
+     */
+    bool phaseIsConsidered(int phaseIdx) const
+    { return true; }
 
     /*!
      * \brief Compute the total storage inside one phase of all

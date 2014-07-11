@@ -240,7 +240,10 @@ class PvsModel
 public:
     PvsModel(Simulator &simulator)
         : ParentType(simulator)
-    {}
+    {
+        verbosity_ = EWOMS_GET_PARAM(TypeTag, int, PvsVerbosity);
+        numSwitched_ = 0;
+    }
 
     /*!
      * \brief Register all run-time parameters for the PVS compositional model.
@@ -262,17 +265,6 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, int, PvsVerbosity,
                              "The verbosity level of the primary variable "
                              "switching model");
-    }
-
-    /*!
-     * \copydoc FvBaseDiscretization::init
-     */
-    void init()
-    {
-        verbosity_ = EWOMS_GET_PARAM(TypeTag, int, PvsVerbosity);
-        numSwitched_ = 0;
-
-        ParentType::init();
     }
 
     /*!
