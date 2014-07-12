@@ -18,11 +18,11 @@ cmake_minimum_required (VERSION 2.8)
 
 # additional search modules
 find_path (OPM_MACROS_ROOT cmake/Modules/OpmInit.cmake
-	PATHS ${opm-macros_ROOT}
-	      ${CMAKE_CURRENT_SOURCE_DIR}
-	DOC "Path to build system macros and scripts"
-	NO_DEFAULT_PATH
-	)
+  PATHS ${opm-macros_ROOT}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+  DOC "Path to build system macros and scripts"
+  NO_DEFAULT_PATH
+  )
 list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules")
 
 # project information is in dune.module. Read this file and set variables.
@@ -40,8 +40,8 @@ include (${project}-prereqs)
 include (CMakeLists_files.cmake)
 
 macro (config_hook)
-	opm_need_version_of ("dune-common")
-	opm_need_version_of ("dune-grid")
+  opm_need_version_of ("dune-common")
+  opm_need_version_of ("dune-grid")
 endmacro (config_hook)
 
 macro (files_hook)
@@ -76,7 +76,7 @@ foreach(file ${datafiles})
 endforeach()
 
 if (NOT MY_BUILD_TESTING)
-	set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
+  set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
 endif()
 
 include(EwomsAddTest)
@@ -141,7 +141,7 @@ EwomsAddTest(ecl_blackoil
 EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
   EXE_NAME co2injection_ncp_ni_ecfv
   NO_COMPILE
-	PROCESSORS 4
+  PROCESSORS 4
   CONDITION MPI_FOUND
   DRIVER_ARGS --parallel-simulation=4 co2injection_ncp_ni_ecfv --end-time=10 --initial-time-step-size=1)
 
@@ -150,7 +150,7 @@ EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
 EwomsAddTest(obstacle_immiscible_parallel
   EXE_NAME obstacle_immiscible
   NO_COMPILE
-	PROCESSORS 4
+  PROCESSORS 4
   CONDITION MPI_FOUND
   DRIVER_ARGS --parallel-simulation=4 obstacle_immiscible --end-time=1 --initial-time-step-size=1)
 
@@ -159,27 +159,27 @@ EwomsAddTest(obstacle_immiscible_parallel
 EwomsAddTest(lens_parallel_vcfv
   EXE_NAME lens_immiscible_vcfv
   NO_COMPILE
-	PROCESSORS 4
+  PROCESSORS 4
   CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation=4 lens_immiscible --end-time=250 --initial-time-step-size=250)
+  DRIVER_ARGS --parallel-simulation=4 lens_immiscible_vcfv --end-time=250 --initial-time-step-size=250)
 
 EwomsAddTest(lens_parallel_ecfv
   EXE_NAME lens_immiscible_ecfv
   NO_COMPILE
-	PROCESSORS 4
+  PROCESSORS 4
   CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation=4 lens_immiscible --end-time=250 --initial-time-step-size=250)
+  DRIVER_ARGS --parallel-simulation=4 lens_immiscible_ecfv --end-time=250 --initial-time-step-size=250)
 
 EwomsAddTest(obstacle_immiscible_parameters
   EXE_NAME obstacle_immiscible
   NO_COMPILE
-	DEPENDS obstacle_immiscible
+  DEPENDS obstacle_immiscible
   DRIVER_ARGS --parameters obstacle_immiscible)
 
 EwomsAddTest(obstacle_pvs_restart
   EXE_NAME obstacle_pvs
   NO_COMPILE
-	DEPENDS obstacle_pvs
+  DEPENDS obstacle_pvs
   DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=15000)
 
 # add the tutorial
