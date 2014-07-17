@@ -635,9 +635,11 @@ public:
      *
      * \copydetails Doxygen::storageParam
      */
-    void globalStorage(EqVector &storage)
+    void globalStorage(EqVector &storage, int timeIdx = 0) const
     {
         storage = 0;
+
+        LocalBlockVector elemStorage;
 
         ElementContext elemCtx(simulator_);
         ElementIterator elemIt = gridView_.template begin<0>();
@@ -647,12 +649,15 @@ public:
                 continue; // ignore ghost and overlap elements
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
-            localResidual().evalStorage(elemCtx, /*timeIdx=*/0);
+            elemCtx.updateIntensiveQuantities(timeIdx);
 
-            int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+            int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
+            elemStorage.resize(numPrimaryDof);
+
+            localResidual().evalStorage(elemStorage, elemCtx, timeIdx);
+
             for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
-                storage += localResidual().storageTerm()[dofIdx];
+                storage += elemStorage[dofIdx];
         };
 
         storage = gridView_.comm().sum(storage);
