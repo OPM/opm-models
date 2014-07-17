@@ -337,18 +337,31 @@ public:
     int globalSpaceIndex(int dofIdx, int timeIdx) const
     { return stencil(timeIdx).globalSpaceIndex(dofIdx); }
 
+
+    /*!
+     * \brief Return the element-local volume associated with a degree of freedom
+     *
+     * In the case of the vertex-centered finite volume method, this is different from
+     * the total volume because a finite volume usually spans multiple elements...
+     *
+     * \param dofIdx The local index of the degree of freedom in the current element.
+     * \param timeIdx The index of the solution vector used by the time discretization.
+     */
+    Scalar dofVolume(int dofIdx, int timeIdx) const
+    { return stencil(timeIdx).subControlVolume(dofIdx).volume();  }
+
     /*!
      * \brief Return the total volume associated with a degree of freedom
      *
-     * \param dofIdx The local index of the degree of freedom
-     *               in the current element.
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
+     * "Total" means the volume controlled by a degree of freedom disregarding the
+     * element. (For example in the vertex-centered finite volume method, a control
+     * volume typically encompasses parts of multiple elements.)
+     *
+     * \param dofIdx The local index of the degree of freedom in the current element.
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     Scalar dofTotalVolume(int dofIdx, int timeIdx) const
-    {
-        return model().dofTotalVolume(globalSpaceIndex(dofIdx, timeIdx));
-    }
+    { return model().dofTotalVolume(globalSpaceIndex(dofIdx, timeIdx)); }
 
     /*!
      * \brief Returns whether the current element is on the domain's
