@@ -251,9 +251,12 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, BoundaryContext) BoundaryContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, GradientCalculator) GradientCalculator;
@@ -661,6 +664,100 @@ public:
         };
 
         storage = gridView_.comm().sum(storage);
+    }
+
+    /*!
+     * \brief Ensure that the difference between the storage terms of the last and of the
+     *        current time step is consistent with the source and boundary terms.
+     *
+     * This method is purely intented for debugging purposes. If the program is compiled
+     * with optimizations enabled, it becomes a no-op.
+     */
+    void checkConservativeness(Scalar tolerance = 1e-6) const
+    {
+#ifndef NDEBUG
+        EqVector storageBeginTimeStep;
+        EqVector storageEndTimeStep;
+
+        Scalar totalBoundaryArea(0.0);
+        Scalar totalVolume(0.0);
+        EqVector totalRate(0.0);
+
+        // we assume the implicit Euler time discretization for now...
+        assert(historySize == 2);
+
+        globalStorage(storageBeginTimeStep, /*timeIdx=*/1);
+        globalStorage(storageEndTimeStep, /*timeIdx=*/0);
+
+        // calculate the rate at the boundary and the source rate
+        ElementContext elemCtx(simulator_);
+        auto eIt = simulator_.gridView().template begin</*codim=*/0>();
+        const auto &eEndIt = simulator_.gridView().template end</*codim=*/0>();
+        for (; eIt != eEndIt; ++eIt) {
+            if (eIt->partitionType() != Dune::InteriorEntity)
+                continue; // ignore ghost and overlap elements
+
+            elemCtx.updateAll(*eIt);
+
+            // handle the boundary terms
+            if (elemCtx.onBoundary()) {
+                BoundaryContext boundaryCtx(elemCtx);
+
+                for (int faceIdx = 0; faceIdx < boundaryCtx.numBoundaryFaces(/*timeIdx=*/0); ++faceIdx) {
+                    BoundaryRateVector values;
+                    simulator_.problem().boundary(values,
+                                                         boundaryCtx,
+                                                         faceIdx,
+                                                         /*timeIdx=*/0);
+                    Valgrind::CheckDefined(values);
+
+                    int dofIdx = boundaryCtx.interiorScvIndex(faceIdx, /*timeIdx=*/0);
+                    const auto &insideIntQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+
+                    Scalar bfArea =
+                        boundaryCtx.boundarySegmentArea(faceIdx, /*timeIdx=*/0)
+                        * insideIntQuants.extrusionFactor();
+
+                    values *= bfArea;
+
+                    totalBoundaryArea += bfArea;
+                    totalRate += values;
+                }
+            }
+
+            // deal with the source terms
+            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
+                BoundaryRateVector values;
+                simulator_.problem().source(values,
+                                            elemCtx,
+                                            dofIdx,
+                                            /*timeIdx=*/0);
+                Valgrind::CheckDefined(values);
+
+                const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                Scalar dofVolume =
+                    elemCtx.dofVolume(dofIdx, /*timeIdx=*/0)
+                    * intQuants.extrusionFactor();
+                values *= dofVolume;
+                totalVolume += dofVolume;
+                totalRate += values;
+            }
+        }
+
+        // summarize everything over all processes
+        const auto &comm = simulator_.gridView().comm();
+        totalRate = comm.sum(totalRate);
+        totalBoundaryArea = comm.sum(totalBoundaryArea);
+        totalVolume = comm.sum(totalVolume);
+
+        if (comm.rank() == 0) {
+            EqVector storageRate = storageBeginTimeStep;
+            storageRate -= storageEndTimeStep;
+            storageRate /= simulator_.timeStepSize();
+            for (int eqIdx = 0; eqIdx < EqVector::dimension; ++eqIdx)
+                assert(std::abs(storageRate[eqIdx] - totalRate[eqIdx]) <= tolerance);
+        }
+#endif // NDEBUG
     }
 
     /*!
@@ -1182,10 +1279,9 @@ protected:
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
             {
                 // map the local degree of freedom index to the global one
-                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-                dofTotalVolume_[globalIdx] +=
-                    elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();
+                dofTotalVolume_[globalDofIdx] += elemCtx.dofVolume(dofIdx, /*timeIdx=*/0);
             }
         }
 
