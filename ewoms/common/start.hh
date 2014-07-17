@@ -45,6 +45,8 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <termios.h>
+#include <signal.h>
 
 #if HAVE_MPI
 #include <mpi.h>
@@ -146,6 +148,19 @@ int setupParameters_(int argc, char **argv)
     return /*status=*/0;
 }
 
+static struct termios origTermios_;
+
+/*!
+ * \brief Resets the current TTY to a usable state if the program was interrupted by
+ *        SIGABRT or SIGINT.
+ */
+void resetTerminal_(int signum)
+{
+    if (isatty(STDIN_FILENO))
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &origTermios_);
+    exit(-signum);
+}
+
 //! \endcond
 
 /*!
@@ -164,6 +179,20 @@ int start(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+
+    // set the signal handlers to reset the TTY to a well defined state on unexpected
+    // program aborts
+    if (isatty(STDIN_FILENO)) {
+        if (tcgetattr(STDIN_FILENO, &origTermios_) == 0) {
+            signal(SIGINT, resetTerminal_);
+            signal(SIGHUP, resetTerminal_);
+            signal(SIGABRT, resetTerminal_);
+            signal(SIGFPE, resetTerminal_);
+            signal(SIGSEGV, resetTerminal_);
+            signal(SIGPIPE, resetTerminal_);
+            signal(SIGTERM, resetTerminal_);
+        }
+    }
 
     // initialize MPI, finalize is done automatically on exit
     const Ewoms::MpiHelper mpiHelper(argc, argv);
