@@ -117,6 +117,12 @@ public:
     { return elemCtx_.numInteriorFaces(timeIdx); }
 
     /*!
+     * \brief Return the number of boundary segments of the current element
+     */
+    int numBoundaryFaces(int timeIdx) const
+    { return elemCtx_.stencil(timeIdx).numBoundaryFaces(); }
+
+    /*!
      * \copydoc Ewoms::ElementContext::stencil()
      */
     const Stencil &stencil(int timeIdx) const
