@@ -176,8 +176,9 @@ public:
         // evaluate the flux terms
         asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
 
+        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof(); i++) {
+        for (int i=0; i < numPrimaryDof; i++) {
             for (int j = 0; j < numEq; ++ j)
                 assert(std::isfinite(residual[i][j]));
             Valgrind::CheckDefined(residual[i]);
@@ -187,7 +188,7 @@ public:
         // evaluate the storage and the source terms
         asImp_().evalVolumeTerms_(residual, storage, elemCtx);
 
-        for (int dofIdx=0; dofIdx < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof(); dofIdx++) {
+        for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
             storage[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
@@ -201,7 +202,7 @@ public:
         asImp_().evalBoundary_(residual, storage, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG && HAVE_VALGRIND
-        for (int i=0; i < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof(); i++) {
+        for (int i=0; i < numPrimaryDof; i++) {
             for (int j = 0; j < numEq; ++ j)
                 assert(std::isfinite(residual[i][j]));
             Valgrind::CheckDefined(residual[i]);
@@ -213,10 +214,7 @@ public:
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
-        for (int dofIdx=0;
-             dofIdx < elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
-             ++dofIdx)
-        {
+        for (int dofIdx=0; dofIdx < numPrimaryDof; ++dofIdx) {
             assert(elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0);
             residual[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
             assert(std::isfinite(residual[dofIdx].two_norm()));
@@ -231,7 +229,7 @@ public:
 
     /*!
      * \brief Calculate the amount of all conservation quantities stored in all element's
-     *        sub-control volumes for a given history index.
+     *        primary sub-control volumes for a given history index.
      *
      * This is used to figure out how much of each conservation
      * quantity is inside the element.
@@ -239,11 +237,10 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalStorage(const ElementContext &elemCtx,
-                     int timeIdx)
+    void evalStorage(const ElementContext &elemCtx,  int timeIdx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        internalStorageTerm_.resize(numDof);
+        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        internalStorageTerm_.resize(numPrimaryDof);
         evalStorage(internalStorageTerm_,
                     elemCtx,
                     timeIdx);
@@ -265,8 +262,9 @@ public:
                      int timeIdx) const
     {
         // calculate the amount of conservation each quantity inside
-        // all sub control volumes
-        for (int dofIdx=0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); dofIdx++)
+        // all primary sub control volumes
+        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++)
         {
             storage[dofIdx] = 0.0;
             asImp_().computeStorage(storage[dofIdx],
@@ -294,8 +292,9 @@ public:
 
         const auto &stencil = elemCtx.stencil(timeIdx);
         // calculate the mass flux over the sub-control volume faces
-        for (int scvfIdx = 0; scvfIdx < elemCtx.stencil(timeIdx).numInteriorFaces(); scvfIdx++)
-        {
+        int numInteriorFaces = elemCtx.numInteriorFaces(timeIdx);
+        int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
+        for (int scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
             const auto &face = stencil.interiorFace(scvfIdx);
             int i = face.interiorIndex();
             int j = face.exteriorIndex();
@@ -318,9 +317,9 @@ public:
             // Since the mass flux as calculated by computeFlux() goes out of sub-control
             // volume i and into sub-control volume j, we need to add the flux to finite
             // volume i and subtract it from finite volume j
-            if (i < stencil.numPrimaryDof())
+            if (i < numPrimaryDof)
                 residual[i] += flux;
-            if (j < stencil.numPrimaryDof())
+            if (j < numPrimaryDof)
                 residual[j] -= flux;
         }
     }
@@ -392,12 +391,11 @@ protected:
         if (!elemCtx.onBoundary())
             return;
 
-        const auto &stencil = elemCtx.stencil(timeIdx);
         BoundaryContext boundaryCtx(elemCtx);
 
-        // Assemble the boundary for all vertices of the current
-        // face
-        for (int faceIdx = 0; faceIdx < stencil.numBoundaryFaces(); ++faceIdx)
+        // Assemble the boundary for all vertices of the current face
+        int numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
+        for (int faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx)
         {
             // add the residual of all vertices of the boundary
             // segment
@@ -452,7 +450,8 @@ protected:
         const auto &problem = elemCtx.problem();
         Constraints constraints;
         ConstraintsContext constraintsCtx(elemCtx);
-        for (int dofIdx = 0; dofIdx < constraintsCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
             // ask the problem for the constraint values
             constraints.reset();
             problem.constraints(constraints, elemCtx, dofIdx, timeIdx);
@@ -490,7 +489,8 @@ protected:
         RateVector sourceRate;
 
         // evaluate the volumetric terms (storage + source terms)
-        for (int dofIdx=0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
+        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++)
         {
             Scalar extrusionFactor =
                 elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
