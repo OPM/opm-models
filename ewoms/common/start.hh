@@ -149,6 +149,7 @@ int setupParameters_(int argc, char **argv)
 }
 
 static struct termios origTermios_;
+std::map<int, void (*)(int)> origSignalHandlers_;
 
 /*!
  * \brief Resets the current TTY to a usable state if the program was interrupted by
@@ -158,9 +159,8 @@ void resetTerminal_(int signum)
 {
     if (isatty(STDIN_FILENO))
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &origTermios_);
-    exit(-signum);
+    origSignalHandlers_.at(signum)(signum);
 }
-
 //! \endcond
 
 /*!
@@ -184,13 +184,13 @@ int start(int argc, char **argv)
     // program aborts
     if (isatty(STDIN_FILENO)) {
         if (tcgetattr(STDIN_FILENO, &origTermios_) == 0) {
-            signal(SIGINT, resetTerminal_);
-            signal(SIGHUP, resetTerminal_);
-            signal(SIGABRT, resetTerminal_);
-            signal(SIGFPE, resetTerminal_);
-            signal(SIGSEGV, resetTerminal_);
-            signal(SIGPIPE, resetTerminal_);
-            signal(SIGTERM, resetTerminal_);
+            origSignalHandlers_[SIGINT] = signal(SIGINT, resetTerminal_);
+            origSignalHandlers_[SIGHUP] = signal(SIGHUP, resetTerminal_);
+            origSignalHandlers_[SIGABRT] = signal(SIGABRT, resetTerminal_);
+            origSignalHandlers_[SIGFPE] = signal(SIGFPE, resetTerminal_);
+            origSignalHandlers_[SIGSEGV] = signal(SIGSEGV, resetTerminal_);
+            origSignalHandlers_[SIGPIPE] = signal(SIGPIPE, resetTerminal_);
+            origSignalHandlers_[SIGTERM] = signal(SIGTERM, resetTerminal_);
         }
     }
 
