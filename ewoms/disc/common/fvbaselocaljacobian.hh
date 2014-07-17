@@ -382,7 +382,7 @@ protected:
     {
         // save all quantities which depend on the specified primary
         // variable at the given sub control volume
-        elemCtx.saveIntQuants(dofIdx);
+        elemCtx.saveIntensiveQuantities(dofIdx);
 
         PrimaryVariables priVars(elemCtx.primaryVars(dofIdx, /*timeIdx=*/0));
         Scalar eps = asImp_().numericEpsilon(elemCtx, dofIdx, pvIdx);
@@ -443,7 +443,7 @@ protected:
 
         // restore the original state of the element's volume
         // variables
-        elemCtx.restoreIntQuants(dofIdx);
+        elemCtx.restoreIntensiveQuantities(dofIdx);
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < derivResidual_.size(); ++i)

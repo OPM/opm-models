@@ -101,7 +101,7 @@ public:
     void updateAll(const Element &elem)
     {
         updateStencil(elem);
-        updateAllIntQuants();
+        updateAllIntensiveQuantities();
         updateAllExtensiveQuantities();
     }
 
@@ -148,7 +148,7 @@ public:
      * \brief Compute the intensive quantities of all sub-control volumes
      *        of the current element for all time indices.
      */
-    void updateAllIntQuants()
+    void updateAllIntensiveQuantities()
     {
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
             updateIntensiveQuantities(timeIdx);
@@ -452,7 +452,7 @@ public:
      * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      */
-    void saveIntQuants(int dofIdx)
+    void saveIntensiveQuantities(int dofIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(/*timeIdx=*/0));
 
@@ -467,7 +467,7 @@ public:
      * \param dofIdx The local index of the degree of freedom
      *               in the current element.
      */
-    void restoreIntQuants(int dofIdx)
+    void restoreIntensiveQuantities(int dofIdx)
     {
         dofIdxSaved_ = -1;
         dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
