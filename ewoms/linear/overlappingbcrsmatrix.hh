@@ -62,14 +62,17 @@ public:
     typedef typename ParentType::block_type block_type;
 
     // no real copying done at the moment
-    OverlappingBCRSMatrix(const OverlappingBCRSMatrix &M) : ParentType(M)
+    OverlappingBCRSMatrix(const OverlappingBCRSMatrix &other)
+        : ParentType(other)
     {}
 
-    OverlappingBCRSMatrix(const BCRSMatrix &M, const BorderList &borderList,
-                          const std::set<Index> &blackList, int overlapSize)
+    OverlappingBCRSMatrix(const BCRSMatrix& nativeMatrix,
+                          const BorderList& borderList,
+                          const std::set<Index> &blackList,
+                          int overlapSize)
     {
         overlap_ = std::shared_ptr<Overlap>(
-            new Overlap(M, borderList, blackList, overlapSize));
+            new Overlap(nativeMatrix, borderList, blackList, overlapSize));
         myRank_ = 0;
 #if HAVE_MPI
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
@@ -77,7 +80,7 @@ public:
 
         // build the overlapping matrix from the non-overlapping
         // matrix and the overlap
-        build_(M);
+        build_(nativeMatrix);
     }
 
     ~OverlappingBCRSMatrix()
@@ -112,14 +115,13 @@ public:
     { return *overlap_; }
 
     /*!
-     * \brief Assign and syncronize the overlapping matrix from a
-     *       non-overlapping one.
+     * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
      */
-    void assignAdd(const BCRSMatrix &M)
+    void assignAdd(const BCRSMatrix &nativeMatrix)
     {
 
         // copy the native entries
-        assignFromNative_(M);
+        assignFromNative_(nativeMatrix);
 
         // communicate and add the contents of overlapping rows
         syncAdd_();
@@ -131,10 +133,10 @@ public:
      *
      * The non-master entries are copied from the master
      */
-    void assignCopy(const BCRSMatrix &M)
+    void assignCopy(const BCRSMatrix &nativeMatrix)
     {
         // copy the native entries
-        assignFromNative_(M);
+        assignFromNative_(nativeMatrix);
 
         // communicate and add the contents of overlapping rows
         syncCopy_();
@@ -196,42 +198,42 @@ public:
     }
 
 private:
-    void assignFromNative_(const BCRSMatrix &M)
+    void assignFromNative_(const BCRSMatrix &nativeMatrix)
     {
         // first, set everything to 0,
         BCRSMatrix::operator=(0.0);
 
-        // then copy the local entries of M to the overlapping matrix
-        for (unsigned nativeRowIdx = 0; nativeRowIdx < M.N(); ++nativeRowIdx) {
-            int localRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
-            if (localRowIdx < 0) {
+        // then copy the domestic entries of the native matrix to the overlapping matrix
+        for (unsigned nativeRowIdx = 0; nativeRowIdx < nativeMatrix.N(); ++nativeRowIdx) {
+            int domesticRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
+            if (domesticRowIdx < 0) {
                 continue; // row corresponds to a black-listed entry
             }
 
-            ConstColIterator nativeColIt = M[nativeRowIdx].begin();
-            const ConstColIterator &nativeColEndIt = M[nativeRowIdx].end();
-            ColIterator localColIt = (*this)[localRowIdx].begin();
+            ConstColIterator nativeColIt = nativeMatrix[nativeRowIdx].begin();
+            const ConstColIterator &nativeColEndIt = nativeMatrix[nativeRowIdx].end();
+            ColIterator domesticColIt = (*this)[domesticRowIdx].begin();
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
-                int localColIdx = overlap_->nativeToDomestic(nativeColIt.index());
-                if (localColIdx < 0) {
+                int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
+                if (domesticColIdx < 0) {
                     continue; // column corresponds to a black-listed entry
                 }
 
                 while (true) {
-                    // go to the local column which corresponds the
-                    // the same entry of the native matrix
-                    if (static_cast<int>(localColIt.index()) == localColIdx) {
-                        (*localColIt) = *nativeColIt;
+                    // go to the domestic column which corresponds to the same entry of
+                    // the native matrix
+                    if (static_cast<int>(domesticColIt.index()) == domesticColIdx) {
+                        (*domesticColIt) = *nativeColIt;
                         break;
                     }
 
-                    ++localColIt;
+                    ++domesticColIt;
                 }
             }
         }
     }
 
-    void build_(const BCRSMatrix &M)
+    void build_(const BCRSMatrix &nativeMatrix)
     {
         int numDomestic = overlap_->numDomestic();
 
@@ -240,16 +242,16 @@ private:
         this->setBuildMode(ParentType::random);
 
         // communicate the entries
-        buildIndices_(M);
+        buildIndices_(nativeMatrix);
     }
 
-    int numDomesticEntriesInRowFor_(const BCRSMatrix &M, int peerRank, int rowIdx)
+    int numDomesticEntriesInRowFor_(const BCRSMatrix &nativeMatrix, int peerRank, int rowIdx)
     {
         int numEntries = 0;
 
         typedef typename BCRSMatrix::ConstColIterator ColIt;
-        ColIt colIt = M[rowIdx].begin();
-        ColIt colEndIt = M[rowIdx].end();
+        ColIt colIt = nativeMatrix[rowIdx].begin();
+        ColIt colEndIt = nativeMatrix[rowIdx].end();
         for (; colIt != colEndIt; ++colIt) {
             if (overlap_->isDomesticIndexFor(peerRank, colIt.index()))
                 ++numEntries;
@@ -258,24 +260,29 @@ private:
         return numEntries;
     }
 
-    void buildIndices_(const BCRSMatrix &M)
+    void buildIndices_(const BCRSMatrix &nativeMatrix)
     {
         /////////
         // first, add all local matrix entries
         /////////
         entries_.resize(overlap_->numDomestic());
-        for (unsigned nativeRowIdx = 0; nativeRowIdx < M.N(); ++nativeRowIdx) {
-            int localRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
-            if (localRowIdx < 0)
+        for (unsigned nativeRowIdx = 0; nativeRowIdx < nativeMatrix.N(); ++nativeRowIdx) {
+            int domesticRowIdx = overlap_->nativeToDomestic(nativeRowIdx);
+            if (domesticRowIdx < 0)
                 continue;
 
-            ConstColIterator colIt = M[nativeRowIdx].begin();
-            ConstColIterator colEndIt = M[nativeRowIdx].end();
+            ConstColIterator colIt = nativeMatrix[nativeRowIdx].begin();
+            ConstColIterator colEndIt = nativeMatrix[nativeRowIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                int localColIdx = overlap_->nativeToDomestic(colIt.index());
-                if (localColIdx < 0)
+                int domesticColIdx = overlap_->nativeToDomestic(colIt.index());
+
+                if (domesticColIdx < 0)
+                    // there is no domestic index which corresponds to a blacklisted
+                    // one. this can happen if the grid overlap is larger than the
+                    // algebraic one...
                     continue;
-                entries_[localRowIdx].insert(localColIdx);
+
+                entries_[domesticRowIdx].insert(domesticColIdx);
             }
         }
 
@@ -289,7 +296,7 @@ private:
         typename PeerSet::const_iterator peerEndIt = peerSet.end();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
-            sendIndices_(M, peerRank);
+            sendIndices_(nativeMatrix, peerRank);
         }
 
         // then recieve all indices from the peers
@@ -342,7 +349,7 @@ private:
     }
 
     // send the overlap indices to a peer
-    void sendIndices_(const BCRSMatrix &M, int peerRank)
+    void sendIndices_(const BCRSMatrix &nativeMatrix, int peerRank)
     {
 #if HAVE_MPI
         // send size of foreign overlap to peer
@@ -360,25 +367,27 @@ private:
         // create the row size and index MPI buffers for the peer
         int numEntries = 0;
         for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
-            int localRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
-            int nativeRowIdx = overlap_->domesticToNative(localRowIdx);
+            int domesticRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
+            int nativeRowIdx = overlap_->domesticToNative(domesticRowIdx);
 
             typedef typename BCRSMatrix::ConstColIterator ColIt;
-            ColIt colIt = M[nativeRowIdx].begin();
-            ColIt colEndIt = M[nativeRowIdx].end();
+            ColIt nativeColIt = nativeMatrix[nativeRowIdx].begin();
+            ColIt nativeColEndIt = nativeMatrix[nativeRowIdx].end();
             int numCols = 0;
-            for (; colIt != colEndIt; ++colIt) {
-                int localColIdx = overlap_->nativeToDomestic(colIt.index());
-                if (localColIdx < 0)
+            for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
+                int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
+
+                if (domesticColIdx < 0)
+                    // there is no domestic index which corresponds to a blacklisted
+                    // one. this can happen if the grid overlap is larger than the
+                    // algebraic one...
                     continue;
-                else if (!overlap_->peerHasIndex(peerRank, localColIdx)) {
-                    continue;
-                }
+
                 ++numCols;
             }
 
             (*rowSizesSendBuff_[peerRank])[overlapOffset] = numCols;
-            (*rowIndicesSendBuff_[peerRank])[overlapOffset] = overlap_->domesticToGlobal(localRowIdx);
+            (*rowIndicesSendBuff_[peerRank])[overlapOffset] = overlap_->domesticToGlobal(domesticRowIdx);
             numEntries += numCols;
 
             Valgrind::CheckDefined((*rowSizesSendBuff_[peerRank])[overlapOffset]);
@@ -394,20 +403,22 @@ private:
         entryColIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numEntries);
         int buffIdx = 0;
         for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
-            int localRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
-            int nativeRowIdx = overlap_->domesticToNative(localRowIdx);
+            int domesticRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
+            int nativeRowIdx = overlap_->domesticToNative(domesticRowIdx);
 
             typedef typename BCRSMatrix::ConstColIterator ColIt;
-            ColIt colIt = M[nativeRowIdx].begin();
-            ColIt colEndIt = M[nativeRowIdx].end();
-            for (; colIt != colEndIt; ++colIt) {
-                int localColIdx = overlap_->nativeToDomestic(colIt.index());
-                if (localColIdx < 0)
-                    continue;
-                else if (!overlap_->peerHasIndex(peerRank, localColIdx))
+            ColIt nativeColIt = nativeMatrix[nativeRowIdx].begin();
+            ColIt nativeColEndIt = nativeMatrix[nativeRowIdx].end();
+            for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
+                int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
+
+                if (domesticColIdx < 0)
+                    // there is no domestic index which corresponds to a blacklisted
+                    // one. this can happen if the grid overlap is larger than the
+                    // algebraic one...
                     continue;
 
-                int globalColIdx = overlap_->domesticToGlobal(localColIdx);
+                int globalColIdx = overlap_->domesticToGlobal(domesticColIdx);
                 (*entryColIndicesSendBuff_[peerRank])[buffIdx] = globalColIdx;
                 ++ buffIdx;
             }

@@ -321,7 +321,7 @@ private:
         // create and initialize DUNE's OwnerOverlapCopyCommunication
         // using the domestic overlap
         istlComm_ = new OwnerOverlapCopyCommunication(MPI_COMM_WORLD);
-        setupAmgIndexSet(overlappingMatrix_->overlap(), istlComm_->indexSet());
+        setupAmgIndexSet_(overlappingMatrix_->overlap(), istlComm_->indexSet());
         istlComm_->remoteIndices().template rebuild<false>();
 #endif
     }
@@ -342,7 +342,7 @@ private:
 
 #if HAVE_MPI
     template <class ParallelIndexSet>
-    void setupAmgIndexSet(const Overlap &overlap, ParallelIndexSet &istlIndices)
+    void setupAmgIndexSet_(const Overlap &overlap, ParallelIndexSet &istlIndices)
     {
         typedef Dune::OwnerOverlapCopyAttributeSet GridAttributes;
         typedef Dune::OwnerOverlapCopyAttributeSet::AttributeSet GridAttributeSet;
@@ -404,8 +404,9 @@ private:
             coarsenCriterion.setDebugLevel(1);
         else
             coarsenCriterion.setDebugLevel(0); // make the AMG shut up
-        coarsenCriterion.setMinCoarsenRate(
-            1.05); // reduce the minium coarsen rate (default is 1.2)
+
+        // reduce the minium coarsen rate (default is 1.2)
+        coarsenCriterion.setMinCoarsenRate(1.05);
         // coarsenCriterion.setAccumulate(Dune::Amg::noAccu);
         coarsenCriterion.setAccumulate(Dune::Amg::atOnceAccu);
         coarsenCriterion.setSkipIsolated(false);

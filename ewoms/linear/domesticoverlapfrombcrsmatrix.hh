@@ -376,24 +376,24 @@ protected:
         borderDistance_.resize(numLocal(), 0);
 
         PeerSet::const_iterator peerIt;
-        PeerSet::const_iterator peerEndIt = foreignOverlap_.peerSet().end();
+        PeerSet::const_iterator peerEndIt = peerSet_.end();
 
         // send the overlap indices to all peer processes
-        peerIt = foreignOverlap_.peerSet().begin();
+        peerIt = peerSet_.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
             sendIndicesToPeer_(peerRank);
         };
 
         // receive our overlap from the processes to all peer processes
-        peerIt = foreignOverlap_.peerSet().begin();
+        peerIt = peerSet_.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
             receiveIndicesFromPeer_(peerRank);
         };
 
         // wait until all send operations complete
-        peerIt = foreignOverlap_.peerSet().begin();
+        peerIt = peerSet_.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
             waitSendIndices_(peerRank);
@@ -433,7 +433,6 @@ protected:
                 masterRank_[*idxIt] = std::min(masterRank_[*idxIt], *peerIt);
             }
         }
-
     }
 
     void sendIndicesToPeer_(int peerRank)
