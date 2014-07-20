@@ -24,6 +24,7 @@
 #define EWOMS_ELEMENT_BORDER_LIST_FROM_GRID_HH
 
 #include "overlaptypes.hh"
+#include "blacklist.hh"
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
@@ -42,79 +43,198 @@ namespace Linear {
  */
 template <class GridView, class ElementMapper>
 class ElementBorderListFromGrid
-    : public Dune::CommDataHandleIF<ElementBorderListFromGrid<GridView, ElementMapper>,
-                                    int>
 {
+    typedef BlackList::PeerBlackListedEntry PeerBlackListedEntry;
+    typedef BlackList::PeerBlackList PeerBlackList;
+    typedef BlackList::PeerBlackLists PeerBlackLists;
+
+    typedef typename GridView::template Codim<0>::Entity Element;
+
+    class BorderListHandle_
+        : public Dune::CommDataHandleIF<BorderListHandle_, int>
+    {
+    public:
+        BorderListHandle_(const GridView &gridView,
+                          const ElementMapper &map,
+                          BlackList &blackList,
+                          BorderList &borderList)
+            : gridView_(gridView)
+            , map_(map)
+            , blackList_(blackList)
+            , borderList_(borderList)
+        {}
+
+        // data handle methods
+        bool contains(int dim, int codim) const
+        { return codim == 0; }
+
+        bool fixedsize(int dim, int codim) const
+        { return true; }
+
+        template <class EntityType>
+        size_t size(const EntityType &e) const
+        { return 2; }
+
+        template <class MessageBufferImp, class EntityType>
+        void gather(MessageBufferImp &buff, const EntityType &e) const
+        {
+            int myIdx = map_.map(e);
+            buff.write(gridView_.comm().rank());
+            buff.write(myIdx);
+
+            blackList_.addIndex(myIdx);
+        }
+
+        template <class MessageBufferImp>
+        void scatter(MessageBufferImp &buff, const Element &e, size_t n)
+        {
+            // discard the index if it is not on the process boundary
+            bool isInteriorNeighbor = false;
+            auto isIt = gridView_.ibegin(e);
+            const auto &isEndIt = gridView_.iend(e);
+            for (; isIt != isEndIt; ++isIt) {
+                if (!isIt->neighbor())
+                    continue;
+                else if (isIt->outside()->partitionType() == Dune::InteriorEntity) {
+                    isInteriorNeighbor = true;
+                    break;
+                }
+            }
+            if (!isInteriorNeighbor)
+                return;
+
+            BorderIndex bIdx;
+
+            bIdx.localIdx = map_.map(e);
+            {
+                int tmp;
+                buff.read(tmp);
+                bIdx.peerRank = tmp;
+                peerSet_.insert(tmp);
+            }
+            {
+                int tmp;
+                buff.read(tmp);
+                bIdx.peerIdx = tmp;
+            }
+            bIdx.borderDistance = 1;
+
+            borderList_.push_back(bIdx);
+        }
+
+        // this template method is needed because the above one only works for codim-0
+        // entities (i.e., elements) but the dune grid uses some code which causes the
+        // compiler to invoke the scatter method for every codim...
+        template <class MessageBufferImp, class EntityType>
+        void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+        { }
+
+        const std::set<ProcessRank>& peerSet() const
+        { return peerSet_; }
+
+    private:
+        GridView gridView_;
+        const ElementMapper &map_;
+        std::set<ProcessRank> peerSet_;
+        BlackList &blackList_;
+        BorderList &borderList_;
+    };
+
+    class PeerBlackListHandle_
+        : public Dune::CommDataHandleIF<PeerBlackListHandle_, int>
+    {
+    public:
+        PeerBlackListHandle_(const GridView &gridView,
+                             const ElementMapper &map,
+                             PeerBlackLists& peerBlackLists)
+            : gridView_(gridView)
+            , map_(map)
+            , peerBlackLists_(peerBlackLists)
+        {}
+
+        // data handle methods
+        bool contains(int dim, int codim) const
+        { return codim == 0; }
+
+        bool fixedsize(int dim, int codim) const
+        { return true; }
+
+        template <class EntityType>
+        size_t size(const EntityType &e) const
+        { return 2; }
+
+        template <class MessageBufferImp, class EntityType>
+        void gather(MessageBufferImp &buff, const EntityType &e) const
+        {
+            buff.write(gridView_.comm().rank());
+            buff.write(map_.map(e));
+        }
+
+        template <class MessageBufferImp, class EntityType>
+        void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+        {
+            int peerRank;
+            int peerIdx;
+            int localIdx;
+
+            buff.read(peerRank);
+            buff.read(peerIdx);
+            localIdx = map_.map(e);
+
+            PeerBlackListedEntry pIdx;
+            pIdx.nativeIndexOfPeer = peerIdx;
+            pIdx.myOwnNativeIndex = localIdx;
+
+            peerBlackLists_[peerRank].push_back(pIdx);
+        }
+
+        const PeerBlackList& peerBlackList(ProcessRank peerRank) const
+        { return peerBlackLists_.at(peerRank); }
+
+    private:
+        GridView gridView_;
+        const ElementMapper &map_;
+        PeerBlackLists peerBlackLists_;
+    };
+
 public:
     ElementBorderListFromGrid(const GridView &gridView, const ElementMapper &map)
-        : gridView_(gridView), map_(map)
+        : gridView_(gridView)
+        , map_(map)
     {
-        gridView.communicate(*this, Dune::InteriorBorder_All_Interface,
+        BorderListHandle_ blh(gridView, map, blackList_, borderList_);
+        gridView.communicate(blh,
+                             Dune::InteriorBorder_All_Interface,
                              Dune::BackwardCommunication);
-    }
 
-    void createBlackList(std::set<Ewoms::Linear::Index> &blackList) const
-    {
-        // blacklist all ghost and overlap entries
-        auto dofIt = gridView_.template begin</*codim=*/0>();
-        const auto &dofEndIt = gridView_.template end</*codim=*/0>();
-        for (; dofIt != dofEndIt; ++dofIt) {
-            if (dofIt->partitionType() != Dune::InteriorEntity
-                && dofIt->partitionType() != Dune::BorderEntity) {
-                // we blacklist everything except degrees of freedom
-                // in the interior and on the border
-                blackList.insert(map_.map(*dofIt));
-            }
-        }
-    }
+        PeerBlackListHandle_ pblh(gridView, map, peerBlackLists_);
+        gridView.communicate(pblh,
+                             Dune::InteriorBorder_All_Interface,
+                             Dune::BackwardCommunication);
 
-    // data handle methods
-    bool contains(int dim, int codim) const
-    { return codim == 0; }
-
-    bool fixedsize(int dim, int codim) const
-    { return true; }
-
-    template <class EntityType>
-    size_t size(const EntityType &e) const
-    { return 2; }
-
-    template <class MessageBufferImp, class EntityType>
-    void gather(MessageBufferImp &buff, const EntityType &e) const
-    {
-        buff.write(gridView_.comm().rank());
-        buff.write(map_.map(e));
-    }
-
-    template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
-    {
-        BorderIndex bIdx;
-
-        bIdx.localIdx = map_.map(e);
-        {
-            int tmp;
-            buff.read(tmp);
-            bIdx.peerRank = tmp;
-        }
-        {
-            int tmp;
-            buff.read(tmp);
-            bIdx.peerIdx = tmp;
-        }
-        bIdx.borderDistance = 1;
-
-        borderList_.push_back(bIdx);
+        auto peerIt = blh.peerSet().begin();
+        const auto& peerEndIt = blh.peerSet().end();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            blackList_.setPeerList(*peerIt, pblh.peerBlackList(*peerIt));
+        };
     }
 
     // Access to the border list.
     const BorderList &borderList() const
     { return borderList_; }
 
+    // Access to the black-list indices.
+    const BlackList& blackList() const
+    { return blackList_; }
+
 private:
     const GridView gridView_;
     const ElementMapper &map_;
+
     BorderList borderList_;
+
+    BlackList blackList_;
+    PeerBlackLists peerBlackLists_;
 };
 
 } // namespace Linear

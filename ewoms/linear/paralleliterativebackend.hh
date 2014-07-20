@@ -343,8 +343,10 @@ public:
         solverWrapper_.cleanup();
         precWrapper_.cleanup();
 
-        if (!solverSucceeded)
+        if (!solverSucceeded) {
+            Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
             return false;
+        }
 
         // copy the result back to the non-overlapping vector
         overlappingx_->assignTo(x);
@@ -369,14 +371,11 @@ private:
         BorderListCreator borderListCreator(simulator_.gridView(),
                                             simulator_.model().dofMapper());
 
-        std::set<Ewoms::Linear::Index> blackList;
-        borderListCreator.createBlackList(blackList);
-
         // create the overlapping Jacobian matrix
         int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
         overlappingMatrix_ = new OverlappingMatrix(M,
                                                    borderListCreator.borderList(),
-                                                   blackList,
+                                                   borderListCreator.blackList(),
                                                    overlapSize);
 
         // create the overlapping vectors for the residual and the

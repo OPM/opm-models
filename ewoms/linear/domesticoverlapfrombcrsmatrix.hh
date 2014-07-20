@@ -24,6 +24,7 @@
 #define EWOMS_DOMESTIC_OVERLAP_FROM_BCRS_MATRIX_HH
 
 #include "foreignoverlapfrombcrsmatrix.hh"
+#include "blacklist.hh"
 #include "globalindices.hh"
 
 #include <ewoms/parallel/mpibuffer.hh>
@@ -60,10 +61,11 @@ public:
      */
     DomesticOverlapFromBCRSMatrix(const BCRSMatrix &A,
                                   const BorderList &borderList,
-                                  const std::set<Index> &blackList,
+                                  const BlackList &blackList,
                                   int overlapSize)
-        : foreignOverlap_(A, borderList, blackList, overlapSize),
-          globalIndices_(foreignOverlap_)
+        : foreignOverlap_(A, borderList, blackList, overlapSize)
+        , blackList_(blackList)
+        , globalIndices_(foreignOverlap_)
     {
         myRank_ = 0;
         worldSize_ = 1;
@@ -75,6 +77,7 @@ public:
 
         buildDomesticOverlap_();
         updateMasterRanks_();
+        blackList_.updateNativeToDomesticMap(*this);
 
         setupDebugMapping_();
     }
@@ -184,6 +187,12 @@ public:
         return domOverlap.size() > 0
             && int(domOverlap.begin()->second) == foreignOverlap_.overlapSize();
     }
+
+    /*!
+     * \brief Returns the object which represents the black-listed native indices.
+     */
+    const BlackList& blackList() const
+    { return blackList_; }
 
     /*!
      * \brief Returns the number of processes which "see" a given
@@ -319,12 +328,12 @@ public:
     }
 
     /*!
-     * \brief Returns true iff a local index is seen by a peer rank.
+     * \brief Returns true iff a domestic index is seen by a peer rank.
      */
-    bool peerHasIndex(int peerRank, int localIdx) const
+    bool peerHasIndex(int peerRank, int domesticIdx) const
     {
         return foreignOverlap_.peerHasIndex(peerRank,
-                                            mapExternalToInternal_(localIdx));
+                                            mapExternalToInternal_(domesticIdx));
     }
 
     /*!
@@ -554,6 +563,8 @@ protected:
     int myRank_;
     int worldSize_;
     ForeignOverlap foreignOverlap_;
+
+    BlackList blackList_;
 
     DomesticOverlapByRank domesticOverlapWithPeer_;
     OverlapByIndex domesticOverlapByIndex_;

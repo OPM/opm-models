@@ -24,6 +24,7 @@
 #define EWOMS_FOREIGN_OVERLAP_FROM_BCRS_MATRIX_HH
 
 #include "overlaptypes.hh"
+#include "blacklist.hh"
 
 #include <ewoms/parallel/mpibuffer.hh>
 
@@ -64,7 +65,7 @@ public:
      */
     ForeignOverlapFromBCRSMatrix(const BCRSMatrix &A,
                                  const BorderList &borderList,
-                                 const std::set<Index> &blackList,
+                                 const BlackList &blackList,
                                  int overlapSize)
         : borderList_(borderList), blackList_(blackList)
     {
@@ -299,6 +300,12 @@ public:
     }
 
     /*!
+     * \brief Returns the object which represents the black-listed native indices.
+     */
+    const BlackList& blackList() const
+    { return blackList_; }
+
+    /*!
      * \brief Return the number of peer ranks for which a given local
      *        index is visible.
      */
@@ -341,8 +348,7 @@ protected:
         // communicate the non-neigbor overlap indices
         addNonNeighborOverlapIndices_(A, seedList, borderDistance);
 
-        // add all processes in the seed rows of the current overlap
-        // level
+        // add all processes in the seed rows of the current overlap level
         auto seedIt = seedList.begin();
         const auto &seedEndIt = seedList.end();
         for (; seedIt != seedEndIt; ++seedIt) {
@@ -424,7 +430,7 @@ protected:
         // create the native <-> local maps
         Index localIdx = 0;
         for (Index nativeIdx = 0; nativeIdx < numNative_;) {
-            if (blackList_.count(nativeIdx) == 0) {
+            if (!blackList_.hasIndex(nativeIdx)) {
                 localToNativeIndices_.push_back(nativeIdx);
                 nativeToLocalIndices_.push_back(localIdx);
                 ++nativeIdx;
@@ -653,7 +659,7 @@ protected:
     const BorderList &borderList_;
 
     // the set of indices which should not be considered
-    const std::set<Index> &blackList_;
+    const BlackList &blackList_;
 
     // local indices are the native indices sans the black listed ones
     std::vector<Index> nativeToLocalIndices_;

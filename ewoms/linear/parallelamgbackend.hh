@@ -172,7 +172,7 @@ public:
      *
      * \return true if the residual reduction could be achieved, else false.
      */
-    bool solve(const Matrix &M, Vector &x, const Vector &b)
+    bool solve(const Matrix &M, Vector &x, Vector &b)
     {
         int verbosity = 0;
         if (simulator_.gridManager().gridView().comm().rank() == 0)
@@ -192,17 +192,20 @@ public:
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignAdd(M);
-        overlappingMatrix_->resetFront();
-
         overlappingb_->assignAddBorder(b);
-        overlappingb_->resetFront();
+
+        // copy the result back to the non-overlapping vector. This is
+        // necessary here as assignAddBorder() might modify the
+        // residual vector for the border entities and we need the
+        // "globalized" residual in b...
+        overlappingb_->assignTo(b);
 
         (*overlappingx_) = 0.0;
 
-/////////////
-// set-up the AMG preconditioner
-/////////////
-// create the parallel scalar product and the parallel operator
+        /////////////
+        // set-up the AMG preconditioner
+        /////////////
+        // create the parallel scalar product and the parallel operator
 #if HAVE_MPI
         FineOperator fineOperator(*overlappingMatrix_, *istlComm_);
 #else
@@ -300,8 +303,7 @@ private:
         BorderListCreator borderListCreator(simulator_.gridView(),
                                             simulator_.model().dofMapper());
 
-        std::set<Ewoms::Linear::Index> blackList;
-        borderListCreator.createBlackList(blackList);
+        auto &blackList = borderListCreator.blackList();
 
         // create the overlapping Jacobian matrix
         int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);

@@ -25,6 +25,7 @@
 
 #include <ewoms/linear/domesticoverlapfrombcrsmatrix.hh>
 #include <ewoms/linear/globalindices.hh>
+#include <ewoms/linear/blacklist.hh>
 #include <ewoms/parallel/mpibuffer.hh>
 
 #include <opm/material/Valgrind.hpp>
@@ -68,7 +69,7 @@ public:
 
     OverlappingBCRSMatrix(const BCRSMatrix& nativeMatrix,
                           const BorderList& borderList,
-                          const std::set<Index> &blackList,
+                          const BlackList& blackList,
                           int overlapSize)
     {
         overlap_ = std::shared_ptr<Overlap>(
@@ -119,7 +120,6 @@ public:
      */
     void assignAdd(const BCRSMatrix &nativeMatrix)
     {
-
         // copy the native entries
         assignFromNative_(nativeMatrix);
 
@@ -193,7 +193,8 @@ public:
             std::cout << "\n" << std::flush;
         };
         Dune::printSparseMatrix(std::cout,
-                                *static_cast<const BCRSMatrix *>(this), "M",
+                                *static_cast<const BCRSMatrix *>(this),
+                                "M",
                                 "row");
     }
 
@@ -212,23 +213,22 @@ private:
 
             ConstColIterator nativeColIt = nativeMatrix[nativeRowIdx].begin();
             const ConstColIterator &nativeColEndIt = nativeMatrix[nativeRowIdx].end();
-            ColIterator domesticColIt = (*this)[domesticRowIdx].begin();
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
                 int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
-                if (domesticColIdx < 0) {
-                    continue; // column corresponds to a black-listed entry
-                }
 
-                while (true) {
-                    // go to the domestic column which corresponds to the same entry of
-                    // the native matrix
-                    if (static_cast<int>(domesticColIt.index()) == domesticColIdx) {
-                        (*domesticColIt) = *nativeColIt;
-                        break;
-                    }
+                // make sure to include all off-diagonal entries, even those which belong
+                // to DOFs which are managed by a peer process. For this, we have to
+                // re-map the column index of the black-listed index to a native one.
+                if (domesticColIdx < 0)
+                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
 
-                    ++domesticColIt;
-                }
+                if (domesticColIdx < 0)
+                    // there is no domestic index which corresponds to a black-listed
+                    // one. this can happen if the grid overlap is larger than the
+                    // algebraic one...
+                    continue;
+
+                (*this)[domesticRowIdx][domesticColIdx] = *nativeColIt;
             }
         }
     }
@@ -271,15 +271,19 @@ private:
             if (domesticRowIdx < 0)
                 continue;
 
-            ConstColIterator colIt = nativeMatrix[nativeRowIdx].begin();
-            ConstColIterator colEndIt = nativeMatrix[nativeRowIdx].end();
-            for (; colIt != colEndIt; ++colIt) {
-                int domesticColIdx = overlap_->nativeToDomestic(colIt.index());
+            ConstColIterator nativeColIt = nativeMatrix[nativeRowIdx].begin();
+            ConstColIterator nativeColEndIt = nativeMatrix[nativeRowIdx].end();
+            for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
+                int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
+
+                // make sure to include all off-diagonal entries, even those which belong
+                // to DOFs which are managed by a peer process. For this, we have to
+                // re-map the column index of the black-listed index to a native one.
+                if (domesticColIdx < 0) {
+                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+                }
 
                 if (domesticColIdx < 0)
-                    // there is no domestic index which corresponds to a blacklisted
-                    // one. this can happen if the grid overlap is larger than the
-                    // algebraic one...
                     continue;
 
                 entries_[domesticRowIdx].insert(domesticColIdx);
@@ -377,10 +381,19 @@ private:
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
                 int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
 
+                // make sure to include all off-diagonal entries, even those which belong
+                // to DOFs which are managed by a peer process. For this, we have to
+                // re-map the column index of the black-listed index to a native one.
                 if (domesticColIdx < 0)
-                    // there is no domestic index which corresponds to a blacklisted
-                    // one. this can happen if the grid overlap is larger than the
-                    // algebraic one...
+                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+
+                // if the native index cannot be mapped to a domestic one (i.e., it is in
+                // the grid overlap but the black-list does not care to map it to a
+                // domestic index), ignore it.
+                if (domesticColIdx < 0)
+                    continue;
+
+                if (overlap_->isLocal(domesticColIdx) && !overlap_->peerHasIndex(peerRank, domesticColIdx))
                     continue;
 
                 ++numCols;
@@ -412,13 +425,23 @@ private:
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
                 int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
 
+                // make sure to include all off-diagonal entries, even those which belong
+                // to DOFs which are managed by a peer process. For this, we have to
+                // re-map the column index of the black-listed index to a native one.
                 if (domesticColIdx < 0)
-                    // there is no domestic index which corresponds to a blacklisted
-                    // one. this can happen if the grid overlap is larger than the
-                    // algebraic one...
+                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+
+                // if the native index cannot be mapped to a domestic one (i.e., it is in
+                // the grid overlap but the black-list does not care to map it to a
+                // domestic index), ignore it.
+                if (domesticColIdx < 0)
+                    continue;
+
+                if (overlap_->isLocal(domesticColIdx) && !overlap_->peerHasIndex(peerRank, domesticColIdx))
                     continue;
 
                 int globalColIdx = overlap_->domesticToGlobal(domesticColIdx);
+
                 (*entryColIndicesSendBuff_[peerRank])[buffIdx] = globalColIdx;
                 ++ buffIdx;
             }
@@ -559,20 +582,13 @@ private:
         for (unsigned i = 0; i < mpiRowIndicesSendBuff.size(); ++i) {
             Index domRowIdx = mpiRowIndicesSendBuff[i];
 
-            typedef typename ParentType::ConstColIterator ColIt;
-            ColIt colIt = (*this)[domRowIdx].begin();
-            for (Index j = 0;
-                 j < static_cast<Index>(mpiRowSizesSendBuff[i]);
-                 ++j)
+            for (Index j = 0; j < static_cast<Index>(mpiRowSizesSendBuff[i]); ++j)
             {
                 // move to the next column which is in the overlap
                 Index domColIdx = mpiColIndicesSendBuff[k];
-                for (; static_cast<Index>(colIt.index()) < domColIdx; ++colIt)
-                { }
-                assert(static_cast<Index>(colIt.index()) == domColIdx);
 
                 // add the values of this column to the send buffer
-                mpiSendBuff[k] = (*colIt);
+                mpiSendBuff[k] = (*this)[domRowIdx][domColIdx];
                 ++k;
             }
         }

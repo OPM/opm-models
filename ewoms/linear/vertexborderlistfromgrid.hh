@@ -58,19 +58,15 @@ public:
         gridView.communicate(*this,
                              Dune::InteriorBorder_InteriorBorder_Interface,
                              Dune::ForwardCommunication);
-    }
 
-    void createBlackList(std::set<Ewoms::Linear::Index> &blackList) const
-    {
-        // blacklist all ghost and overlap entries
-        auto dofIt = gridView_.template begin</*codim=*/dimWorld>();
-        const auto &dofEndIt = gridView_.template end</*codim=*/dimWorld>();
-        for (; dofIt != dofEndIt; ++dofIt) {
-            if (dofIt->partitionType() != Dune::InteriorEntity
-                && dofIt->partitionType() != Dune::BorderEntity) {
-                // we blacklist everything except degrees of freedom
-                // in the interior and on the border
-                blackList.insert(map_.map(*dofIt));
+        auto vIt = gridView.template begin<dimWorld>();
+        const auto& vEndIt = gridView.template end<dimWorld >();
+        for (; vIt != vEndIt; ++vIt) {
+            if (vIt->partitionType() != Dune::InteriorEntity
+                && vIt->partitionType() != Dune::BorderEntity)
+            {
+                int vIdx = map_.map(*vIt);
+                blackList_.addIndex(vIdx);
             }
         }
     }
@@ -118,10 +114,15 @@ public:
     const BorderList &borderList() const
     { return borderList_; }
 
+    // Access to the black-list indices.
+    const BlackList& blackList() const
+    { return blackList_; }
+
 private:
     const GridView gridView_;
     const VertexMapper &map_;
     BorderList borderList_;
+    BlackList blackList_;
 };
 
 } // namespace Linear
