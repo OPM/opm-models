@@ -190,6 +190,16 @@ protected:
     }
 
     /*!
+     * \brief Indicates the beginning of a Newton iteration.
+     */
+    void beginIteration_()
+    {
+        model_().syncOverlap();
+
+        ParentType::beginIteration_();
+    }
+
+    /*!
      * \brief Called if the Newton method broke down.
      */
     void failed_()

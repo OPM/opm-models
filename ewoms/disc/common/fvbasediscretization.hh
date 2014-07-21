@@ -789,7 +789,6 @@ public:
 
         bool converged = solver.apply();
         if (converged) {
-            asImp_().syncOverlap();
             asImp_().updateSuccessful();
         }
         else
