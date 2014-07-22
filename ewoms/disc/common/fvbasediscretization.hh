@@ -673,7 +673,7 @@ public:
      * This method is purely intented for debugging purposes. If the program is compiled
      * with optimizations enabled, it becomes a no-op.
      */
-    void checkConservativeness(Scalar tolerance = 1e-6) const
+    void checkConservativeness(Scalar tolerance = 1e-4) const
     {
 #ifndef NDEBUG
         EqVector storageBeginTimeStep;
@@ -754,8 +754,11 @@ public:
             EqVector storageRate = storageBeginTimeStep;
             storageRate -= storageEndTimeStep;
             storageRate /= simulator_.timeStepSize();
-            for (int eqIdx = 0; eqIdx < EqVector::dimension; ++eqIdx)
-                assert(std::abs(storageRate[eqIdx] - totalRate[eqIdx]) <= tolerance);
+            for (int eqIdx = 0; eqIdx < EqVector::dimension; ++eqIdx) {
+                Scalar eps = (std::abs(storageRate[eqIdx]) + std::abs(totalRate[eqIdx]))*tolerance;
+                eps = std::max(tolerance, eps);
+                assert(std::abs(storageRate[eqIdx] - totalRate[eqIdx]) <= eps);
+            }
         }
 #endif // NDEBUG
     }
