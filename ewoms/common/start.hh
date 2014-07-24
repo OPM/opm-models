@@ -148,18 +148,81 @@ int setupParameters_(int argc, char **argv)
     return /*status=*/0;
 }
 
-static struct termios origTermios_;
-std::map<int, void (*)(int)> origSignalHandlers_;
-
 /*!
  * \brief Resets the current TTY to a usable state if the program was interrupted by
  *        SIGABRT or SIGINT.
  */
-void resetTerminal_(int signum)
+static void resetTerminal_(int signum)
 {
-    if (isatty(STDIN_FILENO))
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &origTermios_);
-    origSignalHandlers_.at(signum)(signum);
+    // the following code resets the terminal status and was shamelessly ripped of from
+    // ncurses' "tset" utility. The original copyright license is the following:
+    //
+    // Copyright (c) 1980, 1991, 1993
+    //      The Regents of the University of California.  All rights reserved.
+    //
+    // Redistribution and use in source and binary forms, with or without
+    // modification, are permitted provided that the following conditions
+    // are met:
+    // 1. Redistributions of source code must retain the above copyright
+    //    notice, this list of conditions and the following disclaimer.
+    // 2. Redistributions in binary form must reproduce the above copyright
+    //    notice, this list of conditions and the following disclaimer in the
+    //    documentation and/or other materials provided with the distribution.
+    // 3. Neither the name of the University nor the names of its contributors
+    //    may be used to endorse or promote products derived from this software
+    //    without specific prior written permission.
+    //
+    // THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+    // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    // ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+    // FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    // DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+    // OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    // HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+    // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+    // SUCH DAMAGE.
+    struct termios mode;
+    tcgetattr(STDERR_FILENO, &mode);
+
+    mode.c_cc[VDISCARD] = CDISCARD;
+    mode.c_cc[VEOF] = CEOF;
+    mode.c_cc[VERASE] = CERASE;
+    mode.c_cc[VINTR] = CINTR;
+    mode.c_cc[VKILL] = CKILL;
+    mode.c_cc[VLNEXT] = CLNEXT;
+    mode.c_cc[VQUIT] = CQUIT;
+    mode.c_cc[VREPRINT] = CRPRNT;
+    mode.c_cc[VSTART] = CSTART;
+    mode.c_cc[VSTOP] = CSTOP;
+    mode.c_cc[VSUSP] = CSUSP;
+    mode.c_cc[VWERASE] = CWERASE;
+
+    mode.c_iflag &= ~(IGNBRK | PARMRK | INPCK | ISTRIP
+                      | INLCR | IGNCR | IUCLC | IXANY | IXOFF);
+
+    mode.c_iflag |= (BRKINT | IGNPAR | ICRNL | IXON | IMAXBEL);
+
+    mode.c_oflag &= ~(OLCUC | OCRNL | ONOCR | ONLRET
+                      | OFILL | OFDEL | NLDLY | CRDLY
+                      | TABDLY | BSDLY | VTDLY | FFDLY);
+
+    mode.c_oflag |= (OPOST | ONLCR);
+    mode.c_cflag &= ~(CSIZE | CSTOPB | PARENB | PARODD | CLOCAL);
+    mode.c_cflag |= (CS8 | CREAD);
+    mode.c_lflag &= ~(ECHONL | NOFLSH | TOSTOP | XCASE);
+    mode.c_lflag |= (ISIG | ICANON | ECHO | ECHOE | ECHOK | ECHOCTL | ECHOKE );
+
+    tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
+
+    // print a new line to decrease the possibility of garbage remaining on the line
+    // which shows the command line prompt
+    std::cout << "\n";
+
+    // restore original signal handler and re-raise the signal
+    signal(signum, SIG_DFL);
+    raise(signum);
 }
 //! \endcond
 
@@ -183,15 +246,13 @@ int start(int argc, char **argv)
     // set the signal handlers to reset the TTY to a well defined state on unexpected
     // program aborts
     if (isatty(STDIN_FILENO)) {
-        if (tcgetattr(STDIN_FILENO, &origTermios_) == 0) {
-            origSignalHandlers_[SIGINT] = signal(SIGINT, resetTerminal_);
-            origSignalHandlers_[SIGHUP] = signal(SIGHUP, resetTerminal_);
-            origSignalHandlers_[SIGABRT] = signal(SIGABRT, resetTerminal_);
-            origSignalHandlers_[SIGFPE] = signal(SIGFPE, resetTerminal_);
-            origSignalHandlers_[SIGSEGV] = signal(SIGSEGV, resetTerminal_);
-            origSignalHandlers_[SIGPIPE] = signal(SIGPIPE, resetTerminal_);
-            origSignalHandlers_[SIGTERM] = signal(SIGTERM, resetTerminal_);
-        }
+        signal(SIGINT, resetTerminal_);
+        signal(SIGHUP, resetTerminal_);
+        signal(SIGABRT, resetTerminal_);
+        signal(SIGFPE, resetTerminal_);
+        signal(SIGSEGV, resetTerminal_);
+        signal(SIGPIPE, resetTerminal_);
+        signal(SIGTERM, resetTerminal_);
     }
 
     // initialize MPI, finalize is done automatically on exit
