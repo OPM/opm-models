@@ -531,7 +531,9 @@ public:
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
                           << "Wall time:" << timer_.elapsed()
-                          << ", time:" << this->time() << ", time step size:" << timeStepSize()
+                          << ", time:" << this->time()
+                          << ", time step size:" << dt
+                          << ", next time step size: " << timeStepSize()
                           << "\n" << std::flush;
             }
         }
