@@ -738,7 +738,7 @@ public:
                 Scalar dofVolume =
                     elemCtx.dofVolume(dofIdx, /*timeIdx=*/0)
                     * intQuants.extrusionFactor();
-                values *= dofVolume;
+                values *= -dofVolume;
                 totalVolume += dofVolume;
                 totalRate += values;
             }
