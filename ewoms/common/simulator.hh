@@ -530,15 +530,46 @@ public:
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
-                          << "Wall time:" << timer_.elapsed()
-                          << ", time:" << this->time()
-                          << ", time step size:" << dt
-                          << ", next time step size: " << timeStepSize()
+                          << "Wall time: " << timer_.elapsed() << " seconds" << humanReadableTime(timer_.elapsed())
+                          << ", time: " << this->time() << " seconds" << humanReadableTime(this->time())
+                          << ", time step size: " << dt << " seconds" << humanReadableTime(dt) << ")"
+                          << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
                           << "\n" << std::flush;
             }
         }
 
         problem_->finalize();
+    }
+
+    /*!
+     * \brief Given a time step size in seconds, return it in a format which is more
+     *        easily parsable by humans.
+     *
+     * e.g. 874000.0 will become "10.12 days"
+     */
+    static std::string humanReadableTime(Scalar timeInSeconds)
+    {
+        std::ostringstream oss;
+        oss << std::setprecision(4);
+        oss << std::fixed;
+        oss << " (";
+        if (timeInSeconds >= 365.25*24*60*60)
+            oss << timeInSeconds/(365.25*24*60*60) << " years";
+        else if (timeInSeconds >= 24.0*60*60)
+            oss << timeInSeconds/(24.0*60*60) << " days";
+        else if (timeInSeconds >= 60.0*60)
+            oss << timeInSeconds/(60.0*60) << " hours";
+        else if (timeInSeconds >= 60.0)
+            oss << timeInSeconds/(60.0) << " minutes";
+        else if (timeInSeconds < 1e-6)
+            oss << timeInSeconds/(1e-6) << " microseconds";
+        else if (timeInSeconds <= 1e-3)
+            oss << timeInSeconds/(1e-3) << " miliseconds";
+        else
+            return "";
+        oss << ")";
+
+        return oss.str();
     }
 
     /*!

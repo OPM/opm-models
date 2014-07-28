@@ -304,13 +304,22 @@ public:
             Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
             int numCores = this->gridView().comm().size();
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
-                      << "Timing receipt [s] (solve total/assemble/linear solve/update): "
-                      << totalTime  << " (" << totalTime*numCores
-                      << " cummulative, " << numCores <<" processes) / "
-                      << assembleTime_  << " (" << assembleTime_/totalTime*100 << "%) / "
-                      << solveTime_ << " (" << solveTime_/totalTime*100 << "%) / "
-                      << updateTime_ << " (" << updateTime_/totalTime*100 << "%)"
-                      << "\n" << std::flush;
+                      << "Timing receipt:\n"
+                      << "  Wall time: "<< totalTime << " seconds"
+                      << Simulator::humanReadableTime(totalTime) << "\n"
+                      << "  CPU time: " << totalTime*numCores << " seconds"
+                      << Simulator::humanReadableTime(totalTime*numCores) << "\n"
+                      << "  Number of processes: " << numCores << "\n"
+                      << "  Linearization time: " << assembleTime_
+                      << Simulator::humanReadableTime(assembleTime_) << " seconds"
+                      << ", " << assembleTime_/totalTime*100 << "%\n"
+                      << "  Linear solve time: " << solveTime_ << " seconds"
+                      << Simulator::humanReadableTime(solveTime_)
+                      << ", " << solveTime_/totalTime*100 << "%\n"
+                      << "  Newton update time: " << updateTime_ << " seconds"
+                      << Simulator::humanReadableTime(updateTime_)
+                      << ", " << updateTime_/totalTime*100 << "%\n"
+                      << std::flush;
         }
     }
 
