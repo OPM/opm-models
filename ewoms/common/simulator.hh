@@ -532,7 +532,7 @@ public:
                 std::cout << "Time step " << timeStepIndex() << " done. "
                           << "Wall time: " << timer_.elapsed() << " seconds" << humanReadableTime(timer_.elapsed())
                           << ", time: " << this->time() << " seconds" << humanReadableTime(this->time())
-                          << ", time step size: " << dt << " seconds" << humanReadableTime(dt) << ")"
+                          << ", time step size: " << dt << " seconds" << humanReadableTime(dt)
                           << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
                           << "\n" << std::flush;
             }
