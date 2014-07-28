@@ -106,6 +106,7 @@ public:
             (*this)[conti0EqIdx + compIdx] =
                 fluidState.density(phaseIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)
+                / FluidSystem::molarMass(compIdx)
                 * volume;
     }
 };
