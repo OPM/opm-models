@@ -54,7 +54,7 @@ namespace Ewoms {
  * simplifies writing datasets consisting of multiple files. (i.e.
  * multiple time steps or grid refinements within a time step.)
  */
-template <class GridView>
+template <class GridView, int vtkFormat>
 class VtkMultiWriter : public BaseOutputWriter
 {
     enum { dim = GridView::dimension };
@@ -295,14 +295,14 @@ public:
 
             // write the actual data as vtu or vtp
             fileName = curWriter_->write(/*name=*/curOutFileName_.c_str(),
-                                         /*outputType=*/Dune::VTK::ascii);
+                                         static_cast<Dune::VTK::OutputType>(vtkFormat));
 
             // for the parallel case, write the pieces file
             if (commSize_ > 1)
                 fileName = curWriter_->pwrite(/*name=*/curOutFileName_.c_str(),
                                               /*path=*/".",
                                               /*extendpath=*/".",
-                                              /*outputType=*/Dune::VTK::ascii);
+                                              static_cast<Dune::VTK::OutputType>(vtkFormat));
 
             // determine name to write into the multi-file for the
             // current time step
@@ -405,29 +405,11 @@ public:
 private:
     std::string fileName_()
     {
+        // use a new file name for each time step
         std::ostringstream oss;
         oss << simName_ << "-" << std::setw(5) << std::setfill('0')
             << curWriterNum_;
         return oss.str();
-    }
-
-    std::string fileName_(int rank)
-    {
-        if (commSize_ > 1) {
-            std::ostringstream oss;
-            oss << "s" << std::setw(4) << std::setfill('0') << commSize_ << "-p"
-                << std::setw(4) << std::setfill('0') << rank << "-" << simName_
-                << "-" << std::setw(5) << curWriterNum_;
-            return oss.str();
-
-            return oss.str();
-        }
-        else {
-            std::ostringstream oss;
-            oss << simName_ << "-" << std::setw(5) << std::setfill('0')
-                << curWriterNum_;
-            return oss.str();
-        }
     }
 
     std::string fileSuffix_()

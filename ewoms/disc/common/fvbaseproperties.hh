@@ -146,6 +146,17 @@ NEW_PROP_TAG(Simulator);
  */
 NEW_PROP_TAG(EnableVtkOutput);
 
+/*!
+ * \brief Specify the format the VTK output is written to disk
+ *
+ * Possible values are:
+ *   - Dune::VTK::ascii (default)
+ *   - Dune::VTK::base64
+ *   - Dune::VTK::appendedraw
+ *   - Dune::VTK::appendedbase64
+ */
+NEW_PROP_TAG(VtkOutputFormat);
+
 //! Specify whether the linear system of equations of the last
 //! iteration of a time step should be re-used as the jacobian of the
 //! first iteration of the next time step.

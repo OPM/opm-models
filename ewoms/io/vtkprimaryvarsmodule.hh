@@ -57,7 +57,8 @@ class VtkPrimaryVarsModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+    static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::EqBuffer EqBuffer;

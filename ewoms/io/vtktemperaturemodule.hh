@@ -62,9 +62,10 @@ class VtkTemperatureModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
-    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+
+    static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
     VtkTemperatureModule(const Simulator &simulator)

@@ -36,6 +36,7 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(NewtonMethod);
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
+NEW_PROP_TAG(VtkOutputFormat);
 }} // namespace Properties, Opm
 
 namespace Ewoms {
@@ -55,7 +56,8 @@ class FvBaseNewtonConvergenceWriter
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
-    typedef Ewoms::VtkMultiWriter<GridView>  VtkMultiWriter;
+    static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
     FvBaseNewtonConvergenceWriter(NewtonMethod &nm)

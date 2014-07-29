@@ -87,7 +87,8 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
 
-    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+    static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { dim = GridView::dimension };
     enum { dimWorld = GridView::dimensionworld };

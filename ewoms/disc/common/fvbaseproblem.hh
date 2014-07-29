@@ -53,7 +53,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+    static const int vtkOutputFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkOutputFormat> VtkMultiWriter;
 
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;

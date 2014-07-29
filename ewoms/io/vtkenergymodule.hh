@@ -74,7 +74,9 @@ class VtkEnergyModule : public BaseOutputModule<TypeTag>
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
-    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+
+    static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 

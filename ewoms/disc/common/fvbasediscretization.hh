@@ -198,6 +198,9 @@ SET_INT_PROP(FvBaseDiscretization, NumericDifferenceMethod, +1);
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 
+//! Set the format of the VTK output to ASCII by default
+SET_INT_PROP(FvBaseDiscretization, VtkOutputFormat, Dune::VTK::ascii);
+
 // disable linearization recycling by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 
@@ -1140,7 +1143,8 @@ public:
      * \param u The solution function
      * \param deltaU The delta of the solution function before and after the Newton update
      */
-    void addConvergenceVtkFields(Ewoms::VtkMultiWriter<GridView> &writer,
+    template <class VtkMultiWriter>
+    void addConvergenceVtkFields(VtkMultiWriter &writer,
                                  const SolutionVector &u,
                                  const GlobalEqVector &deltaU) const
     {

@@ -241,7 +241,9 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
     enum { numComponents = FluidSystem::numComponents };
 
-    typedef Ewoms::VtkMultiWriter<GridView> VtkMultiWriter;
+    static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
 public:
