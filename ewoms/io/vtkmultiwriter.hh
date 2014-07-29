@@ -290,19 +290,10 @@ public:
     void endWrite(bool onlyDiscard = false)
     {
         if (!onlyDiscard) {
-
             std::string fileName;
-
-            // write the actual data as vtu or vtp
+            // write the actual data as vtu or vtp (plus the pieces file in the parallel case)
             fileName = curWriter_->write(/*name=*/curOutFileName_.c_str(),
                                          static_cast<Dune::VTK::OutputType>(vtkFormat));
-
-            // for the parallel case, write the pieces file
-            if (commSize_ > 1)
-                fileName = curWriter_->pwrite(/*name=*/curOutFileName_.c_str(),
-                                              /*path=*/".",
-                                              /*extendpath=*/".",
-                                              static_cast<Dune::VTK::OutputType>(vtkFormat));
 
             // determine name to write into the multi-file for the
             // current time step
