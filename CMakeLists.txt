@@ -105,10 +105,10 @@ EwomsAddTest(cuvette_pvs SOURCES tests/cuvette_pvs.cc)
 EwomsAddTest(diffusion_flash SOURCES tests/diffusion_flash.cc)
 EwomsAddTest(diffusion_ncp SOURCES tests/diffusion_ncp.cc)
 EwomsAddTest(diffusion_pvs SOURCES tests/diffusion_pvs.cc)
-EwomsAddTest(finger_immiscible SOURCES tests/finger_immiscible.cc CONDITION ALUGRID_FOUND)
+EwomsAddTest(finger_immiscible SOURCES tests/finger_immiscible.cc CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
 EwomsAddTest(fracture_discretefracture
   SOURCES tests/fracture_discretefracture.cc
-  CONDITION ALUGRID_FOUND
+  CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
   DRIVER_ARGS --simulation fracture_discretefracture --end-time=1000)
 EwomsAddTest(groundwater_immiscible SOURCES tests/groundwater_immiscible.cc)
 EwomsAddTest(infiltration_pvs SOURCES tests/infiltration_pvs.cc)
@@ -122,7 +122,7 @@ EwomsAddTest(outflow_pvs SOURCES tests/outflow_pvs.cc)
 EwomsAddTest(powerinjection_darcy SOURCES tests/powerinjection_darcy.cc)
 EwomsAddTest(powerinjection_forchheimer SOURCES tests/powerinjection_forchheimer.cc)
 EwomsAddTest(reservoir_blackoil SOURCES tests/reservoir_blackoil.cc)
-EwomsAddTest(test_navierstokes SOURCES tests/test_navierstokes.cc CONDITION ALUGRID_FOUND AND SUPERLU_FOUND)
+EwomsAddTest(test_navierstokes SOURCES tests/test_navierstokes.cc CONDITION (DUNE_ALUGRID_FOUND OR ALUGRID_FOUND) AND SUPERLU_FOUND)
 EwomsAddTest(test_quadrature SOURCES tests/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
 EwomsAddTest(test_stokes SOURCES tests/test_stokes.cc CONDITION SUPERLU_FOUND)
 EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUND)
