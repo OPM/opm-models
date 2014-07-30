@@ -11,4 +11,4 @@ Codename: Ringo
 MaintainerName: Andreas Lauser
 Maintainer: and@poware.org
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2) opm-core opm-material
-Suggests: opm-parser dune-cornerpoint
+Suggests: dune-alugrid opm-parser dune-cornerpoint
