@@ -216,11 +216,19 @@ static void resetTerminal_(int signum)
 
     tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
 
+    const char resetString[] = {
+        27, '[', '!', 'p', 27, '[', '?', '3', ';', '4', 'l', 27, '[', '4', 'l', 27, '>', 0
+    };
+
+    std::cerr << resetString << std::flush;
+
+    tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
+
     // print a new line to decrease the possibility of garbage remaining on the line
     // which shows the command line prompt
-    std::cout << "\n";
+    std::cerr << "\r\n" << std::flush;
 
-    // restore original signal handler and re-raise the signal
+    // restore the default signal handler and re-raise the signal
     signal(signum, SIG_DFL);
     raise(signum);
 }
