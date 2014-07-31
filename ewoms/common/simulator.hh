@@ -78,48 +78,43 @@ public:
     {
         verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
-        // deal with the restart stuff
-        Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
-        if (restartTime > -1e100) {
-            time_ = restartTime;
-            doRestart_ = true;
-        }
-        else {
-            time_ = 0.0;
-            doRestart_ = false;
-        }
-
-        timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
         timeStepIdx_ = 0;
-        startTime_ = time();
-        endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
+        startTime_ = 0.0;
+        endTime_ = 0.0;
+        timeStepSize_ = 0.0;
 
         episodeIdx_ = 0;
-        episodeLength_ = 1e100;
         episodeStartTime_ = 0;
+        episodeLength_ = 1e100;
 
         finished_ = false;
 
         if (verbose_)
-            std::cout << "Allocating the grid\n"
-                      << std::flush;
-
+            std::cout << "Allocating the grid\n" << std::flush;
         gridManager_.reset(new GridManager(*this));
 
         if (verbose_)
-            std::cout << "Distributing the grid\n"
-                      << std::flush;
+            std::cout << "Distributing the grid\n" << std::flush;
         gridManager_->loadBalance();
 
         if (verbose_)
-            std::cout << "Allocating the problem and the model\n"
-                      << std::flush;
+            std::cout << "Allocating the model\n" << std::flush;
         model_.reset(new Model(*this));
+
+        if (verbose_)
+            std::cout << "Allocating the problem\n" << std::flush;
         problem_.reset(new Problem(*this));
 
-        // finish the initialization of the model and the problem
+        if (verbose_)
+            std::cout << "Finish init of the model\n" << std::flush;
         model_->finishInit();
+
+        if (verbose_)
+            std::cout << "Finish init of the problem\n" << std::flush;
         problem_->finishInit();
+
+        if (verbose_)
+            std::cout << "Construction of simulation done\n" << std::flush;
     }
 
     /*!
@@ -413,7 +408,13 @@ public:
      */
     bool episodeWillBeOver() const
     {
-        return this->time() + timeStepSize() >= episodeStartTime_ + episodeLength() * (1 - 1e-8);
+        return
+            startTime()
+            + this->time()
+            + timeStepSize()
+            >=
+            episodeStartTime_
+            + episodeLength()*(1 - 1e-8);
     }
 
     /*!
@@ -446,8 +447,11 @@ public:
      */
     void run()
     {
-        // try restart the simulation if requested
-        if (doRestart_) {
+        Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
+        if (restartTime > -1e100) {
+            // try to restart a previous simulation
+            time_ = restartTime;
+
             Ewoms::Restart res;
             res.deserializeBegin(*this, time_);
             if (verbose_)
@@ -462,13 +466,19 @@ public:
             if (verbose_)
                 std::cout << "Applying the initial solution of the \"" << problem_->name()
                           << "\" problem\n" << std::flush;
+
+            timeStepSize_ = 0.0;
+            timeStepIdx_ = -1;
+
             model_->applyInitialSolution();
 
-            // write initial condition (if problem is not restarted)
-            time_ -= timeStepSize_;
+            // write initial condition
             if (problem_->shouldWriteOutput())
                 problem_->writeOutput();
-            time_ += timeStepSize_;
+
+            endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
+            timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+            timeStepIdx_ = 0.0;
         }
 
         timer_.reset();
@@ -485,7 +495,6 @@ public:
 
             // execute the time integration scheme
             problem_->timeIntegration();
-            Scalar dt = timeStepSize();
 
             // post-process the current solution
             problem_->endTimeStep();
@@ -495,10 +504,11 @@ public:
                 problem_->writeOutput();
 
             // do the next time integration
+            Scalar oldDt = timeStepSize();
             problem_->advanceTimeLevel();
 
             // advance the simulated time by the current time step size
-            time_ += dt;
+            time_ += oldDt;
             ++timeStepIdx_;
 
             // notify the problem if an episode is finished
@@ -532,7 +542,7 @@ public:
                 std::cout << "Time step " << timeStepIndex() << " done. "
                           << "Wall time: " << timer_.elapsed() << " seconds" << humanReadableTime(timer_.elapsed())
                           << ", time: " << this->time() << " seconds" << humanReadableTime(this->time())
-                          << ", time step size: " << dt << " seconds" << humanReadableTime(dt)
+                          << ", time step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
                           << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
                           << "\n" << std::flush;
             }
@@ -645,17 +655,6 @@ public:
     }
 
 private:
-    /*!
-     * \brief Load a previously saved state of the whole simulation
-     *        from disk.
-     *
-     * \param restartTime The simulation time on which the program was
-     *                    written to disk.
-     */
-    void restart_(Scalar restartTime)
-    {
-    }
-
     std::unique_ptr<GridManager> gridManager_;
     std::unique_ptr<Model> model_;
     std::unique_ptr<Problem> problem_;
@@ -673,7 +672,6 @@ private:
     int timeStepIdx_;
     bool finished_;
     bool verbose_;
-    bool doRestart_;
 };
 } // namespace Ewoms
 
