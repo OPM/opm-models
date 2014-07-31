@@ -109,6 +109,10 @@ SET_TYPE_PROP(BlackOilModel, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);
 SET_TYPE_PROP(BlackOilModel, FluidSystem,
               Opm::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
+//! Set the number of Newton-Raphson iterations for which the update should be chopped to
+//! 4 by default
+SET_INT_PROP(BlackOilModel, BlackoilNumChoppedIterations, 4);
+
 //! Only produce Eclipse output if the necessary preconditions are fulfilled.
 SET_PROP(BlackOilModel, EnableEclipseOutput)
 { private:
