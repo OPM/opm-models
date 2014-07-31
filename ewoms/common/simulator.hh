@@ -527,12 +527,9 @@ public:
                 // episode or an exception is thrown...
                 problem_->endEpisode();
             }
-            else {
-                // notify the problem that the timestep is done and ask it
-                // for a suggestion for the next timestep size
-                // set the time step size for the next step
+            else
+                // ask the problem to provide the next time step size
                 setTimeStepSize(problem_->nextTimeStepSize());
-            }
 
             // write restart file if mandated by the problem
             if (problem_->shouldWriteRestartFile())
