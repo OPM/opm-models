@@ -77,9 +77,6 @@ public:
      */
     void writeOutput(bool verbose = true)
     {
-        if (!asImp_().shouldWriteOutput())
-            return;
-
         // calculate the time _after_ the time was updated
         Scalar t = this->simulator().time() + this->simulator().timeStepSize();
 

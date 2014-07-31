@@ -544,11 +544,6 @@ public:
      */
     void writeOutput(bool verbose = true)
     {
-        if (!asImp_().shouldWriteOutput())
-            // skip if the implementation says we should not write
-            // anything
-            return;
-
         if (verbose && gridView().comm().rank() == 0)
             std::cout << "Writing visualization results for the current time step.\n"
                       << std::flush;
