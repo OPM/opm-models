@@ -270,7 +270,7 @@ public:
         // http://en.wikipedia.org/wiki/ANSI_escape_code
         const char *clearRemainingLine = "\n";
         if (isatty(fileno(stdout))) {
-            const char blubb[] = { 0x1b, '[', 'K', '\r', 0 };
+            static const char blubb[] = { 0x1b, '[', 'K', '\r', 0 };
             clearRemainingLine = blubb;
         }
 
