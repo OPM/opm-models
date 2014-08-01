@@ -344,7 +344,7 @@ int start(int argc, char **argv)
         simulator.run();
 
         if (myRank == 0) {
-            std::cout << "eWoms reached the destination. If it is not the one that was intended,"
+            std::cout << "eWoms reached the destination. If it is not the one that was intended, "
                       << "change your booking and try again.\n"
                       << std::flush;
         }

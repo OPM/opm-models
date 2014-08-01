@@ -356,6 +356,7 @@ public:
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
         ElementContext elemCtx(simulator_);
+        gridTotalVolume_ = 0.0;
 
         // iterate through the grid and evaluate the initial condition
         ElementIterator it = gridView_.template begin</*codim=*/0>();
@@ -368,6 +369,7 @@ public:
 
             // deal with the current element
             elemCtx.updateStencil(*it);
+            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
             // loop over all element vertices, i.e. sub control volumes
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
@@ -375,17 +377,22 @@ public:
                 // map the local degree of freedom index to the global one
                 unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-                dofTotalVolume_[globalIdx] +=
-                    elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume();
+                Scalar dofVolume = stencil.subControlVolume(dofIdx).volume();
+                dofTotalVolume_[globalIdx] += dofVolume;
+                gridTotalVolume_ += dofVolume;
             }
         }
 
+        // add the volumes of the DOFs on the process boundaries
         const auto sumHandle =
             GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
                                                               asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
                               Dune::InteriorBorder_InteriorBorder_Interface,
                               Dune::ForwardCommunication);
+
+        // sum up the volumes of the grid partitions
+        gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
 
         localJacobian_.init(simulator_);
         jacAsm_->init(simulator_);
@@ -676,7 +683,7 @@ public:
      * This method is purely intented for debugging purposes. If the program is compiled
      * with optimizations enabled, it becomes a no-op.
      */
-    void checkConservativeness(Scalar tolerance = 1e-4, bool verbose=false) const
+    void checkConservativeness(Scalar tolerance = -1, bool verbose=false) const
     {
 #ifndef NDEBUG
         EqVector storageBeginTimeStep;
@@ -685,6 +692,15 @@ public:
         Scalar totalBoundaryArea(0.0);
         Scalar totalVolume(0.0);
         EqVector totalRate(0.0);
+
+        // take the newton tolerance times the total volume of the grid if we're not
+        // given an explicit tolerance...
+        if (tolerance <= 0) {
+            tolerance =
+                simulator_.model().newtonMethod().tolerance()
+                * simulator_.model().gridTotalVolume()
+                * 1000;
+        }
 
         // we assume the implicit Euler time discretization for now...
         assert(historySize == 2);
@@ -765,7 +781,8 @@ public:
                 std::cout << "difference in rates: " << (storageRate - totalRate) << "\n";
             }
             for (int eqIdx = 0; eqIdx < EqVector::dimension; ++eqIdx) {
-                Scalar eps = (std::abs(storageRate[eqIdx]) + std::abs(totalRate[eqIdx]))*tolerance;
+                Scalar eps =
+                    (std::abs(storageRate[eqIdx]) + std::abs(totalRate[eqIdx]))*tolerance;
                 eps = std::max(tolerance, eps);
                 assert(std::abs(storageRate[eqIdx] - totalRate[eqIdx]) <= eps);
             }
@@ -781,6 +798,13 @@ public:
      */
     Scalar dofTotalVolume(int globalIdx) const
     { return dofTotalVolume_[globalIdx]; }
+
+    /*!
+     * \brief Returns the volume \f$\mathrm{[m^3]}\f$ of the whole grid which represents
+     *        the spatial domain.
+     */
+    Scalar gridTotalVolume() const
+    { return gridTotalVolume_; }
 
     /*!
      * \brief Reference to the solution at a given history index as a block vector.
@@ -1404,7 +1428,8 @@ protected:
 
     std::list<BaseOutputModule<TypeTag>*> outputModules_;
 
-    std::vector<double> dofTotalVolume_;
+    Scalar gridTotalVolume_;
+    std::vector<Scalar> dofTotalVolume_;
 };
 } // namespace Ewoms
 
