@@ -345,7 +345,7 @@ int start(int argc, char **argv)
 
         if (myRank == 0) {
             std::cout << "eWoms reached the destination. If it is not the one that was intended, "
-                      << "change your booking and try again.\n"
+                      << "change the booking and try again.\n"
                       << std::flush;
         }
         return 0;

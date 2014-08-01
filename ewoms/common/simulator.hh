@@ -76,6 +76,8 @@ public:
 
     Simulator(bool verbose = true)
     {
+        setupTimer_.reset();
+
         verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
         timeStepIdx_ = 0;
@@ -246,10 +248,16 @@ public:
     { return endTime_; }
 
     /*!
-     * \brief Returns the current wall time (cpu time).
+     * \brief Returns the current wall time required by actually running the simulation.
      */
-    double wallTime() const
-    { return timer_.elapsed(); }
+    double executionTime() const
+    { return executionTimer_.elapsed(); }
+
+    /*!
+     * \brief Returns the wall time required by setting up and initializing the simulation.
+     */
+    double setupTime() const
+    { return setupTimer_.elapsed(); }
 
     /*!
      * \brief Set the current time step size to a given value.
@@ -482,7 +490,8 @@ public:
             timeStepIdx_ = 0.0;
         }
 
-        timer_.reset();
+        setupTimer_.stop();
+        executionTimer_.reset();
 
         // do the time steps
         while (!finished()) {
@@ -538,8 +547,8 @@ public:
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
-                          << "Wall time: " << timer_.elapsed() << " seconds" << humanReadableTime(timer_.elapsed())
-                          << ", time: " << this->time() << " seconds" << humanReadableTime(this->time())
+                          << "Execution time: " << executionTimer_.elapsed() << " seconds" << humanReadableTime(executionTimer_.elapsed())
+                          << ", simulation time: " << this->time() << " seconds" << humanReadableTime(this->time())
                           << ", time step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
                           << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
                           << "\n" << std::flush;
@@ -661,7 +670,8 @@ private:
     Scalar episodeStartTime_;
     Scalar episodeLength_;
 
-    Dune::Timer timer_;
+    Dune::Timer setupTimer_;
+    Dune::Timer executionTimer_;
     Scalar startTime_;
     Scalar time_;
     Scalar endTime_;

@@ -302,24 +302,35 @@ public:
     void finalize()
     {
         if (gridView().comm().rank() == 0) {
-            Scalar totalTime = std::max(1e-100, assembleTime_ + solveTime_ + updateTime_);
+            Scalar execTime = simulator().executionTime();
             int numCores = this->gridView().comm().size();
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
-                      << "Timing receipt:\n"
-                      << "  Wall time: "<< totalTime << " seconds"
-                      << Simulator::humanReadableTime(totalTime) << "\n"
-                      << "  CPU time: " << totalTime*numCores << " seconds"
-                      << Simulator::humanReadableTime(totalTime*numCores) << "\n"
+                      << "\n"
+                      << "-------------- Timing receipt --------------\n"
+                      << "  Setup time: "<< simulator().setupTime() << " seconds"
+                      << Simulator::humanReadableTime(simulator().setupTime()) << "\n"
+                      << "  Execution time: "<< execTime << " seconds"
+                      << Simulator::humanReadableTime(execTime) << "\n"
+                      << "  Execution CPU time: " << execTime*numCores << " seconds"
+                      << Simulator::humanReadableTime(execTime*numCores) << "\n"
                       << "  Number of processes: " << numCores << "\n"
                       << "  Linearization time: " << assembleTime_
                       << Simulator::humanReadableTime(assembleTime_) << " seconds"
-                      << ", " << assembleTime_/totalTime*100 << "%\n"
+                      << ", " << assembleTime_/execTime*100 << "%\n"
                       << "  Linear solve time: " << solveTime_ << " seconds"
                       << Simulator::humanReadableTime(solveTime_)
-                      << ", " << solveTime_/totalTime*100 << "%\n"
+                      << ", " << solveTime_/execTime*100 << "%\n"
                       << "  Newton update time: " << updateTime_ << " seconds"
                       << Simulator::humanReadableTime(updateTime_)
-                      << ", " << updateTime_/totalTime*100 << "%\n"
+                      << ", " << updateTime_/execTime*100 << "%\n"
+                      << "\n"
+                      << "Note: Taxes and administrative overhead\n"
+                      << "      are "
+                      << (execTime - (assembleTime_+solveTime_+updateTime_))/execTime*100
+                      << "% of total execution time.\n"
+                      << "      Thank you for your understanding.\n"
+                      << "--------------------------------------------\n"
+                      << "\n"
                       << std::flush;
         }
     }
