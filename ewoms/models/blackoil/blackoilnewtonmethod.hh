@@ -123,7 +123,7 @@ protected:
 
         // update the solution
         for (unsigned i = 0; i < previousSolution.size(); ++i) {
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 // calculate the update of the curren primary variable. Here we limit the
                 // pressure update, but do we not clamp anything after the specified
                 // number of iterations was reached
