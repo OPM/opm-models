@@ -80,6 +80,7 @@ public:
 
         timeStepIdx_ = 0;
         startTime_ = 0.0;
+        time_ = 0.0;
         endTime_ = 0.0;
         timeStepSize_ = 0.0;
 
