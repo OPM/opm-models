@@ -487,7 +487,7 @@ public:
 
             endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
             timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
-            timeStepIdx_ = 0.0;
+            timeStepIdx_ = 0;
         }
 
         setupTimer_.stop();
