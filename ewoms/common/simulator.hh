@@ -83,8 +83,8 @@ public:
         timeStepIdx_ = 0;
         startTime_ = 0.0;
         time_ = 0.0;
-        endTime_ = 0.0;
-        timeStepSize_ = 0.0;
+        endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
+        timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
 
         episodeIdx_ = 0;
         episodeStartTime_ = 0;
@@ -476,6 +476,8 @@ public:
                 std::cout << "Applying the initial solution of the \"" << problem_->name()
                           << "\" problem\n" << std::flush;
 
+            Scalar oldTimeStepSize = timeStepSize_;
+            int oldTimeStepIdx = timeStepIdx_;
             timeStepSize_ = 0.0;
             timeStepIdx_ = -1;
 
@@ -485,9 +487,8 @@ public:
             if (problem_->shouldWriteOutput())
                 problem_->writeOutput();
 
-            endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
-            timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
-            timeStepIdx_ = 0;
+            timeStepSize_ = oldTimeStepSize;
+            timeStepIdx_ = oldTimeStepIdx;
         }
 
         setupTimer_.stop();
