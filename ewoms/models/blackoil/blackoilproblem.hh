@@ -70,6 +70,13 @@ public:
     }
 
     /*!
+     * \brief Returns the index of the relevant region for thermodynmic properties
+     */
+    template <class Context>
+    int pvtRegionIndex(const Context &context, int spaceIdx, int timeIdx) const
+    { return 0; }
+
+    /*!
      * \brief Write the relevant secondary variables of the current
      *        solution into the output files.
      *

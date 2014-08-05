@@ -208,6 +208,7 @@ class BlackOilModel
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -358,6 +359,14 @@ public:
 
 //protected:
 //    friend typename GET_PROP_TYPE(TypeTag, Discretization);
+
+    template <class Context>
+    void supplementInitialSolution_(PrimaryVariables &priVars,
+                                    const Context &context, int dofIdx, int timeIdx)
+    {
+        int regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
+        priVars.setPvtRegionIndex(regionIdx);
+    }
 
     void registerOutputModules_()
     {

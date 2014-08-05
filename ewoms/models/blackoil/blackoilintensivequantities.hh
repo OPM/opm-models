@@ -82,6 +82,8 @@ public:
         const auto &problem = elemCtx.problem();
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
+        int pvtRegionIdx = priVars.pvtRegionIndex();
+
         // extract the water and the gas saturations for convenience
         Scalar Sw = priVars[Indices::waterSaturationIdx];
 
@@ -124,7 +126,7 @@ public:
         // for the oil phase, the switching primary variable needs to be considered
         if (priVars.switchingVariableIsGasSaturation()) {
             // we take the composition of the gas-saturated oil phase
-            Scalar xoG = FluidSystem::saturatedOilGasMoleFraction(po);
+            Scalar xoG = FluidSystem::saturatedOilGasMoleFraction(po, /*regionIdx=*/0);
 
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
@@ -141,6 +143,7 @@ public:
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
+        paramCache.setRegionIndex(pvtRegionIdx);
         paramCache.updateAll(fluidState_);
 
         // set the phase densities

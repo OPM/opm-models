@@ -158,39 +158,44 @@ public:
         if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
             return;
 
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            const auto &fs = elemCtx.intensiveQuantities(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
-            int I = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
+            const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
+            int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+            int regionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
             Scalar po = fs.pressure(oilPhaseIdx);
             Scalar XoG = fs.massFraction(oilPhaseIdx, gasCompIdx);
 
             if (saturationsOutput_()) {
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                    saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
-                    Valgrind::CheckDefined(saturation_[phaseIdx][I]);
+                    saturation_[phaseIdx][globalDofIdx] = fs.saturation(phaseIdx);
+                    Valgrind::CheckDefined(saturation_[phaseIdx][globalDofIdx]);
                 }
             }
             if (pressuresOutput_()) {
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                    pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
-                    Valgrind::CheckDefined(pressure_[phaseIdx][I]);
+                    pressure_[phaseIdx][globalDofIdx] = fs.pressure(phaseIdx);
+                    Valgrind::CheckDefined(pressure_[phaseIdx][globalDofIdx]);
                 }
             }
             if (gasDissolutionFactorOutput_()) {
-                gasDissolutionFactor_[I] = FluidSystem::gasDissolutionFactor(po);
-                Valgrind::CheckDefined(gasDissolutionFactor_[I]);
+                gasDissolutionFactor_[globalDofIdx] =
+                    FluidSystem::gasDissolutionFactor(po, regionIdx);
+                Valgrind::CheckDefined(gasDissolutionFactor_[globalDofIdx]);
             }
             if (gasFormationVolumeFactorOutput_()) {
-                gasFormationVolumeFactor_[I] = FluidSystem::gasFormationVolumeFactor(po);
-                Valgrind::CheckDefined(gasFormationVolumeFactor_[I]);
+                gasFormationVolumeFactor_[globalDofIdx] =
+                    FluidSystem::gasFormationVolumeFactor(po, regionIdx);
+                Valgrind::CheckDefined(gasFormationVolumeFactor_[globalDofIdx]);
             }
             if (saturatedOilFormationVolumeFactorOutput_()) {
-                saturatedOilFormationVolumeFactor_[I] = FluidSystem::saturatedOilFormationVolumeFactor(po);
-                Valgrind::CheckDefined(saturatedOilFormationVolumeFactor_[I]);
+                saturatedOilFormationVolumeFactor_[globalDofIdx] =
+                    FluidSystem::saturatedOilFormationVolumeFactor(po, regionIdx);
+                Valgrind::CheckDefined(saturatedOilFormationVolumeFactor_[globalDofIdx]);
             }
             if (oilSaturationPressureOutput_()) {
-                oilSaturationPressure_[I] = FluidSystem::oilSaturationPressure(XoG);
-                Valgrind::CheckDefined(oilSaturationPressure_[I]);
+                oilSaturationPressure_[globalDofIdx] =
+                    FluidSystem::oilSaturationPressure(XoG, regionIdx);
+                Valgrind::CheckDefined(oilSaturationPressure_[globalDofIdx]);
             }
         }
     }

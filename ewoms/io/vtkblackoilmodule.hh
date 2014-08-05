@@ -133,24 +133,29 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            const auto &fs = elemCtx.intensiveQuantities(/*spaceIdx=*/i, /*timeIdx=*/0).fluidState();
-            int I = elemCtx.globalSpaceIndex(/*spaceIdx=*/i, /*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
+            const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
+            int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
             Scalar po = fs.pressure(oilPhaseIdx);
             Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
-            Scalar rhooRef = FluidSystem::surfaceDensity(oilPhaseIdx);
-            Scalar rhogRef = FluidSystem::surfaceDensity(gasPhaseIdx);
+            int regionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
+            Scalar rhooRef = FluidSystem::surfaceDensity(oilPhaseIdx, regionIdx);
+            Scalar rhogRef = FluidSystem::surfaceDensity(gasPhaseIdx, regionIdx);
 
             if (gasDissolutionFactorOutput_())
-                gasDissolutionFactor_[I] = X_oG / rhogRef * rhooRef / (1 - X_oG);
+                gasDissolutionFactor_[globalDofIdx] = X_oG / rhogRef * rhooRef / (1 - X_oG);
             if (saturatedOilGasDissolutionFactorOutput_())
-                saturatedOilGasDissolutionFactor_[I] = FluidSystem::gasDissolutionFactor(po);
+                saturatedOilGasDissolutionFactor_[globalDofIdx] =
+                    FluidSystem::gasDissolutionFactor(po, regionIdx);
             if (gasFormationVolumeFactorOutput_())
-                gasFormationVolumeFactor_[I] = FluidSystem::gasFormationVolumeFactor(po);
+                gasFormationVolumeFactor_[globalDofIdx] =
+                    FluidSystem::gasFormationVolumeFactor(po, regionIdx);
             if (saturatedOilFormationVolumeFactorOutput_())
-                saturatedOilFormationVolumeFactor_[I] = FluidSystem::saturatedOilFormationVolumeFactor(po);
+                saturatedOilFormationVolumeFactor_[globalDofIdx] =
+                    FluidSystem::saturatedOilFormationVolumeFactor(po, regionIdx);
             if (oilSaturationPressureOutput_())
-                oilSaturationPressure_[I] = FluidSystem::oilSaturationPressure(X_oG);
+                oilSaturationPressure_[globalDofIdx] =
+                    FluidSystem::oilSaturationPressure(X_oG, regionIdx);
         }
     }
 

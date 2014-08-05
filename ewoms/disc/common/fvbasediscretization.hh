@@ -440,6 +440,7 @@ public:
                 // let the problem do the dirty work of nailing down
                 // the initial solution.
                 simulator_.problem().initial(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
+                asImp_().supplementInitialSolution_(uCur[globalIdx], elemCtx, dofIdx, /*timeIdx=*/0);
                 uCur[globalIdx].checkDefined();
             }
         }
@@ -1334,6 +1335,11 @@ protected:
         jacAsm_ = new JacobianAssembler();
         jacAsm_->init(simulator_);
     }
+
+    template <class Context>
+    void supplementInitialSolution_(PrimaryVariables &priVars,
+                                    const Context &context, int dofIdx, int timeIdx)
+    { }
 
     static bool storeIntensiveQuantities_()
     { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
