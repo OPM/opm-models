@@ -32,17 +32,17 @@ macro(EwomsAddTest TestName)
   endif()
   if (NOT BUILD_TESTING)
     # don't build the tests by _default_ (i.e., when typing
-    # 'make'). Though they can still be build using 'make tests' and
+    # 'make'). Though they can still be build using 'make ctests' and
     # they can be build and run using 'make check'
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
 
   set(SKIP_CUR_TEST "1")
-  # the "x " is a hack which is required to prevent CMake from
+  # the "AND OR " is a hack which is required to prevent CMake from
   # evaluating the condition in the string. (which might
   # evaluate to an empty string even though "${CURTEST_CONDITION}"
   # is not empty.)
-  if ("x ${CURTEST_CONDITION}" STREQUAL "x ")
+  if ("AND OR ${CURTEST_CONDITION}" STREQUAL "AND OR ")
     set(SKIP_CUR_TEST "0")
   elseif(${CURTEST_CONDITION})
     set(SKIP_CUR_TEST "0")
@@ -77,6 +77,8 @@ macro(EwomsAddTest TestName)
       endif()
     endif()
   else ()
-    add_test(${TestName} skip_test_dummy)
+    if (NOT CURTEST_NO_COMPILE)
+      add_test(${TestName} skip_test_dummy)
+    endif()
   endif()
 endmacro()
