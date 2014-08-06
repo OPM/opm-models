@@ -128,11 +128,22 @@ protected:
                 // pressure update, but do we not clamp anything after the specified
                 // number of iterations was reached
                 Scalar delta = solutionUpdate[i][eqIdx];
-                if (eqIdx == Indices::gasPressureIdx
-                    && this->numIterations_ < numChoppedIterations_)
-                {
-                    if (std::abs(delta/previousSolution[i][eqIdx]) > 0.1)
+                if (this->numIterations_ < numChoppedIterations_) {
+                    // limit changes in pressure to 10% of the value of the previous iteration
+                    if (eqIdx == Indices::gasPressureIdx
+                        && std::abs(delta/previousSolution[i][eqIdx]) > 0.1)
+                    {
                         delta /= std::abs(delta/(0.1*previousSolution[i][eqIdx]));
+                    }
+                    // limit changes in saturation to 20%
+                    else if ((eqIdx == Indices::waterSaturationIdx ||
+                              (eqIdx == Indices::switchIdx
+                               && currentSolution[i].switchingVariableIsGasSaturation()))
+                             && std::abs(delta) > 0.2)
+                    {
+                        delta /= std::abs(delta/0.2);
+                    }
+
                 }
 
                 // do the actual update
