@@ -45,6 +45,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 #include <termios.h>
 #include <signal.h>
 
@@ -234,7 +235,10 @@ static void resetTerminal_(int signum)
 
     tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
 
-    usleep(300 * 1000);
+    struct timespec sleepTime;
+    sleepTime.tv_sec = 0;
+    sleepTime.tv_nsec = 300 * 1000 * 1000;
+    nanosleep(&sleepTime, NULL);
 
     // restore the default signal handler and re-raise the signal
     signal(signum, SIG_DFL);
