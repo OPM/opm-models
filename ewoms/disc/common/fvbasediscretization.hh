@@ -663,7 +663,7 @@ public:
                 continue; // ignore ghost and overlap elements
 
             elemCtx.updateStencil(*elemIt);
-            elemCtx.updateIntensiveQuantities(timeIdx);
+            elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
             int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
             elemStorage.resize(numPrimaryDof);

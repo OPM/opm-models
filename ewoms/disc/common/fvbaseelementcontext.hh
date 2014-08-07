@@ -163,39 +163,17 @@ public:
      *                time discretization.
      */
     void updateIntensiveQuantities(int timeIdx)
-    {
-        // update the intensive quantities for the whole history
-        const SolutionVector &globalSol = model().solution(timeIdx);
+    { updateIntensiveQuantities_(timeIdx, numDof(/*timeIdx=*/0)); }
 
-        // update the non-gradient quantities
-        int nDof = numDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            int globalIdx = globalSpaceIndex(dofIdx, timeIdx);
-            const PrimaryVariables &volSol = globalSol[globalIdx];
-
-            dofVars_[dofIdx].thermodynamicHint[timeIdx] =
-                model().thermodynamicHint(globalIdx, timeIdx);
-
-            const auto *cachedIntQuants = model().cachedIntensiveQuantities(globalIdx, timeIdx);
-            if (cachedIntQuants) {
-                dofVars_[dofIdx].priVars[timeIdx] = volSol;
-                dofVars_[dofIdx].intensiveQuantities[timeIdx] = *cachedIntQuants;
-            }
-            else {
-                updateSingleIntQuants_(volSol, dofIdx, timeIdx);
-                model().updateCachedIntensiveQuantities(dofVars_[dofIdx].intensiveQuantities[timeIdx],
-                                                        globalIdx,
-                                                        timeIdx);
-            }
-        }
-
-        // update gradients
-        for (int dofIdx = 0; dofIdx < nDof; dofIdx++) {
-            dofVars_[dofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
-                                                                             dofIdx,
-                                                                             timeIdx);
-        }
-    }
+    /*!
+     * \brief Compute the intensive quantities of all sub-control volumes
+     *        of the current element for a single time index.
+     *
+     * \param timeIdx The index of the solution vector used by the
+     *                time discretization.
+     */
+    void updatePrimaryIntensiveQuantities(int timeIdx)
+    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(/*timeIdx=*/0)); }
 
     /*!
      * \brief Compute the intensive quantities of a single sub-control
@@ -541,6 +519,45 @@ public:
     }
 
 protected:
+    /*!
+     * \brief Update the first 'n' intensive quantities objects from the primary variables.
+     *
+     * This method considers the intensive quantities cache.
+     */
+    void updateIntensiveQuantities_(int timeIdx, int numDof)
+    {
+        // update the intensive quantities for the whole history
+        const SolutionVector &globalSol = model().solution(timeIdx);
+
+        // update the non-gradient quantities
+        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
+            int globalIdx = globalSpaceIndex(dofIdx, timeIdx);
+            const PrimaryVariables &volSol = globalSol[globalIdx];
+
+            dofVars_[dofIdx].thermodynamicHint[timeIdx] =
+                model().thermodynamicHint(globalIdx, timeIdx);
+
+            const auto *cachedIntQuants = model().cachedIntensiveQuantities(globalIdx, timeIdx);
+            if (cachedIntQuants) {
+                dofVars_[dofIdx].priVars[timeIdx] = volSol;
+                dofVars_[dofIdx].intensiveQuantities[timeIdx] = *cachedIntQuants;
+            }
+            else {
+                updateSingleIntQuants_(volSol, dofIdx, timeIdx);
+                model().updateCachedIntensiveQuantities(dofVars_[dofIdx].intensiveQuantities[timeIdx],
+                                                        globalIdx,
+                                                        timeIdx);
+            }
+        }
+
+        // update gradients
+        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
+            dofVars_[dofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
+                                                                             dofIdx,
+                                                                             timeIdx);
+        }
+    }
+
     void updateSingleIntQuants_(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
     {
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
