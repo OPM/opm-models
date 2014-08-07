@@ -155,6 +155,9 @@ int setupParameters_(int argc, char **argv)
  */
 static void resetTerminal_(int signum)
 {
+    // first thing to do when a nuke hits: restore the default signal handler
+    signal(signum, SIG_DFL);
+
     // the following code resets the terminal status and was shamelessly ripped of from
     // ncurses' "tset" utility. The original copyright license is the following:
     //
@@ -235,13 +238,13 @@ static void resetTerminal_(int signum)
 
     tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
 
+    // sleep a bit to give the terminal some time to contemplate about the commands...
     struct timespec sleepTime;
     sleepTime.tv_sec = 0;
-    sleepTime.tv_nsec = 300 * 1000 * 1000;
+    sleepTime.tv_nsec = 100 * 1000 * 1000;
     nanosleep(&sleepTime, NULL);
 
-    // restore the default signal handler and re-raise the signal
-    signal(signum, SIG_DFL);
+    // after we did our best to clean the pedestrian way, re-raise the signal
     raise(signum);
 }
 //! \endcond
