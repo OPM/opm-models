@@ -833,9 +833,15 @@ public:
     {
         elementPtr_ = ElementPointer(e);
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        numVertices = e.subEntities(/*codim=*/dim);
+        numEdges = e.subEntities(/*codim=*/dim-1);
+        numFaces = (dim<3)?0:e.subEntities(/*codim=*/1);
+#else
         numVertices = e.template count</*codim=*/dim>();
         numEdges = e.template count</*codim=*/dim-1>();
         numFaces = (dim<3)?0:e.template count</*codim=*/1>();
+#endif
         numBoundarySegments_ = 0; // TODO: really required here(?)
     }
 

@@ -33,6 +33,7 @@
 #include <dune/common/timer.hh>
 
 #include <iostream>
+#include <iomanip>
 #include <memory>
 
 namespace Opm {

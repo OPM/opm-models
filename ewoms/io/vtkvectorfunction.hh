@@ -87,7 +87,11 @@ public:
             double min = 1e100;
             int imin = -1;
             Dune::GeometryType gt = e.type();
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int n = e.subEntities(dim);
+#else
             int n = e.template count<dim>();
+#endif
             for (int i = 0; i < n; ++i) {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
                 Dune::FieldVector<ctype, dim> local =
