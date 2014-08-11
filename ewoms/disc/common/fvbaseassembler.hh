@@ -219,7 +219,7 @@ public:
         if (!succeeded) {
             OPM_THROW(Opm::NumericalProblem,
                        "A process did not succeed in linearizing the system");
-        };
+        }
 
         if (!linearizationReused && enablePartialRelinearization_()) {
             greenElems_ = gridView_().comm().sum(greenElems_);
@@ -369,7 +369,7 @@ public:
             else
                 nextRelinearizationAccuracy_ =
                     std::max(nextRelinearizationAccuracy_, dofError_[i]);
-        };
+        }
 
         Stencil stencil(gridView_());
         // Mark all red elements
@@ -386,7 +386,7 @@ public:
                     isRed = true;
                     break;
                 }
-            };
+            }
 
             // if yes, the element color is also red, else it is not
             // red, i.e. green for the mean time
@@ -414,7 +414,7 @@ public:
                 if (dofColor_[globalIdx] != Red) {
                     dofColor_[globalIdx] = Orange;
                 }
-            };
+            }
         }
 
         // at this point, we communicate the yellow degrees of freedom
@@ -446,7 +446,7 @@ public:
                     isYellow = true;
                     break;
                 }
-            };
+            }
 
             if (isYellow)
                 elementColor_[elemIdx] = Yellow;
@@ -469,7 +469,7 @@ public:
                 // if a degree of freedom is orange, recolor it to yellow!
                 if (dofColor_[globalIdx] == Orange)
                     dofColor_[globalIdx] = Yellow;
-            };
+            }
         }
 
         // demote the border orange degrees of freedom
@@ -492,7 +492,7 @@ public:
             // set the error of this degree of freedom to 0 because
             // the system will be relinearized at this dof
             dofError_[i] = 0.0;
-        };
+        }
     }
 
     /*!
@@ -618,7 +618,7 @@ private:
                     neighbors[myIdx].insert(neighborIdx);
                 }
             }
-        };
+        }
 
         // allocate space for the rows of the matrix
         for (int i = 0; i < numDof; ++i) {
@@ -662,7 +662,7 @@ private:
                 for (int i=0; i < numDof; ++ i) {
                     storageJacobian_[i] = 0;
                     storageTerm_[i] = 0;
-                };
+                }
             }
 
             return;
@@ -690,7 +690,7 @@ private:
             for (; colIt != colEndIt; ++colIt) {
                 (*colIt) = 0.0;
             }
-        };
+        }
     }
 
     // linearize the whole system
@@ -718,7 +718,7 @@ private:
                 // term of the last iteration of the last time step...)
                 residual_[i] = storageTerm_[i];
                 residual_[i] *= -1;
-            };
+            }
 
             reuseLinearization_ = false;
             oldDt_ = curDt;
@@ -740,7 +740,7 @@ private:
                 continue;
 
             assembleElement_(elem);
-        };
+        }
     }
 
 

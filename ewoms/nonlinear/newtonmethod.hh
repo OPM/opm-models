@@ -325,7 +325,7 @@ public:
                               << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
-            };
+            }
 
             if (asImp_().verbose_()) {
                 std::cout << "Solve: M deltax^k = r"
@@ -394,7 +394,7 @@ public:
                               << e.what() << "\"\n" << std::flush;
                 asImp_().failed_();
                 return false;
-            };
+            }
         }
 
         // tell the implementation that we're done

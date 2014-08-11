@@ -132,7 +132,7 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             os << "(c_tot," << FluidSystem::componentName(compIdx) << " = "
                << this->operator[](cTot0Idx + compIdx);
-        };
+        }
         os << ")" << std::flush;
     }
 };

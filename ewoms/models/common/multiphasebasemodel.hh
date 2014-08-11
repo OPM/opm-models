@@ -216,7 +216,7 @@ public:
                 tmp *= scv.volume()*intQuants.extrusionFactor();
                 storage += tmp;
             }
-        };
+        }
 
         storage = this->gridView_.comm().sum(storage);
     }

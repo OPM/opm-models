@@ -135,7 +135,7 @@ public:
             ird.borderDistance = it->borderDistance;
 
             this->push_back(ird);
-        };
+        }
     }
 };
 
@@ -151,9 +151,8 @@ public:
 
         auto it = borderList.begin();
         const auto &endIt = borderList.end();
-        for (; it != endIt; ++it) {
+        for (; it != endIt; ++it)
             this->insert(it->peerRank);
-        };
     }
 };
 

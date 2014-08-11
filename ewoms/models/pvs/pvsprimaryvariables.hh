@@ -343,7 +343,7 @@ public:
                    << FluidSystem::componentName(compIdx) << " = "
                    << (*this)[switch0Idx + switchIdx];
             }
-        };
+        }
         for (int compIdx = numPhases - 1; compIdx < numComponents - 1;
              ++compIdx) {
             os << ", x_" << FluidSystem::phaseName(lowestPhaseIdx) << "^"

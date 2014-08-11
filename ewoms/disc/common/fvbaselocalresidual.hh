@@ -471,8 +471,8 @@ protected:
 
                 residual[dofIdx][eqIdx] = priVars[pvIdx] - constraints[pvIdx];
                 storage[dofIdx][eqIdx] = 0.0;
-            };
-        };
+            }
+        }
     }
 
     /*!

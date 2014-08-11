@@ -239,7 +239,7 @@ protected:
                      myRank_ + 1,     // peer rank
                      0,               // tag
                      MPI_COMM_WORLD); // communicator
-        };
+        }
 
         typename PeerSet::const_iterator peerIt;
         typename PeerSet::const_iterator peerEndIt = peerSet_().end();

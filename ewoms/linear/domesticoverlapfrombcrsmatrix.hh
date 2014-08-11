@@ -392,21 +392,21 @@ protected:
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
             sendIndicesToPeer_(peerRank);
-        };
+        }
 
         // receive our overlap from the processes to all peer processes
         peerIt = peerSet_.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
             receiveIndicesFromPeer_(peerRank);
-        };
+        }
 
         // wait until all send operations complete
         peerIt = peerSet_.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
             int peerRank = *peerIt;
             waitSendIndices_(peerRank);
-        };
+        }
     }
 
     void updateMasterRanks_()
@@ -474,7 +474,7 @@ protected:
             tmp.numPeers = numPeers;
 
             (*indicesSendBuffer_[peerRank])[i] = tmp;
-        };
+        }
 
         indicesSendBuffer_[peerRank]->send(peerRank);
 #endif // HAVE_MPI

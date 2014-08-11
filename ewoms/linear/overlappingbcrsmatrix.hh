@@ -191,7 +191,7 @@ public:
                     std::cout << " ";
             }
             std::cout << "\n" << std::flush;
-        };
+        }
         Dune::printSparseMatrix(std::cout,
                                 *static_cast<const BCRSMatrix *>(this),
                                 "M",

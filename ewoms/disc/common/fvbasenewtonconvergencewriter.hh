@@ -115,8 +115,7 @@ public:
             std::cout << "Oops: exception thrown on rank "
                       << newtonMethod_.problem().gridView().comm().rank()
                       << " while writing the convergence\n"  << std::flush;
-        };
-
+        }
     }
 
     /*!

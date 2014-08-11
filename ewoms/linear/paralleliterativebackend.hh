@@ -245,7 +245,7 @@ public:
             // make sure that the overlapping matrix and block vectors
             // have been created
             prepare_(M);
-        };
+        }
 
         // copy the values of the non-overlapping linear system of
         // equations to the overlapping one. On ther border, we add up
@@ -422,7 +422,7 @@ private:
                 rankField[nativeIdx] = simulator_.gridView().comm().rank();
                 if (overlap.peerHasIndex(lookedAtRank, localIdx))
                     isInOverlap[nativeIdx] = 1.0;
-            };
+            }
 
             typedef Dune::VTKWriter<GridView> VtkWriter;
             VtkWriter writer(simulator_.gridView(), Dune::VTK::conforming);

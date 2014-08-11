@@ -374,7 +374,7 @@ public:
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                     (*moleFraction[compIdx])[globalIdx] = fluidState.moleFraction(phaseIdx, compIdx);
-            };
+            }
         }
 
         std::ostringstream tmp;

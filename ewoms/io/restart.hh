@@ -144,7 +144,7 @@ public:
         for (; it != endIt; ++it) {
             serializer.serializeEntity(outStream_, *it);
             outStream_ << "\n";
-        };
+        }
 
         serializeSectionEnd();
     }
@@ -219,7 +219,7 @@ public:
             if (!std::isspace(dummy[i])) {
                 OPM_THROW(std::logic_error,
                           "Encountered unread values while deserializing");
-            };
+            }
         }
     }
 
@@ -250,7 +250,7 @@ public:
             std::getline(inStream_, curLine);
             std::istringstream curLineStream(curLine);
             deserializer.deserializeEntity(curLineStream, *it);
-        };
+        }
 
         deserializeSectionEnd();
     }

@@ -70,7 +70,7 @@ public:
 
             eq2pvIdx_[i] = i;
             pv2eqIdx_[i] = i;
-        };
+        }
     }
 
     /*!

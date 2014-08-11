@@ -645,8 +645,8 @@ protected:
                 tmp.borderDistance = it->second;
                 tmp.numPeers = nRanks;
                 foreignOverlapByRank_[it->first].push_back(tmp);
-            };
-        };
+            }
+        }
     }
 
     // set of processes with which we have to communicate

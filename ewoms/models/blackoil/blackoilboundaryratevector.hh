@@ -120,7 +120,7 @@ public:
 #ifndef NDEBUG
         for (int i = 0; i < numEq; ++i) {
             Valgrind::CheckDefined((*this)[i]);
-        };
+        }
         Valgrind::CheckDefined(*this);
 #endif
     }
@@ -139,7 +139,7 @@ public:
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::min<Scalar>(0.0, val);
-        };
+        }
     }
 
     /*!
@@ -156,7 +156,7 @@ public:
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::max<Scalar>(0.0, val);
-        };
+        }
     }
 
     /*!

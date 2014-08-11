@@ -566,7 +566,7 @@ void printValues(std::ostream &os = std::cout)
             continue;
         else
             compileTimeKeyList.push_back(keyName);
-    };
+    }
 
     // report the values of all registered (and unregistered)
     // parameters

@@ -56,7 +56,7 @@ public:
         for (int domIdx = 0; domIdx < numDom; ++domIdx) {
             if (overlap_.iAmMasterOf(domIdx))
                 sum += x[domIdx] * y[domIdx];
-        };
+        }
 
         // compute the global sum
         double sumGlobal = 0.0;

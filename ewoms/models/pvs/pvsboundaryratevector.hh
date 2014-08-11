@@ -159,7 +159,7 @@ public:
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::min<Scalar>(0.0, val);
-        };
+        }
     }
 
     /*!
@@ -176,7 +176,7 @@ public:
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar &val = this->operator[](eqIdx);
             val = std::max<Scalar>(0.0, val);
-        };
+        }
     }
 
     /*!

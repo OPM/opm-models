@@ -44,7 +44,7 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilExtensiveQuantities
     : public MultiPhaseBaseExtensiveQuantities<TypeTag>
-{};
+{ };
 
 } // namespace Ewoms
 

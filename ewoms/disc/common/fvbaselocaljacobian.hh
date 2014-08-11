@@ -80,19 +80,13 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    enum {
-        numEq = GET_PROP_VALUE(TypeTag, NumEq),
-
-    };
-
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
     typedef Dune::Matrix<MatrixBlock> LocalBlockMatrix;
 

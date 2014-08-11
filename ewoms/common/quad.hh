@@ -76,9 +76,7 @@ public:
     static const float_denorm_style has_denorm = denorm_present;
     static const bool has_denorm_loss = false;
     static quad infinity() throw()
-    {
-        return __builtin_huge_valq();
-    };
+    { return __builtin_huge_valq(); }
     static quad quiet_NaN() throw()
     { return __builtin_nan(""); }
     static quad signaling_NaN() throw()

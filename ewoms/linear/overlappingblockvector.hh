@@ -120,7 +120,7 @@ public:
                 (*this)[domRowIdx] = 0.0;
             else
                 (*this)[domRowIdx] = nativeBlockVector[nativeRowIdx];
-        };
+        }
 
         // add up the contents of border rows, for the remaining rows,
         // get the values from their respective master process.
@@ -274,7 +274,7 @@ public:
         for (int i = 0; i < this->size(); ++i) {
             std::cout << "row " << i << (overlap_->isLocal(i) ? " " : "*")
                       << ": " << (*this)[i] << "\n" << std::flush;
-        };
+        }
     }
 
 private:

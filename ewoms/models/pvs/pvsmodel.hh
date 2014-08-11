@@ -538,7 +538,7 @@ public:
                           << "' phase appears at position " << pos
                           << " sum x = " << sumx  << std::flush;
             }
-        };
+        }
 
         std::cout << ", new primary variables: ";
         newPv.print();

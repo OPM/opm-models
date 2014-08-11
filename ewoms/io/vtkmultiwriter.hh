@@ -389,7 +389,7 @@ public:
         else {
             std::string tmp;
             std::getline(res.deserializeStream(), tmp);
-        };
+        }
         res.deserializeSectionEnd();
     }
 

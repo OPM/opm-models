@@ -216,7 +216,7 @@ public:
         const auto& peerEndIt = blh.peerSet().end();
         for (; peerIt != peerEndIt; ++peerIt) {
             blackList_.setPeerList(*peerIt, pblh.peerBlackList(*peerIt));
-        };
+        }
     }
 
     // Access to the border list.

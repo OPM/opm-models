@@ -354,9 +354,9 @@ public:
                                  fs.fugacityCoefficient(phaseIdx, compIdx)
                                  * fs.pressure(phaseIdx));
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
-                };
-            };
-        };
+                }
+            }
+        }
     }
 
     /*!

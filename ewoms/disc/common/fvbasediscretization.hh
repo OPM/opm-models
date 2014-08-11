@@ -622,7 +622,7 @@ public:
                 int globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                 dest[globalI] += residual[dofIdx];
             }
-        };
+        }
 
         // add up the residuals on the process borders
         const auto sumHandle =
@@ -670,7 +670,7 @@ public:
 
             for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
                 storage += elemStorage[dofIdx];
-        };
+        }
 
         storage = gridView_.comm().sum(storage);
     }
