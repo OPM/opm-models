@@ -42,6 +42,7 @@ NEW_PROP_TAG(VtkWriteTotalMoleFractions);
 NEW_PROP_TAG(VtkWriteMolarities);
 NEW_PROP_TAG(VtkWriteFugacities);
 NEW_PROP_TAG(VtkWriteFugacityCoeffs);
+NEW_PROP_TAG(VtkOutputFormat);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkComposition, VtkWriteMassFractions, false);

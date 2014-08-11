@@ -45,6 +45,9 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/material/Valgrind.hpp>
+
 namespace Ewoms {
 
 // forward definition of the EclGridManager class. We need this for

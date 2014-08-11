@@ -39,6 +39,7 @@ NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
 NEW_PROP_TAG(VtkWriteHeatConductivity);
 NEW_PROP_TAG(VtkWriteInternalEnergies);
 NEW_PROP_TAG(VtkWriteEnthalpies);
+NEW_PROP_TAG(VtkOutputFormat);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkEnergy, VtkWriteSolidHeatCapacity, false);

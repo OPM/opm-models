@@ -24,6 +24,7 @@
 #define EWOMS_VERTEX_BORDER_LIST_FROM_GRID_HH
 
 #include "overlaptypes.hh"
+#include "blacklist.hh"
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>

@@ -44,6 +44,7 @@ NEW_PROP_TAG(VtkWriteSaturatedOilGasDissolutionFactor);
 NEW_PROP_TAG(VtkWriteGasFormationVolumeFactor);
 NEW_PROP_TAG(VtkWriteOilFormationVolumeFactor);
 NEW_PROP_TAG(VtkWriteOilSaturationPressure);
+NEW_PROP_TAG(VtkOutputFormat);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkBlackOil, VtkWriteGasDissolutionFactor, false);

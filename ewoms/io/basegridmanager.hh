@@ -26,6 +26,8 @@
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
+#include <dune/common/version.hh>
+
 #include <type_traits>
 #include <memory>
 
@@ -37,6 +39,7 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(GridViewLevel);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
+NEW_PROP_TAG(Simulator);
 }} // namespace Opm, Properties
 
 namespace Ewoms {

@@ -38,7 +38,10 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridFile);
+NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridGlobalRefinements);
+NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(Simulator);
 }} // namespace Opm, Properties
 
 namespace Ewoms {

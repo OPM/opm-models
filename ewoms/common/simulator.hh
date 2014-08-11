@@ -27,6 +27,7 @@
 
 #include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/io/restart.hh>
+#include <ewoms/common/parametersystem.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
 
