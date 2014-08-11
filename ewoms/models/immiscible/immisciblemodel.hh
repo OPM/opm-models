@@ -196,7 +196,6 @@ class ImmiscibleModel
 {
     typedef Ewoms::MultiPhaseBaseModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -205,12 +204,7 @@ class ImmiscibleModel
 
     enum { numComponents = FluidSystem::numComponents };
 
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    enum { dimWorld = GridView::dimensionworld };
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };

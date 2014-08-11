@@ -230,8 +230,6 @@ class RichardsModel
     typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -246,7 +244,6 @@ class RichardsModel
     static const int liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex);
     static const int gasCompIdx = GET_PROP_VALUE(TypeTag, GasComponentIndex);
 
-    static const int dimWorld = GridView::dimensionworld;
 
     // some consistency checks
     static_assert(numPhases == 2,

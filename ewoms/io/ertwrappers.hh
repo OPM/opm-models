@@ -189,7 +189,6 @@ private:
  */
 class ErtGrid
 {
-    enum { dim = 3 };
 
 public:
 #if HAVE_ERT

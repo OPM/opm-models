@@ -118,7 +118,6 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;

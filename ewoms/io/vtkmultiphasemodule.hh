@@ -102,7 +102,6 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
-    enum { dim = GridView::dimension };
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 

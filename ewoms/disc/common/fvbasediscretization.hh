@@ -244,7 +244,6 @@ template<class TypeTag>
 class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -274,7 +273,6 @@ class FvBaseDiscretization
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
         historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
-        dim = GridView::dimension
     };
 
     typedef std::vector<IntensiveQuantities> IntensiveQuantitiesVector;

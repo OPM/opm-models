@@ -54,7 +54,6 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    enum { dim = GridView::dimension };
     typedef typename GridView::template Codim<0>::Entity Element;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;

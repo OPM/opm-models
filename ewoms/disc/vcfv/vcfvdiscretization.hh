@@ -98,7 +98,6 @@ class VcfvDiscretization : public FvBaseDiscretization<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
     enum { dim = GridView::dimension };

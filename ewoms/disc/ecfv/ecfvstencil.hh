@@ -47,7 +47,6 @@ namespace Ewoms {
 template <class Scalar, class GridView>
 class EcfvStencil
 {
-    enum { dim = GridView::dimension };
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GridView::ctype CoordScalar;

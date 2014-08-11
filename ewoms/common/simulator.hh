@@ -80,7 +80,7 @@ public:
     {
         setupTimer_.reset();
 
-        verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
+        verbose_ = verbose && Ewoms::MpiHelper::getCollectiveCommunication().rank() == 0;
 
         timeStepIdx_ = 0;
         startTime_ = 0.0;

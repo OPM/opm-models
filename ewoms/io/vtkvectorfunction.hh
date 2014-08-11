@@ -50,7 +50,6 @@ class VtkVectorFunction : public Dune::VTKFunction<GridView>
     typedef typename GridView::ctype ctype;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    typedef BaseOutputWriter::Vector Vector;
     typedef BaseOutputWriter::VectorBuffer VectorBuffer;
 
 public:

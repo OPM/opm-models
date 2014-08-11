@@ -52,9 +52,7 @@ class RichardsRateVector
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { contiEqIdx = Indices::contiEqIdx };
-    enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
     enum { liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex) };
-    enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     typedef Dune::FieldVector<Scalar, numEq> ParentType;

@@ -97,7 +97,6 @@ class ParallelAmgBackend
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
 
-    enum { dimWorld = GridView::dimensionworld };
 
     // define the smoother used for the AMG and specify its
     // arguments

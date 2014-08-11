@@ -86,7 +86,6 @@ private:
     enum {
         numEq = GET_PROP_VALUE(TypeTag, NumEq),
 
-        historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize)
     };
 
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;

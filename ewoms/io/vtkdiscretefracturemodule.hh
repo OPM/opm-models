@@ -96,7 +96,6 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
-    typedef typename ParentType::VectorBuffer VectorBuffer;
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
     typedef typename ParentType::PhaseVectorBuffer PhaseVectorBuffer;

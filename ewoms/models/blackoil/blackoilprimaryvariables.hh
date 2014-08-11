@@ -62,7 +62,6 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
     // component indices from the fluid system
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
-    enum { gasCompIdx = FluidSystem::gasCompIdx };
 
     static_assert(numPhases == 3,
                   "The black-oil model assumes three phases!");
