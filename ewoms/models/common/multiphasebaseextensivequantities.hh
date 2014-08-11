@@ -225,8 +225,7 @@ private:
         }
 
         // correct the pressure gradients by the gravitational acceleration
-        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
-        {
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
             DimVector g(elemCtx.problem().gravity(elemCtx, this->interiorIndex(), timeIdx));
@@ -236,8 +235,7 @@ private:
 
             const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorIndex(), timeIdx);
             const auto &intQuantsEx = elemCtx.intensiveQuantities(this->exteriorIndex(), timeIdx);
-            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-            {
+            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                     continue;
 
