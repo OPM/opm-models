@@ -140,8 +140,8 @@ public:
             Scalar po = fs.pressure(oilPhaseIdx);
             Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
             int regionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
-            Scalar rhooRef = FluidSystem::surfaceDensity(oilPhaseIdx, regionIdx);
-            Scalar rhogRef = FluidSystem::surfaceDensity(gasPhaseIdx, regionIdx);
+            Scalar rhooRef = FluidSystem::referenceDensity(oilPhaseIdx, regionIdx);
+            Scalar rhogRef = FluidSystem::referenceDensity(gasPhaseIdx, regionIdx);
 
             if (gasDissolutionFactorOutput_())
                 gasDissolutionFactor_[globalDofIdx] = X_oG / rhogRef * rhooRef / (1 - X_oG);
