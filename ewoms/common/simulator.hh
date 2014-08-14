@@ -226,7 +226,8 @@ public:
     }
 
     /*!
-     * \brief Return the time \f$\mathrm{[s]}\f$ before the time integration.
+     * \brief Return the number of seconds of simulated time which have elapsed since the
+     *        start time.
      *
      * To get the time after the time integration, you have to add
      * timeStepSize() to time().

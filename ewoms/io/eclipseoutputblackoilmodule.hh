@@ -172,7 +172,7 @@ public:
             }
             if (pressuresOutput_()) {
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-                    pressure_[phaseIdx][globalDofIdx] = fs.pressure(phaseIdx);
+                    pressure_[phaseIdx][globalDofIdx] = fs.pressure(phaseIdx) / 1e5;
                     Valgrind::CheckDefined(pressure_[phaseIdx][globalDofIdx]);
                 }
             }
@@ -211,15 +211,16 @@ public:
             return; // this module only consideres eclipse writers...
 
         typename ParentType::BufferType bufferType = ParentType::ElementBuffer;
-        if (saturationsOutput_()) {
-            this->commitScalarBuffer_(writer, "SOIL", saturation_[oilPhaseIdx], bufferType);
-            this->commitScalarBuffer_(writer, "SGAS", saturation_[gasPhaseIdx], bufferType);
-            this->commitScalarBuffer_(writer, "SWAT", saturation_[waterPhaseIdx], bufferType);
-        }
         if (pressuresOutput_()) {
             this->commitScalarBuffer_(writer, "PRESSURE", pressure_[oilPhaseIdx], bufferType);
             this->commitScalarBuffer_(writer, "PGAS", pressure_[gasPhaseIdx], bufferType);
             this->commitScalarBuffer_(writer, "PWAT", pressure_[waterPhaseIdx], bufferType);
+        }
+        if (saturationsOutput_()) {
+            this->commitScalarBuffer_(writer, "SWAT", saturation_[waterPhaseIdx], bufferType);
+            this->commitScalarBuffer_(writer, "SGAS", saturation_[gasPhaseIdx], bufferType);
+            // the oil saturation is _NOT_ written to disk. Instead, it is calculated by
+            // the visualization tool. Wondering why is probably a waste of time...
         }
         if (gasDissolutionFactorOutput_())
             this->commitScalarBuffer_(writer, "RS", gasDissolutionFactor_, bufferType);

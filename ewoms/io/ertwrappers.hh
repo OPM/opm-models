@@ -293,11 +293,11 @@ public:
     void writeHeader(const Simulator &simulator, int reportStepIdx)
     {
         const auto eclipseGrid = getEclipseGrid__(simulator.gridManager());
-        double secondsElapsed = simulator.time() - simulator.startTime();
+        double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
         ecl_rst_file_fwrite_header(restartFileHandle_,
                                    reportStepIdx,
-                                   simulator.time(),
+                                   simulator.startTime() + secondsElapsed,
                                    daysElapsed,
                                    eclipseGrid->getNX(),
                                    eclipseGrid->getNY(),
