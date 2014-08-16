@@ -227,7 +227,7 @@ public:
         if (gasFormationVolumeFactorOutput_())
             this->commitScalarBuffer_(writer, "BG", gasFormationVolumeFactor_, bufferType);
         if (saturatedOilFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(writer, "BP", saturatedOilFormationVolumeFactor_, bufferType);
+            this->commitScalarBuffer_(writer, "BOSAT", saturatedOilFormationVolumeFactor_, bufferType);
         if (oilSaturationPressureOutput_())
             this->commitScalarBuffer_(writer, "PSAT", oilSaturationPressure_);
     }
