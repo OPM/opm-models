@@ -383,7 +383,7 @@ public:
 
         // add the volumes of the DOFs on the process boundaries
         const auto sumHandle =
-            GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
+            GridCommHandleFactory::template sumHandle<Scalar>(dofTotalVolume_,
                                                               asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
                               Dune::InteriorBorder_InteriorBorder_Interface,
