@@ -11,7 +11,7 @@ include(CheckCXXSourceCompiles)
 include(CMakePushCheckState)
 include(CheckCXXCompilerFlag)
 
-check_cxx_compiler_flag(-fext-numeric-literals HAVE_EXTENDED_NUMERIC_LITERALS)
+check_cxx_compiler_flag("-Werror -fext-numeric-literals" HAVE_EXTENDED_NUMERIC_LITERALS)
 if (HAVE_EXTENDED_NUMERIC_LITERALS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fext-numeric-literals")
 endif()
