@@ -27,6 +27,7 @@
 
 #include "vtkscalarfunction.hh"
 #include "vtkvectorfunction.hh"
+#include "vtktensorfunction.hh"
 
 #include <ewoms/io/baseoutputwriter.hh>
 
@@ -65,8 +66,10 @@ class VtkMultiWriter : public BaseOutputWriter
 public:
     typedef BaseOutputWriter::Scalar Scalar;
     typedef BaseOutputWriter::Vector Vector;
+    typedef BaseOutputWriter::Tensor Tensor;
     typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
     typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+    typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
     typedef Dune::VTKWriter<GridView> VtkWriter;
 
@@ -252,6 +255,28 @@ public:
     }
 
     /*!
+     * \brief Add a finished vertex-centered tensor field to the output.
+     */
+    void attachTensorVertexData(TensorBuffer &buf, std::string name)
+    {
+        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
+        typedef Ewoms::VtkTensorFunction<GridView, VertexMapper> VtkFn;
+
+        for (size_t colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
+            std::ostringstream oss;
+            oss << name <<  "[" << colIdx << "]";
+
+            FunctionPtr fnPtr(new VtkFn(oss.str(),
+                                        gridView_,
+                                        vertexMapper_,
+                                        buf,
+                                        /*codim=*/dim,
+                                        colIdx));
+            curWriter_->addVertexData(fnPtr);
+        }
+    }
+
+    /*!
      * \brief Add a element centered quantity to the output.
      *
      * If the buffer is managed by the VtkMultiWriter, it must have
@@ -278,6 +303,28 @@ public:
                                     buf,
                                     /*codim=*/0));
         curWriter_->addCellData(fnPtr);
+    }
+
+    /*!
+     * \brief Add a finished element-centered tensor field to the output.
+     */
+    void attachTensorElementData(TensorBuffer &buf, std::string name)
+    {
+        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
+        typedef Ewoms::VtkTensorFunction<GridView, ElementMapper> VtkFn;
+
+        for (size_t colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
+            std::ostringstream oss;
+            oss << name <<  "[" << colIdx << "]";
+
+            FunctionPtr fnPtr(new VtkFn(oss.str(),
+                                        gridView_,
+                                        elementMapper_,
+                                        buf,
+                                        /*codim=*/0,
+                                        colIdx));
+            curWriter_->addCellData(fnPtr);
+        }
     }
 
     /*!

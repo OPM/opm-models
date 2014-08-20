@@ -107,6 +107,7 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::VectorBuffer VectorBuffer;
+    typedef typename ParentType::TensorBuffer TensorBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
 
     typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
@@ -160,7 +161,7 @@ public:
         if (averageMolarMassOutput_()) this->resizePhaseBuffer_(averageMolarMass_);
 
         if (porosityOutput_()) this->resizeScalarBuffer_(porosity_);
-        if (intrinsicPermeabilityOutput_()) this->resizeScalarBuffer_(intrinsicPermeability_);
+        if (intrinsicPermeabilityOutput_()) this->resizeTensorBuffer_(intrinsicPermeability_);
 
         if (velocityOutput_()) {
             Scalar nDof = this->simulator_.model().numDof();
@@ -201,8 +202,11 @@ public:
 
             if (porosityOutput_()) porosity_[I] = intQuants.porosity();
             if (intrinsicPermeabilityOutput_()) {
-                const auto &K = intQuants.intrinsicPermeability();
-                intrinsicPermeability_[I] = K[0][0];
+                const auto& K = intQuants.intrinsicPermeability();
+                intrinsicPermeability_[I].resize(K.rows, K.cols);
+                for (int rowIdx = 0; rowIdx < K.rows; ++rowIdx)
+                    for (int colIdx = 0; colIdx < K.cols; ++colIdx)
+                        intrinsicPermeability_[I][rowIdx][colIdx] = K[rowIdx][colIdx];
             }
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -302,7 +306,7 @@ public:
         if (porosityOutput_())
             this->commitScalarBuffer_(baseWriter, "porosity", porosity_);
         if (intrinsicPermeabilityOutput_())
-            this->commitScalarBuffer_(baseWriter, "intrinsicPerm", intrinsicPermeability_);
+            this->commitTensorBuffer_(baseWriter, "intrinsicPerm", intrinsicPermeability_);
 
         if (velocityOutput_()) {
             int nDof = this->simulator_.model().numDof();
@@ -382,7 +386,7 @@ private:
     PhaseBuffer averageMolarMass_;
 
     ScalarBuffer porosity_;
-    ScalarBuffer intrinsicPermeability_;
+    TensorBuffer intrinsicPermeability_;
 
     PhaseVectorBuffer velocity_;
     PhaseBuffer velocityWeight_;

@@ -25,6 +25,7 @@
 #define EWOMS_BASE_OUTPUT_WRITER_HH
 
 #include <dune/common/dynvector.hh>
+#include <dune/common/dynmatrix.hh>
 
 #include <vector>
 
@@ -40,8 +41,10 @@ class BaseOutputWriter
 public:
     typedef double Scalar;
     typedef Dune::DynamicVector<double> Vector;
+    typedef Dune::DynamicMatrix<double> Tensor;
     typedef std::vector<Scalar> ScalarBuffer;
     typedef std::vector<Vector> VectorBuffer;
+    typedef std::vector<Tensor> TensorBuffer;
 
     BaseOutputWriter()
     {}
@@ -74,6 +77,16 @@ public:
      * \brief Add a vectorial element centered quantity to the output.
      */
     virtual void attachVectorElementData(VectorBuffer &buf, std::string name) = 0;
+
+    /*!
+     * \brief Add a tensorial vertex centered tensor field to the output.
+     */
+    virtual void attachTensorVertexData(TensorBuffer &buf, std::string name) = 0;
+
+    /*!
+     * \brief Add a tensorial element centered quantity to the output.
+     */
+    virtual void attachTensorElementData(TensorBuffer &buf, std::string name) = 0;
 
     /*!
      * \brief Finalizes the current writer.

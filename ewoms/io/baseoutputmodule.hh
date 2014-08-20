@@ -84,6 +84,7 @@ class BaseOutputModule
 public:
     typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
     typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+    typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
     typedef std::array<ScalarBuffer, numEq> EqBuffer;
     typedef std::array<ScalarBuffer, numPhases> PhaseBuffer;
@@ -140,6 +141,26 @@ protected:
      * \brief Allocate the space for a buffer storing a scalar quantity
      */
     void resizeScalarBuffer_(ScalarBuffer &buffer,
+                             BufferType bufferType = DofBuffer)
+    {
+        Scalar n;
+        if (bufferType == VertexBuffer)
+            n = simulator_.gridView().size(dim);
+        else if (bufferType == ElementBuffer)
+            n = simulator_.gridView().size(0);
+        else if (bufferType == DofBuffer)
+            n = simulator_.model().numDof();
+        else
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+
+        buffer.resize(n);
+        std::fill(buffer.begin(), buffer.end(), 0.0);
+    }
+
+    /*!
+     * \brief Allocate the space for a buffer storing a tensorial quantity
+     */
+    void resizeTensorBuffer_(TensorBuffer &buffer,
                              BufferType bufferType = DofBuffer)
     {
         Scalar n;
@@ -251,7 +272,7 @@ protected:
     }
 
     /*!
-     * \brief Add a phase-specific buffer to the result file.
+     * \brief Add a buffer containing scalar quantities to the result file.
      */
     void commitScalarBuffer_(BaseOutputWriter &baseWriter,
                              const char *name,
@@ -264,6 +285,42 @@ protected:
             attachScalarVertexData_(baseWriter, buffer, name);
         else if (bufferType == ElementBuffer)
             attachScalarElementData_(baseWriter, buffer, name);
+        else
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+    }
+
+    /*!
+     * \brief Add a buffer containing vectorial quantities to the result file.
+     */
+    void commitVectorBuffer_(BaseOutputWriter &baseWriter,
+                             const char *name,
+                             VectorBuffer &buffer,
+                             BufferType bufferType = DofBuffer)
+    {
+        if (bufferType == DofBuffer)
+            DiscBaseOutputModule::attachVectorDofData_(baseWriter, buffer, name);
+        else if (bufferType == VertexBuffer)
+            attachVectorVertexData_(baseWriter, buffer, name);
+        else if (bufferType == ElementBuffer)
+            attachVectorElementData_(baseWriter, buffer, name);
+        else
+            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+    }
+
+    /*!
+     * \brief Add a buffer containing tensorial quantities to the result file.
+     */
+    void commitTensorBuffer_(BaseOutputWriter &baseWriter,
+                             const char *name,
+                             TensorBuffer &buffer,
+                             BufferType bufferType = DofBuffer)
+    {
+        if (bufferType == DofBuffer)
+            DiscBaseOutputModule::attachTensorDofData_(baseWriter, buffer, name);
+        else if (bufferType == VertexBuffer)
+            attachTensorVertexData_(baseWriter, buffer, name);
+        else if (bufferType == ElementBuffer)
+            attachTensorElementData_(baseWriter, buffer, name);
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
     }
@@ -410,6 +467,16 @@ protected:
                                  VectorBuffer &buffer,
                                  const char *name)
     { baseWriter.attachVectorVertexData(buffer, name); }
+
+    void attachTensorElementData_(BaseOutputWriter &baseWriter,
+                                  TensorBuffer &buffer,
+                                  const char *name)
+    { baseWriter.attachTensorElementData(buffer, name); }
+
+    void attachTensorVertexData_(BaseOutputWriter &baseWriter,
+                                 TensorBuffer &buffer,
+                                 const char *name)
+    { baseWriter.attachTensorVertexData(buffer, name); }
 
     const Simulator &simulator_;
 };

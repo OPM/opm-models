@@ -42,6 +42,7 @@ public:
     typedef BaseOutputWriter::Vector Vector;
     typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
     typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+    typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
     /*!
      * \brief Add a buffer where the data is associated with the
@@ -60,6 +61,15 @@ public:
                                      VectorBuffer &buffer,
                                      const std::string &name)
     { baseWriter.attachVectorElementData(buffer, name.c_str()); }
+
+    /*!
+     * \brief Add a buffer where the data is associated with the
+     *        degrees of freedom to the current VTK output file.
+     */
+    static void attachTensorDofData_(BaseOutputWriter &baseWriter,
+                                     TensorBuffer &buffer,
+                                     const std::string &name)
+    { baseWriter.attachTensorElementData(buffer, name.c_str()); }
 };
 
 } // namespace Ewoms
