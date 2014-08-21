@@ -26,7 +26,10 @@
 #define EWOMS_FV_BASE_ASSEMBLER_HH
 
 #include "fvbaseproperties.hh"
+
 #include <ewoms/parallel/gridcommhandles.hh>
+#include <ewoms/parallel/threadmanager.hh>
+#include <ewoms/parallel/threadedentityiterator.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -58,6 +61,8 @@ class FvBaseAssembler
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
+
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
 
     typedef typename GridView::template Codim<0>::Entity Element;
@@ -110,7 +115,6 @@ public:
     FvBaseAssembler()
     {
         simulatorPtr_ = 0;
-        elementCtx_ = 0;
 
         matrix_ = 0;
 
@@ -119,12 +123,16 @@ public:
         // relinearization accuracy is always smaller than the current
         // tolerance
         relinearizationAccuracy_ = 0.0;
+
     }
 
     ~FvBaseAssembler()
     {
         delete matrix_;
-        delete elementCtx_;
+        auto it = elementCtx_.begin();
+        const auto &endIt = elementCtx_.end();
+        for (; it != endIt; ++it)
+            delete *it;
     }
 
     /*!
@@ -152,8 +160,6 @@ public:
     void init(Simulator& simulator)
     {
         simulatorPtr_ = &simulator;
-        delete elementCtx_;
-        elementCtx_ = new ElementContext(simulator);
 
         // initialize the BCRS matrix
         createMatrix_();
@@ -165,6 +171,11 @@ public:
 
         int numDof = model_().numDof();
         int numElems = gridView_().size(/*codim=*/0);
+
+        // create the per-thread objects
+        elementCtx_.resize(ThreadManager::maxThreads());
+        for (int threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
+            elementCtx_[threadId] = new ElementContext(simulator);
 
         residual_.resize(numDof);
 
@@ -732,17 +743,25 @@ private:
         greenElems_ = 0;
 
         // relinearize the elements...
-        ElementIterator elemIt = gridView_().template begin<0>();
-        ElementIterator elemEndIt = gridView_().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            const Element &elem = *elemIt;
-            if (elem.partitionType() != Dune::InteriorEntity)
-                continue;
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
+#if HAVE_OPENMP
+#pragma omp parallel
+#endif
+        {
+            ElementIterator elemIt = gridView_().template begin</*codim=*/0>();
+            for (threadedElemIt.beginParallel(elemIt);
+                 !threadedElemIt.isFinished(elemIt);
+                 threadedElemIt.increment(elemIt))
+            {
+                const Element &elem = *elemIt;
 
-            assembleElement_(elem);
+                if (elem.partitionType() != Dune::InteriorEntity)
+                    continue;
+
+                assembleElement_(elem);
+            }
         }
     }
-
 
     // assemble an element in the interior of the process' grid
     // partition
@@ -758,58 +777,69 @@ private:
             }
         }
 
-        elementCtx_->updateAll(elem);
-        model_().localJacobian().assemble(*elementCtx_);
+        int threadId = ThreadManager::threadId();
 
+        ElementContext *elementCtx = elementCtx_[threadId];
+        auto &localJacobian = model_().localJacobian(threadId);
+
+        elementCtx->updateAll(elem);
+        localJacobian.assemble(*elementCtx);
+
+        ScopedLock addLock(globalMatrixMutex_);
         for (int primaryDofIdx = 0;
-             primaryDofIdx < elementCtx_->numPrimaryDof(/*timeIdx=*/0);
+             primaryDofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0);
              ++ primaryDofIdx)
         {
-            int globI = elementCtx_->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
+            int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx,
+                                                     /*timeIdx=*/0);
 
             // update the right hand side
-            residual_[globI] += model_().localJacobian().residual(primaryDofIdx);
+            residual_[globI] += localJacobian.residual(primaryDofIdx);
 
             if (enableLinearizationRecycling_()) {
-                storageTerm_[globI] +=
-                    model_().localJacobian().residualStorage(primaryDofIdx);
+                storageTerm_[globI] += localJacobian.residualStorage(primaryDofIdx);
             }
 
             // only update the jacobian matrix for non-green degrees of freedom
             if (dofColor(globI) != Green) {
                 if (enableLinearizationRecycling_())
-                    storageJacobian_[globI] +=
-                        model_().localJacobian().jacobianStorage(primaryDofIdx);
+                    storageJacobian_[globI] += localJacobian.jacobianStorage(primaryDofIdx);
 
                 // update the jacobian matrix
-                for (int dofIdx = 0; dofIdx < elementCtx_->numDof(/*timeIdx=*/0); ++ dofIdx) {
-                    int globJ = elementCtx_->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
-                    (*matrix_)[globI][globJ] +=
-                        model_().localJacobian().jacobian(primaryDofIdx, dofIdx);
+                for (int dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
+                    int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+                    (*matrix_)[globI][globJ] += localJacobian.jacobian(primaryDofIdx, dofIdx);
                 }
             }
         }
+        addLock.unlock();
     }
 
     // "assemble" a green element. green elements only get the
     // residual updated, but the jacobian is left alone...
     void assembleGreenElement_(const Element &elem)
     {
-        elementCtx_->updateAll(elem);
-        model_().localResidual().eval(*elementCtx_);
+        int threadId = ThreadManager::threadId();
+        ElementContext *elementCtx = elementCtx_[threadId];
 
-        for (int dofIdx=0; dofIdx < elementCtx_->numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
-            int globI = elementCtx_->globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+        elementCtx->updateAll(elem);
+        auto& localResidual = model_().localResidual(threadId);
+        localResidual.eval(*elementCtx);
+
+        ScopedLock addLock(globalMatrixMutex_);
+        for (int dofIdx=0; dofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
+            int globI = elementCtx->globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
             // update the right hand side
-            residual_[globI] += model_().localResidual().residual(dofIdx);
+            residual_[globI] += localResidual.residual(dofIdx);
             if (enableLinearizationRecycling_())
-                storageTerm_[globI] += model_().localResidual().storageTerm(dofIdx);
+                storageTerm_[globI] += localResidual.storageTerm(dofIdx);
         }
+        addLock.unlock();
     }
 
     Simulator *simulatorPtr_;
-    ElementContext *elementCtx_;
+    std::vector<ElementContext*> elementCtx_;
 
     // the jacobian matrix
     Matrix *matrix_;
@@ -834,6 +864,8 @@ private:
 
     Scalar nextRelinearizationAccuracy_;
     Scalar relinearizationAccuracy_;
+
+    OmpMutex globalMatrixMutex_;
 };
 
 } // namespace Ewoms

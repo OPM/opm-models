@@ -58,6 +58,7 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Simulator);
+NEW_PROP_TAG(ThreadManager);
 NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
@@ -77,6 +78,7 @@ template <class TypeTag>
 int setupParameters_(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
 
     // first, get the MPI rank of the current process
@@ -99,6 +101,7 @@ int setupParameters_(int argc, char **argv)
                          "start of the simulation");
 
     Simulator::registerParameters();
+    ThreadManager::registerParameters();
 
     ////////////////////////////////////////////////////////////
     // set the parameter values
@@ -265,6 +268,7 @@ int start(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     // set the signal handlers to reset the TTY to a well defined state on unexpected
     // program aborts
@@ -291,6 +295,8 @@ int start(int argc, char **argv)
         if (paramStatus == 2)
             return 0;
 
+        ThreadManager::init();
+
         // read the initial time step and the end time
         double endTime;
         double initialTimeStepSize;
@@ -311,6 +317,7 @@ int start(int argc, char **argv)
                                                 "not specified!");
             return 1;
         }
+
 
         if (myRank == 0)
             std::cout << "eWoms " << EWOMS_VERSION

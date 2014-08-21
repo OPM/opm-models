@@ -41,6 +41,7 @@
 #include "fvbaseextensivequantities.hh"
 
 #include <ewoms/parallel/gridcommhandles.hh>
+#include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
 
@@ -174,6 +175,12 @@ SET_TYPE_PROP(FvBaseDiscretization, BoundaryContext, Ewoms::FvBaseBoundaryContex
 SET_TYPE_PROP(FvBaseDiscretization, ConstraintsContext, Ewoms::FvBaseConstraintsContext<TypeTag>);
 
 /*!
+ * \brief The OpenMP threads manager
+ */
+SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Ewoms::ThreadManager<TypeTag>);
+SET_INT_PROP(FvBaseDiscretization, ThreadsPerProcess, 1);
+
+/*!
  * \brief Assembler for the global jacobian matrix.
  */
 SET_TYPE_PROP(FvBaseDiscretization, JacobianAssembler, Ewoms::FvBaseAssembler<TypeTag>);
@@ -266,6 +273,7 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
@@ -294,6 +302,7 @@ public:
         : simulator_(simulator)
         , gridView_(simulator.gridView())
         , newtonMethod_(simulator)
+        , localJacobian_(ThreadManager::maxThreads())
         , jacAsm_(new JacobianAssembler())
     {
         asImp_().updateBoundary_();
@@ -392,8 +401,9 @@ public:
         // sum up the volumes of the grid partitions
         gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
 
-        localJacobian_.init(simulator_);
         jacAsm_->init(simulator_);
+        for (int threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
+            localJacobian_[threadId].init(simulator_);
 
         if (storeIntensiveQuantities_()) {
             // invalidate all cached intensive quantities
@@ -603,24 +613,38 @@ public:
     {
         dest = 0;
 
-        LocalBlockVector residual, storageTerm;
+        OmpMutex mutex;
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
+#if HAVE_OPENMP
+#pragma omp parallel
+#endif
+        {
+            // Attention: the variables below are thread specific and thus cannot be
+            // moved in front of the #pragma!
+            int threadId = ThreadManager::threadId();
+            ElementContext elemCtx(simulator_);
+            ElementIterator elemIt = gridView().template begin</*codim=*/0>();
+            LocalBlockVector residual, storageTerm;
 
-        ElementContext elemCtx(simulator_);
-        ElementIterator elemIt = gridView_.template begin<0>();
-        const ElementIterator elemEndIt = gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue;
+            for (threadedElemIt.beginParallel(elemIt);
+                 !threadedElemIt.isFinished(elemIt);
+                 threadedElemIt.increment(elemIt))
+            {
+                if (elemIt->partitionType() != Dune::InteriorEntity)
+                    continue;
 
-            elemCtx.updateAll(*elemIt);
-            residual.resize(elemCtx.numDof(/*timeIdx=*/0));
-            storageTerm.resize(elemCtx.numDof(/*timeIdx=*/0));
-            asImp_().localResidual().eval(residual, storageTerm, elemCtx);
+                elemCtx.updateAll(*elemIt);
+                residual.resize(elemCtx.numDof(/*timeIdx=*/0));
+                storageTerm.resize(elemCtx.numDof(/*timeIdx=*/0));
+                asImp_().localResidual(threadId).eval(residual, storageTerm, elemCtx);
 
-            int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-            for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
-                int globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                dest[globalI] += residual[dofIdx];
+                int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+                ScopedLock addLock(mutex);
+                for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
+                    int globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                    dest[globalI] += residual[dofIdx];
+                }
+                addLock.unlock();
             }
         }
 
@@ -651,25 +675,39 @@ public:
     {
         storage = 0;
 
-        LocalBlockVector elemStorage;
+        OmpMutex mutex;
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
+#if HAVE_OPENMP
+#pragma omp parallel
+#endif
+        {
+            // Attention: the variables below are thread specific and thus cannot be
+            // moved in front of the #pragma!
+            int threadId = ThreadManager::threadId();
+            ElementContext elemCtx(simulator_);
+            ElementIterator elemIt = gridView().template begin</*codim=*/0>();
+            LocalBlockVector elemStorage;
 
-        ElementContext elemCtx(simulator_);
-        ElementIterator elemIt = gridView_.template begin<0>();
-        const ElementIterator elemEndIt = gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue; // ignore ghost and overlap elements
+            for (threadedElemIt.beginParallel(elemIt);
+                 !threadedElemIt.isFinished(elemIt);
+                 threadedElemIt.increment(elemIt))
+            {
+                if (elemIt->partitionType() != Dune::InteriorEntity)
+                    continue; // ignore ghost and overlap elements
 
-            elemCtx.updateStencil(*elemIt);
-            elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
+                elemCtx.updateStencil(*elemIt);
+                elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
-            int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
-            elemStorage.resize(numPrimaryDof);
+                int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
+                elemStorage.resize(numPrimaryDof);
 
-            localResidual().evalStorage(elemStorage, elemCtx, timeIdx);
+                localResidual(threadId).evalStorage(elemStorage, elemCtx, timeIdx);
 
-            for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
-                storage += elemStorage[dofIdx];
+                ScopedLock addLock(mutex);
+                for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
+                    storage += elemStorage[dofIdx];
+                addLock.unlock();
+            }
         }
 
         storage = gridView_.comm().sum(storage);
@@ -840,24 +878,24 @@ public:
      * the jacobian assembler to produce a global linerization of the
      * problem.
      */
-    const LocalJacobian &localJacobian() const
-    { return localJacobian_; }
+    const LocalJacobian &localJacobian(int openMpThreadId) const
+    { return localJacobian_[openMpThreadId]; }
     /*!
      * \copydoc localJacobian() const
      */
-    LocalJacobian &localJacobian()
-    { return localJacobian_; }
+    LocalJacobian &localJacobian(int openMpThreadId)
+    { return localJacobian_[openMpThreadId]; }
 
     /*!
      * \brief Returns the object to calculate the local residual function.
      */
-    const LocalResidual &localResidual() const
-    { return asImp_().localJacobian().localResidual(); }
+    const LocalResidual &localResidual(int openMpThreadId) const
+    { return asImp_().localJacobian(openMpThreadId).localResidual(); }
     /*!
      * \copydoc localResidual() const
      */
-    LocalResidual &localResidual()
-    { return asImp_().localJacobian().localResidual(); }
+    LocalResidual &localResidual(int openMpThreadId)
+    { return asImp_().localJacobian(openMpThreadId).localResidual(); }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -1416,7 +1454,7 @@ protected:
     NewtonMethod newtonMethod_;
 
     // calculates the local jacobian matrix for a given element
-    LocalJacobian localJacobian_;
+    std::vector<LocalJacobian> localJacobian_;
     // Linearizes the problem at the current time step using the
     // local jacobian
     JacobianAssembler *jacAsm_;

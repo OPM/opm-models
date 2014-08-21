@@ -133,6 +133,12 @@ NEW_PROP_TAG(DiscBaseOutputModule);
 //! The class to create grid communication handles
 NEW_PROP_TAG(GridCommHandleFactory);
 
+/*!
+ * \brief The OpenMP threads manager
+ */
+NEW_PROP_TAG(ThreadManager);
+NEW_PROP_TAG(ThreadsPerProcess);
+
 // high-level simulation control
 
 //! Manages the simulation time

@@ -119,6 +119,7 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -189,32 +190,48 @@ public:
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
         storage = 0;
-        EqVector tmp;
 
-        ElementContext elemCtx(this->simulator_);
-        ElementIterator elemIt = this->gridView_.template begin<0>();
-        const ElementIterator elemEndIt = this->gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue; // ignore ghost and overlap elements
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(this->gridView());
+        OmpMutex addMutex;
+#if HAVE_OPENMP
+#pragma omp parallel
+#endif
+        {
+            // Attention: the variables below are thread specific and thus cannot be
+            // moved in front of the #pragma!
+            int threadId = ThreadManager::threadId();
+            ElementContext elemCtx(this->simulator_);
+            ElementIterator elemIt = this->gridView().template begin</*codim=*/0>();
+            EqVector tmp;
 
-            elemCtx.updateStencil(*elemIt);
-            elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
+            for (threadedElemIt.beginParallel(elemIt);
+                 !threadedElemIt.isFinished(elemIt);
+                 threadedElemIt.increment(elemIt))
+            {
+                if (elemIt->partitionType() != Dune::InteriorEntity)
+                    continue; // ignore ghost and overlap elements
 
-            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
+                elemCtx.updateStencil(*elemIt);
+                elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
 
-            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                const auto &scv = stencil.subControlVolume(dofIdx);
-                const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
-                tmp = 0;
-                this->localResidual().addPhaseStorage(tmp,
-                                                      elemCtx,
-                                                      dofIdx,
-                                                      /*timeIdx=*/0,
-                                                      phaseIdx);
-                tmp *= scv.volume()*intQuants.extrusionFactor();
-                storage += tmp;
+                for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+                    const auto &scv = stencil.subControlVolume(dofIdx);
+                    const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+
+                    tmp = 0;
+                    this->localResidual(threadId).addPhaseStorage(tmp,
+                                                                  elemCtx,
+                                                                  dofIdx,
+                                                                  /*timeIdx=*/0,
+                                                                  phaseIdx);
+                    tmp *= scv.volume()*intQuants.extrusionFactor();
+
+                    OmpMutex addLock(addMutex);
+                    storage += tmp;
+                    addLock.unlock();
+                }
             }
         }
 

@@ -94,8 +94,9 @@ private:
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
     typedef Dune::BlockVector<MatrixBlock> LocalStorageMatrix;
 
-    // copying a local jacobian is not a good idea
-    FvBaseLocalJacobian(const FvBaseLocalJacobian &);
+    // copying local residual objects around is a very bad idea, so we explicitly prevent
+    // it...
+    FvBaseLocalJacobian(const FvBaseLocalJacobian&) = delete;
 
 public:
     FvBaseLocalJacobian()

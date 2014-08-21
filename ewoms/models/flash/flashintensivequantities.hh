@@ -57,6 +57,7 @@ class FlashIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     // primary variable indices
     enum { cTot0Idx = Indices::cTot0Idx };
@@ -104,7 +105,7 @@ public:
             const auto &model = elemCtx.model();
 
             // assume 18g/mol as the molar weight of water
-            flashTolerance = model.localJacobian().baseEpsilon() / (100 * 18e-3);
+            flashTolerance = model.localJacobian(ThreadManager::threadId()).baseEpsilon() / (100 * 18e-3);
         }
 
         // extract the total molar densities of the components
