@@ -5,6 +5,7 @@
 set (ewoms_CONFIG_VAR
 	HAVE_QUAD
 	HAVE_VALGRIND
+	HAVE_OPENMP
 	)
 
 # dependencies
@@ -26,4 +27,6 @@ set (ewoms_DEPS
 	"Valgrind"
 	# quadruple precision floating point calculations
 	"Quadmath"
+	# the openMP parallelization package
+	"OpmOpenMP"
 	)
