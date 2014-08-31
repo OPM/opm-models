@@ -80,6 +80,9 @@ class BaseOutputModule
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { dim = GridView::dimension };
+    enum { dimWorld = GridView::dimensionworld };
+
+    typedef BaseOutputWriter::Tensor Tensor;
 
 public:
     typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
@@ -174,7 +177,8 @@ protected:
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
         buffer.resize(n);
-        std::fill(buffer.begin(), buffer.end(), 0.0);
+        Tensor nullMatrix(dimWorld, dimWorld, 0.0);
+        std::fill(buffer.begin(), buffer.end(), nullMatrix);
     }
 
     /*!
