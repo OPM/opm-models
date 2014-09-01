@@ -94,10 +94,17 @@ private:
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
     typedef Dune::BlockVector<MatrixBlock> LocalStorageMatrix;
 
+#if __GNUC__ == 4 && __GNUC_MINOR__ <= 6
+public:
+    // make older GCCs happy by providing a public copy constructor (this is necessary
+    // for their implementation of std::vector, although the method is never called...)
+    FvBaseLocalJacobian(const FvBaseLocalJacobian&) {}
+
+#else
     // copying local residual objects around is a very bad idea, so we explicitly prevent
     // it...
     FvBaseLocalJacobian(const FvBaseLocalJacobian&) = delete;
-
+#endif
 public:
     FvBaseLocalJacobian()
         : internalElemContext_(0)
