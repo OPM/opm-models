@@ -98,7 +98,9 @@ private:
 public:
     // make older GCCs happy by providing a public copy constructor (this is necessary
     // for their implementation of std::vector, although the method is never called...)
-    FvBaseLocalJacobian(const FvBaseLocalJacobian&) {}
+    FvBaseLocalJacobian(const FvBaseLocalJacobian&)
+        : internalElemContext_(0)
+    {}
 
 #else
     // copying local residual objects around is a very bad idea, so we explicitly prevent
