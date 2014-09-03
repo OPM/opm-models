@@ -143,13 +143,25 @@ public:
     {
         const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto &face = stencil.interiorFace(fapIdx);
-        const auto &normal = face.normal();
+
+        const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).center();
+        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
 
         Scalar dy = quantityCallback(face.exteriorIndex()) - quantityCallback(face.interiorIndex());
-        Scalar dx = exteriorDistance_[fapIdx] + interiorDistance_[fapIdx];
 
+        Scalar distSquared = 0;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
+            distSquared += tmp*tmp;
+            quantityGrad[dimIdx] = tmp*dy;
+        }
+
+        // divide the gradient by the squared distance between the centers of the
+        // sub-control volumes: the gradient is the normalized directional vector between
+        // the two centers times the ratio of the difference of the values and their
+        // distance, i.e., d/abs(d) * dy / abs(d) = d*dy / abs(d)^2.
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            quantityGrad[dimIdx] = normal[dimIdx]*dy/dx;
+            quantityGrad[dimIdx] /= distSquared;
     }
 
     /*!
@@ -194,24 +206,26 @@ public:
     {
         const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto &face = stencil.boundaryFace(fapIdx);
-        const auto &normal = face.normal();
 
-        Scalar dy = quantityCallback.boundaryValue()
-            - quantityCallback(face.interiorIndex());
+        Scalar dy = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
 
-        DimVector distVec(face.integrationPos());
-        distVec -= stencil.subControlVolume(face.interiorIndex()).center();
+        const auto& boundaryFacePos = face.integrationPos();
+        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
 
-        // we assume that the value on the boundary belongs equivalent to a finite volume
-        // which is equivalent to the finite volume on the interior of the face, but
-        // mirrored on the boundary face. This means the distance is twice the one
-        // between the integration point and the center of the FV on the interior of the
-        // domain.
-        Scalar dx = 2*distVec.two_norm();
+        Scalar distSquared = 0;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
+            distSquared += tmp*tmp;
+            quantityGrad[dimIdx] = tmp*dy;
+        }
 
-        for (int dimIdx = 0; dimIdx < dim; ++dimIdx)
-            quantityGrad[dimIdx] = normal[dimIdx];
-        quantityGrad *= dy/dx;
+        // divide the gradient by the squared distance between the center of the
+        // sub-control and the center of the boundary face: the gradient is the
+        // normalized directional vector between the two centers times the ratio of the
+        // difference of the values and their distance, i.e., d/abs(d) * dy / abs(d) =
+        // d*dy / abs(d)^2.
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            quantityGrad[dimIdx] /= distSquared;
     }
 
 private:
