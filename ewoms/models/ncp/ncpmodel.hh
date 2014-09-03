@@ -41,7 +41,11 @@
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
+
 #include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
+
+#include <opm/core/utility/ErrorMacros.hpp>
+#include <opm/core/utility/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>
@@ -355,6 +359,10 @@ public:
                                  * fs.pressure(phaseIdx));
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 }
+                if (minActivityCoeff_[globalIdx][compIdx] <= 0)
+                    OPM_THROW(Opm::NumericalProblem,
+                              "The minumum activity coefficient for component " << compIdx
+                              << " on DOF " << globalIdx << " is negative or zero!");
             }
         }
     }
@@ -365,9 +373,10 @@ public:
     Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
         Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
+        Scalar result;
         if (tmp > 0)
             // energy related quantity
-            return tmp;
+            result = tmp;
         else if (fugacity0Idx <= pvIdx && pvIdx < fugacity0Idx + numComponents) {
             // component fugacity
             int compIdx = pvIdx - fugacity0Idx;
@@ -376,22 +385,28 @@ public:
             Valgrind::CheckDefined(minActivityCoeff_[globalDofIdx][compIdx]);
             static const Scalar fugacityBaseWeight =
                 GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
-            return fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];
+            result = fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];
         }
         else if (Indices::pressure0Idx == pvIdx) {
             static const Scalar pressureBaseWeight = GET_PROP_VALUE(TypeTag, NcpPressureBaseWeight);
-            return pressureBaseWeight / referencePressure_;
+            result = pressureBaseWeight / referencePressure_;
         }
-
+        else {
 #ifndef NDEBUG
-        int phaseIdx = pvIdx - saturation0Idx;
-        assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
+            int phaseIdx = pvIdx - saturation0Idx;
+            assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
 #endif
 
-        // saturation
-        static const Scalar saturationsBaseWeight =
-            GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
-        return saturationsBaseWeight;
+            // saturation
+            static const Scalar saturationsBaseWeight =
+                GET_PROP_VALUE(TypeTag, NcpSaturationsBaseWeight);
+            result = saturationsBaseWeight;
+        }
+
+        assert(std::isfinite(result));
+        assert(result > 0);
+
+        return result;
     }
 
     /*!
