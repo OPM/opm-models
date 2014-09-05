@@ -85,14 +85,12 @@ public:
         // compute the pressure potential gradients
         calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
-        // determine the upstream indices. since this is a semi-smooth
-        // non-linear solver, make upstream only look at the
-        // evaluation point for the upstream decision
+        // determine the upstream indices. since this is a semi-smooth non-linear solver,
+        // make upstream only look at the evaluation point for the upstream decision
         const auto &evalExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
         if (&evalExtQuants == this) {
-            // we _are_ the evaluation point. Check whether the
-            // pressure potential is in the same direction as the face
-            // normal or in the opposite one
+            // we _are_ the evaluation point. Check whether the pressure potential is in
+            // the same direction as the face normal or in the opposite one
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                     Valgrind::SetUndefined(upstreamScvIdx_[phaseIdx]);
@@ -115,9 +113,8 @@ public:
             }
         }
         else {
-            // we are *not* the evaluation point. in this case, we
-            // just take the up-/downstream indices from the
-            // evaluation point.
+            // we are *not* the evaluation point. in this case, we just take the
+            // up-/downstream indices from the evaluation point.
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 upstreamScvIdx_[phaseIdx] = evalExtQuants.upstreamIndex(phaseIdx);
                 downstreamScvIdx_[phaseIdx] = evalExtQuants.downstreamIndex(phaseIdx);
@@ -228,39 +225,55 @@ private:
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            DimVector g(elemCtx.problem().gravity(elemCtx, this->interiorIndex(), timeIdx));
-            g += elemCtx.problem().gravity(elemCtx, this->exteriorIndex(), timeIdx);
+            auto g = elemCtx.problem().gravity(elemCtx, this->interiorIndex(), timeIdx);
+            const auto& gEx = elemCtx.problem().gravity(elemCtx, this->exteriorIndex(), timeIdx);
+            g += gEx;
             g /= 2;
             Valgrind::CheckDefined(g);
 
             const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorIndex(), timeIdx);
             const auto &intQuantsEx = elemCtx.intensiveQuantities(this->exteriorIndex(), timeIdx);
+
+            const auto &posIn = elemCtx.pos(this->interiorIndex(), timeIdx);
+            const auto &posEx = elemCtx.pos(this->exteriorIndex(), timeIdx);
+
+            // the distance between the centers of the control volumes
+            DimVector distVec(posEx);
+            distVec -= posIn;
+            Scalar absDistSquared = distVec.two_norm2();
+
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                     continue;
 
-                // calculate the phase density at the integration
-                // point. we only do this if the repective phase is
-                // present in both cells
-                Scalar mobilityI = intQuantsIn.mobility(phaseIdx);
-                Scalar mobilityJ = intQuantsEx.mobility(phaseIdx);
-                Scalar rhoI = intQuantsIn.fluidState().density(phaseIdx);
-                Scalar rhoJ = intQuantsEx.fluidState().density(phaseIdx);
-                Scalar fI = std::max(0.0, std::min(mobilityI*1e5, 1.0));
-                Scalar fJ = std::max(0.0, std::min(mobilityJ*1e5, 1.0));
-                if (fabs(fI + fJ) < 1e-20)
-                    // doesn't matter because phase is not present in
-                    // both cells!
-                    fI = fJ = 0.5;
-                Scalar density = (fI*rhoI + fJ*rhoJ)/(fI + fJ);
-                Valgrind::CheckDefined(density);
+                // calculate the hydrostatic pressure at the reference height, i.e., at
+                // the surface...
+                Scalar rhoIn = intQuantsIn.fluidState().density(phaseIdx);
+                Scalar rhoEx = intQuantsEx.fluidState().density(phaseIdx);
+                Scalar rho = (rhoIn + rhoEx)/2;
 
-                // make gravity acceleration a force
-                DimVector f(g);
-                f *= density;
+                // calculate the difference in height of the exterior SCV compared to
+                // interior one.
+                Scalar x = distVec * g;
+                x /= g*g;
+
+                DimVector deltaHeightVec = g;
+                deltaHeightVec *= x;
+
+                // compute the hydrostatic pressure for the exterior control volume
+                // assuming constant density...
+                Scalar pStatIn = 0;
+                Scalar pStatEx = pStatIn - rho*(g*deltaHeightVec);
+
+                // compute the hydrostatic gradient between the two control volumes (this
+                // gradient exhibitis the same direction as the vector between the two
+                // control volume centers and the length (pStaticExterior -
+                // pStaticInterior)/distanceInteriorToExterior
+                auto f(distVec);
+                f *= (pStatEx - pStatIn)/(absDistSquared);
 
                 // calculate the final potential gradient
-                potentialGrad_[phaseIdx] -= f;
+                potentialGrad_[phaseIdx] += f;
                 if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
                     OPM_THROW(Opm::NumericalProblem,
                                "Non finite potential gradient for phase '"
