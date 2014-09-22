@@ -147,19 +147,19 @@ public:
         const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).center();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
 
-        Scalar dy = quantityCallback(face.exteriorIndex()) - quantityCallback(face.interiorIndex());
+        Scalar deltay = quantityCallback(face.exteriorIndex()) - quantityCallback(face.interiorIndex());
 
         Scalar distSquared = 0;
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
-            quantityGrad[dimIdx] = tmp*dy;
+            quantityGrad[dimIdx] = tmp*deltay;
         }
 
         // divide the gradient by the squared distance between the centers of the
         // sub-control volumes: the gradient is the normalized directional vector between
         // the two centers times the ratio of the difference of the values and their
-        // distance, i.e., d/abs(d) * dy / abs(d) = d*dy / abs(d)^2.
+        // distance, i.e., d/abs(d) * delta y / abs(d) = d*delta y / abs(d)^2.
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             quantityGrad[dimIdx] /= distSquared;
     }
@@ -207,7 +207,7 @@ public:
         const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto &face = stencil.boundaryFace(fapIdx);
 
-        Scalar dy = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
+        Scalar deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
 
         const auto& boundaryFacePos = face.integrationPos();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
@@ -216,14 +216,14 @@ public:
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
-            quantityGrad[dimIdx] = tmp*dy;
+            quantityGrad[dimIdx] = tmp*deltay;
         }
 
         // divide the gradient by the squared distance between the center of the
         // sub-control and the center of the boundary face: the gradient is the
         // normalized directional vector between the two centers times the ratio of the
-        // difference of the values and their distance, i.e., d/abs(d) * dy / abs(d) =
-        // d*dy / abs(d)^2.
+        // difference of the values and their distance, i.e., d/abs(d) * deltay / abs(d)
+        // = d*deltay / abs(d)^2.
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             quantityGrad[dimIdx] /= distSquared;
     }
