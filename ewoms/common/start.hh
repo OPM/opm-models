@@ -223,29 +223,30 @@ static void resetTerminal_(int signum)
 
     tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
 
-    const char resetString1[] = {
-        27, '[', 'm', 0
+    const char resetString[] = {
+        // reset current attributes
+        27, '[', 'm',
+
+        // disable line wrapping
+        27, '[', '7', 'l',
+
+        // show text cursor
+        27, '[', '2', '5', 'h',
+
+        0
     };
 
-    std::cerr << resetString1 << std::flush;
-
-    const char resetString2[] = {
-        27, '[', '!', 'p', 27, '[', '?', '3', ';', '4', 'l', 27, '[', '4', 'l', 27, '>', 0
-    };
-
-    std::cerr << resetString2 << std::flush;
-
-    // print a new line to decrease the possibility of garbage remaining on the line
-    // which shows the command line prompt
-    std::cerr << "\r\n" << std::flush;
-
-    tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
+    std::cerr << resetString << std::flush;
 
     // sleep a bit to give the terminal some time to contemplate about the commands...
     struct timespec sleepTime;
     sleepTime.tv_sec = 0;
     sleepTime.tv_nsec = 100 * 1000 * 1000;
     nanosleep(&sleepTime, NULL);
+
+    // print a new line to decrease the possibility of garbage remaining on the line
+    // which shows the command line prompt
+    std::cerr << "\r\n" << std::flush;
 
     // after we did our best to clean the pedestrian way, re-raise the signal
     raise(signum);
