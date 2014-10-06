@@ -31,7 +31,9 @@
 #include <dune/grid/CpGrid.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/checkDeck.Hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -106,9 +108,28 @@ public:
         caseName_ = boost::to_upper_copy(deckPath.stem().string());
 
         Opm::ParserPtr parser(new Opm::Parser());
-        deck_ = parser->parseFile(deckPath.string());
+        Opm::ParserLogPtr parserLog(new Opm::ParserLog());
 
-        eclipseState_.reset(new Opm::EclipseState(deck_));
+        try {
+            deck_ = parser->parseFile(deckPath.string(), /*strict=*/false, parserLog);
+            Opm::checkDeck(deck_, parserLog);
+            eclipseState_.reset(new Opm::EclipseState(deck_, parserLog));
+        }
+        catch (const std::invalid_argument& e) {
+            if (parserLog->size() > 0) {
+                std::cerr << "Issues found while parsing the deck file:\n";
+                parserLog->printAll(std::cerr);
+            }
+
+            std::cerr << "Non-recoverable error encountered while parsing the deck file:"
+                      << e.what() << "\n";
+            throw e;
+        }
+
+        if (parserLog->size() > 0) {
+            std::cerr << "Issues found while parsing the deck file:\n";
+            parserLog->printAll(std::cerr);
+        }
 
         grid_ = GridPointer(new Grid());
         grid_->processEclipseFormat(eclipseState_->getEclipseGrid(),
