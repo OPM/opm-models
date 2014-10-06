@@ -160,7 +160,7 @@ public:
         // large grids the tolerance needs to be reduced because the total mass lost
         // would be too large.)
         Scalar minDofVolume = 1e100;
-        for (size_t globalDofIdx = 0; globalDofIdx < this->numDof(); ++ globalDofIdx)
+        for (size_t globalDofIdx = 0; globalDofIdx < this->numGridDof(); ++ globalDofIdx)
             if (this->dofTotalVolume(globalDofIdx) > 0.0)
                 minDofVolume = std::min(minDofVolume, this->dofTotalVolume(globalDofIdx));
         minDofVolume = this->gridView().comm().min(minDofVolume);

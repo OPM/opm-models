@@ -120,24 +120,24 @@ protected:
             assembler.computeColors(relinearizationTol);
         }
 
-        // update the solution
-        for (unsigned i = 0; i < previousSolution.size(); ++i) {
+        // update the solution for the grid DOFs
+        for (unsigned dofIdx = 0; dofIdx < this->model().numGridDof(); ++dofIdx) {
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 // calculate the update of the curren primary variable. Here we limit the
                 // pressure update, but do we not clamp anything after the specified
                 // number of iterations was reached
-                Scalar delta = solutionUpdate[i][eqIdx];
+                Scalar delta = solutionUpdate[dofIdx][eqIdx];
                 if (this->numIterations_ < numChoppedIterations_) {
                     // limit changes in pressure to 10% of the value of the previous iteration
                     if (eqIdx == Indices::gasPressureIdx
-                        && std::abs(delta/previousSolution[i][eqIdx]) > 0.1)
+                        && std::abs(delta/previousSolution[dofIdx][eqIdx]) > 0.1)
                     {
-                        delta /= std::abs(delta/(0.1*previousSolution[i][eqIdx]));
+                        delta /= std::abs(delta/(0.1*previousSolution[dofIdx][eqIdx]));
                     }
                     // limit changes in saturation to 20%
                     else if ((eqIdx == Indices::waterSaturationIdx ||
                               (eqIdx == Indices::switchIdx
-                               && currentSolution[i].switchingVariableIsGasSaturation()))
+                               && currentSolution[dofIdx].switchingVariableIsGasSaturation()))
                              && std::abs(delta) > 0.2)
                     {
                         delta /= std::abs(delta/0.2);
@@ -146,10 +146,17 @@ protected:
                 }
 
                 // do the actual update
-                currentSolution[i][eqIdx] = previousSolution[i][eqIdx] - delta;
+                currentSolution[dofIdx][eqIdx] = previousSolution[dofIdx][eqIdx] - delta;
             }
 
-            this->model_().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
+            this->model_().invalidateIntensiveQuantitiesCacheEntry(dofIdx, /*timeIdx=*/0);
+        }
+
+        // update the DOFs of the auxiliary equations
+        int nTotalDof = this->model().numTotalDof();
+        for (unsigned dofIdx = this->model().numGridDof(); dofIdx < nTotalDof; ++dofIdx) {
+            currentSolution[dofIdx] = previousSolution[dofIdx];
+            currentSolution[dofIdx] -= solutionUpdate[dofIdx];
         }
     }
 

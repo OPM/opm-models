@@ -150,7 +150,7 @@ public:
             this->resizeScalarBuffer_(fractureVolumeFraction_);
 
         if (velocityOutput_()) {
-            int nDof = this->simulator_.model().numDof();
+            int nDof = this->simulator_.model().numGridDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 fractureVelocity_[phaseIdx].resize(nDof);
                 for (int dofIdx = 0; dofIdx < nDof; ++dofIdx) {
@@ -262,7 +262,7 @@ public:
         }
 
         if (velocityOutput_()) {
-            int nDof = this->simulator_.model().numDof();
+            int nDof = this->simulator_.model().numGridDof();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the

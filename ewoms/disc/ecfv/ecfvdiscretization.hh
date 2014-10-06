@@ -110,9 +110,9 @@ public:
     { return "ecfv"; }
 
     /*!
-     * \brief Returns the number of global degrees of freedoms (DOFs)
+     * \brief Returns the number of global degrees of freedom (DOFs) due to the grid
      */
-    size_t numDof() const
+    size_t numGridDof() const
     { return this->gridView_.size(/*codim=*/0); }
 
     /*!

@@ -72,7 +72,7 @@ namespace Ewoms {
 /*!
  * \ingroup TestProblems
  *
- * \brief Helper class for grid instantiation of the ecl problem.
+ * \brief Helper class for grid instantiation of ECL file-format using problems.
  */
 template <class TypeTag>
 class EclGridManager : public BaseGridManager<TypeTag>
@@ -95,10 +95,10 @@ public:
     }
 
     /*!
-     * \brief Create the grid for the ecl problem
-     */
-    /*!
-     * \brief Create the grid for the lens problem
+     * \brief Create the grid for problem data files which use the ECL file format.
+     *
+     * This is the file format used by the commercial Eclipse simulator. Usually it uses a
+     * cornerpoint description of the grid.
      */
     EclGridManager(Simulator &simulator)
         : ParentType(simulator)

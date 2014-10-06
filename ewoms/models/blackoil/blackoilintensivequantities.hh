@@ -46,6 +46,7 @@ class BlackOilIntensiveQuantities
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, BlackOilFluidState) FluidState;
@@ -79,8 +80,8 @@ public:
 
         fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
 
-        const auto &problem = elemCtx.problem();
-        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         int pvtRegionIdx = priVars.pvtRegionIndex();
 

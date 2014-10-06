@@ -555,7 +555,7 @@ protected:
         // the solution's residual
         error_ = 0;
         for (unsigned i = 0; i < previousResidual.size(); ++i) {
-            if (model().dofTotalVolume(i) <= 0)
+            if (i >= model().numGridDof() || model().dofTotalVolume(i) <= 0)
                 continue;
 
             const auto &r = previousResidual[i];

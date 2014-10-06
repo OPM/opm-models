@@ -30,6 +30,7 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/parallel/threadedentityiterator.hh>
+#include <ewoms/aux/baseauxiliarymodule.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -160,42 +161,17 @@ public:
     void init(Simulator& simulator)
     {
         simulatorPtr_ = &simulator;
+        delete matrix_; // <- note that this even works for nullpointers!
+        matrix_ = 0;
+    }
 
-        // initialize the BCRS matrix
-        createMatrix_();
-
-        // initialize the jacobian matrix and the right hand side
-        // vector
-        *matrix_ = 0;
-        reuseLinearization_ = false;
-
-        int numDof = model_().numDof();
-        int numElems = gridView_().size(/*codim=*/0);
-
-        // create the per-thread objects
-        elementCtx_.resize(ThreadManager::maxThreads());
-        for (int threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
-            elementCtx_[threadId] = new ElementContext(simulator);
-
-        residual_.resize(numDof);
-
-        // initialize the storage part of the Jacobian matrix. Since
-        // we only need this if Jacobian matrix recycling is enabled,
-        // we do not waste space if it is disabled
-        if (enableLinearizationRecycling_()) {
-            storageJacobian_.resize(numDof);
-            storageTerm_.resize(numDof);
-        }
-
-        totalElems_ = gridView_().comm().sum(numElems);
-
-        // initialize data needed for partial relinearization
-        if (enablePartialRelinearization_()) {
-            dofColor_.resize(numDof);
-            dofError_.resize(numDof);
-            elementColor_.resize(numElems);
-        }
-        relinearizeAll();
+    /*!
+     * \brief Causes the Jacobian matrix to be recreated in the next iteration.
+     */
+    void recreateMatrix()
+    {
+        delete matrix_; // <- note that this even works for nullpointers!
+        matrix_ = 0;
     }
 
     /*!
@@ -207,6 +183,12 @@ public:
      */
     void assemble()
     {
+        // we defer the initialization of the Jacobian matrix until here because the
+        // auxiliary modules usually assume the problem, model and grid to be fully
+        // initialized...
+        if (!matrix_)
+            initFirstIteration_();
+
         // we need to store whether the linearization was recycled
         // here because the assemble_ method modifies the
         // reuseLinearization_ attribute!
@@ -307,11 +289,13 @@ public:
         if (!enablePartialRelinearization_())
             return;
 
+        unsigned numGridDof = model_().numGridDof();
+
         // update the vector which stores the error for partial
         // relinearization for each degree of freedom
-        for (unsigned globalDofIdx = 0; globalDofIdx < previousResid.size(); ++globalDofIdx) {
+        for (unsigned globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
             if (model_().dofTotalVolume(globalDofIdx) <= 0) {
-                // ignore overlap and ghost degrees of freedom
+                // ignore degrees of freedom of overlap and ghost elements
                 dofError_[globalDofIdx] = 0;
                 continue;
             }
@@ -602,20 +586,60 @@ private:
     const DofMapper &dofMapper_() const
     { return model_().dofMapper(); }
 
+    void initFirstIteration_()
+    {
+        // initialize the BCRS matrix
+        createMatrix_();
+
+        // initialize the jacobian matrix and the right hand side
+        // vector
+        *matrix_ = 0;
+        reuseLinearization_ = false;
+
+        int numGridDof = model_().numGridDof();
+        int numAllDof =  model_().numTotalDof();
+        int numElems = gridView_().size(/*codim=*/0);
+
+        // create the per-thread objects
+        elementCtx_.resize(ThreadManager::maxThreads());
+        for (int threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
+            elementCtx_[threadId] = new ElementContext(simulator_());
+
+        residual_.resize(numAllDof);
+
+        // initialize the storage part of the Jacobian matrix. Since
+        // we only need this if Jacobian matrix recycling is enabled,
+        // we do not waste space if it is disabled
+        if (enableLinearizationRecycling_()) {
+            storageJacobian_.resize(numGridDof);
+            storageTerm_.resize(numGridDof);
+        }
+
+        totalElems_ = gridView_().comm().sum(numElems);
+
+        // initialize data needed for partial relinearization
+        if (enablePartialRelinearization_()) {
+            dofColor_.resize(numGridDof);
+            dofError_.resize(numGridDof);
+            elementColor_.resize(numElems);
+        }
+        relinearizeAll();
+    }
+
     // Construct the BCRS matrix for the global jacobian
     void createMatrix_()
     {
-        int numDof = model_().numDof();
+        int numAllDof =  model_().numTotalDof();
 
         // allocate raw matrix
-        matrix_ = new Matrix(numDof, numDof, Matrix::random);
+        matrix_ = new Matrix(numAllDof, numAllDof, Matrix::random);
 
         Stencil stencil(gridView_());
 
-        // find out the global indices of the neighboring degrees of
+        // for the main model, find out the global indices of the neighboring degrees of
         // freedom of each primary degree of freedom
         typedef std::set<int> NeighborSet;
-        std::vector<NeighborSet> neighbors(numDof);
+        std::vector<NeighborSet> neighbors(numAllDof);
         ElementIterator eIt = gridView_().template begin<0>();
         const ElementIterator eEndIt = gridView_().template end<0>();
         for (; eIt != eEndIt; ++eIt) {
@@ -631,21 +655,26 @@ private:
             }
         }
 
+        // add the additional neighbors and degrees of freedom caused by the auxiliary
+        // equations
+        const auto& model = model_();
+        int numAuxMod = model.numAuxiliaryModules();
+        for (int auxModIdx = 0; auxModIdx < numAuxMod; ++auxModIdx)
+            model.auxiliaryModule(auxModIdx)->addNeighbors(neighbors);
+
         // allocate space for the rows of the matrix
-        for (int i = 0; i < numDof; ++i) {
-            matrix_->setrowsize(i, neighbors[i].size());
-        }
+        for (int dofIdx = 0; dofIdx < numAllDof; ++ dofIdx)
+            matrix_->setrowsize(dofIdx, neighbors[dofIdx].size());
         matrix_->endrowsizes();
 
         // fill the rows with indices. each degree of freedom talks to
         // all of its neighbors. (it also talks to itself since
         // degrees of freedom are sometimes quite egocentric.)
-        for (int i = 0; i < numDof; ++i) {
-            typename NeighborSet::iterator nIt = neighbors[i].begin();
-            typename NeighborSet::iterator nEndIt = neighbors[i].end();
-            for (; nIt != nEndIt; ++nIt) {
-                matrix_->addindex(i, *nIt);
-            }
+        for (int dofIdx = 0; dofIdx < numAllDof; ++ dofIdx) {
+            typename NeighborSet::iterator nIt = neighbors[dofIdx].begin();
+            typename NeighborSet::iterator nEndIt = neighbors[dofIdx].end();
+            for (; nIt != nEndIt; ++nIt)
+                matrix_->addindex(dofIdx, *nIt);
         }
         matrix_->endindices();
     }
@@ -659,6 +688,8 @@ private:
         if (reuseLinearization_)
             return;
 
+        size_t numGridDof = model_().numGridDof();
+
         // reset the right hand side.
         residual_ = 0.0;
 
@@ -669,8 +700,7 @@ private:
 
             // reset the parts needed for Jacobian recycling
             if (enableLinearizationRecycling_()) {
-                int numDof = matrix_->N();
-                for (int i=0; i < numDof; ++ i) {
+                for (unsigned i=0; i < numGridDof; ++ i) {
                     storageJacobian_[i] = 0;
                     storageTerm_[i] = 0;
                 }
@@ -681,7 +711,7 @@ private:
 
         // reset all entries corrosponding to a red or yellow degree
         // of freedom
-        for (unsigned rowIdx = 0; rowIdx < matrix_->N(); ++rowIdx) {
+        for (unsigned rowIdx = 0; rowIdx < numGridDof; ++rowIdx) {
             if (dofColor_[rowIdx] == Green)
                 // the equations for this control volume are already below the treshold
                 continue;
@@ -713,26 +743,28 @@ private:
         // here and be done with it...
         Scalar curDt = problem_().simulator().timeStepSize();
         if (reuseLinearization_) {
-            int numDof = storageJacobian_.size();
-            for (int i = 0; i < numDof; ++i) {
+            int numGridDof = model_().numGridDof();
+            for (int dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
                 // rescale the mass term of the jacobian matrix
-                MatrixBlock &J_i_i = (*matrix_)[i][i];
+                MatrixBlock &J_ii = (*matrix_)[dofIdx][dofIdx];
 
-                J_i_i -= storageJacobian_[i];
-                storageJacobian_[i] *= oldDt_/curDt;
-                J_i_i += storageJacobian_[i];
+                J_ii -= storageJacobian_[dofIdx];
+                storageJacobian_[dofIdx] *= oldDt_/curDt;
+                J_ii += storageJacobian_[dofIdx];
 
                 // use the flux term plus the source term as the new residual (since the
                 // delta in the d(storage)/dt is 0 for the first iteration and the
                 // residual is approximately 0 in the last iteration, the flux term plus
                 // the source term must be equal to the negative change of the storage
                 // term of the last iteration of the last time step...)
-                residual_[i] = storageTerm_[i];
-                residual_[i] *= -1;
+                residual_[dofIdx] = storageTerm_[dofIdx];
+                residual_[dofIdx] *= -1;
             }
 
             reuseLinearization_ = false;
             oldDt_ = curDt;
+
+            assembleAuxiliaryEquations_();
 
             problem_().newtonMethod().endIterMsg()
                 << ", linear system of equations reused from previous time step";
@@ -761,6 +793,8 @@ private:
                 assembleElement_(elem);
             }
         }
+
+        assembleAuxiliaryEquations_();
     }
 
     // assemble an element in the interior of the process' grid
@@ -836,6 +870,13 @@ private:
                 storageTerm_[globI] += localResidual.storageTerm(dofIdx);
         }
         addLock.unlock();
+    }
+
+    void assembleAuxiliaryEquations_()
+    {
+        auto& model = model_();
+        for (int auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
+            model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
     }
 
     Simulator *simulatorPtr_;

@@ -152,7 +152,7 @@ protected:
         else if (bufferType == ElementBuffer)
             n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = simulator_.model().numDof();
+            n = simulator_.model().numGridDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -172,7 +172,7 @@ protected:
         else if (bufferType == ElementBuffer)
             n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = simulator_.model().numDof();
+            n = simulator_.model().numGridDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -194,7 +194,7 @@ protected:
         else if (bufferType == ElementBuffer)
             n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = simulator_.model().numDof();
+            n = simulator_.model().numGridDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -217,7 +217,7 @@ protected:
         else if (bufferType == ElementBuffer)
             n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = simulator_.model().numDof();
+            n = simulator_.model().numGridDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -240,7 +240,7 @@ protected:
         else if (bufferType == ElementBuffer)
             n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = simulator_.model().numDof();
+            n = simulator_.model().numGridDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 
@@ -263,7 +263,7 @@ protected:
         else if (bufferType == ElementBuffer)
             n = simulator_.gridView().size(0);
         else if (bufferType == DofBuffer)
-            n = simulator_.model().numDof();
+            n = simulator_.model().numGridDof();
         else
             OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
 

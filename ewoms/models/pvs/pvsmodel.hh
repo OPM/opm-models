@@ -333,7 +333,8 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        for (size_t dofIdx = 0; dofIdx < this->numDof(); ++ dofIdx) {
+        int nDof = this->numTotalDof();
+        for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
             if (this->dofTotalVolume(dofIdx) > 0) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
@@ -455,7 +456,7 @@ public:
     {
         numSwitched_ = 0;
 
-        std::vector<bool> visited(this->numDof(), false);
+        std::vector<bool> visited(this->numGridDof(), false);
         ElementContext elemCtx(this->simulator_);
 
         ElementIterator elemIt = this->gridView_.template begin<0>();
@@ -465,9 +466,8 @@ public:
                 continue;
             elemCtx.updateStencil(*elemIt);
 
-            int numDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
-            for (int dofIdx = 0; dofIdx < numDof; ++dofIdx)
-            {
+            int numLocalDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
+            for (int dofIdx = 0; dofIdx < numLocalDof; ++dofIdx) {
                 int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
                 if (visited[globalIdx])

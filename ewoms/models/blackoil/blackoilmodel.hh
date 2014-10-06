@@ -284,6 +284,11 @@ public:
      */
     Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
     {
+        // do not care about the auxiliary equations as they are supposed to scale
+        // themselves
+        if (globalDofIdx >= this->numGridDof())
+            return 1;
+
         if (Indices::gasPressureIdx == pvIdx)
             return 10/referencePressure_;
 
@@ -295,6 +300,11 @@ public:
      */
     Scalar eqWeight(int globalDofIdx, int eqIdx) const
     {
+        // do not care about the auxiliary equations as they are supposed to scale
+        // themselves
+        if (globalDofIdx >= this->numGridDof())
+            return 1;
+
         int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
 
@@ -312,7 +322,7 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        for (size_t dofIdx = 0; dofIdx < this->numDof(); ++ dofIdx) {
+        for (size_t dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
             if (this->dofTotalVolume(dofIdx) > 0) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][Indices::gasPressureIdx];
@@ -332,7 +342,7 @@ public:
     {
         numSwitched_ = 0;
 
-        int numDof = this->numDof();
+        int numDof = this->numGridDof();
         for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
             auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
             if (priVars.adaptSwitchingVariable())

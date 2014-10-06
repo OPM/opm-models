@@ -44,6 +44,7 @@
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
+#include <ewoms/aux/baseauxiliarymodule.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -307,7 +308,7 @@ public:
     {
         asImp_().updateBoundary_();
 
-        int nDofs = asImp_().numDof();
+        int nDofs = asImp_().numGridDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDofs);
 
@@ -358,7 +359,7 @@ public:
     void finishInit()
     {
         // initialize the volume of the finite volumes to zero
-        int nDofs = asImp_().numDof();
+        int nDofs = asImp_().numGridDof();
         dofTotalVolume_.resize(nDofs);
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
@@ -1115,11 +1116,31 @@ public:
     }
 
     /*!
-     * \brief Returns the number of global degrees of freedoms (DOFs)
+     * \brief Returns the number of degrees of freedom (DOFs) for the computational grid
      */
-    size_t numDof() const
+    size_t numGridDof() const
     { OPM_THROW(std::logic_error,
-                "The discretization class must implement the numDof() method!"); }
+                "The discretization class must implement the numGridDof() method!"); }
+
+    /*!
+     * \brief Returns the number of degrees of freedom (DOFs) of the auxiliary equations
+     */
+    size_t numAuxiliaryDof() const
+    {
+        size_t result = 0;
+        auto auxModIt = auxEqModules_.begin();
+        const auto& auxModEndIt = auxEqModules_.end();
+        for (; auxModIt != auxModEndIt; ++auxModIt)
+            result += (*auxModIt)->numDofs();
+
+        return result;
+    }
+
+    /*!
+     * \brief Returns the total number of degrees of freedom (i.e., grid plux auxiliary DOFs)
+     */
+    size_t numTotalDof() const
+    { return asImp_().numGridDof() + numAuxiliaryDof(); }
 
     /*!
      * \brief Mapper to convert the Dune entities of the
@@ -1219,22 +1240,22 @@ public:
         asImp_().globalResidual(globalResid, u);
 
         // create the required scalar fields
-        unsigned numDof = asImp_().numDof();
+        unsigned numGridDof = asImp_().numGridDof();
 
         // global defect of the two auxiliary equations
         ScalarBuffer* def[numEq];
         ScalarBuffer* delta[numEq];
         ScalarBuffer* priVars[numEq];
         ScalarBuffer* priVarWeight[numEq];
-        ScalarBuffer* relError = writer.allocateManagedScalarBuffer(numDof);
+        ScalarBuffer* relError = writer.allocateManagedScalarBuffer(numGridDof);
         for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
-            priVars[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
-            priVarWeight[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
-            delta[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
-            def[pvIdx] = writer.allocateManagedScalarBuffer(numDof);
+            priVars[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
+            priVarWeight[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
+            delta[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
+            def[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
         }
 
-        for (unsigned globalIdx = 0; globalIdx < numDof; ++ globalIdx)
+        for (unsigned globalIdx = 0; globalIdx < numGridDof; ++ globalIdx)
         {
             for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
                 (*priVars[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
@@ -1327,6 +1348,57 @@ public:
     const GridView &gridView() const
     { return gridView_; }
 
+    /*!
+     * \brief Add a module for an auxiliary equation.
+     *
+     * This module can add additional degrees of freedom and additional off-diagonal
+     * elements, but the number of equations per DOF needs to be the same as for the
+     * "main" model.
+     *
+     * For example, auxiliary modules can be used to specify non-neighboring connections,
+     * well equations or model couplings via mortar DOFs. Auxiliary equations are
+     * completely optional, though.
+     */
+    void addAuxiliaryModule(std::shared_ptr<BaseAuxiliaryModule<TypeTag> > auxMod)
+    {
+        auxMod->setDofOffset(numTotalDof());
+        auxEqModules_.push_back(auxMod);
+
+        // resize the solutions
+        int nDof = numTotalDof();
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution_[timeIdx].resize(nDof);
+        }
+
+        auxMod->applyInitial();
+    }
+
+    /*!
+     * \brief Causes the list of auxiliary equations to be cleared
+     *
+     * Note that this method implies recreateMatrix()
+     */
+    void clearAuxiliaryModules()
+    { auxEqModules_.clear(); }
+
+    /*!
+     * \brief Returns the number of modules for auxiliary equations
+     */
+    size_t numAuxiliaryModules() const
+    { return auxEqModules_.size(); }
+
+    /*!
+     * \brief Returns a given module for auxiliary equations
+     */
+    std::shared_ptr<BaseAuxiliaryModule<TypeTag> > auxiliaryModule(int auxEqModIdx)
+    { return auxEqModules_[auxEqModIdx]; }
+
+    /*!
+     * \brief Returns a given module for auxiliary equations
+     */
+    std::shared_ptr<const BaseAuxiliaryModule<TypeTag> > auxiliaryModule(int auxEqModIdx) const
+    { return auxEqModules_[auxEqModIdx]; }
+
 protected:
     /*!
      * \brief Finalize the initialization of the discretization
@@ -1336,7 +1408,7 @@ protected:
     void finishInit_()
     {
         // initialize the volume of the finite volumes to zero
-        int nDofs = asImp_().numDof();
+        int nDofs = asImp_().numGridDof();
         dofTotalVolume_.resize(nDofs);
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
@@ -1416,7 +1488,7 @@ protected:
     void updateBoundary_()
     {
         // resize the vectors and set everything to not being on the boundary
-        onBoundary_.resize(asImp_().numDof());
+        onBoundary_.resize(asImp_().numGridDof());
         std::fill(onBoundary_.begin(), onBoundary_.end(), /*value=*/false);
 
         // loop over all elements of the grid
@@ -1454,6 +1526,9 @@ protected:
 
     // the representation of the spatial domain of the problem
     GridView gridView_;
+
+    // a vector with all auxiliary equations to be considered
+    std::vector<std::shared_ptr<BaseAuxiliaryModule<TypeTag> > > auxEqModules_;
 
     NewtonMethod newtonMethod_;
 

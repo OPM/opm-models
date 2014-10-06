@@ -164,7 +164,7 @@ public:
         if (intrinsicPermeabilityOutput_()) this->resizeTensorBuffer_(intrinsicPermeability_);
 
         if (velocityOutput_()) {
-            Scalar nDof = this->simulator_.model().numDof();
+            Scalar nDof = this->simulator_.model().numGridDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 velocity_[phaseIdx].resize(nDof);
                 for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
@@ -176,7 +176,7 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            Scalar nDof = this->simulator_.model().numDof();
+            Scalar nDof = this->simulator_.model().numGridDof();
             for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 potentialGradient_[phaseIdx].resize(nDof);
                 for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
@@ -309,13 +309,13 @@ public:
             this->commitTensorBuffer_(baseWriter, "intrinsicPerm", intrinsicPermeability_);
 
         if (velocityOutput_()) {
-            int nDof = this->simulator_.model().numDof();
+            int nDof = this->simulator_.model().numGridDof();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
                 for (int i = 0; i < nDof; ++i)
-                        velocity_[phaseIdx][i] /= velocityWeight_[phaseIdx][i];
+                    velocity_[phaseIdx][i] /= velocityWeight_[phaseIdx][i];
                 // commit the phase velocity
                 char name[512];
                 snprintf(name, 512, "filterVelocity_%s", FluidSystem::phaseName(phaseIdx));
@@ -325,7 +325,7 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            int nDof = this->simulator_.model().numDof();
+            int nDof = this->simulator_.model().numGridDof();
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the

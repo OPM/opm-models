@@ -41,6 +41,8 @@ class FvBaseIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
@@ -95,12 +97,6 @@ public:
 
     /*!
      * \brief Update all quantities for a given control volume.
-     *
-     * \param elemCtx The execution context from which the method is called.
-     * \param dofIdx The index of the sub-control volume for which the
-     *               intensive quantities should be calculated.
-     * \param timeIdx The index for the time discretization for which
-     *                the intensive quantities should be calculated
      */
     void update(const ElementContext &elemCtx,
                 int dofIdx,

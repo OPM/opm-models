@@ -286,7 +286,8 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        for (size_t dofIdx = 0; dofIdx < this->numDof(); ++ dofIdx) {
+        int nDof = this->numTotalDof();
+        for (size_t dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
             if (this->dofTotalVolume(dofIdx) > 0) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
