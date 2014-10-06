@@ -161,69 +161,99 @@ static void resetTerminal_(int signum)
     // first thing to do when a nuke hits: restore the default signal handler
     signal(signum, SIG_DFL);
 
-    // the following code resets the terminal status and was shamelessly ripped of from
-    // ncurses' "tset" utility. The original copyright license is the following:
+    // the following code resets the terminal status and is loosely based on corutils'
+    // "stty" utility. The copyright notice for this file is the following:
     //
-    // Copyright (c) 1980, 1991, 1993
-    //      The Regents of the University of California.  All rights reserved.
+    // Copyright (C) 1990-2014 Free Software Foundation, Inc.
     //
-    // Redistribution and use in source and binary forms, with or without
-    // modification, are permitted provided that the following conditions
-    // are met:
-    // 1. Redistributions of source code must retain the above copyright
-    //    notice, this list of conditions and the following disclaimer.
-    // 2. Redistributions in binary form must reproduce the above copyright
-    //    notice, this list of conditions and the following disclaimer in the
-    //    documentation and/or other materials provided with the distribution.
-    // 3. Neither the name of the University nor the names of its contributors
-    //    may be used to endorse or promote products derived from this software
-    //    without specific prior written permission.
-    //
-    // THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-    // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-    // ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-    // FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    // DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-    // OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-    // HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-    // LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-    // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-    // SUCH DAMAGE.
+    // This program is free software: you can redistribute it and/or modify it under the
+    // terms of the GNU General Public License as published by the Free Software
+    // Foundation, either version 3 of the License, or (at your option) any later
+    // version.
     struct termios mode;
     tcgetattr(STDERR_FILENO, &mode);
 
-    mode.c_cc[VDISCARD] = CDISCARD;
-    mode.c_cc[VEOF] = CEOF;
-    mode.c_cc[VERASE] = CERASE;
     mode.c_cc[VINTR] = CINTR;
-    mode.c_cc[VKILL] = CKILL;
-    mode.c_cc[VLNEXT] = CLNEXT;
     mode.c_cc[VQUIT] = CQUIT;
-    mode.c_cc[VREPRINT] = CRPRNT;
+    mode.c_cc[VERASE] = CERASE;
+    mode.c_cc[VKILL] = CKILL;
+    mode.c_cc[VEOF] = CEOF;
+    mode.c_cc[VEOL] = CEOL;
+    mode.c_cc[VEOL2] = _POSIX_VDISABLE;
+    mode.c_cc[VSWTC] = CSUSP;
     mode.c_cc[VSTART] = CSTART;
     mode.c_cc[VSTOP] = CSTOP;
     mode.c_cc[VSUSP] = CSUSP;
+    mode.c_cc[VREPRINT] = CRPRNT;
     mode.c_cc[VWERASE] = CWERASE;
+    mode.c_cc[VLNEXT] = CLNEXT;
+    mode.c_cc[VDISCARD] = 0x1f & 'o';
+    mode.c_cc[VMIN] = 1;
+    mode.c_cc[VTIME] = 0;
 
-    mode.c_iflag &= ~(IGNBRK | PARMRK | INPCK | ISTRIP
-                      | INLCR | IGNCR | IUCLC | IXANY | IXOFF);
+    // control flags
+    mode.c_cflag |= CREAD;
 
-    mode.c_iflag |= (BRKINT | IGNPAR | ICRNL | IXON | IMAXBEL);
+    // input flags
+    mode.c_iflag &= ~IGNBRK;
+    mode.c_iflag |= BRKINT;
+    mode.c_iflag &= ~INLCR;
+    mode.c_iflag &= ~IGNCR;
+    mode.c_iflag |= ICRNL;
+    mode.c_iflag &= ~IXOFF;
+    mode.c_iflag &= ~IUCLC;
+    mode.c_iflag &= ~IXANY;
+    mode.c_iflag |= IMAXBEL;
+    mode.c_iflag &= ~IUTF8;
 
-    mode.c_oflag &= ~(OLCUC | OCRNL | ONOCR | ONLRET
-                      | OFILL | OFDEL | NLDLY | CRDLY
-                      | TABDLY | BSDLY | VTDLY | FFDLY);
+    // output flags
+    mode.c_oflag |= OPOST;
+    mode.c_oflag &= ~OLCUC;
+    mode.c_oflag &= ~OCRNL;
+    mode.c_oflag |= ONLCR;
+    mode.c_oflag &= ~ONOCR;
+    mode.c_oflag &= ~ONLRET;
+    mode.c_oflag &= ~OFILL;
+    mode.c_oflag &= ~OFDEL;
+    mode.c_oflag &= ~NL1;
+    mode.c_oflag |= NL0;
+    mode.c_oflag &= ~CR3;
+    mode.c_oflag &= ~CR2;
+    mode.c_oflag &= ~CR1;
+    mode.c_oflag |= CR0;
+    mode.c_oflag &= ~TAB3;
+    mode.c_oflag &= ~TAB2;
+    mode.c_oflag &= ~TAB1;
+    mode.c_oflag |= TAB0;
+    mode.c_oflag &= ~BS1;
+    mode.c_oflag |= BS0;
+    mode.c_oflag &= ~VT1;
+    mode.c_oflag |= VT0;
+    mode.c_oflag &= ~FF1;
+    mode.c_oflag |= FF0;
 
-    mode.c_oflag |= (OPOST | ONLCR);
-    mode.c_cflag &= ~(CSIZE | CSTOPB | PARENB | PARODD | CLOCAL);
-    mode.c_cflag |= (CS8 | CREAD);
-    mode.c_lflag &= ~(ECHONL | NOFLSH | TOSTOP | XCASE);
-    mode.c_lflag |= (ISIG | ICANON | ECHO | ECHOE | ECHOK | ECHOCTL | ECHOKE );
+    // local flags
+    mode.c_lflag |= ISIG;
+    mode.c_lflag |= ICANON;
+    mode.c_lflag |= IEXTEN;
+    mode.c_lflag |= ECHO;
+    mode.c_lflag |= ECHOE;
+    mode.c_lflag |= ECHOK;
+    mode.c_lflag &= ~ECHONL;
+    mode.c_lflag &= ~NOFLSH;
+    mode.c_lflag &= ~XCASE;
+    mode.c_lflag &= ~TOSTOP;
+    mode.c_lflag &= ~ECHOPRT;
+    mode.c_lflag |= ECHOCTL;
+    mode.c_lflag |= ECHOKE;
 
-    tcsetattr(STDERR_FILENO, TCSADRAIN, &mode);
+    // set the control mode of the TTY
+    tcsetattr(STDIN_FILENO, TCSADRAIN, &mode);
 
     const char resetString[] = {
+        // switch back to the default character set
+        0x0f,
+
         // reset current attributes
         27, '[', 'm',
 
