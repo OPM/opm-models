@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/checkDeck.Hpp>
+#include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -116,19 +116,20 @@ public:
             eclipseState_.reset(new Opm::EclipseState(deck_, parserLog));
         }
         catch (const std::invalid_argument& e) {
+            std::cerr << "Non-recoverable error encountered while parsing the deck file:"
+                      << e.what() << "\n";
+
             if (parserLog->size() > 0) {
                 std::cerr << "Issues found while parsing the deck file:\n";
                 parserLog->printAll(std::cerr);
             }
 
-            std::cerr << "Non-recoverable error encountered while parsing the deck file:"
-                      << e.what() << "\n";
             throw e;
         }
 
         if (parserLog->size() > 0) {
-            std::cerr << "Issues found while parsing the deck file:\n";
-            parserLog->printAll(std::cerr);
+            std::cout << "Issues found while parsing the deck file:\n";
+            parserLog->printAll(std::cout);
         }
 
         grid_ = GridPointer(new Grid());
