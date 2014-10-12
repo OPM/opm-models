@@ -27,6 +27,4 @@ set (ewoms_DEPS
 	"Valgrind"
 	# quadruple precision floating point calculations
 	"Quadmath"
-	# the openMP parallelization package
-	"OpmOpenMP"
 	)
