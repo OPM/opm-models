@@ -226,7 +226,7 @@ public:
                                               zcornKeyword.ertHandle(),
                                               coordKeyword.ertHandle(),
                                               actnumKeyword.ertHandle(),
-                                              mapaxesKeyword.ertHandle());
+                                              mapaxesData.size()?mapaxesKeyword.ertHandle():NULL);
 #endif // HAVE_ERT && HAVE_DUNE_CORNERPOINT
     }
 
