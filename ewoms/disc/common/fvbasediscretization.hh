@@ -966,8 +966,12 @@ public:
             asImp_().updateFailed();
 
 #if HAVE_VALGRIND
+        // make sure that the "non-pseudo" primary variables are defined. Note that
+        // because of the padding, we can't just simply ask valgrind to check the whole
+        // solution vectors for definedness...
         for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
-            Valgrind::CheckDefined(asImp_().solution(/*timeIdx=*/0)[i]);
+            for (size_t eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                Valgrind::CheckDefined(asImp_().solution(/*timeIdx=*/0)[i][eqIdx]);
         }
 #endif // HAVE_VALGRIND
 
