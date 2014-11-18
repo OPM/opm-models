@@ -875,7 +875,7 @@ private:
     void assembleAuxiliaryEquations_()
     {
         auto& model = model_();
-        for (int auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
+        for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
             model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
     }
 

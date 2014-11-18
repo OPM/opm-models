@@ -286,7 +286,7 @@ public:
     {
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
-        if (globalDofIdx >= this->numGridDof())
+        if (globalDofIdx >= (int) this->numGridDof())
             return 1;
 
         if (Indices::gasPressureIdx == pvIdx)
@@ -302,7 +302,7 @@ public:
     {
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
-        if (globalDofIdx >= this->numGridDof())
+        if (globalDofIdx >= (int) this->numGridDof())
             return 1;
 
         int compIdx = eqIdx - Indices::conti0EqIdx;

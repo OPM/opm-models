@@ -287,7 +287,7 @@ public:
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
         int nDof = this->numTotalDof();
-        for (size_t dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+        for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
             if (this->dofTotalVolume(dofIdx) > 0) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];

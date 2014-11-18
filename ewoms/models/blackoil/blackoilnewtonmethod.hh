@@ -154,7 +154,7 @@ protected:
 
         // update the DOFs of the auxiliary equations
         int nTotalDof = this->model().numTotalDof();
-        for (unsigned dofIdx = this->model().numGridDof(); dofIdx < nTotalDof; ++dofIdx) {
+        for (int dofIdx = this->model().numGridDof(); dofIdx < nTotalDof; ++dofIdx) {
             currentSolution[dofIdx] = previousSolution[dofIdx];
             currentSolution[dofIdx] -= solutionUpdate[dofIdx];
         }
