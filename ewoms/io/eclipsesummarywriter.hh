@@ -1,0 +1,389 @@
+/*
+  Copyright (C) 2014 by Andreas Lauser
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 2 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/*!
+ * \file
+ *
+ * \copydoc Ewoms::EclipseSummaryWriter
+ */
+#ifndef EWOMS_ECLIPSE_SUMMARY_WRITER_HH
+#define EWOMS_ECLIPSE_SUMMARY_WRITER_HH
+
+#include "ertwrappers.hh"
+
+#include <ewoms/wells/eclwellmanager.hh>
+
+#include <opm/core/utility/PropertySystem.hpp>
+
+#include <opm/material/Valgrind.hpp>
+
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
+
+#if HAVE_ERT
+#include <ert/ecl/ecl_sum.h>
+#endif
+
+#include <boost/algorithm/string.hpp>
+
+#include <string>
+
+namespace Opm {
+namespace Properties {
+NEW_PROP_TAG(EnableEclipseSummaryOutput);
+}}
+
+namespace Ewoms {
+template <class TypeTag>
+class EclipseSummaryWriter;
+
+/*!
+ * \brief Implements writing Eclipse summary files.
+ *
+ * i.e., well rates, bottom hole pressures, etc.
+ */
+template <class TypeTag>
+class EclipseSummaryWriter
+{
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+    typedef Ewoms::EclWellManager<TypeTag> WellManager;
+    typedef Ewoms::ErtSummary<TypeTag> ErtSummary;
+
+    static const int numPhases = GET_PROP_VALUE(TypeTag, NumPhases);
+
+    struct ErtWellInfo {
+        smspec_node_type* wbhpErtHandle;
+        smspec_node_type* wthpErtHandle;
+        smspec_node_type* wgorErtHandle;
+        smspec_node_type* wwirErtHandle;
+        smspec_node_type* wgirErtHandle;
+        smspec_node_type* woirErtHandle;
+        smspec_node_type* wwprErtHandle;
+        smspec_node_type* wgprErtHandle;
+        smspec_node_type* woprErtHandle;
+    };
+
+    static const int waterPhaseIdx = FluidSystem::waterPhaseIdx;
+    static const int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+    static const int oilPhaseIdx = FluidSystem::oilPhaseIdx;
+
+public:
+    EclipseSummaryWriter(const Simulator &simulator)
+        : simulator_(simulator)
+#if HAVE_ERT
+        , ertSummary_(simulator)
+#endif
+    {
+        const auto deck = simulator.gridManager().deck();
+
+        // populate the set of quantities to write
+        if (deck->hasKeyword("ALL"))
+            addAllSummaryKeywords_();
+        else
+            addPresentSummaryKeywords_(deck);
+
+        addVariables_(*simulator.gridManager().eclipseState());
+    }
+
+    ~EclipseSummaryWriter()
+    { }
+
+    /*!
+     * \brief Adds an entry to the summary file.
+     */
+    void write(const WellManager& wellsManager)
+    {
+        ErtSummaryTimeStep<TypeTag> ertSumTimeStep(ertSummary_,
+                                                   simulator_.time(),
+                                                   simulator_.episodeIndex());
+
+        // add the well quantities
+        for (int wellIdx = 0; wellIdx < wellsManager.numWells(); ++wellIdx) {
+            const auto& well = wellsManager.well(wellIdx);
+            const auto& summaryInfo = ertWellInfo_.at(well->name());
+
+            if (writeWbhp_()) {
+                Scalar bhpPascal = well->bottomHolePressure();
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wbhpErtHandle),
+                                   bhpPascal/1e5); // eclipse uses bars for this
+            }
+
+            if (writeWthp_()) {
+                Scalar thpPascal = well->topHolePressure();
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wthpErtHandle),
+                                   thpPascal/1e5); // eclipse uses bars for this
+            }
+
+            if (writeWgor_()) {
+                // since I'm usure what the gas-to-oil ratio exactly expresses, I just
+                // assume "volume of gas at standard conditions divided by volume of oil
+                // at standard conditions". Mass-based measures would be drastically
+                // different. (As will be if imperial units are used where the volume of
+                // gas is MCF and the volume of oil is bbl)
+                Scalar gasRate = std::abs(well->surfaceRate(gasPhaseIdx));
+                Scalar oilRate = std::abs(well->surfaceRate(oilPhaseIdx));
+                Scalar gasToOilRate = gasRate/std::max(1e-20, oilRate);
+
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wgorErtHandle),
+                                   gasToOilRate);
+            }
+
+            //////////
+            // injection surface rates
+            if (writeWwir_()) {
+                Scalar ratePerSecond = std::max(0.0, well->surfaceRate(waterPhaseIdx));
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwirErtHandle),
+                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+            }
+
+            if (writeWgir_()) {
+                Scalar ratePerSecond = std::max(0.0, well->surfaceRate(gasPhaseIdx));
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwirErtHandle),
+                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+            }
+
+            if (writeWoir_()) {
+                Scalar ratePerSecond = std::max(0.0, well->surfaceRate(oilPhaseIdx));
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwirErtHandle),
+                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+            }
+            //////////
+
+            //////////
+            // production surface rates
+            if (writeWwpr_()) {
+                Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(waterPhaseIdx));
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwprErtHandle),
+                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+            }
+
+            if (writeWgpr_()) {
+                Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(gasPhaseIdx));
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwprErtHandle),
+                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+            }
+
+            if (writeWopr_()) {
+                Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(oilPhaseIdx));
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwprErtHandle),
+                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+            }
+            //////////
+        }
+
+        // write the _complete_ summary file!
+        ecl_sum_fwrite(ertSummary_.ertHandle());
+    }
+
+private:
+    static bool enableEclipseSummaryOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseSummaryOutput); }
+
+    bool writeWbhp_() const
+    { return summaryKeywords_.count("WBHP") > 0; }
+
+    bool writeWthp_() const
+    { return summaryKeywords_.count("WTHP") > 0; }
+
+    // gas-oil ratio
+    bool writeWgor_() const
+    { return summaryKeywords_.count("WGOR") > 0; }
+
+    // write each well's current surface water injection rate
+    bool writeWwir_() const
+    { return summaryKeywords_.count("WWIR") > 0; }
+
+    // write each well's current surface gas injection rate
+    bool writeWgir_() const
+    { return summaryKeywords_.count("WGIR") > 0; }
+
+    // write each well's current surface oil injection rate
+    bool writeWoir_() const
+    { return summaryKeywords_.count("WOIR") > 0; }
+
+    // write each well's current surface water production rate
+    bool writeWwpr_() const
+    { return summaryKeywords_.count("WWPR") > 0; }
+
+    // write each well's current surface gas production rate
+    bool writeWgpr_() const
+    { return summaryKeywords_.count("WGPR") > 0; }
+
+    // write each well's current surface oil production rate
+    bool writeWopr_() const
+    { return summaryKeywords_.count("WOPR") > 0; }
+
+    void addVariables_(const Opm::EclipseState& eclState)
+    {
+        const auto& wellsVector = eclState.getSchedule()->getWells();
+        for (size_t wellIdx = 0; wellIdx < wellsVector.size(); ++ wellIdx) {
+            const auto& eclWell = wellsVector[wellIdx];
+            auto& wellInfo = ertWellInfo_[eclWell->name()];
+
+            // the bottom/top hole pressures
+            if (writeWbhp_())
+                wellInfo.wbhpErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WBHP",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"BARSA",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWthp_())
+                wellInfo.wthpErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WTHP",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"BARSA",
+                                    /*defaultValue=*/0.0);
+
+            // the gas to oil rate
+            if (writeWgor_())
+                wellInfo.wgorErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WGOR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"",
+                                    /*defaultValue=*/0.0);
+
+            // add injection variables
+            if (writeWwir_())
+                wellInfo.wwirErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WWIR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWgir_())
+                wellInfo.wgirErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WGIR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWoir_())
+                wellInfo.woirErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WOIR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            // add production variables
+            if (writeWwpr_())
+                wellInfo.wwprErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WWPR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWgpr_())
+                wellInfo.wgprErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WGPR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWopr_())
+                wellInfo.woprErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WOPR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+        }
+    }
+
+    // add all quantities which are implied by the ALL summary keyword
+    void addAllSummaryKeywords_()
+    {
+        // according to the Eclipse reference manual
+        std::vector<std::string> allKw = {{
+                "FOPR", "GOPR", "WOPR", "FOPT",
+                "GOPT", "WOPT", "FOIR", "GOIR",
+                "WOIR", "FOIT", "GOIT", "WOIT",
+                "FWPR", "GWPR", "WWPR", "FWPT",
+                "GWPT", "WWPT", "FWIR", "GWIR",
+                "WWIR", "FWIT", "GWIT", "WWIT",
+                "FGPR", "GGPR", "WGPR", "FGPT",
+                "GGPT", "WGPT", "FGIR", "GGIR",
+                "WGIR", "FGIT", "GGIT", "WGIT",
+                "FVPR", "GVPR", "WVPR", "FVPT",
+                "GVPT", "WVPT", "FVIR", "GVIR",
+                "WVIR", "FVIT", "GVIT", "WVIT",
+                "FWCT", "GWCT", "WWCT", "FGOR",
+                "GGOR", "WGOR", "FWGR", "GWGR",
+                "WWGR", "WBHP", "WTHP", "WPI",
+                "FOIP", "FOIPL", "FOIPG", "FWIP",
+                "FGIP", "FGIPL", "FGIPG", "FPR",
+                "FAQR", "FAQRG", "AAQR", "AAQRG",
+                "FAQT", "FAQTG", "AAQT", "AAQTG",
+            }};
+        for (int kwIdx = 0; kwIdx < allKw.size(); ++kwIdx)
+            summaryKeywords_.insert(allKw[kwIdx]);
+    }
+
+    // add all quantities which are present in the summary section of the deck
+    void addPresentSummaryKeywords_(Opm::DeckConstPtr deck)
+    {
+        Opm::Section summarySection(deck, "SUMMARY");
+        auto kwIt = summarySection.begin();
+        auto kwEndIt = summarySection.end();
+        // skip the first keyword as this is "SUMMARY". bug in opm-parser?
+        ++kwIt;
+        for (; kwIt != kwEndIt; ++kwIt)
+            summaryKeywords_.insert((*kwIt)->name());
+    }
+
+    const Simulator& simulator_;
+
+    std::set<std::string> summaryKeywords_;
+    std::map<std::string, ErtWellInfo> ertWellInfo_;
+
+#if HAVE_ERT
+    ErtSummary ertSummary_;
+#endif
+};
+} // namespace Ewoms
+
+#endif

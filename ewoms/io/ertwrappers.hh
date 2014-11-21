@@ -48,6 +48,8 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/material/Valgrind.hpp>
 
+#include <ewoms/wells/eclwellmanager.hh>
+
 namespace Ewoms {
 
 // forward definition of the EclGridManager class. We need this for
@@ -347,6 +349,69 @@ public:
 private:
     ErtRestartFile *restartHandle_;
     std::list<std::shared_ptr<const ErtBaseKeyword>> attachedKeywords_;
+};
+
+template <class TypeTag>
+class ErtSummary
+{
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+
+    typedef EclWellManager<TypeTag> WellManager;
+
+public:
+    ErtSummary(const ErtSummary&) = delete;
+
+    ErtSummary(const Simulator& simulator)
+    {
+        std::string caseName = getErtCaseName__(simulator.gridManager());
+
+        const auto& eclGrid = simulator.gridManager().eclipseGrid();
+
+        ertHandle_ = ecl_sum_alloc_writer(caseName.c_str(),
+                                          /*formatted=*/false,
+                                          /*unified=*/true,
+                                          /*joinString=*/":",
+                                          simulator.time(),
+                                          eclGrid->getNX(),
+                                          eclGrid->getNY(),
+                                          eclGrid->getNZ());
+    }
+
+    ~ErtSummary()
+    { ecl_sum_free(ertHandle_); }
+
+    // add all wells in the well manager to the summary output and
+    // write the result.
+    void writeTimeStep(const WellManager& wellManager)
+    { }
+
+    ecl_sum_type *ertHandle() const
+    { return ertHandle_; }
+
+private:
+    ecl_sum_type *ertHandle_;
+};
+
+template <class TypeTag>
+class ErtSummaryTimeStep
+{
+public:
+    ErtSummaryTimeStep(ErtSummary<TypeTag>& summaryHandle,
+                       double timeInSeconds,
+                       int reportStepIdx)
+    {
+        double timeInDays = timeInSeconds / (24*60*60);
+        ertHandle_ = ecl_sum_add_tstep(summaryHandle.ertHandle(), reportStepIdx, timeInDays);
+    }
+
+    // no destructor in this class as ERT takes care of freeing the
+    // handle as part of freeing the summary file handle!
+
+    ecl_sum_tstep_type *ertHandle() const
+    { return ertHandle_; };
+
+private:
+    ecl_sum_tstep_type *ertHandle_;
 };
 
 } // namespace Ewoms
