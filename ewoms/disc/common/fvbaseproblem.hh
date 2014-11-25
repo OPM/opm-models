@@ -301,32 +301,37 @@ public:
      */
     void finalize()
     {
+        const auto& timer = simulator().timer();
+        Scalar realTime = timer.realTimeElapsed();
+        Scalar localCpuTime = timer.cpuTimeElapsed();
+        Scalar globalCpuTime = timer.globalCpuTimeElapsed();
+        int numProcesses = this->gridView().comm().size();
         if (gridView().comm().rank() == 0) {
-            Scalar execTime = simulator().executionTime();
-            int numCores = this->gridView().comm().size();
             std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "\n"
                       << "-------------- Timing receipt --------------\n"
                       << "  Setup time: "<< simulator().setupTime() << " seconds"
                       << Simulator::humanReadableTime(simulator().setupTime()) << "\n"
-                      << "  Execution time: "<< execTime << " seconds"
-                      << Simulator::humanReadableTime(execTime) << "\n"
-                      << "  Execution CPU time: " << execTime*numCores << " seconds"
-                      << Simulator::humanReadableTime(execTime*numCores) << "\n"
-                      << "  Number of processes: " << numCores << "\n"
+                      << "  Execution time: "<< realTime << " seconds"
+                      << Simulator::humanReadableTime(realTime) << "\n"
+                      << "  First process' CPU time: " << localCpuTime << " seconds"
+                      << Simulator::humanReadableTime(localCpuTime) << "\n"
+                      << "  Number of processes: " << numProcesses << "\n"
+                      << "  Total CPU time: " << globalCpuTime << " seconds"
+                      << Simulator::humanReadableTime(globalCpuTime) << "\n"
                       << "  Linearization time: " << assembleTime_
                       << Simulator::humanReadableTime(assembleTime_) << " seconds"
-                      << ", " << assembleTime_/execTime*100 << "%\n"
+                      << ", " << assembleTime_/realTime*100 << "%\n"
                       << "  Linear solve time: " << solveTime_ << " seconds"
                       << Simulator::humanReadableTime(solveTime_)
-                      << ", " << solveTime_/execTime*100 << "%\n"
+                      << ", " << solveTime_/realTime*100 << "%\n"
                       << "  Newton update time: " << updateTime_ << " seconds"
                       << Simulator::humanReadableTime(updateTime_)
-                      << ", " << updateTime_/execTime*100 << "%\n"
+                      << ", " << updateTime_/realTime*100 << "%\n"
                       << "\n"
                       << "Note: Taxes and administrative overhead\n"
                       << "      are "
-                      << (execTime - (assembleTime_+solveTime_+updateTime_))/execTime*100
+                      << (realTime - (assembleTime_+solveTime_+updateTime_))/realTime*100
                       << "% of total execution time.\n"
                       << "      Thank you for your understanding.\n"
                       << "--------------------------------------------\n"
@@ -356,17 +361,13 @@ public:
 
         for (int i = 0; i < maxFails; ++i) {
             bool converged = model().update(newtonMethod());
-            if (converged) {
-                assembleTime_ += newtonMethod().assembleTime();
-                solveTime_ += newtonMethod().solveTime();
-                updateTime_ += newtonMethod().updateTime();
-
-                return;
-            }
 
             assembleTime_ += newtonMethod().assembleTime();
             solveTime_ += newtonMethod().solveTime();
             updateTime_ += newtonMethod().updateTime();
+
+            if (converged)
+                return;
 
             Scalar dt = simulator().timeStepSize();
             Scalar nextDt = dt / 2;

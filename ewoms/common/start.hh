@@ -33,6 +33,7 @@
 #include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/simulator.hh>
+#include <ewoms/common/timer.hh>
 
 #include <dune/grid/io/file/dgfparser.hh>
 #include <dune/common/parametertreeparser.hh>

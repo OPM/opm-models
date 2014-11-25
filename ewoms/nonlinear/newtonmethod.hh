@@ -32,8 +32,8 @@
 #include <opm/core/utility/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/parallel/mpihelper.hh>
+#include <ewoms/common/timer.hh>
 
-#include <dune/common/timer.hh>
 #include <dune/istl/istlexception.hh>
 
 #include <iostream>
@@ -283,9 +283,9 @@ public:
         // tell the implementation that we begin solving
         asImp_().begin_(currentSolution);
 
-        assembleTimer_.reset();
-        solveTimer_.reset();
-        updateTimer_.reset();
+        assembleTime_ = 0.0;
+        solveTime_ = 0.0;
+        updateTime_ = 0.0;
 
         // execute the method as long as the implementation thinks
         // that we should do another iteration
@@ -309,9 +309,11 @@ public:
                 assembleTimer_.start();
                 asImp_().linearize_();
                 assembleTimer_.stop();
+                assembleTime_ += assembleTimer_.realTimeElapsed();;
             }
             catch (const Dune::Exception &e)
             {
+                assembleTime_ += assembleTimer_.realTimeElapsed();;
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Dune exception during linearization: \""
                               << e.what() << "\"\n" << std::flush;
@@ -320,6 +322,7 @@ public:
             }
             catch (const Opm::NumericalProblem &e)
             {
+                assembleTime_ += assembleTimer_.realTimeElapsed();;
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Opm exception during linearization: \""
                               << e.what() << "\"\n" << std::flush;
@@ -340,14 +343,17 @@ public:
             solutionUpdate = 0;
             // ask the implementation to solve the linearized system
             auto b = jacobianAsm.residual();
-            if (!asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate, b)) {
+            bool converged = asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate, b);
+            solveTimer_.stop();
+            solveTime_ += solveTimer_.realTimeElapsed();;
+
+            if (!converged) {
                 if (asImp_().verbose_())
                     std::cout << "Newton: Linear solver did not converge\n" << std::flush;
                 solveTimer_.stop();
                 asImp_().failed_();
                 return false;
             }
-            solveTimer_.stop();
 
             // update the solution
             if (asImp_().verbose_()) {
@@ -366,8 +372,6 @@ public:
                                       b,
                                       solutionUpdate);
                 asImp_().update_(currentSolution, previousSolution, solutionUpdate, b);
-                updateTimer_.stop();
-
 
                 // clear current line on terminal
                 if (asImp_().verbose_() && isatty(fileno(stdout)))
@@ -377,10 +381,12 @@ public:
                 // tell the implementation that we're done with this
                 // iteration
                 asImp_().endIteration_(currentSolution, previousSolution);
+                updateTimer_.stop();
+                updateTime_ += updateTimer_.realTimeElapsed();;
             }
             catch (const Dune::Exception &e)
             {
-                updateTimer_.stop();
+                updateTime_ += updateTimer_.realTimeElapsed();;
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Dune exception during update: \""
                               << e.what() << "\"\n" << std::flush;
@@ -389,6 +395,7 @@ public:
             }
             catch (const Opm::NumericalProblem &e)
             {
+                updateTime_ += updateTimer_.realTimeElapsed();;
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Opm exception during linearization: \""
                               << e.what() << "\"\n" << std::flush;
@@ -402,14 +409,16 @@ public:
 
         if (asImp_().verbose_()) {
             Scalar elapsedTot =
-                assembleTimer_.elapsed() + solveTimer_.elapsed() + updateTimer_.elapsed();
+                assembleTime_
+                + solveTime_
+                + updateTime_;
             std::cout << "Assemble/solve/update time: "
-                      << assembleTimer_.elapsed() << "("
-                      << 100 * assembleTimer_.elapsed() / elapsedTot << "%)/"
-                      << solveTimer_.elapsed() << "("
-                      << 100 * solveTimer_.elapsed() / elapsedTot << "%)/"
-                      << updateTimer_.elapsed() << "("
-                      << 100 * updateTimer_.elapsed() / elapsedTot << "%)"
+                      << assembleTimer_.realTimeElapsed() << "("
+                      << 100 * assembleTime_ / elapsedTot << "%)/"
+                      << solveTimer_.realTimeElapsed() << "("
+                      << 100 * solveTimer_.realTimeElapsed() / elapsedTot << "%)/"
+                      << updateTimer_.realTimeElapsed() << "("
+                      << 100 * updateTimer_.realTimeElapsed() / elapsedTot << "%)"
                       << "\n" << std::flush;
         }
 
@@ -428,7 +437,7 @@ public:
      *        step.
      */
     Scalar assembleTime() const
-    { return assembleTimer_.elapsed(); }
+    { return assembleTime_; }
 
     /*!
      * \brief Returns the wall time spend so far for solving the
@@ -436,7 +445,7 @@ public:
      *        step.
      */
     Scalar solveTime() const
-    { return solveTimer_.elapsed(); }
+    { return solveTime_; }
 
     /*!
      * \brief Returns the wall time spend so far for updating the
@@ -444,7 +453,7 @@ public:
      *        iterations of the current time step.
      */
     Scalar updateTime() const
-    { return updateTimer_.elapsed(); }
+    { return updateTime_; }
 
     /*!
      * \brief Suggest a new time-step size based on the old time-step
@@ -706,9 +715,13 @@ protected:
 
     Simulator &simulator_;
 
-    Dune::Timer assembleTimer_;
-    Dune::Timer solveTimer_;
-    Dune::Timer updateTimer_;
+    Ewoms::Timer assembleTimer_;
+    Ewoms::Timer solveTimer_;
+    Ewoms::Timer updateTimer_;
+
+    Scalar assembleTime_;
+    Scalar solveTime_;
+    Scalar updateTime_;
 
     std::ostringstream endIterMsgStream_;
 

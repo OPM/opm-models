@@ -31,7 +31,7 @@
 
 #include <opm/core/utility/PropertySystem.hpp>
 
-#include <dune/common/timer.hh>
+#include <ewoms/common/timer.hh>
 
 #include <iostream>
 #include <iomanip>
@@ -78,7 +78,7 @@ public:
 
     Simulator(bool verbose = true)
     {
-        setupTimer_.reset();
+        setupTimer_.start();
 
         verbose_ = verbose && Ewoms::MpiHelper::getCollectiveCommunication().rank() == 0;
 
@@ -253,14 +253,14 @@ public:
     /*!
      * \brief Returns the current wall time required by actually running the simulation.
      */
-    double executionTime() const
-    { return executionTimer_.elapsed(); }
+    const Ewoms::Timer& timer() const
+    { return executionTimer_; }
 
     /*!
      * \brief Returns the wall time required by setting up and initializing the simulation.
      */
     double setupTime() const
-    { return setupTimer_.elapsed(); }
+    { return setupTimer_.realTimeElapsed(); }
 
     /*!
      * \brief Set the current time step size to a given value.
@@ -495,7 +495,7 @@ public:
         }
 
         setupTimer_.stop();
-        executionTimer_.reset();
+        executionTimer_.start();
 
         // do the time steps
         while (!finished()) {
@@ -551,13 +551,15 @@ public:
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
-                          << "Execution time: " << executionTimer_.elapsed() << " seconds" << humanReadableTime(executionTimer_.elapsed())
+                          << "Execution time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
                           << ", simulation time: " << this->time() << " seconds" << humanReadableTime(this->time())
                           << ", time step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
                           << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
                           << "\n" << std::flush;
             }
         }
+
+        executionTimer_.stop();
 
         problem_->finalize();
     }
@@ -674,8 +676,8 @@ private:
     Scalar episodeStartTime_;
     Scalar episodeLength_;
 
-    Dune::Timer setupTimer_;
-    Dune::Timer executionTimer_;
+    Ewoms::Timer setupTimer_;
+    Ewoms::Timer executionTimer_;
     Scalar startTime_;
     Scalar time_;
     Scalar endTime_;
