@@ -59,6 +59,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
@@ -306,34 +307,35 @@ public:
         Scalar localCpuTime = timer.cpuTimeElapsed();
         Scalar globalCpuTime = timer.globalCpuTimeElapsed();
         int numProcesses = this->gridView().comm().size();
+        int threadsPerProcess = ThreadManager::maxThreads();
         if (gridView().comm().rank() == 0) {
-            std::cout << "Simulation of problem '" << asImp_().name() << "' finished.\n"
+            std::cout << std::setprecision(3)
+                      << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "\n"
                       << "-------------- Timing receipt --------------\n"
-                      << "  Setup time: "<< simulator().setupTime() << " seconds"
-                      << Simulator::humanReadableTime(simulator().setupTime()) << "\n"
-                      << "  Execution time: "<< realTime << " seconds"
-                      << Simulator::humanReadableTime(realTime) << "\n"
-                      << "  First process' CPU time: " << localCpuTime << " seconds"
-                      << Simulator::humanReadableTime(localCpuTime) << "\n"
+                      << "  Wall-clock time: "<< Simulator::humanReadableTime(realTime, /*isAmendment=*/false) << "\n"
+                      << "  First process' CPU time: " <<  Simulator::humanReadableTime(localCpuTime, /*isAmendment=*/false) << "\n"
                       << "  Number of processes: " << numProcesses << "\n"
-                      << "  Total CPU time: " << globalCpuTime << " seconds"
-                      << Simulator::humanReadableTime(globalCpuTime) << "\n"
-                      << "  Linearization time: " << assembleTime_
-                      << Simulator::humanReadableTime(assembleTime_) << " seconds"
+                      << "  Threads per processes: " << threadsPerProcess << "\n"
+                      << "  Total CPU time: " << Simulator::humanReadableTime(globalCpuTime, /*isAmendment=*/false) << "\n"
+                      << "  Setup time: "<< Simulator::humanReadableTime(simulator().setupTime(), /*isAmendment=*/false)
+                      << ", " << simulator().setupTime()/realTime*100 << "%\n"
+                      << "  Linearization time: "<< Simulator::humanReadableTime(assembleTime_, /*isAmendment=*/false)
                       << ", " << assembleTime_/realTime*100 << "%\n"
-                      << "  Linear solve time: " << solveTime_ << " seconds"
-                      << Simulator::humanReadableTime(solveTime_)
+                      << "  Linear solve time: " << Simulator::humanReadableTime(solveTime_, /*isAmendment=*/false)
                       << ", " << solveTime_/realTime*100 << "%\n"
-                      << "  Newton update time: " << updateTime_ << " seconds"
-                      << Simulator::humanReadableTime(updateTime_)
+                      << "  Newton update time: " << Simulator::humanReadableTime(updateTime_, /*isAmendment=*/false)
                       << ", " << updateTime_/realTime*100 << "%\n"
                       << "\n"
-                      << "Note: Taxes and administrative overhead\n"
-                      << "      are "
+                      << "Note 1: If not stated otherwise, all times\n"
+                      << "        are wall clock times\n"
+                      << "Note 2: Taxes and administrative overhead\n"
+                      << "        are "
                       << (realTime - (assembleTime_+solveTime_+updateTime_))/realTime*100
                       << "% of total execution time.\n"
-                      << "      Thank you for your understanding.\n"
+                      << "\n"
+                      << "Our simulation hours are 24/7. Thank you for\n"
+                      << "choosing us.\n"
                       << "--------------------------------------------\n"
                       << "\n"
                       << std::flush;

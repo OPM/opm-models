@@ -570,12 +570,13 @@ public:
      *
      * e.g. 874000.0 will become "10.12 days"
      */
-    static std::string humanReadableTime(Scalar timeInSeconds)
+    static std::string humanReadableTime(Scalar timeInSeconds, bool isAmendment=true)
     {
         std::ostringstream oss;
-        oss << std::setprecision(4);
+        oss << std::setprecision(2);
         oss << std::fixed;
-        oss << " (";
+        if (isAmendment)
+            oss << " (";
         if (timeInSeconds >= 365.25*24*60*60)
             oss << timeInSeconds/(365.25*24*60*60) << " years";
         else if (timeInSeconds >= 24.0*60*60)
@@ -584,13 +585,16 @@ public:
             oss << timeInSeconds/(60.0*60) << " hours";
         else if (timeInSeconds >= 60.0)
             oss << timeInSeconds/(60.0) << " minutes";
-        else if (timeInSeconds < 1e-6)
+        else if (timeInSeconds < 1e-3)
             oss << timeInSeconds/(1e-6) << " microseconds";
-        else if (timeInSeconds <= 1e-3)
-            oss << timeInSeconds/(1e-3) << " miliseconds";
+        else if (timeInSeconds <= 1.0)
+            oss << timeInSeconds/(1e-3) << " milliseconds";
+        else if (!isAmendment)
+            oss << timeInSeconds << " seconds";
         else
             return "";
-        oss << ")";
+        if (isAmendment)
+            oss << ")";
 
         return oss.str();
     }
