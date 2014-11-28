@@ -447,14 +447,11 @@ public:
     {
         ParentType::registerOutputModules_();
 
-        this->outputModules_.push_back(
-            new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
-            this->outputModules_.push_back(
-                new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
-            this->outputModules_.push_back(
-                new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
     mutable Scalar referencePressure_;

@@ -80,6 +80,7 @@ if (NOT MY_BUILD_TESTING)
   set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
 endif()
 
+include(EwomsAddApplication)
 include(EwomsAddTest)
 
 # add targets for all tests of the models. we add the water-air test
@@ -143,11 +144,10 @@ EwomsAddTest(obstacle_pvs SOURCES tests/obstacle_pvs.cc)
 EwomsAddTest(outflow_pvs SOURCES tests/outflow_pvs.cc)
 EwomsAddTest(test_quadrature SOURCES tests/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
 
-# the test for the general-purpose Eclipse simulator 
-EwomsAddTest(ecl_blackoil
-  SOURCES tests/ecl_blackoil.cc
-  EXE_NAME ecl_blackoil
-  ONLY_COMPILE
+# the general-purpose ECL simulator ("ebos" == "_e_Woms _b_lack-_o_il _s_imulator)
+EwomsAddApplication(ebos
+  SOURCES applications/ebos/ebos.cc
+  EXE_NAME ebos
   CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
 
 # test for the parallelization of the element centered finite volume

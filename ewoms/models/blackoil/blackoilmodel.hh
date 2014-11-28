@@ -39,9 +39,6 @@
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkblackoilmodule.hh>
 
-#include <ewoms/io/eclipseoutputblackoilmodule.hh>
-#include <ewoms/io/eclipsewriter.hh>
-
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 #include <sstream>
@@ -59,7 +56,6 @@ namespace Opm {
 namespace Properties {
 //! The type tag for the black-oil problems
 NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
-                                          EclipseOutputBlackOil,
                                           VtkBlackOil,
                                           VtkComposition));
 
@@ -112,24 +108,6 @@ SET_TYPE_PROP(BlackOilModel, FluidSystem,
 //! Set the number of Newton-Raphson iterations for which the update should be chopped to
 //! 4 by default
 SET_INT_PROP(BlackOilModel, BlackoilNumChoppedIterations, 4);
-
-//! Only produce Eclipse output if the necessary preconditions are fulfilled.
-SET_PROP(BlackOilModel, EnableEclipseOutput)
-{ private:
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-
-    static const bool isEclGridManager = std::is_same<Grid, Ewoms::EclGridManager<TypeTag> >::value;
-
-public:
-    // in addition to EclGridManager, the ERT libraries must be
-    // available...
-#if HAVE_ERT
-    static const bool value = isEclGridManager;
-#else
-    static const bool value = false;
-#endif
-};
-
 }} // namespace Properties, Opm
 
 namespace Ewoms {
@@ -224,7 +202,6 @@ public:
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::EclipseOutputBlackOilModule<TypeTag>::registerParameters();
         Ewoms::VtkBlackOilModule<TypeTag>::registerParameters();
         Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
     }
@@ -380,17 +357,11 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which make sense for the blackoil model
-        this->outputModules_.push_back(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
-        this->outputModules_.push_back(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
-
-        // add the output module for the Eclipse binary output
-        this->outputModules_.push_back(new Ewoms::EclipseOutputBlackOilModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
     }
 
 private:
-    static bool enableEclipseOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseOutput); }
-
     mutable Scalar referencePressure_;
     int numSwitched_;
 };

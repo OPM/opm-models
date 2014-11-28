@@ -1222,6 +1222,12 @@ public:
     { }
 
     /*!
+     * \brief Add an module for writing visualization output after a timestep.
+     */
+    void addOutputModule(BaseOutputModule<TypeTag>* newModule)
+    { outputModules_.push_back(newModule); }
+
+    /*!
      * \brief Add the vector fields for analysing the convergence of
      *        the newton method to the a VTK writer.
      *

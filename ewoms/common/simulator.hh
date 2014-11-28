@@ -128,12 +128,11 @@ public:
     static void registerParameters()
     {
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, EndTime,
-                             "The time at which the simulation is finished [s]");
+                             "The simulation time at which the simulation is finished [s]");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, InitialTimeStepSize,
                              "The size of the initial time step [s]");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestartTime,
-                             "The time time at which a simulation restart should "
-                             "be attempted [s]");
+                             "The simulation time at which a restart should be attempted [s]");
 
         GridManager::registerParameters();
         Model::registerParameters();

@@ -139,8 +139,7 @@ public:
     {
         ParentType::registerOutputModules_();
 
-        this->outputModules_.push_back(
-            new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->simulator_));
     }
 };
 } // namespace Ewoms

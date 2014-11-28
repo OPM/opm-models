@@ -19,14 +19,13 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::EclipseSummaryWriter
+ * \copydoc Ewoms::EclSummaryWriter
  */
-#ifndef EWOMS_ECLIPSE_SUMMARY_WRITER_HH
-#define EWOMS_ECLIPSE_SUMMARY_WRITER_HH
+#ifndef EWOMS_ECL_SUMMARY_WRITER_HH
+#define EWOMS_ECL_SUMMARY_WRITER_HH
 
 #include "ertwrappers.hh"
-
-#include <ewoms/wells/eclwellmanager.hh>
+#include "eclwellmanager.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 
@@ -45,20 +44,20 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(EnableEclipseSummaryOutput);
+NEW_PROP_TAG(EnableEclSummaryOutput);
 }}
 
 namespace Ewoms {
 template <class TypeTag>
-class EclipseSummaryWriter;
+class EclSummaryWriter;
 
 /*!
- * \brief Implements writing Eclipse summary files.
+ * \brief Implements writing of ECL summary files.
  *
  * i.e., well rates, bottom hole pressures, etc.
  */
 template <class TypeTag>
-class EclipseSummaryWriter
+class EclSummaryWriter
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
@@ -86,7 +85,7 @@ class EclipseSummaryWriter
     static const int oilPhaseIdx = FluidSystem::oilPhaseIdx;
 
 public:
-    EclipseSummaryWriter(const Simulator &simulator)
+    EclSummaryWriter(const Simulator &simulator)
         : simulator_(simulator)
 #if HAVE_ERT
         , ertSummary_(simulator)
@@ -100,10 +99,10 @@ public:
         else
             addPresentSummaryKeywords_(deck);
 
-        addVariables_(*simulator.gridManager().eclipseState());
+        addVariables_(*simulator.gridManager().eclState());
     }
 
-    ~EclipseSummaryWriter()
+    ~EclSummaryWriter()
     { }
 
     /*!
@@ -203,8 +202,8 @@ public:
     }
 
 private:
-    static bool enableEclipseSummaryOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseSummaryOutput); }
+    static bool enableEclSummaryOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclSummaryOutput); }
 
     bool writeWbhp_() const
     { return summaryKeywords_.count("WBHP") > 0; }

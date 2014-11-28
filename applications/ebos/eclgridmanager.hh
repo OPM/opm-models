@@ -59,9 +59,9 @@ NEW_TYPE_TAG(EclGridManager);
 // declare the properties required by the for the ecl grid manager
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(EclipseDeckFileName);
+NEW_PROP_TAG(EclDeckFileName);
 
-SET_STRING_PROP(EclGridManager, EclipseDeckFileName, "data/ecl.DATA");
+SET_STRING_PROP(EclGridManager, EclDeckFileName, "data/ecl.DATA");
 
 // set the Grid and GridManager properties
 SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
@@ -90,20 +90,20 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, std::string, EclipseDeckFileName,
-                             "The name of the file which contains the Eclipse deck to be simulated");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, EclDeckFileName,
+                             "The name of the file which contains the ECL deck to be simulated");
     }
 
     /*!
      * \brief Create the grid for problem data files which use the ECL file format.
      *
-     * This is the file format used by the commercial Eclipse simulator. Usually it uses a
-     * cornerpoint description of the grid.
+     * This is the file format used by the commercial ECLiPSE simulator. Usually it uses
+     * a cornerpoint description of the grid.
      */
     EclGridManager(Simulator &simulator)
         : ParentType(simulator)
     {
-        std::string fileName = EWOMS_GET_PARAM(TypeTag, std::string, EclipseDeckFileName);
+        std::string fileName = EWOMS_GET_PARAM(TypeTag, std::string, EclDeckFileName);
         boost::filesystem::path deckPath(fileName);
         caseName_ = boost::to_upper_copy(deckPath.stem().string());
 
@@ -113,7 +113,7 @@ public:
         try {
             deck_ = parser->parseFile(deckPath.string(), /*strict=*/false, parserLog);
             Opm::checkDeck(deck_, parserLog);
-            eclipseState_.reset(new Opm::EclipseState(deck_, parserLog));
+            eclState_.reset(new Opm::EclipseState(deck_, parserLog));
         }
         catch (const std::invalid_argument& e) {
             std::cerr << "Non-recoverable error encountered while parsing the deck file:"
@@ -133,7 +133,7 @@ public:
         }
 
         grid_ = GridPointer(new Grid());
-        grid_->processEclipseFormat(eclipseState_->getEclipseGrid(),
+        grid_->processEclipseFormat(eclState_->getEclipseGrid(),
                                     /*isPeriodic=*/false,
                                     /*flipNormals=*/false,
                                     /*clipZ=*/false);
@@ -154,34 +154,32 @@ public:
     { return *grid_; }
 
     /*!
-     * \brief Return a pointer to the parsed Eclipse deck
+     * \brief Return a pointer to the parsed ECL deck
      */
     Opm::DeckConstPtr deck() const
     { return deck_; }
 
     /*!
-     * \brief Return a pointer to the internalized Eclipse deck
+     * \brief Return a pointer to the internalized ECL deck
      */
-    Opm::EclipseStateConstPtr eclipseState() const
-    { return eclipseState_; }
+    Opm::EclipseStateConstPtr eclState() const
+    { return eclState_; }
 
     /*!
-     * \brief Return a pointer to the internalized schedule of the
-     *        Eclipse deck
+     * \brief Return a pointer to the internalized schedule of the ECL deck
      */
     Opm::ScheduleConstPtr schedule() const
-    { return eclipseState_->getSchedule(); }
+    { return eclState_->getSchedule(); }
 
     /*!
      * \brief Return a pointer to the EclipseGrid object
      *
-     * The EclipseGrid class is used to internalize the cornerpoint
-     * grid representation and, amongst others, can be used to write
-     * EGRID files (which tends to be difficult with a plain
-     * Dune::CpGrid)
+     * The EclipseGrid class is provided by the opm-parser module and is used to
+     * internalize the cornerpoint grid representation and, amongst others, can be used
+     * to write EGRID files (which tends to be difficult with a plain Dune::CpGrid)
      */
-    Opm::EclipseGridConstPtr eclipseGrid() const
-    { return eclipseState_->getEclipseGrid(); }
+    Opm::EclipseGridConstPtr eclGrid() const
+    { return eclState_->getEclipseGrid(); }
 
     /*!
      * \brief Returns the name of the case.
@@ -189,14 +187,14 @@ public:
      * i.e., the all-uppercase version of the file name from which the
      * deck is loaded with the ".DATA" suffix removed.
      */
-    const std::string &caseName() const
+    const std::string& caseName() const
     { return caseName_; }
 
 private:
     std::string caseName_;
     GridPointer grid_;
     Opm::DeckConstPtr deck_;
-    Opm::EclipseStateConstPtr eclipseState_;
+    Opm::EclipseStateConstPtr eclState_;
 };
 
 } // namespace Ewoms

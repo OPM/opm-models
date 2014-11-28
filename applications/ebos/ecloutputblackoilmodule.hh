@@ -18,13 +18,14 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::EclipseOutputBlackOilModule
+ * \copydoc Ewoms::EclOutputBlackOilModule
  */
-#ifndef EWOMS_ECLIPSE_OUTPUT_BLACK_OIL_MODULE_HH
-#define EWOMS_ECLIPSE_OUTPUT_BLACK_OIL_MODULE_HH
+#ifndef EWOMS_ECL_OUTPUT_BLACK_OIL_MODULE_HH
+#define EWOMS_ECL_OUTPUT_BLACK_OIL_MODULE_HH
+
+#include "eclwriter.hh"
 
 #include <ewoms/io/baseoutputmodule.hh>
-#include <ewoms/io/eclipsewriter.hh>
 
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -36,23 +37,23 @@
 namespace Opm {
 namespace Properties {
 // create new type tag for the VTK multi-phase output
-NEW_TYPE_TAG(EclipseOutputBlackOil);
+NEW_TYPE_TAG(EclOutputBlackOil);
 
 // create the property tags needed for the multi phase module
-NEW_PROP_TAG(EclipseOutputWriteSaturations);
-NEW_PROP_TAG(EclipseOutputWritePressures);
-NEW_PROP_TAG(EclipseOutputWriteGasDissolutionFactor);
-NEW_PROP_TAG(EclipseOutputWriteGasFormationVolumeFactor);
-NEW_PROP_TAG(EclipseOutputWriteOilFormationVolumeFactor);
-NEW_PROP_TAG(EclipseOutputWriteOilSaturationPressure);
+NEW_PROP_TAG(EclOutputWriteSaturations);
+NEW_PROP_TAG(EclOutputWritePressures);
+NEW_PROP_TAG(EclOutputWriteGasDissolutionFactor);
+NEW_PROP_TAG(EclOutputWriteGasFormationVolumeFactor);
+NEW_PROP_TAG(EclOutputWriteOilFormationVolumeFactor);
+NEW_PROP_TAG(EclOutputWriteOilSaturationPressure);
 
 // set default values for what quantities to output
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteSaturations, true);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWritePressures, true);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteGasDissolutionFactor, true);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteGasFormationVolumeFactor, true);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilFormationVolumeFactor, true);
-SET_BOOL_PROP(EclipseOutputBlackOil, EclipseOutputWriteOilSaturationPressure, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteSaturations, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWritePressures, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteGasDissolutionFactor, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteGasFormationVolumeFactor, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteOilFormationVolumeFactor, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteOilSaturationPressure, true);
 }} // namespace Opm, Properties
 
 namespace Ewoms {
@@ -62,13 +63,13 @@ template <class TypeTag>
 class EcfvDiscretization;
 
 /*!
- * \ingroup EclipseOutput
+ * \ingroup EclOutput
  *
  * \brief Output module for the results black oil model writing in
- *        Eclipse binary format.
+ *        ECL binary format.
  */
 template <class TypeTag>
-class EclipseOutputBlackOilModule : public BaseOutputModule<TypeTag>
+class EclOutputBlackOilModule : public BaseOutputModule<TypeTag>
 {
     typedef BaseOutputModule<TypeTag> ParentType;
 
@@ -79,7 +80,7 @@ class EclipseOutputBlackOilModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef Ewoms::EclipseWriter<TypeTag> EclipseWriter;
+    typedef Ewoms::EclWriter<TypeTag> EclWriter;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
@@ -90,7 +91,7 @@ class EclipseOutputBlackOilModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
 public:
-    EclipseOutputBlackOilModule(const Simulator &simulator)
+    EclOutputBlackOilModule(const Simulator &simulator)
         : ParentType(simulator)
     { }
 
@@ -100,24 +101,24 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteSaturations,
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputWriteSaturations,
                              "Include the saturations of all fluid phases in the "
-                             "Eclipse output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWritePressures,
+                             "ECL output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputWritePressures,
                              "Include the absolute pressures of all fluid phases in the "
-                             "Eclipse output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteGasDissolutionFactor,
+                             "ECL output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputWriteGasDissolutionFactor,
                              "Include the gas dissolution factor in the "
-                             "Eclipse output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationVolumeFactor,
+                             "ECL output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputWriteGasFormationVolumeFactor,
                              "Include the gas formation volume factor in the "
-                             "Eclipse output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteOilFormationVolumeFactor,
+                             "ECL output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputWriteOilFormationVolumeFactor,
                              "Include the oil formation volume factor of saturated oil "
-                             "in the Eclipse output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EclipseOutputWriteOilSaturationPressure,
+                             "in the ECL output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputWriteOilSaturationPressure,
                              "Include the saturation pressure of oil in the "
-                             "Eclipse output files");
+                             "ECL output files");
     }
 
     /*!
@@ -207,8 +208,8 @@ public:
         if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
             return;
 
-        if (!dynamic_cast<EclipseWriter*>(&writer))
-            return; // this module only consideres eclipse writers...
+        if (!dynamic_cast<EclWriter*>(&writer))
+            return; // this module only consideres ecl writers...
 
         typename ParentType::BufferType bufferType = ParentType::ElementBuffer;
         if (pressuresOutput_()) {
@@ -234,22 +235,22 @@ public:
 
 private:
     static bool saturationsOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteSaturations); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclOutputWriteSaturations); }
 
     static bool pressuresOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWritePressures); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclOutputWritePressures); }
 
     static bool gasDissolutionFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteGasDissolutionFactor); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclOutputWriteGasDissolutionFactor); }
 
     static bool gasFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteGasFormationVolumeFactor); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclOutputWriteGasFormationVolumeFactor); }
 
     static bool saturatedOilFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteOilFormationVolumeFactor); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclOutputWriteOilFormationVolumeFactor); }
 
     static bool oilSaturationPressureOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EclipseOutputWriteOilSaturationPressure); }
+    { return EWOMS_GET_PARAM(TypeTag, bool, EclOutputWriteOilSaturationPressure); }
 
     ScalarBuffer saturation_[numPhases];
     ScalarBuffer pressure_[numPhases];

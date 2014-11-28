@@ -27,7 +27,6 @@
 #include "blackoilproperties.hh"
 
 #include <ewoms/models/common/multiphasebaseproblem.hh>
-#include <ewoms/io/eclipsewriter.hh>
 
 namespace Ewoms {
 
@@ -53,21 +52,7 @@ public:
      */
     BlackOilProblem(Simulator &simulator)
         : ParentType(simulator)
-        , eclipseWriter_(simulator)
     {}
-
-    /*!
-     * \brief Registers all available parameters for the problem and
-     *        the model.
-     */
-    static void registerParameters()
-    {
-        ParentType::registerParameters();
-
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableEclipseOutput,
-                             "Write binary output which is compatible with the commercial "
-                             "Eclipse simulator");
-    }
 
     /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
@@ -76,35 +61,7 @@ public:
     int pvtRegionIndex(const Context &context, int spaceIdx, int timeIdx) const
     { return 0; }
 
-    /*!
-     * \brief Write the relevant secondary variables of the current
-     *        solution into the output files.
-     *
-     * \param verbose If true, then a message will be printed to stdout if a file is written
-     */
-    void writeOutput(bool verbose = true)
-    {
-        // calculate the time _after_ the time was updated
-        Scalar t = this->simulator().time() + this->simulator().timeStepSize();
-
-        // prepare the Eclipse and the VTK writers
-        if (enableEclipseOutput_())
-            eclipseWriter_.beginWrite(t);
-
-        // use the generic code to prepare the output fields and to
-        // write the desired VTK files.
-        ParentType::writeOutput(verbose);
-
-        if (enableEclipseOutput_()) {
-            this->model().appendOutputFields(eclipseWriter_);
-            eclipseWriter_.endWrite();
-        }
-    }
-
 private:
-    static bool enableEclipseOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseOutput); }
-
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation &asImp_()
     { return *static_cast<Implementation *>(this); }
@@ -112,8 +69,6 @@ private:
     //! \copydoc asImp_()
     const Implementation &asImp_() const
     { return *static_cast<const Implementation *>(this); }
-
-    EclipseWriter<TypeTag> eclipseWriter_;
 };
 
 } // namespace Ewoms

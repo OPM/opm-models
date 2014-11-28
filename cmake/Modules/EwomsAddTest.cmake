@@ -4,6 +4,7 @@
 # EwomsAddTest(TestName
 #              [NO_COMPILE]
 #              [ONLY_COMPILE]
+#              [ALWAYS_ENABLE]
 #              [EXE_NAME TestExecutableName]
 #              [CONDITION ConditionalExpression]
 #              [DRIVER_ARGS TestDriverScriptArguments]
@@ -14,7 +15,7 @@ include(CMakeParseArguments)
 
 macro(EwomsAddTest TestName)
   CMAKE_PARSE_ARGUMENTS(CURTEST
-    "NO_COMPILE;ONLY_COMPILE" # flags
+    "NO_COMPILE;ONLY_COMPILE;ALWAYS_ENABLE" # flags
     "EXE_NAME;PROCESSORS" # one value args
     "CONDITION;DEPENDS;DRIVER_ARGS;SOURCES" # multi-value args
     ${ARGN})
@@ -30,7 +31,8 @@ macro(EwomsAddTest TestName)
   if (NOT CURTEST_DRIVER_ARGS)
     set(CURTEST_DRIVER_ARGS --simulation ${CURTEST_EXE_NAME})
   endif()
-  if (NOT BUILD_TESTING)
+  set(CURTEST_EXCLUDE_FROM_ALL "")
+  if (NOT BUILD_TESTING AND NOT CURTEST_ALWAYS_ENABLE)
     # don't build the tests by _default_ (i.e., when typing
     # 'make'). Though they can still be build using 'make ctests' and
     # they can be build and run using 'make check'

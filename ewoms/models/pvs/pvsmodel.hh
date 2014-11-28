@@ -550,16 +550,12 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which are meaningful for the model
-        this->outputModules_.push_back(
-            new Ewoms::VtkPhasePresenceModule<TypeTag>(this->simulator_));
-        this->outputModules_.push_back(
-            new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkPhasePresenceModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
-            this->outputModules_.push_back(
-                new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
-            this->outputModules_.push_back(
-                new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
     mutable Scalar referencePressure_;

@@ -337,7 +337,7 @@ public:
         ParentType::registerOutputModules_();
 
         if (enableEnergy)
-            this->outputModules_.push_back(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
 private:

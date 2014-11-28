@@ -19,14 +19,13 @@
 /*!
  * \file
  *
- * \brief A general-purpose simulator for Eclipse decks using the
- *        black-oil model.
+ * \brief A general-purpose simulator for ECL decks using the black-oil model.
  */
 #include "config.h"
 
 #include <ewoms/common/start.hh>
 #include <ewoms/models/blackoil/blackoilmodel.hh>
-#include "problems/eclproblem.hh"
+#include "eclproblem.hh"
 
 namespace Opm {
 namespace Properties {

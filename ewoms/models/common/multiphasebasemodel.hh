@@ -242,9 +242,9 @@ public:
     {
         ParentType::registerOutputModules_();
 
-        // add the VTK output modules available on all model
-        this->outputModules_.push_back(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->simulator_));
-        this->outputModules_.push_back(new Ewoms::VtkTemperatureModule<TypeTag>(this->simulator_));
+        // add the VTK output modules which make sense for all multi-phase models
+        this->addOutputModule(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Ewoms::VtkTemperatureModule<TypeTag>(this->simulator_));
     }
 
 private:

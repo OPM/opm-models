@@ -19,15 +19,15 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::EclipseWriter
+ * \copydoc Ewoms::EclWriter
  */
-#ifndef EWOMS_ECLIPSE_WRITER_HH
-#define EWOMS_ECLIPSE_WRITER_HH
+#ifndef EWOMS_ECL_WRITER_HH
+#define EWOMS_ECL_WRITER_HH
 
-#include "baseoutputwriter.hh"
 #include "ertwrappers.hh"
 
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
+#include <ewoms/io/baseoutputwriter.hh>
 
 #include <opm/material/Valgrind.hpp>
 
@@ -43,12 +43,12 @@
 
 namespace Opm {
 namespace Properties {
-NEW_PROP_TAG(EnableEclipseOutput);
+NEW_PROP_TAG(EnableEclOutput);
 }}
 
 namespace Ewoms {
 template <class TypeTag>
-class EclipseWriter;
+class EclWriter;
 
 template <class TypeTag>
 class EclGridManager;
@@ -58,35 +58,35 @@ class EclGridManager;
 
 // this is the stub class for non-cornerpoint grids
 template <class TypeTag, class GridManagerType>
-class EclipseWriterHelper
+class EclWriterHelper
 {
-    friend class EclipseWriter<TypeTag>;
+    friend class EclWriter<TypeTag>;
 
-    static void writeHeaders_(EclipseWriter<TypeTag> &writer)
+    static void writeHeaders_(EclWriter<TypeTag> &writer)
     {
         OPM_THROW(std::logic_error,
-                  "Eclipse binary output requires to use Dune::EclGridManager (is: "
+                  "Ecl binary output requires to use Ewoms::EclGridManager (is: "
                   << Dune::className<GridManagerType>());
     }
 };
 
 // this is the "real" code for cornerpoint grids
 template <class TypeTag>
-class EclipseWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
+class EclWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
 {
-    friend class EclipseWriter<TypeTag>;
+    friend class EclWriter<TypeTag>;
 
-    static void writeHeaders_(EclipseWriter<TypeTag> &writer)
+    static void writeHeaders_(EclWriter<TypeTag> &writer)
     {
         typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
         if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
             OPM_THROW(std::logic_error,
-                      "Eclipse binary output only works for the element centered "
+                      "Ecl binary output only works for the element centered "
                       "finite volume discretization.");
 
 #if ! HAVE_ERT
         OPM_THROW(std::logic_error,
-                  "Eclipse binary output requires the ERT libraries");
+                  "Ecl binary output requires the ERT libraries");
 #else
         // set the index of the first time step written to 0...
         writer.reportStepIdx_ = 0;
@@ -99,14 +99,14 @@ class EclipseWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
         std::string egridFileName(egridRawFileName);
         std::free(egridRawFileName);
 
-        ErtGrid ertGrid(writer.simulator_.gridManager().eclipseGrid());
+        ErtGrid ertGrid(writer.simulator_.gridManager().eclGrid());
         ertGrid.write(egridFileName, writer.reportStepIdx_);
 #endif
     }
 };
 
 /*!
- * \brief Implements writing Eclipse binary output files.
+ * \brief Implements writing Ecl binary output files.
  *
  * Caveats:
  * - For this class to do do anything meaningful, you need to have the
@@ -115,13 +115,13 @@ class EclipseWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
  * - The only DUNE grid which is currently supported is Dune::CpGrid
  *   from the OPM module "dune-cornerpoint". Using another grid won't
  *   fail at compile time but you will provoke a fatal exception as
- *   soon as you try to write an Eclipse output file.
+ *   soon as you try to write an ECL output file.
  * - This class requires to use the black oil model with the element
  *   centered finite volume discretization.
  * - MPI-parallel computations are not (yet?) supported.
  */
 template <class TypeTag>
-class EclipseWriter : public BaseOutputWriter
+class EclWriter : public BaseOutputWriter
 {
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
@@ -134,10 +134,10 @@ class EclipseWriter : public BaseOutputWriter
     typedef BaseOutputWriter::VectorBuffer VectorBuffer;
     typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
-    friend class EclipseWriterHelper<TypeTag, GridManager>;
+    friend class EclWriterHelper<TypeTag, GridManager>;
 
 public:
-    EclipseWriter(const Simulator &simulator)
+    EclWriter(const Simulator &simulator)
         : simulator_(simulator)
         , gridView_(simulator_.gridView())
         , elementMapper_(gridView_)
@@ -146,7 +146,7 @@ public:
         reportStepIdx_ = 0;
     }
 
-    ~EclipseWriter()
+    ~EclWriter()
     { }
 
     /*!
@@ -175,32 +175,32 @@ public:
      */
     void beginWrite(double t)
     {
-        if (enableEclipseOutput_() && reportStepIdx_ == 0)
-            EclipseWriterHelper<TypeTag, GridManager>::writeHeaders_(*this);
+        if (enableEclOutput_() && reportStepIdx_ == 0)
+            EclWriterHelper<TypeTag, GridManager>::writeHeaders_(*this);
     }
 
     /*
      * \brief Add a vertex-centered scalar field to the output.
      *
-     * For the EclipseWriter, this method is a no-op which throws a
+     * For the EclWriter, this method is a no-op which throws a
      * std::logic_error exception
      */
     void attachScalarVertexData(ScalarBuffer &buf, std::string name)
     {
         OPM_THROW(std::logic_error,
-                  "The EclipseWriter can only write element based quantities!");
+                  "The EclWriter can only write element based quantities!");
     }
 
     /*
      * \brief Add a vertex-centered vector field to the output.
      *
-     * For the EclipseWriter, this method is a no-op which throws a
+     * For the EclWriter, this method is a no-op which throws a
      * std::logic_error exception
      */
     void attachVectorVertexData(VectorBuffer &buf, std::string name)
     {
         OPM_THROW(std::logic_error,
-                  "The EclipseWriter can only write element based quantities!");
+                  "The EclWriter can only write element based quantities!");
     }
 
     /*
@@ -209,7 +209,7 @@ public:
     void attachTensorVertexData(TensorBuffer &buf, std::string name)
     {
         OPM_THROW(std::logic_error,
-                  "The EclipseWriter can only write element based quantities!");
+                  "The EclWriter can only write element based quantities!");
     }
 
     /*!
@@ -227,13 +227,13 @@ public:
     /*
      * \brief Add a element-centered vector field to the output.
      *
-     * For the EclipseWriter, this method is a no-op which throws a
+     * For the EclWriter, this method is a no-op which throws a
      * std::logic_error exception
      */
     void attachVectorElementData(VectorBuffer &buf, std::string name)
     {
         OPM_THROW(std::logic_error,
-                  "Currently, the EclipseWriter can only write scalar quantities!");
+                  "Currently, the EclWriter can only write scalar quantities!");
     }
 
     /*
@@ -242,7 +242,7 @@ public:
     void attachTensorElementData(TensorBuffer &buf, std::string name)
     {
         OPM_THROW(std::logic_error,
-                  "Currently, the EclipseWriter can only write scalar quantities!");
+                  "Currently, the EclWriter can only write scalar quantities!");
     }
 
     /*!
@@ -255,7 +255,7 @@ public:
      */
     void endWrite(bool onlyDiscard = false)
     {
-        if (onlyDiscard || !enableEclipseOutput_()) {
+        if (onlyDiscard || !enableEclOutput_()) {
             // detach all buffers
             attachedBuffers_.resize(0);
             return;
@@ -263,7 +263,7 @@ public:
 
 #if !HAVE_ERT
         OPM_THROW(std::runtime_error,
-                  "The ERT libraries must be available to write Eclipse output!");
+                  "The ERT libraries must be available to write ECL output!");
 #else
         ErtRestartFile restartFile(simulator_, reportStepIdx_);
         restartFile.writeHeader(simulator_, reportStepIdx_);
@@ -294,7 +294,7 @@ public:
     template <class Restarter>
     void serialize(Restarter &res)
     {
-        res.serializeSectionBegin("EclipseWriter");
+        res.serializeSectionBegin("EclWriter");
         res.serializeStream() << reportStepIdx_ << "\n";
         res.serializeSectionEnd();
     }
@@ -305,14 +305,14 @@ public:
     template <class Restarter>
     void deserialize(Restarter &res)
     {
-        res.deserializeSectionBegin("EclipseWriter");
+        res.deserializeSectionBegin("EclWriter");
         res.deserializeStream() >> reportStepIdx_;
         res.deserializeSectionEnd();
     }
 
 private:
-    static bool enableEclipseOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclipseOutput); }
+    static bool enableEclOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput); }
 
     // make sure the field is well defined if running under valgrind
     // and make sure that all values can be displayed by paraview

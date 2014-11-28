@@ -24,8 +24,8 @@
  * \brief This file implements several wrapper classes around the
  *        opaque ERT data types.
  *
- * These class are shamelessly ripped-off from opm-core and are
- * required to make writing Eclipse files exception safe...
+ * These classes are shamelessly ripped-off from opm-core and are
+ * required to make writing ECL files exception safe...
  */
 #ifndef EWOMS_ERT_WRAPPERS_HH
 #define EWOMS_ERT_WRAPPERS_HH
@@ -48,7 +48,7 @@
 #include <opm/core/utility/ErrorMacros.hpp>
 #include <opm/material/Valgrind.hpp>
 
-#include <ewoms/wells/eclwellmanager.hh>
+#include "eclwellmanager.hh"
 
 namespace Ewoms {
 
@@ -63,19 +63,19 @@ class EclGridManager;
 
 template <class GridManager>
 std::string getErtCaseName__(const GridManager &gridManager)
-{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write Eclipse files"); }
+{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write ECL files"); }
 
 template <class TypeTag>
 std::string getErtCaseName__(const EclGridManager<TypeTag> &gridManager)
 { return gridManager.caseName(); }
 
 template <class GridManager>
-const Opm::EclipseGridConstPtr getEclipseGrid__(const GridManager &gridManager)
-{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write Eclipse files"); }
+const Opm::EclipseGridConstPtr getEclGrid__(const GridManager &gridManager)
+{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write ECL files"); }
 
 template <class TypeTag>
-const Opm::EclipseGridConstPtr getEclipseGrid__(const EclGridManager<TypeTag> &gridManager)
-{ return gridManager.eclipseGrid(); }
+const Opm::EclipseGridConstPtr getEclGrid__(const EclGridManager<TypeTag> &gridManager)
+{ return gridManager.eclGrid(); }
 
 /// \endcond
 
@@ -294,17 +294,17 @@ public:
     template <class Simulator>
     void writeHeader(const Simulator &simulator, int reportStepIdx)
     {
-        const auto eclipseGrid = getEclipseGrid__(simulator.gridManager());
+        const auto eclGrid = getEclGrid__(simulator.gridManager());
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
         ecl_rst_file_fwrite_header(restartFileHandle_,
                                    reportStepIdx,
                                    simulator.startTime() + secondsElapsed,
                                    daysElapsed,
-                                   eclipseGrid->getNX(),
-                                   eclipseGrid->getNY(),
-                                   eclipseGrid->getNZ(),
-                                   eclipseGrid->getNumActive(),
+                                   eclGrid->getNX(),
+                                   eclGrid->getNY(),
+                                   eclGrid->getNZ(),
+                                   eclGrid->getNumActive(),
                                    /*activePhases=*/
                                    ECL_OIL_PHASE
                                    | ECL_WATER_PHASE
@@ -365,7 +365,7 @@ public:
     {
         std::string caseName = getErtCaseName__(simulator.gridManager());
 
-        const auto& eclGrid = simulator.gridManager().eclipseGrid();
+        const auto& eclGrid = simulator.gridManager().eclGrid();
 
         ertHandle_ = ecl_sum_alloc_writer(caseName.c_str(),
                                           /*formatted=*/false,
