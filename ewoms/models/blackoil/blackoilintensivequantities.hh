@@ -165,10 +165,19 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
 
-        // retrieve the porosity from the problem ...
+        // retrieve the porosity from the problem
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
 
-        // ... as well as the intrinsic permeability
+        // the porosity must be modified by the compressibility of the
+        // rock...
+        Scalar rockCompressibility = problem.rockCompressibility(elemCtx, dofIdx, timeIdx);
+        if (rockCompressibility > 0.0) {
+            Scalar rockRefPressure = problem.rockReferencePressure(elemCtx, dofIdx, timeIdx);
+            Scalar x = rockCompressibility*(pg - rockRefPressure);
+            porosity_ *= 1.0 + x + 0.5*x*x;
+        }
+
+        // now get the intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities which are required by the chosen

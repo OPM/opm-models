@@ -61,6 +61,20 @@ public:
     int pvtRegionIndex(const Context &context, int spaceIdx, int timeIdx) const
     { return 0; }
 
+    /*!
+     * \brief Returns the compressibility of the porous medium of a cell
+     */
+    template <class Context>
+    Scalar rockCompressibility(const Context &context, int spaceIdx, int timeIdx) const
+    { return 0.0; }
+
+    /*!
+     * \brief Returns the reference pressure for rock the compressibility of a cell
+     */
+    template <class Context>
+    Scalar rockReferencePressure(const Context &context, int spaceIdx, int timeIdx) const
+    { return 1e5; }
+
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation &asImp_()
