@@ -160,14 +160,14 @@ public:
             if (writeWgir_()) {
                 Scalar ratePerSecond = std::max(0.0, well->surfaceRate(gasPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
-                                   smspec_node_get_params_index(summaryInfo.wwirErtHandle),
+                                   smspec_node_get_params_index(summaryInfo.wgirErtHandle),
                                    ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
             }
 
             if (writeWoir_()) {
                 Scalar ratePerSecond = std::max(0.0, well->surfaceRate(oilPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
-                                   smspec_node_get_params_index(summaryInfo.wwirErtHandle),
+                                   smspec_node_get_params_index(summaryInfo.woirErtHandle),
                                    ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
             }
             //////////
@@ -184,14 +184,14 @@ public:
             if (writeWgpr_()) {
                 Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(gasPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
-                                   smspec_node_get_params_index(summaryInfo.wwprErtHandle),
+                                   smspec_node_get_params_index(summaryInfo.wgprErtHandle),
                                    ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
             }
 
             if (writeWopr_()) {
                 Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(oilPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
-                                   smspec_node_get_params_index(summaryInfo.wwprErtHandle),
+                                   smspec_node_get_params_index(summaryInfo.woprErtHandle),
                                    ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
             }
             //////////
