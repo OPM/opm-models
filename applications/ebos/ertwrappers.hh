@@ -295,20 +295,37 @@ public:
     void writeHeader(const Simulator &simulator, int reportStepIdx)
     {
         const auto eclGrid = getEclGrid__(simulator.gridManager());
+        const auto eclState = simulator.gridManager().eclState();
+        const auto eclSchedule = eclState->getSchedule();
+
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
+
+        ecl_rsthead_type rstHeader = { 0 };
+        rstHeader.sim_time = simulator.startTime() + secondsElapsed;
+        rstHeader.nactive = eclGrid->getNumActive();
+        rstHeader.nx = eclGrid->getNX();
+        rstHeader.ny = eclGrid->getNY();
+        rstHeader.nz = eclGrid->getNZ();
+        rstHeader.nwells = 0; // eclSchedule->numWells(reportStepIdx);
+        rstHeader.niwelz = 0;
+        rstHeader.nzwelz = 0;
+        rstHeader.niconz = 0;
+        rstHeader.ncwmax = 0;
+        rstHeader.phase_sum = ECL_OIL_PHASE | ECL_WATER_PHASE | ECL_GAS_PHASE;
+        rstHeader.ncwmax = 0; // eclSchedule->getMaxNumCompletionsForWells(reportStepIdx);
+
+        static const int niwelz = 11; // Number of data elements per well in IWEL array in restart file
+        static const int nzwelz = 3;  // Number of 8-character words per well in ZWEL array restart file
+        static const int niconz = 14; // Number of data elements per completion in ICON array restart file
+        rstHeader.niwelz = niwelz;
+        rstHeader.nzwelz = nzwelz;
+        rstHeader.niconz = niconz;
+        rstHeader.sim_days = daysElapsed;
+
         ecl_rst_file_fwrite_header(restartFileHandle_,
                                    reportStepIdx,
-                                   simulator.startTime() + secondsElapsed,
-                                   daysElapsed,
-                                   eclGrid->getNX(),
-                                   eclGrid->getNY(),
-                                   eclGrid->getNZ(),
-                                   eclGrid->getNumActive(),
-                                   /*activePhases=*/
-                                   ECL_OIL_PHASE
-                                   | ECL_WATER_PHASE
-                                   | ECL_GAS_PHASE);
+                                   &rstHeader);
     }
 
     ecl_rst_file_type *ertHandle() const
