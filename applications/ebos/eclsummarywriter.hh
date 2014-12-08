@@ -358,7 +358,7 @@ private:
                 "FAQR", "FAQRG", "AAQR", "AAQRG",
                 "FAQT", "FAQTG", "AAQT", "AAQTG",
             }};
-        for (int kwIdx = 0; kwIdx < allKw.size(); ++kwIdx)
+        for (size_t kwIdx = 0; kwIdx < allKw.size(); ++kwIdx)
             summaryKeywords_.insert(allKw[kwIdx]);
     }
 
