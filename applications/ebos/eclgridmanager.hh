@@ -111,7 +111,7 @@ public:
         Opm::ParserLogPtr parserLog(new Opm::ParserLog());
 
         try {
-            deck_ = parser->parseFile(deckPath.string(), /*strict=*/false, parserLog);
+            deck_ = parser->parseFile(deckPath.string(), parserLog);
             Opm::checkDeck(deck_, parserLog);
             eclState_.reset(new Opm::EclipseState(deck_, parserLog));
         }
