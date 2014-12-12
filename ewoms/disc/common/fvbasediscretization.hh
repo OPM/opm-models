@@ -1082,7 +1082,11 @@ public:
     void serializeEntity(std::ostream &outstream,
                          const DofEntity &dof)
     {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        int dofIdx = asImp_().dofMapper().index(dof);
+#else
         int dofIdx = asImp_().dofMapper().map(dof);
+#endif
 
         // write phase state
         if (!outstream.good()) {
@@ -1106,7 +1110,12 @@ public:
     void deserializeEntity(std::istream &instream,
                            const DofEntity &dof)
     {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        int dofIdx = asImp_().dofMapper().index(dof);
+#else
         int dofIdx = asImp_().dofMapper().map(dof);
+#endif
+
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
                 OPM_THROW(std::runtime_error,

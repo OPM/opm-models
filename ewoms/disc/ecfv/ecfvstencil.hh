@@ -281,7 +281,11 @@ public:
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        return elementMapper_.index(element(dofIdx));
+#else
         return elementMapper_.map(element(dofIdx));
+#endif
     }
 
     /*!

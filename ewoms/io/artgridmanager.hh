@@ -275,7 +275,11 @@ public:
         auto vIt = gridView.template begin</*codim=*/2>();
         const auto &vEndIt = gridView.template end</*codim=*/2>();
         for (; vIt != vEndIt; ++vIt) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int duneIdx = vertexMapper.index(*vIt);
+#else
             int duneIdx = vertexMapper.map(*vIt);
+#endif
             int artIdx = gridFactory.insertionIndex(*vIt);
             artToDuneVertexIndex[artIdx] = duneIdx;
         }

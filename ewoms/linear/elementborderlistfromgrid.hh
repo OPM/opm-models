@@ -78,8 +78,12 @@ class ElementBorderListFromGrid
         template <class MessageBufferImp, class EntityType>
         void gather(MessageBufferImp &buff, const EntityType &e) const
         {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int myIdx = map_.index(e);
+#else
             int myIdx = map_.map(e);
-            buff.write(gridView_.comm().rank());
+#endif
+            buff.write(static_cast<int>(gridView_.comm().rank()));
             buff.write(myIdx);
 
             blackList_.addIndex(myIdx);
@@ -105,7 +109,11 @@ class ElementBorderListFromGrid
 
             BorderIndex bIdx;
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            bIdx.localIdx = map_.index(e);
+#else
             bIdx.localIdx = map_.map(e);
+#endif
             {
                 int tmp;
                 buff.read(tmp);
@@ -166,8 +174,12 @@ class ElementBorderListFromGrid
         template <class MessageBufferImp, class EntityType>
         void gather(MessageBufferImp &buff, const EntityType &e) const
         {
-            buff.write(gridView_.comm().rank());
-            buff.write(map_.map(e));
+            buff.write(static_cast<int>(gridView_.comm().rank()));
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            buff.write(static_cast<int>(map_.index(e)));
+#else
+            buff.write(static_cast<int>(map_.map(e)));
+#endif
         }
 
         template <class MessageBufferImp, class EntityType>
@@ -179,7 +191,11 @@ class ElementBorderListFromGrid
 
             buff.read(peerRank);
             buff.read(peerIdx);
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            localIdx = map_.index(e);
+#else
             localIdx = map_.map(e);
+#endif
 
             PeerBlackListedEntry pIdx;
             pIdx.nativeIndexOfPeer = peerIdx;

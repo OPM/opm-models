@@ -385,7 +385,11 @@ public:
 
             // if yes, the element color is also red, else it is not
             // red, i.e. green for the mean time
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int globalElemIdx = elementMapper_().index(*elemIt);
+#else
             int globalElemIdx = elementMapper_().map(*elemIt);
+#endif
             if (isRed)
                 elementColor_[globalElemIdx] = Red;
             else
@@ -395,7 +399,11 @@ public:
         // Mark yellow degrees of freedom (as orange for the mean time)
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int elemIdx = this->elementMapper_().index(*elemIt);
+#else
             int elemIdx = this->elementMapper_().map(*elemIt);
+#endif
             if (elementColor_[elemIdx] != Red)
                 // non-red elements do not tint degrees of freedom yellow!
                 continue;
@@ -425,7 +433,11 @@ public:
         // Mark yellow elements
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int elemIdx = this->elementMapper_().index(*elemIt);
+#else
             int elemIdx = this->elementMapper_().map(*elemIt);
+#endif
             if (elementColor_[elemIdx] == Red)
                 // element is already red
                 continue;
@@ -451,7 +463,11 @@ public:
         // at least one green element as a neighbor.
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int elemIdx = this->elementMapper_().index(*elemIt);
+#else
             int elemIdx = this->elementMapper_().map(*elemIt);
+#endif
             if (elementColor_[elemIdx] != Green)
                 // yellow and red elements do not make orange degrees
                 // of freedom yellow!
@@ -528,7 +544,11 @@ public:
         if (!enablePartialRelinearization_())
             return Red;
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        return elementColor_[elementMapper_().index(element)];
+#else
         return elementColor_[elementMapper_().map(element)];
+#endif
     }
 
     /*!
@@ -802,7 +822,11 @@ private:
     void assembleElement_(const Element &elem)
     {
         if (enablePartialRelinearization_()) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            int globalElemIdx = model_().elementMapper().index(elem);
+#else
             int globalElemIdx = model_().elementMapper().map(elem);
+#endif
             if (elementColor_[globalElemIdx] == Green) {
                 ++greenElems_;
 

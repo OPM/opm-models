@@ -1079,7 +1079,11 @@ public:
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        return vertexMapper_.subIndex(*elementPtr_, dofIdx, /*codim=*/dim);
+#else
         return vertexMapper_.map(*elementPtr_, dofIdx, /*codim=*/dim);
+#endif
     }
 
 private:

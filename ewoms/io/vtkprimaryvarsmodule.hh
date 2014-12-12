@@ -102,7 +102,11 @@ public:
     void processElement(const ElementContext &elemCtx)
     {
         const auto &elementMapper = elemCtx.model().elementMapper();
-        auto elemIdx = elementMapper.map(elemCtx.element());
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        int elemIdx = elementMapper.index(elemCtx.element());
+#else
+        int elemIdx = elementMapper .map(elemCtx.element());
+#endif
         if (processRankOutput_() && !processRank_.empty())
             processRank_[elemIdx] = this->simulator_.gridView().comm().rank();
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {

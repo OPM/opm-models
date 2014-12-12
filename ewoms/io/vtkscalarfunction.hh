@@ -78,7 +78,11 @@ public:
         int idx;
         if (codim_ == 0) {
             // cells. map element to the index
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            idx = mapper_.index(e);
+#else
             idx = mapper_.map(e);
+#endif
         }
         else if (codim_ == dim) {
             // find vertex which is closest to xi in local
@@ -108,7 +112,11 @@ public:
             }
 
             // map vertex to an index
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+            idx = mapper_.subIndex(e, imin, codim_);
+#else
             idx = mapper_.map(e, imin, codim_);
+#endif
         }
         else
             OPM_THROW(std::logic_error, "Only element and vertex based vector "
