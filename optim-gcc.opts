@@ -1,3 +1,10 @@
+# USE_CMAKE is quite a misnomer here: although eWoms and the other OPM
+# modules always use cmake, using dunecontrol for them currently
+# requires to use the autotools compatibility mode, i.e. building the
+# Dune modules using the Dune cmake build system is not yet
+# supported...
+USE_CMAKE=no
+
 CXX_WARNING_OPTS=" \
     -Wall \
     -Wunused \
