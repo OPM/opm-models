@@ -127,7 +127,7 @@ public:
             }
 
             if (writeWthp_()) {
-                Scalar thpPascal = well->topHolePressure();
+                Scalar thpPascal = well->tubingHeadPressure();
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wthpErtHandle),
                                    thpPascal/1e5); // eclipse uses bars for this
@@ -246,7 +246,7 @@ private:
             const auto& eclWell = wellsVector[wellIdx];
             auto& wellInfo = ertWellInfo_[eclWell->name()];
 
-            // the bottom/top hole pressures
+            // the bottom hole and tubing head pressure
             if (writeWbhp_())
                 wellInfo.wbhpErtHandle =
                     ecl_sum_add_var(ertSummary_.ertHandle(),
