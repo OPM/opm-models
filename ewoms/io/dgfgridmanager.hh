@@ -25,7 +25,7 @@
 
 #include <ewoms/parallel/mpihelper.hh>
 
-#include <dune/grid/io/file/dgfparser.hh>
+#include <dune/grid/io/file/dgfparser/dgfparser.hh>
 
 #include <ewoms/io/basegridmanager.hh>
 #include <opm/core/utility/PropertySystem.hpp>
