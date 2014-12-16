@@ -31,7 +31,7 @@
 #include <dune/grid/CpGrid.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/OpmLog.hpp>
+#include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -108,7 +108,7 @@ public:
         caseName_ = boost::to_upper_copy(deckPath.stem().string());
 
         Opm::ParserPtr parser(new Opm::Parser());
-        Opm::OpmLogPtr opmLog(new Opm::OpmLog());
+        Opm::LoggerPtr opmLog(new Opm::Logger());
 
         try {
             deck_ = parser->parseFile(deckPath.string(), opmLog);
