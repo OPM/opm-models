@@ -636,7 +636,7 @@ public:
 
                 elemCtx.updateAll(*elemIt);
                 residual.resize(elemCtx.numDof(/*timeIdx=*/0));
-                storageTerm.resize(elemCtx.numDof(/*timeIdx=*/0));
+                storageTerm.resize(elemCtx.numPrimaryDof(/*timeIdx=*/0));
                 asImp_().localResidual(threadId).eval(residual, storageTerm, elemCtx);
 
                 int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);

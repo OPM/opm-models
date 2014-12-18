@@ -80,6 +80,9 @@ NEW_PROP_TAG(LocalResidual);
 NEW_PROP_TAG(DiscLocalJacobian);
 //! The type of the local jacobian operator
 NEW_PROP_TAG(LocalJacobian);
+//! Specify if elements that do not belong to the local process' grid partition should be
+//! skipped
+NEW_PROP_TAG(LinearizeNonLocalElements);
 
 //! Assembles the global jacobian matrix
 NEW_PROP_TAG(BaseJacobianAssembler);

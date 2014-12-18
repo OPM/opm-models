@@ -532,18 +532,18 @@ protected:
         // update the non-gradient quantities
         for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
             int globalIdx = globalSpaceIndex(dofIdx, timeIdx);
-            const PrimaryVariables &volSol = globalSol[globalIdx];
+            const PrimaryVariables& dofSol = globalSol[globalIdx];
 
             dofVars_[dofIdx].thermodynamicHint[timeIdx] =
                 model().thermodynamicHint(globalIdx, timeIdx);
 
             const auto *cachedIntQuants = model().cachedIntensiveQuantities(globalIdx, timeIdx);
             if (cachedIntQuants) {
-                dofVars_[dofIdx].priVars[timeIdx] = volSol;
+                dofVars_[dofIdx].priVars[timeIdx] = dofSol;
                 dofVars_[dofIdx].intensiveQuantities[timeIdx] = *cachedIntQuants;
             }
             else {
-                updateSingleIntQuants_(volSol, dofIdx, timeIdx);
+                updateSingleIntQuants_(dofSol, dofIdx, timeIdx);
                 model().updateCachedIntensiveQuantities(dofVars_[dofIdx].intensiveQuantities[timeIdx],
                                                         globalIdx,
                                                         timeIdx);

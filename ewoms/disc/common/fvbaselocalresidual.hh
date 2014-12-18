@@ -151,8 +151,9 @@ public:
      */
     void eval(const ElementContext &elemCtx)
     {
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        internalResidual_.resize(numPrimaryDof);
+        internalResidual_.resize(numDof);
         internalStorageTerm_.resize(numPrimaryDof);
         asImp_().eval(internalResidual_, internalStorageTerm_, elemCtx);
     }
@@ -176,13 +177,18 @@ public:
         asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
 
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-#if !defined NDEBUG && HAVE_VALGRIND
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);
+
+        assert(residual.size() == numDof);
+        assert(storage.size() == numPrimaryDof);
+
+#if !defined NDEBUG
         for (int i=0; i < numPrimaryDof; i++) {
             for (int j = 0; j < numEq; ++ j)
                 assert(std::isfinite(residual[i][j]));
             Valgrind::CheckDefined(residual[i]);
         }
-#endif // !defined NDEBUG && HAVE_VALGRIND
+#endif
 
         // evaluate the storage and the source terms
         asImp_().evalVolumeTerms_(residual, storage, elemCtx);
@@ -190,40 +196,51 @@ public:
         for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
             storage[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG
             for (int j = 0; j < numEq; ++ j)
                 assert(std::isfinite(residual[dofIdx][j]));
             Valgrind::CheckDefined(residual[dofIdx]);
-#endif // !defined NDEBUG && HAVE_VALGRIND
+#endif
         }
 
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, storage, elemCtx, /*timeIdx=*/0);
 
-#if !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG
         for (int i=0; i < numPrimaryDof; i++) {
             for (int j = 0; j < numEq; ++ j)
                 assert(std::isfinite(residual[i][j]));
             Valgrind::CheckDefined(residual[i]);
         }
-#endif // !defined NDEBUG && HAVE_VALGRIND
+#endif
 
         // evaluate the constraint DOFs
         asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
-        for (int dofIdx=0; dofIdx < numPrimaryDof; ++dofIdx) {
-            assert(elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0);
-            residual[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
-            assert(std::isfinite(residual[dofIdx].two_norm()));
+        for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
+            if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
+                // non-overlap DOF
+                residual[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
+                assert(std::isfinite(residual[dofIdx].two_norm()));
 
-#if !defined NDEBUG && HAVE_VALGRIND
-            for (int j = 0; j < numEq; ++ j)
-                assert(std::isfinite(residual[dofIdx][j]));
-            Valgrind::CheckDefined(residual[dofIdx]);
-#endif // !defined NDEBUG && HAVE_VALGRIND
+#if !defined NDEBUG
+                for (int j = 0; j < numEq; ++ j)
+                    assert(std::isfinite(residual[dofIdx][j]));
+                Valgrind::CheckDefined(residual[dofIdx]);
+#endif
+            }
+#if !defined NDEBUG
+            // in debug mode, we set the residual for the DOFs in the overlap to NaN
+            else {
+                residual[dofIdx] = std::numeric_limits<Scalar>::quiet_NaN();
+                Valgrind::SetUndefined(residual[dofIdx]);
         }
+#endif
+        }
+
+
     }
 
     /*!
@@ -292,7 +309,6 @@ public:
         const auto &stencil = elemCtx.stencil(timeIdx);
         // calculate the mass flux over the sub-control volume faces
         int numInteriorFaces = elemCtx.numInteriorFaces(timeIdx);
-        int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
         for (int scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
             const auto &face = stencil.interiorFace(scvfIdx);
             int i = face.interiorIndex();
@@ -316,10 +332,8 @@ public:
             // Since the mass flux as calculated by computeFlux() goes out of sub-control
             // volume i and into sub-control volume j, we need to add the flux to finite
             // volume i and subtract it from finite volume j
-            if (i < numPrimaryDof)
-                residual[i] += flux;
-            if (j < numPrimaryDof)
-                residual[j] -= flux;
+            residual[i] += flux;
+            residual[j] -= flux;
         }
     }
 

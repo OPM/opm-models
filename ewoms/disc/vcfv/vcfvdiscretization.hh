@@ -83,6 +83,11 @@ public:
     typedef Ewoms::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
 };
 
+//! For the vertex centered finite volume method, ghost and overlap elements must _not_
+//! be assembled to avoid accounting twice for the fluxes over the process boundary faces
+//! of the local process' grid partition
+SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
+
 }} // namespace Opm, Properties
 
 namespace Ewoms {

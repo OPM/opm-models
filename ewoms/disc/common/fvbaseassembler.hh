@@ -76,6 +76,8 @@ class FvBaseAssembler
     typedef Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
 
+    static const bool linearizeNonLocalElements = GET_PROP_VALUE(TypeTag, LinearizeNonLocalElements);
+
     // copying the jacobian assembler is not a good idea
     FvBaseAssembler(const FvBaseAssembler &);
 
@@ -225,9 +227,8 @@ public:
         }
 
         // reset all degree of freedom colors to green
-        for (unsigned i = 0; i < dofColor_.size(); ++i) {
+        for (unsigned i = 0; i < dofColor_.size(); ++i)
             dofColor_[i] = Green;
-        }
     }
 
     /*!
@@ -371,11 +372,11 @@ public:
         for (; elemIt != elemEndIt; ++elemIt) {
             stencil.update(*elemIt);
 
-            // find out whether the current element contains a red
-            // degree of freedom
+            // find out whether the current element contains a red degree of freedom in
+            // its primary degrees of freedom.
             bool isRed = false;
-            int numDof = stencil.numDof();
-            for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
+            int numPrimaryDof = stencil.numPrimaryDof();
+            for (int dofIdx=0; dofIdx < numPrimaryDof; ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
                 if (dofColor_[globalIdx] == Red) {
                     isRed = true;
@@ -390,10 +391,7 @@ public:
 #else
             int globalElemIdx = elementMapper_().map(*elemIt);
 #endif
-            if (isRed)
-                elementColor_[globalElemIdx] = Red;
-            else
-                elementColor_[globalElemIdx] = Green;
+            elementColor_[globalElemIdx] = isRed?Red:Green;
         }
 
         // Mark yellow degrees of freedom (as orange for the mean time)
@@ -414,14 +412,13 @@ public:
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
                 // if a degree of freedom is already red, don't
                 // recolor it to yellow!
-                if (dofColor_[globalIdx] != Red) {
+                if (dofColor_[globalIdx] != Red)
                     dofColor_[globalIdx] = Orange;
-                }
             }
         }
 
         // at this point, we communicate the yellow degrees of freedom
-        // to the neighboring processes because a neigbor process may
+        // to the neighboring processes because a neighbor process may
         // not see the red degree of freedom for yellow border degrees
         // of freedom
         auto minHandle =
@@ -442,8 +439,8 @@ public:
                 // element is already red
                 continue;
 
-            // check whether the element features a yellow
-            // (resp. orange at this point) degree of freedom
+            // check whether the element's stencil features a yellow (resp. orange at
+            // this point) degree of freedom
             bool isYellow = false;
             stencil.update(*elemIt);
             int numDof = stencil.numDof();
@@ -710,7 +707,7 @@ private:
 
         size_t numGridDof = model_().numGridDof();
 
-        // reset the right hand side.
+        // always reset the right hand side fully.
         residual_ = 0.0;
 
         if (!enablePartialRelinearization_()) {
@@ -729,27 +726,17 @@ private:
             return;
         }
 
-        // reset all entries corrosponding to a red or yellow degree
-        // of freedom
-        for (unsigned rowIdx = 0; rowIdx < numGridDof; ++rowIdx) {
-            if (dofColor_[rowIdx] == Green)
-                // the equations for this control volume are already below the treshold
+        // reset all entries which connect two non-green degrees of freedom
+        for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+            if (dofColor_[dofIdx] == Green)
                 continue;
 
-            // here we have yellow or red degrees of freedom...
-
-            // reset the parts needed for Jacobian recycling
-            if (enableLinearizationRecycling_()) {
-                storageJacobian_[rowIdx] = 0;
-                storageTerm_[rowIdx] = 0;
-            }
-
-            // set all matrix entries in the row to 0
             typedef typename JacobianMatrix::ColIterator ColIterator;
-            ColIterator colIt = (*matrix_)[rowIdx].begin();
-            const ColIterator &colEndIt = (*matrix_)[rowIdx].end();
+            ColIterator colIt = (*matrix_)[dofIdx].begin();
+            const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                (*colIt) = 0.0;
+                if (dofColor_[colIt.index()] != Green)
+                    (*colIt) = 0.0;
             }
         }
     }
@@ -807,7 +794,7 @@ private:
             {
                 const Element &elem = *elemIt;
 
-                if (elem.partitionType() != Dune::InteriorEntity)
+                if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                     continue;
 
                 assembleElement_(elem);
@@ -844,37 +831,41 @@ private:
         localJacobian.assemble(*elementCtx);
 
         ScopedLock addLock(globalMatrixMutex_);
-        for (int primaryDofIdx = 0;
-             primaryDofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0);
-             ++ primaryDofIdx)
-        {
-            int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx,
-                                                     /*timeIdx=*/0);
+        int numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
+        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
+            int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
 
             // update the right hand side
             residual_[globI] += localJacobian.residual(primaryDofIdx);
 
-            if (enableLinearizationRecycling_()) {
+            if (enableLinearizationRecycling_())
                 storageTerm_[globI] += localJacobian.residualStorage(primaryDofIdx);
-            }
 
-            // only update the jacobian matrix for non-green degrees of freedom
-            if (dofColor(globI) != Green) {
-                if (enableLinearizationRecycling_())
-                    storageJacobian_[globI] += localJacobian.jacobianStorage(primaryDofIdx);
+            // we only need to update the Jacobian matrix for entries which connect two
+            // non-green DOFs. if the row DOF corresponds to a green one, we can skip the
+            // whole row...
+            if (dofColor(globI) == Green)
+                continue;
 
-                // update the jacobian matrix
-                for (int dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
-                    int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
-                    (*matrix_)[globI][globJ] += localJacobian.jacobian(primaryDofIdx, dofIdx);
-                }
+            if (enableLinearizationRecycling_())
+                storageJacobian_[globI] += localJacobian.jacobianStorage(primaryDofIdx);
+
+            // update the global Jacobian matrix
+            for (int dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
+                int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+
+                // only update the jacobian matrix for non-green degrees of freedom
+                if (dofColor(globJ) == Green)
+                    continue;
+
+                (*matrix_)[globJ][globI] += localJacobian.jacobian(dofIdx, primaryDofIdx);
             }
         }
         addLock.unlock();
     }
 
     // "assemble" a green element. green elements only get the
-    // residual updated, but the jacobian is left alone...
+    // residual updated, but the Jacobian is left alone...
     void assembleGreenElement_(const Element &elem)
     {
         int threadId = ThreadManager::threadId();

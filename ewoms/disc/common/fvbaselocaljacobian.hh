@@ -42,34 +42,35 @@ namespace Ewoms {
  * \brief Calculates the Jacobian of the local residual for finite
  *        volume spatial discretizations
  *
- * The default behavior is to use numeric differentiation, i.e.
- * forward or backward differences (2nd order), or central differences
- * (3rd order). The method used is determined by the
- * "NumericDifferenceMethod" property:
+ * The local Jacobian for a given context is defined as the derivatives of the residuals
+ * of all degrees of freedom featured by the stencil with regard to the primary variables
+ * of the stencil's "primary" degrees of freedom.
  *
- * - if the value of this property is smaller than 0, backward
- *   differences are used, i.e.:
+ * The default behavior is to use numeric differentiation, i.e.  forward or backward
+ * differences (2nd order), or central differences (3rd order). The method used is
+ * determined by the "NumericDifferenceMethod" property:
+ *
+ * - If the value of this property is smaller than 0, backward differences are used,
+ *   i.e.:
  *   \f[
  *     \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
  *   \f]
  *
- * - if the value of this property is 0, central
- *   differences are used, i.e.:
+ * - If the value of this property is 0, central differences are used, i.e.:
  *   \f[
  *     \frac{\partial f(x)}{\partial x} \approx
  *          \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
  *   \f]
  *
- * - if the value of this property is larger than 0, forward
- *   differences are used, i.e.:
+ * - if the value of this property is larger than 0, forward differences are used, i.e.:
  *   \f[
  *     \frac{\partial f(x)}{\partial x} \approx
  *          \frac{f(x + \epsilon) - f(x)}{\epsilon}
  *   \f]
  *
- * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$
- * is the value of a sub-control volume's primary variable at the
- * evaluation point and \f$\epsilon\f$ is a small value larger than 0.
+ * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$ is the value of a
+ * sub-control volume's primary variable at the evaluation point and \f$\epsilon\f$ is a
+ * small scalar value larger than 0.
  */
 template<class TypeTag>
 class FvBaseLocalJacobian
@@ -141,14 +142,15 @@ public:
     }
 
     /*!
-     * \brief Assemble an element's local Jacobian matrix of the
-     *        defect.
+     * \brief Assemble an element's local residual and its Jacobian matrix.
      *
-     * This assembles the 'grad f(x^k)' and 'f(x^k)' part of the
-     * newton update for a single element.
+     * The local Jacobian for a given context is defined as the derivatives of the
+     * residuals of all degrees of freedom featured by the stencil with regard to the
+     * primary variables of the stencil's "primary" degrees of freedom. Adding the local
+     * Jacobians for all elements in the grid will give the global Jacobian 'grad f(x)'.
      *
-     * \param element The grid element for which the local residual
-     *                and its gradient should be calculated.
+     * \param element The grid element for which the local residual and its local
+     *                Jacobian should be calculated.
      */
     void assemble(const Element &element)
     {
@@ -158,20 +160,22 @@ public:
     }
 
     /*!
-     * \brief Assemble an element's local Jacobian matrix of the
-     *        defect, given all secondary variables for the element.
+     * \brief Assemble a context's local residual and its Jacobian matrix.
      *
-     * After calling this method the ElementContext are in undefined
-     * state, so do not use it anymore!
+     * The local Jacobian for a given context is defined as the derivatives of the
+     * residuals of all degrees of freedom featured by the stencil with regard to the
+     * primary variables of the stencil's "primary" degrees of freedom. Adding the local
+     * Jacobians for all elements in the grid will give the global Jacobian 'grad f(x)'.
      *
-     * \param elemCtx The element execution context for which the
-     *                local residual and its gradient should be
-     *                calculated.
+     * After calling this method the ElementContext is in an undefined state, so do not
+     * use it anymore!
+     *
+     * \param elemCtx The element execution context for which the local residual and its
+     *                local Jacobian should be calculated.
      */
     void assemble(ElementContext &elemCtx)
     {
-        // update the weights of the primary variables using the
-        // current element variables
+        // update the weights of the primary variables for the context
         model_().updatePVWeights(elemCtx);
 
         resize_(elemCtx);
@@ -186,8 +190,8 @@ public:
         elemCtx.saveExtensiveQuantities();
 
         // calculate the local jacobian matrix
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
+        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
             for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
                 asImp_().evalPartialDerivative_(elemCtx, dofIdx, pvIdx);
 
@@ -306,13 +310,13 @@ protected:
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
 
-        jacobian_.setSize(numPrimaryDof, numDof);
+        jacobian_.setSize(numDof, numPrimaryDof);
         jacobianStorage_.resize(numPrimaryDof);
 
-        residual_.resize(numPrimaryDof);
+        residual_.resize(numDof);
         residualStorage_.resize(numPrimaryDof);
 
-        derivResidual_.resize(numPrimaryDof);
+        derivResidual_.resize(numDof);
         derivStorage_.resize(numPrimaryDof);
     }
 
@@ -323,37 +327,36 @@ protected:
     {
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numPrimaryDof; ++ dofIdx) {
-            residual_[dofIdx] = 0.0;
-            residualStorage_[dofIdx] = 0.0;
+        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
+            residualStorage_[primaryDofIdx] = 0.0;
 
-            jacobianStorage_[dofIdx] = 0.0;
+            jacobianStorage_[primaryDofIdx] = 0.0;
             for (int dof2Idx = 0; dof2Idx < numDof; ++ dof2Idx) {
-                jacobian_[dofIdx][dof2Idx] = 0.0;
+                jacobian_[dof2Idx][primaryDofIdx] = 0.0;
             }
         }
+
+        for (int primaryDofIdx = 0; primaryDofIdx < numDof; ++ primaryDofIdx)
+            residual_[primaryDofIdx] = 0.0;
     }
 
     /*!
-     * \brief Compute the partial derivatives to a primary variable at
-     *        an degree of freedom.
+     * \brief Compute the partial derivatives of a context's residual functions
      *
-     * This method can be overwritten by the implementation if a
-     * better scheme than numerical differentiation is available.
+     * This method can be overwritten by the implementation if a better scheme than
+     * numerical differentiation is available.
      *
-     * The default implementation of this method uses numeric
-     * differentiation, i.e. forward or backward differences (2nd
-     * order), or central differences (3rd order). The method used is
-     * determined by the "NumericDifferenceMethod" property:
+     * The default implementation of this method uses numeric differentiation,
+     * i.e. forward or backward differences (2nd order), or central differences (3rd
+     * order). The method used is determined by the "NumericDifferenceMethod" property:
      *
-     * - if the value of this property is smaller than 0, backward
-     *   differences are used, i.e.:
+     * - If the value of this property is smaller than 0, backward differences are used,
+     *   i.e.:
      *   \f[
-         \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
+     *     \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
      *   \f]
      *
-     * - if the value of this property is 0, central
-     *   differences are used, i.e.:
+     * - If the value of this property is 0, central differences are used, i.e.:
      *   \f[
      *     \frac{\partial f(x)}{\partial x} \approx
      *          \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
@@ -365,9 +368,9 @@ protected:
            \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
      *   \f]
      *
-     * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$
-     * is the value of a sub-control volume's primary variable at the
-     * evaluation point and \f$\epsilon\f$ is a small value larger than 0.
+     * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$ is the value
+     * of a sub-control volume's primary variable at the evaluation point and
+     * \f$\epsilon\f$ is a small value larger than 0.
      *
      * \param elemCtx The element context for which the local partial
      *                derivative ought to be calculated
@@ -460,27 +463,23 @@ protected:
      *        primary variable 'pvIdx' at vertex 'dofIdx' .
      */
     void updateLocalJacobian_(const ElementContext &elemCtx,
-                              int dofIdx,
+                              int primaryDofIdx,
                               int pvIdx)
     {
         // store the derivative of the storage term
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        if (dofIdx < numPrimaryDof) {
-            for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
-                jacobianStorage_[dofIdx][eqIdx][pvIdx] = derivStorage_[dofIdx][eqIdx];
-            }
-        }
+        for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
+            jacobianStorage_[primaryDofIdx][eqIdx][pvIdx] = derivStorage_[primaryDofIdx][eqIdx];
 
-        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; primaryDofIdx++)
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (int dofIdx = 0; dofIdx < numDof; dofIdx++)
         {
             for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
-                // A[primaryDofIdx][dofIdx][eqIdx][pvIdx] is the rate of
-                // change of the residual of equation 'eqIdx' at
-                // vertex 'primaryDofIdx' depending on the primary variable
-                // 'pvIdx' at vertex 'dofIdx'.
-                jacobian_[primaryDofIdx][dofIdx][eqIdx][pvIdx] =
-                    derivResidual_[primaryDofIdx][eqIdx];
-                Valgrind::CheckDefined(jacobian_[primaryDofIdx][dofIdx][eqIdx][pvIdx]);
+                // A[dofIdx][primaryDofIdx][eqIdx][pvIdx] is the partial derivative of
+                // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
+                // regard to the primary variable 'pvIdx' of the degree of freedom
+                // 'primaryDofIdx'
+                jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] = derivResidual_[dofIdx][eqIdx];
+                Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
             }
         }
     }

@@ -75,6 +75,11 @@ public:
     typedef Ewoms::Linear::ElementBorderListFromGrid<GridView, ElementMapper> type;
 };
 
+//! For the element centered finite volume method, ghost and overlap elements must be
+//! assembled to calculate the fluxes over the process boundary faces of the local
+//! process' grid partition
+SET_BOOL_PROP(EcfvDiscretization, LinearizeNonLocalElements, true);
+
 } // namespace Properties
 } // namespace Opm
 
