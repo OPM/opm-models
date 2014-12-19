@@ -1431,54 +1431,6 @@ public:
     { return auxEqModules_[auxEqModIdx]; }
 
 protected:
-    /*!
-     * \brief Finalize the initialization of the discretization
-     *
-     * This method requires the model to be constructed.
-     */
-    void finishInit_()
-    {
-        // initialize the volume of the finite volumes to zero
-        int nDofs = asImp_().numGridDof();
-        dofTotalVolume_.resize(nDofs);
-        std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
-
-        ElementContext elemCtx(simulator_);
-
-        // iterate through the grid and evaluate the initial condition
-        ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            // ignore everything which is not in the interior if the
-            // current process' piece of the grid
-            if (elemIt->partitionType() != Dune::InteriorEntity)
-                continue;
-
-            // deal with the current element
-            elemCtx.updateStencil(*elemIt);
-
-            // loop over all element vertices, i.e. sub control volumes
-            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
-            {
-                // map the local degree of freedom index to the global one
-                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-                dofTotalVolume_[globalDofIdx] += elemCtx.dofVolume(dofIdx, /*timeIdx=*/0);
-            }
-        }
-
-        const auto sumHandle =
-            GridCommHandleFactory::template sumHandle<double>(dofTotalVolume_,
-                                                              asImp_().dofMapper());
-        gridView_.communicate(*sumHandle,
-                              Dune::InteriorBorder_InteriorBorder_Interface,
-                              Dune::ForwardCommunication);
-
-        localLinearizer_.init(simulator_);
-        linearizer_ = new Linearizer();
-        linearizer_->init(simulator_);
-    }
-
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
                                     const Context &context, int dofIdx, int timeIdx)
