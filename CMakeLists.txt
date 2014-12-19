@@ -177,14 +177,14 @@ EwomsAddTest(obstacle_immiscible_parallel
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
-EwomsAddTest(lens_parallel_vcfv
+EwomsAddTest(lens_immiscible_vcfv_parallel
   EXE_NAME lens_immiscible_vcfv
   NO_COMPILE
   PROCESSORS 4
   CONDITION MPI_FOUND
   DRIVER_ARGS --parallel-simulation=4 lens_immiscible_vcfv --end-time=250 --initial-time-step-size=250)
 
-EwomsAddTest(lens_parallel_ecfv
+EwomsAddTest(lens_immiscible_ecfv_parallel
   EXE_NAME lens_immiscible_ecfv
   NO_COMPILE
   PROCESSORS 4
