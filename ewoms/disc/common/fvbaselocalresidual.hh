@@ -406,10 +406,9 @@ protected:
 
         BoundaryContext boundaryCtx(elemCtx);
 
-        // Assemble the boundary for all vertices of the current face
+        // evaluate the boundary for all boundary faces of the current context
         int numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
-        for (int faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx)
-        {
+        for (int faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx) {
             // add the residual of all vertices of the boundary
             // segment
             evalBoundarySegment_(residual,

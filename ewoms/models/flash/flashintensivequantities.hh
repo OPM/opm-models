@@ -105,7 +105,7 @@ public:
             const auto &model = elemCtx.model();
 
             // assume 18g/mol as the molar weight of water
-            flashTolerance = model.localJacobian(ThreadManager::threadId()).baseEpsilon() / (100 * 18e-3);
+            flashTolerance = model.localLinearizer(ThreadManager::threadId()).baseEpsilon() / (100 * 18e-3);
         }
 
         // extract the total molar densities of the components

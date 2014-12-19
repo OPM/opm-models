@@ -89,7 +89,7 @@ protected:
                  const GlobalEqVector &solutionUpdate,
                  const GlobalEqVector &previousResidual)
     {
-        auto& assembler = this->model().jacobianAssembler();
+        auto& linearizer = this->model().linearizer();
 
         // first, write out the current solution to make convergence
         // analysis possible
@@ -116,8 +116,8 @@ protected:
             if (relinearizationTol < newtonTol/10)
                 relinearizationTol = newtonTol/10;
 
-            assembler.updateDiscrepancy(previousResidual);
-            assembler.computeColors(relinearizationTol);
+            linearizer.updateDiscrepancy(previousResidual);
+            linearizer.computeColors(relinearizationTol);
         }
 
         // update the solution for the grid DOFs

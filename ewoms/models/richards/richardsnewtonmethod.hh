@@ -52,7 +52,7 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
+    typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { pressureWIdx = Indices::pressureWIdx };
@@ -81,7 +81,7 @@ protected:
                  const GlobalEqVector &deltaU,
                  const GlobalEqVector &previousResidual)
     {
-        const auto &assembler = this->simulator_.model().jacobianAssembler();
+        const auto &linearizer = this->simulator_.model().linearizer();
         const auto &simulator = this->simulator_;
         const auto &problem = simulator.problem();
 
@@ -97,7 +97,7 @@ protected:
         ElementIterator elemIt = simulator.gridView().template begin<0>();
         const ElementIterator &elemEndIt = simulator.gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            if (assembler.elementColor(*elemIt) == JacobianAssembler::Green)
+            if (linearizer.elementColor(*elemIt) == Linearizer::Green)
                 // don't look at green elements, since they
                 // probably have not changed much anyways
                 continue;
@@ -106,7 +106,7 @@ protected:
 
             for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                 int globI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (assembler.dofColor(globI) == JacobianAssembler::Green)
+                if (linearizer.dofColor(globI) == Linearizer::Green)
                     // don't limit at green DOFs, since they
                     // probably have not changed much anyways
                     continue;

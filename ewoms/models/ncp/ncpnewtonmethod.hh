@@ -110,8 +110,8 @@ private:
             if (relinearizationTol < newtonTol/10)
                 relinearizationTol = newtonTol/10;
 
-            this->model_().jacobianAssembler().updateDiscrepancy(previousResidual);
-            this->model_().jacobianAssembler().computeColors(relinearizationTol);
+            this->model_().linearizer().updateDiscrepancy(previousResidual);
+            this->model_().linearizer().computeColors(relinearizationTol);
         }
 
         // normal Newton-Raphson update

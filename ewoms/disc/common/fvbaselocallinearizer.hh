@@ -21,10 +21,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseLocalJacobian
+ * \copydoc Ewoms::FvBaseLocalLinearizer
  */
-#ifndef EWOMS_FV_BASE_LOCAL_JACOBIAN_HH
-#define EWOMS_FV_BASE_LOCAL_JACOBIAN_HH
+#ifndef EWOMS_FV_BASE_LOCAL_LINEARIZER_HH
+#define EWOMS_FV_BASE_LOCAL_LINEARIZER_HH
 
 #include "fvbaseproperties.hh"
 
@@ -73,10 +73,10 @@ namespace Ewoms {
  * small scalar value larger than 0.
  */
 template<class TypeTag>
-class FvBaseLocalJacobian
+class FvBaseLocalLinearizer
 {
 private:
-    typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, LocalLinearizer) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -99,21 +99,21 @@ private:
 public:
     // make older GCCs happy by providing a public copy constructor (this is necessary
     // for their implementation of std::vector, although the method is never called...)
-    FvBaseLocalJacobian(const FvBaseLocalJacobian&)
+    FvBaseLocalLinearizer(const FvBaseLocalLinearizer&)
         : internalElemContext_(0)
     {}
 
 #else
     // copying local residual objects around is a very bad idea, so we explicitly prevent
     // it...
-    FvBaseLocalJacobian(const FvBaseLocalJacobian&) = delete;
+    FvBaseLocalLinearizer(const FvBaseLocalLinearizer&) = delete;
 #endif
 public:
-    FvBaseLocalJacobian()
+    FvBaseLocalLinearizer()
         : internalElemContext_(0)
     { }
 
-    ~FvBaseLocalJacobian()
+    ~FvBaseLocalLinearizer()
     { delete internalElemContext_; }
 
     /*!
@@ -142,7 +142,7 @@ public:
     }
 
     /*!
-     * \brief Assemble an element's local residual and its Jacobian matrix.
+     * \brief Compute an element's local Jacobian matrix and evaluate its residual.
      *
      * The local Jacobian for a given context is defined as the derivatives of the
      * residuals of all degrees of freedom featured by the stencil with regard to the
@@ -152,15 +152,15 @@ public:
      * \param element The grid element for which the local residual and its local
      *                Jacobian should be calculated.
      */
-    void assemble(const Element &element)
+    void linearize(const Element &element)
     {
         internalElemContext_->updateAll(element);
 
-        assemble(*internalElemContext_);
+        linearize(*internalElemContext_);
     }
 
     /*!
-     * \brief Assemble a context's local residual and its Jacobian matrix.
+     * \brief Compute an element's local Jacobian matrix and evaluate its residual.
      *
      * The local Jacobian for a given context is defined as the derivatives of the
      * residuals of all degrees of freedom featured by the stencil with regard to the
@@ -173,7 +173,7 @@ public:
      * \param elemCtx The element execution context for which the local residual and its
      *                local Jacobian should be calculated.
      */
-    void assemble(ElementContext &elemCtx)
+    void linearize(ElementContext &elemCtx)
     {
         // update the weights of the primary variables for the context
         model_().updatePVWeights(elemCtx);
@@ -197,7 +197,7 @@ public:
 
                 // update the local stiffness matrix with the current
                 // partial derivatives
-                updateLocalJacobian_(elemCtx, dofIdx, pvIdx);
+                updateLocalLinearizer_(elemCtx, dofIdx, pvIdx);
             }
         }
 
@@ -462,7 +462,7 @@ protected:
      *        partial derivatives of all equations in regard to the
      *        primary variable 'pvIdx' at vertex 'dofIdx' .
      */
-    void updateLocalJacobian_(const ElementContext &elemCtx,
+    void updateLocalLinearizer_(const ElementContext &elemCtx,
                               int primaryDofIdx,
                               int pvIdx)
     {

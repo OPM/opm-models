@@ -76,7 +76,7 @@ NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
 
 //! The class which linearizes the non-linear system of equations
-NEW_PROP_TAG(JacobianAssembler);
+NEW_PROP_TAG(Linearizer);
 
 //! Specifies the type of a global Jacobian matrix
 NEW_PROP_TAG(JacobianMatrix);
@@ -156,7 +156,7 @@ class NewtonMethod
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
+    typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) LinearSolverBackend;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonConvergenceWriter) ConvergenceWriter;
@@ -278,12 +278,12 @@ public:
         SolutionVector previousSolution(currentSolution);
         GlobalEqVector solutionUpdate(currentSolution.size());
 
-        JacobianAssembler &jacobianAsm = model().jacobianAssembler();
+        Linearizer &linearizer = model().linearizer();
 
         // tell the implementation that we begin solving
         asImp_().begin_(currentSolution);
 
-        assembleTime_ = 0.0;
+        linearizeTime_ = 0.0;
         solveTime_ = 0.0;
         updateTime_ = 0.0;
 
@@ -301,19 +301,19 @@ public:
                 previousSolution = currentSolution;
 
                 if (asImp_().verbose_()) {
-                    std::cout << "Assemble: r(x^k) = dS/dt + div F - q;   M = grad r"
+                    std::cout << "Linearize: r(x^k) = dS/dt + div F - q;   M = grad r"
                               << clearRemainingLine
                               << std::flush;
                 }
 
-                assembleTimer_.start();
+                linearizeTimer_.start();
                 asImp_().linearize_();
-                assembleTimer_.stop();
-                assembleTime_ += assembleTimer_.realTimeElapsed();;
+                linearizeTimer_.stop();
+                linearizeTime_ += linearizeTimer_.realTimeElapsed();;
             }
             catch (const Dune::Exception &e)
             {
-                assembleTime_ += assembleTimer_.realTimeElapsed();;
+                linearizeTime_ += linearizeTimer_.realTimeElapsed();;
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Dune exception during linearization: \""
                               << e.what() << "\"\n" << std::flush;
@@ -322,7 +322,7 @@ public:
             }
             catch (const Opm::NumericalProblem &e)
             {
-                assembleTime_ += assembleTimer_.realTimeElapsed();;
+                linearizeTime_ += linearizeTimer_.realTimeElapsed();;
                 if (asImp_().verbose_())
                     std::cout << "Newton: Caught Opm exception during linearization: \""
                               << e.what() << "\"\n" << std::flush;
@@ -342,8 +342,8 @@ public:
             // set the delta vector to zero before solving the linear system!
             solutionUpdate = 0;
             // ask the implementation to solve the linearized system
-            auto b = jacobianAsm.residual();
-            bool converged = asImp_().solveLinear_(jacobianAsm.matrix(), solutionUpdate, b);
+            auto b = linearizer.residual();
+            bool converged = asImp_().solveLinear_(linearizer.matrix(), solutionUpdate, b);
             solveTimer_.stop();
             solveTime_ += solveTimer_.realTimeElapsed();;
 
@@ -409,12 +409,12 @@ public:
 
         if (asImp_().verbose_()) {
             Scalar elapsedTot =
-                assembleTime_
+                linearizeTime_
                 + solveTime_
                 + updateTime_;
-            std::cout << "Assemble/solve/update time: "
-                      << assembleTime_ << "("
-                      << 100 * assembleTime_/elapsedTot << "%)/"
+            std::cout << "Linearization/solve/update time: "
+                      << linearizeTime_ << "("
+                      << 100 * linearizeTime_/elapsedTot << "%)/"
                       << solveTime_ << "("
                       << 100 * solveTime_/elapsedTot << "%)/"
                       << updateTime_ << "("
@@ -436,8 +436,8 @@ public:
      *        non-linear system for all iterations of the current time
      *        step.
      */
-    Scalar assembleTime() const
-    { return assembleTime_; }
+    Scalar linearizeTime() const
+    { return linearizeTime_; }
 
     /*!
      * \brief Returns the wall time spend so far for solving the
@@ -520,10 +520,10 @@ protected:
     }
 
     /*!
-     * \brief Assemble the global linear system of equations.
+     * \brief Linearize the global non-linear system of equations.
      */
     void linearize_()
-    { model().jacobianAssembler().assemble(); }
+    { model().linearizer().linearize(); }
 
     /*!
      * \brief Solve the linear system of equations \f$\mathbf{A}x - b = 0\f$.
@@ -715,11 +715,11 @@ protected:
 
     Simulator &simulator_;
 
-    Ewoms::Timer assembleTimer_;
+    Ewoms::Timer linearizeTimer_;
     Ewoms::Timer solveTimer_;
     Ewoms::Timer updateTimer_;
 
-    Scalar assembleTime_;
+    Scalar linearizeTime_;
     Scalar solveTime_;
     Scalar updateTime_;
 

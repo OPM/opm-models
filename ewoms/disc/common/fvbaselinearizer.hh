@@ -20,10 +20,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseAssembler
+ * \copydoc Ewoms::FvBaseLinearizer
  */
-#ifndef EWOMS_FV_BASE_ASSEMBLER_HH
-#define EWOMS_FV_BASE_ASSEMBLER_HH
+#ifndef EWOMS_FV_BASE_LINEARIZER_HH
+#define EWOMS_FV_BASE_LINEARIZER_HH
 
 #include "fvbaseproperties.hh"
 
@@ -43,11 +43,14 @@ namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
- * \brief The common code for the assemblers of the global Jacobian matrix of models
- *        using an implicit finite volumes discretization scheme.
+ * \brief The common code for the linearizers of non-linear systems of equations
+ *
+ * This class assumes that these system of equations to be linearized are stemming from
+ * models that use an finite volume scheme for spatial discretization and an Euler
+ * scheme for time discretization.
  */
 template<class TypeTag>
-class FvBaseAssembler
+class FvBaseLinearizer
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -78,8 +81,8 @@ class FvBaseAssembler
 
     static const bool linearizeNonLocalElements = GET_PROP_VALUE(TypeTag, LinearizeNonLocalElements);
 
-    // copying the jacobian assembler is not a good idea
-    FvBaseAssembler(const FvBaseAssembler &);
+    // copying the linearizer is not a good idea
+    FvBaseLinearizer(const FvBaseLinearizer&);
 
 public:
     /*!
@@ -105,7 +108,7 @@ public:
          * This means that its error is below the tolerance, but its
          * defect can be linearized without any additional cost. This
          * is just an "internal" color which is not used ouside of the
-         * jacobian assembler.
+         * jacobian linearizer.
          */
         Orange = 2,
 
@@ -115,7 +118,7 @@ public:
         Green = 3
     };
 
-    FvBaseAssembler()
+    FvBaseLinearizer()
     {
         simulatorPtr_ = 0;
 
@@ -129,7 +132,7 @@ public:
 
     }
 
-    ~FvBaseAssembler()
+    ~FvBaseLinearizer()
     {
         delete matrix_;
         auto it = elementCtx_.begin();
@@ -139,7 +142,7 @@ public:
     }
 
     /*!
-     * \brief Register all run-time parameters for the Jacobian assembler.
+     * \brief Register all run-time parameters for the Jacobian linearizer.
      */
     static void registerParameters()
     {
@@ -152,7 +155,7 @@ public:
     }
 
     /*!
-     * \brief Initialize the jacobian assembler.
+     * \brief Initialize the linearizer.
      *
      * At this point we can assume that all objects in the simulator
      * have been allocated. We cannot assume that they are fully
@@ -177,13 +180,15 @@ public:
     }
 
     /*!
-     * \brief Assemble the global Jacobian of the residual and the
-     *        residual for the current solution.
+     * \brief Linearize the global non-linear system of equations
      *
-     * The current state of affairs (esp. the previous and the current
-     * solutions) is represented by the model object.
+     * That means that the global Jacobian of the residual is assembled and the residual
+     * is evaluated for the current solution.
+     *
+     * The current state of affairs (esp. the previous and the current solutions) is
+     * represented by the model object.
      */
-    void assemble()
+    void linearize()
     {
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
@@ -192,20 +197,20 @@ public:
             initFirstIteration_();
 
         // we need to store whether the linearization was recycled
-        // here because the assemble_ method modifies the
+        // here because the linearize_ method modifies the
         // reuseLinearization_ attribute!
         bool linearizationReused = reuseLinearization_;
 
         int succeeded;
         try {
-            assemble_();
+            linearize_();
             succeeded = 1;
             succeeded = gridView_().comm().min(succeeded);
         }
         catch (Opm::NumericalProblem &e)
         {
             std::cout << "rank " << simulator_().gridView().comm().rank()
-                      << " caught an exception while assembling:" << e.what()
+                      << " caught an exception while linearizing:" << e.what()
                       << "\n"  << std::flush;
             succeeded = 0;
             succeeded = gridView_().comm().min(succeeded);
@@ -233,10 +238,10 @@ public:
 
     /*!
      * \brief If linearization recycling is enabled, this method
-     *        specifies whether the next call to assemble() just
+     *        specifies whether the next call to linearize() just
      *        rescales the storage term or does a full relinearization
      *
-     * \param yesno If true, only rescale; else do full Jacobian assembly.
+     * \param yesno If true, only rescale; else always do a full relinearization.
      */
     void setLinearizationReusable(bool yesno = true)
     {
@@ -246,7 +251,7 @@ public:
 
     /*!
      * \brief If partial relinearization is enabled, this method causes all
-     *        elements to be relinearized in the next assemble() call.
+     *        elements to be relinearized in the next linearize() call.
      */
     void relinearizeAll()
     {
@@ -264,7 +269,7 @@ public:
 
     /*!
      * \brief Returns the largest error of a "green" degree of freedom
-     *        for the most recent call of the assemble() method.
+     *        for the most recent call of the linearize() method.
      *
      * This only has an effect if partial Jacobian relinearization is
      * enabled. If it is disabled, then this method always returns 0.
@@ -314,7 +319,7 @@ public:
 
     /*!
      * \brief Force to relinearize a given degree of freedom the next
-     *        time the assemble() method is called.
+     *        time the linearize() method is called.
      *
      * \param globalDofIdx The global index of the degree of freedom
      *                     which ought to be red.
@@ -745,7 +750,7 @@ private:
     }
 
     // linearize the whole system
-    void assemble_()
+    void linearize_()
     {
         resetSystem_();
 
@@ -774,7 +779,7 @@ private:
             reuseLinearization_ = false;
             oldDt_ = curDt;
 
-            assembleAuxiliaryEquations_();
+            linearizeAuxiliaryEquations_();
 
             problem_().newtonMethod().endIterMsg()
                 << ", linear system of equations reused from previous time step";
@@ -800,16 +805,16 @@ private:
                 if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                     continue;
 
-                assembleElement_(elem);
+                linearizeElement_(elem);
             }
         }
 
-        assembleAuxiliaryEquations_();
+        linearizeAuxiliaryEquations_();
     }
 
-    // assemble an element in the interior of the process' grid
+    // linearize an element in the interior of the process' grid
     // partition
-    void assembleElement_(const Element &elem)
+    void linearizeElement_(const Element &elem)
     {
         if (enablePartialRelinearization_()) {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
@@ -820,7 +825,7 @@ private:
             if (elementColor_[globalElemIdx] == Green) {
                 ++greenElems_;
 
-                assembleGreenElement_(elem);
+                linearizeGreenElement_(elem);
                 return;
             }
         }
@@ -828,10 +833,10 @@ private:
         int threadId = ThreadManager::threadId();
 
         ElementContext *elementCtx = elementCtx_[threadId];
-        auto &localJacobian = model_().localJacobian(threadId);
+        auto &localLinearizer = model_().localLinearizer(threadId);
 
         elementCtx->updateAll(elem);
-        localJacobian.assemble(*elementCtx);
+        localLinearizer.linearize(*elementCtx);
 
         ScopedLock addLock(globalMatrixMutex_);
         int numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
@@ -839,10 +844,10 @@ private:
             int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
 
             // update the right hand side
-            residual_[globI] += localJacobian.residual(primaryDofIdx);
+            residual_[globI] += localLinearizer.residual(primaryDofIdx);
 
             if (enableLinearizationRecycling_())
-                storageTerm_[globI] += localJacobian.residualStorage(primaryDofIdx);
+                storageTerm_[globI] += localLinearizer.residualStorage(primaryDofIdx);
 
             // we only need to update the Jacobian matrix for entries which connect two
             // non-green DOFs. if the row DOF corresponds to a green one, we can skip the
@@ -851,7 +856,7 @@ private:
                 continue;
 
             if (enableLinearizationRecycling_())
-                storageJacobian_[globI] += localJacobian.jacobianStorage(primaryDofIdx);
+                storageJacobian_[globI] += localLinearizer.jacobianStorage(primaryDofIdx);
 
             // update the global Jacobian matrix
             for (int dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
@@ -861,15 +866,15 @@ private:
                 if (dofColor(globJ) == Green)
                     continue;
 
-                (*matrix_)[globJ][globI] += localJacobian.jacobian(dofIdx, primaryDofIdx);
+                (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
             }
         }
         addLock.unlock();
     }
 
-    // "assemble" a green element. green elements only get the
+    // "linearize" a green element. green elements only get the
     // residual updated, but the Jacobian is left alone...
-    void assembleGreenElement_(const Element &elem)
+    void linearizeGreenElement_(const Element &elem)
     {
         int threadId = ThreadManager::threadId();
         ElementContext *elementCtx = elementCtx_[threadId];
@@ -890,7 +895,7 @@ private:
         addLock.unlock();
     }
 
-    void assembleAuxiliaryEquations_()
+    void linearizeAuxiliaryEquations_()
     {
         auto& model = model_();
         for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
@@ -910,7 +915,7 @@ private:
     // The storage part of the local Jacobian
     std::vector<MatrixBlock> storageJacobian_;
     std::vector<VectorBlock> storageTerm_;
-    // time step size of last assembly
+    // time step size used for the last linearization
     Scalar oldDt_;
 
     // data required for partial relinearization

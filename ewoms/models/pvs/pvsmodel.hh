@@ -501,7 +501,7 @@ public:
                                              intQuants.fluidState(),
                                              oldPhasePresence,
                                              priVars);
-                    this->jacobianAssembler().markDofRed(globalIdx);
+                    this->linearizer().markDofRed(globalIdx);
                     ++numSwitched_;
                 }
             }

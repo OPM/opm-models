@@ -77,15 +77,15 @@ NEW_PROP_TAG(DiscLocalResidual);
 //! The type of the local residual function
 NEW_PROP_TAG(LocalResidual);
 //! The discretization specific part of the local jacobian of the residual
-NEW_PROP_TAG(DiscLocalJacobian);
+NEW_PROP_TAG(DiscLocalLinearizer);
 //! The type of the local jacobian operator
-NEW_PROP_TAG(LocalJacobian);
+NEW_PROP_TAG(LocalLinearizer);
 //! Specify if elements that do not belong to the local process' grid partition should be
 //! skipped
 NEW_PROP_TAG(LinearizeNonLocalElements);
 
-//! Assembles the global jacobian matrix
-NEW_PROP_TAG(BaseJacobianAssembler);
+//! Linearizes the global non-linear system of equations
+NEW_PROP_TAG(BaseLinearizer);
 //! Type of the global jacobian matrix
 NEW_PROP_TAG(JacobianMatrix);
 

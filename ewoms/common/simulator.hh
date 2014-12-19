@@ -545,7 +545,7 @@ public:
                 // any specifics of the non-linear solver, but this
                 // call is too easy to forget within the problem's
                 // endEpisode(), so we do it here anyway!
-                model_->jacobianAssembler().setLinearizationReusable(false);
+                model_->linearizer().setLinearizationReusable(false);
 
                 // Notify the problem about the end of the current
                 // episode. This needs to define what to the next

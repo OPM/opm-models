@@ -26,8 +26,8 @@
 #define EWOMS_FV_BASE_DISCRETIZATION_HH
 
 #include "fvbaseproperties.hh"
-#include "fvbaseassembler.hh"
-#include "fvbaselocaljacobian.hh"
+#include "fvbaselinearizer.hh"
+#include "fvbaselocallinearizer.hh"
 #include "fvbaselocalresidual.hh"
 #include "fvbaseelementcontext.hh"
 #include "fvbaseboundarycontext.hh"
@@ -93,8 +93,8 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtens
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
 
-SET_TYPE_PROP(FvBaseDiscretization, DiscLocalJacobian, Ewoms::FvBaseLocalJacobian<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, LocalJacobian, typename GET_PROP_TYPE(TypeTag, DiscLocalJacobian));
+SET_TYPE_PROP(FvBaseDiscretization, DiscLocalLinearizer, Ewoms::FvBaseLocalLinearizer<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, LocalLinearizer, typename GET_PROP_TYPE(TypeTag, DiscLocalLinearizer));
 
 
 //! Set the type of a global jacobian matrix from the solution types
@@ -182,9 +182,9 @@ SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Ewoms::ThreadManager<TypeTag>
 SET_INT_PROP(FvBaseDiscretization, ThreadsPerProcess, 1);
 
 /*!
- * \brief Assembler for the global jacobian matrix.
+ * \brief Linearizer for the global system of equations.
  */
-SET_TYPE_PROP(FvBaseDiscretization, JacobianAssembler, Ewoms::FvBaseAssembler<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, Linearizer, Ewoms::FvBaseLinearizer<TypeTag>);
 
 //! use an unlimited time step size by default
 #if 0
@@ -264,7 +264,7 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianAssembler) JacobianAssembler;
+    typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryContext) BoundaryContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
@@ -276,7 +276,7 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
-    typedef typename GET_PROP_TYPE(TypeTag, LocalJacobian) LocalJacobian;
+    typedef typename GET_PROP_TYPE(TypeTag, LocalLinearizer) LocalLinearizer;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
 
     enum {
@@ -303,8 +303,8 @@ public:
         : simulator_(simulator)
         , gridView_(simulator.gridView())
         , newtonMethod_(simulator)
-        , localJacobian_(ThreadManager::maxThreads())
-        , jacAsm_(new JacobianAssembler())
+        , localLinearizer_(ThreadManager::maxThreads())
+        , linearizer_(new Linearizer())
     {
         asImp_().updateBoundary_();
 
@@ -329,7 +329,7 @@ public:
         for (; modIt != modEndIt; ++modIt)
             delete *modIt;
 
-        delete jacAsm_;
+        delete linearizer_;
     }
 
     /*!
@@ -337,8 +337,8 @@ public:
      */
     static void registerParameters()
     {
-        JacobianAssembler::registerParameters();
-        LocalJacobian::registerParameters();
+        Linearizer::registerParameters();
+        LocalLinearizer::registerParameters();
         LocalResidual::registerParameters();
         GradientCalculator::registerParameters();
         IntensiveQuantities::registerParameters();
@@ -402,9 +402,9 @@ public:
         // sum up the volumes of the grid partitions
         gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
 
-        jacAsm_->init(simulator_);
+        linearizer_->init(simulator_);
         for (int threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
-            localJacobian_[threadId].init(simulator_);
+            localLinearizer_[threadId].init(simulator_);
 
         if (storeIntensiveQuantities_()) {
             // invalidate all cached intensive quantities
@@ -859,44 +859,45 @@ public:
     { return solution_[timeIdx]; }
 
     /*!
-     * \brief Returns the operator assembler for the global jacobian of
+     * \brief Returns the operator linearizer for the global jacobian of
      *        the problem.
      */
-    const JacobianAssembler &jacobianAssembler() const
-    { return *jacAsm_; }
+    const Linearizer &linearizer() const
+    { return *linearizer_; }
 
     /*!
-     * \copydoc jacobianBaseAssembler() const
+     * \brief Returns the object which linearizes the global system of equations at the
+     *        current solution.
      */
-    JacobianAssembler &jacobianAssembler()
-    { return *jacAsm_; }
+    Linearizer &linearizer()
+    { return *linearizer_; }
 
     /*!
      * \brief Returns the local jacobian which calculates the local
      *        stiffness matrix for an arbitrary element.
      *
      * The local stiffness matrices of the element are used by
-     * the jacobian assembler to produce a global linerization of the
+     * the jacobian linearizer to produce a global linerization of the
      * problem.
      */
-    const LocalJacobian &localJacobian(int openMpThreadId) const
-    { return localJacobian_[openMpThreadId]; }
+    const LocalLinearizer &localLinearizer(int openMpThreadId) const
+    { return localLinearizer_[openMpThreadId]; }
     /*!
-     * \copydoc localJacobian() const
+     * \copydoc localLinearizer() const
      */
-    LocalJacobian &localJacobian(int openMpThreadId)
-    { return localJacobian_[openMpThreadId]; }
+    LocalLinearizer &localLinearizer(int openMpThreadId)
+    { return localLinearizer_[openMpThreadId]; }
 
     /*!
      * \brief Returns the object to calculate the local residual function.
      */
     const LocalResidual &localResidual(int openMpThreadId) const
-    { return asImp_().localJacobian(openMpThreadId).localResidual(); }
+    { return asImp_().localLinearizer(openMpThreadId).localResidual(); }
     /*!
      * \copydoc localResidual() const
      */
     LocalResidual &localResidual(int openMpThreadId)
-    { return asImp_().localJacobian(openMpThreadId).localResidual(); }
+    { return asImp_().localLinearizer(openMpThreadId).localResidual(); }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -1020,7 +1021,7 @@ public:
         intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
 
         solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
-        jacAsm_->relinearizeAll();
+        linearizer_->relinearizeAll();
     }
 
     /*!
@@ -1172,14 +1173,14 @@ public:
     { return simulator_.problem().elementMapper(); }
 
     /*!
-     * \brief Resets the Jacobian matrix assembler, so that the
+     * \brief Resets the Jacobian matrix linearizer, so that the
      *        boundary types can be altered.
      */
-    void resetJacobianAssembler ()
+    void resetLinearizer ()
     {
-        delete jacAsm_;
-        jacAsm_ = new JacobianAssembler;
-        jacAsm_->init(simulator_);
+        delete linearizer_;
+        linearizer_ = new Linearizer;
+        linearizer_->init(simulator_);
     }
 
     /*!
@@ -1458,9 +1459,9 @@ protected:
                               Dune::InteriorBorder_InteriorBorder_Interface,
                               Dune::ForwardCommunication);
 
-        localJacobian_.init(simulator_);
-        jacAsm_ = new JacobianAssembler();
-        jacAsm_->init(simulator_);
+        localLinearizer_.init(simulator_);
+        linearizer_ = new Linearizer();
+        linearizer_->init(simulator_);
     }
 
     template <class Context>
@@ -1495,7 +1496,7 @@ protected:
      * \brief Reference to the local residal object
      */
     LocalResidual &localResidual_()
-    { return localJacobian_.localResidual(); }
+    { return localLinearizer_.localResidual(); }
 
     /*!
      * \brief Find the degrees of freedoms adjacent to the grid boundary.
@@ -1548,10 +1549,10 @@ protected:
     NewtonMethod newtonMethod_;
 
     // calculates the local jacobian matrix for a given element
-    std::vector<LocalJacobian> localJacobian_;
+    std::vector<LocalLinearizer> localLinearizer_;
     // Linearizes the problem at the current time step using the
     // local jacobian
-    JacobianAssembler *jacAsm_;
+    Linearizer *linearizer_;
 
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step

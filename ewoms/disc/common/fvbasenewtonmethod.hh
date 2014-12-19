@@ -46,9 +46,6 @@ NEW_TYPE_TAG(FvBaseNewtonMethod, INHERITS_FROM(NewtonMethod));
 //! The class dealing with the balance equations
 NEW_PROP_TAG(Model);
 
-//! The assembler
-NEW_PROP_TAG(BaseAssembler);
-
 //! The class storing primary variables plus pseudo primary variables
 NEW_PROP_TAG(PrimaryVariables);
 
@@ -173,8 +170,8 @@ protected:
             if (relinearizationTol < newtonTol/10)
                 relinearizationTol = newtonTol/10;
 
-            model_().jacobianAssembler().updateDiscrepancy(previousResidual);
-            model_().jacobianAssembler().computeColors(relinearizationTol);
+            model_().linearizer().updateDiscrepancy(previousResidual);
+            model_().linearizer().computeColors(relinearizationTol);
         }
 
         // update the solution
@@ -203,7 +200,7 @@ protected:
     {
         ParentType::failed_();
 
-        model_().jacobianAssembler().relinearizeAll();
+        model_().linearizer().relinearizeAll();
     }
 
     /*!
@@ -214,9 +211,9 @@ protected:
         ParentType::succeeded_();
 
         if (enableLinearizationRecycling_())
-            model_().jacobianAssembler().setLinearizationReusable(true);
+            model_().linearizer().setLinearizationReusable(true);
         else
-            model_().jacobianAssembler().relinearizeAll();
+            model_().linearizer().relinearizeAll();
     }
 
     /*!
@@ -232,14 +229,14 @@ protected:
     { return ParentType::model(); }
 
     /*!
-     * \brief Returns true iff the assembler uses partial
+     * \brief Returns true iff the linearizer uses partial
      *        relinearization.
      */
     bool enablePartialRelinearization_() const
     { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
 
     /*!
-     * \brief Returns true iff the assembler recycles the
+     * \brief Returns true iff the linearizer recycles the
      *        linearization if possible.
      */
     bool enableLinearizationRecycling_() const

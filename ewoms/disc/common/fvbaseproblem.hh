@@ -145,7 +145,7 @@ public:
      */
     void finishInit()
     {
-        assembleTime_ = 0.0;
+        linearizeTime_ = 0.0;
         solveTime_ = 0.0;
         updateTime_ = 0.0;
     }
@@ -321,8 +321,8 @@ public:
                       << "  Total CPU time: " << Simulator::humanReadableTime(globalCpuTime, /*isAmendment=*/false) << "\n"
                       << "  Setup time: "<< Simulator::humanReadableTime(simulator().setupTime(), /*isAmendment=*/false)
                       << ", " << simulator().setupTime()/realTime*100 << "%\n"
-                      << "  Linearization time: "<< Simulator::humanReadableTime(assembleTime_, /*isAmendment=*/false)
-                      << ", " << assembleTime_/realTime*100 << "%\n"
+                      << "  Linearization time: "<< Simulator::humanReadableTime(linearizeTime_, /*isAmendment=*/false)
+                      << ", " << linearizeTime_/realTime*100 << "%\n"
                       << "  Linear solve time: " << Simulator::humanReadableTime(solveTime_, /*isAmendment=*/false)
                       << ", " << solveTime_/realTime*100 << "%\n"
                       << "  Newton update time: " << Simulator::humanReadableTime(updateTime_, /*isAmendment=*/false)
@@ -334,7 +334,7 @@ public:
                       << "        are wall clock times\n"
                       << "Note 2: Taxes and administrative overhead\n"
                       << "        are "
-                      << (realTime - (assembleTime_+solveTime_+updateTime_+totalWriteTime))/realTime*100
+                      << (realTime - (linearizeTime_+solveTime_+updateTime_+totalWriteTime))/realTime*100
                       << "% of total execution time.\n"
                       << "\n"
                       << "Our simulation hours are 24/7. Thank you for\n"
@@ -367,7 +367,7 @@ public:
         for (int i = 0; i < maxFails; ++i) {
             bool converged = model().update(newtonMethod());
 
-            assembleTime_ += newtonMethod().assembleTime();
+            linearizeTime_ += newtonMethod().linearizeTime();
             solveTime_ += newtonMethod().solveTime();
             updateTime_ += newtonMethod().updateTime();
 
@@ -610,7 +610,7 @@ private:
     mutable VtkMultiWriter *defaultVtkWriter_;
 
     // CPU time keeping
-    Scalar assembleTime_;
+    Scalar linearizeTime_;
     Scalar solveTime_;
     Scalar updateTime_;
 };
