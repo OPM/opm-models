@@ -367,16 +367,16 @@ public:
         gridTotalVolume_ = 0.0;
 
         // iterate through the grid and evaluate the initial condition
-        ElementIterator it = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
-        for (; it != eendit; ++it) {
+        ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
+        const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
             // ignore everything which is not in the interior if the
             // current process' piece of the grid
-            if (it->partitionType() != Dune::InteriorEntity)
+            if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue;
 
             // deal with the current element
-            elemCtx.updateStencil(*it);
+            elemCtx.updateStencil(*elemIt);
             const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
             // loop over all element vertices, i.e. sub control volumes
@@ -387,7 +387,8 @@ public:
 
                 Scalar dofVolume = stencil.subControlVolume(dofIdx).volume();
                 dofTotalVolume_[globalIdx] += dofVolume;
-                gridTotalVolume_ += dofVolume;
+                if (elemIt->partitionType() == Dune::InteriorEntity)
+                    gridTotalVolume_ += dofVolume;
             }
         }
 
@@ -436,16 +437,16 @@ public:
         ElementContext elemCtx(simulator_);
 
         // iterate through the grid and evaluate the initial condition
-        ElementIterator it = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
-        for (; it != eendit; ++it) {
+        ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
+        const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
             // ignore everything which is not in the interior if the
             // current process' piece of the grid
-            if (it->partitionType() != Dune::InteriorEntity)
+            if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue;
 
             // deal with the current element
-            elemCtx.updateStencil(*it);
+            elemCtx.updateStencil(*elemIt);
 
             // loop over all element vertices, i.e. sub control volumes
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
@@ -756,8 +757,8 @@ public:
         // calculate the rate at the boundary and the source rate
         ElementContext elemCtx(simulator_);
         auto eIt = simulator_.gridView().template begin</*codim=*/0>();
-        const auto &eEndIt = simulator_.gridView().template end</*codim=*/0>();
-        for (; eIt != eEndIt; ++eIt) {
+        const auto &elemEndIt = simulator_.gridView().template end</*codim=*/0>();
+        for (; eIt != elemEndIt; ++eIt) {
             if (eIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
 
@@ -1445,16 +1446,16 @@ protected:
         ElementContext elemCtx(simulator_);
 
         // iterate through the grid and evaluate the initial condition
-        ElementIterator it = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &eendit = gridView_.template end</*codim=*/0>();
-        for (; it != eendit; ++it) {
+        ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
+        const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
             // ignore everything which is not in the interior if the
             // current process' piece of the grid
-            if (it->partitionType() != Dune::InteriorEntity)
+            if (elemIt->partitionType() != Dune::InteriorEntity)
                 continue;
 
             // deal with the current element
-            elemCtx.updateStencil(*it);
+            elemCtx.updateStencil(*elemIt);
 
             // loop over all element vertices, i.e. sub control volumes
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
