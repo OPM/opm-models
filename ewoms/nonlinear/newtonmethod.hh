@@ -413,12 +413,12 @@ public:
                 + solveTime_
                 + updateTime_;
             std::cout << "Assemble/solve/update time: "
-                      << assembleTimer_.realTimeElapsed() << "("
-                      << 100 * assembleTime_ / elapsedTot << "%)/"
-                      << solveTimer_.realTimeElapsed() << "("
-                      << 100 * solveTimer_.realTimeElapsed() / elapsedTot << "%)/"
-                      << updateTimer_.realTimeElapsed() << "("
-                      << 100 * updateTimer_.realTimeElapsed() / elapsedTot << "%)"
+                      << assembleTime_ << "("
+                      << 100 * assembleTime_/elapsedTot << "%)/"
+                      << solveTime_ << "("
+                      << 100 * solveTime_/elapsedTot << "%)/"
+                      << updateTime_ << "("
+                      << 100 * updateTime_/elapsedTot << "%)"
                       << "\n" << std::flush;
         }
 

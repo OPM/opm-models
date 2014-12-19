@@ -711,15 +711,15 @@ private:
         residual_ = 0.0;
 
         if (!enablePartialRelinearization_()) {
-            // If partial relinearization of the jacobian is not enabled,
-            // we can just reset everything!
+            // If partial re-linearization of the Jacobian is not enabled, we can just
+            // reset everything!
             (*matrix_) = 0;
 
             // reset the parts needed for Jacobian recycling
             if (enableLinearizationRecycling_()) {
                 for (unsigned i=0; i < numGridDof; ++ i) {
-                    storageJacobian_[i] = 0;
-                    storageTerm_[i] = 0;
+                    storageJacobian_[i] = 0.0;
+                    storageTerm_[i] = 0.0;
                 }
             }
 
@@ -730,6 +730,9 @@ private:
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
             if (dofColor_[dofIdx] == Green)
                 continue;
+
+            if (enableLinearizationRecycling_())
+                storageJacobian_[dofIdx] = 0.0;
 
             typedef typename JacobianMatrix::ColIterator ColIterator;
             ColIterator colIt = (*matrix_)[dofIdx].begin();

@@ -256,6 +256,13 @@ public:
     { return executionTimer_; }
 
     /*!
+     * \brief Returns total wall clock time required to write the visualization files of
+     *        all time steps to disk
+     */
+    Scalar totalWriteTime() const
+    { return totalWriteTime_; }
+
+    /*!
      * \brief Returns the wall time required by setting up and initializing the simulation.
      */
     double setupTime() const
@@ -494,6 +501,8 @@ public:
         }
 
         setupTimer_.stop();
+
+        totalWriteTime_ = 0.0;
         executionTimer_.start();
 
         // do the time steps
@@ -513,8 +522,11 @@ public:
             problem_->endTimeStep();
 
             // write the result to disk
+            writeTimer_.start();
             if (problem_->shouldWriteOutput())
                 problem_->writeOutput();
+            writeTimer_.stop();
+            totalWriteTime_ += writeTimer_.realTimeElapsed();
 
             // do the next time integration
             Scalar oldDt = timeStepSize();
@@ -681,6 +693,8 @@ private:
 
     Ewoms::Timer setupTimer_;
     Ewoms::Timer executionTimer_;
+    Ewoms::Timer writeTimer_;
+    Scalar totalWriteTime_;
     Scalar startTime_;
     Scalar time_;
     Scalar endTime_;

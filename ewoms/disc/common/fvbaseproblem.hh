@@ -306,6 +306,7 @@ public:
         Scalar realTime = timer.realTimeElapsed();
         Scalar localCpuTime = timer.cpuTimeElapsed();
         Scalar globalCpuTime = timer.globalCpuTimeElapsed();
+        Scalar totalWriteTime = simulator().totalWriteTime();
         int numProcesses = this->gridView().comm().size();
         int threadsPerProcess = ThreadManager::maxThreads();
         if (gridView().comm().rank() == 0) {
@@ -326,12 +327,14 @@ public:
                       << ", " << solveTime_/realTime*100 << "%\n"
                       << "  Newton update time: " << Simulator::humanReadableTime(updateTime_, /*isAmendment=*/false)
                       << ", " << updateTime_/realTime*100 << "%\n"
+                      << "  Vis output write time: " << Simulator::humanReadableTime(totalWriteTime, /*isAmendment=*/false)
+                      << ", " << totalWriteTime/realTime*100 << "%\n"
                       << "\n"
                       << "Note 1: If not stated otherwise, all times\n"
                       << "        are wall clock times\n"
                       << "Note 2: Taxes and administrative overhead\n"
                       << "        are "
-                      << (realTime - (assembleTime_+solveTime_+updateTime_))/realTime*100
+                      << (realTime - (assembleTime_+solveTime_+updateTime_+totalWriteTime))/realTime*100
                       << "% of total execution time.\n"
                       << "\n"
                       << "Our simulation hours are 24/7. Thank you for\n"
