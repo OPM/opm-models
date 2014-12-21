@@ -215,6 +215,9 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 // disable partial relinearization by default
 SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
 
+// use the default tolerance to determine the degrees of freedom to be relinearized
+SET_SCALAR_PROP(FvBaseDiscretization, RelinearizationToleranceFactor, 1.0);
+
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
 

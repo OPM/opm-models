@@ -62,6 +62,9 @@ NEW_PROP_TAG(NewtonMethod);
 //! the current solution deviates too much from the evaluation point
 NEW_PROP_TAG(EnablePartialRelinearization);
 
+//! some user adjustable knob to increase or decrease the reliniearization tolerance.
+NEW_PROP_TAG(RelinearizationToleranceFactor);
+
 //! Enable linearization recycling?
 NEW_PROP_TAG(EnableLinearizationRecycling);
 
@@ -115,7 +118,13 @@ public:
      * \brief Register all run-time parameters of the Newton method.
      */
     static void registerParameters()
-    { ParentType::registerParameters(); }
+    {
+        ParentType::registerParameters();
+
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor,
+                             "The scaling factor from the default tolerance used for partial "
+                             "relinearization");
+    }
 
 protected:
     friend class Ewoms::NewtonMethod<TypeTag>;
@@ -165,13 +174,14 @@ protected:
             Scalar linearTol =
                 this->error_ * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
             Scalar newtonTol = this->tolerance();
+            Scalar factor = EWOMS_GET_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor);
 
             Scalar relinearizationTol = 0.01*linearTol;
             if (relinearizationTol < newtonTol/10)
                 relinearizationTol = newtonTol/10;
 
             model_().linearizer().updateDiscrepancy(previousResidual);
-            model_().linearizer().computeColors(relinearizationTol);
+            model_().linearizer().computeColors(relinearizationTol*factor);
         }
 
         // update the solution
