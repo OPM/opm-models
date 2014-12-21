@@ -403,8 +403,11 @@ public:
         Scalar dtNext = std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
                                  newtonMethod().suggestTimeStepSize(simulator().timeStepSize()));
 
-        if (simulator().episodeMaxTimeStepSize()  < dtNext*2)
-            dtNext = simulator().episodeMaxTimeStepSize()/2;
+        if (dtNext < simulator().maxTimeStepSize()
+            && simulator().maxTimeStepSize() < dtNext*2)
+        {
+            dtNext = simulator().maxTimeStepSize()/2 * 1.01;
+        }
 
         return dtNext;
     }
