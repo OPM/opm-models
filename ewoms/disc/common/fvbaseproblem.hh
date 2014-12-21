@@ -400,8 +400,13 @@ public:
      */
     Scalar nextTimeStepSize()
     {
-        return std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
-                        newtonMethod().suggestTimeStepSize(simulator().timeStepSize()));
+        Scalar dtNext = std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
+                                 newtonMethod().suggestTimeStepSize(simulator().timeStepSize()));
+
+        if (simulator().episodeMaxTimeStepSize()  < dtNext*2)
+            dtNext = simulator().episodeMaxTimeStepSize()/2;
+
+        return dtNext;
     }
 
     /*!
