@@ -179,8 +179,8 @@ public:
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
 
-        assert(residual.size() == numDof);
-        assert(storage.size() == numPrimaryDof);
+        assert(static_cast<int>(residual.size()) == numDof);
+        assert(static_cast<int>(storage.size()) == numPrimaryDof);
 
 #if !defined NDEBUG
         for (int i=0; i < numPrimaryDof; i++) {
