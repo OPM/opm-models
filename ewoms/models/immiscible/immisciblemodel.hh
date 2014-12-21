@@ -288,7 +288,7 @@ public:
         // to an undefined value, so we have to iterate...
         int nDof = this->numTotalDof();
         for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
-            if (this->dofTotalVolume(dofIdx) > 0) {
+            if (this->isLocalDof(dofIdx)) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
                 break;

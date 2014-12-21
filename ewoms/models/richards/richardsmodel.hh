@@ -342,7 +342,7 @@ public:
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
         for (size_t dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
-            if (this->dofTotalVolume(dofIdx) > 0) {
+            if (this->isLocalDof(dofIdx)) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressureWIdx];
                 break;

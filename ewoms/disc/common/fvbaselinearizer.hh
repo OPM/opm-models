@@ -232,8 +232,8 @@ public:
         }
 
         // reset all degree of freedom colors to green
-        for (unsigned i = 0; i < dofColor_.size(); ++i)
-            dofColor_[i] = Green;
+        for (unsigned dofIdx = 0; dofIdx < dofColor_.size(); ++dofIdx)
+            dofColor_[dofIdx] = Green;
     }
 
     /*!
@@ -300,8 +300,8 @@ public:
         // update the vector which stores the error for partial
         // relinearization for each degree of freedom
         for (unsigned globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-            if (model_().dofTotalVolume(globalDofIdx) <= 0) {
-                // ignore degrees of freedom of overlap and ghost elements
+            if (!model_().isLocalDof(globalDofIdx)) {
+                // ignore degrees of freedom of overlap and ghost degrees of freedom
                 dofError_[globalDofIdx] = 0;
                 continue;
             }
@@ -362,14 +362,17 @@ public:
         // mark the red degrees of freedom and update the tolerance of
         // the linearization which actually will get achieved
         nextRelinearizationAccuracy_ = 0;
-        for (unsigned i = 0; i < dofColor_.size(); ++i) {
-            if (dofError_[i] > tolerance)
+        for (unsigned dofIdx = 0; dofIdx < dofColor_.size(); ++dofIdx) {
+            if (dofError_[dofIdx] > tolerance)
                 // mark the degree of freedom 'red' if discrepancy is
                 // larger than the given tolerance
-                dofColor_[i] = Red;
+                dofColor_[dofIdx] = Red;
+            else if (!model_().isLocalDof(dofIdx))
+                // always mark non-local degrees of freedom as red
+                dofColor_[dofIdx] = Red;
             else
                 nextRelinearizationAccuracy_ =
-                    std::max(nextRelinearizationAccuracy_, dofError_[i]);
+                    std::max(nextRelinearizationAccuracy_, dofError_[dofIdx]);
         }
 
         Stencil stencil(gridView_());
@@ -493,18 +496,18 @@ public:
                                 Dune::ForwardCommunication);
 
         // promote the remaining orange degrees of freedom to red
-        for (unsigned i = 0; i < dofColor_.size(); ++i) {
+        for (unsigned dofIdx = 0; dofIdx < dofColor_.size(); ++dofIdx) {
             // if a degree of freedom is green or yellow don't do anything!
-            if (dofColor_[i] == Green || dofColor_[i] == Yellow)
+            if (dofColor_[dofIdx] == Green || dofColor_[dofIdx] == Yellow)
                 continue;
 
             // make sure the degree of freedom is red (this is a no-op
             // degrees of freedom which are already red!)
-            dofColor_[i] = Red;
+            dofColor_[dofIdx] = Red;
 
             // set the error of this degree of freedom to 0 because
             // the system will be relinearized at this dof
-            dofError_[i] = 0.0;
+            dofError_[dofIdx] = 0.0;
         }
     }
 
@@ -715,6 +718,11 @@ private:
         // always reset the right hand side fully.
         residual_ = 0.0;
 
+        if (enableLinearizationRecycling_()) {
+            for (unsigned dofIdx=0; dofIdx < numGridDof; ++ dofIdx)
+                storageTerm_[dofIdx] = 0.0;
+        }
+
         if (!enablePartialRelinearization_()) {
             // If partial re-linearization of the Jacobian is not enabled, we can just
             // reset everything!
@@ -722,14 +730,13 @@ private:
 
             // reset the parts needed for Jacobian recycling
             if (enableLinearizationRecycling_()) {
-                for (unsigned i=0; i < numGridDof; ++ i) {
-                    storageJacobian_[i] = 0.0;
-                    storageTerm_[i] = 0.0;
-                }
+                for (unsigned dofIdx=0; dofIdx < numGridDof; ++ dofIdx)
+                    storageJacobian_[dofIdx] = 0.0;
             }
 
             return;
         }
+
 
         // reset all entries which connect two non-green degrees of freedom
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {

@@ -391,12 +391,19 @@ public:
             }
         }
 
+        // determine which DOFs should be considered to lie fully in the interior of the
+        // local process grid partition: those which do not have a non-zero volume
+        // before taking the peer processes into account...
+        isLocalDof_.resize(nDofs);
+        for (int dofIdx = 0; dofIdx < nDofs; ++dofIdx)
+            isLocalDof_[dofIdx] = (dofTotalVolume_[dofIdx] != 0.0);
+
         // add the volumes of the DOFs on the process boundaries
         const auto sumHandle =
             GridCommHandleFactory::template sumHandle<Scalar>(dofTotalVolume_,
                                                               asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
-                              Dune::InteriorBorder_InteriorBorder_Interface,
+                              Dune::Overlap_All_Interface,
                               Dune::ForwardCommunication);
 
         // sum up the volumes of the grid partitions
@@ -831,11 +838,18 @@ public:
     /*!
      * \brief Returns the volume \f$\mathrm{[m^3]}\f$ of a given control volume.
      *
-     * \param globalIdx The global index of the control volume's
-     *                  associated vertex
+     * \param globalIdx The global index of the degree of freedom
      */
     Scalar dofTotalVolume(int globalIdx) const
     { return dofTotalVolume_[globalIdx]; }
+
+    /*!
+     * \brief Returns if the overlap of the volume ofa degree of freedom is non-zero.
+     *
+     * \param globalIdx The global index of the degree of freedom
+     */
+    bool isLocalDof(int globalIdx) const
+    { return isLocalDof_[globalIdx]; }
 
     /*!
      * \brief Returns the volume \f$\mathrm{[m^3]}\f$ of the whole grid which represents
@@ -1567,6 +1581,7 @@ protected:
 
     Scalar gridTotalVolume_;
     std::vector<Scalar> dofTotalVolume_;
+    std::vector<bool> isLocalDof_;
 };
 } // namespace Ewoms
 

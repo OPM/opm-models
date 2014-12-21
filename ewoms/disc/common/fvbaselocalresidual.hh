@@ -234,9 +234,9 @@ public:
 #if !defined NDEBUG
             // in debug mode, we set the residual for the DOFs in the overlap to NaN
             else {
-                residual[dofIdx] = std::numeric_limits<Scalar>::quiet_NaN();
+                residual[dofIdx] = 0;
                 Valgrind::SetUndefined(residual[dofIdx]);
-        }
+            }
 #endif
         }
 
