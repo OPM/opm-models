@@ -131,3 +131,9 @@
            * \defgroup VcfvVtk VTK
            * \brief Various Modules to Write VTK Output
            */
+
+/*!
+ * \defgroup EclBlackOilSimulator ECL compatible black-oil simulator
+ * \brief A simulator for ECL input decks which uses the
+ *        fully-implicit element centered black-oil model
+ */

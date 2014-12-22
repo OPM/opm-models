@@ -106,6 +106,8 @@ class EclWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
 };
 
 /*!
+ * \ingroup EclBlackOilSimulator
+ *
  * \brief Implements writing Ecl binary output files.
  *
  * Caveats:

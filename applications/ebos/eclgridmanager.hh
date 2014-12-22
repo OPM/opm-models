@@ -70,7 +70,7 @@ SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
 
 namespace Ewoms {
 /*!
- * \ingroup TestProblems
+ * \ingroup EclBlackOilSimulator
  *
  * \brief Helper class for grid instantiation of ECL file-format using problems.
  */

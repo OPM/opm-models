@@ -86,6 +86,8 @@ public:
 };
 
 /*!
+ * \ingroup EclBlackOilSimulator
+ *
  * \brief This is a smart pointer class for ERT's ecl_kw_type
  *        structure.
  */
@@ -186,6 +188,8 @@ private:
 };
 
 /*!
+ * \ingroup EclBlackOilSimulator
+ *
  * \brief This is a smart pointer class for ERT's ecl_grid_type
  *        structure.
  */
@@ -258,6 +262,8 @@ private:
 };
 
 /*!
+ * \ingroup EclBlackOilSimulator
+ *
  * \brief This is a smart pointer class for ERT's ecl_rst_file_type
  *        structure.
  */
@@ -337,6 +343,8 @@ private:
 };
 
 /**
+ * \ingroup EclBlackOilSimulator
+ *
  * \brief The ErtSolution class wraps the actions that must be done to the
  *        restart file while writing solution variables; it is not a handle on
  *        its own.
@@ -368,6 +376,14 @@ private:
     std::list<std::shared_ptr<const ErtBaseKeyword>> attachedKeywords_;
 };
 
+/**
+ * \ingroup EclBlackOilSimulator
+ *
+ * \brief The ErtSummary class wraps the actions that must be done to write ECL
+ *        summary file.
+ *
+ * These files log the well performance, etc...
+ */
 template <class TypeTag>
 class ErtSummary
 {
@@ -409,6 +425,12 @@ private:
     ecl_sum_type *ertHandle_;
 };
 
+/**
+ * \ingroup EclBlackOilSimulator
+ *
+ * \brief The ErtSummary class wraps the ERT handles which are required to write a single
+ *        time step to the ECL summary file.
+ */
 template <class TypeTag>
 class ErtSummaryTimeStep
 {

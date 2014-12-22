@@ -52,6 +52,8 @@ template <class TypeTag>
 class EclSummaryWriter;
 
 /*!
+ * \ingroup EclBlackOilSimulator
+ *
  * \brief Implements writing of ECL summary files.
  *
  * i.e., well rates, bottom hole pressures, etc.
