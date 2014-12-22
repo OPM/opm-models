@@ -750,7 +750,7 @@ private:
             ColIterator colIt = (*matrix_)[dofIdx].begin();
             const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                if (dofColor_[colIt.index()] != Green)
+                if (colIt.index() < numGridDof && dofColor_[colIt.index()] != Green)
                     (*colIt) = 0.0;
             }
         }
