@@ -104,14 +104,35 @@ public:
         : ParentType(simulator)
     {
         std::string fileName = EWOMS_GET_PARAM(TypeTag, std::string, EclDeckFileName);
-        boost::filesystem::path deckPath(fileName);
-        caseName_ = boost::to_upper_copy(deckPath.stem().string());
+
+        // compute the base name of the input file name
+        const char directorySeparator = '/';
+        int i;
+        for (i = fileName.size(); i >= 0; -- i)
+            if (fileName[i] == directorySeparator)
+                break;
+        std::string baseName = fileName.substr(i + 1, fileName.size());
+
+        // remove the extension from the input file
+        for (i = baseName.size(); i >= 0; -- i)
+            if (baseName[i] == '.')
+                break;
+        std::string rawCaseName;
+        if (i < 0)
+            rawCaseName = baseName;
+        else
+            rawCaseName = baseName.substr(0, i);
+
+        // transform the result to ALL_UPPERCASE
+        caseName_ = "";
+        for (size_t i = 0; i < rawCaseName.size(); ++i)
+            caseName_ += std::toupper(rawCaseName[i]);
 
         Opm::ParserPtr parser(new Opm::Parser());
         Opm::LoggerPtr opmLog(new Opm::Logger());
 
         try {
-            deck_ = parser->parseFile(deckPath.string(), opmLog);
+            deck_ = parser->parseFile(fileName, opmLog);
             Opm::checkDeck(deck_, opmLog);
             eclState_.reset(new Opm::EclipseState(deck_, opmLog));
         }

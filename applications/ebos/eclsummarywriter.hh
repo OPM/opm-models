@@ -339,7 +339,7 @@ private:
     void addAllSummaryKeywords_()
     {
         // according to the Eclipse reference manual
-        std::vector<std::string> allKw = {{
+        std::string allKw[] = {
                 "FOPR", "GOPR", "WOPR", "FOPT",
                 "GOPT", "WOPT", "FOIR", "GOIR",
                 "WOIR", "FOIT", "GOIT", "WOIT",
@@ -359,8 +359,10 @@ private:
                 "FGIP", "FGIPL", "FGIPG", "FPR",
                 "FAQR", "FAQRG", "AAQR", "AAQRG",
                 "FAQT", "FAQTG", "AAQT", "AAQTG",
-            }};
-        for (size_t kwIdx = 0; kwIdx < allKw.size(); ++kwIdx)
+        };
+        int numSummaryKeywords = sizeof(allKw)/sizeof(allKw[0]);
+
+        for (int kwIdx = 0; kwIdx < numSummaryKeywords; ++kwIdx)
             summaryKeywords_.insert(allKw[kwIdx]);
     }
 
