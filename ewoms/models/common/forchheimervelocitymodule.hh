@@ -27,6 +27,8 @@
 #define EWOMS_FORCHHEIMER_MODULE_HH
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
+#include "darcyvelocitymodule.hh"
+
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -210,13 +212,16 @@ private:
  */
 template <class TypeTag>
 class ForchheimerExtensiveQuantities
+    : public DarcyExtensiveQuantities<TypeTag>
 {
+    typedef DarcyExtensiveQuantities<TypeTag> DarcyExtQuants;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
+
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -225,12 +230,6 @@ class ForchheimerExtensiveQuantities
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
 public:
-    /*!
-     * \brief Returns the relevant intrinsic permeability tensor.
-     */
-    const DimMatrix &intrinsicPermability() const
-    { return K_; }
-
     /*!
      * \brief Return the Ergun coefficent at the face's integration point.
      */
@@ -246,47 +245,81 @@ public:
     Scalar mobilityPassabilityRatio(int phaseIdx) const
     { return mobilityPassabilityRatio_[phaseIdx]; }
 
-    /*!
-     * \brief Return the filter velocity of a fluid phase at the
-     *        face's integration point [m/s]
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    const DimVector &filterVelocity(int phaseIdx) const
-    { return filterVelocity_[phaseIdx]; }
-
-    /*!
-     * \brief Return the volume flux of a fluid phase at the flux integration point
-     *        \f$[m^3/s]\f$
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    Scalar volumeFlux(int phaseIdx) const
-    { return volumeFlux_[phaseIdx]; }
-
 protected:
+    void calculateGradients_(const ElementContext &elemCtx,
+                             int faceIdx,
+                             int timeIdx)
+    {
+        DarcyExtQuants::calculateGradients_(elemCtx, faceIdx, timeIdx);
+
+        const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorDofIdx_, timeIdx);
+        const auto &intQuantsEx = elemCtx.intensiveQuantities(this->exteriorDofIdx_, timeIdx);
+
+        // calculate the square root of the intrinsic permeability
+        assert(isDiagonal_(this->K_));
+        sqrtK_ = 0.0;
+        for (int i = 0; i < dimWorld; ++i)
+            sqrtK_[i][i] = std::sqrt(this->K_[i][i]);
+
+        // obtain the Ergun coefficient. Lacking better ideas, we use its the arithmetic mean.
+        ergunCoefficient_ = (intQuantsIn.ergunCoefficient() + intQuantsEx.ergunCoefficient())/2;
+
+        // obtain the mobility to passability ratio for each phase.
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx))
+                continue;
+
+            const auto &up = elemCtx.intensiveQuantities(this->upstreamIndex_(phaseIdx), timeIdx);
+
+            density_[phaseIdx] = up.fluidState().density(phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] = up.mobilityPassabilityRatio(phaseIdx);
+        }
+    }
+
+    template <class FluidState>
+    void calculateBoundaryGradients_(const ElementContext &elemCtx,
+                                     int boundaryFaceIdx,
+                                     int timeIdx,
+                                     const FluidState& fluidState,
+                                     const typename FluidSystem::ParameterCache& paramCache)
+    {
+        DarcyExtQuants::calculateBoundaryGradients_(elemCtx,
+                                                    boundaryFaceIdx,
+                                                    timeIdx,
+                                                    fluidState,
+                                                    paramCache);
+
+        const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorDofIdx_, timeIdx);
+
+        // obtain the Ergun coefficient. Because we are on the boundary here, we will
+        // take the Ergun coefficient of the interior
+        ergunCoefficient_ = intQuantsIn.ergunCoefficient();
+
+        // calculate the square root of the intrinsic permeability
+        assert(isDiagonal_(this->K_));
+        sqrtK_ = 0.0;
+        for (int i = 0; i < dimWorld; ++i)
+            sqrtK_[i][i] = std::sqrt(this->K_[i][i]);
+
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx))
+                continue;
+
+            density_[phaseIdx] = intQuantsIn.fluidState().density(phaseIdx);
+            mobilityPassabilityRatio_[phaseIdx] = intQuantsIn.mobilityPassabilityRatio(phaseIdx);
+        }
+    }
+
     /*!
      * \brief Calculate the filter velocities of all phases
      *
      * The pressure potentials and upwind directions must already be
      * determined before calling this method!
      */
-    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx,
-                              int timeIdx)
+    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
-        const auto &problem = elemCtx.problem();
-
         const auto &intQuantsI = elemCtx.intensiveQuantities(asImp_().interiorIndex(), timeIdx);
         const auto &intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
-
-        // calculate the intrinsic permeability
-        problem.intersectionIntrinsicPermeability(K_, elemCtx, scvfIdx, timeIdx);
-        Valgrind::CheckDefined(K_);
-
-        assert(isDiagonal_(K_));
-        sqrtK_ = 0.0;
-        for (int i = 0; i < dimWorld; ++i)
-            sqrtK_[i][i] = std::sqrt(K_[i][i]);
 
         const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const auto &normal = scvf.normal();
@@ -301,18 +334,13 @@ protected:
         ///////////////
         for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                filterVelocity_[phaseIdx] = 0;
-                volumeFlux_[phaseIdx] = 0;
+                this->filterVelocity_[phaseIdx] = 0;
+                this->volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
-            const auto &up = elemCtx.intensiveQuantities(asImp_().upstreamIndex(phaseIdx), timeIdx);
-            density_[phaseIdx] = up.fluidState().density(phaseIdx);
-            mobility_[phaseIdx] = up.mobility(phaseIdx);
-            mobilityPassabilityRatio_[phaseIdx] = up.mobilityPassabilityRatio(phaseIdx);
-
             calculateForchheimerVelocity_(phaseIdx);
-            volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+            this->volumeFlux_[phaseIdx] = (this->filterVelocity_[phaseIdx] * normal);
         }
     }
 
@@ -320,85 +348,43 @@ protected:
      * \brief Calculate the filter velocities of all phases at the domain
      * boundary
      */
-    template <class Context, class FluidState>
-    void calculateBoundaryVelocities_(
-        const Context &context, int bfIdx, int timeIdx,
-        const FluidState &fluidState,
-        const typename FluidSystem::ParameterCache &paramCache)
+    void calculateBoundaryVelocities_(const ElementContext& elemCtx,
+                                      int bfIdx,
+                                      int timeIdx)
     {
-        const auto &elemCtx = context.elementContext();
-        const auto &problem = elemCtx.problem();
-        int insideScvIdx = asImp_().interiorIndex();
-        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
-        const auto &fsInside = intQuantsInside.fluidState();
-
-        // calculate the intrinsic permeability
-        K_ = intQuantsInside.intrinsicPermeability();
-
-        assert(isDiagonal_(K_));
-        sqrtK_ = 0.0;
-        for (int i = 0; i < dimWorld; ++i)
-            sqrtK_[i][i] = std::sqrt(K_[i][i]);
-
-        const auto &boundaryFace = context.stencil(timeIdx).boundaryFace(bfIdx);
+        const auto &boundaryFace = elemCtx.stencil(timeIdx).boundaryFace(bfIdx);
         const auto &normal = boundaryFace.normal();
-        const auto &matParams = problem.materialLawParams(elemCtx, insideScvIdx, timeIdx);
-
-        Scalar kr[numPhases];
-        MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
-
-        // obtain the Ergun coefficient. Because we are on the boundary here, we will
-        // take the Ergun coefficient of the interior
-        ergunCoefficient_ = intQuantsInside.ergunCoefficient();
 
         ///////////////
         // calculate the weights of the upstream and the downstream degrees of freedom
         ///////////////
         for (int phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                filterVelocity_[phaseIdx] = 0;
-                volumeFlux_[phaseIdx] = 0;
+                this->filterVelocity_[phaseIdx] = 0;
+                this->volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
-            // calculate the actual darcy velocities by multiplying
-            // the current "filter velocity" with the upstream mobility
-            if (fsInside.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
-                // the outside of the domain has higher pressure. we
-                // need to calculate the mobility
-                mobility_[phaseIdx] =
-                    kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-                density_[phaseIdx] = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            }
-            else {
-                mobility_[phaseIdx] = intQuantsInside.mobility(phaseIdx);
-                density_[phaseIdx] = fsInside.density(phaseIdx);
-            }
-
-            // take the mobility/passability ratio of the phase from the inside
-            // SCV
-            mobilityPassabilityRatio_[phaseIdx] = intQuantsInside.mobilityPassabilityRatio(phaseIdx);
-
             calculateForchheimerVelocity_(phaseIdx);
-            volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+            this->volumeFlux_[phaseIdx] = (this->filterVelocity_[phaseIdx] * normal);
         }
     }
 
     void calculateForchheimerVelocity_(int phaseIdx)
     {
         // initial guess: filter velocity is zero
-        DimVector &velocity = filterVelocity_[phaseIdx];
+        DimVector &velocity = this->filterVelocity_[phaseIdx];
         velocity = 0;
 
-        DimVector deltaV(1e5); // the change of velocity between two consecutive
-                               // Newton iterations
-        DimVector residual;    // the residual (function value that is to be
-                               // minimized ) of the equation that is to be
-                               // fulfilled
-        DimMatrix gradResid;   // slope of equation that is to be solved
+        // the change of velocity between two consecutive Newton iterations
+        DimVector deltaV(1e5);
+        // the function value that is to be minimized of the equation that is to be
+        // fulfilled
+        DimVector residual;
+        // derivative of equation that is to be solved
+        DimMatrix gradResid;
 
-        // search by means of the Newton method for a root of Forchheimer
-        // equation
+        // search by means of the Newton method for a root of Forchheimer equation
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-11) {
             if (newtonIter >= 50)
@@ -418,31 +404,32 @@ protected:
 
     void forchheimerResid_(DimVector &residual, int phaseIdx) const
     {
-        const auto &imp = asImp_();
-
-        const DimVector &velocity = filterVelocity_[phaseIdx];
+        const DimVector &velocity = this->filterVelocity_[phaseIdx];
 
         // Obtaining the upstreamed quantities
-        Scalar mobility = mobility_[phaseIdx];
+        Scalar mobility = this->mobility_[phaseIdx];
         Scalar density = density_[phaseIdx];
         Scalar mobilityPassabilityRatio = mobilityPassabilityRatio_[phaseIdx];
 
         // optain the quantites for the integration point
-        const auto &pGrad = imp.potentialGrad(phaseIdx);
+        const auto &pGrad = this->potentialGrad_[phaseIdx];
 
         // residual = v_\alpha
         residual = velocity;
 
         // residual += mobility_\alpha K(\grad p_\alpha - \rho_\alpha g)
-        K_.usmv(mobility, pGrad, residual);
+        this->K_.usmv(mobility, pGrad, residual);
 
         // Forchheimer turbulence correction:
         //
-        // residual += \rho_\alpha * mobility_\alpha * C_E / \eta_{r,\alpha} *
-        // abs(v_\alpha) * sqrt(K)*v_\alpha
-        sqrtK_.usmv(density * mobilityPassabilityRatio * ergunCoefficient_
-                    * velocity.two_norm(),
-                    velocity, residual);
+        // residual +=
+        //   \rho_\alpha
+        //   * mobility_\alpha
+        //   * C_E / \eta_{r,\alpha}
+        //   * abs(v_\alpha) * sqrt(K)*v_\alpha
+        sqrtK_.usmv(density*mobilityPassabilityRatio*ergunCoefficient_*velocity.two_norm(),
+                    velocity,
+                    residual);
 
         Valgrind::CheckDefined(residual);
     }
@@ -450,7 +437,7 @@ protected:
     void gradForchheimerResid_(DimVector &residual, DimMatrix &gradResid,
                                int phaseIdx)
     {
-        DimVector &velocity = filterVelocity_[phaseIdx];
+        DimVector &velocity = this->filterVelocity_[phaseIdx];
         forchheimerResid_(residual, phaseIdx);
 
         Scalar eps = 1e-11;
@@ -496,7 +483,6 @@ private:
 
 protected:
     // intrinsic permeability tensor and its square root
-    DimMatrix K_;
     DimMatrix sqrtK_;
 
     // Ergun coefficient of all phases at the integration point
@@ -507,15 +493,6 @@ protected:
 
     // Density of all phases at the integration point
     Scalar density_[numPhases];
-
-    // Mobility of all phases at the integration point
-    Scalar mobility_[numPhases];
-
-    // filter velocities of all phases [m/s]
-    DimVector filterVelocity_[numPhases];
-
-    // the volumetric flux of all fluid phases over at the flux integration point [m^3/s]
-    Scalar volumeFlux_[numPhases];
 };
 
 } // namespace Ewoms

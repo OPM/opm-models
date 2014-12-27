@@ -144,6 +144,15 @@ public:
     { return K_; }
 
     /*!
+     * \brief Return the pressure potential gradient of a fluid phase
+     *        at the face's integration point [Pa/m]
+     *
+     * \param phaseIdx The index of the fluid phase
+     */
+    const DimVector &potentialGrad(int phaseIdx) const
+    { return potentialGrad_[phaseIdx]; }
+
+    /*!
      * \brief Return the filter velocity of a fluid phase at the
      *        face's integration point [m/s]
      *
@@ -153,8 +162,11 @@ public:
     { return filterVelocity_[phaseIdx]; }
 
     /*!
-     * \brief Return the volume flux of a fluid phase at the
-     *        face's integration point \f$[m^3/s]\f$
+     * \brief Return the volume flux of a fluid phase at the face's integration point
+     *        \f$[m^3/s / m^2]\f$
+     *
+     * This is the fluid volume of a phase per second and per square meter of face
+     * area.
      *
      * \param phaseIdx The index of the fluid phase
      */
@@ -162,110 +174,285 @@ public:
     { return volumeFlux_[phaseIdx]; }
 
 protected:
+    short upstreamIndex_(int phaseIdx) const
+    { return upstreamDofIdx_[phaseIdx]; }
+
+    short downstreamIndex_(int phaseIdx) const
+    { return downstreamDofIdx_[phaseIdx]; }
+
+    /*!
+     * \brief Calculate the gradients which are required to determine the velocity
+     *
+     * The the upwind directions is also determined by method.
+     */
+    void calculateGradients_(const ElementContext &elemCtx,
+                             int faceIdx,
+                             int timeIdx)
+    {
+        const auto& gradCalc = elemCtx.gradientCalculator();
+        Ewoms::PressureCallback<TypeTag> pressureCallback(elemCtx);
+
+        const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
+        const auto &faceNormal = scvf.normal();
+
+        interiorDofIdx_ = scvf.interiorIndex();
+        exteriorDofIdx_ = scvf.exteriorIndex();
+
+        // calculate the "raw" pressure gradient
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
+                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
+                continue;
+            }
+
+            pressureCallback.setPhaseIndex(phaseIdx);
+            gradCalc.calculateGradient(potentialGrad_[phaseIdx],
+                                       elemCtx,
+                                       faceIdx,
+                                       pressureCallback);
+        }
+
+        // correct the pressure gradients by the gravitational acceleration
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
+            // estimate the gravitational acceleration at a given SCV face
+            // using the arithmetic mean
+            const auto& gIn = elemCtx.problem().gravity(elemCtx, interiorDofIdx_, timeIdx);
+            const auto& gEx = elemCtx.problem().gravity(elemCtx, exteriorDofIdx_, timeIdx);
+
+            const auto &intQuantsIn = elemCtx.intensiveQuantities(interiorDofIdx_, timeIdx);
+            const auto &intQuantsEx = elemCtx.intensiveQuantities(exteriorDofIdx_, timeIdx);
+
+            const auto &posIn = elemCtx.pos(interiorDofIdx_, timeIdx);
+            const auto &posEx = elemCtx.pos(exteriorDofIdx_, timeIdx);
+            const auto &posFace = scvf.integrationPos();
+
+            // the distance between the centers of the control volumes
+            DimVector distVecIn(posIn);
+            DimVector distVecEx(posEx);
+            DimVector distVecTotal(posEx);
+
+            distVecIn -= posFace;
+            distVecEx -= posFace;
+            distVecTotal -= posIn;
+            Scalar absDistTotalSquared = distVecTotal.two_norm2();
+            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+                if (!elemCtx.model().phaseIsConsidered(phaseIdx))
+                    continue;
+
+                // calculate the hydrostatic pressure at the integration point of the face
+                Scalar rhoIn = intQuantsIn.fluidState().density(phaseIdx);
+                Scalar rhoEx = intQuantsEx.fluidState().density(phaseIdx);
+
+                Scalar pStatIn = - rhoIn*(gIn*distVecIn);
+                Scalar pStatEx = - rhoEx*(gEx*distVecEx);
+
+                // compute the hydrostatic gradient between the two control volumes (this
+                // gradient exhibitis the same direction as the vector between the two
+                // control volume centers and the length (pStaticExterior -
+                // pStaticInterior)/distanceInteriorToExterior
+                auto f(distVecTotal);
+                f *= (pStatEx - pStatIn)/absDistTotalSquared;
+
+                // calculate the final potential gradient
+                potentialGrad_[phaseIdx] += f;
+
+                if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
+                    OPM_THROW(Opm::NumericalProblem,
+                              "Non finite potential gradient for phase '"
+                              << FluidSystem::phaseName(phaseIdx) << "'");
+                }
+            }
+        } // if (enableGravity)
+
+        Valgrind::SetUndefined(K_);
+        elemCtx.problem().intersectionIntrinsicPermeability(K_, elemCtx, faceIdx, timeIdx);
+        Valgrind::CheckDefined(K_);
+
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
+                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
+                continue;
+            }
+
+            // determine the upstream and downstream DOFs
+            if (potentialGrad_[phaseIdx]*faceNormal > 0) {
+                upstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
+                downstreamDofIdx_[phaseIdx] = interiorDofIdx_;
+            }
+            else {
+                upstreamDofIdx_[phaseIdx] = interiorDofIdx_;
+                downstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
+            }
+
+            const auto &up = elemCtx.intensiveQuantities(upstreamDofIdx_[phaseIdx], timeIdx);
+            mobility_[phaseIdx] = up.mobility(phaseIdx);
+        }
+    }
+
+    /*!
+     * \brief Calculate the gradients at the grid boundary which are required to
+     *        determine the velocity
+     *
+     * The the upwind directions is also determined by method.
+     */
+    template <class FluidState>
+    void calculateBoundaryGradients_(const ElementContext &elemCtx,
+                                     int boundaryFaceIdx,
+                                     int timeIdx,
+                                     const FluidState& fluidState,
+                                     const typename FluidSystem::ParameterCache &paramCache)
+    {
+        const auto& gradCalc = elemCtx.gradientCalculator();
+        Ewoms::BoundaryPressureCallback<TypeTag, FluidState> pressureCallback(elemCtx, fluidState);
+
+        // calculate the pressure gradient
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
+                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
+                continue;
+            }
+
+            pressureCallback.setPhaseIndex(phaseIdx);
+            gradCalc.calculateBoundaryGradient(potentialGrad_[phaseIdx],
+                                               elemCtx,
+                                               boundaryFaceIdx,
+                                               pressureCallback);
+        }
+
+        const auto& scvf = elemCtx.stencil(timeIdx).boundaryFace(boundaryFaceIdx);
+        interiorDofIdx_ = scvf.interiorIndex();
+        exteriorDofIdx_ = -1;
+
+        // calculate the intrinsic permeability
+        const auto &intQuantsIn = elemCtx.intensiveQuantities(interiorDofIdx_, timeIdx);
+        K_ = intQuantsIn.intrinsicPermeability();
+
+        // correct the pressure gradients by the gravitational acceleration
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
+            // estimate the gravitational acceleration at a given SCV face
+            // using the arithmetic mean
+            const auto& gIn = elemCtx.problem().gravity(elemCtx, interiorDofIdx_, timeIdx);
+            const auto& posIn = elemCtx.pos(interiorDofIdx_, timeIdx);
+            const auto& posFace = scvf.integrationPos();
+
+            // the distance between the face center and the center of the control volume
+            DimVector distVecIn(posIn);
+            distVecIn -= posFace;
+
+            Scalar absDist = distVecIn.two_norm();
+
+            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+                if (!elemCtx.model().phaseIsConsidered(phaseIdx))
+                    continue;
+
+                // calculate the hydrostatic pressure at the integration point of the face
+                Scalar rhoIn = intQuantsIn.fluidState().density(phaseIdx);
+                Scalar pStatIn = - rhoIn*(gIn*distVecIn);
+
+                // compute the hydrostatic gradient between the two control volumes (this
+                // gradient exhibitis the same direction as the vector between the two
+                // control volume centers and the length (pStaticExterior -
+                // pStaticInterior)/distanceInteriorToExterior
+                auto f(distVecIn);
+                f *= (0 - pStatIn)/(absDist);
+
+                // calculate the final potential gradient
+                potentialGrad_[phaseIdx] += f;
+
+                if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
+                    OPM_THROW(Opm::NumericalProblem,
+                               "Non finite potential gradient for phase '"
+                               << FluidSystem::phaseName(phaseIdx) << "'");
+                }
+            }
+        }
+
+        // determine the upstream and downstream DOFs
+        const auto &faceNormal = scvf.normal();
+
+        const auto &matParams = elemCtx.problem().materialLawParams(elemCtx, interiorDofIdx_, timeIdx);
+
+        Scalar kr[numPhases];
+        MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
+
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx))
+                continue;
+
+            if (potentialGrad_[phaseIdx]*faceNormal > 0) {
+                upstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
+                downstreamDofIdx_[phaseIdx] = interiorDofIdx_;
+            }
+            else {
+                upstreamDofIdx_[phaseIdx] = interiorDofIdx_;
+                downstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
+            }
+
+            // calculate the actual darcy velocities by multiplying
+            // the current "filter velocity" with the upstream mobility
+            if (upstreamDofIdx_[phaseIdx] < 0)
+                // the exterior of the domain has higher pressure. the boundary condition
+                // determines the mobility
+                mobility_[phaseIdx] =
+                    kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+            else
+                mobility_[phaseIdx] = intQuantsIn.mobility(phaseIdx);
+        }
+    }
+
     /*!
      * \brief Calculate the filter velocities of all phases
      *
      * The pressure potentials and upwind directions must already be
      * determined before calling this method!
      */
-    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void calculateVelocities_(const ElementContext& elemCtx, int scvfIdx, int timeIdx)
     {
-        const auto &problem = elemCtx.problem();
-
         const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const DimVector &normal = scvf.normal();
         Valgrind::CheckDefined(normal);
 
-        problem.intersectionIntrinsicPermeability(K_, elemCtx, scvfIdx, timeIdx);
-        Valgrind::CheckDefined(K_);
-
-        ///////////////
-        // calculate the weights of the upstream and the downstream
-        // control volumes
-        ///////////////
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-        {
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
-            const auto &up = elemCtx.intensiveQuantities(asImp_().upstreamIndex(phaseIdx), timeIdx);
-            mobility_[phaseIdx] = up.mobility(phaseIdx);
-
-            calculateDarcyVelocity_(phaseIdx);
+            asImp_().calculateFilterVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
         }
     }
 
     /*!
-     * \brief Calculate the filter velocities of all phases at the domain boundary
+     * \brief Calculate the filter velocities at a boundary face of all fluid phases
+     *
+     * The pressure potentials and upwind directions must already be determined before
+     * calling this method!
      */
-    template <class Context, class FluidState>
-    void calculateBoundaryVelocities_(const Context &context,
-                                      int bfIdx,
-                                      int timeIdx,
-                                      const FluidState &fluidState,
-                                      const typename FluidSystem::ParameterCache &paramCache)
+    void calculateBoundaryVelocities_(const ElementContext& elemCtx,
+                                      int boundaryFaceIdx,
+                                      int timeIdx)
     {
-        const auto &elemCtx = context.elementContext();
-        const auto &problem = elemCtx.problem();
-        int interiorScvIdx = asImp_().interiorIndex();
-        const auto &intQuantsInterior = elemCtx.intensiveQuantities(interiorScvIdx, timeIdx);
-        const auto &fsInterior = intQuantsInterior.fluidState();
+        const auto &scvf = elemCtx.stencil(timeIdx).boundaryFace(boundaryFaceIdx);
+        const DimVector &normal = scvf.normal();
+        Valgrind::CheckDefined(normal);
 
-        // calculate the intrinsic permeability
-        K_ = intQuantsInterior.intrinsicPermeability();
-
-        const auto &boundaryFace = context.stencil(timeIdx).boundaryFace(bfIdx);
-        const auto &normal = boundaryFace.normal();
-
-        const auto &matParams = problem.materialLawParams(elemCtx, interiorScvIdx, timeIdx);
-
-        Scalar kr[numPhases];
-        MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
-
-        ///////////////
-        // calculate the weights of the upstream and the downstream
-        // control volumes
-        ///////////////
-        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-        {
-            if (!context.model().phaseIsConsidered(phaseIdx)) {
+        for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 filterVelocity_[phaseIdx] = 0;
                 volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 
-            // calculate the actual darcy velocities by multiplying
-            // the current "filter velocity" with the upstream mobility
-            if (fsInterior.pressure(phaseIdx) < fluidState.pressure(phaseIdx)) {
-                // the exterior of the domain has higher pressure. we
-                // need to calculate the mobility
-                mobility_[phaseIdx] =
-                    kr[phaseIdx]
-                    / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
-            }
-            else {
-                mobility_[phaseIdx] = intQuantsInterior.mobility(phaseIdx);
-            }
-
-            calculateDarcyVelocity_(phaseIdx);
-
-            Scalar tmp = 0;
-            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-                tmp += filterVelocity_[phaseIdx][dimIdx] * normal[dimIdx];
-
-            volumeFlux_[phaseIdx] = tmp;
+            asImp_().calculateFilterVelocity_(phaseIdx);
+            volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
         }
     }
 
-    void calculateDarcyVelocity_(int phaseIdx)
+    void calculateFilterVelocity_(int phaseIdx)
     {
-        // calculate the "prelimanary" filter velocity not
-        // taking the mobility into account
-        K_.mv(asImp_().potentialGrad(phaseIdx), filterVelocity_[phaseIdx]);
+        K_.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
         filterVelocity_[phaseIdx] *= - mobility_[phaseIdx];
     }
 
@@ -280,6 +467,12 @@ protected:
     // intrinsic permeability tensor and its square root
     DimMatrix K_;
 
+    // interior, exterior, upstream and downstream DOFs
+    short interiorDofIdx_;
+    short exteriorDofIdx_;
+    short upstreamDofIdx_[numPhases];
+    short downstreamDofIdx_[numPhases];
+
     // filter velocities of all phases [m/s]
     Scalar mobility_[numPhases];
 
@@ -289,6 +482,9 @@ protected:
     // the volumetric flux of all fluid phases over the control
     // volume's face [m^3/s]
     Scalar volumeFlux_[numPhases];
+
+    // pressure potential gradients of all phases
+    DimVector potentialGrad_[numPhases];
 };
 
 } // namespace Ewoms

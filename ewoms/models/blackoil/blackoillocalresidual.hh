@@ -73,9 +73,12 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
-                     int scvfIdx, int timeIdx) const
+    void computeFlux(RateVector &flux,
+                     const ElementContext &elemCtx,
+                     int scvfIdx,
+                     int timeIdx) const
     {
+        //std::cout << "------------\n";
         const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         const ExtensiveQuantities &evalPointExtQuants =
             elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
@@ -83,12 +86,18 @@ public:
         flux = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+            //if (std::abs(evalPointExtQuants.pressureDifferential_[phaseIdx]) > 1e-10)
+            //    std::cout << "upIdx: " << upIdx << "\n";
+
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
                 // add advective flux of current component in current phase
                 flux[conti0EqIdx + compIdx] +=
                     extQuants.volumeFlux(phaseIdx) * up.fluidState().molarity(phaseIdx, compIdx);
+
+                //typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+                //std::cout << "volFlux " << FluidSystem::phaseName(phaseIdx) << " = " << extQuants.volumeFlux(phaseIdx) << "\n";
 
                 assert(std::isfinite(flux[conti0EqIdx + compIdx]));
             }

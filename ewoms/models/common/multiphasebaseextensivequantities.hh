@@ -80,10 +80,8 @@ public:
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
 
-        const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
-
         // compute the pressure potential gradients
-        calculateGradients_(elemCtx, scvfIdx, timeIdx);
+        VelocityExtensiveQuantities::calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
         // determine the upstream indices. since this is a semi-smooth non-linear solver,
         // make upstream only look at the evaluation point for the upstream decision
@@ -98,18 +96,8 @@ public:
                     continue;
                 }
 
-                Scalar tmp = 0;
-                for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-                    tmp += potentialGrad(phaseIdx)[dimIdx] * scvf.normal()[dimIdx];
-
-                if (tmp > 0) {
-                    upstreamScvIdx_[phaseIdx] = this->exteriorIndex();
-                    downstreamScvIdx_[phaseIdx] = this->interiorIndex();
-                }
-                else {
-                    upstreamScvIdx_[phaseIdx] = this->interiorIndex();
-                    downstreamScvIdx_[phaseIdx] = this->exteriorIndex();
-                }
+                upstreamScvIdx_[phaseIdx] = VelocityExtensiveQuantities::upstreamIndex_(phaseIdx);
+                downstreamScvIdx_[phaseIdx] = VelocityExtensiveQuantities::downstreamIndex_(phaseIdx);
             }
         }
         else {
@@ -144,22 +132,15 @@ public:
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
 
-        calculateBoundaryGradients_(context, bfIdx, timeIdx, fluidState, paramCache);
-        VelocityExtensiveQuantities::calculateBoundaryVelocities_(context,
-                                                            bfIdx,
-                                                            timeIdx,
-                                                            fluidState,
-                                                            paramCache);
+        VelocityExtensiveQuantities::calculateBoundaryGradients_(context.elementContext(),
+                                                                 bfIdx,
+                                                                 timeIdx,
+                                                                 fluidState,
+                                                                 paramCache);
+        VelocityExtensiveQuantities::calculateBoundaryVelocities_(context.elementContext(),
+                                                                  bfIdx,
+                                                                  timeIdx);
     }
-
-    /*!
-     * \brief Return the pressure potential gradient of a fluid phase
-     *        at the face's integration point [Pa/m]
-     *
-     * \param phaseIdx The index of the fluid phase
-     */
-    const DimVector &potentialGrad(int phaseIdx) const
-    { return potentialGrad_[phaseIdx]; }
 
     /*!
      * \brief Return the local index of the upstream control volume for a given phase as
@@ -200,156 +181,8 @@ public:
     { return 1.0 - upstreamWeight(phaseIdx); }
 
 private:
-    void calculateGradients_(const ElementContext &elemCtx,
-                             int faceIdx,
-                             int timeIdx)
-    {
-        const auto& gradCalc = elemCtx.gradientCalculator();
-        Ewoms::PressureCallback<TypeTag> pressureCallback(elemCtx);
-
-        // calculate the pressure gradient
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
-                continue;
-            }
-
-            pressureCallback.setPhaseIndex(phaseIdx);
-            gradCalc.calculateGradient(potentialGrad_[phaseIdx],
-                                       elemCtx,
-                                       faceIdx,
-                                       pressureCallback);
-        }
-
-        const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
-        const auto& posFace = scvf.integrationPos();
-
-        // correct the pressure gradients by the gravitational acceleration
-        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
-            // estimate the gravitational acceleration at a given SCV face
-            // using the arithmetic mean
-            const auto& gIn = elemCtx.problem().gravity(elemCtx, this->interiorIndex(), timeIdx);
-            const auto& gEx = elemCtx.problem().gravity(elemCtx, this->exteriorIndex(), timeIdx);
-
-            const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorIndex(), timeIdx);
-            const auto &intQuantsEx = elemCtx.intensiveQuantities(this->exteriorIndex(), timeIdx);
-
-            const auto &posIn = elemCtx.pos(this->interiorIndex(), timeIdx);
-            const auto &posEx = elemCtx.pos(this->exteriorIndex(), timeIdx);
-
-            // the distance between the centers of the control volumes
-            DimVector distVecIn(posIn);
-            DimVector distVecEx(posEx);
-            DimVector distVecTotal(posEx);
-
-            distVecIn -= posFace;
-            distVecEx -= posFace;
-            distVecTotal -= posIn;
-
-            Scalar absDistTotalSquared = distVecTotal.two_norm2();
-            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
-                if (!elemCtx.model().phaseIsConsidered(phaseIdx))
-                    continue;
-
-                // calculate the hydrostatic pressure at the reference height, i.e., at
-                // the surface...
-                Scalar rhoIn = intQuantsIn.fluidState().density(phaseIdx);
-                Scalar rhoEx = intQuantsEx.fluidState().density(phaseIdx);
-
-                // calculate the difference in height of the exterior SCV compared to
-                // interior one.
-                Scalar xIn = distVecIn * gIn;
-                xIn /= gIn*gIn;
-
-                Scalar xEx = distVecEx * gEx;
-                xEx /= gEx*gEx;
-
-                DimVector deltaHeightVecIn = gIn;
-                deltaHeightVecIn *= xIn;
-
-                DimVector deltaHeightVecEx = gEx;
-                deltaHeightVecEx *= xEx;
-
-                // compute the hydrostatic pressure for the exterior control volume
-                // assuming constant density...
-                Scalar pStatIn = - rhoIn*(gIn*deltaHeightVecIn);
-                Scalar pStatEx = - rhoEx*(gEx*deltaHeightVecEx);
-
-                // compute the hydrostatic gradient between the two control volumes (this
-                // gradient exhibitis the same direction as the vector between the two
-                // control volume centers and the length (pStaticExterior -
-                // pStaticInterior)/distanceInteriorToExterior
-                auto f(distVecTotal);
-                f *= (pStatEx - pStatIn)/(absDistTotalSquared);
-
-                // calculate the final potential gradient
-                potentialGrad_[phaseIdx] += f;
-                if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
-                    OPM_THROW(Opm::NumericalProblem,
-                               "Non finite potential gradient for phase '"
-                               << FluidSystem::phaseName(phaseIdx) << "'");
-                }
-            }
-        }
-    }
-
-    template <class Context, class FluidState>
-    void calculateBoundaryGradients_(const Context &context,
-                                     int bfIdx,
-                                     int timeIdx,
-                                     const FluidState &fluidState,
-                                     const typename FluidSystem::ParameterCache &paramCache)
-    {
-        const auto& gradCalc = context.gradientCalculator();
-        Ewoms::BoundaryPressureCallback<TypeTag, FluidState>
-            pressureCallback(context.elementContext(), fluidState);
-
-        // calculate the pressure gradient using two-point gradient
-        // appoximation
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!context.model().phaseIsConsidered(phaseIdx)) {
-                potentialGrad_[phaseIdx] = 0;
-                continue;
-            }
-
-            pressureCallback.setPhaseIndex(phaseIdx);
-            gradCalc.calculateBoundaryGradient(potentialGrad_[phaseIdx],
-                                               context.elementContext(),
-                                               bfIdx,
-                                               pressureCallback);
-        }
-
-        ///////////////
-        // correct the pressure gradients by the gravitational acceleration
-        ///////////////
-        if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
-        {
-            // estimate the gravitational acceleration at a given SCV face
-            // using the arithmetic mean
-            DimVector g(context.problem().gravity(context.elementContext(),
-                                                  this->interiorIndex(),
-                                                  timeIdx));
-
-            for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++)
-            {
-                if (!context.model().phaseIsConsidered(phaseIdx))
-                    continue;
-
-                // calculate volumetric gravity acceleration force
-                DimVector f(g);
-                f *= context.intensiveQuantities(bfIdx, timeIdx).fluidState().density(phaseIdx);
-
-                // calculate the final potential gradient
-                potentialGrad_[phaseIdx] -= f;
-            }
-        }
-    }
-
     short upstreamScvIdx_[numPhases];
     short downstreamScvIdx_[numPhases];
-
-    // pressure potential gradients of all phases
-    DimVector potentialGrad_[numPhases];
 };
 
 } // namespace Ewoms
