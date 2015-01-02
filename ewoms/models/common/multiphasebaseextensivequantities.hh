@@ -221,15 +221,15 @@ private:
                                        pressureCallback);
         }
 
+        const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
+        const auto& posFace = scvf.integrationPos();
+
         // correct the pressure gradients by the gravitational acceleration
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            auto g = elemCtx.problem().gravity(elemCtx, this->interiorIndex(), timeIdx);
+            const auto& gIn = elemCtx.problem().gravity(elemCtx, this->interiorIndex(), timeIdx);
             const auto& gEx = elemCtx.problem().gravity(elemCtx, this->exteriorIndex(), timeIdx);
-            g += gEx;
-            g /= 2;
-            Valgrind::CheckDefined(g);
 
             const auto &intQuantsIn = elemCtx.intensiveQuantities(this->interiorIndex(), timeIdx);
             const auto &intQuantsEx = elemCtx.intensiveQuantities(this->exteriorIndex(), timeIdx);
@@ -238,9 +238,17 @@ private:
             const auto &posEx = elemCtx.pos(this->exteriorIndex(), timeIdx);
 
             // the distance between the centers of the control volumes
-            DimVector distVec(posEx);
-            distVec -= posIn;
-            Scalar absDistSquared = distVec.two_norm2();
+            DimVector distVecIn(posIn);
+            DimVector distVecEx(posEx);
+            DimVector distVecTotal(posEx);
+
+            distVecIn -= posFace;
+            distVecEx -= posFace;
+            distVecTotal -= posIn;
+
+            Scalar absDistInSquared = distVecIn.two_norm2();
+            Scalar absDistExSquared = distVecEx.two_norm2();
+            Scalar absDistTotalSquared = distVecTotal.two_norm2();
 
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx))
@@ -250,27 +258,32 @@ private:
                 // the surface...
                 Scalar rhoIn = intQuantsIn.fluidState().density(phaseIdx);
                 Scalar rhoEx = intQuantsEx.fluidState().density(phaseIdx);
-                Scalar rho = (rhoIn + rhoEx)/2;
 
                 // calculate the difference in height of the exterior SCV compared to
                 // interior one.
-                Scalar x = distVec * g;
-                x /= g*g;
+                Scalar xIn = distVecIn * gIn;
+                xIn /= gIn*gIn;
 
-                DimVector deltaHeightVec = g;
-                deltaHeightVec *= x;
+                Scalar xEx = distVecEx * gEx;
+                xEx /= gEx*gEx;
+
+                DimVector deltaHeightVecIn = gIn;
+                deltaHeightVecIn *= xIn;
+
+                DimVector deltaHeightVecEx = gEx;
+                deltaHeightVecEx *= xEx;
 
                 // compute the hydrostatic pressure for the exterior control volume
                 // assuming constant density...
-                Scalar pStatIn = 0;
-                Scalar pStatEx = pStatIn - rho*(g*deltaHeightVec);
+                Scalar pStatIn = - rhoIn*(gIn*deltaHeightVecIn) / absDistInSquared;
+                Scalar pStatEx = - rhoEx*(gEx*deltaHeightVecEx) / absDistExSquared;
 
                 // compute the hydrostatic gradient between the two control volumes (this
                 // gradient exhibitis the same direction as the vector between the two
                 // control volume centers and the length (pStaticExterior -
                 // pStaticInterior)/distanceInteriorToExterior
-                auto f(distVec);
-                f *= (pStatEx - pStatIn)/(absDistSquared);
+                auto f(distVecTotal);
+                f *= (pStatEx - pStatIn)/(absDistTotalSquared);
 
                 // calculate the final potential gradient
                 potentialGrad_[phaseIdx] += f;
