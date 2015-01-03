@@ -82,8 +82,8 @@ public:
 
         flux = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
                 const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
                 // add advective flux of current component in current phase
