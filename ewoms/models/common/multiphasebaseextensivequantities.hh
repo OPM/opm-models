@@ -246,10 +246,7 @@ private:
             distVecEx -= posFace;
             distVecTotal -= posIn;
 
-            Scalar absDistInSquared = distVecIn.two_norm2();
-            Scalar absDistExSquared = distVecEx.two_norm2();
             Scalar absDistTotalSquared = distVecTotal.two_norm2();
-
             for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
                 if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                     continue;
@@ -275,8 +272,8 @@ private:
 
                 // compute the hydrostatic pressure for the exterior control volume
                 // assuming constant density...
-                Scalar pStatIn = - rhoIn*(gIn*deltaHeightVecIn) / absDistInSquared;
-                Scalar pStatEx = - rhoEx*(gEx*deltaHeightVecEx) / absDistExSquared;
+                Scalar pStatIn = - rhoIn*(gIn*deltaHeightVecIn);
+                Scalar pStatEx = - rhoEx*(gEx*deltaHeightVecEx);
 
                 // compute the hydrostatic gradient between the two control volumes (this
                 // gradient exhibitis the same direction as the vector between the two
