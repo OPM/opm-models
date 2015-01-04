@@ -164,10 +164,10 @@ namespace Ewoms {
  * \f[ \mathbf{v}_\alpha = - \frac{k_{r\alpha}}{\mu_\alpha} \mathbf{K}
  *\left(\mathbf{grad}\, p_\alpha - \varrho_{\alpha} \mathbf{g} \right) \;, \f]
  * although the actual approach which is used can be specified via the
- * \c VelocityModule property. For example, the velocity model can by
+ * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The primary variables used by this model are:

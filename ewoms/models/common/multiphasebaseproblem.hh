@@ -41,7 +41,7 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
-NEW_PROP_TAG(VelocityModule);
+NEW_PROP_TAG(FluxModule);
 }}
 
 namespace Ewoms {
@@ -54,7 +54,7 @@ namespace Ewoms {
 template<class TypeTag>
 class MultiPhaseBaseProblem
     : public FvBaseProblem<TypeTag>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityBaseProblem
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxBaseProblem
 {
     typedef Ewoms::FvBaseProblem<TypeTag> ParentType;
 

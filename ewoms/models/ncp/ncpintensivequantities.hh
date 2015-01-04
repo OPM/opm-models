@@ -47,7 +47,7 @@ class NcpIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
     , public DiffusionIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
     , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
@@ -60,7 +60,7 @@ class NcpIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, NcpCompositionFromFugacitiesSolver)
         CompositionFromFugacitiesSolver;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -77,7 +77,7 @@ class NcpIntensiveQuantities
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
-    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
 
 public:
     NcpIntensiveQuantities()
@@ -172,7 +172,7 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
+        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
         EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);

@@ -20,11 +20,11 @@
  * \file
  *
  * \brief This file contains the necessary classes to calculate the
- *        velocity out of a pressure potential gradient using the
+ *        volumetric fluxes out of a pressure potential gradient using the
  *        Darcy relation.
  */
-#ifndef EWOMS_DARCY_MODULE_HH
-#define EWOMS_DARCY_MODULE_HH
+#ifndef EWOMS_DARCY_FLUX_MODULE_HH
+#define EWOMS_DARCY_FLUX_MODULE_HH
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
@@ -49,25 +49,25 @@ template <class TypeTag>
 class DarcyBaseProblem;
 
 /*!
- * \ingroup DarcyVelocity
- * \brief Specifies a velocity module which uses the Darcy relation.
+ * \ingroup DarcyFlux
+ * \brief Specifies a flux module which uses the Darcy relation.
  */
 template <class TypeTag>
-struct DarcyVelocityModule
+struct DarcyFluxModule
 {
-    typedef DarcyIntensiveQuantities<TypeTag> VelocityIntensiveQuantities;
-    typedef DarcyExtensiveQuantities<TypeTag> VelocityExtensiveQuantities;
-    typedef DarcyBaseProblem<TypeTag> VelocityBaseProblem;
+    typedef DarcyIntensiveQuantities<TypeTag> FluxIntensiveQuantities;
+    typedef DarcyExtensiveQuantities<TypeTag> FluxExtensiveQuantities;
+    typedef DarcyBaseProblem<TypeTag> FluxBaseProblem;
 
     /*!
-     * \brief Register all run-time parameters for the velocity module.
+     * \brief Register all run-time parameters for the flux module.
      */
     static void registerParameters()
     { }
 };
 
 /*!
- * \ingroup DarcyVelocity
+ * \ingroup DarcyFlux
  * \brief Provides the defaults for the parameters required by the
  *        Darcy velocity approach.
  */
@@ -76,8 +76,8 @@ class DarcyBaseProblem
 { };
 
 /*!
- * \ingroup DarcyVelocity
- * \brief Provides the intensive quantities for the Darcy velocity module
+ * \ingroup DarcyFlux
+ * \brief Provides the intensive quantities for the Darcy flux module
  */
 template <class TypeTag>
 class DarcyIntensiveQuantities
@@ -89,8 +89,8 @@ protected:
 };
 
 /*!
- * \ingroup DarcyVelocity
- * \brief Provides the Darcy velocity module
+ * \ingroup DarcyFlux
+ * \brief Provides the Darcy flux module
  *
  * The commonly used Darcy relation looses its validity for Reynolds
  * numbers \f$ Re > 1\f$.  If one encounters flow velocities in porous
@@ -181,7 +181,7 @@ protected:
     { return downstreamDofIdx_[phaseIdx]; }
 
     /*!
-     * \brief Calculate the gradients which are required to determine the velocity
+     * \brief Calculate the gradients which are required to determine the volumetric fluxes
      *
      * The the upwind directions is also determined by method.
      */
@@ -291,7 +291,7 @@ protected:
 
     /*!
      * \brief Calculate the gradients at the grid boundary which are required to
-     *        determine the velocity
+     *        determine the volumetric fluxes
      *
      * The the upwind directions is also determined by method.
      */
@@ -388,11 +388,8 @@ protected:
                 downstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
             }
 
-            // calculate the actual darcy velocities by multiplying
-            // the current "filter velocity" with the upstream mobility
+            // take the phase mobility from the DOF in upstream direction
             if (upstreamDofIdx_[phaseIdx] < 0)
-                // the exterior of the domain has higher pressure. the boundary condition
-                // determines the mobility
                 mobility_[phaseIdx] =
                     kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
             else
@@ -401,12 +398,12 @@ protected:
     }
 
     /*!
-     * \brief Calculate the filter velocities of all phases
+     * \brief Calculate the volumetric fluxes of all phases
      *
      * The pressure potentials and upwind directions must already be
      * determined before calling this method!
      */
-    void calculateVelocities_(const ElementContext& elemCtx, int scvfIdx, int timeIdx)
+    void calculateFluxes_(const ElementContext& elemCtx, int scvfIdx, int timeIdx)
     {
         const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const DimVector &normal = scvf.normal();
@@ -425,12 +422,12 @@ protected:
     }
 
     /*!
-     * \brief Calculate the filter velocities at a boundary face of all fluid phases
+     * \brief Calculate the volumetric fluxes at a boundary face of all fluid phases
      *
      * The pressure potentials and upwind directions must already be determined before
      * calling this method!
      */
-    void calculateBoundaryVelocities_(const ElementContext& elemCtx,
+    void calculateBoundaryFluxes_(const ElementContext& elemCtx,
                                       int boundaryFaceIdx,
                                       int timeIdx)
     {
@@ -473,17 +470,17 @@ protected:
     short upstreamDofIdx_[numPhases];
     short downstreamDofIdx_[numPhases];
 
-    // filter velocities of all phases [m/s]
+    // mobilities of all fluid phases [1 / (Pa s)]
     Scalar mobility_[numPhases];
 
     // filter velocities of all phases [m/s]
     DimVector filterVelocity_[numPhases];
 
     // the volumetric flux of all fluid phases over the control
-    // volume's face [m^3/s]
+    // volume's face [m^3/s / m^2]
     Scalar volumeFlux_[numPhases];
 
-    // pressure potential gradients of all phases
+    // pressure potential gradients of all phases [Pa / m]
     DimVector potentialGrad_[numPhases];
 };
 

@@ -51,7 +51,7 @@ NEW_PROP_TAG(HeatConductionLawParams);
 //!The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidSystem);
 //! Specifies the relation used for velocity
-NEW_PROP_TAG(VelocityModule);
+NEW_PROP_TAG(FluxModule);
 
 //! Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableGravity);

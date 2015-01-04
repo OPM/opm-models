@@ -40,7 +40,7 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
@@ -52,7 +52,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, BlackOilFluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -66,7 +66,7 @@ class BlackOilIntensiveQuantities
 
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
-    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
 
 public:
     /*!
@@ -182,7 +182,7 @@ public:
 
         // update the quantities which are required by the chosen
         // velocity model
-        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
+        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
 #ifndef NDEBUG
         // some safety checks in debug mode

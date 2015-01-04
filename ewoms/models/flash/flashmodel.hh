@@ -126,10 +126,10 @@ namespace Ewoms {
  *       - \varrho_{\alpha} \mathbf{g} \right) \;,
  * \f]
  * although the actual approach which is used can be specified via the
- * \c VelocityModule property. For example, the velocity model can by
+ * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, VelocityModule, Ewoms::ForchheimerVelocityModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by

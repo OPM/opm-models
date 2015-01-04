@@ -44,7 +44,7 @@ template <class TypeTag>
 class ImmiscibleIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
     , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
@@ -54,7 +54,7 @@ class ImmiscibleIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { pressure0Idx = Indices::pressure0Idx };
@@ -65,7 +65,7 @@ class ImmiscibleIntensiveQuantities
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
-    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
     typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
@@ -137,7 +137,7 @@ public:
         EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
+        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
     }
 
     /*!

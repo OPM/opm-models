@@ -47,7 +47,7 @@ class FlashIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
     , public DiffusionIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableDiffusion) >
     , public EnergyIntensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy) >
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
@@ -55,7 +55,7 @@ class FlashIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
@@ -74,7 +74,7 @@ class FlashIntensiveQuantities
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
-    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
     typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
 
@@ -158,7 +158,7 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
+        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
         // energy related quantities
         EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);

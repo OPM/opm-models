@@ -42,7 +42,7 @@ namespace Ewoms {
 template <class TypeTag>
 class RichardsIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityIntensiveQuantities
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
@@ -52,7 +52,7 @@ class RichardsIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     enum { pressureWIdx = Indices::pressureWIdx };
@@ -61,7 +61,7 @@ class RichardsIntensiveQuantities
     enum { gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex) };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef typename VelocityModule::VelocityIntensiveQuantities VelocityIntensiveQuantities;
+    typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
@@ -138,7 +138,7 @@ public:
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
 
         // update the quantities specific for the velocity model
-        VelocityIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
+        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
     }
 
     /*!

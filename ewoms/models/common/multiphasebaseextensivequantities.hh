@@ -42,7 +42,7 @@ namespace Ewoms {
 template <class TypeTag>
 class MultiPhaseBaseExtensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscExtensiveQuantities)
-    , public GET_PROP_TYPE(TypeTag, VelocityModule)::VelocityExtensiveQuantities
+    , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxExtensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscExtensiveQuantities) ParentType;
 
@@ -56,8 +56,8 @@ class MultiPhaseBaseExtensiveQuantities
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
-    typedef typename GET_PROP_TYPE(TypeTag, VelocityModule) VelocityModule;
-    typedef typename VelocityModule::VelocityExtensiveQuantities VelocityExtensiveQuantities;
+    typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
+    typedef typename FluxModule::FluxExtensiveQuantities FluxExtensiveQuantities;
 
 public:
     /*!
@@ -65,7 +65,7 @@ public:
      */
     static void registerParameters()
     {
-        VelocityModule::registerParameters();
+        FluxModule::registerParameters();
     }
 
     /*!
@@ -81,7 +81,7 @@ public:
         ParentType::update(elemCtx, scvfIdx, timeIdx);
 
         // compute the pressure potential gradients
-        VelocityExtensiveQuantities::calculateGradients_(elemCtx, scvfIdx, timeIdx);
+        FluxExtensiveQuantities::calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
         // determine the upstream indices. since this is a semi-smooth non-linear solver,
         // make upstream only look at the evaluation point for the upstream decision
@@ -96,8 +96,8 @@ public:
                     continue;
                 }
 
-                upstreamScvIdx_[phaseIdx] = VelocityExtensiveQuantities::upstreamIndex_(phaseIdx);
-                downstreamScvIdx_[phaseIdx] = VelocityExtensiveQuantities::downstreamIndex_(phaseIdx);
+                upstreamScvIdx_[phaseIdx] = FluxExtensiveQuantities::upstreamIndex_(phaseIdx);
+                downstreamScvIdx_[phaseIdx] = FluxExtensiveQuantities::downstreamIndex_(phaseIdx);
             }
         }
         else {
@@ -109,7 +109,7 @@ public:
             }
         }
 
-        VelocityExtensiveQuantities::calculateVelocities_(elemCtx, scvfIdx, timeIdx);
+        FluxExtensiveQuantities::calculateFluxes_(elemCtx, scvfIdx, timeIdx);
     }
 
 
@@ -132,12 +132,12 @@ public:
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
 
-        VelocityExtensiveQuantities::calculateBoundaryGradients_(context.elementContext(),
+        FluxExtensiveQuantities::calculateBoundaryGradients_(context.elementContext(),
                                                                  bfIdx,
                                                                  timeIdx,
                                                                  fluidState,
                                                                  paramCache);
-        VelocityExtensiveQuantities::calculateBoundaryVelocities_(context.elementContext(),
+        FluxExtensiveQuantities::calculateBoundaryFluxes_(context.elementContext(),
                                                                   bfIdx,
                                                                   timeIdx);
     }

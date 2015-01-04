@@ -37,7 +37,7 @@ namespace Opm {
 namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
-NEW_PROP_TAG(VelocityModule);
+NEW_PROP_TAG(FluxModule);
 }}
 
 namespace Ewoms {

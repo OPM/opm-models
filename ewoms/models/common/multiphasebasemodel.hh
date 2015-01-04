@@ -29,7 +29,7 @@
 #include "multiphasebaseproblem.hh"
 #include "multiphasebaseextensivequantities.hh"
 
-#include <ewoms/models/common/velocity.hh>
+#include <ewoms/models/common/flux.hh>
 #include <ewoms/disc/vcfv/vcfvdiscretization.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
@@ -67,7 +67,7 @@ SET_INT_PROP(MultiPhaseBaseModel, NumComponents, GET_PROP_TYPE(TypeTag, FluidSys
 SET_TYPE_PROP(MultiPhaseBaseModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
 
 //! By default, use the Darcy relation to determine the phase velocity
-SET_TYPE_PROP(MultiPhaseBaseModel, VelocityModule, Ewoms::DarcyVelocityModule<TypeTag>);
+SET_TYPE_PROP(MultiPhaseBaseModel, FluxModule, Ewoms::DarcyFluxModule<TypeTag>);
 
 /*!
  * \brief Set the material law to the null law by default.

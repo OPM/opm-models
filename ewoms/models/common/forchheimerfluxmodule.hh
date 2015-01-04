@@ -20,14 +20,14 @@
  * \file
  *
  * \brief This file contains the necessary classes to calculate the
- *        velocity out of a pressure potential gradient using the
+ *        volumetric fluxes out of a pressure potential gradient using the
  *        Forchhheimer approach.
  */
-#ifndef EWOMS_FORCHHEIMER_MODULE_HH
-#define EWOMS_FORCHHEIMER_MODULE_HH
+#ifndef EWOMS_FORCHHEIMER_FLUX_MODULE_HH
+#define EWOMS_FORCHHEIMER_FLUX_MODULE_HH
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
-#include "darcyvelocitymodule.hh"
+#include "darcyfluxmodule.hh"
 
 
 #include <dune/common/fvector.hh>
@@ -52,25 +52,25 @@ template <class TypeTag>
 class ForchheimerBaseProblem;
 
 /*!
- * \ingroup ForchheimerVelocity
- * \brief Specifies a velocity module which uses the Forchheimer relation.
+ * \ingroup ForchheimerFlux
+ * \brief Specifies a flux module which uses the Forchheimer relation.
  */
 template <class TypeTag>
-struct ForchheimerVelocityModule
+struct ForchheimerFluxModule
 {
-    typedef ForchheimerIntensiveQuantities<TypeTag> VelocityIntensiveQuantities;
-    typedef ForchheimerExtensiveQuantities<TypeTag> VelocityExtensiveQuantities;
-    typedef ForchheimerBaseProblem<TypeTag> VelocityBaseProblem;
+    typedef ForchheimerIntensiveQuantities<TypeTag> FluxIntensiveQuantities;
+    typedef ForchheimerExtensiveQuantities<TypeTag> FluxExtensiveQuantities;
+    typedef ForchheimerBaseProblem<TypeTag> FluxBaseProblem;
 
     /*!
-     * \brief Register all run-time parameters for the velocity module.
+     * \brief Register all run-time parameters for the flux module.
      */
     static void registerParameters()
     {}
 };
 
 /*!
- * \ingroup ForchheimerVelocity
+ * \ingroup ForchheimerFlux
  * \brief Provides the defaults for the parameters required by the
  *        Forchheimer velocity approach.
  */
@@ -117,7 +117,7 @@ public:
 };
 
 /*!
- * \ingroup ForchheimerVelocity
+ * \ingroup ForchheimerFlux
  * \brief Provides the intensive quantities for the Forchheimer module
  */
 template <class TypeTag>
@@ -169,8 +169,8 @@ private:
 };
 
 /*!
- * \ingroup ForchheimerVelocity
- * \brief Provides the Forchheimer velocity module
+ * \ingroup ForchheimerFlux
+ * \brief Provides the Forchheimer flux module
  *
  * The commonly used Darcy relation looses its validity for Reynolds
  * numbers \f$ Re > 1\f$.  If one encounters flow velocities in porous
@@ -311,12 +311,12 @@ protected:
     }
 
     /*!
-     * \brief Calculate the filter velocities of all phases
+     * \brief Calculate the volumetric fluxes of all phases
      *
      * The pressure potentials and upwind directions must already be
      * determined before calling this method!
      */
-    void calculateVelocities_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void calculateFluxes_(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
     {
         const auto &intQuantsI = elemCtx.intensiveQuantities(asImp_().interiorIndex(), timeIdx);
         const auto &intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
@@ -339,16 +339,15 @@ protected:
                 continue;
             }
 
-            calculateForchheimerVelocity_(phaseIdx);
+            calculateForchheimerFlux_(phaseIdx);
             this->volumeFlux_[phaseIdx] = (this->filterVelocity_[phaseIdx] * normal);
         }
     }
 
     /*!
-     * \brief Calculate the filter velocities of all phases at the domain
-     * boundary
+     * \brief Calculate the volumetric flux rates of all phases at the domain boundary
      */
-    void calculateBoundaryVelocities_(const ElementContext& elemCtx,
+    void calculateBoundaryFluxes_(const ElementContext& elemCtx,
                                       int bfIdx,
                                       int timeIdx)
     {
@@ -365,12 +364,12 @@ protected:
                 continue;
             }
 
-            calculateForchheimerVelocity_(phaseIdx);
+            calculateForchheimerFlux_(phaseIdx);
             this->volumeFlux_[phaseIdx] = (this->filterVelocity_[phaseIdx] * normal);
         }
     }
 
-    void calculateForchheimerVelocity_(int phaseIdx)
+    void calculateForchheimerFlux_(int phaseIdx)
     {
         // initial guess: filter velocity is zero
         DimVector &velocity = this->filterVelocity_[phaseIdx];
