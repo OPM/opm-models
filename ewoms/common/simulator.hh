@@ -585,7 +585,6 @@ public:
     {
         std::ostringstream oss;
         oss << std::setprecision(2);
-        oss << std::fixed;
         if (isAmendment)
             oss << " (";
         if (timeInSeconds >= 365.25*24*60*60)
