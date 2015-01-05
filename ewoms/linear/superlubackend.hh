@@ -47,6 +47,9 @@ NEW_TYPE_TAG(SuperLULinearSolver);
 
 namespace Ewoms {
 namespace Linear {
+template <class Scalar, class TypeTag, class Problem, class Matrix, class Vector>
+class SuperLUSolve_;
+
 /*!
  * \ingroup Linear
  * \brief A linear solver backend for the SuperLU sparse matrix library.
@@ -69,6 +72,17 @@ public:
 
     template <class Matrix, class Vector>
     bool solve(const Matrix &A, Vector &x, const Vector &b)
+    { return SuperLUSolve_<Scalar, TypeTag, Problem, Matrix, Vector>::solve_(problem_, A, x, b); }
+
+private:
+    const Problem &problem_;
+};
+
+template <class Scalar, class TypeTag, class Problem, class Matrix, class Vector>
+class SuperLUSolve_
+{
+public:
+    static bool solve_(const Problem &problem, const Matrix &A, Vector &x, const Vector &b)
     {
         Vector bTmp(b);
 
@@ -90,10 +104,46 @@ public:
 
         return result.converged;
     }
-
-private:
-    const Problem &problem_;
 };
+
+// the following is required to make the SuperLU adapter of dune-istl happy with
+// quadruple precision math on Dune 2.4. this is because the most which SuperLU can
+// handle is double precision (i.e., the linear systems of equations are always solved
+// with at most double precision if chosing SuperLU as the linear solver...)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4) && HAVE_QUAD
+template <class TypeTag, class Problem, class Matrix, class Vector>
+class SuperLUSolve_<__float128, TypeTag, Problem, Matrix, Vector>
+{
+public:
+    static bool solve_(const Problem &problem,
+                       const Matrix &A,
+                       Vector &x,
+                       const Vector &b)
+    {
+        static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+        typedef Dune::FieldVector<double, numEq> DoubleEqVector;
+        typedef Dune::FieldMatrix<double, numEq, numEq> DoubleEqMatrix;
+        typedef Dune::BlockVector<DoubleEqVector> DoubleVector;
+        typedef Dune::BCRSMatrix<DoubleEqMatrix> DoubleMatrix;
+
+        // copy the inputs into the double precision data structures
+        DoubleVector bDouble(b);
+        DoubleVector xDouble(x);
+        DoubleMatrix ADouble(A);
+
+        bool res =
+            SuperLUSolve_<double, TypeTag, Problem, Matrix, Vector>::solve_(problem,
+                                                                            ADouble,
+                                                                            xDouble,
+                                                                            bDouble);
+
+        // copy the result back into the quadruple precision vector.
+        x = xDouble;
+
+        return res;
+    }
+};
+#endif
 
 } // namespace Linear
 } // namespace Ewoms

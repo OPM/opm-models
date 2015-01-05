@@ -275,7 +275,11 @@ protected:
             }
 
             // determine the upstream and downstream DOFs
-            if (potentialGrad_[phaseIdx]*faceNormal > 0) {
+            Scalar tmp = 0;
+            for (unsigned i = 0; i < faceNormal.size(); ++i)
+                tmp += potentialGrad_[phaseIdx][i]*faceNormal[i];
+
+            if (tmp > 0) {
                 upstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
                 downstreamDofIdx_[phaseIdx] = interiorDofIdx_;
             }
@@ -379,7 +383,11 @@ protected:
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            if (potentialGrad_[phaseIdx]*faceNormal > 0) {
+            Scalar tmp = 0;
+            for (unsigned i = 0; i < faceNormal.size(); ++i)
+                tmp += potentialGrad_[phaseIdx][i]*faceNormal[i];
+
+            if (tmp > 0) {
                 upstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
                 downstreamDofIdx_[phaseIdx] = interiorDofIdx_;
             }
