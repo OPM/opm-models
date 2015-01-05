@@ -68,7 +68,6 @@ class EclSummaryWriter
     typedef Ewoms::EclWellManager<TypeTag> WellManager;
     typedef Ewoms::ErtSummary<TypeTag> ErtSummary;
 
-    static const int numPhases = GET_PROP_VALUE(TypeTag, NumPhases);
 
     struct ErtWellInfo {
         smspec_node_type* wbhpErtHandle;

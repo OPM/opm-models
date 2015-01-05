@@ -41,8 +41,6 @@ class FvBaseIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 public:
