@@ -26,6 +26,7 @@
 #define EWOMS_GRID_COMM_HANDLES_HH
 
 #include <dune/grid/common/datahandleif.hh>
+#include <dune/common/version.hh>
 
 namespace Ewoms {
 

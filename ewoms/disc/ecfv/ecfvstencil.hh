@@ -30,6 +30,7 @@
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/geometry/type.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/version.hh>
 
 #include <vector>
 

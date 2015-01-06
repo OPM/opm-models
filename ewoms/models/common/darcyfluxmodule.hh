@@ -26,7 +26,8 @@
 #ifndef EWOMS_DARCY_FLUX_MODULE_HH
 #define EWOMS_DARCY_FLUX_MODULE_HH
 
-#include <ewoms/disc/common/fvbaseproperties.hh>
+#include "multiphasebaseproperties.hh"
+#include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>

@@ -25,6 +25,8 @@
 
 #include <opm/core/utility/PropertySystem.hpp>
 
+#include <ewoms/disc/common/fvbaseproperties.hh>
+
 #include <set>
 #include <vector>
 
