@@ -983,9 +983,8 @@ public:
         asImp_().updateBegin();
 
         bool converged = solver.apply();
-        if (converged) {
+        if (converged)
             asImp_().updateSuccessful();
-        }
         else
             asImp_().updateFailed();
 

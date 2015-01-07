@@ -287,12 +287,12 @@ public:
         solveTime_ = 0.0;
         updateTime_ = 0.0;
 
-        // execute the method as long as the implementation thinks
-        // that we should do another iteration
-        while (asImp_().proceed_()) {
-            // linearize the problem at the current solution
-            try
-            {
+        try {
+            // execute the method as long as the implementation thinks
+            // that we should do another iteration
+            while (asImp_().proceed_()) {
+                // linearize the problem at the current solution
+
                 // notify the implementation that we're about to start
                 // a new iteration
                 asImp_().beginIteration_();
@@ -309,61 +309,42 @@ public:
                 linearizeTimer_.start();
                 asImp_().linearize_();
                 linearizeTimer_.stop();
-                linearizeTime_ += linearizeTimer_.realTimeElapsed();;
-            }
-            catch (const Dune::Exception &e)
-            {
-                linearizeTime_ += linearizeTimer_.realTimeElapsed();;
-                if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Dune exception during linearization: \""
-                              << e.what() << "\"\n" << std::flush;
-                asImp_().failed_();
-                return false;
-            }
-            catch (const Opm::NumericalProblem &e)
-            {
-                linearizeTime_ += linearizeTimer_.realTimeElapsed();;
-                if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Opm exception during linearization: \""
-                              << e.what() << "\"\n" << std::flush;
-                asImp_().failed_();
-                return false;
-            }
+                linearizeTime_ += linearizeTimer_.realTimeElapsed();
+                linearizeTimer_.halt();
 
-            if (asImp_().verbose_()) {
-                std::cout << "Solve: M deltax^k = r"
-                          << clearRemainingLine
-                          << std::flush;
-            }
+                if (asImp_().verbose_()) {
+                    std::cout << "Solve: M deltax^k = r"
+                              << clearRemainingLine
+                              << std::flush;
+                }
 
-            // solve the resulting linear equation system
-            solveTimer_.start();
+                // solve the resulting linear equation system
+                solveTimer_.start();
 
-            // set the delta vector to zero before solving the linear system!
-            solutionUpdate = 0;
-            // ask the implementation to solve the linearized system
-            auto b = linearizer.residual();
-            bool converged = asImp_().solveLinear_(linearizer.matrix(), solutionUpdate, b);
-            solveTimer_.stop();
-            solveTime_ += solveTimer_.realTimeElapsed();;
-
-            if (!converged) {
-                if (asImp_().verbose_())
-                    std::cout << "Newton: Linear solver did not converge\n" << std::flush;
+                // set the delta vector to zero before solving the linear system!
+                solutionUpdate = 0;
+                // ask the implementation to solve the linearized system
+                auto b = linearizer.residual();
+                bool converged = asImp_().solveLinear_(linearizer.matrix(), solutionUpdate, b);
                 solveTimer_.stop();
-                asImp_().failed_();
-                return false;
-            }
+                solveTime_ += solveTimer_.realTimeElapsed();;
+                solveTimer_.halt();
 
-            // update the solution
-            if (asImp_().verbose_()) {
-                std::cout << "Update: x^(k+1) = x^k - deltax^k"
-                          << clearRemainingLine
-                          << std::flush;
-            }
+                if (!converged) {
+                    if (asImp_().verbose_())
+                        std::cout << "Newton: Newton solver did not converge\n" << std::flush;
+                    solveTimer_.stop();
+                    asImp_().failed_();
+                    return false;
+                }
 
-            try
-            {
+                // update the solution
+                if (asImp_().verbose_()) {
+                    std::cout << "Update: x^(k+1) = x^k - deltax^k"
+                              << clearRemainingLine
+                              << std::flush;
+                }
+
                 // update the current solution (i.e. uOld) with the delta
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
@@ -372,41 +353,53 @@ public:
                                       b,
                                       solutionUpdate);
                 asImp_().update_(currentSolution, previousSolution, solutionUpdate, b);
-
-                // clear current line on terminal
-                if (asImp_().verbose_() && isatty(fileno(stdout)))
-                    std::cout << clearRemainingLine
-                              << std::flush;
-
-                // tell the implementation that we're done with this
-                // iteration
-                asImp_().endIteration_(currentSolution, previousSolution);
                 updateTimer_.stop();
-                updateTime_ += updateTimer_.realTimeElapsed();;
-            }
-            catch (const Dune::Exception &e)
-            {
-                updateTime_ += updateTimer_.realTimeElapsed();;
-                if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Dune exception during update: \""
-                              << e.what() << "\"\n" << std::flush;
-                asImp_().failed_();
-                return false;
-            }
-            catch (const Opm::NumericalProblem &e)
-            {
-                updateTime_ += updateTimer_.realTimeElapsed();;
-                if (asImp_().verbose_())
-                    std::cout << "Newton: Caught Opm exception during linearization: \""
-                              << e.what() << "\"\n" << std::flush;
-                asImp_().failed_();
-                return false;
+                updateTime_ += updateTimer_.realTimeElapsed();
+                updateTimer_.halt();
+
+                // tell the implementation that we're done with this iteration
+                asImp_().endIteration_(currentSolution, previousSolution);
             }
         }
+        catch (const Dune::Exception &e)
+        {
+            linearizeTime_ += linearizeTimer_.realTimeElapsed();
+            solveTime_ += solveTimer_.realTimeElapsed();
+            updateTime_ += updateTimer_.realTimeElapsed();
+            linearizeTimer_.halt();
+            solveTimer_.halt();
+            updateTimer_.halt();
+            if (asImp_().verbose_())
+                std::cout << "Newton method caught exception: \""
+                          << e.what() << "\"\n" << std::flush;
+            asImp_().failed_();
+            return false;
+        }
+        catch (const Opm::NumericalProblem &e)
+        {
+            linearizeTime_ += linearizeTimer_.realTimeElapsed();
+            solveTime_ += solveTimer_.realTimeElapsed();
+            updateTime_ += updateTimer_.realTimeElapsed();
+            linearizeTimer_.halt();
+            solveTimer_.halt();
+            updateTimer_.halt();
+
+            if (asImp_().verbose_())
+                std::cout << "Newton method caught exception: \""
+                          << e.what() << "\"\n" << std::flush;
+            asImp_().failed_();
+            return false;
+        }
+
+        // clear current line on terminal
+        if (asImp_().verbose_() && isatty(fileno(stdout)))
+            std::cout << clearRemainingLine
+                      << std::flush;
 
         // tell the implementation that we're done
         asImp_().end_();
 
+        // print the timing summary of the time step
         if (asImp_().verbose_()) {
             Scalar elapsedTot =
                 linearizeTime_
@@ -422,6 +415,9 @@ public:
                       << "\n" << std::flush;
         }
 
+
+        // if we're not converged, tell the implementation that we've failed, else tell
+        // it that we succeeded
         if (!asImp_().converged()) {
             asImp_().failed_();
             return false;

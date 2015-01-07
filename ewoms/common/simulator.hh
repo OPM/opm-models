@@ -333,8 +333,8 @@ public:
     {
         return
             finished_ ||
-            (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8
-             + timeStepSize_ >= endTime());
+            (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8 + timeStepSize_
+             >= endTime());
     }
 
     /*!
@@ -426,13 +426,8 @@ public:
      */
     bool episodeWillBeOver() const
     {
-        return
-            startTime()
-            + this->time()
-            + timeStepSize()
-            >=
-            episodeStartTime_
-            + episodeLength()*(1 - 1e-8);
+        return startTime() + this->time() + timeStepSize()
+            >=  episodeStartTime_ + episodeLength()*(1 - 1e-8);
     }
 
     /*!
@@ -450,7 +445,9 @@ public:
 
         // make sure that we don't exceed the end of the
         // current episode.
-        return std::max<Scalar>(0.0, episodeLength() - (this->time() - episodeStartTime()));
+        return std::max<Scalar>(0.0,
+                                (episodeStartTime() + episodeLength())
+                                - (this->time() + this->startTime()));
     }
 
     /*
