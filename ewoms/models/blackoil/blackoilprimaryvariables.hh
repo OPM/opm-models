@@ -30,8 +30,8 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
-#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/constraintsolvers/NcpFlash.hpp>
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 namespace Ewoms {
 
@@ -48,6 +48,8 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
     // primary variable indices
     enum { gasPressureIdx = Indices::gasPressureIdx };
@@ -63,10 +65,11 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     // component indices from the fluid system
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
-    static_assert(numPhases == 3,
-                  "The black-oil model assumes three phases!");
-    static_assert(numComponents == 3,
-                  "The black-oil model assumes three components!");
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
+
+    static_assert(numPhases == 3, "The black-oil model assumes three phases!");
+    static_assert(numComponents == 3, "The black-oil model assumes three components!");
 
 public:
     BlackOilPrimaryVariables()
@@ -103,6 +106,64 @@ public:
 
     void setSwitchingVariableIsGasSaturation(bool yesno)
     { switchingVariableIsGasSaturation_ = yesno; }
+
+    /*!
+     * \copydoc ImmisciblePrimaryVariables::assignMassConservative
+     */
+    template <class FluidState>
+    void assignMassConservative(const FluidState &fluidState,
+                                const MaterialLawParams &matParams,
+                                bool isInEquilibrium = false)
+    {
+#ifndef NDEBUG
+        // make sure the temperature is the same in all fluid phases
+        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+            assert(fluidState.temperature(0) == fluidState.temperature(phaseIdx));
+        }
+#endif // NDEBUG
+
+        // for the equilibrium case, we don't need complicated
+        // computations.
+        if (isInEquilibrium) {
+            assignNaive(fluidState);
+            return;
+        }
+
+        // If your compiler bails out here, you're probably not using a suitable black
+        // oil fluid system.
+        typename FluidSystem::ParameterCache paramCache;
+        paramCache.setRegionIndex(pvtRegionIdx_);
+
+        // create a mutable fluid state with well defined densities based on the input
+        Opm::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
+        fsFlash.setTemperature(fluidState.temperature(/*phaseIdx=*/0));
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
+            fsFlash.setDensity(phaseIdx, rho);
+            fsFlash.setPressure(phaseIdx, fluidState.pressure(phaseIdx));
+            fsFlash.setSaturation(phaseIdx, fluidState.saturation(phaseIdx));
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                fsFlash.setMoleFraction(phaseIdx, compIdx, fluidState.moleFraction(phaseIdx, compIdx));
+        }
+
+        // calculate the "global molarities"
+        ComponentVector globalMolarities(0.0);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                globalMolarities[compIdx] +=
+                    fsFlash.saturation(phaseIdx) * fsFlash.molarity(phaseIdx, compIdx);
+            }
+        }
+
+        // use a flash calculation to calculate a fluid state in
+        // thermodynamic equilibrium
+
+        // run the flash calculation
+        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
+
+        // use the result to assign the primary variables
+        assignNaive(fsFlash);
+    }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignNaive
