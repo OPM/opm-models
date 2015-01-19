@@ -108,17 +108,8 @@ int setupParameters_(int argc, char **argv)
     // set the parameter values
     ////////////////////////////////////////////////////////////
 
-    // check whether the user wanted to see the help message
-    for (int i = 1; i < argc; ++i) {
-        if (std::string("--help") == argv[i] || std::string("-h") == argv[i]) {
-            if (myRank == 0)
-                Parameters::printUsage<TypeTag>(argv[0], "", /*handleHelp=*/true, std::cout);
-            return /*status=*/2;
-        }
-    }
-
     // fill the parameter tree with the options from the command line
-    std::string s = Parameters::parseCommandLineOptions<TypeTag>(argc, argv);
+    std::string s = Parameters::parseCommandLineOptions<TypeTag>(argc, argv, /*handleHelp=*/myRank == 0);
     if (!s.empty()) {
         return /*status=*/1;
     }

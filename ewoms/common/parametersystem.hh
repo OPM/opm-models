@@ -112,7 +112,7 @@ struct ParamInfo
     std::string usageString;
     std::string compileTimeValue;
 
-    bool operator==(const ParamInfo &other)
+    bool operator==(const ParamInfo &other) const
     {
         return other.paramName == paramName
                && other.paramTypeName == paramTypeName
@@ -169,35 +169,48 @@ NEW_PROP_TAG(ParameterMetaData);
 NEW_PROP_TAG(ParameterGroupPrefix);
 NEW_PROP_TAG(Description);
 
+
 //! Set the ParameterMetaData property
 SET_PROP(ParameterSystem, ParameterMetaData)
 {
     typedef Dune::ParameterTree type;
 
     static Dune::ParameterTree &tree()
-    {
-        static Dune::ParameterTree obj_;
-        return obj_;
-    }
+    { return storage_().tree; }
 
-    static std::map<std::string, ::Ewoms::Parameters::ParamInfo> &registry()
-    {
-        static std::map<std::string, ::Ewoms::Parameters::ParamInfo> obj_;
-        return obj_;
-    }
+    static std::map<std::string, ::Ewoms::Parameters::ParamInfo> &mutableRegistry()
+    { return storage_().registry; }
+
+    static const std::map<std::string, ::Ewoms::Parameters::ParamInfo> &registry()
+    { return storage_().registry; }
 
     static std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> &
     registrationFinalizers()
-    {
-        static std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> obj_;
-        return obj_;
-    }
+    { return storage_().finalizers; }
 
     static bool &registrationOpen()
-    {
-        static bool obj_ = true;
-        return obj_;
-    }
+    { return storage_().registrationOpen; }
+
+private:
+    // this is not pretty, but handling these attributes as static variables inside
+    // member functions of the ParameterSystem members, this triggers a bug in clang
+    // 3.5's address sanitizer which causes these variables to be initialized multiple
+    // times...
+    struct Storage_ {
+        Storage_()
+        {
+            registrationOpen = true;
+        }
+
+        Dune::ParameterTree tree;
+        std::map<std::string, ::Ewoms::Parameters::ParamInfo> registry;
+        std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> finalizers;
+        bool registrationOpen = true;
+    };
+    static Storage_& storage_() {
+        static Storage_ obj;
+        return obj;
+    };
 };
 
 SET_STRING_PROP(ParameterSystem, ParameterGroupPrefix, "");
@@ -305,7 +318,7 @@ void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
     auto keyIt = keyList.begin();
     const auto &keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        std::string value = ParamsMeta::registry()[*keyIt].compileTimeValue;
+        std::string value = ParamsMeta::registry().at(*keyIt).compileTimeValue;
         if (tree.hasKey(*keyIt))
             value = tree.get(*keyIt, "");
         os << *keyIt << "=\"" << value << "\"\n";
@@ -322,7 +335,7 @@ void printCompileTimeParamList_(std::ostream &os,
     auto keyIt = keyList.begin();
     const auto &keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        const auto &paramInfo = ParamsMeta::registry()[*keyIt];
+        const auto &paramInfo = ParamsMeta::registry().at(*keyIt);
         os << *keyIt << "=\"" << paramInfo.compileTimeValue
            << "\" # property: " << paramInfo.propertyName << "\n";
     }
@@ -779,14 +792,14 @@ void registerParam(const char *paramName, const char *propertyName, const char *
     if (ParamsMeta::registry().find(paramName) != ParamsMeta::registry().end()) {
         // allow to register a parameter twice, but only if the
         // parameter name, type and usage string are exactly the same.
-        if (ParamsMeta::registry()[paramName] == paramInfo)
+        if (ParamsMeta::registry().at(paramName) == paramInfo)
             return;
         OPM_THROW(std::logic_error,
                   "Parameter " << paramName
                   << " registered twice with non-matching characteristics.");
     }
 
-    ParamsMeta::registry()[paramName] = paramInfo;
+    ParamsMeta::mutableRegistry()[paramName] = paramInfo;
 }
 
 template <class TypeTag>
