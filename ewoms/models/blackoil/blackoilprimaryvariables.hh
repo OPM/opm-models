@@ -62,6 +62,9 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
 
+    // number of equations
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
     // component indices from the fluid system
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
@@ -74,7 +77,10 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 public:
     BlackOilPrimaryVariables()
         : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    {
+        Valgrind::SetUndefined(*this);
+        pvtRegionIdx_ = 0;
+    }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
@@ -233,6 +239,14 @@ public:
         ParentType::operator=(other);
         switchingVariableIsGasSaturation_ = other.switchingVariableIsGasSaturation_;
         pvtRegionIdx_ = other.pvtRegionIdx_;
+        return *this;
+    }
+
+    BlackOilPrimaryVariables& operator=(Scalar value)
+    {
+        for (int i = 0; i < numEq; ++i)
+            (*this)[i] = value;
+
         return *this;
     }
 
