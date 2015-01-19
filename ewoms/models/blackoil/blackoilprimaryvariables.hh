@@ -228,6 +228,14 @@ public:
         return false;
     }
 
+    BlackOilPrimaryVariables& operator=(const BlackOilPrimaryVariables& other)
+    {
+        ParentType::operator=(other);
+        switchingVariableIsGasSaturation_ = other.switchingVariableIsGasSaturation_;
+        pvtRegionIdx_ = other.pvtRegionIdx_;
+        return *this;
+    }
+
 private:
     bool switchingVariableIsGasSaturation_;
     unsigned char pvtRegionIdx_;

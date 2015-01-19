@@ -178,16 +178,19 @@ template<class TypeTag >
 class BlackOilModel
     : public MultiPhaseBaseModel<TypeTag>
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
     BlackOilModel(Simulator &simulator)
@@ -334,6 +337,111 @@ public:
             << ", num switched=" << numSwitched_;
     }
 
+    /*!
+     * \brief Write the current solution for a degree of freedom to a
+     *        restart file.
+     *
+     * \param outstream The stream into which the vertex data should
+     *                  be serialized to
+     * \param dof The Dune entity which's data should be serialized
+     */
+    template <class DofEntity>
+    void serializeEntity(std::ostream &outstream, const DofEntity &dof)
+    {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        int dofIdx = asImp_().dofMapper().index(dof);
+#else
+        int dofIdx = asImp_().dofMapper().map(dof);
+#endif
+
+        // write phase state
+        if (!outstream.good()) {
+            OPM_THROW(std::runtime_error, "Could not serialize degree of freedom " << dofIdx);
+        }
+
+        // write the primary variables
+        const auto& priVars = this->solution_[/*timeIdx=*/0][dofIdx];
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
+            outstream << priVars[eqIdx] << " ";
+
+        // write the pseudo primary variables
+        outstream << priVars.switchingVariableIsGasSaturation() << " ";
+        outstream << priVars.pvtRegionIndex() << " ";
+    }
+
+    /*!
+     * \brief Reads the current solution variables for a degree of
+     *        freedom from a restart file.
+     *
+     * \param instream The stream from which the vertex data should
+     *                  be deserialized from
+     * \param dof The Dune entity which's data should be deserialized
+     */
+    template <class DofEntity>
+    void deserializeEntity(std::istream &instream,
+                           const DofEntity &dof)
+    {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        int dofIdx = asImp_().dofMapper().index(dof);
+#else
+        int dofIdx = asImp_().dofMapper().map(dof);
+#endif
+
+        // read in the "real" primary variables of the DOF
+        auto& priVars = this->solution_[/*timeIdx=*/0][dofIdx];
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            if (!instream.good())
+                OPM_THROW(std::runtime_error,
+                          "Could not deserialize degree of freedom " << dofIdx);
+            instream >> priVars[eqIdx];
+        }
+
+        // read the pseudo primary variables
+        bool switchingIsSat;
+        instream >> switchingIsSat;
+
+        int pvtRegionIdx;
+        instream >> pvtRegionIdx;
+
+        if (!instream.good())
+            OPM_THROW(std::runtime_error,
+                      "Could not deserialize degree of freedom " << dofIdx);
+
+        priVars.setSwitchingVariableIsGasSaturation(switchingIsSat);
+        priVars.setPvtRegionIndex(pvtRegionIdx);
+    }
+
+    /*!
+     * \brief Deserializes the state of the model.
+     *
+     * \tparam Restarter The type of the serializer class
+     *
+     * \param res The serializer object
+     */
+    template <class Restarter>
+    void deserialize(Restarter &res)
+    {
+        ParentType::deserialize(res);
+
+        // set the PVT indices of the primary variables. This is also done by writing
+        // them into the restart file and re-reading them, but it is better to calculate
+        // them from scratch because the input could have been changed in this regard...
+        ElementContext elemCtx(this->simulator_);
+        auto elemIt = this->gridView().template begin</*codim=*/0>();
+        auto elemEndIt = this->gridView().template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++ elemIt) {
+            elemCtx.updateStencil(*elemIt);
+            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timIdx=*/0); ++dofIdx) {
+                int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timIdx=*/0);
+                updatePvtRegionIndex_(this->solution_[/*timeIdx=*/0][globalDofIdx],
+                                      elemCtx, dofIdx, /*timeIdx=*/0);
+            }
+        }
+
+        this->solution_[/*timeIdx=*/1] = this->solution_[/*timeIdx=*/0];
+    }
+
+
 // HACK: this should be made private and the BaseModel should be
 // declared to be a friend. Since C++-2003 (and more relevantly GCC
 // 4.4) don't support friend typedefs, we need to make this method
@@ -346,10 +454,7 @@ public:
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
                                     const Context &context, int dofIdx, int timeIdx)
-    {
-        int regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
-        priVars.setPvtRegionIndex(regionIdx);
-    }
+    { updatePvtRegionIndex_(priVars, context, dofIdx, timeIdx); }
 
     void registerOutputModules_()
     {
@@ -361,6 +466,18 @@ public:
     }
 
 private:
+    Implementation &asImp_()
+    { return *static_cast<Implementation*>(this); }
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation*>(this); }
+
+    template <class Context>
+    void updatePvtRegionIndex_(PrimaryVariables &priVars, const Context &context, int dofIdx, int timeIdx)
+    {
+        int regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
+        priVars.setPvtRegionIndex(regionIdx);
+    }
+
     mutable Scalar referencePressure_;
     int numSwitched_;
 };
