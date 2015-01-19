@@ -265,6 +265,7 @@ for OPT in "$@"; do
             opm-*       |\
             dune        |\
             dune-*      |\
+            zoltan      |\
             zlib)
               rootvar="$(uppercase ${pkgname})_ROOT"
               rootvar="${rootvar/-/_}"
