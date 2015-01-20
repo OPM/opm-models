@@ -39,6 +39,7 @@ Optional Features:
 Optional Packages:
   --with-ug=PATH          use the UG libraries from a specified location
   --with-alugrid=PATH     use the ALUGrid library from a specified location
+  --enable-ebos-alugrid   use the ALUGrid library for the ECL black oil simulator
   --with-metis=PATH       use the METIS graph partitioning library from a specified location
   --with-boost=PATH       use Boost library from a specified location
   --with-dune=PATH        specify parent of all DUNE modules not specified
@@ -297,6 +298,9 @@ for OPT in "$@"; do
               # special flag: don't disable any particular package
               pkgname=""
               ;;
+            ebos-alugrid)
+              FEATURES="${FEATURES} \"-DEBOS_USE_ALUGRID=1\""
+              ;;
             pch)
               pch_use=" -DPRECOMPILE_HEADERS:BOOL=OFF"
               pkgname=""
@@ -438,6 +442,10 @@ for OPT in "$@"; do
               ;;
             static)
               shared="OFF"
+              ;;
+            ebos-alugrid)
+              FEATURES="${FEATURES} \"-DEBOS_USE_ALUGRID=1\""
+              continue
               ;;
             *)
               invalid_opt "--enable-${kind}"

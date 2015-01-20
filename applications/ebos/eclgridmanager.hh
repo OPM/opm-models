@@ -49,6 +49,19 @@
 
 #include <vector>
 
+// set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
+// the macro is only used by this file...
+#if EBOS_USE_ALUGRID
+#if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
+#warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
+#warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
+#undef EBOS_USE_ALUGRID
+#define EBOS_USE_ALUGRID 0
+#endif
+#else
+#define EBOS_USE_ALUGRID 0
+#endif
+
 namespace Ewoms {
 template <class TypeTag>
 class EclProblem;
@@ -69,11 +82,12 @@ NEW_PROP_TAG(EclDeckFileName);
 SET_STRING_PROP(EclGridManager, EclDeckFileName, "data/ecl.DATA");
 
 // set the Grid and GridManager properties
-#if HAVE_DUNE_ALUGRID
+#if EBOS_USE_ALUGRID
 SET_TYPE_PROP(EclGridManager, Grid, Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming>);
 #else
 SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
 #endif
+
 SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
 }} // namespace Opm, Properties
 
@@ -165,7 +179,7 @@ public:
             opmLog->printAll(std::cout);
         }
 
-#if HAVE_DUNE_ALUGRID
+#if EBOS_USE_ALUGRID
         std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
 #else
         Grid* cpgrid = new Grid();
@@ -178,7 +192,7 @@ public:
         for (int i = 0; i < dimension; ++i)
             cartesianSize_[i] = cpgrid->logicalCartesianSize()[i];
 
-#if HAVE_DUNE_ALUGRID
+#if EBOS_USE_ALUGRID
         Dune::FromToGridFactory< Grid > factory;
         std::vector< int > ordering;
         grid_ = GridPointer(factory.convert(*cpgrid, ordering));
@@ -259,7 +273,7 @@ public:
      */
     const std::vector<int>& cartesianCellId() const
     {
-#if HAVE_DUNE_ALUGRID
+#if EBOS_USE_ALUGRID
         return cartesianCellId_;
 #else
         return grid_->globalCell();
@@ -280,7 +294,7 @@ public:
         ijk[1] = gc % cartesianSize_[1];
         ijk[2] = gc / cartesianSize_[1];
 
-#if not defined NDEBUG && HAVE_DUNE_ALUGRID == 0
+#if !defined NDEBUG && !EBOS_USE_ALUGRID
         // make sure ijk computation is the same as in CpGrid
         std::array<int,3> checkijk;
         grid_->getIJK(c, checkijk);
