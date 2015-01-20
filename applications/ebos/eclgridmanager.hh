@@ -188,8 +188,15 @@ public:
           cartesianCellId_ = cpgrid->globalCell();
         }
         else
-          // todo
-          std::abort();
+        {
+          const int size = ordering.size();
+          cartesianCellId_.reserve( size );
+          const std::vector<int>& globalCell = cpgrid->globalCell();
+          for( int i=0; i<size; ++i )
+          {
+            cartesianCellId_.push_back( globalCell[ ordering[ i ] ] );
+          }
+        }
 #else
         grid_ = GridPointer( cpgrid );
 #endif
