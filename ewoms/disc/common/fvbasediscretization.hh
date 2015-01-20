@@ -373,13 +373,15 @@ public:
         ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
         const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            const Element& elem = *elemIt;
+            const bool isInteriorElement = elem.partitionType() == Dune::InteriorEntity;
             // ignore everything which is not in the interior if the
             // current process' piece of the grid
-            if (elemIt->partitionType() != Dune::InteriorEntity)
+            if ( ! isInteriorElement )
                 continue;
 
             // deal with the current element
-            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateStencil(elem);
             const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
             // loop over all element vertices, i.e. sub control volumes
@@ -390,7 +392,7 @@ public:
 
                 Scalar dofVolume = stencil.subControlVolume(dofIdx).volume();
                 dofTotalVolume_[globalIdx] += dofVolume;
-                if (elemIt->partitionType() == Dune::InteriorEntity)
+                if ( isInteriorElement ) // is this neccessary?
                     gridTotalVolume_ += dofVolume;
             }
         }
@@ -443,13 +445,14 @@ public:
         ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
         const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            const Element& elem = *elemIt;
             // ignore everything which is not in the interior if the
             // current process' piece of the grid
-            if (elemIt->partitionType() != Dune::InteriorEntity)
+            if (elem.partitionType() != Dune::InteriorEntity)
                 continue;
 
             // deal with the current element
-            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateStencil(elem);
 
             // loop over all element vertices, i.e. sub control volumes
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
@@ -642,10 +645,11 @@ public:
                  !threadedElemIt.isFinished(elemIt);
                  threadedElemIt.increment(elemIt))
             {
-                if (elemIt->partitionType() != Dune::InteriorEntity)
+                const Element& elem = *elemIt;
+                if (elem.partitionType() != Dune::InteriorEntity)
                     continue;
 
-                elemCtx.updateAll(*elemIt);
+                elemCtx.updateAll(elem);
                 residual.resize(elemCtx.numDof(/*timeIdx=*/0));
                 storageTerm.resize(elemCtx.numPrimaryDof(/*timeIdx=*/0));
                 asImp_().localResidual(threadId).eval(residual, storageTerm, elemCtx);
@@ -704,10 +708,11 @@ public:
                  !threadedElemIt.isFinished(elemIt);
                  threadedElemIt.increment(elemIt))
             {
-                if (elemIt->partitionType() != Dune::InteriorEntity)
+                const Element& elem = *elemIt;
+                if (elem.partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
 
-                elemCtx.updateStencil(*elemIt);
+                elemCtx.updateStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
                 int numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
@@ -1351,10 +1356,11 @@ public:
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
+            const Element& elem = *elemIt;
+            if (elem.partitionType() != Dune::InteriorEntity)
                 continue;
 
-            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateStencil(elem);
             elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
             elemCtx.updateExtensiveQuantities(/*timeIdx=*/0);
 

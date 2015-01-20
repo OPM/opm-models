@@ -128,6 +128,7 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+    typedef typename GridView::template Codim<0>::Entity Element;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
@@ -208,10 +209,11 @@ public:
                  !threadedElemIt.isFinished(elemIt);
                  threadedElemIt.increment(elemIt))
             {
-                if (elemIt->partitionType() != Dune::InteriorEntity)
+                const Element& elem = *elemIt;
+                if (elem.partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
 
-                elemCtx.updateStencil(*elemIt);
+                elemCtx.updateStencil(elem);
                 elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
 
                 const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
