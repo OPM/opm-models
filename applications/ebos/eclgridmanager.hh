@@ -266,6 +266,29 @@ public:
 #endif
     }
 
+    /*!
+     * \brief Extract Cartesian index triplet (i,j,k) of an active cell.
+     *
+     * \param [in]   c   active cell index.
+     * \param [out] ijk  Cartesian index triplet
+    */
+    void getIJK(const int c, std::array<int,3>& ijk) const
+    {
+        assert( c < int(cartesianCellId().size()) );
+        int gc = cartesianCellId()[ c ];
+        ijk[0] = gc % cartesianSize_[0];  gc /= cartesianSize_[0];
+        ijk[1] = gc % cartesianSize_[1];
+        ijk[2] = gc / cartesianSize_[1];
+
+#if not defined NDEBUG && HAVE_DUNE_ALUGRID == 0
+        // make sure ijk computation is the same as in CpGrid
+        std::array<int,3> checkijk;
+        grid_->getIJK( c, checkijk );
+        for( int i=0; i<3; ++i )
+          assert( checkijk[ i ] == ijk[ i ] );
+#endif
+    }
+
 private:
     std::string caseName_;
     GridPointer grid_;
