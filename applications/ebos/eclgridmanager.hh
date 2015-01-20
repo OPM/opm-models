@@ -30,6 +30,11 @@
 
 #include <dune/grid/CpGrid.hpp>
 
+#if HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
+#include <dune/alugrid/common/fromtogridfactory.hh>
+#endif
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -64,7 +69,11 @@ NEW_PROP_TAG(EclDeckFileName);
 SET_STRING_PROP(EclGridManager, EclDeckFileName, "data/ecl.DATA");
 
 // set the Grid and GridManager properties
+#if HAVE_DUNE_ALUGRID
+SET_TYPE_PROP(EclGridManager, Grid, Dune :: ALUGrid< 3, 3, Dune::cube, Dune::nonconforming > );
+#else
 SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
+#endif
 SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
 }} // namespace Opm, Properties
 
@@ -84,6 +93,7 @@ class EclGridManager : public BaseGridManager<TypeTag>
 
     typedef std::unique_ptr<Grid> GridPointer;
 
+    static const int dimension = Grid :: dimension;
 public:
     /*!
      * \brief Register all run-time parameters for the grid manager.
@@ -101,7 +111,9 @@ public:
      * a cornerpoint description of the grid.
      */
     EclGridManager(Simulator &simulator)
-        : ParentType(simulator)
+        : ParentType(simulator),
+          cartesianCellId_(),
+          cartesianSize_()
     {
         std::string fileName = EWOMS_GET_PARAM(TypeTag, std::string, EclDeckFileName);
 
@@ -153,11 +165,41 @@ public:
             opmLog->printAll(std::cout);
         }
 
-        grid_ = GridPointer(new Grid());
-        grid_->processEclipseFormat(eclState_->getEclipseGrid(),
-                                    /*isPeriodic=*/false,
-                                    /*flipNormals=*/false,
-                                    /*clipZ=*/false);
+#if HAVE_DUNE_ALUGRID
+        std::unique_ptr< Dune::CpGrid > cpgrid( new Dune::CpGrid() );
+#else
+        Grid* cpgrid = new Grid();
+#endif
+        cpgrid->processEclipseFormat(eclState_->getEclipseGrid(),
+                                     /*isPeriodic=*/false,
+                                     /*flipNormals=*/false,
+                                     /*clipZ=*/false);
+
+        for( int i=0; i<dimension; ++i )
+          cartesianSize_[ i ] = cpgrid->logicalCartesianSize()[ i ];
+
+#if HAVE_DUNE_ALUGRID
+        Dune::FromToGridFactory< Grid > factory;
+        std::vector< int > ordering;
+        grid_ = GridPointer( factory.convert( *cpgrid, ordering ) );
+        if( ordering.empty() )
+        {
+          // copy cartesian cell index from cp grid
+          cartesianCellId_ = cpgrid->globalCell();
+        }
+        else
+        {
+          const int size = ordering.size();
+          cartesianCellId_.reserve( size );
+          const std::vector<int>& globalCell = cpgrid->globalCell();
+          for( int i=0; i<size; ++i )
+          {
+            cartesianCellId_.push_back( globalCell[ ordering[ i ] ] );
+          }
+        }
+#else
+        grid_ = GridPointer( cpgrid );
+#endif
 
         this->finalizeInit_();
     }
@@ -211,11 +253,57 @@ public:
     const std::string& caseName() const
     { return caseName_; }
 
+    /*!
+     * \brief Returns the logical Cartesian size
+     */
+    const std::array<int, dimension>& logicalCartesianSize() const
+    {
+      return cartesianSize_;
+    }
+
+    /*!
+     * \brief Returns the Cartesian cell id for identifaction with Ecl data
+     */
+    const std::vector<int>& cartesianCellId() const
+    {
+#if HAVE_DUNE_ALUGRID
+      return cartesianCellId_;
+#else
+      return grid_->globalCell();
+#endif
+    }
+
+    /*!
+     * \brief Extract Cartesian index triplet (i,j,k) of an active cell.
+     *
+     * \param [in]   c   active cell index.
+     * \param [out] ijk  Cartesian index triplet
+    */
+    void getIJK(const int c, std::array<int,3>& ijk) const
+    {
+        assert( c < int(cartesianCellId().size()) );
+        int gc = cartesianCellId()[ c ];
+        ijk[0] = gc % cartesianSize_[0];  gc /= cartesianSize_[0];
+        ijk[1] = gc % cartesianSize_[1];
+        ijk[2] = gc / cartesianSize_[1];
+
+#if not defined NDEBUG && HAVE_DUNE_ALUGRID == 0
+        // make sure ijk computation is the same as in CpGrid
+        std::array<int,3> checkijk;
+        grid_->getIJK( c, checkijk );
+        for( int i=0; i<3; ++i )
+          assert( checkijk[ i ] == ijk[ i ] );
+#endif
+    }
+
 private:
     std::string caseName_;
     GridPointer grid_;
     Opm::DeckConstPtr deck_;
     Opm::EclipseStateConstPtr eclState_;
+
+    std::vector<int> cartesianCellId_;
+    std::array<int,dimension> cartesianSize_;
 };
 
 } // namespace Ewoms
