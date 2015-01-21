@@ -44,6 +44,7 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
@@ -97,12 +98,13 @@ protected:
         ElementIterator elemIt = simulator.gridView().template begin<0>();
         const ElementIterator &elemEndIt = simulator.gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            if (linearizer.elementColor(*elemIt) == Linearizer::Green)
+            const Element& elem = *elemIt;
+            if (linearizer.elementColor(elem) == Linearizer::Green)
                 // don't look at green elements, since they
                 // probably have not changed much anyways
                 continue;
 
-            elemCtx.updateStencil(*elemIt);
+            elemCtx.updateStencil(elem);
 
             for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                 int globI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
