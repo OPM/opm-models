@@ -377,7 +377,7 @@ public:
             const bool isInteriorElement = elem.partitionType() == Dune::InteriorEntity;
             // ignore everything which is not in the interior if the
             // current process' piece of the grid
-            if ( ! isInteriorElement )
+            if (!isInteriorElement)
                 continue;
 
             // deal with the current element
@@ -385,14 +385,13 @@ public:
             const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
             // loop over all element vertices, i.e. sub control volumes
-            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++)
-            {
+            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++) {
                 // map the local degree of freedom index to the global one
                 unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
                 Scalar dofVolume = stencil.subControlVolume(dofIdx).volume();
                 dofTotalVolume_[globalIdx] += dofVolume;
-                if ( isInteriorElement ) // is this neccessary?
+                if (isInteriorElement)
                     gridTotalVolume_ += dofVolume;
             }
         }

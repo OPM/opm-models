@@ -70,7 +70,7 @@ SET_STRING_PROP(EclGridManager, EclDeckFileName, "data/ecl.DATA");
 
 // set the Grid and GridManager properties
 #if HAVE_DUNE_ALUGRID
-SET_TYPE_PROP(EclGridManager, Grid, Dune :: ALUGrid< 3, 3, Dune::cube, Dune::nonconforming > );
+SET_TYPE_PROP(EclGridManager, Grid, Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming>);
 #else
 SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
 #endif
@@ -166,7 +166,7 @@ public:
         }
 
 #if HAVE_DUNE_ALUGRID
-        std::unique_ptr< Dune::CpGrid > cpgrid( new Dune::CpGrid() );
+        std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
 #else
         Grid* cpgrid = new Grid();
 #endif
@@ -175,30 +175,25 @@ public:
                                      /*flipNormals=*/false,
                                      /*clipZ=*/false);
 
-        for( int i=0; i<dimension; ++i )
-          cartesianSize_[ i ] = cpgrid->logicalCartesianSize()[ i ];
+        for (int i = 0; i < dimension; ++i)
+            cartesianSize_[i] = cpgrid->logicalCartesianSize()[i];
 
 #if HAVE_DUNE_ALUGRID
         Dune::FromToGridFactory< Grid > factory;
         std::vector< int > ordering;
-        grid_ = GridPointer( factory.convert( *cpgrid, ordering ) );
-        if( ordering.empty() )
-        {
-          // copy cartesian cell index from cp grid
-          cartesianCellId_ = cpgrid->globalCell();
-        }
-        else
-        {
-          const int size = ordering.size();
-          cartesianCellId_.reserve( size );
-          const std::vector<int>& globalCell = cpgrid->globalCell();
-          for( int i=0; i<size; ++i )
-          {
-            cartesianCellId_.push_back( globalCell[ ordering[ i ] ] );
-          }
+        grid_ = GridPointer(factory.convert(*cpgrid, ordering));
+        if (ordering.empty())
+            // copy cartesian cell index from cp grid
+            cartesianCellId_ = cpgrid->globalCell();
+        else {
+            const int size = ordering.size();
+            cartesianCellId_.reserve(size);
+            const std::vector<int>& globalCell = cpgrid->globalCell();
+            for (int i = 0; i < size; ++i)
+                cartesianCellId_.push_back(globalCell[ordering[i]]);
         }
 #else
-        grid_ = GridPointer( cpgrid );
+        grid_ = GridPointer(cpgrid);
 #endif
 
         this->finalizeInit_();
@@ -257,9 +252,7 @@ public:
      * \brief Returns the logical Cartesian size
      */
     const std::array<int, dimension>& logicalCartesianSize() const
-    {
-      return cartesianSize_;
-    }
+    { return cartesianSize_; }
 
     /*!
      * \brief Returns the Cartesian cell id for identifaction with Ecl data
@@ -267,9 +260,9 @@ public:
     const std::vector<int>& cartesianCellId() const
     {
 #if HAVE_DUNE_ALUGRID
-      return cartesianCellId_;
+        return cartesianCellId_;
 #else
-      return grid_->globalCell();
+        return grid_->globalCell();
 #endif
     }
 
@@ -278,11 +271,11 @@ public:
      *
      * \param [in]   c   active cell index.
      * \param [out] ijk  Cartesian index triplet
-    */
+     */
     void getIJK(const int c, std::array<int,3>& ijk) const
     {
-        assert( c < int(cartesianCellId().size()) );
-        int gc = cartesianCellId()[ c ];
+        assert(c < int(cartesianCellId().size()));
+        int gc = cartesianCellId()[c];
         ijk[0] = gc % cartesianSize_[0];  gc /= cartesianSize_[0];
         ijk[1] = gc % cartesianSize_[1];
         ijk[2] = gc / cartesianSize_[1];
@@ -290,9 +283,9 @@ public:
 #if not defined NDEBUG && HAVE_DUNE_ALUGRID == 0
         // make sure ijk computation is the same as in CpGrid
         std::array<int,3> checkijk;
-        grid_->getIJK( c, checkijk );
-        for( int i=0; i<3; ++i )
-          assert( checkijk[ i ] == ijk[ i ] );
+        grid_->getIJK(c, checkijk);
+        for (int i=0; i<3; ++i)
+            assert(checkijk[i] == ijk[i]);
 #endif
     }
 
