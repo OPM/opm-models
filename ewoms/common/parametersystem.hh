@@ -193,19 +193,17 @@ SET_PROP(ParameterSystem, ParameterMetaData)
 
 private:
     // this is not pretty, but handling these attributes as static variables inside
-    // member functions of the ParameterSystem members, this triggers a bug in clang
+    // member functions of the ParameterMetaData property class triggers a bug in clang
     // 3.5's address sanitizer which causes these variables to be initialized multiple
     // times...
     struct Storage_ {
         Storage_()
-        {
-            registrationOpen = true;
-        }
+        { registrationOpen = true; }
 
         Dune::ParameterTree tree;
         std::map<std::string, ::Ewoms::Parameters::ParamInfo> registry;
         std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> finalizers;
-        bool registrationOpen = true;
+        bool registrationOpen;
     };
     static Storage_& storage_() {
         static Storage_ obj;
