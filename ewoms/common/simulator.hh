@@ -581,21 +581,32 @@ public:
     static std::string humanReadableTime(Scalar timeInSeconds, bool isAmendment=true)
     {
         std::ostringstream oss;
-        oss << std::setprecision(2);
+        oss << std::setprecision(4);
         if (isAmendment)
             oss << " (";
-        if (timeInSeconds >= 365.25*24*60*60)
-            oss << timeInSeconds/(365.25*24*60*60) << " years";
-        else if (timeInSeconds >= 24.0*60*60)
-            oss << timeInSeconds/(24.0*60*60) << " days";
-        else if (timeInSeconds >= 60.0*60)
-            oss << timeInSeconds/(60.0*60) << " hours";
-        else if (timeInSeconds >= 60.0)
-            oss << timeInSeconds/(60.0) << " minutes";
-        else if (timeInSeconds < 1e-3)
-            oss << timeInSeconds/(1e-6) << " microseconds";
-        else if (timeInSeconds <= 1.0)
-            oss << timeInSeconds/(1e-3) << " milliseconds";
+        if (timeInSeconds >= 365.25*24*60*60) {
+            int years = timeInSeconds/(365.25*24*60*60);
+            int days = (timeInSeconds - years*(365.25*24*60*60))/(24*60*60);
+            double hours = (timeInSeconds - years*(365.25*24*60*60) - days*(24*60*60))/(60*60);
+            oss << years << " years, " << days << " days, "  << hours << " hours";
+        }
+        else if (timeInSeconds >= 24.0*60*60) {
+            int days = timeInSeconds/(24*60*60);
+            int hours = (timeInSeconds - days*(24*60*60))/(60*60);
+            double minutes = (timeInSeconds - days*(24*60*60) - hours*(24*60*60))/60;
+            oss << days << " days, " << hours << " hours, " << minutes << " minutes";
+        }
+        else if (timeInSeconds >= 60.0*60) {
+            int hours = timeInSeconds/(60*60);
+            int minutes = (timeInSeconds - hours*(24*60*60))/60;
+            double seconds = (timeInSeconds - hours*(24*60*60) - minutes*60);
+            oss << hours << " hours, " << minutes << " minutes, "  << seconds << " seconds";
+        }
+        else if (timeInSeconds >= 60.0) {
+            int minutes = timeInSeconds/60;
+            double seconds = (timeInSeconds - minutes*60);
+            oss << minutes << " minutes, "  << seconds << " seconds";
+        }
         else if (!isAmendment)
             oss << timeInSeconds << " seconds";
         else
