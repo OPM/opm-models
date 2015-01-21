@@ -356,9 +356,6 @@ public:
         if (!enablePartialRelinearization_())
             return;
 
-        ElementIterator elemIt = gridView_().template begin<0>();
-        ElementIterator elemEndIt = gridView_().template end<0>();
-
         // mark the red degrees of freedom and update the tolerance of
         // the linearization which actually will get achieved
         nextRelinearizationAccuracy_ = 0;
@@ -375,10 +372,14 @@ public:
                     std::max(nextRelinearizationAccuracy_, dofError_[dofIdx]);
         }
 
+        ElementIterator elemIt = gridView_().template begin<0>();
+        ElementIterator elemEndIt = gridView_().template end<0>();
+
         Stencil stencil(gridView_());
         // Mark all red elements
         for (; elemIt != elemEndIt; ++elemIt) {
-            stencil.update(*elemIt);
+            const Element& elem = *elemIt;
+            stencil.update(elem);
 
             // find out whether the current element contains a red degree of freedom in
             // its primary degrees of freedom.
@@ -395,9 +396,9 @@ public:
             // if yes, the element color is also red, else it is not
             // red, i.e. green for the mean time
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int globalElemIdx = elementMapper_().index(*elemIt);
+            int globalElemIdx = elementMapper_().index(elem);
 #else
-            int globalElemIdx = elementMapper_().map(*elemIt);
+            int globalElemIdx = elementMapper_().map(elem);
 #endif
             elementColor_[globalElemIdx] = isRed?Red:Green;
         }
@@ -405,16 +406,17 @@ public:
         // Mark yellow degrees of freedom (as orange for the mean time)
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+          const Element& elem = *elemIt;
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int elemIdx = this->elementMapper_().index(*elemIt);
+            int elemIdx = this->elementMapper_().index(elem);
 #else
-            int elemIdx = this->elementMapper_().map(*elemIt);
+            int elemIdx = this->elementMapper_().map(elem);
 #endif
             if (elementColor_[elemIdx] != Red)
                 // non-red elements do not tint degrees of freedom yellow!
                 continue;
 
-            stencil.update(*elemIt);
+            stencil.update(elem);
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
@@ -438,10 +440,11 @@ public:
         // Mark yellow elements
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            const Element& elem = *elemIt;
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int elemIdx = this->elementMapper_().index(*elemIt);
+            int elemIdx = this->elementMapper_().index(elem);
 #else
-            int elemIdx = this->elementMapper_().map(*elemIt);
+            int elemIdx = this->elementMapper_().map(elem);
 #endif
             if (elementColor_[elemIdx] == Red)
                 // element is already red
@@ -450,7 +453,7 @@ public:
             // check whether the element's stencil features a yellow (resp. orange at
             // this point) degree of freedom
             bool isYellow = false;
-            stencil.update(*elemIt);
+            stencil.update(elem);
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
@@ -468,17 +471,18 @@ public:
         // at least one green element as a neighbor.
         elemIt = gridView_().template begin<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
+            const Element& elem = *elemIt;
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int elemIdx = this->elementMapper_().index(*elemIt);
+            int elemIdx = this->elementMapper_().index(elem);
 #else
-            int elemIdx = this->elementMapper_().map(*elemIt);
+            int elemIdx = this->elementMapper_().map(elem);
 #endif
             if (elementColor_[elemIdx] != Green)
                 // yellow and red elements do not make orange degrees
                 // of freedom yellow!
                 continue;
 
-            stencil.update(*elemIt);
+            stencil.update(elem);
             int numDof = stencil.numDof();
             for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
                 int globalIdx = stencil.globalSpaceIndex(dofIdx);
@@ -665,10 +669,11 @@ private:
         // freedom of each primary degree of freedom
         typedef std::set<int> NeighborSet;
         std::vector<NeighborSet> neighbors(numAllDof);
-        ElementIterator eIt = gridView_().template begin<0>();
-        const ElementIterator eEndIt = gridView_().template end<0>();
-        for (; eIt != eEndIt; ++eIt) {
-            stencil.update(*eIt);
+        ElementIterator elemIt = gridView_().template begin<0>();
+        const ElementIterator elemEndIt = gridView_().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            const Element &elem = *elemIt;
+            stencil.update(elem);
 
             for (int primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof(); ++primaryDofIdx) {
                 int myIdx = stencil.globalSpaceIndex(primaryDofIdx);

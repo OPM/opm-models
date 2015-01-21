@@ -245,6 +245,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+    typedef typename GridView::template Codim<0>::Entity   Element;
 
 public:
     StokesModel(Simulator &simulator)
@@ -347,10 +348,11 @@ public:
         ElementIterator elemIt = this->gridView().template begin<0>();
         ElementIterator elemEndIt = this->gridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            if (elemIt->partitionType() != Dune::InteriorEntity)
+            const Element& elem = *elemIt;
+            if (elem.partitionType() != Dune::InteriorEntity)
                 continue;
 
-            elemCtx.updateAll(*elemIt);
+            elemCtx.updateAll(elem);
 
             int numScv = elemCtx.numPrimaryDof(/*timeIdx=*/0);
             for (int dofIdx = 0; dofIdx < numScv; ++dofIdx)
