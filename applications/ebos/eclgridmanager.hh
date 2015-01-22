@@ -30,7 +30,20 @@
 
 #include <dune/grid/CpGrid.hpp>
 
-#if HAVE_DUNE_ALUGRID
+// set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
+// the macro is only used by this file...
+#if EBOS_USE_ALUGRID
+#if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
+#warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
+#warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
+#undef EBOS_USE_ALUGRID
+#define EBOS_USE_ALUGRID 0
+#endif
+#else
+#define EBOS_USE_ALUGRID 0
+#endif
+
+#if EBOS_USE_ALUGRID
 #include <dune/alugrid/grid.hh>
 #include <dune/alugrid/common/fromtogridfactory.hh>
 #endif
@@ -48,19 +61,6 @@
 #include <dune/common/version.hh>
 
 #include <vector>
-
-// set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
-// the macro is only used by this file...
-#if EBOS_USE_ALUGRID
-#if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
-#warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
-#warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
-#undef EBOS_USE_ALUGRID
-#define EBOS_USE_ALUGRID 0
-#endif
-#else
-#define EBOS_USE_ALUGRID 0
-#endif
 
 namespace Ewoms {
 template <class TypeTag>
