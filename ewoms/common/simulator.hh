@@ -593,13 +593,13 @@ public:
         else if (timeInSeconds >= 24.0*60*60) {
             int days = timeInSeconds/(24*60*60);
             int hours = (timeInSeconds - days*(24*60*60))/(60*60);
-            double minutes = (timeInSeconds - days*(24*60*60) - hours*(24*60*60))/60;
+            double minutes = (timeInSeconds - days*(24*60*60) - hours*(60*60))/60;
             oss << days << " days, " << hours << " hours, " << minutes << " minutes";
         }
         else if (timeInSeconds >= 60.0*60) {
             int hours = timeInSeconds/(60*60);
-            int minutes = (timeInSeconds - hours*(24*60*60))/60;
-            double seconds = (timeInSeconds - hours*(24*60*60) - minutes*60);
+            int minutes = (timeInSeconds - hours*(60*60))/60;
+            double seconds = (timeInSeconds - hours*(60*60) - minutes*60);
             oss << hours << " hours, " << minutes << " minutes, "  << seconds << " seconds";
         }
         else if (timeInSeconds >= 60.0) {
