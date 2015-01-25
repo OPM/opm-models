@@ -41,16 +41,16 @@ NEW_TYPE_TAG(VtkBlackOil);
 // create the property tags needed for the multi phase module
 NEW_PROP_TAG(VtkWriteGasDissolutionFactor);
 NEW_PROP_TAG(VtkWriteSaturatedOilGasDissolutionFactor);
-NEW_PROP_TAG(VtkWriteGasFormationVolumeFactor);
-NEW_PROP_TAG(VtkWriteOilFormationVolumeFactor);
+NEW_PROP_TAG(VtkWriteGasFormationFactor);
+NEW_PROP_TAG(VtkWriteOilFormationFactor);
 NEW_PROP_TAG(VtkWriteOilSaturationPressure);
 NEW_PROP_TAG(VtkOutputFormat);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkBlackOil, VtkWriteGasDissolutionFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedOilGasDissolutionFactor, false);
-SET_BOOL_PROP(VtkBlackOil, VtkWriteGasFormationVolumeFactor, false);
-SET_BOOL_PROP(VtkBlackOil, VtkWriteOilFormationVolumeFactor, false);
+SET_BOOL_PROP(VtkBlackOil, VtkWriteGasFormationFactor, false);
+SET_BOOL_PROP(VtkBlackOil, VtkWriteOilFormationFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteOilSaturationPressure, false);
 } // namespace Properties
 } // namespace Opm
@@ -99,10 +99,10 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturatedOilGasDissolutionFactor,
                              "Include the gas dissolution factor (R_s,sat) of gas saturated "
                              "oil in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor,
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteGasFormationFactor,
                              "Include the gas formation volume factor (B_g) in the "
                              "VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor,
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilFormationFactor,
                              "Include the oil formation volume factor (B_o) of gas saturated "
                              "oil in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilSaturationPressure,
@@ -120,10 +120,10 @@ public:
             this->resizeScalarBuffer_(gasDissolutionFactor_);
         if (saturatedOilGasDissolutionFactorOutput_())
             this->resizeScalarBuffer_(saturatedOilGasDissolutionFactor_);
-        if (gasFormationVolumeFactorOutput_())
-            this->resizeScalarBuffer_(gasFormationVolumeFactor_);
-        if (saturatedOilFormationVolumeFactorOutput_())
-            this->resizeScalarBuffer_(saturatedOilFormationVolumeFactor_);
+        if (gasFormationFactorOutput_())
+            this->resizeScalarBuffer_(gasFormationFactor_);
+        if (saturatedOilFormationFactorOutput_())
+            this->resizeScalarBuffer_(saturatedOilFormationFactor_);
         if (oilSaturationPressureOutput_())
             this->resizeScalarBuffer_(oilSaturationPressure_);
     }
@@ -148,12 +148,12 @@ public:
             if (saturatedOilGasDissolutionFactorOutput_())
                 saturatedOilGasDissolutionFactor_[globalDofIdx] =
                     FluidSystem::gasDissolutionFactor(po, regionIdx);
-            if (gasFormationVolumeFactorOutput_())
-                gasFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::gasFormationVolumeFactor(po, regionIdx);
-            if (saturatedOilFormationVolumeFactorOutput_())
-                saturatedOilFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::saturatedOilFormationVolumeFactor(po, regionIdx);
+            if (gasFormationFactorOutput_())
+                gasFormationFactor_[globalDofIdx] =
+                    FluidSystem::gasFormationFactor(po, regionIdx);
+            if (saturatedOilFormationFactorOutput_())
+                saturatedOilFormationFactor_[globalDofIdx] =
+                    FluidSystem::saturatedOilFormationFactor(po, regionIdx);
             if (oilSaturationPressureOutput_())
                 oilSaturationPressure_[globalDofIdx] =
                     FluidSystem::oilSaturationPressure(X_oG, regionIdx);
@@ -173,10 +173,10 @@ public:
             this->commitScalarBuffer_(baseWriter, "R_s", gasDissolutionFactor_);
         if (saturatedOilGasDissolutionFactorOutput_())
             this->commitScalarBuffer_(baseWriter, "R_s,sat", saturatedOilGasDissolutionFactor_);
-        if (gasFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(baseWriter, "B_g", gasFormationVolumeFactor_);
-        if (saturatedOilFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(baseWriter, "B_o", saturatedOilFormationVolumeFactor_);
+        if (gasFormationFactorOutput_())
+            this->commitScalarBuffer_(baseWriter, "B_g", gasFormationFactor_);
+        if (saturatedOilFormationFactorOutput_())
+            this->commitScalarBuffer_(baseWriter, "B_o", saturatedOilFormationFactor_);
         if (oilSaturationPressureOutput_())
             this->commitScalarBuffer_(baseWriter, "pressure_sat,o", oilSaturationPressure_);
     }
@@ -188,19 +188,19 @@ private:
     static bool saturatedOilGasDissolutionFactorOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedOilGasDissolutionFactor); }
 
-    static bool gasFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor); }
+    static bool gasFormationFactorOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationFactor); }
 
-    static bool saturatedOilFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor); }
+    static bool saturatedOilFormationFactorOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilFormationFactor); }
 
     static bool oilSaturationPressureOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilSaturationPressure); }
 
     ScalarBuffer gasDissolutionFactor_;
     ScalarBuffer saturatedOilGasDissolutionFactor_;
-    ScalarBuffer gasFormationVolumeFactor_;
-    ScalarBuffer saturatedOilFormationVolumeFactor_;
+    ScalarBuffer gasFormationFactor_;
+    ScalarBuffer saturatedOilFormationFactor_;
     ScalarBuffer oilSaturationPressure_;
 };
 } // namespace Ewoms
