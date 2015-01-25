@@ -26,6 +26,7 @@
 
 #include "ertwrappers.hh"
 #include "eclwellmanager.hh"
+#include "ecldeckunits.hh"
 
 #include <opm/core/utility/PropertySystem.hpp>
 
@@ -96,7 +97,7 @@ public:
 
         // populate the set of quantities to write
         if (deck->hasKeyword("ALL"))
-            addAllSummaryKeywords_();
+            handleAllKeyword__();
         else
             addPresentSummaryKeywords_(deck);
 
@@ -115,6 +116,9 @@ public:
                                                    simulator_.time(),
                                                    simulator_.episodeIndex());
 
+        typedef EclDeckUnits<TypeTag> DeckUnits;
+        const auto& deckUnits = simulator_.problem().deckUnits();
+
         // add the well quantities
         for (int wellIdx = 0; wellIdx < wellsManager.numWells(); ++wellIdx) {
             const auto& well = wellsManager.well(wellIdx);
@@ -124,14 +128,14 @@ public:
                 Scalar bhpPascal = well->bottomHolePressure();
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wbhpErtHandle),
-                                   bhpPascal/1e5); // eclipse uses bars for this
+                                   deckUnits.siToDeck(bhpPascal, DeckUnits::pressure));
             }
 
             if (writeWthp_()) {
                 Scalar thpPascal = well->tubingHeadPressure();
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wthpErtHandle),
-                                   thpPascal/1e5); // eclipse uses bars for this
+                                   deckUnits.siToDeck(thpPascal, DeckUnits::pressure));
             }
 
             if (writeWgor_()) {
@@ -142,11 +146,14 @@ public:
                 // gas is MCF and the volume of oil is bbl)
                 Scalar gasRate = std::abs(well->surfaceRate(gasPhaseIdx));
                 Scalar oilRate = std::abs(well->surfaceRate(oilPhaseIdx));
-                Scalar gasToOilRate = gasRate/std::max(1e-20, oilRate);
+
+                Scalar gasToOilRatio = 0;
+                if (std::abs(oilRate) > 1e-3)
+                    gasToOilRatio = gasRate/oilRate;
 
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgorErtHandle),
-                                   gasToOilRate);
+                                   deckUnits.siToDeck(gasToOilRatio, DeckUnits::gasOilRatio));
             }
 
             //////////
@@ -155,21 +162,21 @@ public:
                 Scalar ratePerSecond = std::max(0.0, well->surfaceRate(waterPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wwirErtHandle),
-                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+                                   deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
             }
 
             if (writeWgir_()) {
                 Scalar ratePerSecond = std::max(0.0, well->surfaceRate(gasPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgirErtHandle),
-                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+                                   deckUnits.siToDeck(ratePerSecond, DeckUnits::gasRate));
             }
 
             if (writeWoir_()) {
                 Scalar ratePerSecond = std::max(0.0, well->surfaceRate(oilPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woirErtHandle),
-                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+                                   deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
             }
             //////////
 
@@ -179,21 +186,21 @@ public:
                 Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(waterPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wwprErtHandle),
-                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+                                   deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
             }
 
             if (writeWgpr_()) {
                 Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(gasPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgprErtHandle),
-                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+                                   deckUnits.siToDeck(ratePerSecond, DeckUnits::gasRate));
             }
 
             if (writeWopr_()) {
                 Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(oilPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woprErtHandle),
-                                   ratePerSecond * (24*60*60)); // eclipse uses daily rates for this
+                                   deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
             }
             //////////
         }
@@ -335,9 +342,10 @@ private:
     }
 
     // add all quantities which are implied by the ALL summary keyword
-    void addAllSummaryKeywords_()
+    void handleAllKeyword__()
     {
-        // according to the Eclipse reference manual
+        // these are the keywords implied by ALL which are documented by the Eclipse
+        // reference manual
         std::string allKw[] = {
                 "FOPR", "GOPR", "WOPR", "FOPT",
                 "GOPT", "WOPT", "FOIR", "GOIR",

@@ -208,7 +208,8 @@ public:
     /*!
      * \brief Create an ERT grid based an Opm::EclipseGrid.
      */
-    ErtGrid(Opm::EclipseGridConstPtr eclGrid)
+    template <class DeckUnits>
+    ErtGrid(Opm::EclipseGridConstPtr eclGrid, const DeckUnits& deckUnits)
     {
 #if HAVE_ERT
         std::vector<double> mapaxesData;
@@ -220,6 +221,11 @@ public:
         eclGrid->exportCOORD(coordData);
         eclGrid->exportZCORN(zcornData);
         eclGrid->exportACTNUM(actnumData);
+
+        // conversion to deck units
+        deckUnits.siToDeck(mapaxesData, DeckUnits::length);
+        deckUnits.siToDeck(coordData, DeckUnits::length);
+        deckUnits.siToDeck(zcornData, DeckUnits::length);
 
         ErtKeyword<float> mapaxesKeyword("MAPAXES", mapaxesData);
         ErtKeyword<float> coordKeyword("COORD", coordData);

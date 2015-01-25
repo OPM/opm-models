@@ -99,7 +99,8 @@ class EclWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
         std::string egridFileName(egridRawFileName);
         std::free(egridRawFileName);
 
-        ErtGrid ertGrid(writer.simulator_.gridManager().eclGrid());
+        ErtGrid ertGrid(writer.simulator_.gridManager().eclGrid(),
+                        writer.simulator_.problem().deckUnits());
         ertGrid.write(egridFileName, writer.reportStepIdx_);
 #endif
     }
