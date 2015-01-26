@@ -139,13 +139,12 @@ namespace Ewoms {
  * *saturated* oil, i.e. the density of the oil phase if some gas
  * phase is present.
  *
- * The composition of the oil phase is given by the <i>gas formation
- * factor</i> \f$R_s\f$, which defined as the volume of gas at
- * atmospheric pressure that is dissolved in saturated oil at a given
- * pressure:
+ * The composition of the oil phase is given by the <i>gas dissolution factor</i>
+ * \f$R_s\f$, which defined as the volume of gas at atmospheric pressure that is
+ * dissolved in a given amount of oil at reservoir pressure:
  *
  * \f[
- * R_s := \frac{x_o^G(p)\,\varrho_{mol,o}(p)}{\varrho_g(1\,\text{bar})}\;.
+ * R_s := \frac{\varrho_{o}^G}{\varrho_o^O}\;.
  * \f]
  *
  * This allows to calculate all quantities required for the
