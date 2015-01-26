@@ -42,6 +42,7 @@
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_rst_file.h>
+#include <ert/ecl_well/well_const.h>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -121,9 +122,15 @@ public:
         : ertHandle_(0)
     { set(name, data); }
 
-    /// Initialization from double-precision array.
+    /// Initialization from integer array.
     ErtKeyword(const std::string& name,
                const std::vector<int>& data)
+        : ertHandle_(0)
+    { set(name, data); }
+
+    /// Initialization from string array.
+    ErtKeyword(const std::string& name,
+               const std::vector<const char*>& data)
         : ertHandle_(0)
     { set(name, data); }
 
@@ -139,25 +146,34 @@ public:
     void set(const std::string name, const std::vector<DataElementType>& data)
     {
 #if HAVE_ERT
-        if(ertHandle_) {
+        if(ertHandle_)
             ecl_kw_free(ertHandle_);
-        }
 
         name_ = name;
-        ertHandle_ = ecl_kw_alloc(name.c_str(),
-                                  data.size(),
-                                  ertType_());
+        ertHandle_ = ecl_kw_alloc(name.c_str(), data.size(), ertType_());
 
-        // number of elements to take
-        const int numEntries = data.size();
-
-        // fill it with values
+        // fill ERT object with values
         T* target = static_cast<T*>(ecl_kw_get_ptr(ertHandle()));
-        for (int i = 0; i < numEntries; ++i) {
+        for (int i = 0; i < data.size(); ++i)
             target[i] = static_cast<T>(data[i]);
-        }
 
-        Valgrind::CheckDefined(target, numEntries);
+        Valgrind::CheckDefined(target, data.size());
+#endif
+    }
+
+    // special case for string keywords
+    void set(const std::string name, const std::vector<const char*>& data)
+    {
+#if HAVE_ERT
+        if(ertHandle_)
+            ecl_kw_free(ertHandle_);
+
+        name_ = name;
+        ertHandle_ = ecl_kw_alloc(name.c_str(), data.size(), ertType_());
+
+        // fill ERT object with values
+        for (int i = 0; i < data.size(); ++i)
+            ecl_kw_iset_char_ptr(ertHandle_, i, data[i]);
 #endif
     }
 
@@ -177,6 +193,8 @@ private:
         { return ECL_DOUBLE_TYPE; }
         if (std::is_same<T, int>::value)
         { return ECL_INT_TYPE; }
+        if (std::is_same<T, const char*>::value)
+        { return ECL_CHAR_TYPE; }
 
         OPM_THROW(std::logic_error,
                   "Unhandled type for data elements in ErtKeyword");
@@ -275,6 +293,10 @@ private:
  */
 class ErtRestartFile
 {
+    static const int numIwellItemsPerWell = 11;
+    static const int numZwelStringsPerWell = 3;
+    static const int numIconItemsPerConnection = 15;
+
 public:
     ErtRestartFile(const ErtRestartFile &) = delete;
 
@@ -289,12 +311,10 @@ public:
                                                    /*writeFormatedOutput=*/false,
                                                    reportStepIdx);
 
-        if (reportStepIdx == 0) {
+        if (reportStepIdx == 0)
             restartFileHandle_ = ecl_rst_file_open_write(restartFileName_);
-        }
-        else {
+        else
             restartFileHandle_ = ecl_rst_file_open_append(restartFileName_);
-        }
     }
 
     ~ErtRestartFile()
@@ -303,6 +323,13 @@ public:
         free(restartFileName_);
     }
 
+    /*!
+     * \brief Write the header for the current report step.
+     *
+     * This data structure contains how much time has elapsed since the beginning of the
+     * simulation and the locations and names of the wells as well as which cells are
+     * pierced by them.
+     */
     template <class Simulator>
     void writeHeader(const Simulator &simulator, int reportStepIdx)
     {
@@ -313,37 +340,170 @@ public:
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
 
-        ecl_rsthead_type rstHeader = { 0 };
+        ecl_rsthead_type rstHeader;
         rstHeader.sim_time = simulator.startTime() + secondsElapsed;
         rstHeader.nactive = eclGrid->getNumActive();
         rstHeader.nx = eclGrid->getNX();
         rstHeader.ny = eclGrid->getNY();
         rstHeader.nz = eclGrid->getNZ();
-        rstHeader.nwells = 0; // eclSchedule->numWells(reportStepIdx);
-        rstHeader.niwelz = 0;
-        rstHeader.nzwelz = 0;
-        rstHeader.niconz = 0;
-        rstHeader.ncwmax = 0;
+        rstHeader.nwells = eclSchedule->numWells(reportStepIdx);
+        rstHeader.niwelz = numIwellItemsPerWell;
+        rstHeader.nzwelz = numZwelStringsPerWell;
+        rstHeader.niconz = numIconItemsPerConnection;
         rstHeader.phase_sum = ECL_OIL_PHASE | ECL_WATER_PHASE | ECL_GAS_PHASE;
-        rstHeader.ncwmax = 0; // eclSchedule->getMaxNumCompletionsForWells(reportStepIdx);
-
-        static const int niwelz = 11; // Number of data elements per well in IWEL array in restart file
-        static const int nzwelz = 3;  // Number of 8-character words per well in ZWEL array restart file
-        static const int niconz = 14; // Number of data elements per completion in ICON array restart file
-        rstHeader.niwelz = niwelz;
-        rstHeader.nzwelz = nzwelz;
-        rstHeader.niconz = niconz;
+        rstHeader.ncwmax = eclSchedule->getMaxNumCompletionsForWells(reportStepIdx);
         rstHeader.sim_days = daysElapsed;
+        ecl_rst_file_fwrite_header(restartFileHandle_, reportStepIdx, &rstHeader);
 
-        ecl_rst_file_fwrite_header(restartFileHandle_,
-                                   reportStepIdx,
-                                   &rstHeader);
+        // well information
+        std::vector<int> iconData;
+        std::vector<int> iwelData;
+        std::vector<const char*> zwelData;
+
+        const auto& eclWells = eclSchedule->getWells(reportStepIdx);
+        auto eclWellIt = eclWells.begin();
+        const auto& eclWellEndIt = eclWells.end();
+        for (; eclWellIt != eclWellEndIt; ++eclWellIt) {
+            appendIwelData_(iwelData, *eclWellIt, reportStepIdx);
+            appendZwelData_(zwelData, *eclWellIt, reportStepIdx);
+            appendIconData_(iconData, *eclWellIt, reportStepIdx, rstHeader.ncwmax);
+        }
+
+        ErtKeyword<int> iwelKeyword(IWEL_KW, iwelData);
+        ErtKeyword<const char*> zwelKeyword(ZWEL_KW, zwelData);
+        ErtKeyword<int> iconKeyword(ICON_KW, iconData);
+
+        ecl_rst_file_add_kw(restartFileHandle_, iwelKeyword.ertHandle());
+        ecl_rst_file_add_kw(restartFileHandle_, zwelKeyword.ertHandle());
+        ecl_rst_file_add_kw(restartFileHandle_, iconKeyword.ertHandle());
     }
 
     ecl_rst_file_type *ertHandle() const
     { return restartFileHandle_; }
 
 private:
+    void appendIwelData_(std::vector<int>& iwelData,
+                         Opm::WellConstPtr eclWell,
+                         size_t reportStepIdx) const
+    {
+        Opm::CompletionSetConstPtr completionSet = eclWell->getCompletions(reportStepIdx);
+
+        iwelData.push_back(eclWell->getHeadI() + 1); // item 1 - well head I
+        iwelData.push_back(eclWell->getHeadJ() + 1); // item 2 - well head J
+        iwelData.push_back(0); // item 3 - well head K
+        iwelData.push_back(0); // item 4 - well head logically cartesian cell index? (TODO!?)
+        iwelData.push_back(completionSet->size()); // item 5 - number of completions
+        iwelData.push_back(1); // item 6 - group index, use group 1 for all wells for now
+        iwelData.push_back(ertWellType_(eclWell, reportStepIdx)); // item 7 - well type
+        iwelData.insert(iwelData.end(), 3, 0); //items 8,9,10 - undefined
+        iwelData.push_back(ertWellStatus_(eclWell, reportStepIdx)); // item 11 - well status
+
+        assert(iwelData.size() % numIwellItemsPerWell == 0);
+    }
+
+    void appendZwelData_(std::vector<const char*>& zwelData,
+                         Opm::WellConstPtr eclWell,
+                         size_t /*reportStepIdx*/) const
+    {
+        zwelData.push_back(eclWell->name().c_str());
+        zwelData.push_back("");
+        zwelData.push_back("");
+
+        assert(zwelData.size() % numZwelStringsPerWell == 0);
+    }
+
+    void appendIconData_(std::vector<int>& iconData,
+                         Opm::WellConstPtr eclWell,
+                         size_t reportStepIdx,
+                         int maxNumConnections) const
+    {
+        Opm::CompletionSetConstPtr completionsSet = eclWell->getCompletions(reportStepIdx);
+        for (size_t i = 0; i < completionsSet->size(); ++i) {
+            Opm::CompletionConstPtr completion = completionsSet->get(i);
+
+            iconData.push_back(1); // "IC item"
+            iconData.push_back(completion->getI() + 1);
+            iconData.push_back(completion->getJ() + 1)  ;
+            iconData.push_back(completion->getK() + 1);
+            iconData.push_back(0); // dummy item
+
+            if (completion->getState() == Opm::WellCompletion::OPEN)
+                iconData.push_back(1);
+            else
+                iconData.push_back(0);
+
+            // dummies: items 6,7,8,9,10,11,12
+            iconData.insert(iconData.end(), 7, 0);
+
+            int eclDirection;
+            switch (completion->getDirection()) {
+            case Opm::WellCompletion::X:
+                eclDirection = 1;
+                break;
+
+            case Opm::WellCompletion::Y:
+                eclDirection = 2;
+                break;
+
+            case Opm::WellCompletion::Z:
+                eclDirection = 3;
+                break;
+
+            default:
+                OPM_THROW(std::logic_error, "Encountered unimplemented completion direction.");
+            }
+            iconData.push_back(eclDirection);
+            iconData.push_back(0); // segment index (?)
+        }
+
+        int paddingSize = maxNumConnections - completionsSet->size();
+        for(int i=0; i < paddingSize; ++i)
+            iconData.insert(iconData.end(), numIconItemsPerConnection, 0);
+
+        assert(iconData.size() % numIconItemsPerConnection == 0);
+    }
+
+    int ertWellType_(Opm::WellConstPtr eclWell, size_t reportStepIdx) const
+    {
+        int ertWellType = IWEL_UNDOCUMENTED_ZERO;
+
+        if (eclWell->isProducer(reportStepIdx))
+            ertWellType = IWEL_PRODUCER;
+        else {
+            switch (eclWell->getInjectionProperties(reportStepIdx).injectorType) {
+            case Opm::WellInjector::WATER:
+                ertWellType = IWEL_WATER_INJECTOR;
+                break;
+
+            case Opm::WellInjector::GAS:
+                ertWellType = IWEL_GAS_INJECTOR;
+                break;
+
+            case Opm::WellInjector::OIL :
+                ertWellType = IWEL_OIL_INJECTOR;
+                break;
+
+            default:
+                // oops!
+                ertWellType = IWEL_UNDOCUMENTED_ZERO;
+            }
+        }
+
+        return ertWellType;
+    }
+
+    int ertWellStatus_(Opm::WellConstPtr eclWell, size_t reportStepIdx) const
+    {
+        int ertWellStatus;
+
+        if (eclWell->getStatus(reportStepIdx) == Opm::WellCommon::OPEN)
+            ertWellStatus = 1;
+        else
+            ertWellStatus = 0; // shut or closed...
+
+        return ertWellStatus;
+    }
+
     char *restartFileName_;
     ecl_rst_file_type *restartFileHandle_;
 };
