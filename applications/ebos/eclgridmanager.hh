@@ -269,37 +269,55 @@ public:
     { return cartesianSize_; }
 
     /*!
-     * \brief Returns the Cartesian cell id for identifaction with Ecl data
+     * \brief Returns the logical Cartesian size
      */
-    const std::vector<int>& cartesianCellId() const
+    int numLogicalCartesianCells() const
     {
 #if EBOS_USE_ALUGRID
-        return cartesianCellId_;
+        int n = cartesianCellId_.size();
 #else
-        return grid_->globalCell();
+        int n = grid_->globalCell().size();
+#endif
+        assert(cartesianSize_[0]*cartesianSize_[1]*cartesianSize_[2] == n);
+        return n;
+    }
+
+    /*!
+     * \brief Returns the Cartesian cell id for identifaction with Ecl data
+     */
+    int cartesianCellId(int compressedCellIdx) const
+    {
+#if EBOS_USE_ALUGRID
+        return cartesianCellId_[compressedCellIdx];
+#else
+        return grid_->globalCell()[compressedCellIdx];
 #endif
     }
 
     /*!
      * \brief Extract Cartesian index triplet (i,j,k) of an active cell.
      *
-     * \param [in]   c   active cell index.
-     * \param [out] ijk  Cartesian index triplet
+     * \param [in] cellIdx Active cell index.
+     * \param [out] ijk Cartesian index triplet
      */
-    void getIJK(const int c, std::array<int,3>& ijk) const
+    void getIJK(int cellIdx, std::array<int,3>& ijk) const
     {
-        assert(c < int(cartesianCellId().size()));
-        int gc = cartesianCellId()[c];
-        ijk[0] = gc % cartesianSize_[0];  gc /= cartesianSize_[0];
-        ijk[1] = gc % cartesianSize_[1];
-        ijk[2] = gc / cartesianSize_[1];
+        assert(cellIdx < int(numLogicalCartesianCells()));
+        int cartesianCellIdx = cartesianCellId(cellIdx);
+
+        ijk[0] = cartesianCellIdx % cartesianSize_[0];
+        cartesianCellIdx /= cartesianSize_[0];
+
+        ijk[1] = cartesianCellIdx % cartesianSize_[1];
+
+        ijk[2] = cartesianCellIdx / cartesianSize_[1];
 
 #if !defined NDEBUG && !EBOS_USE_ALUGRID
         // make sure ijk computation is the same as in CpGrid
-        std::array<int,3> checkijk;
-        grid_->getIJK(c, checkijk);
-        for (int i=0; i<3; ++i)
-            assert(checkijk[i] == ijk[i]);
+        std::array<int,3> checkIjk;
+        grid_->getIJK(cellIdx, checkIjk);
+        for (int i=0; i < 3; ++i)
+            assert(checkIjk[i] == ijk[i]);
 #endif
     }
 
