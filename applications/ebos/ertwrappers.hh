@@ -386,17 +386,17 @@ private:
                          Opm::WellConstPtr eclWell,
                          size_t reportStepIdx) const
     {
-        Opm::CompletionSetConstPtr completionSet = eclWell->getCompletions(reportStepIdx);
+        int offset = iwelData.size();
 
-        iwelData.push_back(eclWell->getHeadI() + 1); // item 1 - well head I
-        iwelData.push_back(eclWell->getHeadJ() + 1); // item 2 - well head J
-        iwelData.push_back(0); // item 3 - well head K
-        iwelData.push_back(0); // item 4 - well head logically cartesian cell index? (TODO!?)
-        iwelData.push_back(completionSet->size()); // item 5 - number of completions
-        iwelData.push_back(1); // item 6 - group index, use group 1 for all wells for now
-        iwelData.push_back(ertWellType_(eclWell, reportStepIdx)); // item 7 - well type
-        iwelData.insert(iwelData.end(), 3, 0); //items 8,9,10 - undefined
-        iwelData.push_back(ertWellStatus_(eclWell, reportStepIdx)); // item 11 - well status
+        iwelData.resize(iwelData.size() + numIwellItemsPerWell, 0);
+
+        Opm::CompletionSetConstPtr completionSet = eclWell->getCompletions(reportStepIdx);
+        iwelData[offset + IWEL_HEADI_ITEM] = eclWell->getHeadI() + 1;
+        iwelData[offset + IWEL_HEADJ_ITEM] = eclWell->getHeadJ() + 1;
+        iwelData[offset + IWEL_CONNECTIONS_ITEM] = completionSet->size();
+        iwelData[offset + IWEL_GROUP_ITEM] = 1; // currently we implement only a single group
+        iwelData[offset + IWEL_TYPE_ITEM] = ertWellType_(eclWell, reportStepIdx);
+        iwelData[offset + IWEL_STATUS_ITEM] = ertWellStatus_(eclWell, reportStepIdx);
 
         assert(iwelData.size() % numIwellItemsPerWell == 0);
     }
@@ -417,23 +417,18 @@ private:
                          size_t reportStepIdx,
                          int maxNumConnections) const
     {
+        int offset = iconData.size();
+
+        iconData.resize(iconData.size() + maxNumConnections*numIconItemsPerConnection, 0);
         Opm::CompletionSetConstPtr completionsSet = eclWell->getCompletions(reportStepIdx);
         for (size_t i = 0; i < completionsSet->size(); ++i) {
             Opm::CompletionConstPtr completion = completionsSet->get(i);
 
-            iconData.push_back(1); // "IC item"
-            iconData.push_back(completion->getI() + 1);
-            iconData.push_back(completion->getJ() + 1)  ;
-            iconData.push_back(completion->getK() + 1);
-            iconData.push_back(0); // dummy item
-
-            if (completion->getState() == Opm::WellCompletion::OPEN)
-                iconData.push_back(1);
-            else
-                iconData.push_back(0);
-
-            // dummies: items 6,7,8,9,10,11,12
-            iconData.insert(iconData.end(), 7, 0);
+            iconData[offset + ICON_IC_ITEM] = 1;
+            iconData[offset + ICON_I_ITEM] = completion->getI() + 1;
+            iconData[offset + ICON_J_ITEM] = completion->getJ() + 1;
+            iconData[offset + ICON_K_ITEM] = completion->getK() + 1;
+            iconData[offset + ICON_STATUS_ITEM] = (completion->getState() == Opm::WellCompletion::OPEN)?1:0;
 
             int eclDirection;
             switch (completion->getDirection()) {
@@ -452,13 +447,10 @@ private:
             default:
                 OPM_THROW(std::logic_error, "Encountered unimplemented completion direction.");
             }
-            iconData.push_back(eclDirection);
-            iconData.push_back(0); // segment index (?)
-        }
+            iconData[offset + ICON_STATUS_ITEM] = eclDirection;
 
-        int paddingSize = maxNumConnections - completionsSet->size();
-        for(int i=0; i < paddingSize; ++i)
-            iconData.insert(iconData.end(), numIconItemsPerConnection, 0);
+            offset += numIconItemsPerConnection;
+        }
 
         assert(iconData.size() % numIconItemsPerConnection == 0);
     }
