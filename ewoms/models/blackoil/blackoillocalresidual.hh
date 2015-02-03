@@ -78,7 +78,6 @@ public:
                      int scvfIdx,
                      int timeIdx) const
     {
-        //std::cout << "------------\n";
         const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         const ExtensiveQuantities &evalPointExtQuants =
             elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
@@ -86,9 +85,9 @@ public:
         flux = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
+            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
+            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 // add advective flux of current component in current phase
                 flux[conti0EqIdx + compIdx] +=
                     extQuants.volumeFlux(phaseIdx) * up.fluidState().molarity(phaseIdx, compIdx);

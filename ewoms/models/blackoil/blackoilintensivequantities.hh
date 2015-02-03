@@ -111,7 +111,8 @@ public:
             }
         }
 
-        // oil phase pressure
+        // oil phase temperature and pressure
+        Scalar To = fluidState_.temperature(oilPhaseIdx);
         Scalar po = fluidState_.pressure(oilPhaseIdx);
 
         // update phase compositions. first, set everything to 0...
@@ -126,7 +127,7 @@ public:
         // for the oil phase, the switching primary variable needs to be considered
         if (priVars.switchingVariableIsGasSaturation()) {
             // we take the composition of the gas-saturated oil phase
-            Scalar xoG = FluidSystem::saturatedOilGasMoleFraction(po, /*regionIdx=*/0);
+            Scalar xoG = FluidSystem::saturatedOilGasMoleFraction(To, po, /*regionIdx=*/0);
 
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);

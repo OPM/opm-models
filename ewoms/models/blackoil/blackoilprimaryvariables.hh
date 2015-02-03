@@ -204,6 +204,8 @@ public:
     bool adaptSwitchingVariable()
     {
         Scalar pg = (*this)[Indices::gasPressureIdx];
+#warning TODO: get temperature from problem!
+        Scalar T = 273.15 + 20;
 
         if (switchingVariableIsGasSaturation()) {
             if ((*this)[Indices::waterSaturationIdx] < 1 &&
@@ -212,7 +214,7 @@ public:
                 // we switch to the gas mole fraction in the
                 // oil phase if oil is present and if we would
                 // encounter a negative gas saturation
-                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(pg, pvtRegionIdx_);
+                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
                 setSwitchingVariableIsGasSaturation(false);
                 (*this)[Indices::switchIdx] = xoGsat;
                 return true;
@@ -221,7 +223,7 @@ public:
         else {
             // check if the amount of disolved gas in oil is
             // more that what's allowed
-            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(pg, pvtRegionIdx_);
+            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
             if ((*this)[Indices::switchIdx] > xoGsat) {
                 // yes, so we need to use gas saturation as
                 // primary variable

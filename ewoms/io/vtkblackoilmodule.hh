@@ -79,6 +79,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { gasCompIdx = FluidSystem::gasCompIdx };
+    enum { oilCompIdx = FluidSystem::oilCompIdx };
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
@@ -138,7 +139,9 @@ public:
             const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
             int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
             Scalar po = fs.pressure(oilPhaseIdx);
+            Scalar To = fs.temperature(oilPhaseIdx);
             Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
+            Scalar X_gO = fs.massFraction(gasPhaseIdx, oilCompIdx);
             int regionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
             Scalar rhooRef = FluidSystem::referenceDensity(oilPhaseIdx, regionIdx);
             Scalar rhogRef = FluidSystem::referenceDensity(gasPhaseIdx, regionIdx);
@@ -147,16 +150,16 @@ public:
                 gasDissolutionFactor_[globalDofIdx] = X_oG / rhogRef * rhooRef / (1 - X_oG);
             if (saturatedOilGasDissolutionFactorOutput_())
                 saturatedOilGasDissolutionFactor_[globalDofIdx] =
-                    FluidSystem::gasDissolutionFactor(po, regionIdx);
+                    FluidSystem::gasDissolutionFactor(To, po, regionIdx);
             if (gasFormationVolumeFactorOutput_())
                 gasFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::gasFormationVolumeFactor(po, regionIdx);
+                    FluidSystem::gasFormationVolumeFactor(To, po, X_gO, regionIdx);
             if (saturatedOilFormationVolumeFactorOutput_())
                 saturatedOilFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::saturatedOilFormationVolumeFactor(po, regionIdx);
+                    FluidSystem::saturatedOilFormationVolumeFactor(To, po, regionIdx);
             if (oilSaturationPressureOutput_())
                 oilSaturationPressure_[globalDofIdx] =
-                    FluidSystem::oilSaturationPressure(X_oG, regionIdx);
+                    FluidSystem::oilSaturationPressure(To, X_oG, regionIdx);
         }
     }
 
