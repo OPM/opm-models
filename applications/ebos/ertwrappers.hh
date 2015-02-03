@@ -154,7 +154,7 @@ public:
 
         // fill ERT object with values
         T* target = static_cast<T*>(ecl_kw_get_ptr(ertHandle()));
-        for (int i = 0; i < data.size(); ++i)
+        for (unsigned i = 0; i < data.size(); ++i)
             target[i] = static_cast<T>(data[i]);
 
         Valgrind::CheckDefined(target, data.size());
@@ -172,7 +172,7 @@ public:
         ertHandle_ = ecl_kw_alloc(name.c_str(), data.size(), ertType_());
 
         // fill ERT object with values
-        for (int i = 0; i < data.size(); ++i)
+        for (unsigned i = 0; i < data.size(); ++i)
             ecl_kw_iset_char_ptr(ertHandle_, i, data[i]);
 #endif
     }
@@ -554,15 +554,22 @@ public:
 
     ErtSummary(const Simulator& simulator)
     {
-        std::string caseName = getErtCaseName__(simulator.gridManager());
+        const auto& gridManager = simulator.gridManager();
+        const auto& eclGrid = gridManager.eclGrid();
+        auto timeMap = gridManager.schedule()->getTimeMap();
 
-        const auto& eclGrid = simulator.gridManager().eclGrid();
+        std::string caseName = getErtCaseName__(gridManager);
+
+        // the correct start time has not yet been set in the
+        // simulator, so we extract it from the ECL deck...
+        tm curTime = boost::posix_time::to_tm(timeMap->getStartTime(/*timeStepIdx=*/0));
+        double startTime = std::mktime(&curTime);
 
         ertHandle_ = ecl_sum_alloc_writer(caseName.c_str(),
                                           /*formatted=*/false,
                                           /*unified=*/true,
                                           /*joinString=*/":",
-                                          simulator.time(),
+                                          startTime,
                                           eclGrid->getNX(),
                                           eclGrid->getNY(),
                                           eclGrid->getNZ());

@@ -113,7 +113,7 @@ public:
     void write(const WellManager& wellsManager)
     {
         ErtSummaryTimeStep<TypeTag> ertSumTimeStep(ertSummary_,
-                                                   simulator_.startTime() + simulator_.time(),
+                                                   simulator_.time(),
                                                    simulator_.episodeIndex());
 
         typedef EclDeckUnits<TypeTag> DeckUnits;
