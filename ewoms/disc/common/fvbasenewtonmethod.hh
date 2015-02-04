@@ -132,8 +132,8 @@ protected:
     /*!
      * \brief Update the current solution with a delta vector.
      *
-     * The error estimates required for the newtonConverged() and
-     * newtonProceed() methods should be updated inside this method.
+     * The error estimates required for the converged() and
+     * proceed() methods should be updated inside this method.
      *
      * Different update strategies, such as line search and chopped
      * updates can be implemented. The default behavior is just to

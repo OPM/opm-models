@@ -80,6 +80,7 @@ public:
     {
         Valgrind::SetUndefined(*this);
         pvtRegionIdx_ = 0;
+        temperature_ = FluidSystem::surfaceTemperature;
     }
 
     /*!
@@ -90,6 +91,7 @@ public:
     {
         Valgrind::SetUndefined(switchingVariableIsGasSaturation_);
         pvtRegionIdx_ = 0;
+        temperature_ = FluidSystem::surfaceTemperature;
     }
 
     /*!
@@ -97,6 +99,7 @@ public:
      */
     BlackOilPrimaryVariables(const BlackOilPrimaryVariables &value)
         : ParentType(value)
+        , temperature_(FluidSystem::surfaceTemperature)
         , switchingVariableIsGasSaturation_(value.switchingVariableIsGasSaturation_)
         , pvtRegionIdx_(value.pvtRegionIdx_)
     { }
@@ -177,6 +180,8 @@ public:
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {
+        temperature_ = fluidState.temperature(gasPhaseIdx);
+
         // the pressure of the first phase and the saturation of water
         // are always primary variables
         (*this)[gasPressureIdx] = fluidState.pressure(gasPhaseIdx);
@@ -204,8 +209,6 @@ public:
     bool adaptSwitchingVariable()
     {
         Scalar pg = (*this)[Indices::gasPressureIdx];
-#warning TODO: get temperature from problem!
-        Scalar T = 273.15 + 20;
 
         if (switchingVariableIsGasSaturation()) {
             if ((*this)[Indices::waterSaturationIdx] < 1 &&
@@ -214,7 +217,7 @@ public:
                 // we switch to the gas mole fraction in the
                 // oil phase if oil is present and if we would
                 // encounter a negative gas saturation
-                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
+                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_, pg, pvtRegionIdx_);
                 setSwitchingVariableIsGasSaturation(false);
                 (*this)[Indices::switchIdx] = xoGsat;
                 return true;
@@ -223,7 +226,7 @@ public:
         else {
             // check if the amount of disolved gas in oil is
             // more that what's allowed
-            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
+            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_, pg, pvtRegionIdx_);
             if ((*this)[Indices::switchIdx] > xoGsat) {
                 // yes, so we need to use gas saturation as
                 // primary variable
@@ -239,6 +242,7 @@ public:
     BlackOilPrimaryVariables& operator=(const BlackOilPrimaryVariables& other)
     {
         ParentType::operator=(other);
+        temperature_ = other.temperature_;
         switchingVariableIsGasSaturation_ = other.switchingVariableIsGasSaturation_;
         pvtRegionIdx_ = other.pvtRegionIdx_;
         return *this;
@@ -253,6 +257,7 @@ public:
     }
 
 private:
+    Scalar temperature_; // so far this is just a pseudo-primary variable
     bool switchingVariableIsGasSaturation_;
     unsigned char pvtRegionIdx_;
 };
