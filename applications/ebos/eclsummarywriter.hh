@@ -80,6 +80,12 @@ class EclSummaryWriter
         smspec_node_type* wwprErtHandle;
         smspec_node_type* wgprErtHandle;
         smspec_node_type* woprErtHandle;
+        smspec_node_type* wwitErtHandle;
+        smspec_node_type* wgitErtHandle;
+        smspec_node_type* woitErtHandle;
+        smspec_node_type* wwptErtHandle;
+        smspec_node_type* wgptErtHandle;
+        smspec_node_type* woptErtHandle;
     };
 
     static const int waterPhaseIdx = FluidSystem::waterPhaseIdx;
@@ -181,6 +187,30 @@ public:
             //////////
 
             //////////
+            // total injected surface volume
+            if (writeWwit_()) {
+                Scalar totalVolume = wellsManager.totalInjectedVolume(well->name(), waterPhaseIdx);
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwitErtHandle),
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+            }
+
+            if (writeWgit_()) {
+                Scalar totalVolume = wellsManager.totalInjectedVolume(well->name(), gasPhaseIdx);
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wgitErtHandle),
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::gasVolume));
+            }
+
+            if (writeWoit_()) {
+                Scalar totalVolume = wellsManager.totalInjectedVolume(well->name(), oilPhaseIdx);
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.woitErtHandle),
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+            }
+            //////////
+
+            //////////
             // production surface rates
             if (writeWwpr_()) {
                 Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(waterPhaseIdx));
@@ -201,6 +231,30 @@ public:
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woprErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
+            }
+            //////////
+
+            //////////
+            // total producted surface volume
+            if (writeWwpt_()) {
+                Scalar totalVolume = wellsManager.totalProducedVolume(well->name(), waterPhaseIdx);
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wwptErtHandle),
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+            }
+
+            if (writeWgpt_()) {
+                Scalar totalVolume = wellsManager.totalProducedVolume(well->name(), gasPhaseIdx);
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.wgptErtHandle),
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::gasVolume));
+            }
+
+            if (writeWopt_()) {
+                Scalar totalVolume = wellsManager.totalProducedVolume(well->name(), oilPhaseIdx);
+                ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
+                                   smspec_node_get_params_index(summaryInfo.woptErtHandle),
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
             }
             //////////
         }
@@ -246,6 +300,30 @@ private:
     // write each well's current surface oil production rate
     bool writeWopr_() const
     { return summaryKeywords_.count("WOPR") > 0; }
+
+    // write each well's current surface water injection total
+    bool writeWwit_() const
+    { return summaryKeywords_.count("WWIT") > 0; }
+
+    // write each well's current surface gas injection total
+    bool writeWgit_() const
+    { return summaryKeywords_.count("WGIT") > 0; }
+
+    // write each well's current surface oil injection total
+    bool writeWoit_() const
+    { return summaryKeywords_.count("WOIT") > 0; }
+
+    // write each well's current surface water production total
+    bool writeWwpt_() const
+    { return summaryKeywords_.count("WWPT") > 0; }
+
+    // write each well's current surface gas production total
+    bool writeWgpt_() const
+    { return summaryKeywords_.count("WGPT") > 0; }
+
+    // write each well's current surface oil production total
+    bool writeWopt_() const
+    { return summaryKeywords_.count("WOPT") > 0; }
 
     void addVariables_(const Opm::EclipseState& eclState)
     {
@@ -334,6 +412,62 @@ private:
                 wellInfo.woprErtHandle =
                     ecl_sum_add_var(ertSummary_.ertHandle(),
                                     "WOPR",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            // add total injected volume variables
+            if (writeWwit_())
+                wellInfo.wwitErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WWIT",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWgit_())
+                wellInfo.wgitErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WGIT",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWoit_())
+                wellInfo.woitErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WOIT",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            // add total produced volume variables
+            if (writeWwpt_())
+                wellInfo.wwptErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WWPT",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWgpt_())
+                wellInfo.wgptErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WGPT",
+                                    eclWell->name().c_str(),
+                                    /*num=*/0,
+                                    /*unit=*/"SM3/DAY",
+                                    /*defaultValue=*/0.0);
+
+            if (writeWopt_())
+                wellInfo.woptErtHandle =
+                    ecl_sum_add_var(ertSummary_.ertHandle(),
+                                    "WOPT",
                                     eclWell->name().c_str(),
                                     /*num=*/0,
                                     /*unit=*/"SM3/DAY",
