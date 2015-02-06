@@ -174,14 +174,15 @@ protected:
             Scalar linearTol =
                 this->error_ * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
             Scalar newtonTol = this->tolerance();
-            Scalar factor = EWOMS_GET_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor);
 
-            Scalar relinearizationTol = 0.01*linearTol;
-            if (relinearizationTol < newtonTol/10)
-                relinearizationTol = newtonTol/10;
+            Scalar relinearizationTol = linearTol/500;
+            if (relinearizationTol < newtonTol/100)
+                relinearizationTol = newtonTol/100;
+
+            relinearizationTol *= EWOMS_GET_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor);
 
             model_().linearizer().updateDiscrepancy(previousResidual);
-            model_().linearizer().computeColors(relinearizationTol*factor);
+            model_().linearizer().computeColors(relinearizationTol);
         }
 
         // update the solution

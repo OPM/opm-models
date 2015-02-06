@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2010-2013 by Andreas Lauser
+  Copyright (C) 2010-2015 by Andreas Lauser
   Copyright (C) 2009-2011 by Bernd Flemisch
 
   This file is part of the Open Porous Media project (OPM).
@@ -719,10 +719,10 @@ private:
             return;
 
         size_t numGridDof = model_().numGridDof();
+        size_t numTotalDof = model_().numTotalDof();
 
-        // always reset the right hand side fully.
+        // always fully reset the right hand side
         residual_ = 0.0;
-
         if (enableLinearizationRecycling_()) {
             for (unsigned dofIdx=0; dofIdx < numGridDof; ++ dofIdx)
                 storageTerm_[dofIdx] = 0.0;
@@ -733,7 +733,7 @@ private:
             // reset everything!
             (*matrix_) = 0;
 
-            // reset the parts needed for Jacobian recycling
+            // reset the parts needed for linearization recycling
             if (enableLinearizationRecycling_()) {
                 for (unsigned dofIdx=0; dofIdx < numGridDof; ++ dofIdx)
                     storageJacobian_[dofIdx] = 0.0;
@@ -742,6 +742,15 @@ private:
             return;
         }
 
+        // reset all rows associated with the DOFs of auxiliary equations
+        for (unsigned dofIdx = numGridDof; dofIdx < numTotalDof; ++dofIdx) {
+            typedef typename JacobianMatrix::ColIterator ColIterator;
+            ColIterator colIt = (*matrix_)[dofIdx].begin();
+            const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
+            for (; colIt != colEndIt; ++colIt) {
+                (*colIt) = 0.0;
+            }
+        }
 
         // reset all entries which connect two non-green degrees of freedom
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
@@ -755,7 +764,9 @@ private:
             ColIterator colIt = (*matrix_)[dofIdx].begin();
             const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                if (colIt.index() < numGridDof && dofColor_[colIt.index()] != Green)
+                if (colIt.index() >= numGridDof || dofColor_[colIt.index()] != Green)
+                    // the column either corresponds to an auxiliary DOF or to a
+                    // non-green one.
                     (*colIt) = 0.0;
             }
         }
