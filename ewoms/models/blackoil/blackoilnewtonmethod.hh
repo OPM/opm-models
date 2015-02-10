@@ -39,6 +39,7 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
@@ -140,7 +141,7 @@ protected:
                     // limit changes in saturation to 20%
                     else if ((eqIdx == Indices::waterSaturationIdx ||
                               (eqIdx == Indices::switchIdx
-                               && currentSolution[dofIdx].switchingVariableIsGasSaturation()))
+                               && currentSolution[dofIdx].switchingVarMeaning() == PrimaryVariables::GasSaturation))
                              && std::abs(delta) > 0.2)
                     {
                         delta /= std::abs(delta/0.2);

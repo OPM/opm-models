@@ -51,6 +51,9 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
 
+    // number of equations
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
     // primary variable indices
     enum { gasPressureIdx = Indices::gasPressureIdx };
     enum { waterSaturationIdx = Indices::waterSaturationIdx };
@@ -62,11 +65,11 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
 
-    // number of equations
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-
     // component indices from the fluid system
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { gasCompIdx = FluidSystem::gasCompIdx };
+    enum { waterCompIdx = FluidSystem::waterCompIdx };
+    enum { oilCompIdx = FluidSystem::oilCompIdx };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
@@ -75,6 +78,12 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     static_assert(numComponents == 3, "The black-oil model assumes three components!");
 
 public:
+    enum SwitchingVarMeaning {
+        GasSaturation,
+        OilMoleFractionInGas,
+        GasMoleFractionInOil
+    };
+
     BlackOilPrimaryVariables()
         : ParentType()
     {
@@ -89,7 +98,7 @@ public:
     BlackOilPrimaryVariables(Scalar value)
         : ParentType(value)
     {
-        Valgrind::SetUndefined(switchingVariableIsGasSaturation_);
+        Valgrind::SetUndefined(switchingVarMeaning_);
         pvtRegionIdx_ = 0;
         temperature_ = FluidSystem::surfaceTemperature;
     }
@@ -100,7 +109,7 @@ public:
     BlackOilPrimaryVariables(const BlackOilPrimaryVariables &value)
         : ParentType(value)
         , temperature_(FluidSystem::surfaceTemperature)
-        , switchingVariableIsGasSaturation_(value.switchingVariableIsGasSaturation_)
+        , switchingVarMeaning_(value.switchingVarMeaning_)
         , pvtRegionIdx_(value.pvtRegionIdx_)
     { }
 
@@ -110,11 +119,11 @@ public:
     unsigned pvtRegionIndex() const
     { return pvtRegionIdx_; }
 
-    bool switchingVariableIsGasSaturation() const
-    { return switchingVariableIsGasSaturation_; }
+    SwitchingVarMeaning switchingVarMeaning() const
+    { return switchingVarMeaning_; }
 
-    void setSwitchingVariableIsGasSaturation(bool yesno)
-    { switchingVariableIsGasSaturation_ = yesno; }
+    void setSwitchingVarMeaning(SwitchingVarMeaning newMeaning)
+    { switchingVarMeaning_ = newMeaning; }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
@@ -180,6 +189,8 @@ public:
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {
+        Scalar po = fluidState.pressure(oilPhaseIdx);
+        Scalar pg = fluidState.pressure(gasPhaseIdx);
         temperature_ = fluidState.temperature(gasPhaseIdx);
 
         // the pressure of the first phase and the saturation of water
@@ -189,53 +200,127 @@ public:
 
         bool gasPresent = (fluidState.saturation(gasPhaseIdx) > 0.0);
         bool oilPresent = (fluidState.saturation(oilPhaseIdx) > 0.0);
-        switchingVariableIsGasSaturation_ = gasPresent || (!gasPresent && !oilPresent);
 
-        // depending on the phases present, we use either Sg or x_o^G
-        // as a primary variable
-        if (switchingVariableIsGasSaturation())
+        Scalar xoGSat = -1e100;
+        if (FluidSystem::enableDissolvedGas())
+            xoGSat = FluidSystem::saturatedOilGasMoleFraction(temperature_, po, pvtRegionIdx_);
+
+        Scalar xgOSat = -1e100;
+        if (FluidSystem::enableVaporizedOil())
+            xgOSat = FluidSystem::saturatedGasOilMoleFraction(temperature_, pg, pvtRegionIdx_);
+
+        if (gasPresent || !oilPresent)
+            switchingVarMeaning_ = GasSaturation;
+        else if (fluidState.moleFraction(oilPhaseIdx, gasCompIdx) < xoGSat) {
+            if (FluidSystem::enableDissolvedGas())
+                switchingVarMeaning_ = GasMoleFractionInOil;
+            else
+                switchingVarMeaning_ = GasSaturation;
+        }
+        else {
+            // if the fluid state passed as an argument represents a state in
+            // thermodynamic equilibrium, xgO < xgOSat holds. since this is not
+            // necessarily the case for the assignNaive() method, we use xgO as primary
+            // variable here and risk ending up with primary variables that are
+            // inconsistent with the fluid state (which is a thing assignNaive only
+            // guarantees if the fluid state is "coherent" with the assumptions of the
+            // model anyway)
+            if (FluidSystem::enableVaporizedOil())
+                switchingVarMeaning_ = OilMoleFractionInGas;
+            else
+                switchingVarMeaning_ = GasSaturation;
+        }
+
+        // depending on the phases present, we use either Sg, x_o^G or x_g^O as the
+        // switching primary variable
+        if (switchingVarMeaning() == GasSaturation)
             (*this)[switchIdx] = fluidState.saturation(gasPhaseIdx);
-        else
-            (*this)[switchIdx] = fluidState.moleFraction(oilPhaseIdx, gasPhaseIdx);
+        else if (switchingVarMeaning() == GasMoleFractionInOil)
+            (*this)[switchIdx] = fluidState.moleFraction(oilPhaseIdx, gasCompIdx);
+        else {
+            assert(switchingVarMeaning() == OilMoleFractionInGas);
+            (*this)[switchIdx] = fluidState.moleFraction(gasPhaseIdx, oilCompIdx);
+        }
     }
 
     /*!
      * \brief Adapt the interpretation of the switching variable to a
      *        physically meaningful one.
      *
-     * \return true Iff the interpretation of the switching variable
-     *              was changed
+     * \return true Iff the interpretation of the switching variable was changed
      */
     bool adaptSwitchingVariable()
     {
         Scalar pg = (*this)[Indices::gasPressureIdx];
 
-        if (switchingVariableIsGasSaturation()) {
-            if ((*this)[Indices::waterSaturationIdx] < 1 &&
-                (*this)[Indices::switchIdx] < 0.0)
-            {
-                // we switch to the gas mole fraction in the
-                // oil phase if oil is present and if we would
-                // encounter a negative gas saturation
-                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_, pg, pvtRegionIdx_);
-                setSwitchingVariableIsGasSaturation(false);
+        if (switchingVarMeaning() == GasSaturation) {
+            Scalar Sw = (*this)[Indices::waterSaturationIdx];
+            Scalar Sg = (*this)[Indices::switchIdx];
+            Scalar So = 1 - Sw - Sg;
+
+            if (FluidSystem::enableDissolvedGas() && Sg < 0.0 && (1.0 - Sw) > 0.0) {
+                // we switch to the gas mole fraction in the oil phase if some oil phase
+                // is present and dissolved gas is enabled
+                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_,
+                                                                         pg,
+                                                                         pvtRegionIdx_);
+                setSwitchingVarMeaning(GasMoleFractionInOil);
                 (*this)[Indices::switchIdx] = xoGsat;
                 return true;
             }
+
+            if (FluidSystem::enableVaporizedOil() && So < 0.0 && (1.0 - Sw) > 0.0) {
+                // we switch to the oil mole fraction in the gas phase if some gas phase
+                // is present and vaporized oil is enabled. TODO (?): use oil instead of
+                // gas pressure!
+                Scalar xgOsat = FluidSystem::saturatedGasOilMoleFraction(temperature_,
+                                                                         pg,
+                                                                         pvtRegionIdx_);
+                setSwitchingVarMeaning(OilMoleFractionInGas);
+                (*this)[Indices::switchIdx] = xgOsat;
+                return true;
+            }
+            return false;
         }
-        else {
-            // check if the amount of disolved gas in oil is
-            // more that what's allowed
-            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_, pg, pvtRegionIdx_);
-            if ((*this)[Indices::switchIdx] > xoGsat) {
-                // yes, so we need to use gas saturation as
-                // primary variable
-                setSwitchingVariableIsGasSaturation(true);
+        else if (switchingVarMeaning() == OilMoleFractionInGas) {
+            Scalar Sw = (*this)[Indices::waterSaturationIdx];
+            Scalar So = 0;
+            Scalar Sg = 1 - Sw - So;
+            Scalar xgO = (*this)[Indices::switchIdx];
+
+            // we switch to the gas saturation if the oil component cannot be fully
+            // dissolved in the gas phase or if there is no oil phase present.
+            Scalar xgOSat = FluidSystem::saturatedGasOilMoleFraction(temperature_, pg, pvtRegionIdx_);
+            if (Sg <= 0 || xgO >= xgOSat) {
+                setSwitchingVarMeaning(GasSaturation);
                 (*this)[Indices::switchIdx] = 0;
                 return true;
             }
+
+            return false;
+        }
+        else {
+            assert(switchingVarMeaning() == GasMoleFractionInOil);
+
+            Scalar Sw = (*this)[Indices::waterSaturationIdx];
+            Scalar Sg = 0;
+            Scalar So = 1 - Sw - Sg;
+            Scalar xoG = (*this)[Indices::switchIdx];
+
+            // we switch to the gas saturation if the gas component cannot be fully
+            // dissolved in the oil phase or if there is no oil phase present. TODO (?):
+            // use the oil instead of the gas pressure!
+            Scalar xoGSat = FluidSystem::saturatedOilGasMoleFraction(temperature_, pg, pvtRegionIdx_);
+            if (So <= 0 || xoG >= xoGSat) {
+                setSwitchingVarMeaning(GasSaturation);
+                (*this)[Indices::switchIdx] = 0;
+                return true;
+            }
+
+            return false;
         }
 
+        assert(false);
         return false;
     }
 
@@ -243,7 +328,7 @@ public:
     {
         ParentType::operator=(other);
         temperature_ = other.temperature_;
-        switchingVariableIsGasSaturation_ = other.switchingVariableIsGasSaturation_;
+        switchingVarMeaning_ = other.switchingVarMeaning_;
         pvtRegionIdx_ = other.pvtRegionIdx_;
         return *this;
     }
@@ -258,7 +343,7 @@ public:
 
 private:
     Scalar temperature_; // so far this is just a pseudo-primary variable
-    bool switchingVariableIsGasSaturation_;
+    SwitchingVarMeaning switchingVarMeaning_;
     unsigned char pvtRegionIdx_;
 };
 

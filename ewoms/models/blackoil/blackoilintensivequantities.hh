@@ -48,6 +48,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, BlackOilFluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -88,7 +89,7 @@ public:
         Scalar Sw = priVars[Indices::waterSaturationIdx];
 
         Scalar Sg = 0.0;
-        if (priVars.switchingVariableIsGasSaturation())
+        if (priVars.switchingVarMeaning() == PrimaryVariables::GasSaturation)
             Sg = priVars[Indices::switchIdx];
 
         fluidState_.setSaturation(waterPhaseIdx, Sw);
@@ -112,34 +113,58 @@ public:
         }
 
         // oil phase temperature and pressure
-        Scalar To = fluidState_.temperature(oilPhaseIdx);
-        Scalar po = fluidState_.pressure(oilPhaseIdx);
+        Scalar T = fluidState_.temperature(oilPhaseIdx);
 
         // update phase compositions. first, set everything to 0...
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
 
-        // set composition of gas and water phases
+        // ... then set the default composition of all phases (default = assume immscibility)
+        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0);
         fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
         fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
 
-        // for the oil phase, the switching primary variable needs to be considered
-        if (priVars.switchingVariableIsGasSaturation()) {
-            // we take the composition of the gas-saturated oil phase
-            Scalar xoG = FluidSystem::saturatedOilGasMoleFraction(To, po, /*regionIdx=*/0);
+        // take the meaning of the switiching primary variable into account for the gas
+        // and oil phase compositions
+        if (priVars.switchingVarMeaning() == PrimaryVariables::GasSaturation) {
+            // gas is present, i.e. we use the compositions of the gas-saturated oil and
+            // oil-saturated gas phases if dissolved gas and vaporized oil are
+            // enabled. if they are disabled, continue to assume immiscibility for the
+            // respective phase.
+            Scalar xgO = 0.0;
+            Scalar xoG = 0.0;
+
+            if (FluidSystem::enableVaporizedOil())
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
+
+            else if (FluidSystem::enableDissolvedGas())
+                // TODO (?): use oil instead of gas pressure
+                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
+
+            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
+            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
+
+            fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
+            fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
+        }
+        else if (priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil) {
+            // if the switching variable is the mole fraction of the gas component in the
+            // oil phase, we can directly set the composition of the oil phase
+            Scalar xoG = priVars[Indices::switchIdx];
 
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
         else {
-            // if the switching variable is not the gas saturation, it
-            // is the mole fraction of the gas component in the oil
-            // phase.
-            Scalar xoG = priVars[Indices::switchIdx];
+            assert(priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil);
 
-            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
-            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
+            // if the switching variable is the mole fraction of the oil component in the
+            // gas phase, we can directly set the composition of the gas phase
+            Scalar xgO = priVars[Indices::switchIdx];
+
+            fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
+            fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -147,16 +172,11 @@ public:
         paramCache.setRegionIndex(pvtRegionIdx);
         paramCache.updateAll(fluidState_);
 
-        // set the phase densities
-        fluidState_.setDensity(waterPhaseIdx,
-                               FluidSystem::density(fluidState_, paramCache, waterPhaseIdx));
-        fluidState_.setDensity(gasPhaseIdx,
-                               FluidSystem::density(fluidState_, paramCache, gasPhaseIdx));
-        fluidState_.setDensity(oilPhaseIdx,
-                               FluidSystem::density(fluidState_, paramCache, oilPhaseIdx));
-
-        // compute the phase viscosities
+        // set the phase densities and viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
+            fluidState_.setDensity(phaseIdx, rho);
+
             Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
         }

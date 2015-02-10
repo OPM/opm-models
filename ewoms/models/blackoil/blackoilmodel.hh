@@ -364,7 +364,7 @@ public:
             outstream << priVars[eqIdx] << " ";
 
         // write the pseudo primary variables
-        outstream << priVars.switchingVariableIsGasSaturation() << " ";
+        outstream << priVars.switchingVarMeaning() << " ";
         outstream << priVars.pvtRegionIndex() << " ";
     }
 
@@ -396,8 +396,8 @@ public:
         }
 
         // read the pseudo primary variables
-        bool switchingIsSat;
-        instream >> switchingIsSat;
+        int switchingVarMeaning;
+        instream >> switchingVarMeaning;
 
         int pvtRegionIdx;
         instream >> pvtRegionIdx;
@@ -406,7 +406,8 @@ public:
             OPM_THROW(std::runtime_error,
                       "Could not deserialize degree of freedom " << dofIdx);
 
-        priVars.setSwitchingVariableIsGasSaturation(switchingIsSat);
+        typedef typename PrimaryVariables::SwitchingVarMeaning SVM;
+        priVars.setSwitchingVarMeaning(static_cast<SVM>(switchingVarMeaning));
         priVars.setPvtRegionIndex(pvtRegionIdx);
     }
 
