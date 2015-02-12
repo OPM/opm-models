@@ -810,7 +810,11 @@ public:
     VcfvStencil(const GridView &gridView)
         : gridView_(gridView)
         , vertexMapper_(gridView)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        , element_(*gridView.template begin</*codim=*/0>())
+#else
         , elementPtr_(gridView.template begin</*codim=*/0>())
+#endif
     {
         static bool localGeometriesInitialized = false;
         if (!localGeometriesInitialized) {
@@ -831,17 +835,20 @@ public:
      */
     void updateTopology(const Element& e)
     {
-        elementPtr_ = ElementPointer(e);
-
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        element_ = e;
+
         numVertices = e.subEntities(/*codim=*/dim);
         numEdges = e.subEntities(/*codim=*/dim-1);
         numFaces = (dim<3)?0:e.subEntities(/*codim=*/1);
 #else
+        elementPtr_ = ElementPointer(e);
+
         numVertices = e.template count</*codim=*/dim>();
         numEdges = e.template count</*codim=*/dim-1>();
         numFaces = (dim<3)?0:e.template count</*codim=*/1>();
 #endif
+
         numBoundarySegments_ = 0; // TODO: really required here(?)
     }
 
@@ -1028,8 +1035,13 @@ public:
 
     void updateCenterGradients()
     {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        const auto &localFiniteElement = feCache_.get(element_.type());
+        const auto &geom = element_.geometry();
+#else
         const auto &localFiniteElement = feCache_.get(elementPtr_->type());
         const auto &geom = elementPtr_->geometry();
+#endif
         std::vector<ShapeJacobian> localJac;
 
         for (int scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
@@ -1051,7 +1063,11 @@ public:
     { return numDof(); }
 
     Dune::PartitionType partitionType(int scvIdx) const
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+    { return element_.template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
+#else
     { return elementPtr_->template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
+#endif
 
     const SubControlVolume &subControlVolume(int scvIdx) const
     {
@@ -1080,7 +1096,7 @@ public:
         assert(0 <= dofIdx && dofIdx < numDof());
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        return vertexMapper_.subIndex(*elementPtr_, dofIdx, /*codim=*/dim);
+        return vertexMapper_.subIndex(element_, dofIdx, /*codim=*/dim);
 #else
         return vertexMapper_.map(*elementPtr_, dofIdx, /*codim=*/dim);
 #endif
@@ -1302,7 +1318,13 @@ private:
 
     GridView gridView_;
     VertexMapper vertexMapper_;
+
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+    Element element_;
+#else
     ElementPointer elementPtr_;
+#endif
+
     static LocalFiniteElementCache feCache_;
 
     //! local coordinate of element center

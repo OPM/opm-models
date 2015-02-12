@@ -100,7 +100,11 @@ class ElementBorderListFromGrid
             for (; isIt != isEndIt; ++isIt) {
                 if (!isIt->neighbor())
                     continue;
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+                else if (isIt->outside().partitionType() == Dune::InteriorEntity) {
+#else
                 else if (isIt->outside()->partitionType() == Dune::InteriorEntity) {
+#endif
                     isInteriorNeighbor = true;
                     break;
                 }
