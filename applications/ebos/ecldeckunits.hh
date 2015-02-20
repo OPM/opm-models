@@ -59,8 +59,9 @@ public:
         transmissibility,
         gasDissolutionFactor,
         oilDissolutionFactor,
-        liquidVolume,
-        gasVolume,
+        liquidSurfaceVolume,
+        gasSurfaceVolume,
+        reservoirVolume,
         density,
         viscosity,
 
@@ -91,14 +92,15 @@ public:
         deckToSiFactor_[transmissibility] = deckUnitSystem->getDimension("Transmissibility")->getSIScaling();;
         deckToSiFactor_[gasDissolutionFactor] = deckUnitSystem->getDimension("GasDissolutionFactor")->getSIScaling();;
         deckToSiFactor_[oilDissolutionFactor] = deckUnitSystem->getDimension("OilDissolutionFactor")->getSIScaling();;
-        deckToSiFactor_[liquidVolume] = deckUnitSystem->getDimension("LiquidVolume")->getSIScaling();;
-        deckToSiFactor_[gasVolume] = deckUnitSystem->getDimension("GasVolume")->getSIScaling();;
+        deckToSiFactor_[liquidSurfaceVolume] = deckUnitSystem->getDimension("LiquidSurfaceVolume")->getSIScaling();;
+        deckToSiFactor_[gasSurfaceVolume] = deckUnitSystem->getDimension("GasSurfaceVolume")->getSIScaling();;
+        deckToSiFactor_[reservoirVolume] = deckUnitSystem->getDimension("ReservoirVolume")->getSIScaling();;
         deckToSiFactor_[density] = deckUnitSystem->getDimension("Density")->getSIScaling();;
         deckToSiFactor_[viscosity] = deckUnitSystem->getDimension("Viscosity")->getSIScaling();;
 
-        deckToSiFactor_[liquidRate] = deckToSiFactor_[liquidVolume] / deckToSiFactor_[time];
-        deckToSiFactor_[gasRate] = deckToSiFactor_[gasVolume] / deckToSiFactor_[time];
-        deckToSiFactor_[gasOilRatio] = deckToSiFactor_[gasVolume] / deckToSiFactor_[liquidVolume];
+        deckToSiFactor_[liquidRate] = deckToSiFactor_[liquidSurfaceVolume] / deckToSiFactor_[time];
+        deckToSiFactor_[gasRate] = deckToSiFactor_[gasSurfaceVolume] / deckToSiFactor_[time];
+        deckToSiFactor_[gasOilRatio] = deckToSiFactor_[gasSurfaceVolume] / deckToSiFactor_[liquidSurfaceVolume];
     }
 
     /*!

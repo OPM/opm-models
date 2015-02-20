@@ -192,21 +192,21 @@ public:
                 Scalar totalVolume = wellsManager.totalInjectedVolume(well->name(), waterPhaseIdx);
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wwitErtHandle),
-                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidSurfaceVolume));
             }
 
             if (writeWgit_()) {
                 Scalar totalVolume = wellsManager.totalInjectedVolume(well->name(), gasPhaseIdx);
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgitErtHandle),
-                                   deckUnits.siToDeck(totalVolume, DeckUnits::gasVolume));
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::gasSurfaceVolume));
             }
 
             if (writeWoit_()) {
                 Scalar totalVolume = wellsManager.totalInjectedVolume(well->name(), oilPhaseIdx);
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woitErtHandle),
-                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidSurfaceVolume));
             }
             //////////
 
@@ -240,21 +240,21 @@ public:
                 Scalar totalVolume = wellsManager.totalProducedVolume(well->name(), waterPhaseIdx);
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wwptErtHandle),
-                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidSurfaceVolume));
             }
 
             if (writeWgpt_()) {
                 Scalar totalVolume = wellsManager.totalProducedVolume(well->name(), gasPhaseIdx);
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgptErtHandle),
-                                   deckUnits.siToDeck(totalVolume, DeckUnits::gasVolume));
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::gasSurfaceVolume));
             }
 
             if (writeWopt_()) {
                 Scalar totalVolume = wellsManager.totalProducedVolume(well->name(), oilPhaseIdx);
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woptErtHandle),
-                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidVolume));
+                                   deckUnits.siToDeck(totalVolume, DeckUnits::liquidSurfaceVolume));
             }
             //////////
         }
