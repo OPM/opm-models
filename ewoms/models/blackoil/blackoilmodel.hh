@@ -323,8 +323,10 @@ public:
         int numDof = this->numGridDof();
         for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
             auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
-            if (priVars.adaptSwitchingVariable())
+            if (priVars.adaptSwitchingVariable()) {
+                this->linearizer().markDofRed(globalDofIdx);
                 ++numSwitched_;
+            }
         }
 
         // make sure that if there was a variable switch in an

@@ -154,20 +154,22 @@ protected:
         if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
+        Scalar relinearizationTol = 0.0;
+
         // compute the DOF and element colors for partial relinearization
         if (enablePartialRelinearization_()) {
             linearizer.updateRelinearizationErrors(solutionUpdate, currentResidual);
 
             // we chose to relinearize all DOFs for which the solution is to be deflected
             // by more than a thousandth of the maximum deflection.
-            Scalar relinearizationTol = 1e-3*linearizer.maxDofError();
+            relinearizationTol = 1e-3*linearizer.maxDofError();
 
-            linearizer.computeColors(relinearizationTol);
+            linearizer.setRelinearizationTolerance(relinearizationTol);
         }
 
         // update the solution for the grid DOFs
         for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
-            if (linearizer.dofColor(dofIdx) != Linearizer::Red) {
+            if (enablePartialRelinearization_() && linearizer.dofError(dofIdx) < relinearizationTol) {
                 // don't update non-red DOFs. this implies that the intensive quantities
                 // are still valid.
                 nextSolution[dofIdx] = currentSolution[dofIdx];

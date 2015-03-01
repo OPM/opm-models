@@ -255,11 +255,12 @@ public:
 
         // do not use partial relinearization for the next iteration
         relinearizationAccuracy_ = 0.0;
+        relinearizationTolerance_ = 0.0;
+        numGreenElems_ = 0;
         if (enablePartialRelinearization_()) {
-            std::fill(dofError_.begin(), dofError_.end(), 0.0);
+            std::fill(dofError_.begin(), dofError_.end(), 1e100);
             std::fill(dofColor_.begin(), dofColor_.end(), Red);
             std::fill(elementColor_.begin(), elementColor_.end(), Red);
-            numGreenElems_ = 0;
         }
 
         // set the intensive quantities cache
@@ -327,41 +328,69 @@ public:
                 Scalar tmp = std::abs(d[pvIdx]*model_().primaryVarWeight(globalDofIdx, pvIdx));
                 distRel = std::max(distRel, tmp);
             }
+            Valgrind::CheckDefined(distRel);
             dofError_[globalDofIdx] = distRel;
             maxDofError_ = std::max(maxDofError_, dofError_[globalDofIdx]);
         }
     }
 
     /*!
+     * \brief Ensure that a given degree of freedom is relinarized in the next iteration.
+     *
+     * Calling this method usually means that the interpretation of the primary variables
+     * for the DOF has changed.
+     */
+    void markDofRed(int dofIdx)
+    {
+        dofError_[dofIdx] = 1e100;
+        this->model_().setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, false);
+    }
+
+    /*!
+     * \brief Returns the maximum error for which a degree of freedom is not relinearized.
+     */
+    Scalar relinearizationTolerance() const
+    { return relinearizationTolerance_; }
+
+    /*!
+     * \brief Sets the maximum error for which a degree of freedom is not relinearized.
+     */
+    void setRelinearizationTolerance(Scalar tolerance)
+    { relinearizationTolerance_ = tolerance; }
+
+    /*!
+     * \brief Returns the error for a given degree of freedom after the last iteration.
+     */
+    Scalar dofError(int dofIdx) const
+    { return dofError_[dofIdx]; }
+
+    /*!
+     * \brief Return constant reference to global Jacobian matrix.
+     */
+    const Matrix &matrix() const
+    { return *matrix_; }
+
+    /*!
+     * \brief Return constant reference to global residual vector.
+     */
+    const GlobalEqVector &residual() const
+    { return residual_; }
+
+private:
+    /*!
      * \brief Determine the colors of the degrees of freedom and of
      *        the elements for partial re-linarization for a given
      *        tolerance.
-     *
-     * The following approach is used:
-     *
-     * - Set all degrees of freedom and elements to 'green'
-     * - Mark all degrees of freedom as 'red' which exhibit an error
-     *   above the tolerance
-     * - Mark all elements which contain 'red' degrees of freedom as 'red'
-     * - Mark all degrees of freedom which are not 'red' and are part of a
-     *   'red' element as 'yellow'
-     * - Mark all elements which are not 'red' and contain a
-     *   'yellow' degree of freedom as 'yellow'
-     *
-     * \param tolerance The error below which a degree of freedom
-     *                  won't be relinearized.
      */
-    void computeColors(Scalar tolerance)
+    void computeColors_()
     {
         if (!enablePartialRelinearization_())
             return;
 
-        relinerizationTolerance_ = tolerance;
-
         // mark the red degrees of freedom and update the tolerance of
         // the linearization which actually will get achieved
         for (unsigned dofIdx = 0; dofIdx < dofColor_.size(); ++dofIdx) {
-            if (dofError_[dofIdx] > tolerance) {
+            if (dofError_[dofIdx] > relinearizationTolerance_) {
                 // mark the degree of freedom 'red' if discrepancy is
                 // larger than the given tolerance
                 dofColor_[dofIdx] = Red;
@@ -449,77 +478,6 @@ public:
         numGreenElems_ = gridView_().comm().sum(numGreenElems_);
     }
 
-    /*!
-     * \brief Returns the relinearization color of a degree of freedom
-     *
-     * \copydetails Doxygen::elementParam
-     * \copydetails Doxygen::dofIdxParam
-     */
-    int dofColor(const ElementContext &elemCtx, int dofIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-
-        int globalIdx = elemCtx.globalSpaceIdx(dofIdx, /*timeIdx=*/0);
-        return dofColor_[globalIdx];
-    }
-
-    /*!
-     * \brief Returns the relinearization color of a degree of freedom
-     *
-     * \param globalDofIdx The global index of the degree of freedom.
-     */
-    int dofColor(int globalDofIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-
-        return dofColor_[globalDofIdx];
-    }
-
-    /*!
-     * \brief Returns the relinearization color of an element
-     *
-     * \copydetails Doxygen::elementParam
-     */
-    int elementColor(const Element &element) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        return elementColor_[elementMapper_().index(element)];
-#else
-        return elementColor_[elementMapper_().map(element)];
-#endif
-    }
-
-    /*!
-     * \brief Returns the relinearization color of an element
-     *
-     * \param globalElementIdx The global index of the element.
-     */
-    int elementColor(int globalElementIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-
-        return elementColor_[globalElementIdx];
-    }
-
-    /*!
-     * \brief Return constant reference to global Jacobian matrix.
-     */
-    const Matrix &matrix() const
-    { return *matrix_; }
-
-    /*!
-     * \brief Return constant reference to global residual vector.
-     */
-    const GlobalEqVector &residual() const
-    { return residual_; }
-
-private:
     static bool enableLinearizationRecycling_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
     static bool enablePartialRelinearization_()
@@ -739,12 +697,12 @@ private:
     // linearize the whole system
     void linearize_()
     {
-        resetSystem_();
-
         // if we can "recycle" the current linearization, we do it
         // here and be done with it...
         Scalar curDt = problem_().simulator().timeStepSize();
         if (reuseLinearization_) {
+            resetSystem_();
+
             int numGridDof = model_().numGridDof();
             for (int dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
                 // rescale the mass term of the jacobian matrix
@@ -774,6 +732,8 @@ private:
         }
 
         oldDt_ = curDt;
+        computeColors_();
+        resetSystem_();
 
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
@@ -829,7 +789,7 @@ private:
             // we only need to update the Jacobian matrix for entries which connect two
             // non-green DOFs. if the row DOF corresponds to a green one, we can skip the
             // whole row...
-            if (dofColor(globI) == Green)
+            if (dofColor_[globI] == Green)
                 continue;
 
             // update the right hand side
@@ -845,7 +805,7 @@ private:
                 int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
                 // only update the jacobian matrix for non-green degrees of freedom
-                if (dofColor(globJ) == Green)
+                if (dofColor_[globJ] == Green)
                     continue;
 
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
@@ -885,7 +845,7 @@ private:
     int numTotalElems_;
     int numGreenElems_;
 
-    Scalar relinerizationTolerance_;
+    Scalar relinearizationTolerance_;
     Scalar relinearizationAccuracy_;
     Scalar maxDofError_;
 

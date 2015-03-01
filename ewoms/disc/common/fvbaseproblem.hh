@@ -315,7 +315,7 @@ public:
             std::cout << std::setprecision(3)
                       << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "\n"
-                      << "------------------ Timing receipt ------------------\n"
+                      << "------------------------ Timing receipt ------------------------\n"
                       << "Setup time: "<< Simulator::humanReadableTime(setupTime, /*isAmendment=*/false)
                       << ", " << setupTime/(simulationTime + setupTime)*100 << "%\n"
                       << "Simulation time: "<< Simulator::humanReadableTime(simulationTime, /*isAmendment=*/false)
@@ -335,16 +335,13 @@ public:
                       << "Threads per processes: " << threadsPerProcess << "\n"
                       << "Total CPU time: " << Simulator::humanReadableTime(globalCpuTime, /*isAmendment=*/false) << "\n"
                       << "\n"
-                      << "Note 1: If not stated otherwise, all times\n"
-                      << "        are wall clock times\n"
-                      << "Note 2: Taxes and administrative overhead\n"
-                      << "        are "
+                      << "Note 1: If not stated otherwise, all times are wall clock times\n"
+                      << "Note 2: Taxes and administrative overhead are "
                       << (simulationTime - (linearizeTime_+solveTime_+updateTime_+prePostProcessTime+totalWriteTime))/simulationTime*100
-                      << "% of the simulation time.\n"
+                      << "%\n"
                       << "\n"
-                      << "Our simulation hours are 24/7. Thank you for\n"
-                      << "choosing us.\n"
-                      << "----------------------------------------------------\n"
+                      << "Our simulation hours are 24/7. Thank you for choosing us.\n"
+                      << "----------------------------------------------------------------\n"
                       << "\n"
                       << std::flush;
         }
