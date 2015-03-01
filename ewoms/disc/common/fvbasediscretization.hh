@@ -980,13 +980,21 @@ public:
             asImp_().solution(/*timeIdx=*/0)[i].checkDefined();
 #endif // HAVE_VALGRIND
 
+        Timer prePostProcessTimer;
+        prePostProcessTimer.start();
         asImp_().updateBegin();
+        prePostProcessTimer.stop();
+        simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
 
         bool converged = solver.apply();
+
+        prePostProcessTimer.start();
         if (converged)
             asImp_().updateSuccessful();
         else
             asImp_().updateFailed();
+        prePostProcessTimer.stop();
+        simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
 
 #if HAVE_VALGRIND
         // make sure that the "non-pseudo" primary variables are defined. Note that

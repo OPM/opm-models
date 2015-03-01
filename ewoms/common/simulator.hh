@@ -256,8 +256,8 @@ public:
     { return executionTimer_; }
 
     /*!
-     * \brief Returns total wall clock time required to write the visualization files of
-     *        all time steps to disk
+     * \brief Returns total wall clock time required to write the visualization and
+     *        restart files over the course of the simulation
      */
     Scalar totalWriteTime() const
     { return totalWriteTime_; }
@@ -502,8 +502,11 @@ public:
         totalWriteTime_ = 0.0;
         executionTimer_.start();
 
+        prePostProcessTime_ = 0;
+        Timer prePostProcessTimer;
         // do the time steps
         while (!finished()) {
+            prePostProcessTimer.start();
             if (episodeBegins())
                 // notify the problem that a new episode has just been
                 // started.
@@ -511,12 +514,17 @@ public:
 
             // pre-process the current solution
             problem_->beginTimeStep();
+            prePostProcessTimer.stop();
+            prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
 
             // execute the time integration scheme
             problem_->timeIntegration();
 
             // post-process the current solution
+            prePostProcessTimer.start();
             problem_->endTimeStep();
+            prePostProcessTimer.stop();
+            prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
 
             // write the result to disk
             writeTimer_.start();
@@ -533,6 +541,7 @@ public:
             time_ += oldDt;
             ++timeStepIdx_;
 
+            prePostProcessTimer.start();
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
                 // make the linearization not usable for the first
@@ -552,10 +561,15 @@ public:
             else
                 // ask the problem to provide the next time step size
                 setTimeStepSize(problem_->nextTimeStepSize());
+            prePostProcessTimer.stop();
+            prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
 
             // write restart file if mandated by the problem
+            writeTimer_.start();
             if (problem_->shouldWriteRestartFile())
                 serialize();
+            writeTimer_.stop();
+            totalWriteTime_ += writeTimer_.realTimeElapsed();
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
@@ -571,6 +585,12 @@ public:
 
         problem_->finalize();
     }
+
+    Scalar prePostProcessTime() const
+    { return prePostProcessTime_; }
+
+    void addPrePostProcessTime(Scalar value)
+    { prePostProcessTime_ += value; }
 
     /*!
      * \brief Given a time step size in seconds, return it in a format which is more
@@ -703,6 +723,7 @@ private:
     Ewoms::Timer writeTimer_;
     Scalar totalWriteTime_;
     Scalar startTime_;
+    Scalar prePostProcessTime_;
     Scalar time_;
     Scalar endTime_;
 

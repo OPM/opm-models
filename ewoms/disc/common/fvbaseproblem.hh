@@ -303,7 +303,9 @@ public:
     void finalize()
     {
         const auto& timer = simulator().timer();
-        Scalar realTime = timer.realTimeElapsed();
+        Scalar simulationTime = timer.realTimeElapsed();
+        Scalar setupTime = simulator().setupTime();
+        Scalar prePostProcessTime = simulator().prePostProcessTime();
         Scalar localCpuTime = timer.cpuTimeElapsed();
         Scalar globalCpuTime = timer.globalCpuTimeElapsed();
         Scalar totalWriteTime = simulator().totalWriteTime();
@@ -313,33 +315,36 @@ public:
             std::cout << std::setprecision(3)
                       << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "\n"
-                      << "-------------- Timing receipt --------------\n"
-                      << "  Wall-clock time: "<< Simulator::humanReadableTime(realTime, /*isAmendment=*/false) << "\n"
-                      << "  First process' CPU time: " <<  Simulator::humanReadableTime(localCpuTime, /*isAmendment=*/false) << "\n"
-                      << "  Number of processes: " << numProcesses << "\n"
-                      << "  Threads per processes: " << threadsPerProcess << "\n"
-                      << "  Total CPU time: " << Simulator::humanReadableTime(globalCpuTime, /*isAmendment=*/false) << "\n"
-                      << "  Setup time: "<< Simulator::humanReadableTime(simulator().setupTime(), /*isAmendment=*/false)
-                      << ", " << simulator().setupTime()/realTime*100 << "%\n"
-                      << "  Linearization time: "<< Simulator::humanReadableTime(linearizeTime_, /*isAmendment=*/false)
-                      << ", " << linearizeTime_/realTime*100 << "%\n"
-                      << "  Linear solve time: " << Simulator::humanReadableTime(solveTime_, /*isAmendment=*/false)
-                      << ", " << solveTime_/realTime*100 << "%\n"
-                      << "  Newton update time: " << Simulator::humanReadableTime(updateTime_, /*isAmendment=*/false)
-                      << ", " << updateTime_/realTime*100 << "%\n"
-                      << "  Vis output write time: " << Simulator::humanReadableTime(totalWriteTime, /*isAmendment=*/false)
-                      << ", " << totalWriteTime/realTime*100 << "%\n"
+                      << "------------------ Timing receipt ------------------\n"
+                      << "Setup time: "<< Simulator::humanReadableTime(setupTime, /*isAmendment=*/false)
+                      << ", " << setupTime/(simulationTime + setupTime)*100 << "%\n"
+                      << "Simulation time: "<< Simulator::humanReadableTime(simulationTime, /*isAmendment=*/false)
+                      << ", " << simulationTime/(simulationTime + setupTime)*100 << "%\n"
+                      << "    Linearization time: "<< Simulator::humanReadableTime(linearizeTime_, /*isAmendment=*/false)
+                      << ", " << linearizeTime_/simulationTime*100 << "%\n"
+                      << "    Linear solve time: " << Simulator::humanReadableTime(solveTime_, /*isAmendment=*/false)
+                      << ", " << solveTime_/simulationTime*100 << "%\n"
+                      << "    Newton update time: " << Simulator::humanReadableTime(updateTime_, /*isAmendment=*/false)
+                      << ", " << updateTime_/simulationTime*100 << "%\n"
+                      << "    Pre/postprocess time: " << Simulator::humanReadableTime(prePostProcessTime, /*isAmendment=*/false)
+                      << ", " << prePostProcessTime/simulationTime*100 << "%\n"
+                      << "    Output write time: " << Simulator::humanReadableTime(totalWriteTime, /*isAmendment=*/false)
+                      << ", " << totalWriteTime/simulationTime*100 << "%\n"
+                      << "First process' simulation CPU time: " <<  Simulator::humanReadableTime(localCpuTime, /*isAmendment=*/false) << "\n"
+                      << "Number of processes: " << numProcesses << "\n"
+                      << "Threads per processes: " << threadsPerProcess << "\n"
+                      << "Total CPU time: " << Simulator::humanReadableTime(globalCpuTime, /*isAmendment=*/false) << "\n"
                       << "\n"
                       << "Note 1: If not stated otherwise, all times\n"
                       << "        are wall clock times\n"
                       << "Note 2: Taxes and administrative overhead\n"
                       << "        are "
-                      << (realTime - (linearizeTime_+solveTime_+updateTime_+totalWriteTime))/realTime*100
-                      << "% of total execution time.\n"
+                      << (simulationTime - (linearizeTime_+solveTime_+updateTime_+prePostProcessTime+totalWriteTime))/simulationTime*100
+                      << "% of the simulation time.\n"
                       << "\n"
                       << "Our simulation hours are 24/7. Thank you for\n"
                       << "choosing us.\n"
-                      << "--------------------------------------------\n"
+                      << "----------------------------------------------------\n"
                       << "\n"
                       << std::flush;
         }

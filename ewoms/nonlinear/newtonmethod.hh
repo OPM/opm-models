@@ -287,6 +287,8 @@ public:
         solveTime_ = 0.0;
         updateTime_ = 0.0;
 
+        Timer prePostProcessTimer;
+
         try {
             // execute the method as long as the implementation thinks
             // that we should do another iteration
@@ -295,7 +297,11 @@ public:
 
                 // notify the implementation that we're about to start
                 // a new iteration
+                prePostProcessTimer.start();
                 asImp_().beginIteration_();
+                prePostProcessTimer.stop();
+                simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+
 
                 // make the current solution to the old one
                 previousSolution = currentSolution;
@@ -334,7 +340,12 @@ public:
                     if (asImp_().verbose_())
                         std::cout << "Newton: Newton solver did not converge\n" << std::flush;
                     solveTimer_.stop();
+
+                    prePostProcessTimer.start();
                     asImp_().failed_();
+                    prePostProcessTimer.stop();
+                    simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+
                     return false;
                 }
 
@@ -358,7 +369,10 @@ public:
                 updateTimer_.halt();
 
                 // tell the implementation that we're done with this iteration
+                prePostProcessTimer.start();
                 asImp_().endIteration_(currentSolution, previousSolution);
+                prePostProcessTimer.stop();
+                simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
             }
         }
         catch (const Dune::Exception &e)
