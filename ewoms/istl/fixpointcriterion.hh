@@ -150,6 +150,12 @@ public:
     bool converged() const
     { return delta_ < tolerance(); }
 
+    /*!
+     * \copydoc ConvergenceCriterion::accuracy()
+     */
+    Scalar accuracy() const
+    { return delta_; }
+
 private:
     const CollectiveCommunication &comm_;
 

@@ -45,7 +45,14 @@ namespace Ewoms {
 template <class Vector>
 class ConvergenceCriterion
 {
-    typedef typename Vector::field_type Scalar;
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+    //! \brief The real type of the field type (is the same if using real numbers, but differs for std::complex)
+    typedef typename Dune::FieldTraits<typename Vector::field_type>::real_type real_type;
+#else
+    typedef typename Vector::field_type real_type;
+#endif
+
+    typedef real_type Scalar;
 
 public:
     /*!
@@ -93,6 +100,13 @@ public:
      *        met.
      */
     virtual bool converged() const = 0;
+
+    /*!
+     * \brief Returns the accuracy of the solution at the last update.
+     *
+     * A value of zero means that the solution was exact.
+     */
+    virtual Scalar accuracy() const = 0;
 
     /*!
      * \brief Prints the initial information about the convergence behaviour.

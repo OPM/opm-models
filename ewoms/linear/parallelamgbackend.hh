@@ -35,8 +35,8 @@
 #include <opm/core/utility/PropertySystem.hpp>
 #include <ewoms/common/parametersystem.hh>
 
-#include <ewoms/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
+#include <dune/istl/solvers.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/pinfo.hh>
 #include <dune/istl/schwarz.hh>
@@ -266,7 +266,7 @@ public:
 
         // tell the linear solver to use it
         typedef Ewoms::ConvergenceCriterion<Vector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
+        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
 
         Dune::InverseOperatorResult result;
         int solverSucceeded = 1;

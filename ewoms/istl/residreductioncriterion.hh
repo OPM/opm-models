@@ -97,6 +97,12 @@ public:
     { return curDefect_ <= tolerance(); }
 
     /*!
+     * \copydoc ConvergenceCriterion::accuracy()
+     */
+    Scalar accuracy() const
+    { return curDefect_; }
+
+    /*!
      * \copydoc ConvergenceCriterion::printInitial()
      */
     void printInitial(std::ostream &os=std::cout) const

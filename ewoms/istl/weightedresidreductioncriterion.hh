@@ -201,6 +201,14 @@ public:
     }
 
     /*!
+     * \copydoc ConvergenceCriterion::accuracy()
+     *
+     * For the accuracy we only take the residual into account,
+     */
+    Scalar accuracy() const
+    { return residualError_; }
+
+    /*!
      * \copydoc ConvergenceCriterion::printInitial()
      */
     void printInitial(std::ostream &os = std::cout) const

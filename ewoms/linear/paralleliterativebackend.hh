@@ -324,7 +324,7 @@ public:
 
         // tell the linear solver to use it
         typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(Dune::shared_ptr<ConvergenceCriterion>(convCrit));
+        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
 
         // run the linear solver and have some fun
         Dune::InverseOperatorResult result;

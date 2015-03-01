@@ -23,7 +23,7 @@
 #ifndef EWOMS_SOLVER_PRECONDITIONER_HH
 #define EWOMS_SOLVER_PRECONDITIONER_HH
 
-#include <dune/istl/solvers.hh>
+#include <ewoms/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
 
 namespace Ewoms {
@@ -40,7 +40,7 @@ class SolverPreconditioner
     typedef Dune::MatrixAdapter<Matrix, DomainVector, RangeVector> InnerOperator;
     typedef Dune::SeqScalarProduct<DomainVector> InnerScalarProduct;
     typedef Dune::SeqILU0<Matrix, DomainVector, RangeVector> InnerPreConditioner;
-    typedef Dune::BiCGSTABSolver<DomainVector> InnerSolver;
+    typedef Ewoms::BiCGSTABSolver<DomainVector> InnerSolver;
     typedef typename DomainVector::field_type Scalar;
 
 public:
