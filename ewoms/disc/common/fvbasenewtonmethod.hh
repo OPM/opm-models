@@ -99,10 +99,12 @@ template <class TypeTag>
 class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
 {
     typedef Ewoms::NewtonMethod<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
@@ -140,23 +142,23 @@ protected:
      * subtract deltaU from uLastIter, i.e.
      * \f[ u^{k+1} = u^k - \Delta u^k \f]
      *
-     * \param currentSolution The solution vector after the current iteration
-     * \param previousSolution The solution vector after the last iteration
-     * \param solutionUpdate The delta as calculated from solving the
-     *                       linear system of equations. This
-     *                       parameter also stores the updated
-     *                       solution.
-     * \param previousResidual The residual (i.e., right-hand-side) of
-     *                         the previous iteration's solution.
+     * \param nextSolution The solution vector at the end of the current iteration
+     * \param currentSolution The solution vector at the beginning of the current iteration
+     * \param solutionUpdate The delta as calculated by solving the linear system of
+     *                       equations. This parameter also stores the updated solution.
+     * \param currentResidual The residual (i.e., right-hand-side) of the current solution.
      */
-    void update_(SolutionVector &currentSolution,
-                 const SolutionVector &previousSolution,
+    void update_(SolutionVector &nextSolution,
+                 const SolutionVector &currentSolution,
                  const GlobalEqVector &solutionUpdate,
-                 const GlobalEqVector &previousResidual)
+                 const GlobalEqVector &currentResidual)
     {
-        // first, write out the current solution to make convergence
+        auto& model = this->model();
+        auto& linearizer = model.linearizer();
+
+        // first, write out the next solution to make convergence
         // analysis possible
-        this->writeConvergence_(previousSolution, solutionUpdate);
+        this->writeConvergence_(currentSolution, solutionUpdate);
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.two_norm2()))
@@ -181,16 +183,25 @@ protected:
 
             relinearizationTol *= EWOMS_GET_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor);
 
-            model_().linearizer().updateDiscrepancy(previousResidual);
-            model_().linearizer().computeColors(relinearizationTol);
+            linearizer.updateDiscrepancy(currentResidual);
+            linearizer.computeColors(relinearizationTol);
         }
 
-        // update the solution
-        for (unsigned i = 0; i < previousSolution.size(); ++i) {
-            currentSolution[i] = previousSolution[i];
-            currentSolution[i] -= solutionUpdate[i];
+        // update the solution for the grid DOFs
+        for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
+            asImp_().updatePrimaryVariables_(dofIdx,
+                                             nextSolution[dofIdx],
+                                             currentSolution[dofIdx],
+                                             solutionUpdate[dofIdx],
+                                             currentResidual[dofIdx]);
+            model.invalidateIntensiveQuantitiesCacheEntry(dofIdx, /*timeIdx=*/0);
+        }
 
-            this->model_().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
+        // update the DOFs of the auxiliary equations
+        int nTotalDof = model.numTotalDof();
+        for (int dofIdx = model.numGridDof(); dofIdx < nTotalDof; ++dofIdx) {
+            nextSolution[dofIdx] = currentSolution[dofIdx];
+            nextSolution[dofIdx] -= solutionUpdate[dofIdx];
         }
     }
 
@@ -238,6 +249,13 @@ protected:
      */
     const Model &model_() const
     { return ParentType::model(); }
+
+private:
+    Implementation &asImp_()
+    { return *static_cast<Implementation*>(this); }
+
+    const Implementation &asImp_() const
+    { return *static_cast<const Implementation*>(this); }
 
     /*!
      * \brief Returns true iff the linearizer uses partial

@@ -72,8 +72,14 @@ NEW_PROP_TAG(NewtonMethod);
 //! Specifies the type of a solution
 NEW_PROP_TAG(SolutionVector);
 
+//! Specifies the type of a solution for a single degee of freedom
+NEW_PROP_TAG(PrimaryVariables);
+
 //! Vector containing a quantity of for equation on the whole grid
 NEW_PROP_TAG(GlobalEqVector);
+
+//! Vector containing a quantity of for equation for a single degee of freedom
+NEW_PROP_TAG(EqVector);
 
 //! The class which linearizes the non-linear system of equations
 NEW_PROP_TAG(Linearizer);
@@ -156,6 +162,8 @@ class NewtonMethod
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) LinearSolverBackend;
@@ -274,14 +282,14 @@ public:
             clearRemainingLine = blubb;
         }
 
-        SolutionVector &currentSolution = model().solution(/*historyIdx=*/0);
-        SolutionVector previousSolution(currentSolution);
-        GlobalEqVector solutionUpdate(currentSolution.size());
+        SolutionVector &nextSolution = model().solution(/*historyIdx=*/0);
+        SolutionVector currentSolution(nextSolution);
+        GlobalEqVector solutionUpdate(nextSolution.size());
 
         Linearizer &linearizer = model().linearizer();
 
         // tell the implementation that we begin solving
-        asImp_().begin_(currentSolution);
+        asImp_().begin_(nextSolution);
 
         linearizeTime_ = 0.0;
         solveTime_ = 0.0;
@@ -304,7 +312,7 @@ public:
 
 
                 // make the current solution to the old one
-                previousSolution = currentSolution;
+                currentSolution = nextSolution;
 
                 if (asImp_().verbose_()) {
                     std::cout << "Linearize: r(x^k) = dS/dt + div F - q;   M = grad r"
@@ -359,18 +367,18 @@ public:
                 // update the current solution (i.e. uOld) with the delta
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
-                asImp_().updateError_(currentSolution,
-                                      previousSolution,
+                asImp_().updateError_(nextSolution,
+                                      currentSolution,
                                       b,
                                       solutionUpdate);
-                asImp_().update_(currentSolution, previousSolution, solutionUpdate, b);
+                asImp_().update_(nextSolution, currentSolution, solutionUpdate, b);
                 updateTimer_.stop();
                 updateTime_ += updateTimer_.realTimeElapsed();
                 updateTimer_.halt();
 
                 // tell the implementation that we're done with this iteration
                 prePostProcessTimer.start();
-                asImp_().endIteration_(currentSolution, previousSolution);
+                asImp_().endIteration_(nextSolution, currentSolution);
                 prePostProcessTimer.stop();
                 simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
             }
@@ -557,15 +565,15 @@ protected:
      * For our purposes, the error of a solution is defined as the
      * maximum of the weighted residual of a given solution.
      *
-     * \param currentSolution The current iterative solution
-     * \param previousSolution The last iterative solution
-     * \param previousResidual The residual (i.e., right-hand-side) of
-     *                         the previous iteration's solution.
+     * \param nextSolution The solution after the current iteration
+     * \param currentSolution The solution at the beginning the current iteration
+     * \param currentResidual The residual (i.e., right-hand-side) of the current
+     *                        iteration's solution.
      * \param solutionUpdate The difference between the current and the next solution
      */
-    void updateError_(const SolutionVector &currentSolution,
-                      const SolutionVector &previousSolution,
-                      const GlobalEqVector &previousResidual,
+    void updateError_(const SolutionVector &nextSolution,
+                      const SolutionVector &currentSolution,
+                      const GlobalEqVector &currentResidual,
                       const GlobalEqVector &solutionUpdate)
     {
         lastError_ = error_;
@@ -573,11 +581,11 @@ protected:
         // calculate the error as the maximum weighted tolerance of
         // the solution's residual
         error_ = 0;
-        for (unsigned i = 0; i < previousResidual.size(); ++i) {
+        for (unsigned i = 0; i < currentResidual.size(); ++i) {
             if (i >= model().numGridDof() || model().dofTotalVolume(i) <= 0)
                 continue;
 
-            const auto &r = previousResidual[i];
+            const auto &r = currentResidual[i];
             for (unsigned j = 0; j < r.size(); ++j)
                 error_ = std::max(std::abs(r[j] * model().eqWeight(i, j)), error_);
         }
@@ -602,32 +610,45 @@ protected:
      * use the standard Newton-Raphson update strategy, i.e.
      * \f[ u^{k+1} = u^k - \Delta u^k \f]
      *
-     * \param currentSolution The solution vector after the current iteration
-     * \param previousSolution The solution vector after the last iteration
-     * \param solutionUpdate The delta vector as calculated by solving
-     *                       the linear system of equations
-     * \param previousResidual The residual vector of the previous
-     *                         Newton-Raphson iteraton
+     * \param nextSolution The solution vector after the current iteration
+     * \param currentSolution The solution vector after the last iteration
+     * \param solutionUpdate The delta vector as calculated by solving the linear system
+     *                       of equations
+     * \param currentResidual The residual vector of the current Newton-Raphson iteraton
      */
-    void update_(SolutionVector &currentSolution,
-                 const SolutionVector &previousSolution,
+    void update_(SolutionVector &nextSolution,
+                 const SolutionVector &currentSolution,
                  const GlobalEqVector &solutionUpdate,
-                 const GlobalEqVector &previousResidual)
+                 const GlobalEqVector &currentResidual)
     {
         // first, write out the current solution to make convergence
         // analysis possible
-        writeConvergence_(previousSolution, solutionUpdate);
+        asImp_().writeConvergence_(currentSolution, solutionUpdate);
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        for (unsigned i = 0; i < previousSolution.size(); ++i) {
-            currentSolution[i] = previousSolution[i];
-            currentSolution[i] -= solutionUpdate[i];
-
-            this->model().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < currentSolution.size(); ++dofIdx) {
+            asImp_().updatePrimaryVariables_(dofIdx,
+                                             nextSolution[dofIdx],
+                                             currentSolution[dofIdx],
+                                             solutionUpdate[dofIdx],
+                                             currentResidual[dofIdx]);
         }
+    }
+
+    /*!
+     * \brief Update a single primary variables object.
+     */
+    void updatePrimaryVariables_(int globalDofIdx,
+                                 PrimaryVariables& nextValue,
+                                 const PrimaryVariables& currentValue,
+                                 const EqVector& update,
+                                 const EqVector& currentResidual)
+    {
+        nextValue = currentValue;
+        nextValue -= update;
     }
 
     /*!
@@ -636,12 +657,12 @@ protected:
      *
      * This method is called as part of the update proceedure.
      */
-    void writeConvergence_(const SolutionVector &previousSolution,
+    void writeConvergence_(const SolutionVector &currentSolution,
                            const GlobalEqVector &solutionUpdate)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, NewtonWriteConvergence)) {
             convergenceWriter_.beginIteration();
-            convergenceWriter_.writeFields(previousSolution, solutionUpdate);
+            convergenceWriter_.writeFields(currentSolution, solutionUpdate);
             convergenceWriter_.endIteration();
         }
     }
@@ -649,11 +670,11 @@ protected:
     /*!
      * \brief Indicates that one Newton iteration was finished.
      *
-     * \param currentSolution The solution after the current Newton iteration
-     * \param previousSolution The solution at the beginning of the current Newton iteration
+     * \param nextSolution The solution after the current Newton iteration
+     * \param currentSolution The solution at the beginning of the current Newton iteration
      */
-    void endIteration_(const SolutionVector &currentSolution,
-                       const SolutionVector &previousSolution)
+    void endIteration_(const SolutionVector &nextSolution,
+                       const SolutionVector &currentSolution)
     {
         ++numIterations_;
         problem().endIteration();

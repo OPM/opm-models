@@ -39,8 +39,8 @@ class NcpNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
@@ -82,73 +82,36 @@ private:
     friend class ParentType;
 */
     /*!
-     * \copydoc FvBaseNewtonMethod::update_
+     * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
-    void update_(SolutionVector &uCurrentIter,
-                 const SolutionVector &uLastIter,
-                 const GlobalEqVector &deltaU,
-                 const GlobalEqVector &previousResidual)
+    void updatePrimaryVariables_(int globalDofIdx,
+                                 PrimaryVariables& nextValue,
+                                 const PrimaryVariables& currentValue,
+                                 const EqVector& update,
+                                 const EqVector& currentResidual)
     {
-        // make sure not to swallow non-finite values at this point
-        if (!std::isfinite(deltaU.two_norm2()))
-            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
-
-        // compute the degree of freedom and element colors for
-        // partial relinearization
-        if (this->enablePartialRelinearization_()) {
-            // rationale: the change of the derivatives of the
-            // residual are relatively small if the solution is
-            // largely unchanged and a solution is largly unchanged if
-            // the right hand side is close to zero. This argument may
-            // not be bullet proof, but it is a heuristic that usually
-            // works.
-            Scalar linearTol =
-                this->error_*EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-            Scalar newtonTol = this->tolerance();
-
-            Scalar relinearizationTol = 0.01*linearTol;
-            if (relinearizationTol < newtonTol/10)
-                relinearizationTol = newtonTol/10;
-
-            this->model_().linearizer().updateDiscrepancy(previousResidual);
-            this->model_().linearizer().computeColors(relinearizationTol);
-        }
-
         // normal Newton-Raphson update
-        for (size_t i = 0; i < uLastIter.size(); ++i) {
-            for (int j = 0; j < numEq; ++j) {
-                uCurrentIter[i][j] = uLastIter[i][j] - deltaU[i][j];
-            }
-            this->model_().invalidateIntensiveQuantitiesCacheEntry(i, /*timeIdx=*/0);
-        }
+        nextValue = currentValue;
+        nextValue -= update;
 
         // put crash barriers along the update path at the
         // beginning...
         if (this->numIterations_ < choppedIterations_) {
-            chopUpdate_(uCurrentIter, uLastIter);
-        }
-    }
-
-private:
-    void chopUpdate_(SolutionVector &uCurrentIter,
-                     const SolutionVector &uLastIter)
-    {
-        for (size_t i = 0; i < uLastIter.size(); ++i) {
             for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-                saturationChop_(uCurrentIter[i][saturation0Idx + phaseIdx],
-                                uLastIter[i][saturation0Idx + phaseIdx]);
-            pressureChop_(uCurrentIter[i][pressure0Idx],
-                          uLastIter[i][pressure0Idx]);
+                saturationChop_(nextValue[saturation0Idx + phaseIdx],
+                                currentValue[saturation0Idx + phaseIdx]);
+            pressureChop_(nextValue[pressure0Idx],
+                          currentValue[pressure0Idx]);
 
             // fugacities
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar &val = uCurrentIter[i][fugacity0Idx + compIdx];
-                Scalar oldVal = uLastIter[i][fugacity0Idx + compIdx];
+                Scalar &val = nextValue[fugacity0Idx + compIdx];
+                Scalar oldVal = currentValue[fugacity0Idx + compIdx];
 
                 // allow the mole fraction of the component to change
                 // at most 70% (assuming composition independent
                 // fugacity coefficients)
-                Scalar minPhi = this->problem().model().minActivityCoeff(i, compIdx);
+                Scalar minPhi = this->problem().model().minActivityCoeff(globalDofIdx, compIdx);
                 Scalar maxDelta = 0.7 * minPhi;
 
                 clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
@@ -161,6 +124,7 @@ private:
         }
     }
 
+private:
     void clampValue_(Scalar &val, Scalar minVal, Scalar maxVal) const
     { val = std::max(minVal, std::min(val, maxVal)); }
 

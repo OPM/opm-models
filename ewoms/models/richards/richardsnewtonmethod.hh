@@ -43,13 +43,9 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GridView::template Codim<0>::Entity Element;
-    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
@@ -75,109 +71,85 @@ protected:
 */
 
     /*!
-     * \copydoc FvBaseNewtonMethod::update_
+     * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
-    void update_(SolutionVector &uCurrentIter,
-                 const SolutionVector &uLastIter,
-                 const GlobalEqVector &deltaU,
-                 const GlobalEqVector &previousResidual)
+    void updatePrimaryVariables_(int globalDofIdx,
+                                 PrimaryVariables& nextValue,
+                                 const PrimaryVariables& currentValue,
+                                 const EqVector& update,
+                                 const EqVector& currentResidual)
     {
-        const auto &linearizer = this->simulator_.model().linearizer();
-        const auto &simulator = this->simulator_;
-        const auto &problem = simulator.problem();
+        // normal Newton-Raphson update
+        nextValue = currentValue;
+        nextValue -= update;
 
-        ParentType::update_(uCurrentIter, uLastIter, deltaU, previousResidual);
-
-        // do not clamp anything after 5 iterations
+        // do not clamp anything after 4 iterations
         if (this->numIterations_ > 4)
             return;
 
-        // clamp saturation change to at most 20% per iteration
-        ElementContext elemCtx(simulator);
+        const auto& problem = this->simulator_.problem();
 
-        ElementIterator elemIt = simulator.gridView().template begin<0>();
-        const ElementIterator &elemEndIt = simulator.gridView().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            const Element& elem = *elemIt;
-            if (linearizer.elementColor(elem) == Linearizer::Green)
-                // don't look at green elements, since they
-                // probably have not changed much anyways
-                continue;
+        // calculate the old wetting phase saturation
+        const MaterialLawParams &matParams =
+            problem.materialLawParams(globalDofIdx, /*timeIdx=*/0);
 
-            elemCtx.updateStencil(elem);
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
-            for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                int globI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (linearizer.dofColor(globI) == Linearizer::Green)
-                    // don't limit at green DOFs, since they
-                    // probably have not changed much anyways
-                    continue;
+        // set the temperature
+        Scalar T = problem.temperature(globalDofIdx, /*timeIdx=*/0);
+        fs.setTemperature(T);
 
-                // calculate the old wetting phase saturation
-                const MaterialLawParams &matParams =
-                    problem.materialLawParams(elemCtx, dofIdx, /*timeIdx=*/0);
+        /////////
+        // calculate the phase pressures of the previous iteration
+        /////////
 
-                Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
+        // first, we have to find the minimum capillary pressure
+        // (i.e. Sw = 0)
+        fs.setSaturation(liquidPhaseIdx, 1.0);
+        fs.setSaturation(gasPhaseIdx, 0.0);
+        PhaseVector pC;
+        MaterialLaw::capillaryPressures(pC, matParams, fs);
 
-                // set the temperatures
-                Scalar T = problem.temperature(elemCtx, dofIdx, /*timeIdx=*/0);
-                fs.setTemperature(T);
+        // non-wetting pressure can be larger than the
+        // reference pressure if the medium is fully
+        // saturated by the wetting phase
+        Scalar pWOld = currentValue[pressureWIdx];
+        Scalar pNOld =
+            std::max(problem.referencePressure(globalDofIdx, /*timeIdx=*/0),
+                     pWOld + (pC[gasPhaseIdx] - pC[liquidPhaseIdx]));
 
-                /////////
-                // calculate the phase pressures of the previous iteration
-                /////////
+        /////////
+        // find the saturations of the previous iteration
+        /////////
+        fs.setPressure(liquidPhaseIdx, pWOld);
+        fs.setPressure(gasPhaseIdx, pNOld);
 
-                // first, we have to find the minimum capillary pressure
-                // (i.e. Sw = 0)
-                fs.setSaturation(liquidPhaseIdx, 1.0);
-                fs.setSaturation(gasPhaseIdx, 0.0);
-                PhaseVector pC;
-                MaterialLaw::capillaryPressures(pC, matParams, fs);
+        PhaseVector satOld;
+        MaterialLaw::saturations(satOld, matParams, fs);
+        satOld[liquidPhaseIdx] = std::max<Scalar>(0.0, satOld[liquidPhaseIdx]);
 
-                // non-wetting pressure can be larger than the
-                // reference pressure if the medium is fully
-                // saturated by the wetting phase
-                Scalar pWOld = uLastIter[globI][pressureWIdx];
-                Scalar pNOld =
-                    std::max(problem.referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
-                             pWOld + (pC[gasPhaseIdx] - pC[liquidPhaseIdx]));
+        /////////
+        // find the wetting phase pressures which
+        // corrospond to a 20% increase and a 20% decrease
+        // of the wetting saturation
+        /////////
+        fs.setSaturation(liquidPhaseIdx, satOld[liquidPhaseIdx] - 0.2);
+        fs.setSaturation(gasPhaseIdx, 1.0 - (satOld[liquidPhaseIdx] - 0.2));
+        MaterialLaw::capillaryPressures(pC, matParams, fs);
+        Scalar pwMin = pNOld - (pC[gasPhaseIdx] - pC[liquidPhaseIdx]);
 
-                /////////
-                // find the saturations of the previous iteration
-                /////////
-                fs.setPressure(liquidPhaseIdx, pWOld);
-                fs.setPressure(gasPhaseIdx, pNOld);
+        fs.setSaturation(liquidPhaseIdx, satOld[liquidPhaseIdx] + 0.2);
+        fs.setSaturation(gasPhaseIdx, 1.0 - (satOld[liquidPhaseIdx] + 0.2));
+        MaterialLaw::capillaryPressures(pC, matParams, fs);
+        Scalar pwMax = pNOld - (pC[gasPhaseIdx] - pC[liquidPhaseIdx]);
 
-                PhaseVector satOld;
-                MaterialLaw::saturations(satOld, matParams, fs);
-                satOld[liquidPhaseIdx] = std::max<Scalar>(0.0, satOld[liquidPhaseIdx]);
-
-                /////////
-                // find the wetting phase pressures which
-                // corrospond to a 20% increase and a 20% decrease
-                // of the wetting saturation
-                /////////
-                fs.setSaturation(liquidPhaseIdx, satOld[liquidPhaseIdx] - 0.2);
-                fs.setSaturation(gasPhaseIdx, 1.0 - (satOld[liquidPhaseIdx] - 0.2));
-                MaterialLaw::capillaryPressures(pC, matParams, fs);
-                Scalar pwMin = pNOld - (pC[gasPhaseIdx] - pC[liquidPhaseIdx]);
-
-                fs.setSaturation(liquidPhaseIdx, satOld[liquidPhaseIdx] + 0.2);
-                fs.setSaturation(gasPhaseIdx, 1.0 - (satOld[liquidPhaseIdx] + 0.2));
-                MaterialLaw::capillaryPressures(pC, matParams, fs);
-                Scalar pwMax = pNOld - (pC[gasPhaseIdx] - pC[liquidPhaseIdx]);
-
-                /////////
-                // clamp the result to the minimum and the maximum
-                // pressures we just calculated
-                /////////
-                Scalar pW = uCurrentIter[globI][pressureWIdx];
-                pW = std::max(pwMin, std::min(pW, pwMax));
-                uCurrentIter[globI][pressureWIdx] = pW;
-
-                this->model_().invalidateIntensiveQuantitiesCacheEntry(globI, /*timeIdx=*/0);
-            }
-        }
+        /////////
+        // clamp the result to the minimum and the maximum
+        // pressures we just calculated
+        /////////
+        Scalar pW = nextValue[pressureWIdx];
+        pW = std::max(pwMin, std::min(pW, pwMax));
+        nextValue[pressureWIdx] = pW;
     }
 };
 } // namespace Ewoms

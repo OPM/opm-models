@@ -502,7 +502,6 @@ public:
                                              intQuants.fluidState(),
                                              oldPhasePresence,
                                              priVars);
-                    this->linearizer().markDofRed(globalIdx);
                     ++numSwitched_;
                 }
             }
