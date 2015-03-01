@@ -215,9 +215,6 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 // disable partial relinearization by default
 SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
 
-// use the default tolerance to determine the degrees of freedom to be relinearized
-SET_SCALAR_PROP(FvBaseDiscretization, RelinearizationToleranceFactor, 1.0);
-
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
 
@@ -567,13 +564,14 @@ public:
      *                  hint is to be set.
      * \param timeIdx The index used by the time discretization.
      */
-    void invalidateIntensiveQuantitiesCacheEntry(int globalIdx,
-                                                 int timeIdx) const
+    void setIntensiveQuantitiesCacheEntryValidity(int globalIdx,
+                                                  int timeIdx,
+                                                  bool newValue) const
     {
         if (!storeIntensiveQuantities_())
             return;
 
-        intensiveQuantityCacheUpToDate_[timeIdx][globalIdx] = false;
+        intensiveQuantityCacheUpToDate_[timeIdx][globalIdx] = newValue;
     }
 
     /*!

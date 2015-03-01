@@ -419,9 +419,9 @@ protected:
         Valgrind::CheckDefined(normal);
 
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
+            filterVelocity_[phaseIdx] = 0;
+            volumeFlux_[phaseIdx] = 0;
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                filterVelocity_[phaseIdx] = 0;
-                volumeFlux_[phaseIdx] = 0;
                 continue;
             }
 

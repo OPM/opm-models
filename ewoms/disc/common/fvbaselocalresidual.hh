@@ -38,7 +38,6 @@
 #include <cmath>
 
 namespace Ewoms {
-
 /*!
  * \ingroup Discretization
  *
@@ -204,7 +203,7 @@ public:
         }
 
         // evaluate the boundary conditions
-        asImp_().evalBoundary_(residual, storage, elemCtx, /*timeIdx=*/0);
+        asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
 
 #if !defined NDEBUG
         for (int i=0; i < numPrimaryDof; i++) {
@@ -222,7 +221,8 @@ public:
         for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
             if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
                 // non-overlap DOF
-                residual[dofIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
+                Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
+                residual[dofIdx] /= dofVolume;
                 assert(std::isfinite(residual[dofIdx].two_norm()));
 
 #if !defined NDEBUG
@@ -397,7 +397,6 @@ protected:
      * \brief Evaluate the boundary conditions of an element.
      */
     void evalBoundary_(LocalBlockVector &residual,
-                       LocalBlockVector &storage,
                        const ElementContext &elemCtx,
                        int timeIdx) const
     {

@@ -49,6 +49,10 @@ NEW_PROP_TAG(Model);
 //! The class storing primary variables plus pseudo primary variables
 NEW_PROP_TAG(PrimaryVariables);
 
+//! The class storing values of conservation equations (e.g., a "naked" primary varible
+//! vector)
+NEW_PROP_TAG(EqVector);
+
 //! The number of balance equations.
 NEW_PROP_TAG(NumEq);
 
@@ -61,9 +65,6 @@ NEW_PROP_TAG(NewtonMethod);
 //! Specifies whether the linearization should only be relinearized if
 //! the current solution deviates too much from the evaluation point
 NEW_PROP_TAG(EnablePartialRelinearization);
-
-//! some user adjustable knob to increase or decrease the reliniearization tolerance.
-NEW_PROP_TAG(RelinearizationToleranceFactor);
 
 //! Enable linearization recycling?
 NEW_PROP_TAG(EnableLinearizationRecycling);
@@ -109,24 +110,13 @@ class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
 
 
 public:
     FvBaseNewtonMethod(Simulator &simulator)
         : ParentType(simulator)
     { }
-
-    /*!
-     * \brief Register all run-time parameters of the Newton method.
-     */
-    static void registerParameters()
-    {
-        ParentType::registerParameters();
-
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor,
-                             "The scaling factor from the default tolerance used for partial "
-                             "relinearization");
-    }
 
 protected:
     friend class Ewoms::NewtonMethod<TypeTag>;
@@ -164,37 +154,33 @@ protected:
         if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        // compute the degree of freedom and element colors for
-        // partial relinearization
+        // compute the DOF and element colors for partial relinearization
         if (enablePartialRelinearization_()) {
-            // rationale: the change of the derivatives of the
-            // residual are relatively small if the solution is
-            // largely unchanged and a solution is largly unchanged if
-            // the right hand side is close to zero. This argument may
-            // not be bullet proof, but it is a heuristic that usually
-            // works.
-            Scalar linearTol =
-                this->error_ * EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-            Scalar newtonTol = this->tolerance();
+            linearizer.updateRelinearizationErrors(solutionUpdate, currentResidual);
 
-            Scalar relinearizationTol = linearTol/500;
-            if (relinearizationTol < newtonTol/100)
-                relinearizationTol = newtonTol/100;
+            // we chose to relinearize all DOFs for which the solution is to be deflected
+            // by more than a thousandth of the maximum deflection.
+            Scalar relinearizationTol = 1e-3*linearizer.maxDofError();
 
-            relinearizationTol *= EWOMS_GET_PARAM(TypeTag, Scalar, RelinearizationToleranceFactor);
-
-            linearizer.updateDiscrepancy(currentResidual);
             linearizer.computeColors(relinearizationTol);
         }
 
         // update the solution for the grid DOFs
         for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
+            if (linearizer.dofColor(dofIdx) != Linearizer::Red) {
+                // don't update non-red DOFs. this implies that the intensive quantities
+                // are still valid.
+                nextSolution[dofIdx] = currentSolution[dofIdx];
+                this->model_().setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, true);
+                continue;
+            }
+
             asImp_().updatePrimaryVariables_(dofIdx,
                                              nextSolution[dofIdx],
                                              currentSolution[dofIdx],
                                              solutionUpdate[dofIdx],
                                              currentResidual[dofIdx]);
-            model.invalidateIntensiveQuantitiesCacheEntry(dofIdx, /*timeIdx=*/0);
+            model.setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, false);
         }
 
         // update the DOFs of the auxiliary equations

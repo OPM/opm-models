@@ -29,7 +29,6 @@
 #include <ewoms/models/common/energymodule.hh>
 
 namespace Ewoms {
-
 /*!
  * \ingroup ImmiscibleModel
  *
