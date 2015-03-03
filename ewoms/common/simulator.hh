@@ -408,12 +408,6 @@ public:
     { return episodeLength_; }
 
     /*!
-     * \brief Returns true if the current episode has just been started
-     */
-    bool episodeBegins() const
-    { return startTime() + this->time() < episodeStartTime_ + episodeLength()*1e-8; }
-
-    /*!
      * \brief Returns true if the current episode is finished at the
      *        current time.
      */
@@ -476,9 +470,11 @@ public:
             model_->deserialize(res);
             res.deserializeEnd();
             if (verbose_)
-                std::cout << "Deserialization done. Time step index: " << timeStepIndex()
+                std::cout << "Deserialization done."
+                          << " Simulator time: " << time() << humanReadableTime(time())
+                          << " Time step index: " << timeStepIndex()
                           << " Episode index: " << episodeIndex()
-                          << "'\n" << std::flush;
+                          << "\n" << std::flush;
         }
         else {
             // if no restart is done, apply the initial solution
@@ -508,16 +504,37 @@ public:
 
         prePostProcessTime_ = 0;
         Timer prePostProcessTimer;
+        bool episodeBegins = episodeIsOver() || (timeStepIdx_ == 0);
         // do the time steps
         while (!finished()) {
             prePostProcessTimer.start();
-            if (episodeBegins())
+            if (episodeBegins) {
                 // notify the problem that a new episode has just been
                 // started.
                 problem_->beginEpisode();
 
+                if (finished()) {
+                    // the problem can chose to terminate the simulation in
+                    // beginEpisode(), so we have handle this case.
+                    problem_->endEpisode();
+                    prePostProcessTimer.stop();
+                    prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+                    break;
+                }
+            }
+            episodeBegins = false;
+
             // pre-process the current solution
             problem_->beginTimeStep();
+            if (finished()) {
+                // the problem can chose to terminate the simulation in
+                // beginTimeStep(), so we have handle this case.
+                problem_->endTimeStep();
+                problem_->endEpisode();
+                prePostProcessTimer.stop();
+                prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+                break;
+            }
             prePostProcessTimer.stop();
             prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
 
@@ -545,22 +562,28 @@ public:
             time_ += oldDt;
             ++timeStepIdx_;
 
+            if (verbose_) {
+                std::cout << "Time step " << timeStepIndex() << " done. "
+                          << "Execution time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
+                          << ", simulation time: " << this->time() << " seconds" << humanReadableTime(this->time())
+                          << ", time step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
+                          << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
+                          << "\n" << std::flush;
+            }
+
             prePostProcessTimer.start();
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
-                // make the linearization not usable for the first
-                // iteration of the next time step at the end of each
-                // episode. Strictly speaking, this is a layering
-                // violation as the simulator is not supposed to know
-                // any specifics of the non-linear solver, but this
-                // call is too easy to forget within the problem's
-                // endEpisode(), so we do it here anyway!
+                // make the linearization not usable for the first iteration of the next
+                // time step at the end of each episode. Strictly speaking, this is a
+                // layering violation as the simulator is not supposed to know any
+                // specifics of the non-linear solver, but this call is too easy to
+                // forget within the problem's endEpisode(), so we do it here anyway!
                 model_->linearizer().setLinearizationReusable(false);
 
-                // Notify the problem about the end of the current
-                // episode. This needs to define what to the next
-                // episode or an exception is thrown...
+                // Notify the problem about the end of the current episode...
                 problem_->endEpisode();
+                episodeBegins = true;
             }
             else
                 // ask the problem to provide the next time step size
@@ -574,15 +597,6 @@ public:
                 serialize();
             writeTimer_.stop();
             totalWriteTime_ += writeTimer_.realTimeElapsed();
-
-            if (verbose_) {
-                std::cout << "Time step " << timeStepIndex() << " done. "
-                          << "Execution time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
-                          << ", simulation time: " << this->time() << " seconds" << humanReadableTime(this->time())
-                          << ", time step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
-                          << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
-                          << "\n" << std::flush;
-            }
         }
 
         executionTimer_.stop();
