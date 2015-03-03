@@ -475,6 +475,10 @@ public:
             problem_->deserialize(res);
             model_->deserialize(res);
             res.deserializeEnd();
+            if (verbose_)
+                std::cout << "Deserialization done. Time step index: " << timeStepIndex()
+                          << " Episode index: " << episodeIndex()
+                          << "'\n" << std::flush;
         }
         else {
             // if no restart is done, apply the initial solution

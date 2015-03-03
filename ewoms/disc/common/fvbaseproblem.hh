@@ -292,8 +292,8 @@ public:
      */
     void endEpisode()
     {
-        std::cerr << "The end of an episode is reached, but the problem "
-                  << "does not override the endEpisode() method. "
+        std::cerr << "The end of episode " << simulator().episodeIndex() + 1 << " has been "
+                  << "reached, but the problem does not override the endEpisode() method. "
                   << "Doing nothing!\n";
     }
 
