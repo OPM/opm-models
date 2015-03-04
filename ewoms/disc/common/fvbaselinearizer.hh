@@ -329,7 +329,7 @@ public:
                 distRel = std::max(distRel, tmp);
             }
             Valgrind::CheckDefined(distRel);
-            dofError_[globalDofIdx] = distRel;
+            dofError_[globalDofIdx] += distRel;
             maxDofError_ = std::max(maxDofError_, dofError_[globalDofIdx]);
         }
     }
@@ -650,11 +650,14 @@ private:
             return;
         }
 
-        // reset the rows corresponding to DOFs of auxiliary equations
-        for (unsigned dofIdx = numGridDof; dofIdx < numTotalDof; ++dofIdx) {
-            // reset the right hand side
-            residual_[dofIdx] = 0.0;
+        // always reset the right hand side completely
+        residual_ = 0.0;
+        if (enableLinearizationRecycling_())
+            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx)
+                storageTerm_[dofIdx] = 0.0;
 
+        // reset the rows in the Jacobian which correspond to DOFs of auxiliary equations
+        for (unsigned dofIdx = numGridDof; dofIdx < numTotalDof; ++dofIdx) {
             // reset the row of the Jacobian matrix
             typedef typename JacobianMatrix::ColIterator ColIterator;
             ColIterator colIt = (*matrix_)[dofIdx].begin();
@@ -666,13 +669,6 @@ private:
 
         // partially reset the current linearization for rows corresponding to grid DOFs
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
-            // reset the right hand side of non-green DOFs
-            if (dofColor(dofIdx) != Green) {
-                residual_[dofIdx] = 0.0;
-                if (enableLinearizationRecycling_())
-                    storageTerm_[dofIdx] = 0.0;
-            }
-
             if (dofColor(dofIdx) == Green) {
                 // for green DOFs we keep the left hand side of the current linearization
                 // except for the entries of the Jacobian matrix which connect the green
@@ -789,6 +785,7 @@ private:
             int globalElemIdx = model_().elementMapper().map(elem);
 #endif
             if (elementColor(globalElemIdx) == Green) {
+                linearizeGreenElement_(elem);
                 return;
             }
         }
@@ -832,6 +829,29 @@ private:
 
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
             }
+        }
+        addLock.unlock();
+    }
+
+    // "linearize" a green element. green elements only get the
+    // residual updated, but the Jacobian is left alone...
+    void linearizeGreenElement_(const Element &elem)
+    {
+        int threadId = ThreadManager::threadId();
+        ElementContext *elementCtx = elementCtx_[threadId];
+
+        elementCtx->updateAll(elem);
+        auto& localResidual = model_().localResidual(threadId);
+        localResidual.eval(*elementCtx);
+
+        ScopedLock addLock(globalMatrixMutex_);
+        for (int dofIdx=0; dofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
+            int globI = elementCtx->globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+
+            // update the right hand side
+            residual_[globI] += localResidual.residual(dofIdx);
+            if (enableLinearizationRecycling_())
+                storageTerm_[globI] += localResidual.storageTerm(dofIdx);
         }
         addLock.unlock();
     }

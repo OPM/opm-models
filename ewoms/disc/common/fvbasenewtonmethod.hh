@@ -169,14 +169,6 @@ protected:
 
         // update the solution for the grid DOFs
         for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
-            if (enablePartialRelinearization_() && linearizer.dofError(dofIdx) < relinearizationTol) {
-                // don't update non-red DOFs. this implies that the intensive quantities
-                // are still valid.
-                nextSolution[dofIdx] = currentSolution[dofIdx];
-                this->model_().setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, true);
-                continue;
-            }
-
             asImp_().updatePrimaryVariables_(dofIdx,
                                              nextSolution[dofIdx],
                                              currentSolution[dofIdx],
