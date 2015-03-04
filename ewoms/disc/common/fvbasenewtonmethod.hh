@@ -162,8 +162,24 @@ protected:
 
             // we chose to relinearize all DOFs for which the solution is to be deflected
             // by more than a thousandth of the maximum deflection.
-            relinearizationTol = 1e-3*linearizer.maxDofError();
+            relinearizationTol = 1e-1*linearizer.maxDofError();
 
+            // decrease the relinearization tolerance until at least 15% of the DOFs are
+            // relinearized. (or by at most 6 orders of magnitude.)
+            for (unsigned i = 0; i < 6; ++i) {
+                int numRelinearized = 0;
+                for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
+                    if (linearizer.dofError(dofIdx) > relinearizationTol)
+                        ++numRelinearized;
+                }
+
+                if (numRelinearized*100 >= model.numGridDof()*15)
+                    break;
+
+                relinearizationTol /= 10;
+            }
+
+            // tell the linarizer what tolerance it should use
             linearizer.setRelinearizationTolerance(relinearizationTol);
         }
 
