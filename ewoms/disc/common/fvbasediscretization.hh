@@ -1291,6 +1291,7 @@ public:
         ScalarBuffer* priVars[numEq];
         ScalarBuffer* priVarWeight[numEq];
         ScalarBuffer* relError = writer.allocateManagedScalarBuffer(numGridDof);
+        ScalarBuffer* dofColor = writer.allocateManagedScalarBuffer(numGridDof);
         for (int pvIdx = 0; pvIdx < numEq; ++pvIdx) {
             priVars[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
             priVarWeight[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
@@ -1311,6 +1312,7 @@ public:
             PrimaryVariables uNew(uOld);
             uNew -= deltaU[globalIdx];
             (*relError)[globalIdx] = asImp_().relativeDofError(globalIdx, uOld, uNew);
+            (*dofColor)[globalIdx] = linearizer().dofColor(globalIdx);
         }
 
         DiscBaseOutputModule::attachScalarDofData_(writer, *relError, "relErr");
@@ -1337,6 +1339,8 @@ public:
                                                        *def[i],
                                                        oss.str());
         }
+
+        DiscBaseOutputModule::attachScalarDofData_(writer, *dofColor, "color");
 
         asImp_().prepareOutputFields();
         asImp_().appendOutputFields(writer);

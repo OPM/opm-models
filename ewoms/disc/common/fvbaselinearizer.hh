@@ -103,7 +103,7 @@ public:
          * Degree of freedom/element that needs to be relinearized
          * because some error is above the tolerance
          */
-        Red = 0,
+        Red = 2,
 
         /*!
          * Degree of freedom/element that needs to be relinearized because a
@@ -114,7 +114,7 @@ public:
         /*!
          * Degree of freedom/element that does not need to be relinearized
          */
-        Green = 2
+        Green = 0
     };
 
     FvBaseLinearizer()
@@ -345,6 +345,26 @@ public:
         if (enablePartialRelinearization_())
             dofError_[dofIdx] = 1e100;
         this->model_().setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, false);
+    }
+
+    /*!
+     * \brief Returns the "relinearization color" of a degree of freedom
+     */
+    EntityColor dofColor(int dofIdx) const
+    {
+        if (!enablePartialRelinearization_())
+            return Red;
+        return dofColor_[dofIdx];
+    }
+
+    /*!
+     * \brief Returns the "relinearization color" of an element
+     */
+    EntityColor elementColor(int elemIdx) const
+    {
+        if (!enablePartialRelinearization_())
+            return Red;
+        return elementColor_[elemIdx];
     }
 
     /*!
@@ -647,13 +667,13 @@ private:
         // partially reset the current linearization for rows corresponding to grid DOFs
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
             // reset the right hand side of non-green DOFs
-            if (dofColor__(dofIdx) != Green) {
+            if (dofColor(dofIdx) != Green) {
                 residual_[dofIdx] = 0.0;
                 if (enableLinearizationRecycling_())
                     storageTerm_[dofIdx] = 0.0;
             }
 
-            if (dofColor__(dofIdx) == Green) {
+            if (dofColor(dofIdx) == Green) {
                 // for green DOFs we keep the left hand side of the current linearization
                 // except for the entries of the Jacobian matrix which connect the green
                 // DOF with auxiliary equations. the implementation of this this is
@@ -680,7 +700,7 @@ private:
                 if (enableLinearizationRecycling_())
                     storageJacobian_[dofIdx] = 0.0;
 
-                // reset all entries in the row of the jacobian which connect two non-green
+                // reset all entries in the row of the Jacobian which connect two non-green
                 // degrees of freedom
                 typedef typename JacobianMatrix::ColIterator ColIterator;
                 ColIterator colIt = (*matrix_)[dofIdx].begin();
@@ -768,8 +788,9 @@ private:
 #else
             int globalElemIdx = model_().elementMapper().map(elem);
 #endif
-            if (elementColor__(globalElemIdx) == Green)
+            if (elementColor(globalElemIdx) == Green) {
                 return;
+            }
         }
 
         int threadId = ThreadManager::threadId();
@@ -790,7 +811,7 @@ private:
             // we only need to update the Jacobian matrix for entries which connect two
             // non-green DOFs. if the row DOF corresponds to a green one, we can skip the
             // whole row...
-            if (dofColor__(globI) == Green)
+            if (dofColor(globI) == Green)
                 continue;
 
             // update the right hand side
@@ -806,7 +827,7 @@ private:
                 int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
                 // only update the jacobian matrix for non-green degrees of freedom
-                if (dofColor__(globJ) == Green)
+                if (dofColor(globJ) == Green)
                     continue;
 
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
@@ -820,20 +841,6 @@ private:
         auto& model = model_();
         for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
             model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
-    }
-
-    EntityColor dofColor__(int dofIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-        return dofColor_[dofIdx];
-    }
-
-    EntityColor elementColor__(int elemIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-        return elementColor_[elemIdx];
     }
 
     Simulator *simulatorPtr_;
