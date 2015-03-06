@@ -167,7 +167,7 @@ protected:
             // decrease the relinearization tolerance until at least 15% of the DOFs are
             // relinearized. (or by at most 6 orders of magnitude.)
             for (unsigned i = 0; i < 6; ++i) {
-                int numRelinearized = 0;
+                unsigned numRelinearized = 0;
                 for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
                     if (linearizer.dofError(dofIdx) > relinearizationTol)
                         ++numRelinearized;
