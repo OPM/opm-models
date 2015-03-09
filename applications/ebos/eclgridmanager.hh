@@ -49,7 +49,6 @@
 #endif
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -155,29 +154,9 @@ public:
             caseName_ += std::toupper(rawCaseName[i]);
 
         Opm::ParserPtr parser(new Opm::Parser());
-        Opm::LoggerPtr opmLog(new Opm::Logger());
 
-        try {
-            deck_ = parser->parseFile(fileName, opmLog);
-            Opm::checkDeck(deck_, opmLog);
-            eclState_.reset(new Opm::EclipseState(deck_, opmLog));
-        }
-        catch (const std::invalid_argument& e) {
-            std::cerr << "Non-recoverable error encountered while parsing the deck file:"
-                      << e.what() << "\n";
-
-            if (opmLog->size() > 0) {
-                std::cerr << "Issues found while parsing the deck file:\n";
-                opmLog->printAll(std::cerr);
-            }
-
-            throw e;
-        }
-
-        if (opmLog->size() > 0) {
-            std::cout << "Issues found while parsing the deck file:\n";
-            opmLog->printAll(std::cout);
-        }
+        deck_ = parser->parseFile(fileName);
+        eclState_.reset(new Opm::EclipseState(deck_));
 
 #if EBOS_USE_ALUGRID
         std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
