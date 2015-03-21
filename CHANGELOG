@@ -1,13 +1,16 @@
-Notable Differences Between eWoms 2013.10 and eWoms 2014.03
+Notable Differences Between eWoms 2013.10 and eWoms 2015.04
 ===========================================================
 
-- eWoms now supports the usage or multiple spatial discretizations. So
-  far, only element-centered finite volume have been added, but the
-  plan is to implement the first order finite elements and the
-  staggered grid method for the next release, as well as discontinuous
-  Galerkin methods in the medium term future.
+- The eWoms property system now supports "splices", a mechanism for
+  "deferred inheritance": It allows to specify the type tags from
+  which a base type tag derives from at a later time. A typical
+  use-case for this functionality is to specify the spatial
+  discretization which is be used at the problem level instead of for
+  the type tag of the physical model.
+- eWoms now supports multiple spatial discretizations. So far, only an
+  element-centered finite volume method has been implemented.
 
-  To make a problem use the element-centered finite volume
+  To specify that a problem should use the element-centered finite volume
   discretization, include the file "ewoms/disc/ecfv/ecfvdiscretization.hh"
   and set the "SpatialDiscretizationSplice" property to
   "EcfvDiscretization". The latter is achieved by adding the line
@@ -15,6 +18,13 @@ Notable Differences Between eWoms 2013.10 and eWoms 2014.03
   SET_TAG_PROP(YourProblemTypeTag, SpatialDiscretizationSplice, EcfvDiscretization);
 
   to your problem file.
+- ebos, a fully-implicit black oil simulator for datasets specified
+  using the ECL data format, has been added. The results for various
+  widely used benchmark datasets (i.e., SPE-1, SPE-3 and SPE-9) are
+  very similar to the ones produced by the commercial standard
+  simulator which is used by the crude oil industry.
+- Stability, performance and consistency improvements across the
+  board.
 
 Notable Differences Between eWoms 2.3 and eWoms 2013.10
 =======================================================

@@ -1,24 +1,26 @@
 What is eWoms?
 ==============
 
-eWoms [0, 5] is an module of the Open Porous Media initiative (OPM) [6]
-which is primary focused on fully implicit models for flow and
-transport in porous media. Its main objectives are to provide a easily
-usable, well maintainable, high performance framework which is capable
-of capturing all macro-scale scenarios relevant for academic research
-and industrial applications involving flow and transport processes in
-porous media. Like all other OPM modules eWoms is available under the
-terms of the GNU General Public License (GPL) version 2 or - at your
-option - any later version.
+eWoms [0, 5] is an module of the Open Porous Media initiative (OPM)
+[6] which is focused on implementing fully-implicit general-purpose
+models for flow and transport in porous media. This means that its
+goals are to be a easily usable, well maintainable, high performance
+framework which is -- in principle -- capable of capturing all
+macro-scale scenarios relevant for academic research and industrial
+applications that involve flow and transport processes in porous
+media. Like all other OPM modules eWoms is available under the terms
+of the GNU General Public License (GPL). In contrast to the other OPM
+modules eWoms is licensed under version 2 (instead of version 3) or -
+at your option - any later version of the GPL.
 
 eWoms uses an agile development model similar to the one of the other
 OPM modules. This means that, the development branch is considered
 unstable and eWoms releases often contain "hard" programming interface
 changes. For this reason, people primarily interested in using eWoms
-are advertised to follow a stable branch and to carefully read the
-change log before upgrading to a new version. Currently, a new eWoms
-release will prepared rougthly every six months, which will then be
-supported for two consecutive cycles.
+are advertised to follow a release branch and to carefully read the
+change log before upgrading to a new version. Currently, eWoms follows
+the release schedule OPM, i.e., it is indended to prepare two releases
+a year. All releases will be supported for two consecutive cycles.
 
 The term "eWoms" is an acronym for the German idiom "eierlegende
 Wollmilchsau" (egg-laying wool-milk pig) and reflects the fact that
@@ -30,34 +32,29 @@ have diverged considerably since they separated.
 INSTALLATION
 ============
 
-There are two ways to install eWoms: The first is to use the DUNE's
-build system, the other is to use CMake. If you just want to evaluate
-eWoms, we recommend to compile eWoms the DUNE way as outlined in the
-INSTALL file. On the other hand, if you would like to develop with
-eWoms, using the CMake based build system has advantages like much
-faster configure runs and out-of-tree builds. In this case, follow the
-instructions from INSTALL.cmake.
+For compiling and installing eWoms the 'dunecontrol' script from
+DUNE's build system should be used. For further details see the
+INSTALL file.
 
 LICENSE
 =======
 
-eWoms is licensed under the terms and conditions of the GNU General
-Public License (GPL) version 2 or - at your option - any later
-version. At this point, we would like explicitly state the fact that
-this license also includes version three [3] of the GPL. The GPL can
-be read online [2, 3] and is also embedded in the file COPYING in the
-topmost directory of the eWoms source code tree.
+If not stated otherwise in the respective source code files, eWoms is
+licensed under the terms and conditions of the GNU General Public
+License (GPL) version two or - at your option - any later version. At
+this point, we would like explicitly state the fact that this license
+also includes version three [3] of the GPL. The exact wording of the
+GPL can either be read online [2, 3] or it can be found in the file
+COPYING in the topmost directory of the eWoms source code tree.
 
-Please note that eWoms' license -- unlike DUNE's -- does _NOT_ feature
-a template exception from the GNU General Public License. This means
-that you must publish any source code under a compatible license which
-uses any of the eWoms header files if you want to redistribute your
-program to third parties. (Note, that the GPL only applies to code
-which you redistribute; If you don't pass the modified code, the
-modifications don't need to be covered by the GPL.)
-
-See the file COPYING for the full wording of the license and the 
-copyright holders.
+Please note that eWoms' license -- unlike DUNE's -- does _NOT_ contain
+a template exception from the GPL. This means that for any program
+which uses any of the eWoms header files, you must provide the
+modified program's full source code under the GPL to everyone to whom
+you provide the modified program. (Note that this that this statement
+only applies to programs which are provided to third parties, i.e.,
+programs which use code from eWoms but which are not distributed, do
+not need be covered by the GPL.)
 
 Links
 =====

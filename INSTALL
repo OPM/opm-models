@@ -11,6 +11,7 @@ Getting started
 In order to compile eWoms, you first have to install the following
 DUNE and OPM modules by following their installation instructions:
 
+  - opm-parser         from [3]
   - opm-core           from [3]
   - opm-material       from [3]
   - dune-common        from [0]
@@ -19,15 +20,21 @@ DUNE and OPM modules by following their installation instructions:
   - dune-istl          from [0]
   - dune-localfuctions from [0]
 
-In conjunction with eWoms, the latest release of the prerequisite
-software usually works fine.
+If you like to use the ECL Black-Oil simulator (ebos), you also need
+the following modules:
 
-To compile eWoms, it is recommended to create an option file for the
-dunecontrol script. This allows to conveniently specify the compiler
-which ought to be used to compile eWoms and its prerequisites, set the
+  - dune-cornerpoint   from [3]
+
+For eWoms, the latest release or development branch version of the
+prerequisite software usually works fine.
+
+To compile eWoms, it is recommended the dunecontrol script from the
+dune-common module. This allows to conveniently specify the compiler
+which ought to be used to compile eWoms and its dependencies, set the
 compiler's flags and to define the paths to (optional) external
-libraries. In this context, it is advisable to use the files
-$EWOMS_DIR/optim.opts or $EWOMS_DIR/debug.opts as templates.
+libraries. In this context, it is advisable to adapt the option files
+$EWOMS_DIR/optim.opts or $EWOMS_DIR/debug.opts to your particular
+needs.
 
 After you've obtained the required software, compile eWoms using
 

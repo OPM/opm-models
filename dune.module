@@ -4,8 +4,8 @@
 ################################
 Module: ewoms
 Description: The eWoms simulation framework for flow  and transport in porous media
-Version: 2014.04-git
-Label: 2014.04
+Version: 2015.04-git
+Label: 2015.04
 Url: http://opm-project.org/ewoms
 Codename: Ringo
 MaintainerName: Andreas Lauser
