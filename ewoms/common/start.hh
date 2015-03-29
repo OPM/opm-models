@@ -343,10 +343,7 @@ int start(int argc, char **argv)
 
 
         if (myRank == 0)
-            std::cout << "eWoms " << EWOMS_VERSION
-#ifdef EWOMS_CODENAME
-                      << " (\"" << EWOMS_CODENAME << "\")"
-#endif
+            std::cout << "eWoms " << Ewoms::versionString()
                       << " will now start the trip. "
                       << "Please sit back, relax and enjoy the ride.\n"
                       << std::flush;

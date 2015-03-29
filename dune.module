@@ -3,11 +3,10 @@
 # and by the CMake build scripts.
 ################################
 Module: ewoms
-Description: The eWoms simulation framework for flow  and transport in porous media
 Version: 2015.04-git
-Label: 2015.04
-Url: http://opm-project.org/ewoms
 Codename: Ringo
+Description: The eWoms simulation framework for flow  and transport in porous media
+Url: http://opm-project.org/ewoms
 MaintainerName: Andreas Lauser
 Maintainer: and@poware.org
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2) opm-core opm-material
