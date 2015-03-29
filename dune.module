@@ -3,7 +3,7 @@
 # and by the CMake build scripts.
 ################################
 Module: ewoms
-Version: 2015.04-git
+Version: 2015.04.0-git
 Codename: Ringo
 Description: The eWoms simulation framework for flow  and transport in porous media
 Url: http://opm-project.org/ewoms

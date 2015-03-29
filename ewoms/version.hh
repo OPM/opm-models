@@ -1,6 +1,6 @@
 #define EWOMS_VERSION_MAJOR 2015
 #define EWOMS_VERSION_MINOR 04
-#define EWOMS_VERSION_REVISION -1 // -1 means that this is a version from the development branch...
+#define EWOMS_VERSION_REVISION 0 // -1 means that this is a version from the development branch...
 
 #define EWOMS_VERSION_SUFFIX "git"
 #define EWOMS_VERSION_CODENAME "Ringo"
