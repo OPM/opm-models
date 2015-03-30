@@ -13,12 +13,12 @@ inline std::string versionString()
 {
     std::string tmp;
     tmp =
-        std::to_string(EWOMS_VERSION_MAJOR) + "."
-        + std::to_string(EWOMS_VERSION_MINOR);
+        std::to_string(static_cast<long long>(EWOMS_VERSION_MAJOR)) + "."
+        + std::to_string(static_cast<long long>(EWOMS_VERSION_MINOR));
 
     if (EWOMS_VERSION_REVISION >= 0) {
         tmp += ".";
-        tmp +=  std::to_string(EWOMS_VERSION_REVISION);
+        tmp +=  std::to_string(static_cast<long long>(EWOMS_VERSION_REVISION));
     }
 
     // append the version suffix to the version string
