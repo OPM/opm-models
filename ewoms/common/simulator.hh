@@ -524,6 +524,13 @@ public:
             }
             episodeBegins = false;
 
+            if (verbose_) {
+                std::cout << "Begin time step " << timeStepIndex() << ". "
+                          << "Start time: " << this->time() << " seconds" << humanReadableTime(this->time())
+                          << ", step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
+                          << "\n";
+            }
+
             // pre-process the current solution
             problem_->beginTimeStep();
             if (finished()) {
@@ -564,10 +571,9 @@ public:
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
-                          << "Execution time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
-                          << ", simulation time: " << this->time() << " seconds" << humanReadableTime(this->time())
-                          << ", time step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
-                          << ", next time step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
+                          << "CPU time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
+                          << ", end time: " << this->time() << " seconds" << humanReadableTime(this->time())
+                          << ", step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
                           << "\n" << std::flush;
             }
 
