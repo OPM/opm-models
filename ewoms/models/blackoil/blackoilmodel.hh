@@ -310,35 +310,6 @@ public:
     }
 
     /*!
-     * \internal
-     * \brief Do the primary variable switching after a Newton iteration.
-     *
-     * This is an internal method that needs to be public because it
-     * gets called by the Newton method after an update.
-     */
-    void switchPrimaryVars_()
-    {
-        numSwitched_ = 0;
-
-        int numDof = this->numGridDof();
-        for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
-            auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
-            if (priVars.adaptSwitchingVariable()) {
-                this->linearizer().markDofRed(globalDofIdx);
-                ++numSwitched_;
-            }
-        }
-
-        // make sure that if there was a variable switch in an
-        // other partition we will also set the switch flag
-        // for our partition.
-        numSwitched_ = this->gridView_.comm().sum(numSwitched_);
-
-        this->simulator_.model().newtonMethod().endIterMsg()
-            << ", num switched=" << numSwitched_;
-    }
-
-    /*!
      * \brief Write the current solution for a degree of freedom to a
      *        restart file.
      *

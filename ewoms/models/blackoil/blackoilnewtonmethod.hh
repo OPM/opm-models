@@ -72,15 +72,19 @@ protected:
     friend class NewtonMethod<TypeTag>;
     friend class ParentType;
 */
-
-    /*!
-     * \copydoc FvBaseNewtonMethod::endIteration_
-     */
-    void endIteration_(SolutionVector &uCurrentIter,
-                       const SolutionVector &uLastIter)
+    void beginIteration_()
     {
-        ParentType::endIteration_(uCurrentIter, uLastIter);
-        this->problem().model().switchPrimaryVars_();
+        ParentType::beginIteration_();
+
+        numSwitched_ = 0;
+    }
+
+    void endIteration_(const SolutionVector &nextSolution,
+                       const SolutionVector &currentSolution)
+    {
+        this->simulator_.model().newtonMethod().endIterMsg()
+            << ", num switched=" << numSwitched_;
+        ParentType::endIteration_(nextSolution, currentSolution);
     }
 
     /*!
@@ -120,9 +124,15 @@ protected:
             // do the actual update
             nextValue[eqIdx] = currentValue[eqIdx] - delta;
         }
+
+        if (nextValue.adaptSwitchingVariable()) {
+            this->model().linearizer().markDofRed(globalDofIdx);
+            ++numSwitched_;
+        }
     }
 
 private:
+    int numSwitched_;
     int numChoppedIterations_;
 };
 } // namespace Ewoms
