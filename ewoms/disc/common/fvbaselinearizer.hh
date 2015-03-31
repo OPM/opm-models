@@ -627,10 +627,6 @@ private:
     // must only be erased partially!
     void resetSystem_()
     {
-        // do not do anything if we can re-use the current linearization
-        if (reuseLinearization_)
-            return;
-
         size_t numGridDof = model_().numGridDof();
         size_t numTotalDof = model_().numTotalDof();
 
@@ -718,24 +714,20 @@ private:
         // here and be done with it...
         Scalar curDt = problem_().simulator().timeStepSize();
         if (reuseLinearization_) {
-            resetSystem_();
-
             int numGridDof = model_().numGridDof();
             for (int dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
-                // rescale the mass term of the jacobian matrix
+                // use the flux term plus the source term as the residual: the numerator
+                // in the d(storage)/dt term is 0 for the first iteration of a time step
+                // because the initial guess for the next solution is the value of the
+                // last time step.
+                residual_[dofIdx] -= storageTerm_[dofIdx];
+
+                // rescale the contributions of the storage term to the Jacobian matrix
                 MatrixBlock &J_ii = (*matrix_)[dofIdx][dofIdx];
 
                 J_ii -= storageJacobian_[dofIdx];
                 storageJacobian_[dofIdx] *= oldDt_/curDt;
                 J_ii += storageJacobian_[dofIdx];
-
-                // use the flux term plus the source term as the new residual (since the
-                // delta in the d(storage)/dt is 0 for the first iteration and the
-                // residual is approximately 0 in the last iteration, the flux term plus
-                // the source term must be equal to the negative change of the storage
-                // term of the last iteration of the last time step...)
-                residual_[dofIdx] = storageTerm_[dofIdx];
-                residual_[dofIdx] *= -1;
             }
 
             reuseLinearization_ = false;
@@ -744,7 +736,7 @@ private:
             linearizeAuxiliaryEquations_();
 
             problem_().newtonMethod().endIterMsg()
-                << ", linear system of equations reused from previous time step";
+                << ", linear system of equations rescaled using previous time step";
             return;
         }
 
