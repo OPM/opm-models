@@ -47,8 +47,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
-#include <termios.h>
 #include <signal.h>
+#include <string.h>
 
 #if HAVE_MPI
 #include <mpi.h>
@@ -152,123 +152,14 @@ static void resetTerminal_(int signum)
 {
     // first thing to do when a nuke hits: restore the default signal handler
     signal(signum, SIG_DFL);
+    std::cout << "\n\nReceived signal " << signum
+              << " (\"" << strsignal(signum) << "\")."
+              << " Trying to reset the terminal.\n";
 
-    // the following code resets the terminal status and is loosely based on corutils'
-    // "stty" utility. The copyright notice for this file is the following:
-    //
-    // Copyright (C) 1990-2014 Free Software Foundation, Inc.
-    //
-    // This program is free software: you can redistribute it and/or modify it under the
-    // terms of the GNU General Public License as published by the Free Software
-    // Foundation, either version 3 of the License, or (at your option) any later
-    // version.
-    struct termios mode;
-    tcgetattr(STDERR_FILENO, &mode);
-
-    mode.c_cc[VINTR] = CINTR;
-    mode.c_cc[VQUIT] = CQUIT;
-    mode.c_cc[VERASE] = CERASE;
-    mode.c_cc[VKILL] = CKILL;
-    mode.c_cc[VEOF] = CEOF;
-    mode.c_cc[VEOL] = CEOL;
-    mode.c_cc[VEOL2] = _POSIX_VDISABLE;
-    mode.c_cc[VSWTC] = CSUSP;
-    mode.c_cc[VSTART] = CSTART;
-    mode.c_cc[VSTOP] = CSTOP;
-    mode.c_cc[VSUSP] = CSUSP;
-    mode.c_cc[VREPRINT] = CRPRNT;
-    mode.c_cc[VWERASE] = CWERASE;
-    mode.c_cc[VLNEXT] = CLNEXT;
-    mode.c_cc[VDISCARD] = 0x1f & 'o';
-    mode.c_cc[VMIN] = 1;
-    mode.c_cc[VTIME] = 0;
-
-    // control flags
-    mode.c_cflag |= CREAD;
-
-    // input flags
-    mode.c_iflag &= ~IGNBRK;
-    mode.c_iflag |= BRKINT;
-    mode.c_iflag &= ~INLCR;
-    mode.c_iflag &= ~IGNCR;
-    mode.c_iflag |= ICRNL;
-    mode.c_iflag &= ~IXOFF;
-    mode.c_iflag &= ~IUCLC;
-    mode.c_iflag &= ~IXANY;
-    mode.c_iflag |= IMAXBEL;
-    mode.c_iflag &= ~IUTF8;
-
-    // output flags
-    mode.c_oflag |= OPOST;
-    mode.c_oflag &= ~OLCUC;
-    mode.c_oflag &= ~OCRNL;
-    mode.c_oflag |= ONLCR;
-    mode.c_oflag &= ~ONOCR;
-    mode.c_oflag &= ~ONLRET;
-    mode.c_oflag &= ~OFILL;
-    mode.c_oflag &= ~OFDEL;
-    mode.c_oflag &= ~NL1;
-    mode.c_oflag |= NL0;
-    mode.c_oflag &= ~CR3;
-    mode.c_oflag &= ~CR2;
-    mode.c_oflag &= ~CR1;
-    mode.c_oflag |= CR0;
-    mode.c_oflag &= ~TAB3;
-    mode.c_oflag &= ~TAB2;
-    mode.c_oflag &= ~TAB1;
-    mode.c_oflag |= TAB0;
-    mode.c_oflag &= ~BS1;
-    mode.c_oflag |= BS0;
-    mode.c_oflag &= ~VT1;
-    mode.c_oflag |= VT0;
-    mode.c_oflag &= ~FF1;
-    mode.c_oflag |= FF0;
-
-    // local flags
-    mode.c_lflag |= ISIG;
-    mode.c_lflag |= ICANON;
-    mode.c_lflag |= IEXTEN;
-    mode.c_lflag |= ECHO;
-    mode.c_lflag |= ECHOE;
-    mode.c_lflag |= ECHOK;
-    mode.c_lflag &= ~ECHONL;
-    mode.c_lflag &= ~NOFLSH;
-    mode.c_lflag &= ~XCASE;
-    mode.c_lflag &= ~TOSTOP;
-    mode.c_lflag &= ~ECHOPRT;
-    mode.c_lflag |= ECHOCTL;
-    mode.c_lflag |= ECHOKE;
-
-    // set the control mode of the TTY
-    tcsetattr(STDIN_FILENO, TCSADRAIN, &mode);
-
-    const char resetString[] = {
-        // switch back to the default character set
-        0x0f,
-
-        // reset current attributes
-        27, '[', 'm',
-
-        // disable line wrapping
-        27, '[', '7', 'l',
-
-        // show text cursor
-        27, '[', '2', '5', 'h',
-
-        0
-    };
-
-    std::cerr << resetString << std::flush;
-
-    // sleep a bit to give the terminal some time to contemplate about the commands...
-    struct timespec sleepTime;
-    sleepTime.tv_sec = 0;
-    sleepTime.tv_nsec = 100 * 1000 * 1000;
-    nanosleep(&sleepTime, NULL);
-
-    // print a new line to decrease the possibility of garbage remaining on the line
-    // which shows the command line prompt
-    std::cerr << "\r\n" << std::flush;
+    // this requires the 'stty' command to be available in the command search path. on
+    // most linux systems, is the case. (but even if the system() function fails, the
+    // worst thing which can happen is that the TTY stays potentially choked up...)
+    system("stty sane");
 
     // after we did our best to clean the pedestrian way, re-raise the signal
     raise(signum);
