@@ -35,6 +35,7 @@
 #include <string>
 #include <limits>
 #include <iostream>
+#include <type_traits>
 
 extern "C" {
 #include <quadmath.h>
@@ -96,6 +97,150 @@ public:
     static const bool tinyness_before = std::numeric_limits<double>::tinyness_before;
     static const float_round_style round_style = round_to_nearest;
 };
+
+// provide some type traits for the quadruple precision type
+template <>
+struct is_floating_point<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_arithmetic<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_fundamental<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_scalar<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_pod<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_signed<quad>
+    : public integral_constant<bool, true>
+{};
+
+
+template <>
+struct is_standard_layout<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_trivial<quad>
+    : public integral_constant<bool, true>
+{};
+
+/*
+template <>
+struct is_trivially_copyable<quad>
+    : public integral_constant<bool, true>
+{};
+*/
+
+template <class OtherType>
+struct is_assignable<quad, OtherType>
+    : public integral_constant<bool, is_arithmetic<OtherType>::value>
+{};
+
+template <class OtherType>
+struct is_nothrow_assignable<quad, OtherType>
+    : public is_assignable<quad, OtherType>
+{};
+
+/*
+template <class OtherType>
+struct is_trivially_assignable<quad, OtherType>
+    : public integral_constant<bool, is_arithmetic<OtherType>::value>
+{};
+*/
+
+template <>
+struct is_copy_assignable<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_nothrow_copy_assignable<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_move_assignable<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_nothrow_move_assignable<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_nothrow_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_default_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_nothrow_default_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+/*
+template <>
+struct is_trivially_default_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+*/
+
+template <>
+struct is_copy_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_move_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_nothrow_move_constructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+
+template <>
+struct is_destructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <>
+struct is_nothrow_destructible<quad>
+    : public integral_constant<bool, true>
+{};
+
+template <class OtherType>
+struct is_convertible<quad, OtherType>
+    : public is_arithmetic<OtherType>
+{ };
 
 inline std::ostream &operator<<(std::ostream &os, const quad &val)
 { return (os << double(val)); }
