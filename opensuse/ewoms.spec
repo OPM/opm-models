@@ -39,7 +39,7 @@ flow and transport processes in porous media.
 
 %build
 module add openmpi-%{_arch}
-cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%{_prefix}
+cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}
 %__make %{?jobs:-j%{jobs}}
 
 # No symbols in a template-only library
