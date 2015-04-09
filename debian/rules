@@ -5,6 +5,7 @@ DUNE_DEBIAN_DUNECONTROL ?= /usr/bin/dunecontrol
 DUNE_DEBIAN_CONFIGURE_FLAGS ?= \
 	--enable-parallel \
 	--enable-shared \
+	--enable-strip-debug \
 	--enable-documentation \
 	--enable-fieldvector-size-is-method \
 	--with-alberta=/usr \
