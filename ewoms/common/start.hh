@@ -159,7 +159,9 @@ static void resetTerminal_(int signum)
     // this requires the 'stty' command to be available in the command search path. on
     // most linux systems, is the case. (but even if the system() function fails, the
     // worst thing which can happen is that the TTY stays potentially choked up...)
-    system("stty sane");
+    if (system("stty sane") != 0)
+        std::cout << "Executing the 'stty' command failed."
+                  << " Terminal might be left in an undefined state!\n";
 
     // after we did our best to clean the pedestrian way, re-raise the signal
     raise(signum);
