@@ -2,20 +2,26 @@ Source: ewoms
 Section: libs
 Priority: optional
 Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
-Build-Depends: debhelper (>= 9),
- automake, autoconf, gfortran, libtool, mpi-default-bin, mpi-default-dev, pkg-config,
- libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0), libdune-localfunctions-dev (>= 2.2.0),
- libopm-core-dev, libopm-material-dev
-Build-Depends-Indep: doxygen, ghostscript, texlive-latex-extra, texlive-latex-recommended, pgf
+Build-Depends: debhelper (>= 9), cmake,
+ gfortran, libtool, mpi-default-bin, mpi-default-dev, pkg-config,
+ libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0),
+ libdune-localfunctions-dev (>= 2.2.0), libopm-core-dev, libopm-material-dev,
+# Build-Depends-Indep: # broken on precise pbuilder
+ doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript,
+ libboost-filesystem-dev, libboost-system-dev, libboost-date-time-dev,
+ libboost-test-dev, libsuperlu3-dev, gfortran, libsuitesparse-dev, libert.ecl-dev,
+ libopm-parser-dev, libboost-iostreams-dev
 Standards-Version: 3.9.3
 Homepage: http://opm-project.org/ewoms
 Vcs-Git: git://github.com/OPM/ewoms.git
 Vcs-Browser: https://github.com/OPM/ewoms
 
-Package: libewoms-dev
+Package: libewoms1-dev
 Architecture: all
 Depends: ${misc:Depends},
- libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0), libdune-localfunctions-dev (>= 2.2.0)
+ libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0),
+ libdune-localfunctions-dev (>= 2.2.0), libopm-core-dev, libopm-material-dev
+Provides: libewoms-dev
 Description: development files for ewoms
  eWoms is an simulation framework which is primary focused on fully implicit
  models for flow and transport in porous media. Its main objectives
@@ -24,8 +30,9 @@ Description: development files for ewoms
  relevant for academic research and industrial applications involving
  flow and transport processes in porous media.
 
-Package: libewoms-doc
+Package: libewoms1-doc
 Architecture: all
+Provides: libewoms-doc
 Description: documentation for ewoms
  eWoms is an simulation framework which is primary focused on fully implicit
  models for flow and transport in porous media. Its main objectives
