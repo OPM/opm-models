@@ -570,6 +570,7 @@ public:
                                           /*unified=*/true,
                                           /*joinString=*/":",
                                           startTime,
+                                          /*timeIsInDays=*/false,
                                           eclGrid->getNX(),
                                           eclGrid->getNY(),
                                           eclGrid->getNZ());
