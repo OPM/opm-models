@@ -1,8 +1,8 @@
-%define tag rc3
+%define tag final
 
 Name: ewoms
 Summary: OPM - Fully implicit models for flow and transport in porous media
-Version: 2013.10
+Version: 2015.04
 Release: 0
 License: GPL-3.0+
 Group:   Development/Libraries/C and C++
