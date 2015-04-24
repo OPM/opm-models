@@ -1,3 +1,9 @@
+ewoms (2015.04-1~precise) precise; urgency=medium
+
+  * Release new version
+
+ -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Fri, 24 Apr 2015 15:34:34 +0200
+
 ewoms (2013.10-2~precise) precise; urgency=low
 
   * New release
