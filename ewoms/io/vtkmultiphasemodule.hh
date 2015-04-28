@@ -26,14 +26,14 @@
 #include "vtkmultiwriter.hh"
 #include "baseoutputmodule.hh"
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/fvector.hh>
 
 #include <cstdio>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkMultiPhase);
@@ -65,7 +65,7 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWriteIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePotentialGradients, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!

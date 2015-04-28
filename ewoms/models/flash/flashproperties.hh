@@ -31,7 +31,7 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Provides the thermodynamic relations
 NEW_PROP_TAG(FluidSystem);

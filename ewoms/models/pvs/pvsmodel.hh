@@ -53,7 +53,7 @@ template <class TypeTag>
 class PvsModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The type tag for the isothermal single phase problems
 NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel,

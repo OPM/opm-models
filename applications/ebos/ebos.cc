@@ -27,7 +27,7 @@
 #include <ewoms/models/blackoil/blackoilmodel.hh>
 #include "eclproblem.hh"
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(EclProblem, INHERITS_FROM(BlackOilModel, EclBaseProblem));
 }}

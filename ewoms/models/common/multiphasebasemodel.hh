@@ -43,7 +43,7 @@ template <class TypeTag>
 class MultiPhaseBaseModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(MultiPhaseBaseModel, INHERITS_FROM(VtkMultiPhase, VtkTemperature));
@@ -77,7 +77,7 @@ SET_PROP(MultiPhaseBaseModel, MaterialLaw)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
+    typedef Opm::NullMaterialTraits<Scalar, FluidSystem::numPhases> Traits;
 
 public:
     typedef Opm::NullMaterial<Traits> type;

@@ -29,7 +29,7 @@
 #if !defined EWOMS_QUAD_HH && HAVE_QUAD
 #define EWOMS_QUAD_HH
 
-#include <opm/core/utility/ClassName.hpp>
+#include <opm/material/common/ClassName.hpp>
 
 #include <cmath>
 #include <string>

@@ -27,8 +27,8 @@
 
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
+#include <ewoms/common/propertysystem.hh>
+#include <opm/material/common/ErrorMacros.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
@@ -41,7 +41,7 @@
 #include <cstdio>
 
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // forward definition of property tags
 NEW_PROP_TAG(NumPhases);

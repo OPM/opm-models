@@ -25,9 +25,9 @@
 #ifndef EWOMS_START_HH
 #define EWOMS_START_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include "parametersystem.hh"
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <ewoms/version.hh>
 #include <ewoms/parallel/mpihelper.hh>
@@ -54,7 +54,7 @@
 #include <mpi.h>
 #endif
 
-namespace Opm {
+namespace Ewoms {
 // forward declaration of property tags
 namespace Properties {
 NEW_PROP_TAG(Scalar);
@@ -64,7 +64,7 @@ NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 //! \cond SKIP_THIS
 
 namespace Ewoms {
@@ -269,7 +269,7 @@ int start(int argc, char **argv)
         int printProps = EWOMS_GET_PARAM(TypeTag, int, PrintProperties);
         if (printProps && myRank == 0) {
             if (printProps == 1 || !isatty(fileno(stdout)))
-                Opm::Properties::printValues<TypeTag>();
+                Ewoms::Properties::printValues<TypeTag>();
         }
 
         // instantiate and run the concrete problem. make sure to

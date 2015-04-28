@@ -28,9 +28,9 @@
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 /*!
  * \ingroup EcfvDiscretization

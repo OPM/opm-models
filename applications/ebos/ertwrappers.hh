@@ -46,8 +46,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include "eclwellmanager.hh"
 

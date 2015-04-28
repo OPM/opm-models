@@ -31,7 +31,7 @@
 #include <ewoms/linear/overlappingoperator.hh>
 #include <ewoms/linear/solverpreconditioner.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/istl/solvers.hh>
@@ -46,7 +46,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ParallelIterativeLinearSolver);
 
@@ -105,7 +105,7 @@ NEW_PROP_TAG(PreconditionerRelaxation);
 //! number of iterations between solver restarts for the GMRES solver
 NEW_PROP_TAG(GMResRestart);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 namespace Linear {
@@ -599,7 +599,7 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
 } // namespace Linear
 } // namespace Ewoms
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! make the linear solver shut up by default
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverVerbosity, 0);
@@ -652,6 +652,6 @@ SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 250);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif

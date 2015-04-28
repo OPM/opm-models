@@ -30,7 +30,7 @@
 #include <ewoms/io/vtkmultiphasemodule.hh>
 #include <ewoms/io/vtktemperaturemodule.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The splice to be used for the spatial discretization
 NEW_PROP_TAG(SpatialDiscretizationSplice);
@@ -56,6 +56,6 @@ NEW_PROP_TAG(FluxModule);
 //! Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableGravity);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif

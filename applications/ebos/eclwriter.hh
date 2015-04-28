@@ -29,7 +29,7 @@
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
 #include <ewoms/io/baseoutputwriter.hh>
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -41,7 +41,7 @@
 #include <fstream>
 #include <type_traits>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(EnableEclOutput);
 }}

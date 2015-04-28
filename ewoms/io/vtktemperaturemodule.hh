@@ -27,9 +27,9 @@
 #include "baseoutputmodule.hh"
 
 #include <ewoms/common/parametersystem.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK temperature output
 NEW_TYPE_TAG(VtkTemperature);
@@ -44,7 +44,7 @@ NEW_PROP_TAG(VtkOutputFormat);
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!

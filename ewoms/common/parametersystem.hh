@@ -28,10 +28,10 @@
 #ifndef EWOMS_PARAMETERS_HH
 #define EWOMS_PARAMETERS_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/utility/Exceptions.hpp>
-#include <opm/core/utility/ClassName.hpp>
+#include <ewoms/common/propertysystem.hh>
+#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/material/common/Exceptions.hpp>
+#include <opm/material/common/ClassName.hpp>
 
 #include <dune/common/parametertree.hh>
 
@@ -157,9 +157,7 @@ private:
     std::string paramName_;
 };
 } // namespace Parameters
-} // namespace Ewoms
 
-namespace Opm {
 namespace Properties {
 // type tag which is supposed to spliced in or inherited from if the
 // parameter system is to be used
@@ -215,9 +213,7 @@ SET_STRING_PROP(ParameterSystem, ParameterGroupPrefix, "");
 SET_STRING_PROP(ParameterSystem, Description, "");
 
 } // namespace Properties
-} // namespace Opm
 
-namespace Ewoms {
 namespace Parameters {
 // function prototype declarations
 void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo);

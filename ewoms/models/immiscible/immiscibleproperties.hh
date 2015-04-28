@@ -29,7 +29,7 @@
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //!The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidSystem);
@@ -49,6 +49,6 @@ NEW_PROP_TAG(NonwettingPhase);
 NEW_PROP_TAG(Fluid);
 
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif

@@ -31,7 +31,7 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Enable the energy equation?
 NEW_PROP_TAG(EnableEnergy);
@@ -53,6 +53,6 @@ NEW_PROP_TAG(NcpCompositionFromFugacitiesSolver);
 //! Number of Newton iterations per time step where the update gets chopped?
 NEW_PROP_TAG(NcpNewtonNumChoppedIterations);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif

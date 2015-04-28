@@ -32,7 +32,7 @@
 #include <ewoms/linear/overlappingscalarproduct.hh>
 #include <ewoms/linear/overlappingoperator.hh>
 #include <ewoms/linear/solverpreconditioner.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/istl/preconditioners.hh>
@@ -58,7 +58,7 @@ template <class TypeTag>
 class ParallelAmgBackend;
 }}
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ParallelAmgLinearSolver, INHERITS_FROM(ParallelIterativeLinearSolver));
 
@@ -71,7 +71,7 @@ SET_INT_PROP(ParallelAmgLinearSolver, AmgCoarsenTarget, 5000);
 SET_TYPE_PROP(ParallelAmgLinearSolver, LinearSolverBackend,
               Ewoms::Linear::ParallelAmgBackend<TypeTag>);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 namespace Linear {

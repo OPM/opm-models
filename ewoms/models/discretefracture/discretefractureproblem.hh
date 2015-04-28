@@ -28,12 +28,12 @@
 
 #include <ewoms/models/common/multiphasebaseproblem.hh>
 
-#include <opm/core/utility/Average.hpp>
+#include <opm/material/common/Means.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
@@ -93,7 +93,7 @@ public:
         // you have off-main diagonal entries in your permeabilities!
         for (int i = 0; i < dimWorld; ++i)
             for (int j = 0; j < dimWorld; ++j)
-                result[i][j] = Opm::utils::harmonicAverage(K1[i][j], K2[i][j]);
+                result[i][j] = Opm::harmonicMean(K1[i][j], K2[i][j]);
     }
     /*!
      * \brief Returns the intrinsic permeability tensor \f$[m^2]\f$ at a given position due to a fracture

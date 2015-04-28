@@ -37,7 +37,7 @@ template <class TypeTag>
 class EcfvDiscretization;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Set the stencil
 SET_PROP(EcfvDiscretization, Stencil)
@@ -81,7 +81,7 @@ public:
 SET_BOOL_PROP(EcfvDiscretization, LinearizeNonLocalElements, true);
 
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!

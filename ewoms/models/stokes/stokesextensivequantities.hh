@@ -30,7 +30,7 @@
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 

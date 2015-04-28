@@ -29,7 +29,7 @@
 #include "stokesextensivequantities.hh"
 #include "stokesproperties.hh"
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/grid/common/grid.hh>
 #include <dune/common/fvector.hh>

@@ -25,11 +25,11 @@
 #define EWOMS_FV_BASE_NEWTON_CONVERGENCE_WRITER_HH
 
 #include <ewoms/io/vtkmultiwriter.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
 #include <iostream>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(GridView);
@@ -37,7 +37,7 @@ NEW_PROP_TAG(NewtonMethod);
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(VtkOutputFormat);
-}} // namespace Properties, Opm
+}} // namespace Properties, Ewoms
 
 namespace Ewoms {
 /*!

@@ -30,11 +30,11 @@
 #include <ewoms/parallel/locks.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
 #include <dune/common/version.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(ThreadsPerProcess);
 }}

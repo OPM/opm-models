@@ -53,7 +53,7 @@ template <class TypeTag>
 class ImmiscibleModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(ImmiscibleModel, INHERITS_FROM(MultiPhaseBaseModel, VtkEnergy));

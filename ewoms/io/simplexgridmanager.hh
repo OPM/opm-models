@@ -25,7 +25,7 @@
 #define EWOMS_SIMPLEX_GRID_MANAGER_HH
 
 #include <ewoms/common/basicproperties.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/grid/utility/structuredgridfactory.hh>
@@ -33,7 +33,7 @@
 
 #include <memory>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
@@ -47,7 +47,7 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-}} // namespace Opm,Properties
+}} // namespace Ewoms,Properties
 
 namespace Ewoms {
 /*!

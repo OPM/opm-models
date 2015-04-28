@@ -35,7 +35,7 @@
 
 #include <cmath>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(MaterialLaw);
 }
@@ -387,7 +387,7 @@ protected:
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-11) {
             if (newtonIter >= 50)
-                OPM_THROW(Opm::NumericalProblem,
+                OPM_THROW(Opm::NumericalIssue,
                           "Could not determine Forchheimer velocity within "
                           << newtonIter << " iterations");
             ++newtonIter;

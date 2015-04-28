@@ -34,7 +34,7 @@
 
 #include <cmath>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(MaterialLaw);
 }}
@@ -258,7 +258,7 @@ protected:
                 potentialGrad_[phaseIdx] += f;
 
                 if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
-                    OPM_THROW(Opm::NumericalProblem,
+                    OPM_THROW(Opm::NumericalIssue,
                               "Non finite potential gradient for phase '"
                               << FluidSystem::phaseName(phaseIdx) << "'");
                 }
@@ -365,7 +365,7 @@ protected:
                 potentialGrad_[phaseIdx] += f;
 
                 if (!std::isfinite(potentialGrad_[phaseIdx].two_norm())) {
-                    OPM_THROW(Opm::NumericalProblem,
+                    OPM_THROW(Opm::NumericalIssue,
                                "Non finite potential gradient for phase '"
                                << FluidSystem::phaseName(phaseIdx) << "'");
                 }

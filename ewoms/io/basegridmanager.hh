@@ -23,7 +23,7 @@
 #ifndef EWOMS_BASE_GRID_MANAGER_HH
 #define EWOMS_BASE_GRID_MANAGER_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/common/version.hh>
@@ -31,7 +31,7 @@
 #include <type_traits>
 #include <memory>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridManager);
@@ -40,7 +40,7 @@ NEW_PROP_TAG(GridViewLevel);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Simulator);
-}} // namespace Opm, Properties
+}} // namespace Ewoms, Properties
 
 namespace Ewoms {
 

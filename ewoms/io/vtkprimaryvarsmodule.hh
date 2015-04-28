@@ -27,9 +27,9 @@
 #include <ewoms/io/vtkmultiwriter.hh>
 
 #include <ewoms/common/parametersystem.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK primary variables output
 NEW_TYPE_TAG(VtkPrimaryVars);

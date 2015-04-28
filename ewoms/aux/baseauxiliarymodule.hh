@@ -23,14 +23,14 @@
 #ifndef EWOMS_BASE_AUXILIARY_MODULE_HH
 #define EWOMS_BASE_AUXILIARY_MODULE_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
 #include <set>
 #include <vector>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(AuxModule);
 
@@ -41,7 +41,7 @@ NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(DofMapper);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(JacobianMatrix);
-}} // namespace Opm, Properties
+}} // namespace Ewoms, Properties
 
 namespace Ewoms {
 /*!

@@ -25,8 +25,8 @@
 
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 #include <ewoms/common/parametersystem.hh>
-#include <opm/core/utility/PropertySystem.hpp>
-#include <opm/material/Valgrind.hpp>
+#include <ewoms/common/propertysystem.hh>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <ewoms/io/basegridmanager.hh>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -44,7 +44,7 @@
 #include <string>
 #include <memory>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
@@ -52,7 +52,7 @@ NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(EnableFractures);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!

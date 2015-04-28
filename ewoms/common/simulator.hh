@@ -29,7 +29,7 @@
 #include <ewoms/io/restart.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
 #include <ewoms/common/timer.hh>
 
@@ -37,7 +37,7 @@
 #include <iomanip>
 #include <memory>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(GridManager);

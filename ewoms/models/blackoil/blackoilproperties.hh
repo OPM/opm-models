@@ -29,7 +29,7 @@
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkblackoilmodule.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Specifies if the simulation should write output files that are
 //! compatible with those produced by the commercial Eclipse simulator

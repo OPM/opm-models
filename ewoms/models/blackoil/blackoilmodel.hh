@@ -52,7 +52,7 @@ template <class TypeTag>
 class EclGridManager;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The type tag for the black-oil problems
 NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,

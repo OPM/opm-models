@@ -25,7 +25,7 @@
 
 #include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/io/basegridmanager.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/grid/CpGrid.hpp>
@@ -69,7 +69,7 @@ template <class TypeTag>
 class EclGridManager;
 } // namespace Ewoms
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(EclGridManager);
 
@@ -88,7 +88,7 @@ SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
 #endif
 
 SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
-}} // namespace Opm, Properties
+}} // namespace Ewoms, Properties
 
 namespace Ewoms {
 /*!

@@ -32,7 +32,7 @@
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(Problem);
@@ -43,7 +43,7 @@ NEW_PROP_TAG(LinearSolverBackend);
 
 NEW_TYPE_TAG(SuperLULinearSolver);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 namespace Linear {
@@ -148,13 +148,13 @@ public:
 } // namespace Linear
 } // namespace Ewoms
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 SET_INT_PROP(SuperLULinearSolver, LinearSolverVerbosity, 0);
 SET_TYPE_PROP(SuperLULinearSolver, LinearSolverBackend,
               Ewoms::Linear::SuperLUBackend<TypeTag>);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif // HAVE_SUPERLU
 

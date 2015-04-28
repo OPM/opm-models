@@ -26,10 +26,10 @@
 
 #include "nullconvergencewriter.hh"
 
-#include <opm/core/utility/Exceptions.hpp>
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/utility/PropertySystem.hpp>
-#include <opm/core/utility/ClassName.hpp>
+#include <opm/material/common/Exceptions.hpp>
+#include <opm/material/common/ErrorMacros.hpp>
+#include <ewoms/common/propertysystem.hh>
+#include <opm/material/common/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/timer.hh>
@@ -47,7 +47,7 @@ template <class TypeTag>
 class NewtonMethod;
 }
 
-namespace Opm {
+namespace Ewoms {
 // forward declaration of property tags
 namespace Properties {
 //! The type tag on which the default properties for the Newton method
@@ -141,7 +141,7 @@ SET_SCALAR_PROP(NewtonMethod, NewtonMaxError, 1e100);
 SET_INT_PROP(NewtonMethod, NewtonTargetIterations, 10);
 SET_INT_PROP(NewtonMethod, NewtonMaxIterations, 18);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!
@@ -397,7 +397,7 @@ public:
             asImp_().failed_();
             return false;
         }
-        catch (const Opm::NumericalProblem &e)
+        catch (const Opm::NumericalIssue &e)
         {
             linearizeTime_ += linearizeTimer_.realTimeElapsed();
             solveTime_ += solveTimer_.realTimeElapsed();
@@ -546,7 +546,7 @@ protected:
     /*!
      * \brief Solve the linear system of equations \f$\mathbf{A}x - b = 0\f$.
      *
-     * Throws Opm::NumericalProblem if the linear solver didn't
+     * Throws Opm::NumericalIssue if the linear solver didn't
      * converge.
      *
      * \param A The matrix of the linear system of equations
@@ -596,7 +596,7 @@ protected:
         // make sure that the error never grows beyond the maximum
         // allowed one
         if (error_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError))
-            OPM_THROW(Opm::NumericalProblem,
+            OPM_THROW(Opm::NumericalIssue,
                       "Newton: Error " << error_
                       << " is larger than maximum allowed error of "
                       << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError));
@@ -627,7 +627,7 @@ protected:
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.two_norm2()))
-            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
+            OPM_THROW(Opm::NumericalIssue, "Non-finite update!");
 
         for (unsigned dofIdx = 0; dofIdx < currentSolution.size(); ++dofIdx) {
             asImp_().updatePrimaryVariables_(dofIdx,

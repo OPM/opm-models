@@ -26,7 +26,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include "blackoilintensivequantities.hh"

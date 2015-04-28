@@ -26,10 +26,10 @@
 #include "vtkmultiwriter.hh"
 #include "baseoutputmodule.hh"
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK composition output
 NEW_TYPE_TAG(VtkComposition);
@@ -53,7 +53,7 @@ SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!

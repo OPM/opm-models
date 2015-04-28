@@ -44,8 +44,8 @@
 
 #include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
 
-#include <opm/core/utility/ErrorMacros.hpp>
-#include <opm/core/utility/Exceptions.hpp>
+#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>
@@ -60,7 +60,7 @@ template <class TypeTag>
 class NcpModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 /*!
  * \brief Define the type tag for the compositional NCP model.
@@ -360,7 +360,7 @@ public:
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 }
                 if (minActivityCoeff_[globalIdx][compIdx] <= 0)
-                    OPM_THROW(Opm::NumericalProblem,
+                    OPM_THROW(Opm::NumericalIssue,
                               "The minumum activity coefficient for component " << compIdx
                               << " on DOF " << globalIdx << " is negative or zero!");
             }

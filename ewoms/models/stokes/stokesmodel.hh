@@ -55,7 +55,7 @@ template <class TypeTag>
 class StokesModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The type tag for the problems using the Stokes equations
 NEW_TYPE_TAG(StokesModel, INHERITS_FROM(VcfvDiscretization));
@@ -178,7 +178,7 @@ SET_BOOL_PROP(StokesModel, RequireScvCenterGradients, true);
 
 //! Enable the inertial term for the Navier-Stokes model
 SET_BOOL_PROP(NavierStokesModel, EnableNavierTerm, true);
-}} // namespace Opm,Properties
+}} // namespace Ewoms,Properties
 
 namespace Ewoms {
 

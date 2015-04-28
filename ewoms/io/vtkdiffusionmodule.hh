@@ -27,10 +27,10 @@
 #include "vtkmultiwriter.hh"
 #include "baseoutputmodule.hh"
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK output of the quantities for molecular
 // diffusion
@@ -47,7 +47,7 @@ SET_BOOL_PROP(VtkDiffusion, VtkWriteTortuosities, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteDiffusionCoefficients, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteEffectiveDiffusionCoefficients, false);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 /*!

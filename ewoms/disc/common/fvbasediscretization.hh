@@ -61,7 +61,7 @@ template<class TypeTag>
 class FvBaseDiscretization;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Set the default type for the time manager
 SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
@@ -240,7 +240,7 @@ SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
 //! Most models don't need the gradients at the center of the SCVs, so
 //! we disable them by default.
 SET_BOOL_PROP(FvBaseDiscretization, RequireScvCenterGradients, false);
-}} // namespace Opm, Properties
+}} // namespace Ewoms, Properties
 
 namespace Ewoms {
 /*!

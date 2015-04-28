@@ -50,7 +50,7 @@ template <class TypeTag>
 class FlashModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The type tag for the isothermal single phase problems
 NEW_TYPE_TAG(FlashModel, INHERITS_FROM(MultiPhaseBaseModel,

@@ -24,14 +24,14 @@
 #ifndef EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 #define EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/geometry.hh>
 
 #include <dune/common/fvector.hh>
 
-#include <opm/core/utility/ClassName.hpp>
+#include <opm/material/common/ClassName.hpp>
 
 #include "fvbaseproperties.hh"
 

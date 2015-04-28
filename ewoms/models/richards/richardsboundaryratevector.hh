@@ -24,7 +24,7 @@
 #ifndef EWOMS_RICHARDS_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_RICHARDS_BOUNDARY_RATE_VECTOR_HH
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include "richardsintensivequantities.hh"

@@ -51,7 +51,7 @@ template <class TypeTag>
 class RichardsModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The type tag for problems discretized using the Richards model
 NEW_TYPE_TAG(Richards, INHERITS_FROM(MultiPhaseBaseModel));
@@ -162,7 +162,7 @@ public:
 };
 
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 namespace Ewoms {
 

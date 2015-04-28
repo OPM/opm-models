@@ -28,13 +28,13 @@
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 
 #include <ewoms/io/basegridmanager.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <type_traits>
 #include <string>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridFile);
@@ -42,7 +42,7 @@ NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Simulator);
-}} // namespace Opm, Properties
+}} // namespace Ewoms, Properties
 
 namespace Ewoms {
 /*!

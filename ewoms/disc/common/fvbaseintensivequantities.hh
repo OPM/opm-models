@@ -26,7 +26,7 @@
 
 #include "fvbaseproperties.hh"
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 namespace Ewoms {
 

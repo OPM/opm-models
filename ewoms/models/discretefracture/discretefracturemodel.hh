@@ -41,7 +41,7 @@ template <class TypeTag>
 class DiscreteFractureModel;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(DiscreteFractureModel, INHERITS_FROM(ImmiscibleTwoPhaseModel, VtkDiscreteFracture));

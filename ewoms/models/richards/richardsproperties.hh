@@ -28,7 +28,7 @@
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 
 // \{
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! The fluid system used for the problem
 NEW_PROP_TAG(FluidSystem);

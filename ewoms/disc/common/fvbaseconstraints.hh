@@ -24,10 +24,10 @@
 #ifndef EWOMS_FV_BASE_CONSTRAINTS_HH
 #define EWOMS_FV_BASE_CONSTRAINTS_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
-#include <opm/material/Valgrind.hpp>
+#include <ewoms/common/propertysystem.hh>
+#include <opm/material/common/Valgrind.hpp>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(PrimaryVariables);
 NEW_PROP_TAG(Scalar);

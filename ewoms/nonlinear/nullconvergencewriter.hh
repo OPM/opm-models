@@ -24,9 +24,9 @@
 #ifndef EWOMS_NULL_CONVERGENCE_WRITER_HH
 #define EWOMS_NULL_CONVERGENCE_WRITER_HH
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(NewtonMethod);
 

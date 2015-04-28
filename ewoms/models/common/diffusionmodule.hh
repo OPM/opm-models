@@ -29,7 +29,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Indices);
 }

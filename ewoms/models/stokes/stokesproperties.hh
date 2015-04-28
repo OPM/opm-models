@@ -27,7 +27,7 @@
 
 #include <ewoms/disc/vcfv/vcfvdiscretization.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Enumerations for the Stokes models accessible using a generic name
 NEW_PROP_TAG(Indices);
@@ -47,6 +47,6 @@ NEW_PROP_TAG(EnableEnergy);
 //! Specify whether the model should feature an inertial term or not
 NEW_PROP_TAG(EnableNavierTerm);
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif

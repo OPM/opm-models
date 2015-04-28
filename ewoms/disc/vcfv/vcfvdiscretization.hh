@@ -38,7 +38,7 @@ template <class TypeTag>
 class VcfvDiscretization;
 }
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! Set the stencil
 SET_PROP(VcfvDiscretization, Stencil)
@@ -88,7 +88,7 @@ public:
 //! of the local process' grid partition
 SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
 
-}} // namespace Opm, Properties
+}} // namespace Ewoms, Properties
 
 namespace Ewoms {
 /*!

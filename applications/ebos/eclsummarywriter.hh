@@ -28,9 +28,9 @@
 #include "eclwellmanager.hh"
 #include "ecldeckunits.hh"
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -43,7 +43,7 @@
 
 #include <string>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(EnableEclSummaryOutput);
 }}

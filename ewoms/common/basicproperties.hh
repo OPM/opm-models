@@ -27,11 +27,11 @@
 
 #include <dune/common/parametertree.hh>
 
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/io/dgfgridmanager.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 ///////////////////////////////////
 // Type tag definitions:
@@ -161,6 +161,6 @@ SET_SCALAR_PROP(NumericModel, InitialTimeStepSize, -1e100);
 SET_SCALAR_PROP(NumericModel, RestartTime, -1e100);
 
 } // namespace Properties
-} // namespace Opm
+} // namespace Ewoms
 
 #endif

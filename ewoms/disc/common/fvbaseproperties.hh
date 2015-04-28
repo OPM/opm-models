@@ -33,7 +33,7 @@
 #include <ewoms/io/vtkprimaryvarsmodule.hh>
 #include <ewoms/linear/paralleliterativebackend.hh>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 /*!
  * \ingroup Discretization

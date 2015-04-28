@@ -31,7 +31,7 @@
 
 #include <ewoms/io/baseoutputwriter.hh>
 
-#include <opm/material/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>

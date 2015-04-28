@@ -33,7 +33,7 @@
 
 #include <string>
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Indices);
 NEW_PROP_TAG(EnableEnergy);

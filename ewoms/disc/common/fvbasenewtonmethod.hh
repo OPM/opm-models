@@ -27,7 +27,7 @@
 #include "fvbasenewtonconvergencewriter.hh"
 
 #include <ewoms/nonlinear/newtonmethod.hh>
-#include <opm/core/utility/PropertySystem.hpp>
+#include <ewoms/common/propertysystem.hh>
 
 namespace Ewoms {
 
@@ -38,7 +38,7 @@ template <class TypeTag>
 class FvBaseNewtonConvergenceWriter;
 } // namespace Ewoms
 
-namespace Opm {
+namespace Ewoms {
 namespace Properties {
 //! create a type tag for the Newton method of the finite-volume discretization
 NEW_TYPE_TAG(FvBaseNewtonMethod, INHERITS_FROM(NewtonMethod));
@@ -152,7 +152,7 @@ protected:
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.two_norm2()))
-            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
+            OPM_THROW(Opm::NumericalIssue, "Non-finite update!");
 
         Scalar relinearizationTol = 0.0;
 
