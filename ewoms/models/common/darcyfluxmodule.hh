@@ -403,6 +403,7 @@ protected:
                     kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
             else
                 mobility_[phaseIdx] = intQuantsIn.mobility(phaseIdx);
+            assert(std::isfinite(mobility_[phaseIdx]));
         }
     }
 
@@ -427,6 +428,7 @@ protected:
 
             asImp_().calculateFilterVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+            assert(std::isfinite(volumeFlux_[phaseIdx]));
         }
     }
 
@@ -453,11 +455,23 @@ protected:
 
             asImp_().calculateFilterVelocity_(phaseIdx);
             volumeFlux_[phaseIdx] = (filterVelocity_[phaseIdx] * normal);
+            assert(std::isfinite(volumeFlux_[phaseIdx]));
+
+            Valgrind::SetNoAccess(volumeFlux_[phaseIdx]);
         }
     }
 
     void calculateFilterVelocity_(int phaseIdx)
     {
+#ifndef NDEBUG
+        assert(std::isfinite(mobility_[phaseIdx]));
+        for (int i = 0; i < K_.M(); ++ i)
+            for (int j = 0; j < K_.N(); ++ j)
+                assert(std::isfinite(K_[i][j]));
+        for (int i = 0; i < filterVelocity_[phaseIdx].size(); ++ i)
+            assert(std::isfinite(filterVelocity_[phaseIdx][i]));
+#endif
+
         K_.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
         filterVelocity_[phaseIdx] *= - mobility_[phaseIdx];
     }
