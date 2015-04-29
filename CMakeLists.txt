@@ -91,7 +91,7 @@ include(EwomsAddTest)
 
 EwomsAddTest(test_propertysystem
 	SOURCES tests/test_propertysystem.cc
-  DRIVER_ARGS --plain)
+  DRIVER_ARGS --plain test_propertysystem)
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
