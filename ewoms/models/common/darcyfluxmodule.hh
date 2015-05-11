@@ -465,15 +465,18 @@ protected:
     {
 #ifndef NDEBUG
         assert(std::isfinite(mobility_[phaseIdx]));
-        for (int i = 0; i < K_.M(); ++ i)
-            for (int j = 0; j < K_.N(); ++ j)
+        for (unsigned i = 0; i < K_.M(); ++ i)
+            for (unsigned j = 0; j < K_.N(); ++ j)
                 assert(std::isfinite(K_[i][j]));
-        for (int i = 0; i < filterVelocity_[phaseIdx].size(); ++ i)
-            assert(std::isfinite(filterVelocity_[phaseIdx][i]));
 #endif
 
         K_.mv(potentialGrad_[phaseIdx], filterVelocity_[phaseIdx]);
         filterVelocity_[phaseIdx] *= - mobility_[phaseIdx];
+
+#ifndef NDEBUG
+        for (unsigned i = 0; i < filterVelocity_[phaseIdx].size(); ++ i)
+            assert(std::isfinite(filterVelocity_[phaseIdx][i]));
+#endif
     }
 
 private:
