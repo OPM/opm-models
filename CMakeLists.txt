@@ -13,64 +13,60 @@
 #       cmake/Modules/${project}-prereqs.cmake   Dependencies             #
 #                                                                         #
 ###########################################################################
-
 cmake_minimum_required (VERSION 2.8)
 
+# add the current projects cmake module directory to the search
+# path. This is not required anymore once support for federated builds
+# is merged.
+list(INSERT CMAKE_MODULE_PATH 0 "cmake/Modules")
 
-# project information is in dune.module. Read this file and set variables.
-# we cannot generate dune.module since it is read by dunecontrol before
-# the build starts, so it makes sense to keep the data there then.
-set( OPM_CMAKE_ROOT "" CACHE PATH "Root directory containing OPM related cmake modules")
+set(OPM_CMAKE_ROOT "" CACHE PATH "Root directory containing OPM related cmake modules")
 
-include (OpmInit OPTIONAL RESULT_VARIABLE OPM_INIT)
+include(OpmInit OPTIONAL RESULT_VARIABLE OPM_INIT_INCLUDED)
 
-if (OPM_INIT) 
-
+if(OPM_INIT_INCLUDED)
    # We actually found the OpmInit module without using the OPM_CMAKE_ROOT variable.
    # The build needs the variable $OPM_MACROS_ROOT to be set, so here we infer it 
    # by backtracing from the location of the OpmInit module.
    get_filename_component( TMP1 ${OPM_INIT} PATH )
    get_filename_component( TMP2 ${TMP1} PATH )
    get_filename_component( OPM_MACROS_ROOT ${TMP2} PATH )
-
 else()
-
-   if (OPM_CMAKE_ROOT)
-      list( APPEND CMAKE_MODULE_PATH "${OPM_CMAKE_ROOT}/cmake/Modules")
-      include (OpmInit OPTIONAL RESULT_VARIABLE OPM_INIT)
-      set( OPM_MACROS_ROOT ${OPM_CMAKE_ROOT} )
+   if(OPM_CMAKE_ROOT)
+      list(APPEND CMAKE_MODULE_PATH "${OPM_CMAKE_ROOT}/cmake/Modules")
+      include (OpmInit OPTIONAL RESULT_VARIABLE OPM_INIT_FOUND)
+      set(OPM_MACROS_ROOT ${OPM_CMAKE_ROOT} )
    endif()
 
-   if (NOT OPM_INIT)
-      message( "" )       
-      message( " /-------------------------------------------------------------------------------\\")
-      message( " |  Could not locate the opm build macros. The opm build macros                  |")
-      message( " |  are in a separate repository - instructions to proceed:                      |")
-      message( " |                                                                               |")
-      message( " |    1. Clone the repository: git clone git@github.com:OPM/opm-cmake.git        |")
-      message( " |                                                                               |")
-      message( " |    2. Run cmake in the current project with -DOPM_CMAKE_ROOT=<path>/opm-cmake |")
-      message( " |                                                                               |") 
-      message( " \\-------------------------------------------------------------------------------/")
-      message( "" )       
-      message( FATAL_ERROR "Could not find OPM Macros")
+   if(NOT OPM_INIT_FOUND)
+      message("") 
+      message(" /-------------------------------------------------------------------------------\\")
+      message(" |  Could not locate the opm build system. The opm build system macros           |")
+      message(" |  are in a separate repository - instructions to proceed:                      |")
+      message(" |                                                                               |")
+      message(" |    1. Clone the repository: git clone git@github.com:OPM/opm-cmake.git        |")
+      message(" |                                                                               |")
+      message(" |    2. Run cmake in the current project with -DOPM_CMAKE_ROOT=<path>/opm-cmake |")
+      message(" |                                                                               |") 
+      message(" \\-------------------------------------------------------------------------------/")
+      message("")
+      message(FATAL_ERROR "Could not find the OPM build system Macros")
    endif()
-
 endif()
 
 # list of prerequisites for this particular project; this is in a
 # separate file (in cmake/Modules sub-directory) because it is shared
 # with the find module
-include (${project}-prereqs)
+include(${project}-prereqs)
 
 # read the list of components from this file (in the project directory);
 # it should set various lists with the names of the files to include
-include (CMakeLists_files.cmake)
+include(CMakeLists_files.cmake)
 
 macro (config_hook)
-  opm_need_version_of ("dune-common")
-  opm_need_version_of ("dune-grid")
-  opm_need_version_of ("dune-alugrid")
+  opm_need_version_of("dune-common")
+  opm_need_version_of("dune-grid")
+  opm_need_version_of("dune-alugrid")
 endmacro (config_hook)
 
 macro (files_hook)
@@ -96,24 +92,25 @@ endmacro (tests_hook)
 set(MY_BUILD_TESTING "${BUILD_TESTING}")
 set(BUILD_TESTING "ON" CACHE BOOL "Build the tests" FORCE)
 
-# all setup common to the OPM library modules is done here
+# all setup common to the OPM library modules
 include (OpmLibMain)
 
-add_custom_target(check-commits
-									COMMAND ${CMAKE_COMMAND}
-													-DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
-													-DCMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}
-													-P ${PROJECT_SOURCE_DIR}/cmake/Scripts/CheckCommits.cmake)
+# restore the value of the BUILD_TESTING variable to its original
+# value. This is required because OpmLibMain thinks it is smarter
+# appropriate and sets it...
+if (NOT MY_BUILD_TESTING)
+  set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
+endif()
 
+# copy the data files (i.e., grid files, etc) needed to run the unit
+# tests from the source to the build directory
 file(GLOB datafiles "tests/data/*")
 foreach(file ${datafiles})
   file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
 endforeach()
 
-if (NOT MY_BUILD_TESTING)
-  set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
-endif()
-
+# include the macros required to build the tests and applications
+# shipped as part of the eWoms distribution
 include(EwomsAddApplication)
 include(EwomsAddTest)
 
