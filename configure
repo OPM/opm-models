@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # where is the source tree located by default relative to here
-srcdir=$(dirname "$(dirname "$(dirname "$0")")")
+srcdir=$(dirname "$0")
 
 # display help text
 usage () {
