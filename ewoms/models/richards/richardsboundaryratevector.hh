@@ -43,11 +43,14 @@ class RichardsBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { contiEqIdx = Indices::contiEqIdx };
     enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     RichardsBoundaryRateVector() : ParentType()
@@ -57,7 +60,8 @@ public:
      * \copydoc
      * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    RichardsBoundaryRateVector(Scalar value) : ParentType(value)
+    RichardsBoundaryRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
@@ -72,8 +76,7 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setFreeFlow
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
-                     const FluidState &fluidState)
+    void setFreeFlow(const Context &context, int bfIdx, int timeIdx, const FluidState &fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
@@ -85,10 +88,10 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        (*this) = 0.0;
+        (*this) = Toolbox::createConstant(0.0);
 
         int phaseIdx = liquidPhaseIdx;
-        Scalar density;
+        Evaluation density;
         if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
             density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         else
@@ -115,11 +118,10 @@ public:
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
-        // we only allow fluxes in the direction opposite to the outer
-        // unit normal
+        // we only allow fluxes in the direction opposite to the outer unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
-            val = std::min<Scalar>(0.0, val);
+            Evaluation& val = this->operator[](eqIdx);
+            val = Toolbox::min(0.0, val);
         }
     }
 
@@ -132,11 +134,10 @@ public:
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
-        // we only allow fluxes in the same direction as the outer
-        // unit normal
+        // we only allow fluxes in the same direction as the outer unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
-            val = std::max<Scalar>(0.0, val);
+            Evaluation& val = this->operator[](eqIdx);
+            val = Toolbox::max(0.0, val);
         }
     }
 
@@ -144,7 +145,7 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */
     void setNoFlow()
-    { (*this) = 0.0; }
+    { (*this) = Toolbox::createConstant(0.0); }
 };
 
 } // namespace Ewoms

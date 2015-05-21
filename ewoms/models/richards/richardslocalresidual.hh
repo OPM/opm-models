@@ -38,6 +38,7 @@ template <class TypeTag>
 class RichardsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -45,12 +46,15 @@ class RichardsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 
     enum { contiEqIdx = Indices::contiEqIdx };
     enum { liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex) };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
+    template <class LhsEval>
+    void computeStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                         const ElementContext &elemCtx,
                         int dofIdx,
                         int timeIdx) const
@@ -59,9 +63,9 @@ public:
 
         // partial time derivative of the wetting phase mass
         storage[contiEqIdx] =
-            intQuants.fluidState().density(liquidPhaseIdx)
-            * intQuants.fluidState().saturation(liquidPhaseIdx)
-            * intQuants.porosity();
+            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().density(liquidPhaseIdx))
+            *Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(liquidPhaseIdx))
+            *Toolbox::template toLhs<LhsEval>(intQuants.porosity());
     }
 
     /*!
@@ -70,24 +74,20 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
     {
-        const auto &extQuantsEval = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
-        // const auto &extQuantsEval = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-        // data attached to upstream and the downstream DOFs
-        // of the current phase
-        const IntensiveQuantities &up =
-            elemCtx.intensiveQuantities(extQuantsEval.upstreamIndex(liquidPhaseIdx), timeIdx);
-        const IntensiveQuantities &dn =
-            elemCtx.intensiveQuantities(extQuantsEval.downstreamIndex(liquidPhaseIdx), timeIdx);
+        int interiorIdx = extQuants.interiorIndex();
+        int upIdx = extQuants.upstreamIndex(liquidPhaseIdx);
 
-        flux[contiEqIdx] =
-            extQuants.volumeFlux(liquidPhaseIdx)
-            * (extQuants.upstreamWeight(liquidPhaseIdx)
-               * up.fluidState().density(liquidPhaseIdx)
-               +
-               extQuants.downstreamWeight(liquidPhaseIdx)
-               * dn.fluidState().density(liquidPhaseIdx));
+        const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+
+        // compute advective mass flux of the liquid phase. This is slightly hacky
+        // because it is specific to the element-centered finite volume method.
+        const Evaluation& rho = up.fluidState().density(liquidPhaseIdx);
+        if (interiorIdx == upIdx)
+            flux[contiEqIdx] = extQuants.volumeFlux(liquidPhaseIdx)*rho;
+        else
+            flux[contiEqIdx] = extQuants.volumeFlux(liquidPhaseIdx)*Toolbox::value(rho);
     }
 
     /*!
@@ -97,12 +97,7 @@ public:
                        const ElementContext &elemCtx,
                        int dofIdx,
                        int timeIdx) const
-    {
-        elemCtx.problem().source(source,
-                                 elemCtx,
-                                 dofIdx,
-                                 timeIdx);
-    }
+    { elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx); }
 };
 
 } // namespace Ewoms

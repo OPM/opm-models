@@ -24,6 +24,8 @@
 #ifndef EWOMS_RICHARDS_MODEL_HH
 #define EWOMS_RICHARDS_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "richardsproperties.hh"
 #include "richardsindices.hh"
 #include "richardslocalresidual.hh"

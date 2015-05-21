@@ -54,6 +54,6 @@ NEW_PROP_TAG(LiquidComponentIndex);
 NEW_PROP_TAG(GasComponentIndex);
 
 // \}
-}} // namespace Properties, Opm
+}} // namespace Properties, Ewoms
 
 #endif

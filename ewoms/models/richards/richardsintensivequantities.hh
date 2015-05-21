@@ -45,10 +45,9 @@ class RichardsIntensiveQuantities
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -63,22 +62,23 @@ class RichardsIntensiveQuantities
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef Dune::FieldVector<Scalar, numPhases> ScalarPhaseVector;
+    typedef Dune::FieldVector<Evaluation, numPhases> PhaseVector;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     //! The type returned by the fluidState() method
-    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem> FluidState;
+    typedef Opm::ImmiscibleFluidState<Evaluation, FluidSystem> FluidState;
 
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
+        const auto& T = elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx);
+        fluidState_.setTemperature(T);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -94,15 +94,16 @@ public:
         // first, we have to find the minimum capillary pressure (i.e. Sw = 0)
         fluidState_.setSaturation(liquidPhaseIdx, 1.0);
         fluidState_.setSaturation(gasPhaseIdx, 0.0);
-        PhaseVector pC;
+        ScalarPhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
         // non-wetting pressure can be larger than the
         // reference pressure if the medium is fully
         // saturated by the wetting phase
-        Scalar pW = priVars[pressureWIdx];
-        Scalar pN = std::max(elemCtx.problem().referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
-                             pW + (pC[gasPhaseIdx] - pC[liquidPhaseIdx]));
+        const Evaluation& pW = priVars.makeEvaluation(pressureWIdx, timeIdx);
+        Evaluation pN =
+            Toolbox::max(elemCtx.problem().referencePressure(elemCtx, dofIdx, /*timeIdx=*/0),
+                         pW + (pC[gasPhaseIdx] - pC[liquidPhaseIdx]));
 
         /////////
         // calculate the saturations
@@ -113,25 +114,29 @@ public:
         PhaseVector sat;
         MaterialLaw::saturations(sat, materialParams, fluidState_);
         fluidState_.setSaturation(liquidPhaseIdx, sat[liquidPhaseIdx]);
-        fluidState_.setSaturation(gasPhaseIdx, 1.0 - sat[liquidPhaseIdx]);
+        fluidState_.setSaturation(gasPhaseIdx, sat[gasPhaseIdx]);
 
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState_);
 
         // compute and set the wetting phase viscosity
-        Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, liquidPhaseIdx);
+        const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, liquidPhaseIdx);
         fluidState_.setViscosity(liquidPhaseIdx, mu);
         fluidState_.setViscosity(gasPhaseIdx, 1e-20);
 
         // compute and set the wetting phase density
-        Scalar rho = FluidSystem::density(fluidState_, paramCache, liquidPhaseIdx);
+        const Evaluation& rho = FluidSystem::density(fluidState_, paramCache, liquidPhaseIdx);
         fluidState_.setDensity(liquidPhaseIdx, rho);
         fluidState_.setDensity(gasPhaseIdx, 1e-20);
 
-        //////////
-        // specify the other parameters
-        //////////
+        // relperms
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+
+        // mobilities
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            mobility_[phaseIdx] = relativePermeability_[phaseIdx]/fluidState_.viscosity(phaseIdx);
+
+        // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
 
         // intrinsic permeability
@@ -150,7 +155,7 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
-    Scalar porosity() const
+    const Evaluation& porosity() const
     { return porosity_; }
 
     /*!
@@ -162,22 +167,21 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    Scalar relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    Scalar mobility(int phaseIdx) const
-    {
-        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
-    }
+    const Evaluation& mobility(int phaseIdx) const
+    { return mobility_[phaseIdx]; }
 
 private:
     FluidState fluidState_;
     DimMatrix intrinsicPerm_;
-    Scalar relativePermeability_[numPhases];
-    Scalar porosity_;
+    Evaluation relativePermeability_[numPhases];
+    Evaluation mobility_[numPhases];
+    Evaluation porosity_;
 };
 
 } // namespace Ewoms
