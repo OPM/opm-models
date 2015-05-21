@@ -26,14 +26,20 @@
 #define EWOMS_START_HH
 
 #include <ewoms/common/propertysystem.hh>
+// the following header is not required here, but it must be included before
+// dune/common/densematrix.hh because of some c++ ideosyncrasies
+#include <opm/material/localad/Evaluation.hpp>
+
 #include "parametersystem.hh"
-#include <opm/material/common/Valgrind.hpp>
 
 #include <ewoms/version.hh>
 #include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/parametersystem.hh>
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/timer.hh>
+
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/common/parametertreeparser.hh>

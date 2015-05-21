@@ -63,6 +63,7 @@ class FvBaseLinearizer
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -75,6 +76,8 @@ class FvBaseLinearizer
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
@@ -746,7 +749,7 @@ private:
 
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
-#if HAVE_OPENMP
+#ifdef _OPENMP
 #pragma omp parallel
 #endif
         {
@@ -787,7 +790,7 @@ private:
         ElementContext *elementCtx = elementCtx_[threadId];
         auto &localLinearizer = model_().localLinearizer(threadId);
 
-        // do the actual linearization
+        // the actual work of linearization is done by the local linearizer class
         elementCtx->updateAll(elem);
         localLinearizer.linearize(*elementCtx);
 
@@ -815,6 +818,7 @@ private:
             for (int dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
                 int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
+
                 // only update the jacobian matrix for non-green degrees of freedom
                 if (dofColor(globJ) == Green)
                     continue;
@@ -841,9 +845,11 @@ private:
             int globI = elementCtx->globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
             // update the right hand side
-            residual_[globI] += localResidual.residual(dofIdx);
+            for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                residual_[globI][eqIdx] += Toolbox::value(localResidual.residual(dofIdx)[eqIdx]);
             if (enableLinearizationRecycling_())
-                storageTerm_[globI] += localResidual.storageTerm(dofIdx);
+                for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                    storageTerm_[globI][eqIdx] += Toolbox::value(localResidual.storageTerm(dofIdx)[eqIdx]);
         }
         addLock.unlock();
     }

@@ -25,9 +25,12 @@
 #ifndef EWOMS_FV_BASE_DISCRETIZATION_HH
 #define EWOMS_FV_BASE_DISCRETIZATION_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "fvbaseproperties.hh"
 #include "fvbaselinearizer.hh"
-#include "fvbaselocallinearizer.hh"
+#include "fvbasefdlocallinearizer.hh"
+#include "fvbaseadlocallinearizer.hh"
 #include "fvbaselocalresidual.hh"
 #include "fvbaseelementcontext.hh"
 #include "fvbaseboundarycontext.hh"
@@ -46,6 +49,8 @@
 #include <ewoms/common/simulator.hh>
 #include <ewoms/aux/baseauxiliarymodule.hh>
 
+#include <opm/material/common/MathToolbox.hpp>
+
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
@@ -59,9 +64,7 @@
 namespace Ewoms {
 template<class TypeTag>
 class FvBaseDiscretization;
-}
 
-namespace Ewoms {
 namespace Properties {
 //! Set the default type for the time manager
 SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
@@ -92,10 +95,6 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtens
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
-
-SET_TYPE_PROP(FvBaseDiscretization, DiscLocalLinearizer, Ewoms::FvBaseLocalLinearizer<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, LocalLinearizer, typename GET_PROP_TYPE(TypeTag, DiscLocalLinearizer));
-
 
 //! Set the type of a global jacobian matrix from the solution types
 SET_PROP(FvBaseDiscretization, JacobianMatrix)
@@ -188,20 +187,13 @@ SET_TYPE_PROP(FvBaseDiscretization, Linearizer, Ewoms::FvBaseLinearizer<TypeTag>
 
 //! use an unlimited time step size by default
 #if 0
-// requires GCC 4.6 and above to call the constexpr function of
-// numeric_limits
+// requires GCC 4.6 or later to be able call the constexpr function here
 SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, std::numeric_limits<Scalar>::infinity());
 #else
 SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, 1e100);
 #endif
 //! By default, accept any time step larger than zero
 SET_SCALAR_PROP(FvBaseDiscretization, MinTimeStepSize, 0.0);
-
-//! The base epsilon value for finite difference calculations
-SET_SCALAR_PROP(FvBaseDiscretization, BaseEpsilon, 0.9123e-10);
-
-//! use forward differences to calculate the jacobian by default
-SET_INT_PROP(FvBaseDiscretization, NumericDifferenceMethod, +1);
 
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
@@ -240,9 +232,8 @@ SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
 //! Most models don't need the gradients at the center of the SCVs, so
 //! we disable them by default.
 SET_BOOL_PROP(FvBaseDiscretization, RequireScvCenterGradients, false);
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup Discretization
  *
@@ -255,6 +246,7 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
@@ -289,7 +281,9 @@ class FvBaseDiscretization
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+    typedef Dune::FieldVector<Evaluation, numEq> VectorBlock;
+    typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
 
     // copying a discretization object is not a good idea
@@ -627,7 +621,7 @@ public:
 
         OmpMutex mutex;
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
-#if HAVE_OPENMP
+#ifdef _OPENMP
 #pragma omp parallel
 #endif
         {
@@ -655,7 +649,8 @@ public:
                 ScopedLock addLock(mutex);
                 for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
                     int globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                    dest[globalI] += residual[dofIdx];
+                    for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        dest[globalI][eqIdx] += Toolbox::value(residual[dofIdx][eqIdx]);
                 }
                 addLock.unlock();
             }
@@ -690,7 +685,7 @@ public:
 
         OmpMutex mutex;
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
-#if HAVE_OPENMP
+#ifdef _OPENMP
 #pragma omp parallel
 #endif
         {
@@ -719,7 +714,8 @@ public:
 
                 ScopedLock addLock(mutex);
                 for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
-                    storage += elemStorage[dofIdx];
+                    for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                        storage[eqIdx] += Toolbox::value(elemStorage[dofIdx][eqIdx]);
                 addLock.unlock();
             }
         }
@@ -742,7 +738,7 @@ public:
 
         Scalar totalBoundaryArea(0.0);
         Scalar totalVolume(0.0);
-        EqVector totalRate(0.0);
+        EvalEqVector totalRate(Toolbox::createConstant(0.0));
 
         // take the newton tolerance times the total volume of the grid if we're not
         // given an explicit tolerance...
@@ -788,7 +784,8 @@ public:
                         boundaryCtx.boundarySegmentArea(faceIdx, /*timeIdx=*/0)
                         * insideIntQuants.extrusionFactor();
 
-                    values *= bfArea;
+                    for (unsigned i = 0; i < values.size(); ++i)
+                        values[i] *= bfArea;
 
                     totalBoundaryArea += bfArea;
                     totalRate += values;
@@ -797,7 +794,7 @@ public:
 
             // deal with the source terms
             for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
-                BoundaryRateVector values;
+                RateVector values;
                 simulator_.problem().source(values,
                                             elemCtx,
                                             dofIdx,
@@ -808,9 +805,9 @@ public:
                 Scalar dofVolume =
                     elemCtx.dofVolume(dofIdx, /*timeIdx=*/0)
                     * intQuants.extrusionFactor();
-                values *= -dofVolume;
+                for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                    totalRate[eqIdx] += -dofVolume*Toolbox::value(values[eqIdx]);
                 totalVolume += dofVolume;
-                totalRate += values;
             }
         }
 
@@ -829,13 +826,16 @@ public:
                 std::cout << "storage at end of time step: " << storageEndTimeStep << "\n";
                 std::cout << "rate based on storage terms: " << storageRate << "\n";
                 std::cout << "rate based on source and boundary terms: " << totalRate << "\n";
-                std::cout << "difference in rates: " << (storageRate - totalRate) << "\n";
+                std::cout << "difference in rates: ";
+                for (int eqIdx = 0; eqIdx < EqVector::dimension; ++eqIdx)
+                    std::cout << (storageRate[eqIdx] - Toolbox::value(totalRate[eqIdx])) << " ";
+                std::cout << "\n";
             }
             for (int eqIdx = 0; eqIdx < EqVector::dimension; ++eqIdx) {
                 Scalar eps =
-                    (std::abs(storageRate[eqIdx]) + std::abs(totalRate[eqIdx]))*tolerance;
+                    (std::abs(storageRate[eqIdx]) + Toolbox::value(totalRate[eqIdx]))*tolerance;
                 eps = std::max(tolerance, eps);
-                assert(std::abs(storageRate[eqIdx] - totalRate[eqIdx]) <= eps);
+                assert(std::abs(storageRate[eqIdx] - Toolbox::value(totalRate[eqIdx])) <= eps);
             }
         }
 #endif // NDEBUG

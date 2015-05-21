@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2008-2013 by Andreas Lauser
+  Copyright (C) 2008-2015 by Andreas Lauser
   Copyright (C) 2011-2012 by Bernd Flemisch
   Copyright (C) 2011 by Klaus Mosthaf
 
@@ -21,10 +21,12 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseLocalLinearizer
+ * \copydoc Ewoms::FvBaseAdLocalLinearizer
  */
-#ifndef EWOMS_FV_BASE_LOCAL_LINEARIZER_HH
-#define EWOMS_FV_BASE_LOCAL_LINEARIZER_HH
+#ifndef EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
+#define EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
+
+#include <opm/material/localad/Math.hpp>
 
 #include "fvbaseproperties.hh"
 
@@ -35,45 +37,56 @@
 #include <dune/common/fmatrix.hh>
 
 namespace Ewoms {
+// forward declaration
+template<class TypeTag>
+class FvBaseAdLocalLinearizer;
+
+namespace Properties {
+// declare the property tags required for the finite differences local linearizer
+NEW_TYPE_TAG(AutoDiffLocalLinearizer);
+
+NEW_PROP_TAG(LocalLinearizer);
+NEW_PROP_TAG(Evaluation);
+
+NEW_PROP_TAG(LocalResidual);
+NEW_PROP_TAG(Simulator);
+NEW_PROP_TAG(Problem);
+NEW_PROP_TAG(Model);
+NEW_PROP_TAG(PrimaryVariables);
+NEW_PROP_TAG(ElementContext);
+NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(Evaluation);
+NEW_PROP_TAG(GridView);
+
+// set the properties to be spliced in
+SET_TYPE_PROP(AutoDiffLocalLinearizer, LocalLinearizer,
+              Ewoms::FvBaseAdLocalLinearizer<TypeTag>);
+
+//! Set the function evaluation w.r.t. the primary variables
+SET_PROP(AutoDiffLocalLinearizer, Evaluation)
+{
+private:
+    static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
+
+public:
+    typedef Opm::LocalAd::Evaluation<Scalar, Discretization, numEq> type;
+};
+
+} // namespace Properties
 
 /*!
  * \ingroup Discretization
  *
- * \brief Calculates the Jacobian of the local residual for finite
- *        volume spatial discretizations
+ * \brief Calculates the local residual and its Jacobian for a single element of the grid.
  *
- * The local Jacobian for a given context is defined as the derivatives of the residuals
- * of all degrees of freedom featured by the stencil with regard to the primary variables
- * of the stencil's "primary" degrees of freedom.
- *
- * The default behavior is to use numeric differentiation, i.e.  forward or backward
- * differences (2nd order), or central differences (3rd order). The method used is
- * determined by the "NumericDifferenceMethod" property:
- *
- * - If the value of this property is smaller than 0, backward differences are used,
- *   i.e.:
- *   \f[
- *     \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
- *   \f]
- *
- * - If the value of this property is 0, central differences are used, i.e.:
- *   \f[
- *     \frac{\partial f(x)}{\partial x} \approx
- *          \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
- *   \f]
- *
- * - if the value of this property is larger than 0, forward differences are used, i.e.:
- *   \f[
- *     \frac{\partial f(x)}{\partial x} \approx
- *          \frac{f(x + \epsilon) - f(x)}{\epsilon}
- *   \f]
- *
- * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$ is the value of a
- * sub-control volume's primary variable at the evaluation point and \f$\epsilon\f$ is a
- * small scalar value larger than 0.
+ * This class uses automatic differentiation to calculate the partial derivatives (the
+ * alternative is finite differences).
  */
 template<class TypeTag>
-class FvBaseLocalLinearizer
+class FvBaseAdLocalLinearizer
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, LocalLinearizer) Implementation;
@@ -99,32 +112,28 @@ private:
 public:
     // make older GCCs happy by providing a public copy constructor (this is necessary
     // for their implementation of std::vector, although the method is never called...)
-    FvBaseLocalLinearizer(const FvBaseLocalLinearizer&)
+    FvBaseAdLocalLinearizer(const FvBaseAdLocalLinearizer&)
         : internalElemContext_(0)
     {}
 
 #else
     // copying local residual objects around is a very bad idea, so we explicitly prevent
     // it...
-    FvBaseLocalLinearizer(const FvBaseLocalLinearizer&) = delete;
+    FvBaseAdLocalLinearizer(const FvBaseAdLocalLinearizer&) = delete;
 #endif
 public:
-    FvBaseLocalLinearizer()
+    FvBaseAdLocalLinearizer()
         : internalElemContext_(0)
     { }
 
-    ~FvBaseLocalLinearizer()
+    ~FvBaseAdLocalLinearizer()
     { delete internalElemContext_; }
 
     /*!
      * \brief Register all run-time parameters for the local jacobian.
      */
     static void registerParameters()
-    {
-        EWOMS_REGISTER_PARAM(TypeTag, int, NumericDifferenceMethod,
-                             "The method used for numeric differentiation (-1: backward "
-                             "differences, 0: central differences, 1: forward differences)");
-    }
+    { }
 
     /*!
      * \brief Initialize the local Jacobian object.
@@ -182,27 +191,16 @@ public:
         reset_(elemCtx);
 
         // calculate the local residual
-        localResidual_.eval(residual_, residualStorage_, elemCtx);
-
-        // save all extensive quantities calculated using the unmodified primary
-        // variables. This automatically makes these the extensive quantities of the
-        // evaluation point.
-        elemCtx.saveExtensiveQuantities();
+        localResidual_.eval(elemCtx);
 
         // calculate the local jacobian matrix
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         for (int dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
-            for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
-                asImp_().evalPartialDerivative_(elemCtx, dofIdx, pvIdx);
-
-                // update the local stiffness matrix with the current
-                // partial derivatives
-                updateLocalLinearizer_(elemCtx, dofIdx, pvIdx);
-            }
+            // convert the local Jacobian matrix and the right hand side from the data
+            // structures used by the automatic differentiation code to the conventional
+            // ones used by the linear solver.
+            updateLocalLinearization_(elemCtx, dofIdx);
         }
-
-        // restore extensive quantities.
-        //elemCtx.restoreScvfVars(); // not necessary
     }
 
     /*!
@@ -315,9 +313,6 @@ protected:
 
         residual_.resize(numDof);
         residualStorage_.resize(numPrimaryDof);
-
-        derivResidual_.resize(numDof);
-        derivStorage_.resize(numPrimaryDof);
     }
 
     /*!
@@ -341,145 +336,36 @@ protected:
     }
 
     /*!
-     * \brief Compute the partial derivatives of a context's residual functions
-     *
-     * This method can be overwritten by the implementation if a better scheme than
-     * numerical differentiation is available.
-     *
-     * The default implementation of this method uses numeric differentiation,
-     * i.e. forward or backward differences (2nd order), or central differences (3rd
-     * order). The method used is determined by the "NumericDifferenceMethod" property:
-     *
-     * - If the value of this property is smaller than 0, backward differences are used,
-     *   i.e.:
-     *   \f[
-     *     \frac{\partial f(x)}{\partial x} \approx \frac{f(x) - f(x - \epsilon)}{\epsilon}
-     *   \f]
-     *
-     * - If the value of this property is 0, central differences are used, i.e.:
-     *   \f[
-     *     \frac{\partial f(x)}{\partial x} \approx
-     *          \frac{f(x + \epsilon) - f(x - \epsilon)}{2 \epsilon}
-     *   \f]
-     *
-     * - if the value of this property is larger than 0, forward
-     *   differences are used, i.e.:
-     *   \f[
-           \frac{\partial f(x)}{\partial x} \approx \frac{f(x + \epsilon) - f(x)}{\epsilon}
-     *   \f]
-     *
-     * Here, \f$ f \f$ is the residual function for all equations, \f$x\f$ is the value
-     * of a sub-control volume's primary variable at the evaluation point and
-     * \f$\epsilon\f$ is a small value larger than 0.
-     *
-     * \param elemCtx The element context for which the local partial
-     *                derivative ought to be calculated
-     * \param dofIdx The sub-control volume index of the current
-     *               finite element for which the partial derivative
-     *               ought to be calculated
-     * \param pvIdx The index of the primary variable at the dofIdx'
-     *              sub-control volume of the current finite element
-     *              for which the partial derivative ought to be
-     *              calculated
-     */
-    void evalPartialDerivative_(ElementContext &elemCtx,
-                                int dofIdx,
-                                int pvIdx)
-    {
-        // save all quantities which depend on the specified primary
-        // variable at the given sub control volume
-        elemCtx.saveIntensiveQuantities(dofIdx);
-
-        PrimaryVariables priVars(elemCtx.primaryVars(dofIdx, /*timeIdx=*/0));
-        Scalar eps = asImp_().numericEpsilon(elemCtx, dofIdx, pvIdx);
-        Scalar delta = 0;
-
-        if (numericDifferenceMethod_() >= 0) {
-            // we are not using backward differences, i.e. we need to
-            // calculate f(x + \epsilon)
-
-            // deflect primary variables
-            priVars[pvIdx] += eps;
-            delta += eps;
-
-            // calculate the residual
-            elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
-            elemCtx.updateAllExtensiveQuantities();
-            localResidual_.eval(derivResidual_, derivStorage_, elemCtx);
-        }
-        else {
-            // we are using backward differences, i.e. we don't need
-            // to calculate f(x + \epsilon) and we can recycle the
-            // (already calculated) residual f(x)
-            derivResidual_ = residual_;
-            derivStorage_ = residualStorage_;
-        }
-
-        if (numericDifferenceMethod_() <= 0) {
-            // we are not using forward differences, i.e. we don't
-            // need to calculate f(x - \epsilon)
-
-            // deflect the primary variables
-            priVars[pvIdx] -= delta + eps;
-            delta += eps;
-
-            // calculate residual again, this time we use the local
-            // residual's internal storage.
-            elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
-            elemCtx.updateAllExtensiveQuantities();
-            localResidual_.eval(elemCtx);
-
-            derivResidual_ -= localResidual_.residual();
-            derivStorage_ -= localResidual_.storageTerm();
-        }
-        else {
-            // we are using forward differences, i.e. we don't need to
-            // calculate f(x - \epsilon) and we can recycle the
-            // (already calculated) residual f(x)
-            derivResidual_ -= residual_;
-            derivStorage_ -= residualStorage_;
-        }
-
-        assert(delta > 0);
-
-        // divide difference in residuals by the magnitude of the
-        // deflections between the two function evaluation
-        derivResidual_ /= delta;
-        derivStorage_ /= delta;
-
-        // restore the original state of the element's volume
-        // variables
-        elemCtx.restoreIntensiveQuantities(dofIdx);
-
-#ifndef NDEBUG
-        for (unsigned i = 0; i < derivResidual_.size(); ++i)
-            Valgrind::CheckDefined(derivResidual_[i]);
-#endif
-    }
-
-    /*!
      * \brief Updates the current local Jacobian matrix with the
      *        partial derivatives of all equations in regard to the
      *        primary variable 'pvIdx' at vertex 'dofIdx' .
      */
-    void updateLocalLinearizer_(const ElementContext &elemCtx,
-                              int primaryDofIdx,
-                              int pvIdx)
+    void updateLocalLinearization_(const ElementContext &elemCtx,
+                                   int primaryDofIdx)
     {
-        // store the derivative of the storage term
-        for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
-            jacobianStorage_[primaryDofIdx][eqIdx][pvIdx] = derivStorage_[primaryDofIdx][eqIdx];
+        const auto& residStorage = localResidual_.storageTerm();
+        const auto& resid = localResidual_.residual();
+
+        for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
+            residual_[primaryDofIdx][eqIdx] = resid[primaryDofIdx][eqIdx].value;
+            residualStorage_[primaryDofIdx][eqIdx] = residStorage[primaryDofIdx][eqIdx].value;
+
+            // store the derivative of the storage term
+            for (int pvIdx = 0; pvIdx < numEq; pvIdx++)
+                jacobianStorage_[primaryDofIdx][eqIdx][pvIdx] = residStorage[primaryDofIdx][eqIdx].derivatives[pvIdx];
+        }
 
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numDof; dofIdx++)
-        {
+        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
             for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
-                // A[dofIdx][primaryDofIdx][eqIdx][pvIdx] is the partial derivative of
-                // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
-                // regard to the primary variable 'pvIdx' of the degree of freedom
-                // 'primaryDofIdx'
-                jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] = derivResidual_[dofIdx][eqIdx];
-                Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
+                for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
+                    // A[dofIdx][primaryDofIdx][eqIdx][pvIdx] is the partial derivative of
+                    // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
+                    // regard to the primary variable 'pvIdx' of the degree of freedom
+                    // 'primaryDofIdx'
+                    jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] = resid[dofIdx][eqIdx].derivatives[pvIdx];
+                    Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
+                }
             }
         }
     }
@@ -489,14 +375,11 @@ protected:
 
     ElementContext *internalElemContext_;
 
-    LocalBlockMatrix jacobian_;
-    LocalStorageMatrix jacobianStorage_;
-
     LocalBlockVector residual_;
     LocalBlockVector residualStorage_;
 
-    LocalBlockVector derivResidual_;
-    LocalBlockVector derivStorage_;
+    LocalBlockMatrix jacobian_;
+    LocalStorageMatrix jacobianStorage_;
 
     LocalResidual localResidual_;
 };

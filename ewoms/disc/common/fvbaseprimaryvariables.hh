@@ -41,7 +41,11 @@ class FvBasePrimaryVariables
                                GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, numEq> ParentType;
 
 public:
@@ -62,6 +66,21 @@ public:
     FvBasePrimaryVariables(const FvBasePrimaryVariables &value)
         : ParentType(value)
     { }
+
+    /*!
+     * \brief Return a primary variable intensive evaluation.
+     *
+     * i.e., the result represents the function f = x_i if the time index is zero, else
+     * it represents the a constant f = x_i. (the difference is that in the first case,
+     * the derivative w.r.t. x_i is 1, while it is 0 in the second case.
+     */
+    Evaluation makeEvaluation(int varIdx, int timeIdx) const
+    {
+        if (timeIdx == 0)
+            return Toolbox::createVariable((*this)[varIdx], varIdx);
+        else
+            return Toolbox::createConstant((*this)[varIdx]);
+    }
 
     /*!
      * \brief Assign the primary variables "somehow" from a fluid state

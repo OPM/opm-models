@@ -84,9 +84,8 @@ SET_TYPE_PROP(FvBaseNewtonMethod, NewtonMethod,
               typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod));
 SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
               Ewoms::FvBaseNewtonConvergenceWriter<TypeTag>);
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup Discretization
  * \ingroup Newton

@@ -108,23 +108,22 @@ public:
     /*!
      * \brief Compute the finite volume geometry for an element.
      *
-     * \param elem The grid element for which the finite volume
-     *             geometry ought to be computed.
+     * \param elem The grid element for which the finite volume geometry ought to be
+     *             computed.
      */
     void updateStencil(const Element &elem)
     {
         // remember the current element
         elemPtr_ = &elem;
 
-        // update the stencil. the center gradients are kind of
-        // expensive to calculate and most models don't need them, so
-        // that we only do this if the model needs them
+        // update the stencil. the center gradients are kind of expensive to calculate
+        // and most models don't need them, so that we only do this if the model needs
+        // them
         stencil_.update(elem);
         if (requireScvCenterGradients)
             stencil_.updateCenterGradients();
 
-        // resize the arrays containing the flux and the volume
-        // variables
+        // resize the arrays containing the flux and the volume variables
         dofVars_.resize(stencil_.numDof());
         extensiveQuantities_.resize(stencil_.numInteriorFaces());
     }
@@ -132,8 +131,8 @@ public:
     /*!
      * \brief Update the topological part of the stencil, but nothing else.
      *
-     * \param elem The grid element for which the finite volume
-     *             geometry ought to be computed.
+     * \param elem The grid element for which the finite volume geometry ought to be
+     *             computed.
      */
     void updateStencilTopology(const Element &elem)
     {
@@ -145,8 +144,8 @@ public:
     }
 
     /*!
-     * \brief Compute the intensive quantities of all sub-control volumes
-     *        of the current element for all time indices.
+     * \brief Compute the intensive quantities of all sub-control volumes of the current
+     *        element for all time indices.
      */
     void updateAllIntensiveQuantities()
     {
@@ -156,35 +155,32 @@ public:
     }
 
     /*!
-     * \brief Compute the intensive quantities of all sub-control volumes
-     *        of the current element for a single time index.
+     * \brief Compute the intensive quantities of all sub-control volumes of the current
+     *        element for a single time index.
      *
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updateIntensiveQuantities(int timeIdx)
     { updateIntensiveQuantities_(timeIdx, numDof(/*timeIdx=*/0)); }
 
     /*!
-     * \brief Compute the intensive quantities of all sub-control volumes
-     *        of the current element for a single time index.
+     * \brief Compute the intensive quantities of all sub-control volumes of the current
+     *        element for a single time index.
      *
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updatePrimaryIntensiveQuantities(int timeIdx)
     { updateIntensiveQuantities_(timeIdx, numPrimaryDof(/*timeIdx=*/0)); }
 
     /*!
-     * \brief Compute the intensive quantities of a single sub-control
-     *        volume of the current element for a single time index.
+     * \brief Compute the intensive quantities of a single sub-control volume of the
+     *        current element for a single time index.
      *
-     * \param priVars The PrimaryVariables which should be used to
-     *                calculate the intensive quantities.
-     * \param dofIdx The local index in the current element of the
-     *               sub-control volume which should be updated.
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
+     * \param priVars The PrimaryVariables which should be used to calculate the
+     *                intensive quantities.
+     * \param dofIdx The local index in the current element of the sub-control volume
+     *               which should be updated.
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updateIntensiveQuantities(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
     {
@@ -378,12 +374,8 @@ public:
      * If the time step index is not given, return the volume
      * variables for the current time.
      *
-     * \param dofIdx The local index of the sub-control volume for
-     *               which the intensive quantities are requested
-     * \param timeIdx The index of the time step for which the
-     *                    intensive quantities are requested. 0 means
-     *                    current time step, 1 previous time step,
-     *                    2 next-to-previous, etc.
+     * \param dofIdx The local index of the degree of freedom in the current element.
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     const IntensiveQuantities &intensiveQuantities(int dofIdx, int timeIdx) const
     {
@@ -396,10 +388,8 @@ public:
      *
      * \sa Discretization::thermodynamicHint(int, int)
      *
-     * \param dofIdx The local index of the degree of freedom
-     *               in the current element.
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
+     * \param dofIdx The local index of the degree of freedom in the current element.
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     const IntensiveQuantities *thermodynamicHint(int dofIdx, int timeIdx) const
     {
@@ -476,10 +466,9 @@ public:
      * \brief Return a reference to the extensive quantities of a
      *        sub-control volume face.
      *
-     * \param fluxIdx The local index of the sub-control volume face for
-     *               which the extensive quantities are requested
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
+     * \param fluxIdx The local index of the sub-control volume face for which the
+     *               extensive quantities are requested
+     * \param timeIdx The index of the solution vector used by the time discretization.
      */
     const ExtensiveQuantities &extensiveQuantities(int fluxIdx, int timeIdx) const
     { return extensiveQuantities_[fluxIdx]; }

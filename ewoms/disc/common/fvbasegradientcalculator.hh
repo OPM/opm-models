@@ -29,6 +29,9 @@
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
+template<class TypeTag>
+class EcfvDiscretization;
+
 /*!
  * \ingroup Discretization
  *
@@ -41,6 +44,8 @@ class FvBaseGradientCalculator
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { dim = GridView::dimension };
@@ -50,7 +55,14 @@ class FvBaseGradientCalculator
     // we assume that the geometry with the most pointsq is a cube.
     enum { maxFap = 2 << dim };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
+    typedef Dune::FieldVector<Evaluation, dim> EvalDimVector;
+
+    static_assert(std::is_same<Evaluation, Scalar>::value ||
+                  std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value,
+                  "So far, automatic differentiation is only available for the "
+                  "element-centered finite volume discretization!");
 
 public:
     /*!
@@ -137,7 +149,7 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    void calculateGradient(DimVector &quantityGrad,
+    void calculateGradient(EvalDimVector &quantityGrad,
                            const ElementContext &elemCtx,
                            int fapIdx,
                            const QuantityCallback &quantityCallback) const
@@ -148,21 +160,33 @@ public:
         const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).center();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
 
-        Scalar deltay = quantityCallback(face.exteriorIndex()) - quantityCallback(face.interiorIndex());
+        // this is slightly hacky because the derivatives of the quantity for the
+        // exterior DOF are thrown away and this code thus assumes that the exterior DOF
+        // is not a primary degree of freedom. Basically this means that two-point flux
+        // approximation scheme is used. A way to fix this in a conceptionally elegant
+        // way would be to introduce the concept of extensive evaluations, but
+        // unfortunately this makes things quite a bit slower. (and also quite a bit
+        // harder to comprehend :/ )
+        Evaluation deltay =
+            Toolbox::value(quantityCallback(face.exteriorIndex()))
+            - quantityCallback(face.interiorIndex());
 
         Scalar distSquared = 0;
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            quantityGrad[dimIdx] = deltay;
+
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
-            quantityGrad[dimIdx] = tmp*deltay;
         }
 
         // divide the gradient by the squared distance between the centers of the
         // sub-control volumes: the gradient is the normalized directional vector between
         // the two centers times the ratio of the difference of the values and their
         // distance, i.e., d/abs(d) * delta y / abs(d) = d*delta y / abs(d)^2.
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            quantityGrad[dimIdx] /= distSquared;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
+            quantityGrad[dimIdx] *= tmp/distSquared;
+        }
     }
 
     /*!
@@ -194,22 +218,22 @@ public:
      * approximation.
      *
      * \param elemCtx The current execution context
-     * \param fapIdx The local index of the flux approximation point
-     *               in the current element's stencil.
+     * \param faceIdx The local index of the flux approximation point
+     *                in the current element's stencil.
      * \param quantityCallback A callable object returning the value
      *               of the quantity at an index of a degree of
      *               freedom
      */
     template <class QuantityCallback>
-    void calculateBoundaryGradient(DimVector &quantityGrad,
+    void calculateBoundaryGradient(EvalDimVector &quantityGrad,
                                    const ElementContext &elemCtx,
-                                   int fapIdx,
+                                   int faceIdx,
                                    const QuantityCallback &quantityCallback) const
     {
         const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
-        const auto &face = stencil.boundaryFace(fapIdx);
+        const auto &face = stencil.boundaryFace(faceIdx);
 
-        Scalar deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
+        auto deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
 
         const auto& boundaryFacePos = face.integrationPos();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
@@ -218,7 +242,8 @@ public:
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
-            quantityGrad[dimIdx] = tmp*deltay;
+
+            quantityGrad[dimIdx] = deltay;
         }
 
         // divide the gradient by the squared distance between the center of the
@@ -226,8 +251,10 @@ public:
         // normalized directional vector between the two centers times the ratio of the
         // difference of the values and their distance, i.e., d/abs(d) * deltay / abs(d)
         // = d*deltay / abs(d)^2.
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            quantityGrad[dimIdx] /= distSquared;
+        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
+            quantityGrad[dimIdx] *= tmp/distSquared;
+        }
     }
 
 private:

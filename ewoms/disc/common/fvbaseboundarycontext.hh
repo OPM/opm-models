@@ -111,6 +111,12 @@ public:
     { return elemCtx_.numDof(timeIdx); }
 
     /*!
+     * \copydoc Ewoms::ElementContext::numPrimaryDof()
+     */
+    int numPrimaryDof(int timeIdx) const
+    { return elemCtx_.numPrimaryDof(timeIdx); }
+
+    /*!
      * \copydoc Ewoms::ElementContext::numInteriorFaces()
      */
     int numInteriorFaces(int timeIdx) const

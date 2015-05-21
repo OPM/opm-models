@@ -28,6 +28,7 @@
 
 #include "fvbasenewtonmethod.hh"
 #include "fvbaseproperties.hh"
+#include "fvbasefdlocallinearizer.hh"
 
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/io/vtkprimaryvarsmodule.hh>
@@ -48,10 +49,28 @@ NEW_TYPE_TAG(FvBaseDiscretization,
 
 //! set the splices for the finite volume discretizations
 NEW_PROP_TAG(LinearSolverSplice);
-SET_SPLICES(FvBaseDiscretization, LinearSolverSplice);
+NEW_PROP_TAG(ParallelIterativeLinearSolver);
+
+NEW_PROP_TAG(LocalLinearizerSplice);
+NEW_PROP_TAG(FiniteDifferenceLocalLinearizer);
+
+SET_SPLICES(FvBaseDiscretization, LinearSolverSplice, LocalLinearizerSplice);
 
 //! use a parallel iterative linear solver by default
 SET_TAG_PROP(FvBaseDiscretization, LinearSolverSplice, ParallelIterativeLinearSolver);
+
+//! by default, use finite differences to linearize the system of PDEs
+SET_TAG_PROP(FvBaseDiscretization, LocalLinearizerSplice, FiniteDifferenceLocalLinearizer);
+
+/*!
+ * \brief Representation of a function evaluation and all necessary derivatives with
+ *        regard to the intensive quantities of the primary variables.
+ *
+ * Depending on the chosen linearization method, this property may be the same as the
+ * "Scalar" property (if the finite difference linearizer is used), or it may be more
+ * complex (for the linearizer which uses automatic differentiation).
+ */
+NEW_PROP_TAG(Evaluation);
 
 //! The type of the DUNE grid
 NEW_PROP_TAG(Grid);
@@ -76,9 +95,7 @@ NEW_PROP_TAG(Discretization);
 NEW_PROP_TAG(DiscLocalResidual);
 //! The type of the local residual function
 NEW_PROP_TAG(LocalResidual);
-//! The discretization specific part of the local jacobian of the residual
-NEW_PROP_TAG(DiscLocalLinearizer);
-//! The type of the local jacobian operator
+//! The type of the local linearizer
 NEW_PROP_TAG(LocalLinearizer);
 //! Specify if elements that do not belong to the local process' grid partition should be
 //! skipped
@@ -200,15 +217,6 @@ NEW_PROP_TAG(MinTimeStepSize);
 NEW_PROP_TAG(MaxTimeStepDivisions);
 
 /*!
- * \brief Specify which kind of method should be used to numerically
- * calculate the partial derivatives of the residual.
- *
- * -1 means backward differences, 0 means central differences, 1 means
- * forward differences. By default we use central differences.
- */
-NEW_PROP_TAG(NumericDifferenceMethod);
-
-/*!
  * \brief Specify whether all intensive quantities for the grid should be
  *        cached in the discretization.
  *
@@ -229,10 +237,7 @@ NEW_PROP_TAG(EnableIntensiveQuantityCache);
  */
 NEW_PROP_TAG(EnableThermodynamicHints);
 
-//! The base epsilon value for finite difference calculations
-NEW_PROP_TAG(BaseEpsilon);
-
-// mappers from local to global indices
+// mappers from local to global DOF indices
 
 /*!
  * \brief The mapper to find the global index of a vertex.
@@ -270,7 +275,7 @@ NEW_PROP_TAG(TimeDiscHistorySize);
  */
 NEW_PROP_TAG(RequireScvCenterGradients);
 
-}} // namespace Properties, Opm
+}} // namespace Properties, Ewoms
 
 // \}
 
