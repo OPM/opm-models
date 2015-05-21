@@ -25,6 +25,8 @@
 #ifndef EWOMS_NCP_MODEL_HH
 #define EWOMS_NCP_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "ncpproperties.hh"
 #include "ncplocalresidual.hh"
 #include "ncpextensivequantities.hh"
@@ -41,8 +43,6 @@
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
-
-#include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
 
 #include <opm/material/common/ErrorMacros.hpp>
 #include <opm/material/common/Exceptions.hpp>
@@ -69,20 +69,6 @@ NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel,
                                      VtkComposition,
                                      VtkEnergy,
                                      VtkDiffusion));
-
-/*!
- * \brief Set the themodynamic constraint solver which calculates the
- *        composition of any phase given all component fugacities.
- */
-SET_PROP(NcpModel, NcpCompositionFromFugacitiesSolver)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-public:
-    typedef Opm::CompositionFromFugacities<Scalar, FluidSystem> type;
-};
 
 //! Use the Ncp local jacobian operator for the compositional NCP model
 SET_TYPE_PROP(NcpModel,
@@ -132,9 +118,7 @@ SET_SCALAR_PROP(NcpModel, NcpSaturationsBaseWeight, 1.0);
 //! The unmodified weight for the fugacity primary variables
 SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0);
 
-}} // namespace Properties, Opm
-
-namespace Ewoms {
+} // namespace Properties
 
 /*!
  * \ingroup NcpModel
@@ -216,11 +200,11 @@ class NcpModel
     typedef MultiPhaseBaseModel<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-
 
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
@@ -233,6 +217,8 @@ class NcpModel
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
@@ -355,8 +341,8 @@ public:
 
                     minActivityCoeff_[globalIdx][compIdx] =
                         std::min(minActivityCoeff_[globalIdx][compIdx],
-                                 fs.fugacityCoefficient(phaseIdx, compIdx)
-                                 * fs.pressure(phaseIdx));
+                                 Toolbox::value(fs.fugacityCoefficient(phaseIdx, compIdx))
+                                 * Toolbox::value(fs.pressure(phaseIdx)));
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 }
                 if (minActivityCoeff_[globalIdx][compIdx] <= 0)

@@ -42,12 +42,14 @@ class NcpLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { ncp0EqIdx = Indices::ncp0EqIdx };
@@ -59,13 +61,16 @@ class NcpLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
-    typedef Dune::BlockVector<EqVector> LocalBlockVector;
+    typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
+    typedef Dune::BlockVector<EvalEqVector> ElemEvalEqVector;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
-    void addPhaseStorage(EqVector &storage,
+    template <class LhsEval>
+    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                          const ElementContext &elemCtx,
                          int dofIdx,
                          int timeIdx,
@@ -78,9 +83,9 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             int eqIdx = conti0EqIdx + compIdx;
             storage[eqIdx] +=
-                fluidState.molarity(phaseIdx, compIdx)
-                * fluidState.saturation(phaseIdx)
-                * intQuants.porosity();
+                Toolbox::template toLhs<LhsEval>(fluidState.molarity(phaseIdx, compIdx))
+                * Toolbox::template toLhs<LhsEval>(fluidState.saturation(phaseIdx))
+                * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
         }
 
         EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
@@ -89,7 +94,8 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
+    template <class LhsEval>
+    void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                         const ElementContext &elemCtx,
                         int dofIdx,
                         int timeIdx) const
@@ -107,7 +113,7 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
     {
-        flux = 0.0;
+        flux = Toolbox::createConstant(0.0);
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 
@@ -122,22 +128,36 @@ public:
                           int scvfIdx, int timeIdx) const
     {
         const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
-        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
-        ////////
-        // advective fluxes of all components in all phases
-        ////////
+        int interiorIdx = extQuants.interiorIndex();
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // data attached to upstream and the finite volume of the current phase
-            const IntensiveQuantities &up =
-                elemCtx.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
+            // data attached to upstream and the downstream DOFs
+            // of the current phase
+            int upIdx = extQuants.upstreamIndex(phaseIdx);
+            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                int eqIdx = conti0EqIdx + compIdx;
-                flux[eqIdx] +=
-                    extQuants.volumeFlux(phaseIdx) * up.fluidState().molarity(phaseIdx, compIdx);
+            // this is a bit hacky because it is specific to the element-centered
+            // finite volume scheme. (N.B. that if finite differences are used to
+            // linearize the system of equations, it does not matter.)
+            if (upIdx == interiorIdx) {
+                Evaluation tmp =
+                    up.fluidState().molarDensity(phaseIdx)
+                    * extQuants.volumeFlux(phaseIdx);
 
-                Valgrind::CheckDefined(flux[eqIdx]);
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    flux[conti0EqIdx + compIdx] +=
+                        tmp*up.fluidState().moleFraction(phaseIdx, compIdx);
+                }
+            }
+            else {
+                Evaluation tmp =
+                    Toolbox::value(up.fluidState().molarDensity(phaseIdx))
+                    * extQuants.volumeFlux(phaseIdx);
+
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    flux[conti0EqIdx + compIdx] +=
+                        tmp*Toolbox::value(up.fluidState().moleFraction(phaseIdx, compIdx));
+                }
             }
         }
 
@@ -174,9 +194,9 @@ public:
     /*!
      * \brief Set the values of the constraint volumes of the current element.
      */
-    void evalConstraints_(LocalBlockVector &residual,
-                          LocalBlockVector &storageTerm,
-                          const ElementContext &elemCtx, int timeIdx) const
+    void evalConstraints_(ElemEvalEqVector& residual,
+                          ElemEvalEqVector& storageTerm,
+                          const ElementContext& elemCtx, int timeIdx) const
     {
         // set the auxiliary functions
         for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
@@ -193,19 +213,16 @@ public:
     /*!
      * \brief Returns the value of the NCP-function for a phase.
      */
-    Scalar phaseNcp_(const ElementContext &elemCtx,
-                     int dofIdx,
-                     int timeIdx,
-                     int phaseIdx) const
+    Evaluation phaseNcp_(const ElementContext &elemCtx,
+                         int dofIdx,
+                         int timeIdx,
+                         int phaseIdx) const
     {
-        const auto &fluidStateEval = elemCtx.evalPointIntensiveQuantities(dofIdx, timeIdx).fluidState();
         const auto &fluidState = elemCtx.intensiveQuantities(dofIdx, timeIdx).fluidState();
 
-        Scalar aEval = phaseNotPresentIneq_(fluidStateEval, phaseIdx);
-        Scalar bEval = phasePresentIneq_(fluidStateEval, phaseIdx);
-        if (aEval > bEval)
-            return phasePresentIneq_(fluidState, phaseIdx);
-        return phaseNotPresentIneq_(fluidState, phaseIdx);
+        const Evaluation& a = phaseNotPresentIneq_(fluidState, phaseIdx);
+        const Evaluation& b = phasePresentIneq_(fluidState, phaseIdx);
+        return Toolbox::min(a, b);
     }
 
     /*!
@@ -213,7 +230,7 @@ public:
      *        present.
      */
     template <class FluidState>
-    Scalar phasePresentIneq_(const FluidState &fluidState, int phaseIdx) const
+    Evaluation phasePresentIneq_(const FluidState &fluidState, int phaseIdx) const
     { return fluidState.saturation(phaseIdx); }
 
     /*!
@@ -221,10 +238,10 @@ public:
      *        present.
      */
     template <class FluidState>
-    Scalar phaseNotPresentIneq_(const FluidState &fluidState, int phaseIdx) const
+    Evaluation phaseNotPresentIneq_(const FluidState &fluidState, int phaseIdx) const
     {
         // difference of sum of mole fractions in the phase from 100%
-        Scalar a = 1;
+        Evaluation a = 1;
         for (int i = 0; i < numComponents; ++i)
             a -= fluidState.moleFraction(phaseIdx, i);
         return a;

@@ -28,8 +28,10 @@
 
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
+
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -52,13 +54,13 @@ class NcpIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, NcpCompositionFromFugacitiesSolver)
-        CompositionFromFugacitiesSolver;
+
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
@@ -71,9 +73,11 @@ class NcpIntensiveQuantities
     enum { pressure0Idx = Indices::pressure0Idx };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem,
+    typedef Opm::CompositionFromFugacities<Scalar, FluidSystem, Evaluation>
+        CompositionFromFugacitiesSolver;
+    typedef Opm::CompositionalFluidState<Evaluation, FluidSystem,
                                          /*storeEnthalpy=*/enableEnergy> FluidState;
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
@@ -99,11 +103,11 @@ public:
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         // set the phase saturations
-        Scalar sumSat = 0;
+        Evaluation sumSat = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
-            sumSat += priVars[saturation0Idx + phaseIdx];
-            fluidState_.setSaturation(phaseIdx,
-                                      priVars[saturation0Idx + phaseIdx]);
+            const Evaluation& val = priVars.makeEvaluation(saturation0Idx + phaseIdx, timeIdx);
+            fluidState_.setSaturation(phaseIdx, val);
+            sumSat += val;
         }
         fluidState_.setSaturation(numPhases - 1, 1.0 - sumSat);
         Valgrind::CheckDefined(sumSat);
@@ -116,18 +120,17 @@ public:
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         // calculate capillary pressures
-        Scalar capPress[numPhases];
+        Evaluation capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
         // add to the pressure of the first fluid phase
-        Scalar pressure0 = priVars[pressure0Idx];
+        const Evaluation& pressure0 = priVars.makeEvaluation(pressure0Idx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx]
-                                                           - capPress[0]));
+            fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx] - capPress[0]));
 
         ComponentVector fug;
         // retrieve component fugacities
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            fug[compIdx] = priVars[fugacity0Idx + compIdx];
+            fug[compIdx] = priVars.makeEvaluation(fugacity0Idx + compIdx, timeIdx);
 
         // calculate phase compositions
         const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
@@ -136,7 +139,7 @@ public:
             if (hint) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     // use the hint for the initial mole fraction!
-                    Scalar moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
+                    const Evaluation& moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
 
                     // set initial guess of the component's mole fraction
                     fluidState_.setMoleFraction(phaseIdx, compIdx, moleFracIJ);
@@ -164,8 +167,10 @@ public:
         // dynamic viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // viscosities
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
+
+            mobility_[phaseIdx] = relativePermeability_[phaseIdx]/mu;
         }
 
         // intrinsic permeability
@@ -198,19 +203,19 @@ public:
     /*!
      * \brief ImmiscibleIntensiveQuantities::relativePermeability
      */
-    Scalar relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \brief ImmiscibleIntensiveQuantities::mobility
      */
-    Scalar mobility(int phaseIdx) const
-    { return relativePermeability(phaseIdx) / fluidState_.viscosity(phaseIdx); }
+    const Evaluation& mobility(int phaseIdx) const
+    { return mobility_[phaseIdx]; }
 
     /*!
      * \brief ImmiscibleIntensiveQuantities::porosity
      */
-    Scalar porosity() const
+    const Evaluation& porosity() const
     { return porosity_; }
 
     /*!
@@ -229,10 +234,11 @@ public:
     }
 
 private:
-    FluidState fluidState_;
-    Scalar porosity_;
     DimMatrix intrinsicPerm_;
-    Scalar relativePermeability_[numPhases];
+    FluidState fluidState_;
+    Evaluation porosity_;
+    Evaluation relativePermeability_[numPhases];
+    Evaluation mobility_[numPhases];
 };
 
 } // namespace Ewoms

@@ -42,12 +42,13 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class NcpRateVector
-    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
+    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Evaluation),
                                GET_PROP_VALUE(TypeTag, NumEq)>
 {
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+    typedef Dune::FieldVector<Evaluation, numEq> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -57,6 +58,8 @@ class NcpRateVector
 
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+
 public:
     NcpRateVector() : ParentType()
     { Valgrind::SetUndefined(*this); }
@@ -64,14 +67,16 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    NcpRateVector(Scalar value) : ParentType(value)
+    NcpRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
      * ImmiscibleRateVector &)
      */
-    NcpRateVector(const NcpRateVector &value) : ParentType(value)
+    NcpRateVector(const NcpRateVector &value)
+        : ParentType(value)
     {}
 
     /*!
@@ -97,15 +102,15 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::setEnthalpyRate
      */
-    void setEnthalpyRate(Scalar rate)
+    template <class RhsEval>
+    void setEnthalpyRate(const RhsEval& rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
-    template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
-                           Scalar volume)
+    template <class FluidState, class RhsEval>
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
     {
         *this = 0.0;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
@@ -113,6 +118,27 @@ public:
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
         Valgrind::CheckDefined(*this);
+    }
+
+    /*!
+     * \brief Assignment operator from a scalar or a function evaluation
+     */
+    template <class RhsEval>
+    NcpRateVector& operator=(const RhsEval& value)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = value;
+        return *this;
+    }
+
+    /*!
+     * \brief Assignment operator from another rate vector
+     */
+    NcpRateVector& operator=(const NcpRateVector& other)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = other[i];
+        return *this;
     }
 };
 
