@@ -44,10 +44,11 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class PvsRateVector
-    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
+    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Evaluation),
                                GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -56,7 +57,7 @@ class PvsRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef Dune::FieldVector<Evaluation, numEq> ParentType;
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
@@ -66,12 +67,12 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    PvsRateVector(Scalar value) : ParentType(value)
+    PvsRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
-     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
-     * ImmiscibleRateVector&)
+     * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const ImmiscibleRateVector&)
      */
     PvsRateVector(const PvsRateVector &value) : ParentType(value)
     {}
@@ -82,11 +83,10 @@ public:
     void setMassRate(const ParentType &value)
     {
         // convert to molar rates
-        ParentType molarRate(value);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
-
-        setMolarRate(molarRate);
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            (*this)[compIdx] = value[compIdx];
+            (*this)[compIdx] /= FluidSystem::molarMass(compIdx);
+        }
     }
 
     /*!
@@ -98,15 +98,15 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::setEnthalpyRate
      */
-    void setEnthalpyRate(Scalar rate)
+    template <class RhsEval>
+    void setEnthalpyRate(const RhsEval& rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
-    template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
-                           Scalar volume)
+    template <class FluidState, class RhsEval>
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] =
@@ -115,6 +115,27 @@ public:
                 * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
+    }
+
+    /*!
+     * \brief Assignment operator from a scalar or a function evaluation
+     */
+    template <class RhsEval>
+    PvsRateVector& operator=(const RhsEval& value)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = value;
+        return *this;
+    }
+
+    /*!
+     * \brief Assignment operator from another rate vector
+     */
+    PvsRateVector& operator=(const PvsRateVector& other)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = other[i];
+        return *this;
     }
 };
 

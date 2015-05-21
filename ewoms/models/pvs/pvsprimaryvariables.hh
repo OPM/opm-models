@@ -56,6 +56,7 @@ class PvsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -68,8 +69,9 @@ class PvsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
+    typedef typename Opm::MathToolbox<Evaluation> Toolbox;
+    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
@@ -248,13 +250,16 @@ public:
      *
      * \copydoc Doxygen::phaseIdxParam
      */
-    Scalar explicitSaturationValue(int phaseIdx) const
+    Evaluation explicitSaturationValue(int phaseIdx, int timeIdx) const
     {
         if (!phaseIsPresent(phaseIdx) || phaseIdx == lowestPresentPhaseIdx())
             // non-present phases have saturation 0
-            return 0.0;
+            return Toolbox::createConstant(0.0);
 
-        return (*this)[switch0Idx + phaseIdx - 1];
+        int varIdx = switch0Idx + phaseIdx - 1;
+        if (timeIdx != 0)
+            Toolbox::createConstant((*this)[varIdx]);
+        return Toolbox::createVariable((*this)[varIdx], varIdx);
     }
 
     /*!
@@ -263,12 +268,14 @@ public:
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {
+        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
+
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
         // set the pressure of the first phase
-        (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
+        (*this)[pressure0Idx] = FsToolbox::value(fluidState.pressure(/*phaseIdx=*/0));
         Valgrind::CheckDefined((*this)[pressure0Idx]);
 
         // determine the phase presence.
@@ -278,9 +285,9 @@ public:
             // present or not
             Scalar a = 1;
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                a -= fluidState.moleFraction(phaseIdx, compIdx);
+                a -= FsToolbox::value(fluidState.moleFraction(phaseIdx, compIdx));
             }
-            Scalar b = fluidState.saturation(phaseIdx);
+            Scalar b = FsToolbox::value(fluidState.saturation(phaseIdx));
 
             if (b > a)
                 phasePresence_ |= (1 << phaseIdx);
@@ -301,11 +308,12 @@ public:
                 ++phaseIdx;
 
             if (phaseIsPresent(phaseIdx)) {
-                (*this)[switch0Idx + switchIdx] = fluidState.saturation(phaseIdx);
+                (*this)[switch0Idx + switchIdx] = FsToolbox::value(fluidState.saturation(phaseIdx));
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
             else {
-                (*this)[switch0Idx + switchIdx] = fluidState.moleFraction(lowestPhaseIdx, compIdx);
+                (*this)[switch0Idx + switchIdx] =
+                    FsToolbox::value(fluidState.moleFraction(lowestPhaseIdx, compIdx));
                 Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
         }
@@ -314,7 +322,8 @@ public:
         // the phase with the lowest index
         for (int compIdx = numPhases - 1; compIdx < numComponents - 1;
              ++compIdx) {
-            (*this)[switch0Idx + compIdx] = fluidState.moleFraction(lowestPhaseIdx, compIdx + 1);
+            (*this)[switch0Idx + compIdx] =
+                FsToolbox::value(fluidState.moleFraction(lowestPhaseIdx, compIdx + 1));
             Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);
         }
     }

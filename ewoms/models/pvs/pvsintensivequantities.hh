@@ -57,6 +57,7 @@ class PvsIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -73,12 +74,12 @@ class PvsIntensiveQuantities
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { dimWorld = GridView::dimensionworld };
 
-    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem>
-    MiscibleMultiPhaseComposition;
-    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem>
-    ComputeFromReferencePhase;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+    typedef Opm::MiscibleMultiPhaseComposition<Scalar, FluidSystem, Evaluation> MiscibleMultiPhaseComposition;
+    typedef Opm::ComputeFromReferencePhase<Scalar, FluidSystem, Evaluation> ComputeFromReferencePhase;
 
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef Dune::FieldVector<Evaluation, numPhases> EvalPhaseVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
@@ -87,18 +88,14 @@ class PvsIntensiveQuantities
 
 public:
     //! The type of the object returned by the fluidState() method
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FluidState;
+    typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           dofIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx);
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
@@ -107,10 +104,9 @@ public:
         /////////////
         // set the saturations
         /////////////
-        Scalar sumSat = 0;
+        Evaluation sumSat = Toolbox::createConstant(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            fluidState_.setSaturation(phaseIdx,
-                                      priVars.explicitSaturationValue(phaseIdx));
+            fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx, timeIdx));
             Valgrind::CheckDefined(fluidState_.saturation(phaseIdx));
             sumSat += fluidState_.saturation(phaseIdx);
         }
@@ -125,13 +121,13 @@ public:
         // calculate capillary pressure
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
-        PhaseVector pC;
+        EvalPhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
         // set the absolute phase pressures in the fluid state
+        const Evaluation& p0 = priVars.makeEvaluation(pressure0Idx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState_.setPressure(phaseIdx, priVars[pressure0Idx]
-                                              + (pC[phaseIdx] - pC[0]));
+            fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
 
         /////////////
         // calculate the phase compositions
@@ -149,9 +145,9 @@ public:
         if (numNonPresentPhases == numPhases - 1) {
             // only one phase is present, i.e. the primary variables
             // contain the complete composition of the phase
-            Scalar sumx = 0;
+            Evaluation sumx = Toolbox::createConstant(0.0);
             for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
-                Scalar x = priVars[switch0Idx + compIdx - 1];
+                const Evaluation& x = priVars.makeEvaluation(switch0Idx + compIdx - 1, timeIdx);
                 fluidState_.setMoleFraction(lowestPresentPhaseIdx, compIdx, x);
                 sumx += x;
             }
@@ -169,9 +165,8 @@ public:
         }
         else {
             // create the auxiliary constraints
-            int numAuxConstraints = numComponents + numNonPresentPhases
-                                    - numPhases;
-            Opm::MMPCAuxConstraint<Scalar> auxConstraints[numComponents];
+            int numAuxConstraints = numComponents + numNonPresentPhases - numPhases;
+            Opm::MMPCAuxConstraint<Evaluation> auxConstraints[numComponents];
 
             int auxIdx = 0;
             int switchIdx = 0;
@@ -182,9 +177,8 @@ public:
                     switchPhaseIdx += 1;
 
                 if (!priVars.phaseIsPresent(switchPhaseIdx)) {
-                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx,
-                                               compIdx,
-                                               priVars[switch0Idx + switchIdx]);
+                    auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx,
+                                               priVars.makeEvaluation(switch0Idx + switchIdx, timeIdx));
                     ++auxIdx;
                 }
             }
@@ -192,13 +186,12 @@ public:
             for (; auxIdx < numAuxConstraints; ++auxIdx, ++switchIdx) {
                 int compIdx = numPhases - numNonPresentPhases + auxIdx;
                 auxConstraints[auxIdx].set(lowestPresentPhaseIdx, compIdx,
-                                           priVars[switch0Idx + switchIdx]);
+                                           priVars.makeEvaluation(switch0Idx + switchIdx, timeIdx));
             }
 
-            // both phases are present, i.e. phase compositions are a
-            // result of the the gas <-> liquid equilibrium. This is
-            // the job of the "MiscibleMultiPhaseComposition"
-            // constraint solver
+            // both phases are present, i.e. phase compositions are a result of the the
+            // gas <-> liquid equilibrium. This is the job of the
+            // "MiscibleMultiPhaseComposition" constraint solver
             MiscibleMultiPhaseComposition::solve(fluidState_, paramCache,
                                                  priVars.phasePresence(),
                                                  auxConstraints,
@@ -224,6 +217,11 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_,
                                             materialParams, fluidState_);
         Valgrind::CheckDefined(relativePermeability_);
+
+        // mobilities
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            mobility_[phaseIdx] =
+                relativePermeability_[phaseIdx] / fluidState().viscosity(phaseIdx);
 
         // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
@@ -259,28 +257,27 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    Scalar relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    Scalar mobility(int phaseIdx) const
-    {
-        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
-    }
+    const Evaluation& mobility(int phaseIdx) const
+    { return mobility_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
-    Scalar porosity() const
+    const Evaluation& porosity() const
     { return porosity_; }
 
 private:
     FluidState fluidState_;
-    Scalar porosity_;
+    Evaluation porosity_;
     DimMatrix intrinsicPerm_;
-    Scalar relativePermeability_[numPhases];
+    Evaluation relativePermeability_[numPhases];
+    Evaluation mobility_[numPhases];
 };
 
 } // namespace Ewoms

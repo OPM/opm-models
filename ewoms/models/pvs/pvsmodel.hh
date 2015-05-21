@@ -24,6 +24,8 @@
 #ifndef EWOMS_PVS_MODEL_HH
 #define EWOMS_PVS_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "pvsproperties.hh"
 #include "pvslocalresidual.hh"
 #include "pvsnewtonmethod.hh"
@@ -108,9 +110,7 @@ SET_SCALAR_PROP(PvsModel, PvsSaturationsBaseWeight, 1.0);
 
 //! The basis value for the weight of the mole fraction primary variables
 SET_SCALAR_PROP(PvsModel, PvsMoleFractionsBaseWeight, 1.0);
-}} // namespace Properties, Opm
-
-namespace Ewoms {
+} // namespace Properties
 
 /*!
  * \ingroup PvsModel
@@ -525,6 +525,8 @@ public:
                               int oldPhasePresence,
                               const PrimaryVariables &newPv) const
     {
+        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
+
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             bool oldPhasePresent = (oldPhasePresence & (1 << phaseIdx)) > 0;
             bool newPhasePresent = newPv.phaseIsPresent(phaseIdx);
@@ -541,7 +543,7 @@ public:
             else {
                 Scalar sumx = 0;
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                    sumx += fs.moleFraction(phaseIdx, compIdx);
+                    sumx += FsToolbox::value(fs.moleFraction(phaseIdx, compIdx));
 
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
                           << "' phase appears at position " << pos
