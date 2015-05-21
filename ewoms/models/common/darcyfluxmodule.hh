@@ -37,9 +37,8 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(MaterialLaw);
-}}
+}
 
-namespace Ewoms {
 template <class TypeTag>
 class DarcyIntensiveQuantities;
 

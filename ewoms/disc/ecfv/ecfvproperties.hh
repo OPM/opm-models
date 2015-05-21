@@ -41,7 +41,6 @@ namespace Properties {
 NEW_TYPE_TAG(EcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
 
 // \}
-}} // namespace Properties, Opm
-
+}} // namespace Properties, Ewoms
 
 #endif

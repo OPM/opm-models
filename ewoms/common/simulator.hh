@@ -47,9 +47,8 @@ NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
-}}
+}
 
-namespace Ewoms {
 /*!
  * \ingroup Simulator
  *

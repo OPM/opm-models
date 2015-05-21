@@ -24,6 +24,8 @@
 #ifndef EWOMS_VCFV_DISCRETIZATION_HH
 #define EWOMS_VCFV_DISCRETIZATION_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "vcfvproperties.hh"
 #include "vcfvstencil.hh"
 #include "vcfvgradientcalculator.hh"
@@ -36,9 +38,7 @@
 namespace Ewoms {
 template <class TypeTag>
 class VcfvDiscretization;
-}
 
-namespace Ewoms {
 namespace Properties {
 //! Set the stencil
 SET_PROP(VcfvDiscretization, Stencil)
@@ -88,9 +88,8 @@ public:
 //! of the local process' grid partition
 SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
 
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup Discretization
  *

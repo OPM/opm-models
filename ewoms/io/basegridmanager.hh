@@ -40,9 +40,7 @@ NEW_PROP_TAG(GridViewLevel);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Simulator);
-}} // namespace Ewoms, Properties
-
-namespace Ewoms {
+} // namespace Properties
 
 /*!
  * \cond 0

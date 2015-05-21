@@ -56,9 +56,8 @@ namespace Ewoms {
 namespace Linear {
 template <class TypeTag>
 class ParallelAmgBackend;
-}}
+}
 
-namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ParallelAmgLinearSolver, INHERITS_FROM(ParallelIterativeLinearSolver));
 
@@ -71,9 +70,7 @@ SET_INT_PROP(ParallelAmgLinearSolver, AmgCoarsenTarget, 5000);
 SET_TYPE_PROP(ParallelAmgLinearSolver, LinearSolverBackend,
               Ewoms::Linear::ParallelAmgBackend<TypeTag>);
 } // namespace Properties
-} // namespace Ewoms
 
-namespace Ewoms {
 namespace Linear {
 /*!
  * \ingroup Linear

@@ -24,6 +24,8 @@
 #ifndef EWOMS_DISCRETE_FRACTURE_MODEL_HH
 #define EWOMS_DISCRETE_FRACTURE_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "discretefractureproperties.hh"
 #include "discretefractureprimaryvariables.hh"
 #include "discretefractureintensivequantities.hh"
@@ -81,9 +83,8 @@ SET_BOOL_PROP(DiscreteFractureModel, UseTwoPointGradients, true);
 // of freedom. This is because the fracture properties (volume, permeability, etc) are
 // specific for each...
 SET_BOOL_PROP(DiscreteFractureModel, EnableIntensiveQuantityCache, false);
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup DiscreteFractureModel
  * \brief A fully-implicit multi-phase flow model which assumes

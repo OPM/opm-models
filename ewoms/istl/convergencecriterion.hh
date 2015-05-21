@@ -23,6 +23,8 @@
 #ifndef EWOMS_ISTL_CONVERGENCE_CRITERION_HH
 #define EWOMS_ISTL_CONVERGENCE_CRITERION_HH
 
+#include <dune/common/version.hh>
+
 #include <cmath>
 #include <iostream>
 #include <iomanip>

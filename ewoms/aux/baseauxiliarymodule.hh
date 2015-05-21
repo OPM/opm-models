@@ -41,9 +41,8 @@ NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(DofMapper);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(JacobianMatrix);
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup AuxiliaryEquations
  *

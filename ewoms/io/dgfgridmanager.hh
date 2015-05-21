@@ -42,9 +42,8 @@ NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Simulator);
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \brief Provides a grid manager which reads Dune Grid Format (DGF) files
  */

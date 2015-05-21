@@ -37,9 +37,7 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(ThreadsPerProcess);
-}}
-
-namespace Ewoms {
+}
 
 /*!
  * \brief Simplifies multi-threaded capabilities.

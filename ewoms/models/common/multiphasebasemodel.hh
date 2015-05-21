@@ -24,6 +24,7 @@
 #ifndef EWOMS_MULTI_PHASE_BASE_MODEL_HH
 #define EWOMS_MULTI_PHASE_BASE_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
 #include <ewoms/parallel/mpihelper.hh>
 #include "multiphasebaseproperties.hh"
 #include "multiphasebaseproblem.hh"
@@ -105,9 +106,8 @@ SET_TYPE_PROP(MultiPhaseBaseModel,
 //! disable gravity by default
 SET_BOOL_PROP(MultiPhaseBaseModel, EnableGravity, false);
 
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup MultiPhaseBaseModel
  * \brief A base class for fully-implicit multi-phase porous-media flow models

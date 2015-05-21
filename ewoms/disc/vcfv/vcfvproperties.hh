@@ -45,7 +45,6 @@ NEW_TYPE_TAG(VcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
 NEW_PROP_TAG(UseTwoPointGradients);
 
 // \}
-}} // namespace Properties, Opm
-
+}} // namespace Properties, Ewoms
 
 #endif

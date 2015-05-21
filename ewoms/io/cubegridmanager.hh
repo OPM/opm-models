@@ -49,9 +49,8 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \brief Provides a grid manager which a regular grid made of
  *        quadrilaterals.
