@@ -24,6 +24,7 @@
 #ifndef EWOMS_IMMISCIBLE_MODEL_HH
 #define EWOMS_IMMISCIBLE_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
 #include <ewoms/parallel/mpihelper.hh>
 #include "immiscibleproperties.hh"
 #include "immiscibleindices.hh"
@@ -151,9 +152,8 @@ public:
                                               NonwettingPhase> type;
 };
 
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
  * \brief A fully-implicit multi-phase flow model which assumes

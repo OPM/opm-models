@@ -42,20 +42,20 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class ImmiscibleRateVector
-    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
+    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Evaluation),
                                GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
-
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef Dune::FieldVector<Evaluation, numEq> ParentType;
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
@@ -70,7 +70,8 @@ public:
      *
      * \param value The scalar value to which all entries of the vector will be set.
      */
-    ImmiscibleRateVector(Scalar value) : ParentType(value)
+    ImmiscibleRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
@@ -78,7 +79,8 @@ public:
      *
      * \param value The rate vector that will be duplicated.
      */
-    ImmiscibleRateVector(const ImmiscibleRateVector &value) : ParentType(value)
+    ImmiscibleRateVector(const ImmiscibleRateVector& value)
+        : ParentType(value)
     {}
 
     /*!
@@ -105,12 +107,9 @@ public:
     void setMolarRate(const ParentType &value)
     {
         // convert to mass rates
-        ParentType massRate(value);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            massRate[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx);
-
-        // set the mass rate
-        setMassRate(massRate);
+            ParentType::operator[](conti0EqIdx + compIdx) =
+                value[conti0EqIdx + compIdx]*FluidSystem::molarMass(compIdx);
     }
 
     /*!
@@ -120,7 +119,8 @@ public:
      *
      * \param rate The enthalpy rate in \f$[J/(m^2\,s)]\f$
      */
-    void setEnthalpyRate(Scalar rate)
+    template <class RhsEval>
+    void setEnthalpyRate(const RhsEval& rate)
     { EnergyModule::setEnthalpyRate(*this, rate); }
 
     /*!
@@ -138,9 +138,8 @@ public:
      * \param volume The volumetric rate of the fluid phase in
      *               \f$[m^3/(m^2\,s)]\f$ (unit for areal fluxes)
      */
-    template <class FluidState>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx,
-                           Scalar volume)
+    template <class FluidState, class RhsEval>
+    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] =
@@ -149,6 +148,27 @@ public:
                 * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
+    }
+
+    /*!
+     * \brief Assignment operator from a scalar or a function evaluation
+     */
+    template <class RhsEval>
+    ImmiscibleRateVector& operator=(const RhsEval& value)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = value;
+        return *this;
+    }
+
+    /*!
+     * \brief Assignment operator from another rate vector
+     */
+    ImmiscibleRateVector& operator=(const ImmiscibleRateVector& other)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = other[i];
+        return *this;
     }
 };
 

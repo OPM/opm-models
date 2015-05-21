@@ -48,12 +48,13 @@ class ImmiscibleIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -62,26 +63,23 @@ class ImmiscibleIntensiveQuantities
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { dimWorld = GridView::dimensionworld };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
+    typedef Dune::FieldVector<Evaluation, numPhases> EvalPhaseVector;
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
-    typedef Opm::ImmiscibleFluidState<Scalar, FluidSystem,
+    typedef Opm::ImmiscibleFluidState<Evaluation, FluidSystem,
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           dofIdx,
-                           timeIdx);
-
+        ParentType::update(elemCtx, dofIdx, timeIdx);
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // material law parameters
@@ -92,19 +90,23 @@ public:
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         Valgrind::CheckDefined(priVars);
 
-        Scalar sumSat = 0;
+        Evaluation sumSat = Toolbox::createConstant(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
-            fluidState_.setSaturation(phaseIdx,
-                                      priVars[saturation0Idx + phaseIdx]);
-            sumSat += priVars[saturation0Idx + phaseIdx];
+            const Evaluation& Salpha = priVars.makeEvaluation(saturation0Idx + phaseIdx, timeIdx);
+            fluidState_.setSaturation(phaseIdx, Salpha);
+            sumSat += Salpha;
         }
         fluidState_.setSaturation(numPhases - 1, 1 - sumSat);
 
-        PhaseVector pC;
+        EvalPhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
         Valgrind::CheckDefined(pC);
 
-        Scalar p0 = priVars[pressure0Idx];
+        // calculate relative permeabilities
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
+
+        const Evaluation& p0 = priVars.makeEvaluation(pressure0Idx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
 
@@ -114,18 +116,15 @@ public:
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
 
             // compute and set the density
-            Scalar rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
+            const Evaluation& rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
             fluidState_.setDensity(phaseIdx, rho);
-        }
 
-        // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_,
-                                            materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
+            mobility_[phaseIdx] = relativePermeability_[phaseIdx]/mu;
+        }
 
         // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
@@ -143,7 +142,7 @@ public:
     /*!
      * \brief Returns the phase state for the control-volume.
      */
-    const FluidState &fluidState() const
+    const FluidState& fluidState() const
     { return fluidState_; }
 
     /*!
@@ -158,7 +157,7 @@ public:
      *
      * \copydetails Doxygen::phaseIdxParam
      */
-    Scalar relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
@@ -167,22 +166,21 @@ public:
      *
      * \copydetails Doxygen::phaseIdxParam
      */
-    Scalar mobility(int phaseIdx) const
-    {
-        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
-    }
+    const Evaluation& mobility(int phaseIdx) const
+    { return mobility_[phaseIdx]; }
 
     /*!
      * \brief Returns the average porosity within the control volume.
      */
-    Scalar porosity() const
+    const Evaluation& porosity() const
     { return porosity_; }
 
 protected:
     FluidState fluidState_;
-    Scalar porosity_;
+    Evaluation porosity_;
     DimMatrix intrinsicPerm_;
-    Scalar relativePermeability_[numPhases];
+    Evaluation relativePermeability_[numPhases];
+    Evaluation mobility_[numPhases];
 };
 
 } // namespace Ewoms

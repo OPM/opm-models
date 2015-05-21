@@ -40,6 +40,7 @@ class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) Implementation;
 
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -48,10 +49,12 @@ class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
 
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
@@ -62,7 +65,8 @@ public:
      * \copydetails Doxygen::dofCtxParams
      * \copydetails Doxygen::phaseIdxParam
      */
-    void addPhaseStorage(EqVector &storage,
+    template <class LhsEval>
+    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                          const ElementContext &elemCtx,
                          int dofIdx,
                          int timeIdx,
@@ -74,9 +78,9 @@ public:
         const auto &fs = intQuants.fluidState();
 
         storage[conti0EqIdx + phaseIdx] =
-            intQuants.porosity()
-            * fs.saturation(phaseIdx)
-            * fs.density(phaseIdx);
+            Toolbox::template toLhs<LhsEval>(intQuants.porosity())
+            * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(fs.density(phaseIdx));
 
         EnergyModule::addPhaseStorage(storage, intQuants, phaseIdx);
     }
@@ -84,12 +88,15 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
+    template <class LhsEval>
+    void computeStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                         const ElementContext &elemCtx,
                         int dofIdx,
                         int timeIdx) const
     {
-        storage = 0;
+        typedef Opm::MathToolbox<LhsEval> LhsToolbox;
+
+        storage = LhsToolbox::createConstant(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
@@ -102,7 +109,7 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
     {
-        flux = 0;
+        flux = Toolbox::createConstant(0.0);
         asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         asImp_().addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
@@ -123,6 +130,7 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
+        int interiorIdx = evalPointExtQuants.interiorIndex();
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream DOFs of
             // the current phase. The upstream decision has to be made
@@ -133,14 +141,13 @@ public:
 
             const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
-            assert(std::isfinite(extQuants.volumeFlux(phaseIdx)));
-            assert(std::isfinite(up.fluidState().density(phaseIdx)));
-
-            // add advective flux of current component in current
-            // phase
-            flux[conti0EqIdx + phaseIdx] +=
-                extQuants.volumeFlux(phaseIdx)
-                * up.fluidState().density(phaseIdx);
+            // add advective flux of current component in current phase. This is slightly
+            // hacky because it is specific to the element-centered finite volume method.
+            const Evaluation& rho = up.fluidState().density(phaseIdx);
+            if (interiorIdx == upIdx)
+                flux[conti0EqIdx + phaseIdx] += extQuants.volumeFlux(phaseIdx)*rho;
+            else
+                flux[conti0EqIdx + phaseIdx] += extQuants.volumeFlux(phaseIdx)*Toolbox::value(rho);
         }
 
         EnergyModule::addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);

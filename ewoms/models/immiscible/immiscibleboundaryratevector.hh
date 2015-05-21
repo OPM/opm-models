@@ -44,6 +44,7 @@ class ImmiscibleBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -51,10 +52,12 @@ class ImmiscibleBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    ImmiscibleBoundaryRateVector() : ParentType()
+    ImmiscibleBoundaryRateVector()
+        : ParentType()
     {}
 
     /*!
@@ -63,7 +66,8 @@ public:
      * \param value The scalar value to which all components of the
      *              boundary rate vector will be set.
      */
-    ImmiscibleBoundaryRateVector(Scalar value) : ParentType(value)
+    ImmiscibleBoundaryRateVector(const Evaluation& value)
+        : ParentType(value)
     {}
 
     /*!
@@ -87,8 +91,7 @@ public:
      *                   boundary segment.
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
-                     const FluidState &fluidState)
+    void setFreeFlow(const Context &context, int bfIdx, int timeIdx, const FluidState &fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
@@ -100,43 +103,41 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        (*this) = 0.0;
+        (*this) = Toolbox::createConstant(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar density;
+            Evaluation density;
             if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else
                 density = insideIntQuants.fluidState().density(phaseIdx);
 
+            Valgrind::CheckDefined(density);
+            Valgrind::CheckDefined(extQuants.volumeFlux(phaseIdx));
+
             // add advective flux of current component in current
             // phase
-            (*this)[conti0EqIdx + phaseIdx] +=
-                extQuants.volumeFlux(phaseIdx)
-                * density;
+            (*this)[conti0EqIdx + phaseIdx] += extQuants.volumeFlux(phaseIdx)*density;
 
             if (enableEnergy) {
-                Scalar specificEnthalpy;
-                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
+                Evaluation specificEnthalpy;
+                Scalar pBoundary = fluidState.pressure(phaseIdx);
+                const Evaluation& pElement = insideIntQuants.fluidState().pressure(phaseIdx);
+                if (pBoundary > pElement)
                     specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
                 else
                     specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar enthalpyRate =
-                    density
-                    * extQuants.volumeFlux(phaseIdx)
-                    * specificEnthalpy;
+                Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
 
-        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(
-                                                   extQuants));
+        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(extQuants));
 
 #ifndef NDEBUG
-        for (int i = 0; i < numEq; ++i) {
+        for (int i = 0; i < numEq; ++i)
             Valgrind::CheckDefined((*this)[i]);
-        }
         Valgrind::CheckDefined(*this);
 #endif
     }
@@ -156,11 +157,10 @@ public:
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
-        // we only allow fluxes in the direction opposite to the outer
-        // unit normal
+        // we only allow fluxes in the direction opposite to the outer unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
-            val = std::min<Scalar>(0.0, val);
+            Evaluation& val = this->operator[](eqIdx);
+            val = Toolbox::min(0.0, val);
         }
     }
 
@@ -179,11 +179,10 @@ public:
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
-        // we only allow fluxes in the same direction as the outer
-        // unit normal
+        // we only allow fluxes in the same direction as the outer unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
-            val = std::max<Scalar>(0.0, val);
+            Evaluation &val = this->operator[](eqIdx);
+            val = Toolbox::max(0.0, val);
         }
     }
 
@@ -191,7 +190,7 @@ public:
      * \brief Specify a no-flow boundary for all conserved quantities.
      */
     void setNoFlow()
-    { (*this) = 0.0; }
+    { (*this) = Toolbox::createConstant(0.0); }
 };
 
 } // namespace Ewoms
