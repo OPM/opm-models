@@ -570,7 +570,7 @@ public:
                                           /*unified=*/true,
                                           /*joinString=*/":",
                                           startTime,
-                                          /*timeIsInDays=*/false,
+                                          /*timeIsInDays=*/true, // if not, it's hours...
                                           eclGrid->getNX(),
                                           eclGrid->getNY(),
                                           eclGrid->getNZ());
@@ -605,8 +605,7 @@ public:
                        double timeInSeconds,
                        int reportStepIdx)
     {
-        double timeInDays = timeInSeconds / (24*60*60);
-        ertHandle_ = ecl_sum_add_tstep(summaryHandle.ertHandle(), reportStepIdx, timeInDays);
+        ertHandle_ = ecl_sum_add_tstep(summaryHandle.ertHandle(), reportStepIdx, timeInSeconds);
     }
 
     // no destructor in this class as ERT takes care of freeing the
