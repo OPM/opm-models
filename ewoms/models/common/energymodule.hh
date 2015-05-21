@@ -58,14 +58,18 @@ template <class TypeTag>
 class EnergyModule<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename FluidSystem::ParameterCache ParameterCache;
+
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+
+    typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
 
 public:
     /*!
@@ -123,34 +127,39 @@ public:
     static void setEnthalpyRate(RateVector &rateVec,
                                 const FluidState &fluidState,
                                 int phaseIdx,
-                                Scalar volume)
+                                const Evaluation& volume)
     {}
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
     static void setEnthalpyRate(RateVector &rateVec,
-                                Scalar rate)
+                                const Evaluation& rate)
     {}
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
     static void addToEnthalpyRate(RateVector &rateVec,
-                                  Scalar rate)
+                                  const Evaluation& rate)
     {}
 
     /*!
      * \brief Add the rate of the conductive heat flux to a rate vector.
      */
-    static Scalar heatConductionRate(const ExtensiveQuantities &extQuants)
-    { return 0.0; }
+    static Evaluation heatConductionRate(const ExtensiveQuantities &extQuants)
+    {
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+
+        return Toolbox::createConstant(0.0);
+    }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation
      * vector
      */
-    static void addPhaseStorage(EqVector &storage,
+    template <class LhsEval>
+    static void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                                 const IntensiveQuantities &intQuants,
                                 int phaseIdx)
     {}
@@ -159,19 +168,20 @@ public:
      * \brief Add the energy storage term for a fluid phase to an equation
      * vector
      */
-    template <class Scv>
-    static void addFracturePhaseStorage(EqVector &storage,
-                                        const IntensiveQuantities &intQuants,
-                                        const Scv &scv,
+    template <class LhsEval, class Scv>
+    static void addFracturePhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
+                                        const IntensiveQuantities& intQuants,
+                                        const Scv& scv,
                                         int phaseIdx)
     {}
 
     /*!
-     * \brief Add the energy storage term for a fluid phase to an equation
-     * vector
+     * \brief Add the energy storage term for the fracture part a fluid phase to an
+     *        equation vector
      */
-    static void addSolidHeatStorage(EqVector &storage,
-                                    const IntensiveQuantities &intQuants)
+    template <class LhsEval>
+    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq> &storage,
+                                    const IntensiveQuantities& intQuants)
     {}
 
     /*!
@@ -220,6 +230,7 @@ template <class TypeTag>
 class EnergyModule<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -230,9 +241,13 @@ class EnergyModule<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename FluidSystem::ParameterCache ParameterCache;
 
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = FluidSystem::numPhases };
     enum { energyEqIdx = Indices::energyEqIdx };
     enum { temperatureIdx = Indices::temperatureIdx };
+
+    typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
@@ -295,20 +310,20 @@ public:
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void setEnthalpyRate(RateVector &rateVec, Scalar rate)
+    static void setEnthalpyRate(RateVector &rateVec, const Evaluation& rate)
     { rateVec[energyEqIdx] = rate; }
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void addToEnthalpyRate(RateVector &rateVec, Scalar rate)
+    static void addToEnthalpyRate(RateVector &rateVec, const Evaluation& rate)
     { rateVec[energyEqIdx] += rate; }
 
     /*!
      * \brief Returns the rate of the conductive heat flux for a given flux
      *        integration point.
      */
-    static Scalar heatConductionRate(const ExtensiveQuantities &extQuants)
+    static Evaluation heatConductionRate(const ExtensiveQuantities &extQuants)
     { return -extQuants.temperatureGradNormal() * extQuants.heatConductivity(); }
 
     /*!
@@ -320,8 +335,10 @@ public:
                                 const FluidState &fluidState, int phaseIdx,
                                 Scalar volume)
     {
-        rateVec[energyEqIdx] = volume * fluidState.density(phaseIdx)
-                               * fluidState.enthalpy(phaseIdx);
+        rateVec[energyEqIdx] =
+            volume
+            * fluidState.density(phaseIdx)
+            * fluidState.enthalpy(phaseIdx);
     }
 
     /*!
@@ -331,10 +348,11 @@ public:
     static void setPriVarTemperatures(PrimaryVariables &priVars,
                                       const FluidState &fs)
     {
-        priVars[temperatureIdx] = fs.temperature(/*phaseIdx=*/0);
+        priVars[temperatureIdx] = Toolbox::value(fs.temperature(/*phaseIdx=*/0));
 #ifndef NDEBUG
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            assert(std::abs(fs.temperature(/*phaseIdx=*/0) - fs.temperature(phaseIdx)) < 1e-30);
+            assert(std::abs(Toolbox::value(fs.temperature(/*phaseIdx=*/0))
+                            - Toolbox::value(fs.temperature(phaseIdx))) < 1e-30);
         }
 #endif
     }
@@ -343,43 +361,47 @@ public:
      * \brief Add the energy storage term for a fluid phase to an equation
      * vector
      */
-    static void addPhaseStorage(EqVector &storage,
+    template <class LhsEval>
+    static void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                                 const IntensiveQuantities &intQuants, int phaseIdx)
     {
         const auto &fs = intQuants.fluidState();
         storage[energyEqIdx] +=
-            fs.density(phaseIdx)
-            * fs.internalEnergy(phaseIdx)
-            * fs.saturation(phaseIdx)
-            * intQuants.porosity();
+            Toolbox::template toLhs<LhsEval>(fs.density(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(fs.internalEnergy(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
     }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation
      * vector
      */
-    template <class Scv>
-    static void addFracturePhaseStorage(EqVector &storage,
+    template <class Scv, class LhsEval>
+    static void addFracturePhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                                         const IntensiveQuantities &intQuants,
                                         const Scv &scv, int phaseIdx)
     {
         const auto &fs = intQuants.fractureFluidState();
         storage[energyEqIdx] +=
-            fs.density(phaseIdx)
-            * fs.internalEnergy(phaseIdx)
-            * fs.saturation(phaseIdx)
-            * intQuants.fracturePorosity()
-            * intQuants.fractureVolume()/scv.volume();
+            Toolbox::template toLhs<LhsEval>(fs.density(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(fs.internalEnergy(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.fracturePorosity())
+            * Toolbox::template toLhs<LhsEval>(intQuants.fractureVolume())/scv.volume();
     }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation
      * vector
      */
-    static void addSolidHeatStorage(EqVector &storage, const IntensiveQuantities &intQuants)
+    template <class LhsEval>
+    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq> &storage,
+                                    const IntensiveQuantities &intQuants)
     {
         storage[energyEqIdx] +=
-            intQuants.heatCapacitySolid() * intQuants.fluidState().temperature(/*phaseIdx=*/0);
+            Toolbox::template toLhs<LhsEval>(intQuants.heatCapacitySolid())
+            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().temperature(/*phaseIdx=*/0));
     }
 
     /*!
@@ -515,9 +537,12 @@ template <class TypeTag>
 class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename FluidSystem::ParameterCache ParameterCache;
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
@@ -525,7 +550,7 @@ public:
      * rock matrix in
      *        the sub-control volume.
      */
-    Scalar heatCapacitySolid() const
+    Evaluation heatCapacitySolid() const
     {
         OPM_THROW(std::logic_error, "Method heatCapacitySolid() does not make "
                                     "sense for isothermal models");
@@ -536,7 +561,7 @@ public:
      *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
      *        sub-control volume.
      */
-    Scalar heatConductivity() const
+    Evaluation heatConductivity() const
     {
         OPM_THROW(std::logic_error, "Method heatConductivity() does not make "
                                     "sense for isothermal models");
@@ -550,7 +575,10 @@ protected:
     static void updateTemperatures_(FluidState &fluidState,
                                     const Context &context, int spaceIdx,
                                     int timeIdx)
-    { fluidState.setTemperature(context.problem().temperature(context, spaceIdx, timeIdx)); }
+    {
+        Scalar T = context.problem().temperature(context, spaceIdx, timeIdx);
+        fluidState.setTemperature(Toolbox::createConstant(T));
+    }
 
     /*!
      * \brief Update the quantities required to calculate
@@ -572,6 +600,7 @@ template <class TypeTag>
 class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
@@ -582,6 +611,8 @@ class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
     enum { energyEqIdx = Indices::energyEqIdx };
     enum { temperatureIdx = Indices::temperatureIdx };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+
 protected:
     /*!
      * \brief Update the temperatures of the fluids of a fluid state.
@@ -590,7 +621,16 @@ protected:
     static void updateTemperatures_(FluidState &fluidState,
                                     const Context &context, int spaceIdx,
                                     int timeIdx)
-    { fluidState.setTemperature(context.primaryVars(spaceIdx, timeIdx)[temperatureIdx]); }
+    {
+        const auto& priVars = context.primaryVars(spaceIdx, timeIdx);
+        Evaluation val;
+        if (timeIdx == 0)
+            val = Toolbox::createVariable(priVars[temperatureIdx], temperatureIdx);
+        else
+            val = Toolbox::createConstant(priVars[temperatureIdx]);
+
+        fluidState.setTemperature(val);
+    }
 
     /*!
      * \brief Update the quantities required to calculate
@@ -617,7 +657,8 @@ protected:
         const auto &heatCondParams = problem.heatConductionParams(elemCtx, dofIdx, timeIdx);
 
         heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, dofIdx, timeIdx);
-        heatConductivity_ = HeatConductionLaw::heatConductivity(heatCondParams, fs);
+        heatConductivity_ =
+            HeatConductionLaw::template heatConductivity<FluidState, Evaluation>(heatCondParams, fs);
 
         Valgrind::CheckDefined(heatCapacitySolid_);
         Valgrind::CheckDefined(heatConductivity_);
@@ -629,7 +670,7 @@ public:
      * rock matrix in
      *        the sub-control volume.
      */
-    Scalar heatCapacitySolid() const
+    const Evaluation& heatCapacitySolid() const
     { return heatCapacitySolid_; }
 
     /*!
@@ -637,12 +678,12 @@ public:
      *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
      *        sub-control volume.
      */
-    Scalar heatConductivity() const
+    const Evaluation& heatConductivity() const
     { return heatConductivity_; }
 
 private:
-    Scalar heatCapacitySolid_;
-    Scalar heatConductivity_;
+    Evaluation heatCapacitySolid_;
+    Evaluation heatConductivity_;
 };
 
 /*!
@@ -705,9 +746,11 @@ class EnergyExtensiveQuantities<TypeTag, /*enableEnergy=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     enum { dimWorld = GridView::dimensionworld };
+    typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 protected:
@@ -720,7 +763,7 @@ protected:
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::TemperatureCallback<TypeTag> temperatureCallback(elemCtx);
 
-        DimVector temperatureGrad;
+        EvalDimVector temperatureGrad;
         gradCalc.calculateGradient(temperatureGrad,
                                    elemCtx,
                                    faceIdx,
@@ -744,8 +787,7 @@ protected:
     }
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context, int bfIdx, int timeIdx,
-                         const FluidState &fs)
+    void updateBoundary_(const Context &context, int bfIdx, int timeIdx, const FluidState &fs)
     {
         const auto &stencil = context.stencil(timeIdx);
         const auto &face = stencil.boundaryFace(bfIdx);
@@ -783,19 +825,19 @@ public:
     /*!
      * \brief The temperature gradient times the face normal [K m^2 / m]
      */
-    Scalar temperatureGradNormal() const
+    const Evaluation& temperatureGradNormal() const
     { return temperatureGradNormal_; }
 
     /*!
      * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 /
      * (K/m)]}\f$
      */
-    Scalar heatConductivity() const
+    const Evaluation& heatConductivity() const
     { return heatConductivity_; }
 
 private:
-    Scalar temperatureGradNormal_;
-    Scalar heatConductivity_;
+    Evaluation temperatureGradNormal_;
+    Evaluation heatConductivity_;
 };
 
 } // namespace Ewoms

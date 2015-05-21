@@ -33,9 +33,7 @@ namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Indices);
 }
-}
 
-namespace Ewoms {
 /*!
  * \ingroup Diffusion
  * \class Ewoms::DiffusionModule
@@ -80,6 +78,7 @@ template <class TypeTag>
 class DiffusionModule<TypeTag, /*enableDiffusion=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -87,6 +86,8 @@ class DiffusionModule<TypeTag, /*enableDiffusion=*/true>
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
@@ -108,21 +109,19 @@ public:
         const auto &fluidStateI = context.intensiveQuantities(extQuants.interiorIndex(), timeIdx).fluidState();
         const auto &fluidStateJ = context.intensiveQuantities(extQuants.exteriorIndex(), timeIdx).fluidState();
 
-        RateVector molarRate(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // arithmetic mean of the phase's molar density
-            Scalar rhoMolar = (fluidStateI.molarDensity(phaseIdx)
-                               + fluidStateJ.molarDensity(phaseIdx)) / 2;
+            Evaluation rhoMolar = fluidStateI.molarDensity(phaseIdx);
+            rhoMolar += Toolbox::value(fluidStateJ.molarDensity(phaseIdx));
+            rhoMolar /= 2;
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 // mass flux due to molecular diffusion
-                molarRate[conti0EqIdx + compIdx] +=
+                flux[conti0EqIdx + compIdx] +=
                     -rhoMolar
                     * extQuants.moleFractionGradientNormal(phaseIdx, compIdx)
                     * extQuants.effectiveDiffusionCoefficient(phaseIdx, compIdx);
         }
-
-        flux += molarRate;
     }
 };
 

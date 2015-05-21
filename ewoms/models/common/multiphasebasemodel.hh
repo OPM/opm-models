@@ -194,7 +194,7 @@ public:
 
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(this->gridView());
         OmpMutex addMutex;
-#if HAVE_OPENMP
+#ifdef _OPENMP
 #pragma omp parallel
 #endif
         {

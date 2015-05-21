@@ -80,30 +80,17 @@ public:
         // compute the pressure potential gradients
         FluxExtensiveQuantities::calculateGradients_(elemCtx, scvfIdx, timeIdx);
 
-        // determine the upstream indices. since this is a semi-smooth non-linear solver,
-        // make upstream only look at the evaluation point for the upstream decision
-        const auto &evalExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
-        if (&evalExtQuants == this) {
-            // we _are_ the evaluation point. Check whether the pressure potential is in
-            // the same direction as the face normal or in the opposite one
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                    Valgrind::SetUndefined(upstreamScvIdx_[phaseIdx]);
-                    Valgrind::SetUndefined(downstreamScvIdx_[phaseIdx]);
-                    continue;
-                }
+        // Check whether the pressure potential is in the same direction as the face
+        // normal or in the opposite one
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
+                Valgrind::SetUndefined(upstreamScvIdx_[phaseIdx]);
+                Valgrind::SetUndefined(downstreamScvIdx_[phaseIdx]);
+                continue;
+            }
 
-                upstreamScvIdx_[phaseIdx] = FluxExtensiveQuantities::upstreamIndex_(phaseIdx);
-                downstreamScvIdx_[phaseIdx] = FluxExtensiveQuantities::downstreamIndex_(phaseIdx);
-            }
-        }
-        else {
-            // we are *not* the evaluation point. in this case, we just take the
-            // up-/downstream indices from the evaluation point.
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                upstreamScvIdx_[phaseIdx] = evalExtQuants.upstreamIndex(phaseIdx);
-                downstreamScvIdx_[phaseIdx] = evalExtQuants.downstreamIndex(phaseIdx);
-            }
+            upstreamScvIdx_[phaseIdx] = FluxExtensiveQuantities::upstreamIndex_(phaseIdx);
+            downstreamScvIdx_[phaseIdx] = FluxExtensiveQuantities::downstreamIndex_(phaseIdx);
         }
 
         FluxExtensiveQuantities::calculateFluxes_(elemCtx, scvfIdx, timeIdx);
