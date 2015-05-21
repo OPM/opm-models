@@ -45,6 +45,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -64,8 +65,8 @@ class BlackOilIntensiveQuantities
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
 
 public:
@@ -78,7 +79,7 @@ public:
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
+        fluidState_.setTemperature(Toolbox::createConstant(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx)));
 
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
@@ -86,44 +87,44 @@ public:
         int pvtRegionIdx = priVars.pvtRegionIndex();
 
         // extract the water and the gas saturations for convenience
-        Scalar Sw = priVars[Indices::waterSaturationIdx];
+        Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
 
-        Scalar Sg = 0.0;
+        Evaluation Sg = Toolbox::createConstant(0.0);
         if (priVars.switchingVarMeaning() == PrimaryVariables::GasSaturation)
-            Sg = priVars[Indices::switchIdx];
+            Sg = priVars.makeEvaluation(Indices::switchIdx, timeIdx);
 
         fluidState_.setSaturation(waterPhaseIdx, Sw);
         fluidState_.setSaturation(gasPhaseIdx, Sg);
         fluidState_.setSaturation(oilPhaseIdx, 1 - Sw - Sg);
 
         // reference phase (-> gas) pressure
-        Scalar pg = priVars[Indices::gasPressureIdx];
+        Evaluation pg = priVars.makeEvaluation(Indices::gasPressureIdx, timeIdx);
 
         // now we compute all phase pressures
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-        Scalar pC[numPhases];
+        Evaluation pC[numPhases];
         const auto &materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
-            if (fluidState_.pressure(phaseIdx) < 1e5) {
+            if (Toolbox::value(fluidState_.pressure(phaseIdx)) < 1e5) {
                 OPM_THROW(Opm::NumericalIssue,
                           "All pressures must be at least 1 bar.");
             }
         }
 
         // oil phase temperature and pressure
-        Scalar T = fluidState_.temperature(oilPhaseIdx);
+        const auto& T = fluidState_.temperature(oilPhaseIdx);
 
         // update phase compositions. first, set everything to 0...
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
+                fluidState_.setMoleFraction(phaseIdx, compIdx, Toolbox::createConstant(0.0));
 
         // ... then set the default composition of all phases (default = assume immscibility)
-        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0);
-        fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
-        fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
+        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, Toolbox::createConstant(1.0));
+        fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, Toolbox::createConstant(1.0));
+        fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, Toolbox::createConstant(1.0));
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
@@ -132,8 +133,8 @@ public:
             // oil-saturated gas phases if dissolved gas and vaporized oil are
             // enabled. if they are disabled, continue to assume immiscibility for the
             // respective phase.
-            Scalar xgO = 0.0;
-            Scalar xoG = 0.0;
+            Evaluation xgO = Toolbox::createConstant(0.0);
+            Evaluation xoG = Toolbox::createConstant(0.0);
 
             if (FluidSystem::enableVaporizedOil())
                 xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
@@ -151,7 +152,7 @@ public:
         else if (priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil) {
             // if the switching variable is the mole fraction of the gas component in the
             // oil phase, we can directly set the composition of the oil phase
-            Scalar xoG = priVars[Indices::switchIdx];
+            const auto& xoG = priVars.makeEvaluation(Indices::switchIdx, timeIdx);
 
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
@@ -161,11 +162,15 @@ public:
 
             // if the switching variable is the mole fraction of the oil component in the
             // gas phase, we can directly set the composition of the gas phase
-            Scalar xgO = priVars[Indices::switchIdx];
+            const auto& xgO = priVars.makeEvaluation(Indices::switchIdx, timeIdx);
 
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
+
+        // calculate relative permeabilities
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
@@ -174,16 +179,14 @@ public:
 
         // set the phase densities and viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
+            const auto& rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
             fluidState_.setDensity(phaseIdx, rho);
 
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            const auto& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
-        }
 
-        // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
+            mobility_[phaseIdx] = relativePermeability_[phaseIdx] / mu;
+        }
 
         // retrieve the porosity from the problem
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
@@ -193,7 +196,7 @@ public:
         Scalar rockCompressibility = problem.rockCompressibility(elemCtx, dofIdx, timeIdx);
         if (rockCompressibility > 0.0) {
             Scalar rockRefPressure = problem.rockReferencePressure(elemCtx, dofIdx, timeIdx);
-            Scalar x = rockCompressibility*(pg - rockRefPressure);
+            Evaluation x = rockCompressibility*(pg - rockRefPressure);
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
 
@@ -207,18 +210,17 @@ public:
 #ifndef NDEBUG
         // some safety checks in debug mode
         for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            assert(std::isfinite(fluidState_.density(phaseIdx)));
-            assert(std::isfinite(fluidState_.saturation(phaseIdx)));
-            assert(std::isfinite(fluidState_.temperature(phaseIdx)));
-            assert(std::isfinite(fluidState_.pressure(phaseIdx)));
-            assert(std::isfinite(fluidState_.viscosity(phaseIdx)));
-            assert(std::isfinite(relativePermeability_[phaseIdx]));
-            for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-                assert(std::isfinite(fluidState_.moleFraction(phaseIdx, compIdx)));
-            }
+            assert(std::isfinite(Toolbox::value(fluidState_.density(phaseIdx))));
+            assert(std::isfinite(Toolbox::value(fluidState_.saturation(phaseIdx))));
+            assert(std::isfinite(Toolbox::value(fluidState_.temperature(phaseIdx))));
+            assert(std::isfinite(Toolbox::value(fluidState_.pressure(phaseIdx))));
+            assert(std::isfinite(Toolbox::value(fluidState_.viscosity(phaseIdx))));
+            assert(std::isfinite(Toolbox::value(relativePermeability_[phaseIdx])));
+            for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
+                assert(std::isfinite(Toolbox::value(fluidState_.moleFraction(phaseIdx, compIdx))));
         }
         assert(std::isfinite(intrinsicPerm_.frobenius_norm()));
-        assert(std::isfinite(porosity_));
+        assert(std::isfinite(Toolbox::value(porosity_)));
 #endif
     }
 
@@ -237,28 +239,27 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    Scalar relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    Scalar mobility(int phaseIdx) const
-    {
-        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
-    }
+    const Evaluation& mobility(int phaseIdx) const
+    { return mobility_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
-    Scalar porosity() const
+    const Evaluation& porosity() const
     { return porosity_; }
 
 private:
     FluidState fluidState_;
-    Scalar porosity_;
+    Evaluation porosity_;
     DimMatrix intrinsicPerm_;
-    Scalar relativePermeability_[numPhases];
+    Evaluation relativePermeability_[numPhases];
+    Evaluation mobility_[numPhases];
 };
 
 } // namespace Ewoms

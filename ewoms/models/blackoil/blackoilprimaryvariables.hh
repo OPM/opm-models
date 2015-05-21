@@ -34,7 +34,6 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 
 namespace Ewoms {
-
 /*!
  * \ingroup BlackOilModel
  *
@@ -43,9 +42,10 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef FvBasePrimaryVariables<TypeTag> ParentType;
 
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -71,8 +71,8 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { waterCompIdx = FluidSystem::waterCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
 
+    typedef typename Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
     static_assert(numPhases == 3, "The black-oil model assumes three phases!");
     static_assert(numComponents == 3, "The black-oil model assumes three components!");
@@ -133,9 +133,16 @@ public:
                                 const MaterialLawParams &matParams,
                                 bool isInEquilibrium = false)
     {
+        typedef typename std::remove_reference<typename FluidState::Scalar>::type ConstEvaluation;
+        typedef typename std::remove_const<ConstEvaluation>::type FsEvaluation;
+        typedef typename Opm::MathToolbox<FsEvaluation> FsToolbox;
+
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
         for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+            Valgrind::CheckDefined(fluidState.temperature(0));
+            Valgrind::CheckDefined(fluidState.temperature(phaseIdx));
+
             assert(fluidState.temperature(0) == fluidState.temperature(phaseIdx));
         }
 #endif // NDEBUG
@@ -153,15 +160,18 @@ public:
         paramCache.setRegionIndex(pvtRegionIdx_);
 
         // create a mutable fluid state with well defined densities based on the input
-        Opm::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
-        fsFlash.setTemperature(fluidState.temperature(/*phaseIdx=*/0));
+        typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
+        typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FlashFluidState;
+        FlashFluidState fsFlash;
+        fsFlash.setTemperature(FsToolbox::value(fluidState.temperature(/*phaseIdx=*/0)));
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar rho = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            fsFlash.setDensity(phaseIdx, rho);
-            fsFlash.setPressure(phaseIdx, fluidState.pressure(phaseIdx));
-            fsFlash.setSaturation(phaseIdx, fluidState.saturation(phaseIdx));
+            fsFlash.setPressure(phaseIdx, FsToolbox::value(fluidState.pressure(phaseIdx)));
+            fsFlash.setSaturation(phaseIdx, FsToolbox::value(fluidState.saturation(phaseIdx)));
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fsFlash.setMoleFraction(phaseIdx, compIdx, fluidState.moleFraction(phaseIdx, compIdx));
+                fsFlash.setMoleFraction(phaseIdx, compIdx, FsToolbox::value(fluidState.moleFraction(phaseIdx, compIdx)));
+
+            Scalar rho = FluidSystem::template density<FlashFluidState, Scalar>(fsFlash, paramCache, phaseIdx);
+            fsFlash.setDensity(phaseIdx, rho);
         }
 
         // calculate the "global molarities"
@@ -189,17 +199,21 @@ public:
     template <class FluidState>
     void assignNaive(const FluidState &fluidState)
     {
-        Scalar po = fluidState.pressure(oilPhaseIdx);
-        Scalar pg = fluidState.pressure(gasPhaseIdx);
-        temperature_ = fluidState.temperature(gasPhaseIdx);
+        typedef typename std::remove_reference<typename FluidState::Scalar>::type ConstEvaluation;
+        typedef typename std::remove_const<ConstEvaluation>::type FsEvaluation;
+        typedef typename Opm::MathToolbox<FsEvaluation> FsToolbox;
+
+        Scalar po = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
+        Scalar pg = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
+        temperature_ = FsToolbox::value(fluidState.temperature(gasPhaseIdx));
 
         // the pressure of the first phase and the saturation of water
         // are always primary variables
-        (*this)[gasPressureIdx] = fluidState.pressure(gasPhaseIdx);
-        (*this)[waterSaturationIdx] = fluidState.saturation(waterPhaseIdx);
+        (*this)[gasPressureIdx] = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
+        (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
 
-        bool gasPresent = (fluidState.saturation(gasPhaseIdx) > 0.0);
-        bool oilPresent = (fluidState.saturation(oilPhaseIdx) > 0.0);
+        bool gasPresent = (FsToolbox::value(fluidState.saturation(gasPhaseIdx)) > 0.0);
+        bool oilPresent = (FsToolbox::value(fluidState.saturation(oilPhaseIdx)) > 0.0);
 
         Scalar xoGSat = -1e100;
         if (FluidSystem::enableDissolvedGas())
@@ -211,7 +225,7 @@ public:
 
         if (gasPresent || !oilPresent)
             switchingVarMeaning_ = GasSaturation;
-        else if (fluidState.moleFraction(oilPhaseIdx, gasCompIdx) < xoGSat) {
+        else if (FsToolbox::value(fluidState.moleFraction(oilPhaseIdx, gasCompIdx)) < xoGSat) {
             if (FluidSystem::enableDissolvedGas())
                 switchingVarMeaning_ = GasMoleFractionInOil;
             else
@@ -234,12 +248,12 @@ public:
         // depending on the phases present, we use either Sg, x_o^G or x_g^O as the
         // switching primary variable
         if (switchingVarMeaning() == GasSaturation)
-            (*this)[switchIdx] = fluidState.saturation(gasPhaseIdx);
+            (*this)[switchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
         else if (switchingVarMeaning() == GasMoleFractionInOil)
-            (*this)[switchIdx] = fluidState.moleFraction(oilPhaseIdx, gasCompIdx);
+            (*this)[switchIdx] = FsToolbox::value(fluidState.moleFraction(oilPhaseIdx, gasCompIdx));
         else {
             assert(switchingVarMeaning() == OilMoleFractionInGas);
-            (*this)[switchIdx] = fluidState.moleFraction(gasPhaseIdx, oilCompIdx);
+            (*this)[switchIdx] = FsToolbox::value(fluidState.moleFraction(gasPhaseIdx, oilCompIdx));
         }
     }
 
@@ -346,6 +360,7 @@ private:
     SwitchingVarMeaning switchingVarMeaning_;
     unsigned char pvtRegionIdx_;
 };
+
 
 } // namespace Ewoms
 

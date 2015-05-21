@@ -44,10 +44,11 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class BlackOilRateVector
-    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
+    : public Dune::FieldVector<typename GET_PROP_TYPE(TypeTag, Evaluation),
                                GET_PROP_VALUE(TypeTag, NumEq)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -55,7 +56,8 @@ class BlackOilRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
-    typedef Dune::FieldVector<Scalar, numEq> ParentType;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+    typedef Dune::FieldVector<Evaluation, numEq> ParentType;
 
 public:
     BlackOilRateVector() : ParentType()
@@ -64,7 +66,11 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
      */
-    BlackOilRateVector(Scalar value) : ParentType(value)
+    BlackOilRateVector(Scalar value) : ParentType(Toolbox::createConstant(value))
+    {}
+
+    template <class Eval = Evaluation>
+    BlackOilRateVector(const typename std::enable_if<std::is_same<Eval, Evaluation>::value, Evaluation>::type& value) : ParentType(value)
     {}
 
     /*!
@@ -97,17 +103,38 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
-    template <class FluidState>
+    template <class FluidState, class RhsEval>
     void setVolumetricRate(const FluidState &fluidState,
                            int phaseIdx,
-                           Scalar volume)
+                           const RhsEval& volume)
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] =
                 fluidState.density(phaseIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)
-                / FluidSystem::molarMass(compIdx)
-                * volume;
+                * volume
+                / FluidSystem::molarMass(compIdx);
+    }
+
+    /*!
+     * \brief Assignment operator from a scalar or a function evaluation
+     */
+    template <class RhsEval>
+    BlackOilRateVector& operator=(const RhsEval& value)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = value;
+        return *this;
+    }
+
+    /*!
+     * \brief Assignment operator from another rate vector
+     */
+    BlackOilRateVector& operator=(const BlackOilRateVector& other)
+    {
+        for (unsigned i=0; i < this->size(); ++i)
+            (*this)[i] = other[i];
+        return *this;
     }
 };
 

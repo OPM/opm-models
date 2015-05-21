@@ -26,8 +26,6 @@
 #define EWOMS_BLACK_OIL_PROPERTIES_HH
 
 #include <ewoms/models/common/multiphasebaseproperties.hh>
-#include <ewoms/io/vtkcompositionmodule.hh>
-#include <ewoms/io/vtkblackoilmodule.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -42,7 +40,6 @@ NEW_PROP_TAG(HeatConductionLaw);
 NEW_PROP_TAG(HeatConductionLawParams);
 //! Number of Newton-Raphson iterations for which the update should be chopped
 NEW_PROP_TAG(BlackoilNumChoppedIterations);
-
-}} // namespace Properties, Opm
+}} // namespace Properties, Ewoms
 
 #endif

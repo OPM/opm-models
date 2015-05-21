@@ -24,6 +24,8 @@
 #ifndef EWOMS_BLACK_OIL_MODEL_HH
 #define EWOMS_BLACK_OIL_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "blackoilproblem.hh"
 #include "blackoilindices.hh"
 #include "blackoilextensivequantities.hh"
@@ -75,10 +77,10 @@ SET_TYPE_PROP(BlackOilModel, BaseProblem, Ewoms::BlackOilProblem<TypeTag>);
 //! The BlackOilFluidState property
 SET_PROP(BlackOilModel, BlackOilFluidState)
 { private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 public:
-    typedef Opm::CompositionalFluidState<Scalar,
+    typedef Opm::CompositionalFluidState<Evaluation,
                                          FluidSystem,
                                          /*enableEnthalpy=*/false> type;
 };
@@ -102,15 +104,21 @@ SET_TYPE_PROP(BlackOilModel, ExtensiveQuantities, Ewoms::BlackOilExtensiveQuanti
 SET_TYPE_PROP(BlackOilModel, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
-SET_TYPE_PROP(BlackOilModel, FluidSystem,
-              Opm::FluidSystems::BlackOil<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+SET_PROP(BlackOilModel, FluidSystem)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+
+public:
+    typedef Opm::FluidSystems::BlackOil<Scalar, Evaluation> type;
+};
 
 //! Set the number of Newton-Raphson iterations for which the update should be chopped to
 //! 4 by default
 SET_INT_PROP(BlackOilModel, BlackoilNumChoppedIterations, 4);
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup BlackOilModel
  * \brief A fully-implicit black-oil flow model.
@@ -307,6 +315,35 @@ public:
                 break;
             }
         }
+    }
+
+    /*!
+     * \internal
+     * \brief Do the primary variable switching after a Newton iteration.
+     *
+     * This is an internal method that needs to be public because it
+     * gets called by the Newton method after an update.
+     */
+    void switchPrimaryVars_()
+    {
+        numSwitched_ = 0;
+
+        int numDof = this->numGridDof();
+        for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
+            auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
+            if (priVars.adaptSwitchingVariable()) {
+                this->linearizer().markDofRed(globalDofIdx);
+                ++numSwitched_;
+            }
+        }
+
+        // make sure that if there was a variable switch in an
+        // other partition we will also set the switch flag
+        // for our partition.
+        numSwitched_ = this->gridView_.comm().sum(numSwitched_);
+
+        this->simulator_.model().newtonMethod().endIterMsg()
+            << ", num switched=" << numSwitched_;
     }
 
     /*!
