@@ -39,12 +39,14 @@ namespace Ewoms {
 template <class TypeTag>
 class FlashLocalResidual: public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 {
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
@@ -55,11 +57,14 @@ class FlashLocalResidual: public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+
 public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
-    void addPhaseStorage(EqVector &storage,
+    template <class LhsEval>
+    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                          const ElementContext &elemCtx,
                          int dofIdx,
                          int timeIdx,
@@ -72,9 +77,9 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             int eqIdx = conti0EqIdx + compIdx;
             storage[eqIdx] +=
-                fs.molarity(phaseIdx, compIdx)
-                * fs.saturation(phaseIdx)
-                * intQuants.porosity();
+                Toolbox::template toLhs<LhsEval>(fs.molarity(phaseIdx, compIdx))
+                * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
+                * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
         }
 
         EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
@@ -83,7 +88,8 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
+    template <class LhsEval>
+    void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                         const ElementContext &elemCtx,
                         int dofIdx,
                         int timeIdx) const
@@ -120,30 +126,35 @@ public:
                           int timeIdx) const
     {
         const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
-        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
-        ////////
-        // advective fluxes of all components in all phases
-        ////////
+        int interiorIdx = extQuants.interiorIndex();
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // data attached to upstream and the downstream DOFs of the current phase
-            const IntensiveQuantities &up =
-                elemCtx.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
-            const IntensiveQuantities &dn =
-                elemCtx.intensiveQuantities(evalPointExtQuants.downstreamIndex(phaseIdx), timeIdx);
+            // data attached to upstream and the finite volume of the current phase
+            int upIdx = extQuants.upstreamIndex(phaseIdx);
+            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                int eqIdx = conti0EqIdx + compIdx;
+            // this is a bit hacky because it is specific to the element-centered
+            // finite volume scheme. (N.B. that if finite differences are used to
+            // linearize the system of equations, it does not matter.)
+            if (upIdx == interiorIdx) {
+                Evaluation tmp =
+                    up.fluidState().molarDensity(phaseIdx)
+                    * extQuants.volumeFlux(phaseIdx);
 
-                flux[eqIdx] +=
-                    extQuants.volumeFlux(phaseIdx)
-                    * (extQuants.upstreamWeight(phaseIdx)
-                       * up.fluidState().molarity(phaseIdx, compIdx)
-                       +
-                       extQuants.downstreamWeight(phaseIdx)
-                       * dn.fluidState().molarity(phaseIdx, compIdx));
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    flux[conti0EqIdx + compIdx] +=
+                        tmp*up.fluidState().moleFraction(phaseIdx, compIdx);
+                }
+            }
+            else {
+                Evaluation tmp =
+                    Toolbox::value(up.fluidState().molarDensity(phaseIdx))
+                    * extQuants.volumeFlux(phaseIdx);
 
-                Valgrind::CheckDefined(flux[eqIdx]);
+                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                    flux[conti0EqIdx + compIdx] +=
+                        tmp*Toolbox::value(up.fluidState().moleFraction(phaseIdx, compIdx));
+                }
             }
         }
 

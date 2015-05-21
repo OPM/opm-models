@@ -45,6 +45,7 @@ class FlashBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -54,6 +55,7 @@ class FlashBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     FlashBoundaryRateVector() : ParentType()
@@ -63,7 +65,7 @@ public:
      * \copydoc
      * ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(Scalar)
      */
-    FlashBoundaryRateVector(Scalar value) : ParentType(value)
+    FlashBoundaryRateVector(const Evaluation& value) : ParentType(value)
     {}
 
     /*!
@@ -91,39 +93,40 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        (*this) = 0.0;
+        (*this) = Toolbox::createConstant(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar meanMBoundary = 0;
+            Evaluation meanMBoundary = 0;
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                meanMBoundary += fluidState.moleFraction(phaseIdx, compIdx) * FluidSystem::molarMass(compIdx);
+                meanMBoundary +=
+                    fluidState.moleFraction(phaseIdx, compIdx)*FluidSystem::molarMass(compIdx);
 
-            Scalar density;
+            Evaluation density;
             if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
             else
                 density = insideIntQuants.fluidState().density(phaseIdx);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar molarity;
+                Evaluation molarity;
                 if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                    molarity = fluidState.moleFraction(phaseIdx, compIdx) * density / meanMBoundary;
+                    molarity = fluidState.moleFraction(phaseIdx, compIdx)*density/meanMBoundary;
                 else
                     molarity = insideIntQuants.fluidState().molarity(phaseIdx, compIdx);
 
                 // add advective flux of current component in current
                 // phase
-                (*this)[conti0EqIdx + compIdx] += extQuants.volumeFlux(phaseIdx) * molarity;
+                (*this)[conti0EqIdx + compIdx] += extQuants.volumeFlux(phaseIdx)*molarity;
             }
 
             if (enableEnergy) {
-                Scalar specificEnthalpy;
+                Evaluation specificEnthalpy;
                 if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                     specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
                 else
                     specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
 
                 // currently we neglect heat conduction!
-                Scalar enthalpyRate = density * extQuants.volumeFlux(phaseIdx) * specificEnthalpy;
+                Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
@@ -146,11 +149,10 @@ public:
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
-        // we only allow fluxes in the direction opposite to the outer
-        // unit normal
+        // we only allow fluxes in the direction opposite to the outer unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
-            val = std::min<Scalar>(0.0, val);
+            Evaluation &val = this->operator[](eqIdx);
+            val = Toolbox::min(0.0, val);
         }
     }
 
@@ -163,11 +165,10 @@ public:
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
-        // we only allow fluxes in the same direction as the outer
-        // unit normal
+        // we only allow fluxes in the same direction as the outer unit normal
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
-            val = std::max<Scalar>(0.0, val);
+            Evaluation &val = this->operator[](eqIdx);
+            val = Toolbox::max(0.0, val);
         }
     }
 
@@ -175,7 +176,7 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */
     void setNoFlow()
-    { (*this) = 0.0; }
+    { (*this) = Toolbox::createConstant(0.0); }
 };
 
 } // namespace Ewoms

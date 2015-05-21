@@ -49,6 +49,6 @@ NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableEnergy);
 //! Enable diffusive fluxes?
 NEW_PROP_TAG(EnableDiffusion);
-}} // namespace Properties, Opm
+}} // namespace Properties, Ewoms
 
 #endif

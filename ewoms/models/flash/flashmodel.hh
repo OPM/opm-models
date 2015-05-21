@@ -24,6 +24,8 @@
 #ifndef EWOMS_FLASH_MODEL_HH
 #define EWOMS_FLASH_MODEL_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "flashproperties.hh"
 #include "flashprimaryvariables.hh"
 #include "flashlocalresidual.hh"
@@ -105,9 +107,8 @@ SET_BOOL_PROP(FlashModel, EnableDiffusion, false);
 
 //! Disable the energy equation by default
 SET_BOOL_PROP(FlashModel, EnableEnergy, false);
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup FlashModel
  *

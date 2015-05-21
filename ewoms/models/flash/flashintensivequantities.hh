@@ -68,10 +68,11 @@ class FlashIntensiveQuantities
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, FlashSolver) FlashSolver;
 
-    typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
+    typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
@@ -80,15 +81,12 @@ class FlashIntensiveQuantities
 
 public:
     //! The type of the object returned by the fluidState() method
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem,
-                                         /*storeEnthalpy=*/enableEnergy> FluidState;
+    typedef Opm::CompositionalFluidState<Evaluation, FluidSystem, enableEnergy> FluidState;
 
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
         ParentType::update(elemCtx,
                            dofIdx,
@@ -98,20 +96,13 @@ public:
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         const auto &problem = elemCtx.problem();
         Scalar flashTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, FlashTolerance);
-        if (flashTolerance <= 0) {
-            // make the tolerance of the flash solver 10 times smaller
-            // than the epsilon value used by the newton solver to
-            // calculate the partial derivatives
-            const auto &model = elemCtx.model();
-
-            // assume 18g/mol as the molar weight of water
-            flashTolerance = model.localLinearizer(ThreadManager::threadId()).baseEpsilon() / (100 * 18e-3);
-        }
+        if (flashTolerance <= 0)
+            flashTolerance = std::numeric_limits<Scalar>::epsilon()*1e7;
 
         // extract the total molar densities of the components
         ComponentVector cTotal;
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            cTotal[compIdx] = priVars[cTot0Idx + compIdx];
+            cTotal[compIdx] = priVars.makeEvaluation(cTot0Idx + compIdx, timeIdx);
 
         typename FluidSystem::ParameterCache paramCache;
         const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
@@ -119,7 +110,7 @@ public:
             // use the same fluid state as the one of the hint, but
             // make sure that we don't overwrite the temperature
             // specified by the primary variables
-            Scalar T = fluidState_.temperature(/*phaseIdx=*/0);
+            const Evaluation& T = fluidState_.temperature(/*phaseIdx=*/0);
             fluidState_.assign(hint->fluidState());
             fluidState_.setTemperature(T);
         }
@@ -135,20 +126,23 @@ public:
                                                  cTotal,
                                                  flashTolerance);
 
+        // calculate relative permeabilities
+        MaterialLaw::relativePermeabilities(relativePermeability_,
+                                            materialParams, fluidState_);
+        Valgrind::CheckDefined(relativePermeability_);
+
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
+            const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
+
+            mobility_[phaseIdx] = relativePermeability_[phaseIdx] / mu;
+            Valgrind::CheckDefined(mobility_[phaseIdx]);
         }
 
         /////////////
         // calculate the remaining quantities
         /////////////
-
-        // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_,
-                                            materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
 
         // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
@@ -182,28 +176,29 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    Scalar relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(int phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    Scalar mobility(int phaseIdx) const
+    const Evaluation& mobility(int phaseIdx) const
     {
-        return relativePermeability(phaseIdx) / fluidState().viscosity(phaseIdx);
+        return mobility_[phaseIdx];
     }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::porosity
      */
-    Scalar porosity() const
+    const Evaluation& porosity() const
     { return porosity_; }
 
 private:
-    FluidState fluidState_;
-    Scalar porosity_;
     DimMatrix intrinsicPerm_;
-    Scalar relativePermeability_[numPhases];
+    FluidState fluidState_;
+    Evaluation porosity_;
+    Evaluation relativePermeability_[numPhases];
+    Evaluation mobility_[numPhases];
 };
 
 } // namespace Ewoms
