@@ -41,9 +41,8 @@ NEW_PROP_TAG(VtkOutputFormat);
 
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
-}} // namespace Properties, Opm
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup Vtk
  *

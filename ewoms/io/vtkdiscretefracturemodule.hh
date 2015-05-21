@@ -58,9 +58,8 @@ SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFracturePorosity, true);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureFilterVelocities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureVolumeFraction, true);
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup Vtk
  *

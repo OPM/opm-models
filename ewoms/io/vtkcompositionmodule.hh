@@ -29,6 +29,8 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <opm/material/common/MathToolbox.hpp>
+
 namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK composition output
@@ -53,9 +55,7 @@ SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
 } // namespace Properties
-} // namespace Ewoms
 
-namespace Ewoms {
 /*!
  * \ingroup Vtk
  *
@@ -75,6 +75,7 @@ class VtkCompositionModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -143,6 +144,8 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
@@ -151,15 +154,15 @@ public:
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     if (moleFracOutput_())
-                        moleFrac_[phaseIdx][compIdx][I] = fs.moleFraction(phaseIdx, compIdx);
+                        moleFrac_[phaseIdx][compIdx][I] = Toolbox::value(fs.moleFraction(phaseIdx, compIdx));
                     if (massFracOutput_())
-                        massFrac_[phaseIdx][compIdx][I] = fs.massFraction(phaseIdx, compIdx);
+                        massFrac_[phaseIdx][compIdx][I] = Toolbox::value(fs.massFraction(phaseIdx, compIdx));
                     if (molarityOutput_())
-                        molarity_[phaseIdx][compIdx][I] = fs.molarity(phaseIdx, compIdx);
+                        molarity_[phaseIdx][compIdx][I] = Toolbox::value(fs.molarity(phaseIdx, compIdx));
 
                     if (fugacityCoeffOutput_())
                         fugacityCoeff_[phaseIdx][compIdx][I] =
-                            fs.fugacityCoefficient(phaseIdx, compIdx);
+                            Toolbox::value(fs.fugacityCoefficient(phaseIdx, compIdx));
                 }
             }
 
@@ -168,11 +171,11 @@ public:
                     Scalar compMass = 0;
                     Scalar totalMass = 0;
                     for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                        totalMass += fs.density(phaseIdx)
-                                     * fs.saturation(phaseIdx);
-                        compMass += fs.density(phaseIdx)
-                                    * fs.saturation(phaseIdx)
-                                    * fs.massFraction(phaseIdx, compIdx);
+                        totalMass += Toolbox::value(fs.density(phaseIdx)) * Toolbox::value(fs.saturation(phaseIdx));
+                        compMass +=
+                            Toolbox::value(fs.density(phaseIdx))
+                            *Toolbox::value(fs.saturation(phaseIdx))
+                            *Toolbox::value(fs.massFraction(phaseIdx, compIdx));
                     }
                     totalMassFrac_[compIdx][I] = compMass / totalMass;
                 }
@@ -180,16 +183,18 @@ public:
                     Scalar compMoles = 0;
                     Scalar totalMoles = 0;
                     for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                        totalMoles += fs.molarDensity(phaseIdx)
-                                      * fs.saturation(phaseIdx);
-                        compMoles += fs.molarDensity(phaseIdx)
-                                     * fs.saturation(phaseIdx)
-                                     * fs.moleFraction(phaseIdx, compIdx);
+                        totalMoles +=
+                            Toolbox::value(fs.molarDensity(phaseIdx))
+                            *Toolbox::value(fs.saturation(phaseIdx));
+                        compMoles +=
+                            Toolbox::value(fs.molarDensity(phaseIdx))
+                            *Toolbox::value(fs.saturation(phaseIdx))
+                            *Toolbox::value(fs.moleFraction(phaseIdx, compIdx));
                     }
                     totalMoleFrac_[compIdx][I] = compMoles / totalMoles;
                 }
                 if (fugacityOutput_())
-                    fugacity_[compIdx][I] = intQuants.fluidState().fugacity(/*phaseIdx=*/0, compIdx);
+                    fugacity_[compIdx][I] = Toolbox::value(intQuants.fluidState().fugacity(/*phaseIdx=*/0, compIdx));
             }
         }
     }

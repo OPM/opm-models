@@ -29,6 +29,8 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <opm/material/common/MathToolbox.hpp>
+
 namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK energy output
@@ -69,17 +71,18 @@ class VtkEnergyModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
-
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+
+    typedef typename Opm::MathToolbox<Evaluation> Toolbox;
+    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
     VtkEnergyModule(const Simulator &simulator)
@@ -135,15 +138,15 @@ public:
             const auto &fs = intQuants.fluidState();
 
             if (solidHeatCapacityOutput_())
-                solidHeatCapacity_[I] = intQuants.heatCapacitySolid();
+                solidHeatCapacity_[I] = Toolbox::value(intQuants.heatCapacitySolid());
             if (heatConductivityOutput_())
-                heatConductivity_[I] = intQuants.heatConductivity();
+                heatConductivity_[I] = Toolbox::value(intQuants.heatConductivity());
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (enthalpyOutput_())
-                    enthalpy_[phaseIdx][I] = fs.enthalpy(phaseIdx);
+                    enthalpy_[phaseIdx][I] = Toolbox::value(fs.enthalpy(phaseIdx));
                 if (internalEnergyOutput_())
-                    internalEnergy_[phaseIdx][I] = fs.internalEnergy(phaseIdx);
+                    internalEnergy_[phaseIdx][I] = Toolbox::value(fs.internalEnergy(phaseIdx));
             }
         }
     }

@@ -28,6 +28,8 @@
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
+#include <ewoms/models/blackoil/blackoilproperties.hh>
+#include <opm/material/localad/Math.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -68,6 +70,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -135,13 +138,15 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+
         for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
             const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
             int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-            Scalar po = fs.pressure(oilPhaseIdx);
-            Scalar To = fs.temperature(oilPhaseIdx);
-            Scalar X_oG = fs.massFraction(oilPhaseIdx, gasCompIdx);
-            Scalar X_gO = fs.massFraction(gasPhaseIdx, oilCompIdx);
+            Scalar po = Toolbox::value(fs.pressure(oilPhaseIdx));
+            Scalar To = Toolbox::value(fs.temperature(oilPhaseIdx));
+            Scalar X_oG = Toolbox::value(fs.massFraction(oilPhaseIdx, gasCompIdx));
+            Scalar X_gO = Toolbox::value(fs.massFraction(gasPhaseIdx, oilCompIdx));
             int regionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
             Scalar rhooRef = FluidSystem::referenceDensity(oilPhaseIdx, regionIdx);
             Scalar rhogRef = FluidSystem::referenceDensity(gasPhaseIdx, regionIdx);
@@ -150,7 +155,7 @@ public:
                 gasDissolutionFactor_[globalDofIdx] = X_oG / rhogRef * rhooRef / (1 - X_oG);
             if (saturatedOilGasDissolutionFactorOutput_())
                 saturatedOilGasDissolutionFactor_[globalDofIdx] =
-                    FluidSystem::gasDissolutionFactor(To, po, regionIdx);
+                    FluidSystem::template gasDissolutionFactor<Scalar>(To, po, regionIdx);
             if (gasFormationVolumeFactorOutput_())
                 gasFormationVolumeFactor_[globalDofIdx] =
                     FluidSystem::gasFormationVolumeFactor(To, po, X_gO, regionIdx);

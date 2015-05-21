@@ -29,6 +29,8 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 
+#include <opm/material/common/MathToolbox.hpp>
+
 namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK temperature output
@@ -44,9 +46,7 @@ NEW_PROP_TAG(VtkOutputFormat);
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
 } // namespace Properties
-} // namespace Ewoms
 
-namespace Ewoms {
 /*!
  * \ingroup Vtk
  *
@@ -62,6 +62,7 @@ class VtkTemperatureModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
@@ -97,13 +98,15 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto &fs = intQuants.fluidState();
 
             if (temperatureOutput_())
-                temperature_[I] = fs.temperature(/*phaseIdx=*/0);
+                temperature_[I] = Toolbox::value(fs.temperature(/*phaseIdx=*/0));
         }
     }
 

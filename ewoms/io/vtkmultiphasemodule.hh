@@ -29,6 +29,8 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <opm/material/common/MathToolbox.hpp>
+
 #include <dune/common/fvector.hh>
 
 #include <cstdio>
@@ -51,6 +53,7 @@ NEW_PROP_TAG(VtkWriteIntrinsicPermeabilities);
 NEW_PROP_TAG(VtkWritePotentialGradients);
 NEW_PROP_TAG(VtkWriteFilterVelocities);
 NEW_PROP_TAG(VtkOutputFormat);
+NEW_PROP_TAG(Evaluation);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePressures, true);
@@ -65,9 +68,7 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWriteIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePotentialGradients, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
 } // namespace Properties
-} // namespace Ewoms
 
-namespace Ewoms {
 /*!
  * \ingroup Vtk
  *
@@ -93,6 +94,7 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -102,6 +104,8 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
@@ -109,6 +113,8 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::VectorBuffer VectorBuffer;
     typedef typename ParentType::TensorBuffer TensorBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
+
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
     typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
 
@@ -195,12 +201,14 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto &fs = intQuants.fluidState();
 
-            if (porosityOutput_()) porosity_[I] = intQuants.porosity();
+            if (porosityOutput_()) porosity_[I] = Toolbox::value(intQuants.porosity());
             if (intrinsicPermeabilityOutput_()) {
                 const auto& K = intQuants.intrinsicPermeability();
                 intrinsicPermeability_[I].resize(K.rows, K.cols);
@@ -211,19 +219,19 @@ public:
 
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (pressureOutput_())
-                    pressure_[phaseIdx][I] = fs.pressure(phaseIdx);
+                    pressure_[phaseIdx][I] = Toolbox::value(fs.pressure(phaseIdx));
                 if (densityOutput_())
-                    density_[phaseIdx][I] = fs.density(phaseIdx);
+                    density_[phaseIdx][I] = Toolbox::value(fs.density(phaseIdx));
                 if (saturationOutput_())
-                    saturation_[phaseIdx][I] = fs.saturation(phaseIdx);
+                    saturation_[phaseIdx][I] = Toolbox::value(fs.saturation(phaseIdx));
                 if (mobilityOutput_())
-                    mobility_[phaseIdx][I] = intQuants.mobility(phaseIdx);
+                    mobility_[phaseIdx][I] = Toolbox::value(intQuants.mobility(phaseIdx));
                 if (relativePermeabilityOutput_())
-                    relativePermeability_[phaseIdx][I] = intQuants.relativePermeability(phaseIdx);
+                    relativePermeability_[phaseIdx][I] = Toolbox::value(intQuants.relativePermeability(phaseIdx));
                 if (viscosityOutput_())
-                    viscosity_[phaseIdx][I] = fs.viscosity(phaseIdx);
+                    viscosity_[phaseIdx][I] = Toolbox::value(fs.viscosity(phaseIdx));
                 if (averageMolarMassOutput_())
-                    averageMolarMass_[phaseIdx][I] = fs.averageMolarMass(phaseIdx);
+                    averageMolarMass_[phaseIdx][I] = Toolbox::value(fs.averageMolarMass(phaseIdx));
             }
         }
 
@@ -240,8 +248,10 @@ public:
 
                     potentialWeight_[phaseIdx][I] += weight;
 
-                    auto pGrad = extQuants.potentialGrad(phaseIdx);
-                    pGrad *= weight;
+                    const auto &inputPGrad = extQuants.potentialGrad(phaseIdx);
+                    DimVector pGrad;
+                    for (int j = 0; j < numPhases; ++j)
+                        pGrad[j] = Toolbox::value(inputPGrad[j])*weight;
                     potentialGradient_[phaseIdx][I] += pGrad;
                 } // end for all phases
             } // end for all faces
@@ -259,13 +269,17 @@ public:
                 int J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
 
                 for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    Scalar weight = std::max(1e-16, std::abs(extQuants.volumeFlux(phaseIdx)));
+                    Scalar weight = std::max<Scalar>(1e-16,
+                                                     std::abs(Toolbox::value(extQuants.volumeFlux(phaseIdx))));
                     Valgrind::CheckDefined(extQuants.extrusionFactor());
                     assert(extQuants.extrusionFactor() > 0);
                     weight *= extQuants.extrusionFactor();
 
-                    auto v(extQuants.filterVelocity(phaseIdx));
-                    if (std::abs(v.two_norm()) > 1e-20)
+                    const auto& inputV = extQuants.filterVelocity(phaseIdx);
+                    DimVector v;
+                    for (int k = 0; k < dimWorld; ++k)
+                        v[k] = Toolbox::value(inputV[k]);
+                    if (v.two_norm() > 1e-20)
                         weight /= v.two_norm();
                     v *= weight;
 
