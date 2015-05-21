@@ -23,6 +23,7 @@
  */
 #include "config.h"
 
+#include <ewoms/common/quad.hh>
 #include <ewoms/common/start.hh>
 #include <ewoms/models/blackoil/blackoilmodel.hh>
 #include "eclproblem.hh"

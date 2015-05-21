@@ -180,7 +180,7 @@ EwomsAddTest(obstacle_pvs SOURCES tests/obstacle_pvs.cc)
 EwomsAddTest(outflow_pvs SOURCES tests/outflow_pvs.cc)
 EwomsAddTest(test_quadrature SOURCES tests/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
 
-# the general-purpose ECL simulator ("ebos" == "_e_Woms _b_lack-_o_il _s_imulator)
+# the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
 EwomsAddApplication(ebos
   SOURCES applications/ebos/ebos.cc
   EXE_NAME ebos

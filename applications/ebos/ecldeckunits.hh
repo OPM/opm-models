@@ -112,7 +112,8 @@ public:
     /*!
      * \brief Convert an array of scalar quanities from deck to SI units.
      */
-    void deckToSi(std::vector<Scalar>& values, Dimension dimens) const
+    template <class DeckScalar>
+    void deckToSi(std::vector<DeckScalar>& values, Dimension dimens) const
     {
         for (unsigned i = 0; i < values.size(); ++i)
             values[i] = values[i]*deckToSiFactor_[dimens] + deckToSiOffset_[dimens];
@@ -127,7 +128,8 @@ public:
     /*!
      * \brief Convert an array of scalar quanities from SI to deck units.
      */
-    void siToDeck(std::vector<Scalar>& values, Dimension dimens) const
+    template <class DeckScalar>
+    void siToDeck(std::vector<DeckScalar>& values, Dimension dimens) const
     {
         for (unsigned i = 0; i < values.size(); ++i)
             values[i] = (values[i] - deckToSiOffset_[dimens])/deckToSiFactor_[dimens];

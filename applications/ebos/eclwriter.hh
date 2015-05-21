@@ -24,6 +24,8 @@
 #ifndef EWOMS_ECL_WRITER_HH
 #define EWOMS_ECL_WRITER_HH
 
+#include <opm/material/localad/Evaluation.hpp>
+
 #include "ertwrappers.hh"
 
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
@@ -44,9 +46,8 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(EnableEclOutput);
-}}
+}
 
-namespace Ewoms {
 template <class TypeTag>
 class EclWriter;
 

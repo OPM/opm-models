@@ -46,9 +46,8 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(EnableEclSummaryOutput);
-}}
+}
 
-namespace Ewoms {
 template <class TypeTag>
 class EclSummaryWriter;
 
@@ -165,21 +164,21 @@ public:
             //////////
             // injection surface rates
             if (writeWwir_()) {
-                Scalar ratePerSecond = std::max(0.0, well->surfaceRate(waterPhaseIdx));
+                Scalar ratePerSecond = std::max<Scalar>(0.0, well->surfaceRate(waterPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wwirErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
             }
 
             if (writeWgir_()) {
-                Scalar ratePerSecond = std::max(0.0, well->surfaceRate(gasPhaseIdx));
+                Scalar ratePerSecond = std::max<Scalar>(0.0, well->surfaceRate(gasPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgirErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::gasRate));
             }
 
             if (writeWoir_()) {
-                Scalar ratePerSecond = std::max(0.0, well->surfaceRate(oilPhaseIdx));
+                Scalar ratePerSecond = std::max<Scalar>(0.0, well->surfaceRate(oilPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woirErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
@@ -213,21 +212,21 @@ public:
             //////////
             // production surface rates
             if (writeWwpr_()) {
-                Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(waterPhaseIdx));
+                Scalar ratePerSecond = std::max<Scalar>(0.0, -well->surfaceRate(waterPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wwprErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));
             }
 
             if (writeWgpr_()) {
-                Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(gasPhaseIdx));
+                Scalar ratePerSecond = std::max<Scalar>(0.0, -well->surfaceRate(gasPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.wgprErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::gasRate));
             }
 
             if (writeWopr_()) {
-                Scalar ratePerSecond = std::max(0.0, -well->surfaceRate(oilPhaseIdx));
+                Scalar ratePerSecond = std::max<Scalar>(0.0, -well->surfaceRate(oilPhaseIdx));
                 ecl_sum_tstep_iset(ertSumTimeStep.ertHandle(),
                                    smspec_node_get_params_index(summaryInfo.woprErtHandle),
                                    deckUnits.siToDeck(ratePerSecond, DeckUnits::liquidRate));

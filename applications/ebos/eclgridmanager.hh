@@ -67,9 +67,7 @@ class EclProblem;
 
 template <class TypeTag>
 class EclGridManager;
-} // namespace Ewoms
 
-namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(EclGridManager);
 
@@ -88,9 +86,8 @@ SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
 #endif
 
 SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
-}} // namespace Ewoms, Properties
+} // namespace Properties
 
-namespace Ewoms {
 /*!
  * \ingroup EclBlackOilSimulator
  *
