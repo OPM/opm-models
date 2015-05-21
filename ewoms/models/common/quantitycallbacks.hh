@@ -25,7 +25,12 @@
 #ifndef EWOMS_QUANTITY_CALLBACKS_HH
 #define EWOMS_QUANTITY_CALLBACKS_HH
 
+#include <ewoms/common/declval.hh>
 #include <ewoms/disc/common/fvbaseproperties.hh>
+
+#include <opm/material/common/MathToolbox.hpp>
+
+#include <type_traits>
 
 namespace Ewoms {
 /*!
@@ -36,10 +41,14 @@ namespace Ewoms {
 template <class TypeTag>
 class TemperatureCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
+    typedef decltype(Ewoms::declval<IQFluidState>().temperature(0)) ResultType;
+
     TemperatureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     {}
@@ -51,7 +60,7 @@ public:
      * In this context, we assume that thermal equilibrium applies,
      * i.e. that the temperature of all phases is equal.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().temperature(/*phaseIdx=*/0); }
 
 private:
@@ -66,10 +75,14 @@ private:
 template <class TypeTag>
 class PressureCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
+    typedef decltype(Ewoms::declval<IQFluidState>().pressure(0)) ResultType;
+
     PressureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
@@ -90,7 +103,7 @@ public:
      * \brief Return the pressure of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
@@ -111,8 +124,15 @@ class BoundaryPressureCallback
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef typename std::remove_reference<IQFluidState>::type::Scalar IQScalar;
+    typedef Opm::MathToolbox<IQScalar> Toolbox;
 
 public:
+    typedef IQScalar ResultType;
+
     BoundaryPressureCallback(const ElementContext& elemCtx, const FluidState& boundaryFs)
         : elemCtx_(elemCtx)
         , boundaryFs_(boundaryFs)
@@ -137,16 +157,16 @@ public:
      * \brief Return the pressure of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
     }
 
-    Scalar boundaryValue() const
+    IQScalar boundaryValue() const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return boundaryFs_.pressure(phaseIdx_);
+        return Toolbox::passThroughOrCreateConstant(boundaryFs_.pressure(phaseIdx_));
     }
 
 private:
@@ -163,10 +183,14 @@ private:
 template <class TypeTag>
 class DensityCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
+    typedef decltype(Ewoms::declval<IQFluidState>().density(0)) ResultType;
+
     DensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
@@ -187,7 +211,7 @@ public:
      * \brief Return the density of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_);
@@ -206,10 +230,14 @@ private:
 template <class TypeTag>
 class MolarDensityCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
+    typedef decltype(Ewoms::declval<IQFluidState>().molarDensity(0)) ResultType;
+
     MolarDensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
@@ -230,7 +258,7 @@ public:
      * \brief Return the molar density of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_);
@@ -249,10 +277,14 @@ private:
 template <class TypeTag>
 class ViscosityCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
+    typedef decltype(Ewoms::declval<IQFluidState>().viscosity(0)) ResultType;
+
     ViscosityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
@@ -273,7 +305,7 @@ public:
      * \brief Return the viscosity of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_);
@@ -292,15 +324,13 @@ private:
 template <class TypeTag>
 class VelocityCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    enum { dim = GridView::dimensionworld };
-
-    typedef Dune::FieldVector<Scalar, dim> DimVector;
-
 public:
+    typedef decltype(IntensiveQuantities().velocityCenter()) ResultType;
+
     VelocityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     {}
@@ -309,7 +339,7 @@ public:
      * \brief Return the velocity of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    const DimVector &operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter(); }
 
 private:
@@ -324,15 +354,12 @@ private:
 template <class TypeTag>
 class VelocityComponentCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
-    enum { dim = GridView::dimensionworld };
-
-    typedef Dune::FieldVector<Scalar, dim> DimVector;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
 public:
+    typedef decltype(IntensiveQuantities().velocityCenter()[0]) ResultType;
+
     VelocityComponentCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(dimIdx_); }
@@ -353,7 +380,7 @@ public:
      * \brief Return the velocity of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(dimIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_];
@@ -372,10 +399,14 @@ private:
 template <class TypeTag>
 class MoleFractionCallback
 {
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
+
+    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
+    typedef decltype(Ewoms::declval<IQFluidState>().moleFraction(0, 0)) ResultType;
+
     MoleFractionCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     {
@@ -408,7 +439,7 @@ public:
      *        the index of a degree of freedom within an element
      *        context.
      */
-    Scalar operator()(int dofIdx) const
+    ResultType operator()(int dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         Valgrind::CheckDefined(compIdx_);

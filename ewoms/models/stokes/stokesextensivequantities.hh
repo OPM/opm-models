@@ -108,11 +108,7 @@ public:
         density_ = gradCalc.calculateValue(elemCtx, scvfIdx, densityCallback);
         molarDensity_ = gradCalc.calculateValue(elemCtx, scvfIdx, molarDensityCallback);
         viscosity_ = gradCalc.calculateValue(elemCtx, scvfIdx, viscosityCallback);
-        velocity_ =
-            gradCalc.template calculateValue<VelocityCallback<TypeTag>,
-                                             DimVector>(elemCtx,
-                                                        scvfIdx,
-                                                        velocityCallback);
+        velocity_ = gradCalc.calculateValue(elemCtx, scvfIdx, velocityCallback);
 
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             velocityComponentCallback.setDimIndex(dimIdx);

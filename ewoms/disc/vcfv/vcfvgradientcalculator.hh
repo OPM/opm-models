@@ -71,18 +71,6 @@ class VcfvGradientCalculator : public FvBaseGradientCalculator<TypeTag>
 
 public:
     /*!
-     * \brief Register all run-time parameters for the gradient calculator
-     *        of the VCVF discretization.
-     */
-    static void registerParameters()
-    {
-        ParentType::registerParameters();
-
-        EWOMS_REGISTER_PARAM(TypeTag, bool, UseTwoPointGradients,
-                             "Use two-point gradients instead of P1-finite element ones");
-    }
-
-    /*!
      * \brief Precomputes the common values to calculate gradients and
      *        values of quantities at any flux approximation point.
      *
@@ -91,7 +79,7 @@ public:
     template <bool prepareValues = true, bool prepareGradients = true>
     void prepare(const ElementContext &elemCtx, int timeIdx)
     {
-        if (EWOMS_GET_PARAM(TypeTag, bool, UseTwoPointGradients)) {
+        if (GET_PROP_VALUE(TypeTag, UseTwoPointGradients)) {
             ParentType::template prepare<prepareValues, prepareGradients>(elemCtx, timeIdx);
             return;
         }
@@ -143,17 +131,19 @@ public:
      *               of the quantity at an index of a degree of
      *               freedom
      */
-    template <class QuantityCallback, class QuantityType = Scalar>
-    QuantityType calculateValue(const ElementContext &elemCtx,
-                                int fapIdx,
-                                const QuantityCallback &quantityCallback) const
+    template <class QuantityCallback, class Dummy=int>
+    auto calculateValue(const ElementContext &elemCtx,
+                        typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                                                Dummy>::type fapIdx,
+                        const QuantityCallback& quantityCallback) const
+        ->  typename std::remove_reference<typename QuantityCallback::ResultType>::type
     {
-        if (EWOMS_GET_PARAM(TypeTag, bool, UseTwoPointGradients)) {
-            return ParentType::template calculateValue<QuantityCallback,
-                                                       QuantityType>(elemCtx,
-                                                                     fapIdx,
-                                                                     quantityCallback);
-        }
+        static_assert(std::is_integral<Dummy>::value,
+                      "The 'Dummy' template parameter must _not_ be specified explicitly."
+                      "It is only required to conditionally disable this method!");
+
+        typedef typename std::remove_reference<typename QuantityCallback::ResultType>::type QuantityConstType;
+        typedef typename std::remove_const<QuantityConstType>::type QuantityType;
 
         // If the user does not want to use two-point gradients, we
         // use P1 finite element gradients..
@@ -167,6 +157,20 @@ public:
         return value;
     }
 
+    template <class QuantityCallback, class Dummy = int>
+    auto calculateValue(const ElementContext &elemCtx,
+                        typename std::enable_if<GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                                                Dummy>::type fapIdx,
+                        const QuantityCallback& quantityCallback) const
+        ->  decltype(ParentType::calculateValue(elemCtx, fapIdx, quantityCallback))
+    {
+        static_assert(std::is_integral<Dummy>::value,
+                      "The 'Dummy' template parameter must _not_ be specified explicitly."
+                      "It is only required to conditionally disable this method!");
+
+        return ParentType::calculateValue(elemCtx, fapIdx, quantityCallback);
+    }
+
     /*!
      * \brief Calculates the gradient of an arbitrary quantity at any
      *        flux approximation point.
@@ -178,16 +182,16 @@ public:
      *               of the quantity at an index of a degree of
      *               freedom
      */
-    template <class QuantityCallback>
-    void calculateGradient(DimVector &quantityGrad,
+    template <class QuantityCallback, class EvalDimVector, class Dummy = int>
+    void calculateGradient(EvalDimVector &quantityGrad,
                            const ElementContext &elemCtx,
-                           int fapIdx,
-                           const QuantityCallback &quantityCallback) const
+                           typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                                                   Dummy>::type fapIdx,
+                           const QuantityCallback& quantityCallback) const
     {
-        if (EWOMS_GET_PARAM(TypeTag, bool, UseTwoPointGradients)) {
-            ParentType::calculateGradient(quantityGrad, elemCtx, fapIdx, quantityCallback);
-            return;
-        }
+        static_assert(std::is_integral<Dummy>::value,
+                      "The 'Dummy' template parameter must _not_ be specified explicitly."
+                      "It is only required to conditionally disable this method!");
 
         // If the user does not want two-point gradients, we use P1
         // finite element gradients...
@@ -195,10 +199,24 @@ public:
         for (int vertIdx = 0; vertIdx < elemCtx.numDof(/*timeIdx=*/0); ++vertIdx) {
             Scalar dofVal = quantityCallback(vertIdx);
 
-            DimVector tmp(p1Gradient_[fapIdx][vertIdx]);
+            auto tmp = p1Gradient_[fapIdx][vertIdx];
             tmp *= dofVal;
             quantityGrad += tmp;
         }
+    }
+
+    template <class QuantityCallback, class EvalDimVector, class Dummy=int>
+    void calculateGradient(EvalDimVector &quantityGrad,
+                           const ElementContext &elemCtx,
+                           typename std::enable_if<GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                                                   Dummy>::type fapIdx,
+                           const QuantityCallback& quantityCallback) const
+    {
+        static_assert(std::is_integral<Dummy>::value,
+                      "The 'Dummy' template parameter must _not_ be specified explicitly."
+                      "It is only required to conditionally disable this method!");
+
+        return ParentType::calculateGradient(quantityGrad, elemCtx, fapIdx, quantityCallback);
     }
 
     /*!
@@ -216,9 +234,10 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    Scalar calculateBoundaryValue(const ElementContext &elemCtx,
-                                  int fapIdx,
-                                  const QuantityCallback &quantityCallback)
+    auto calculateBoundaryValue(const ElementContext &elemCtx,
+                                int fapIdx,
+                                const QuantityCallback &quantityCallback)
+        ->  decltype(ParentType::calculateBoundaryValue(elemCtx, fapIdx, quantityCallback))
     { return ParentType::calculateBoundaryValue(elemCtx, fapIdx, quantityCallback); }
 
     /*!
@@ -235,8 +254,8 @@ public:
      *               of the quantity at an index of a degree of
      *               freedom
      */
-    template <class QuantityCallback>
-    void calculateBoundaryGradient(DimVector &quantityGrad,
+    template <class QuantityCallback, class EvalDimVector>
+    void calculateBoundaryGradient(EvalDimVector &quantityGrad,
                                    const ElementContext &elemCtx,
                                    int fapIdx,
                                    const QuantityCallback &quantityCallback) const

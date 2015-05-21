@@ -106,17 +106,18 @@ public:
      *               of the quantity at an index of a degree of
      *               freedom
      */
-    template <class QuantityCallback, class QuantityType = Scalar>
-    QuantityType calculateValue(const ElementContext &elemCtx,
-                                int fapIdx,
-                                const QuantityCallback &quantityCallback) const
+    template <class QuantityCallback>
+    auto calculateValue(const ElementContext &elemCtx,
+                        int fapIdx,
+                        const QuantityCallback &quantityCallback) const
+        -> typename std::remove_reference<decltype(quantityCallback.operator()(0))>::type
     {
         const auto &face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(fapIdx);
 
         // average weighted by distance to DOF coordinate...
-        QuantityType value(quantityCallback(face.interiorIndex()));
+        auto value(quantityCallback(face.interiorIndex()));
         value *= interiorDistance_[fapIdx];
-        QuantityType tmp(quantityCallback(face.exteriorIndex()));
+        auto tmp(quantityCallback(face.exteriorIndex()));
         tmp *= exteriorDistance_[fapIdx];
         value += tmp;
         value /= interiorDistance_[fapIdx] + exteriorDistance_[fapIdx];
@@ -179,9 +180,10 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    Scalar calculateBoundaryValue(const ElementContext &elemCtx,
-                                  int fapIdx,
-                                  const QuantityCallback &quantityCallback)
+    auto calculateBoundaryValue(const ElementContext &elemCtx,
+                                int fapIdx,
+                                const QuantityCallback &quantityCallback)
+        -> decltype(quantityCallback.boundaryValue())
     { return quantityCallback.boundaryValue(); }
 
     /*!
