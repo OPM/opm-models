@@ -24,7 +24,7 @@
 #ifndef EWOMS_LOCKS_HH
 #define EWOMS_LOCKS_HH
 
-#if HAVE_OPENMP || DOXYGEN
+#if defined(_OPENMP) || DOXYGEN
 #include <omp.h>
 
 /*!

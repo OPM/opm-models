@@ -23,10 +23,6 @@
 #ifndef EWOMS_THREADED_ENTITY_ITERATOR_HH
 #define EWOMS_THREADED_ENTITY_ITERATOR_HH
 
-#if HAVE_OPENMP
-#include <omp.h>
-#endif
-
 #include <ewoms/parallel/locks.hh>
 
 namespace Ewoms {

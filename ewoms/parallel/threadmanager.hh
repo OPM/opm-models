@@ -23,7 +23,7 @@
 #ifndef EWOMS_THREAD_MANAGER_HH
 #define EWOMS_THREAD_MANAGER_HH
 
-#if HAVE_OPENMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -49,7 +49,7 @@ class ThreadManager
 {
 public:
     enum {
-#if HAVE_OPENMP || DOXYGEN
+#if defined(_OPENMP) || DOXYGEN
         //! Specify whether OpenMP is really available or not
         isFake = false
 #else
@@ -72,7 +72,7 @@ public:
         numThreads_ = EWOMS_GET_PARAM(TypeTag, int, ThreadsPerProcess);
 
         // some safety checks. This is pretty ugly macro-magic, but so what?
-#if !HAVE_OPENMP
+#if !defined(_OPENMP)
         if (numThreads_ != 1 && numThreads_ != -1)
             OPM_THROW(std::invalid_argument,
                       "OpenMP is not available. The only valid values for "
@@ -101,7 +101,7 @@ public:
                       "(or -1 for 'automatic')!");
 #endif
 
-#if HAVE_OPENMP
+#ifdef _OPENMP
         // actually limit the number of threads and get the number of threads which are
         // used in the end.
         if (numThreads_ > 0)
@@ -122,7 +122,7 @@ public:
      */
     static int threadId()
     {
-#if HAVE_OPENMP
+#ifdef _OPENMP
         return omp_get_thread_num();
 #else
         return 0;
