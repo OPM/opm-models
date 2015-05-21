@@ -231,25 +231,16 @@ public:
         // calculate the local residual
         localResidual_.eval(residual_, residualStorage_, elemCtx);
 
-        // save all extensive quantities calculated using the unmodified primary
-        // variables. This automatically makes these the extensive quantities of the
-        // evaluation point.
-        elemCtx.saveExtensiveQuantities();
-
         // calculate the local jacobian matrix
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         for (int dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
             for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
                 asImp_().evalPartialDerivative_(elemCtx, dofIdx, pvIdx);
 
-                // update the local stiffness matrix with the current
-                // partial derivatives
+                // incorporate the partial derivatives into the local Jacobian matrix
                 updateLocalLinearizer_(elemCtx, dofIdx, pvIdx);
             }
         }
-
-        // restore extensive quantities.
-        //elemCtx.restoreScvfVars(); // not necessary
     }
 
     /*!

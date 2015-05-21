@@ -151,7 +151,6 @@ public:
     {
         for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
             updateIntensiveQuantities(timeIdx);
-        dofIdxSaved_ = -1;
     }
 
     /*!
@@ -213,8 +212,6 @@ public:
      */
     void updateExtensiveQuantities(int timeIdx)
     {
-        extensiveQuantitiesEval_ = &extensiveQuantities_;
-
         gradientCalculator_.prepare(/*context=*/*this, timeIdx);
 
         for (int fluxIdx = 0; fluxIdx < numInteriorFaces(timeIdx); fluxIdx++) {
@@ -345,29 +342,6 @@ public:
     { return element().hasBoundaryIntersections(); }
 
     /*!
-     * \brief Save the current extensive quantities and use them as the
-     *        evaluation point.
-     */
-    void saveExtensiveQuantities()
-    {
-        extensiveQuantitiesSaved_ = extensiveQuantities_;
-
-        // change evaluation point
-        extensiveQuantitiesEval_ = &extensiveQuantitiesSaved_;
-    }
-
-    /*!
-     * \brief Restore current extensive quantities from the saved ones.
-     */
-    void restoreExtensiveQuantities()
-    {
-        //extensiveQuantitiesSaved_ = extensiveQuantities_; // not needed
-
-        // change evaluation point
-        extensiveQuantitiesEval_ = &extensiveQuantities_;
-    }
-
-    /*!
      * \brief Return a reference to the intensive quantities of a
      *        sub-control volume at a given time.
      *
@@ -428,29 +402,25 @@ public:
     }
 
     /*!
-     * \brief Returns the intensive quantities at the evaluation point.
+     * \brief Stash the intensive quantities for a degree of freedom on internal memory.
      *
-     * \param dofIdx The local index of the degree of freedom
-     *               in the current element.
+     * \param dofIdx The local index of the degree of freedom in the current element.
      */
     void saveIntensiveQuantities(int dofIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(/*timeIdx=*/0));
 
-        dofIdxSaved_ = dofIdx;
         intensiveQuantitiesSaved_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
         priVarsSaved_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
     }
 
     /*!
-     * \brief Restores the intensive quantities at the evaluation point.
+     * \brief Restores the intensive quantities for a degree of freedom from internal memory.
      *
-     * \param dofIdx The local index of the degree of freedom
-     *               in the current element.
+     * \param dofIdx The local index of the degree of freedom in the current element.
      */
     void restoreIntensiveQuantities(int dofIdx)
     {
-        dofIdxSaved_ = -1;
         dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
         dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesSaved_;
     }
@@ -472,40 +442,6 @@ public:
      */
     const ExtensiveQuantities &extensiveQuantities(int fluxIdx, int timeIdx) const
     { return extensiveQuantities_[fluxIdx]; }
-
-    /*!
-     * \brief Return a reference to the extensive quantities of a
-     *        sub-control volume face for the evaluation point.
-     *
-     * \param fluxIdx The local index of the sub-control volume face for
-     *               which the extensive quantities are requested
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
-     */
-    const ExtensiveQuantities &evalPointExtensiveQuantities(int fluxIdx, int timeIdx) const
-    {
-        if (timeIdx != 0)
-            return extensiveQuantities(fluxIdx, timeIdx);
-        return (*extensiveQuantitiesEval_)[fluxIdx];
-    }
-
-    /*!
-     * \brief Returns the intensive quantities for history index 0 at the
-     *        evaluation point.
-     *
-     * \param dofIdx The local index of the degree of freedom
-     *               in the current element.
-     * \param timeIdx The index of the solution vector used by the
-     *                time discretization.
-     */
-    const IntensiveQuantities &evalPointIntensiveQuantities(int dofIdx, int timeIdx) const
-    {
-        if (timeIdx != 0)
-            return intensiveQuantities(dofIdx, timeIdx);
-        if (dofIdxSaved_ == dofIdx)
-            return intensiveQuantitiesSaved_;
-        return intensiveQuantities(dofIdx, /*timeIdx=*/0);
-    }
 
 protected:
     /*!
@@ -555,16 +491,12 @@ protected:
 
     DofVarsVector dofVars_;
 
-    int dofIdxSaved_;
     IntensiveQuantities intensiveQuantitiesSaved_;
     PrimaryVariables priVarsSaved_;
 
     GradientCalculator gradientCalculator_;
 
     ExtensiveQuantitiesVector extensiveQuantities_;
-    ExtensiveQuantitiesVector extensiveQuantitiesSaved_;
-
-    ExtensiveQuantitiesVector *extensiveQuantitiesEval_;
 
     const Simulator *simulatorPtr_;
     const Element *elemPtr_;

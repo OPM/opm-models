@@ -414,7 +414,6 @@ public:
     static void addAdvectiveFlux(RateVector &flux, const Context &context, int spaceIdx, int timeIdx)
     {
         const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
-        const auto &evalPointExtQuants = context.evalPointExtensiveQuantities(spaceIdx, timeIdx);
 
         // advective heat flux in all phases
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -423,7 +422,7 @@ public:
 
             // intensive quantities of the upstream and the downstream DOFs
             const IntensiveQuantities &up =
-                context.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
+                context.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
 
             flux[energyEqIdx] +=
                 extQuants.volumeFlux(phaseIdx)
@@ -443,8 +442,6 @@ public:
     {
         const auto &scvf = context.stencil(timeIdx).interiorFace(spaceIdx);
         const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
-        const auto &evalPointExtQuants =
-            context.evalPointExtensiveQuantities(spaceIdx, timeIdx);
 
         // reduce the heat flux in the matrix by the half the width
         // occupied by the fracture
@@ -458,7 +455,7 @@ public:
 
             // intensive quantities of the upstream and the downstream DOFs
             const IntensiveQuantities &up =
-                context.intensiveQuantities(evalPointExtQuants.upstreamIndex(phaseIdx), timeIdx);
+                context.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
 
             flux[energyEqIdx] +=
                 extQuants.fractureVolumeFlux(phaseIdx)

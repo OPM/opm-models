@@ -125,19 +125,14 @@ public:
                           int timeIdx) const
     {
         const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
-        const ExtensiveQuantities &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
-        int interiorIdx = evalPointExtQuants.interiorIndex();
+        int interiorIdx = extQuants.interiorIndex();
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            // data attached to upstream and the downstream DOFs of
-            // the current phase. The upstream decision has to be made
-            // using the evaluation point and *not* the current local
-            // solution. (although the actual secondary variables must
-            // obviously be calculated using the current solution.)
-            int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+            // data attached to upstream DOF of the current phase.
+            int upIdx = extQuants.upstreamIndex(phaseIdx);
 
             const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 

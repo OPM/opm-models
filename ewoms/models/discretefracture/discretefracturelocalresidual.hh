@@ -111,7 +111,6 @@ public:
         ParentType::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
         const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
-        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
 
         int i = extQuants.interiorIndex();
         int j = extQuants.exteriorIndex();
@@ -139,7 +138,7 @@ public:
                 1 - extQuants.fractureWidth() / (2 * scvfArea);
 
             // intensive quantities of the upstream and the downstream DOFs
-            int upIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+            int upIdx = extQuants.upstreamIndex(phaseIdx);
             const auto &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
             flux[conti0EqIdx + phaseIdx] +=
                 extQuants.fractureVolumeFlux(phaseIdx) * up.fractureFluidState().density(phaseIdx);

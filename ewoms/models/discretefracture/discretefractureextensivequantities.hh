@@ -87,12 +87,10 @@ public:
                                                outsideScvIdx, timeIdx);
         assert(fractureWidth_ < scvf.area());
 
-        const auto &evalPointExtQuants = elemCtx.evalPointExtensiveQuantities(scvfIdx, timeIdx);
-
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             const auto &pGrad = extQuants.potentialGrad(phaseIdx);
 
-            int upstreamIdx = evalPointExtQuants.upstreamIndex(phaseIdx);
+            int upstreamIdx = extQuants.upstreamIndex(phaseIdx);
             const auto &up = elemCtx.intensiveQuantities(upstreamIdx, timeIdx);
 
             // multiply with the fracture mobility of the upstream vertex
