@@ -137,7 +137,7 @@ public:
      *        residual compared to the initial solution.
      */
     Scalar residualAccuracy() const
-    { return residualError_/std::max(1e-20, initialResidualError_); }
+    { return residualError_/std::max<Scalar>(1e-20, initialResidualError_); }
 
     /*!
      * \brief Sets the fix-point tolerance.
@@ -174,7 +174,7 @@ public:
 
         // make sure that we don't allow an initial error of 0 to avoid
         // divisions by zero
-        residualError_ = std::max(residualError_, 1e-20);
+        residualError_ = std::max<Scalar>(residualError_, 1e-20);
         initialResidualError_ = residualError_;
     }
 
@@ -237,7 +237,7 @@ public:
         os << std::setw(20) << fixPointAccuracy() << " ";
         os << std::setw(20) << residualError_ << " ";
         os << std::setw(20) << 1/residualAccuracy() << " ";
-        os << std::setw(20) << lastResidualError_ / std::max(residualError_, 1e-80) << " ";
+        os << std::setw(20) << lastResidualError_ / std::max<Scalar>(residualError_, 1e-80) << " ";
         os << std::endl << std::flush;
     }
 
@@ -255,7 +255,7 @@ private:
                 fixPointError_ =
                     std::max<Scalar>(fixPointError_,
                                      std::abs(curSol[i][j] - lastSolVec_[i][j])
-                                     /std::max(1.0, curSol[i][j]));
+                                     /std::max<Scalar>(1.0, curSol[i][j]));
             }
         }
         lastSolVec_ = curSol;
