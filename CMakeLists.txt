@@ -18,7 +18,7 @@ cmake_minimum_required (VERSION 2.8)
 # add the current projects cmake module directory to the search
 # path. This is not required anymore once support for federated builds
 # is merged.
-list(INSERT CMAKE_MODULE_PATH 0 "cmake/Modules")
+list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/cmake/Modules")
 
 set(OPM_CMAKE_ROOT "" CACHE PATH "Root directory containing OPM related cmake modules")
 
