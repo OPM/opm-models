@@ -18,7 +18,7 @@ cmake_minimum_required (VERSION 2.8)
 # add the current projects cmake module directory to the search
 # path. This is not required anymore once support for federated builds
 # is merged.
-list(INSERT CMAKE_MODULE_PATH 0 "cmake/Modules")
+list(INSERT CMAKE_MODULE_PATH 0 "${PROJECT_SOURCE_DIR}/cmake/Modules")
 
 set(OPM_CMAKE_ROOT "" CACHE PATH "Root directory containing OPM related cmake modules")
 
@@ -53,6 +53,10 @@ else()
       message(FATAL_ERROR "Could not find the OPM build system Macros")
    endif()
 endif()
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+
+# Testing
+include(OpmSatellites)
 
 # list of prerequisites for this particular project; this is in a
 # separate file (in cmake/Modules sub-directory) because it is shared
@@ -112,135 +116,191 @@ endforeach()
 # include the macros required to build the tests and applications
 # shipped as part of the eWoms distribution
 include(EwomsAddApplication)
-include(EwomsAddTest)
 
-EwomsAddTest(test_propertysystem
-	SOURCES tests/test_propertysystem.cc
-  DRIVER_ARGS --plain test_propertysystem)
+opm_add_test(test_propertysystem
+             SOURCES tests/test_propertysystem.cc
+             DRIVER_ARGS --plain test_propertysystem
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
 # them as long for parallel test runs
-EwomsAddTest(waterair_pvs_ni
-	SOURCES tests/waterair_pvs_ni.cc
-  DRIVER_ARGS --simulation waterair_pvs_ni --grid-global-refinements=1)
+opm_add_test(waterair_pvs_ni
+             SOURCES tests/waterair_pvs_ni.cc
+             DRIVER_ARGS --simulation=waterair_pvs_ni
+                         --grid-global-refinements=1
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(lens_immiscible_vcfv
-	SOURCES tests/lens_immiscible_vcfv.cc
-  DRIVER_ARGS --simulation lens_immiscible_vcfv --end-time=3000)
+opm_add_test(lens_immiscible_vcfv
+             SOURCES tests/lens_immiscible_vcfv.cc
+             DRIVER_ARGS --simulation=lens_immiscible_vcfv --end-time=3000
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(lens_immiscible_ecfv
-	SOURCES tests/lens_immiscible_ecfv.cc
-  DRIVER_ARGS --simulation lens_immiscible_ecfv --end-time=3000)
+opm_add_test(lens_immiscible_ecfv
+             SOURCES tests/lens_immiscible_ecfv.cc
+             DRIVER_ARGS --simulation=lens_immiscible_ecfv --end-time=3000
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(finger_immiscible
-	SOURCES tests/finger_immiscible.cc
-	CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
+opm_add_test(finger_immiscible
+             SOURCES tests/finger_immiscible.cc
+             CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(test_navierstokes
-	SOURCES tests/test_navierstokes.cc
-	CONDITION (DUNE_ALUGRID_FOUND OR ALUGRID_FOUND) AND SUPERLU_FOUND)
-EwomsAddTest(test_stokes2c SOURCES tests/test_stokes2c.cc CONDITION SUPERLU_FOUND)
-EwomsAddTest(test_stokesni SOURCES tests/test_stokesni.cc CONDITION SUPERLU_FOUND)
+opm_add_test(test_navierstokes
+             SOURCES tests/test_navierstokes.cc
+             CONDITION (DUNE_ALUGRID_FOUND OR ALUGRID_FOUND) AND SUPERLU_FOUND
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(co2injection_flash_ni_vcfv SOURCES tests/co2injection_flash_ni_vcfv.cc)
-EwomsAddTest(co2injection_flash_ni_ecfv SOURCES tests/co2injection_flash_ni_ecfv.cc)
-EwomsAddTest(co2injection_flash_vcfv SOURCES tests/co2injection_flash_vcfv.cc)
-EwomsAddTest(co2injection_flash_ecfv SOURCES tests/co2injection_flash_ecfv.cc)
-EwomsAddTest(co2injection_ncp_ni_vcfv SOURCES tests/co2injection_ncp_ni_vcfv.cc)
-EwomsAddTest(co2injection_pvs_ni_vcfv SOURCES tests/co2injection_pvs_ni_vcfv.cc)
-EwomsAddTest(co2injection_ncp_vcfv SOURCES tests/co2injection_ncp_vcfv.cc)
-EwomsAddTest(co2injection_pvs_vcfv SOURCES tests/co2injection_pvs_vcfv.cc)
-EwomsAddTest(co2injection_immiscible_ni_vcfv SOURCES tests/co2injection_immiscible_ni_vcfv.cc)
-EwomsAddTest(co2injection_immiscible_vcfv SOURCES tests/co2injection_immiscible_vcfv.cc)
-EwomsAddTest(co2injection_immiscible_ecfv SOURCES tests/co2injection_immiscible_ecfv.cc)
-EwomsAddTest(co2injection_ncp_ecfv SOURCES tests/co2injection_ncp_ecfv.cc)
-EwomsAddTest(co2injection_pvs_ecfv SOURCES tests/co2injection_pvs_ecfv.cc)
-EwomsAddTest(co2injection_immiscible_ni_ecfv SOURCES tests/co2injection_immiscible_ni_ecfv.cc)
-EwomsAddTest(co2injection_ncp_ni_ecfv SOURCES tests/co2injection_ncp_ni_ecfv.cc)
-EwomsAddTest(co2injection_pvs_ni_ecfv SOURCES tests/co2injection_pvs_ni_ecfv.cc)
+opm_add_test(test_stokes2c
+             SOURCES tests/test_stokes2c.cc
+             CONDITION SUPERLU_FOUND
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(fracture_discretefracture
-  SOURCES tests/fracture_discretefracture.cc
-  CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
-  DRIVER_ARGS --simulation fracture_discretefracture --end-time=400)
+opm_add_test(test_stokesni
+             SOURCES tests/test_stokesni.cc
+             CONDITION SUPERLU_FOUND
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(powerinjection_forchheimer SOURCES tests/powerinjection_forchheimer.cc)
-EwomsAddTest(powerinjection_darcy SOURCES tests/powerinjection_darcy.cc)
+foreach(tapp co2injection_flash_ni_vcfv
+             co2injection_flash_ni_ecfv
+             co2injection_flash_vcfv
+             co2injection_flash_ecfv
+             co2injection_ncp_ni_vcfv
+             co2injection_pvs_ni_vcfv
+             co2injection_ncp_vcfv
+             co2injection_pvs_vcfv
+             co2injection_immiscible_ni_vcfv
+             co2injection_immiscible_vcfv
+             co2injection_immiscible_ecfv
+             co2injection_ncp_ecfv
+             co2injection_pvs_ecfv
+             co2injection_immiscible_ni_ecfv
+             co2injection_ncp_ni_ecfv
+             co2injection_pvs_ni_ecfv
+             powerinjection_forchheimer
+             powerinjection_darcy
+             reservoir_blackoil
+             cuvette_pvs
+             infiltration_pvs
+             lens_richards_vcfv
+             lens_richards_ecfv
+             obstacle_immiscible
+             obstacle_ncp
+             obstacle_pvs
+             outflow_pvs
+             diffusion_flash
+             diffusion_ncp
+             diffusion_pvs
+             groundwater_immiscible)
+  opm_add_test(${tapp} SOURCES tests/${tapp}.cc
+                       WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+                       DRIVER_ARGS --simulation=${tapp}
+                       LIBRARIES ${ewoms_LIBRARIES})
+endforeach()
 
-EwomsAddTest(reservoir_blackoil SOURCES tests/reservoir_blackoil.cc)
+opm_add_test(fracture_discretefracture
+             SOURCES tests/fracture_discretefracture.cc
+             CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
+             DRIVER_ARGS --simulation=fracture_discretefracture --end-time=400
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(cuvette_pvs SOURCES tests/cuvette_pvs.cc)
-EwomsAddTest(infiltration_pvs SOURCES tests/infiltration_pvs.cc)
-EwomsAddTest(lens_richards_vcfv SOURCES tests/lens_richards_vcfv.cc)
-EwomsAddTest(lens_richards_ecfv SOURCES tests/lens_richards_ecfv.cc)
-EwomsAddTest(obstacle_immiscible SOURCES tests/obstacle_immiscible.cc)
-EwomsAddTest(obstacle_ncp SOURCES tests/obstacle_ncp.cc)
-EwomsAddTest(obstacle_pvs SOURCES tests/obstacle_pvs.cc)
-EwomsAddTest(outflow_pvs SOURCES tests/outflow_pvs.cc)
-EwomsAddTest(test_quadrature SOURCES tests/test_quadrature.cc DRIVER_ARGS --plain test_quadrature)
+opm_add_test(test_quadrature
+             SOURCES tests/test_quadrature.cc
+             DRIVER_ARGS --plain test_quadrature
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
 # the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
 EwomsAddApplication(ebos
-  SOURCES applications/ebos/ebos.cc
-  EXE_NAME ebos
-  CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
+                    SOURCES applications/ebos/ebos.cc
+                    EXE_NAME ebos
+                    CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT
+                    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+                    LIBRARIES ${ewoms_LIBRARIES})
 
 # test for the parallelization of the element centered finite volume
 # discretization (using the non-isothermal NCP model and BiCGSTAB +
 # ILU0)
-EwomsAddTest(co2injection_ncp_ni_ecfv_parallel
-  EXE_NAME co2injection_ncp_ni_ecfv
-  NO_COMPILE
-  PROCESSORS 4
-  CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation=4 co2injection_ncp_ni_ecfv --end-time=10 --initial-time-step-size=1)
+opm_add_test(co2injection_ncp_ni_ecfv_parallel
+             EXE_NAME co2injection_ncp_ni_ecfv
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION MPI_FOUND
+             DRIVER_ARGS --parallel-simulation=4 co2injection_ncp_ni_ecfv
+                         --end-time=10 --initial-time-step-size=1
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)
-EwomsAddTest(obstacle_immiscible_parallel
-  EXE_NAME obstacle_immiscible
-  NO_COMPILE
-  PROCESSORS 4
-  CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation=4 obstacle_immiscible --end-time=1 --initial-time-step-size=1)
+opm_add_test(obstacle_immiscible_parallel
+             EXE_NAME obstacle_immiscible
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION MPI_FOUND
+             DRIVER_ARGS --parallel-simulation=4 obstacle_immiscible
+                         --end-time=1 --initial-time-step-size=1
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
-EwomsAddTest(lens_immiscible_vcfv_parallel
-  EXE_NAME lens_immiscible_vcfv
-  NO_COMPILE
-  PROCESSORS 4
-  CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation=4 lens_immiscible_vcfv --end-time=250 --initial-time-step-size=250)
+opm_add_test(lens_immiscible_vcfv_parallel
+             EXE_NAME lens_immiscible_vcfv
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION MPI_FOUND
+             DRIVER_ARGS --parallel-simulation=4 lens_immiscible_vcfv
+                         --end-time=250 --initial-time-step-size=250
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(lens_immiscible_ecfv_parallel
-  EXE_NAME lens_immiscible_ecfv
-  NO_COMPILE
-  PROCESSORS 4
-  CONDITION MPI_FOUND
-  DRIVER_ARGS --parallel-simulation=4 lens_immiscible_ecfv --end-time=250 --initial-time-step-size=250)
+opm_add_test(lens_immiscible_ecfv_parallel
+             EXE_NAME lens_immiscible_ecfv
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION MPI_FOUND
+             DRIVER_ARGS --parallel-simulation=4 lens_immiscible_ecfv
+                         --end-time=250 --initial-time-step-size=250
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(obstacle_immiscible_parameters
-  EXE_NAME obstacle_immiscible
-  NO_COMPILE
-  DEPENDS obstacle_immiscible
-  DRIVER_ARGS --parameters obstacle_immiscible)
+opm_add_test(obstacle_immiscible_parameters
+             EXE_NAME obstacle_immiscible
+             NO_COMPILE
+             DEPENDS obstacle_immiscible
+             DRIVER_ARGS --parameters=obstacle_immiscible
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(obstacle_pvs_restart
-  EXE_NAME obstacle_pvs
-  NO_COMPILE
-  DEPENDS obstacle_pvs
-  DRIVER_ARGS --restart obstacle_pvs --pvs-verbosity=2 --end-time=15000)
+opm_add_test(obstacle_pvs_restart
+             EXE_NAME obstacle_pvs
+             NO_COMPILE
+             DEPENDS obstacle_pvs
+             DRIVER_ARGS --restart=obstacle_pvs --pvs-verbosity=2
+                         --end-time=15000
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
+
 
 # the test for the plain stokes model is completes quite
 # quickly. thus, we put it to the end of the list...
-EwomsAddTest(test_stokes SOURCES tests/test_stokes.cc CONDITION SUPERLU_FOUND)
+opm_add_test(test_stokes
+             SOURCES tests/test_stokes.cc
+             CONDITION SUPERLU_FOUND
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
 
-EwomsAddTest(diffusion_flash SOURCES tests/diffusion_flash.cc)
-EwomsAddTest(diffusion_ncp SOURCES tests/diffusion_ncp.cc)
-EwomsAddTest(diffusion_pvs SOURCES tests/diffusion_pvs.cc)
-
-EwomsAddTest(tutorial1 SOURCES tutorial/tutorial1.cc)
-
-EwomsAddTest(groundwater_immiscible SOURCES tests/groundwater_immiscible.cc)
+opm_add_test(tutorial1
+             SOURCES tutorial/tutorial1.cc
+             WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+             LIBRARIES ${ewoms_LIBRARIES})
