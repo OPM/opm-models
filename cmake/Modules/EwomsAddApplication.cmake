@@ -5,8 +5,8 @@
 #                     [EXE_NAME AppExecutableName]
 #                     [CONDITION ConditionalExpression]
 #                     [SOURCES SourceFile1 SourceFile2 ...])
-include(EwomsAddTest)
+include(OpmSatellites)
 
 macro(EwomsAddApplication AppName)
-  EwomsAddTest(${AppName} ${ARGN} ALWAYS_ENABLE ONLY_COMPILE)
+  opm_add_test(${AppName} ${ARGN} ALWAYS_ENABLE ONLY_COMPILE)
 endmacro()
