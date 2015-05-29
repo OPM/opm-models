@@ -274,7 +274,10 @@ public:
     void write(const std::string& fileName, int reportStepIdx)
     {
 #if HAVE_ERT
-        ecl_grid_fwrite_EGRID(ertHandle(), fileName.c_str());
+        // we convert the units ourselfs, so we set convertFromMetric to
+        // true. (currently, the ecl_grid_alloc_GRDECL_kw() function always allocates a
+        // metric grid.)
+        ecl_grid_fwrite_EGRID(ertHandle(), fileName.c_str(), /*convertFromMetric=*/true);
 #endif
     }
 
