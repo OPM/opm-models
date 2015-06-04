@@ -117,14 +117,18 @@ endforeach()
 # shipped as part of the eWoms distribution
 include(EwomsAddApplication)
 
+opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
+opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
+
+set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
+
 # the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
 EwomsAddApplication(ebos
                     SOURCES applications/ebos/ebos.cc
                     EXE_NAME ebos
                     CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
 
-opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
-opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
+message("HAVE_DUNE_CORNERPOINT: ${HAVE_DUNE_CORNERPOINT}")
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for

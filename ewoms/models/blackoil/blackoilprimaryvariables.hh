@@ -204,7 +204,6 @@ public:
         typedef typename Opm::MathToolbox<FsEvaluation> FsToolbox;
 
         Scalar po = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
-        Scalar pg = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
         temperature_ = FsToolbox::value(fluidState.temperature(gasPhaseIdx));
 
         // the pressure of the first phase and the saturation of water
@@ -218,10 +217,6 @@ public:
         Scalar xoGSat = -1e100;
         if (FluidSystem::enableDissolvedGas())
             xoGSat = FluidSystem::saturatedOilGasMoleFraction(temperature_, po, pvtRegionIdx_);
-
-        Scalar xgOSat = -1e100;
-        if (FluidSystem::enableVaporizedOil())
-            xgOSat = FluidSystem::saturatedGasOilMoleFraction(temperature_, pg, pvtRegionIdx_);
 
         if (gasPresent || !oilPresent)
             switchingVarMeaning_ = GasSaturation;
