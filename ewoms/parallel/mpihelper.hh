@@ -93,11 +93,10 @@ public:
     {
         // make it only possible to instanciate this class once during
         // the lifetime of the program
-        static bool wasInstanciated = false;
-        if (wasInstanciated)
+        if (singleton_)
             OPM_THROW(std::logic_error,
                       "Ewoms::MpiHelper may only be instanciated once!");
-        wasInstanciated = true;
+        singleton_ = this;
 
 #if HAVE_MPI
         if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
@@ -118,12 +117,11 @@ public:
     /*!
      * \brief The deprecated singleton DUNE interface
      */
-    DUNE_DEPRECATED_MSG(
-        "Construct an instance of this class in your main function instead!")
     static MpiHelper &instance(int &argc, char **&argv)
     {
-        static MpiHelper singleton(argc, argv);
-        return singleton;
+        if (!singleton_)
+            singleton_ = new MpiHelper(argc, argv);
+        return *singleton_;
     }
 
     /*!
@@ -176,12 +174,16 @@ public:
 
 private:
     MpiHelper &operator=(const MpiHelper);
+    static bool wasInstanciated;
+    static MpiHelper* singleton_;
     static int size_;
     static int rank_;
 };
 
 int MpiHelper::size_ = 1;
 int MpiHelper::rank_ = 0;
+
+MpiHelper* MpiHelper::singleton_ = 0;
 
 } // namespace Ewoms
 

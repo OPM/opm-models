@@ -244,6 +244,7 @@ class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -1032,7 +1033,16 @@ public:
      *        model can overload.
      */
     void updateSuccessful()
-    { }
+    {
+#if 0 // HAVE_DUNE_FEM
+        // adapt the grid if enabled and if all dependencies are available
+        if (adaptationManager_.adaptive()) {
+            problem_.markForGridAdaptation();
+            adaptationManager_.adapt();
+#warning TODO: deal with the solution vectors
+        }
+#endif
+    }
 
     /*!
      * \brief Called by the update() method if it was
@@ -1543,6 +1553,19 @@ protected:
     mutable SolutionVector solution_[historySize];
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
+
+#if 0 // HAVE_DUNE_FEM
+    typedef Dune::Fem::FunctionSpace<typename Grid::ctype,
+                                     Scalar,
+                                     Grid::dimensionworld,
+                                     numEq> FunctionSpace;
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+    typedef Dune::Fem::FiniteVolumeSpace<FunctionSpace, GridPart, 0> DiscreteFunctionSpace;
+    typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace> DiscreteFunction;
+    typedef Dune::Fem::RestrictProlongDefault<DiscreteFunction> RestrictProlongType;
+    typedef Dune::Fem::AdaptationManager<Grid, RestrictProlongType> AdaptationManager;
+    AdaptationManager adaptationManager_;
+#endif
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;

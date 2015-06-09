@@ -36,6 +36,7 @@ namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(GridPart);
 NEW_PROP_TAG(GridViewLevel);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
@@ -129,6 +130,10 @@ class BaseGridManager
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, GridManager) Implementation;
 
+#if HAVE_DUNE_FEM
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+#endif
+
 public:
     BaseGridManager(Simulator &simulator)
         : simulator_(simulator)
@@ -146,6 +151,14 @@ public:
     const GridView &gridView() const
     { return *gridView_; }
 
+#if HAVE_DUNE_FEM
+    /*!
+     * \brief Returns a reference to the grid part to be used.
+     */
+    const GridPart &gridPart() const
+    { return *gridPart_; }
+#endif
+
     /*!
      * \brief Distribute the grid (and attached data) over all
      *        processes.
@@ -157,7 +170,12 @@ protected:
     // this method should be called after the grid has been allocated
     void finalizeInit_()
     {
+#if HAVE_DUNE_FEM
+        gridPart_.reset(new GridPart(asImp_().grid()));
+        gridView_.reset(new GridView(gridPart_->gridView()));
+#else
         gridView_.reset(new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_())));
+#endif
     }
 
 private:
@@ -169,6 +187,9 @@ private:
 
     Simulator &simulator_;
     std::unique_ptr<GridView> gridView_;
+#if HAVE_DUNE_FEM
+    std::unique_ptr<GridPart> gridPart_;
+#endif
 };
 
 } // namespace Ewoms
