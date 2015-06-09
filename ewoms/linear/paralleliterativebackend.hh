@@ -190,6 +190,7 @@ class ParallelIterativeSolverBackend
 public:
     ParallelIterativeSolverBackend(const Simulator &simulator)
         : simulator_(simulator)
+        , gridSequenceNumber_( -1 )
     {
         overlappingMatrix_ = 0;
         overlappingb_ = 0;
@@ -240,6 +241,14 @@ public:
     {
         Scalar oldSingularLimit = Dune::FMatrixPrecision<Scalar>::singular_limit();
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-50);
+
+        // if grid has changed the sequence number has changed too
+        const int currentSequence = simulator_.gridManager().gridSequenceNumber();
+        if( gridSequenceNumber_ != currentSequence )
+        {
+          cleanup_();
+          gridSequenceNumber_ = currentSequence;
+        }
 
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
@@ -436,6 +445,7 @@ private:
     }
 
     const Simulator &simulator_;
+    int gridSequenceNumber_;
 
     OverlappingMatrix *overlappingMatrix_;
     OverlappingVector *overlappingb_;

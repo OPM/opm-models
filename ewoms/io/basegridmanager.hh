@@ -28,6 +28,10 @@
 
 #include <dune/common/version.hh>
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/space/common/dofmanager.hh>
+#endif
+
 #include <type_traits>
 #include <memory>
 
@@ -157,7 +161,20 @@ public:
      */
     const GridPart &gridPart() const
     { return *gridPart_; }
+
+    /*!
+     * \brief Returns a reference to the grid part to be used.
+     */
+    GridPart &gridPart()
+    { return *gridPart_; }
+
+    int gridSequenceNumber () const
+    {
+      typedef Dune::Fem::DofManager< Grid > FemDofManager;
+      return FemDofManager::instance( gridPart().grid() ).sequence();
+    }
 #endif
+
 
     /*!
      * \brief Distribute the grid (and attached data) over all
