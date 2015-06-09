@@ -1056,7 +1056,10 @@ public:
             simulator_.problem().markForGridAdaptation();
             adaptationManager_->adapt();
 
+            resetLinearizer();
+            finishInit();
             resizeAndResetIntensiveQuantitiesCache_();
+            updateBoundary_();
         }
 #endif
     }
