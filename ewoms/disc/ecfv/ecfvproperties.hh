@@ -20,7 +20,6 @@
 */
 /*!
  * \file
- * \ingroup EcfvDiscretization
  *
  * \brief Declare the basic properties used by the common infrastructure of
  *        the element-centered finite volume discretization.
@@ -34,15 +33,8 @@
 
 namespace Ewoms {
 namespace Properties {
-/*!
- * \ingroup EcfvDiscretization
- */
-// \{
-
 //! The type tag for models based on the ECFV-scheme
 NEW_TYPE_TAG(EcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
-
-// \}
 }} // namespace Properties, Ewoms
 
 #endif

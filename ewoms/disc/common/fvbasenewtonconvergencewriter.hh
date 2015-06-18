@@ -32,6 +32,7 @@
 #include <iostream>
 
 namespace Ewoms {
+//! \cond SKIP_THIS
 namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(GridView);
@@ -40,10 +41,10 @@ NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(VtkOutputFormat);
 } // namespace Properties
+//! \endcond
 
 /*!
- * \ingroup Discretization
- * \ingroup Newton
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Writes the intermediate solutions during the Newton scheme
  *        for models using a finite volume discretization

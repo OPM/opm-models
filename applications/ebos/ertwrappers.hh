@@ -60,7 +60,7 @@ namespace Ewoms {
 template <class TypeTag>
 class EclGridManager;
 
-/// \cond 0
+/// \cond SKIP_THIS
 
 // required to make the compiler happy if the grid manager is not EclGridManager...
 

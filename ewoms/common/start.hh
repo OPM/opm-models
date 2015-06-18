@@ -177,10 +177,10 @@ static void resetTerminal_(int signum)
 //! \endcond
 
 /*!
- * \ingroup Startup
+ * \ingroup Common
  *
  * \brief Provides a main function which reads in parameters from the
- *        command line and a parameter file.
+ *        command line and a parameter file and runs the simulation
  *
  * \tparam TypeTag  The type tag of the problem which needs to be solved
  *

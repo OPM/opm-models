@@ -33,8 +33,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Discretization
- *
+ * \ingroup BlackOilModel
  * \brief Base class for all problems which use the black-oil model.
  */
 template<class TypeTag>

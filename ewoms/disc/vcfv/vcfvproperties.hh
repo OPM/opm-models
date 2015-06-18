@@ -20,9 +20,8 @@
 */
 /*!
  * \file
- * \ingroup VcfvDiscretization
  *
- * \brief Declare the basic properties used by the common infrastructure of
+ * \brief Declares the basic properties used by the common infrastructure of
  *        the vertex-centered finite volume discretization.
  */
 #ifndef EWOMS_VCFV_PROPERTIES_HH
@@ -34,19 +33,12 @@
 
 namespace Ewoms {
 namespace Properties {
-/*!
- * \ingroup VcfvDiscretization
- */
-// \{
-
 //! The type tag for models based on the VCFV-scheme
 NEW_TYPE_TAG(VcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
 
 //! Use the two-point gradient approximation scheme instead of first
 //! order finite element ones
 NEW_PROP_TAG(UseTwoPointGradients);
-
-// \}
 }} // namespace Properties, Ewoms
 
 #endif

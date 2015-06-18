@@ -40,8 +40,6 @@ namespace Ewoms {
 
 /*!
  * \ingroup StokesModel
- * \ingroup LocalResidual
- *
  * \brief The local residual function for problems using the
  *        Stokes model.
  */

@@ -128,7 +128,7 @@ namespace Properties {
 //! \endcond
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Convert a type tag name to a type
  *
  * The main advantage of the type of a \c TypeTag is that it can be
@@ -137,7 +137,7 @@ namespace Properties {
 #define TTAG(TypeTagName) Ewoms::Properties::TTag::TypeTagName
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Makes a type out of a property tag name
  *
  * Again property type names can be passed as template argument. This
@@ -146,7 +146,7 @@ namespace Properties {
 #define PTAG(PropTagName) Ewoms::Properties::PTag::PropTagName
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Define a new type tag.
  *
  * A type tag can inherit the properties defined on up to five parent
@@ -175,7 +175,7 @@ namespace Properties {
     extern int semicolonHack_
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Define splices for a given type tag.
  *
  * Splices can be seen as children which can be overridden lower in
@@ -221,7 +221,7 @@ namespace Properties {
     extern int semicolonHack_
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Syntactic sugar for NEW_TYPE_TAG.
  *
  * See the documentation for NEW_TYPE_TAG.
@@ -229,7 +229,7 @@ namespace Properties {
 #define INHERITS_FROM(...) __VA_ARGS__
 
 /*!
- * \ingroup PropertySystem
+// * \ingroup Properties
  * \brief Define a property tag.
  *
  * A property tag is the unique identifier for a property. It may only
@@ -264,7 +264,7 @@ namespace Properties {
 //! \endcond
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Set a property for a specific type tag.
  *
  * After this macro, you must to specify a complete body of a class
@@ -308,7 +308,7 @@ namespace Properties {
                     PTAG(PropTagName) >
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Explicitly unset a property for a type tag.
  *
  * This means that the property will not be inherited from the type
@@ -336,7 +336,7 @@ namespace Properties {
     {}
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Set a property to a simple constant integer value.
  *
  * The constant can be accessed by the \c value attribute.
@@ -352,7 +352,7 @@ namespace Properties {
     }
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Set a property to a simple constant boolean value.
  *
  * The constant can be accessed by the \c value attribute.
@@ -368,7 +368,7 @@ namespace Properties {
     }
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Set a property which defines a type.
  *
  * The type can be accessed by the \c type attribute.
@@ -383,7 +383,7 @@ namespace Properties {
     }
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Set a property to a simple constant scalar value.
  *
  * The constant can be accessed by the \c value attribute. In order to
@@ -406,7 +406,7 @@ namespace Properties {
     Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Set a property to a simple constant string value.
  *
  * The constant can be accessed by the \c value attribute and is of
@@ -427,7 +427,7 @@ namespace Properties {
     Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Define a property containing a type tag.
  *
  * This is convenient for splices.
@@ -443,7 +443,7 @@ namespace Properties {
 
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Retrieve a property for a type tag.
  *
  * If you use \c GET_PROP within a template and want to refer to some
@@ -458,7 +458,7 @@ namespace Properties {
 //!\endcond
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Access the \c value attribute of a property for a type tag.
  *
  * This is just for convenience and equivalent to
@@ -473,7 +473,7 @@ namespace Properties {
 //!\endcond
 
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Access the \c type attribute of a property for a type tag.
  *
  * This is just for convenience and equivalent to
@@ -491,7 +491,7 @@ namespace Properties {
 
 #if !defined NO_PROPERTY_INTROSPECTION
 /*!
- * \ingroup PropertySystem
+ * \ingroup Properties
  * \brief Return a human readable diagnostic message how exactly a
  *        property was defined.
  *

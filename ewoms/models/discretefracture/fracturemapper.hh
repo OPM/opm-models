@@ -33,6 +33,7 @@
 namespace Ewoms {
 
 /*!
+ * \ingroup DiscreteFractureModel
  * \brief Stores the topology of fractures.
  */
 template <class TypeTag>

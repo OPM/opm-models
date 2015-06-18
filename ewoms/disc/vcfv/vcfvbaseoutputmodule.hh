@@ -35,7 +35,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup VcfvBaseOutputModule
+ * \ingroup VcfvDiscretization
  *
  * \brief Implements the discretization specific parts of writing files.
  */

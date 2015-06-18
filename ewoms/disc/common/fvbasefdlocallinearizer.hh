@@ -86,7 +86,7 @@ SET_SCALAR_PROP(FiniteDifferenceLocalLinearizer, BaseEpsilon, 0.9123e-10);
 }
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Calculates the Jacobian of the local residual for finite volume spatial
  *        discretizations using a finite difference method

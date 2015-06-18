@@ -31,7 +31,6 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Newton
  * \ingroup PvsModel
  *
  * \brief A newton solver which is specific to the compositional

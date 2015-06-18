@@ -54,7 +54,7 @@ template <class TypeTag>
 class ForchheimerBaseProblem;
 
 /*!
- * \ingroup ForchheimerFlux
+ * \ingroup FluxModules
  * \brief Specifies a flux module which uses the Forchheimer relation.
  */
 template <class TypeTag>
@@ -72,7 +72,7 @@ struct ForchheimerFluxModule
 };
 
 /*!
- * \ingroup ForchheimerFlux
+ * \ingroup FluxModules
  * \brief Provides the defaults for the parameters required by the
  *        Forchheimer velocity approach.
  */
@@ -119,7 +119,7 @@ public:
 };
 
 /*!
- * \ingroup ForchheimerFlux
+ * \ingroup FluxModules
  * \brief Provides the intensive quantities for the Forchheimer module
  */
 template <class TypeTag>
@@ -171,7 +171,7 @@ private:
 };
 
 /*!
- * \ingroup ForchheimerFlux
+ * \ingroup FluxModules
  * \brief Provides the Forchheimer flux module
  *
  * The commonly used Darcy relation looses its validity for Reynolds

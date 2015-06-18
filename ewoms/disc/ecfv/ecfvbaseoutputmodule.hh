@@ -32,7 +32,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup EcfvBaseOutputModule
+ * \ingroup EcfvDiscretization
  *
  * \brief Implements the discretization specific parts of writing files.
  */

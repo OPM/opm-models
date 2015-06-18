@@ -48,7 +48,7 @@ template<class TypeTag>
 class EcfvDiscretization;
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief The common code for the linearizers of non-linear systems of equations
  *
@@ -59,6 +59,7 @@ class EcfvDiscretization;
 template<class TypeTag>
 class FvBaseLinearizer
 {
+//! \cond SKIP_THIS
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -97,6 +98,7 @@ class FvBaseLinearizer
 
     // copying the linearizer is not a good idea
     FvBaseLinearizer(const FvBaseLinearizer&);
+//! \endcond
 
 public:
     /*!

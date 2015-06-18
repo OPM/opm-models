@@ -32,7 +32,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup Discretization
+ * \ingroup EcfvDiscretization
  *
  * \brief A class which provides types for DUNE grid handles for
  *        communication.

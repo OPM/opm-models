@@ -44,10 +44,9 @@ NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Simulator);
 } // namespace Properties
 
-/*!
- * \cond 0
- *
- * Functions to retrieve the GridView regardless of whether the leaf
+//! \cond SKIP_THIS
+
+/* Functions to retrieve the GridView regardless of whether the leaf
  * or a level grid view was chosen.  This code is a bit tricky as it
  * uses the SFINAE rule and also has to work around some C++
  * ideosyncracities...
@@ -116,9 +115,7 @@ gimmeGridView_(const GridManager &gridManager)
 #endif
 }
 } // namespace BaseGridManagerHelper
-/*!
- * \endcond
- */
+//! \endcond
 
 /*!
  * \brief Provides the base class for most (all?) grid managers.

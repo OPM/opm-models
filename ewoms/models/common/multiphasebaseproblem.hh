@@ -56,6 +56,7 @@ class MultiPhaseBaseProblem
     : public FvBaseProblem<TypeTag>
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxBaseProblem
 {
+//! \cond SKIP_THIS
     typedef Ewoms::FvBaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
@@ -68,6 +69,7 @@ class MultiPhaseBaseProblem
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
+//! \endcond
 
 public:
     /*!

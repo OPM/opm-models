@@ -33,7 +33,8 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Newton
+ * \ingroup NcpModel
+ *
  * \brief A Newton solver specific to the NCP model.
  */
 template <class TypeTag>

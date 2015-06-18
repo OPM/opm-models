@@ -35,7 +35,7 @@ template<class TypeTag>
 class EcfvDiscretization;
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief This class calculates gradients of arbitrary quantities at
  *        flux integration points using the two-point approximation scheme

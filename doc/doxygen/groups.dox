@@ -11,129 +11,168 @@
  */
     /*!
      * \ingroup Common
-     * \defgroup Startup Startup
-     * \brief Helper Routines to Start the Simulation
+     * \defgroup Properties Properties
+     * \brief The property system
+     *
+     * The purpose of the eWoms property system is to specify compile-time parameters. It
+     * can thus be used to specify types and things which cause the compiler to alter
+     * its decisions.
+     *
+     * Semantically, the property system can be thought of being very similar to the
+     * standard C++ "traits" pattern. The advantages of the property system are that it
+     * includes build-in introspection capabilities and (more importantly) an easy to use
+     * inheritance mechanism.
      */
     /*!
      * \ingroup Common
-     * \defgroup TimeManager Time
-     * \brief Helper Routines to Control the Simulation Time
+     * \defgroup Parameter Parameters
+     * \brief The parameters system
+     *
+     * Parameters allow to specify values at runtime (either via command line arguments
+     * or by means of a .INI file) and thus cannot be used to specify types as properties
+     * can. Also all parameters fall back to the value of the property of the same as the
+     * parameter, so this property must exist and be defined.
      */
+/*!
+ * \defgroup Solvers Solvers
+ * \brief Linear and Non-Linear Solvers
+ */
     /*!
-     * \ingroup Common
+     * \ingroup Solvers
      * \defgroup Newton Non-Linear Solver
-     * \brief The Newton-Raphson Non-Linear Solver 
+     * \brief The Newton-Raphson Non-Linear Solver
      */
     /*!
-     * \ingroup Common
+     * \ingroup Solvers
      * \defgroup Linear Linear Solvers
      * \brief Linear Solvers
      */
 
 /****************** Fully Implicit ******************/
 /*!
- * \defgroup VcfvModel Physical Models
- * \brief Physical Models Based on the Fully Implicit Vertex Centered Finite Volume Discretization
+ * \defgroup SpatialDiscretizations Spatial Discretizations
+
+ * \brief Spatial discretizations approximate the continuous spatial
+ *        space of the physical world by data for finite number of points.
+ *
+ * These data points are usually called "degrees of freedom"
+ * (DOF). Each of them has a vector of so-called "primary variables"
+ * attached.
  */
+  /*!
+   * \ingroup SpatialDiscretizations
+   * \defgroup FiniteVolumeDiscretizations Finite-Volume Discretizations
+   *
+   * \brief Finite volume discretizations represent the spatial domain as
+   *        a set of piecewise constant functions.
+   */
     /*!
-     * \ingroup VcfvModel
-     * \defgroup VcfvModels Models
-     * \brief Models Using the Vcfv Scheme
+     * \ingroup FiniteVolumeDiscretizations
+     * \defgroup VcfvDiscretization  Vertex-Centered-Finite-Volumes
+     * \brief The Vertex-Centered-Finite-Volume Scheme
+     *
+     * This discretization assigns the primary variables to each of the grid's
+     * vertices. The primary variables of a vertex represent the solution for all points
+     * of the spatial domain for which the given vertex is the closest one.
      */
-        /*!
-         * \ingroup VcfvModels
-         * \defgroup ImmiscibleVcfvModel Immiscible
-         * \brief Immiscible Multi-Phase Model
-         *
-         * \copydetails Ewoms::ImmiscibleModel
-         */
-         /*!
-          * \ingroup VcfvModels
-          * \defgroup PvsVcfvModel PVS
-          * \brief Compositional Multi-Phase Model Using Primary Variable Switching
-          *
-          * \copydetails Ewoms::PvsModel
-          */
-         /*!
-          * \ingroup VcfvModels
-          * \defgroup NcpModel NCP
-          * \brief Compositional Multi-Phase Model Directly Solving Non-linear Complementarity Problems
-          *
-          * \copydetails Ewoms::NcpModel
-          */
-         /*!
-          * \ingroup VcfvModels
-          * \defgroup FlashModel Flash
-          * \brief Compositional Multi-Phase Model Based on Flash Calculations
-          *
-          * \copydetails Ewoms::FlashModel
-          */
-         /*!
-          * \ingroup VcfvModels
-          * \defgroup BlackOilVcfvModel Black Oil
-          * \brief Partially Miscible Three-Phase Model Based on the Black Oil Assumptions
-          *
-          * \copydetails Ewoms::BlackOilModel
-          */
-         /*!
-          * \ingroup VcfvModels
-          * \defgroup RichardsModel Richards
-          * \brief Immiscible Two-Phase Model Using the Richards Equation
-          *
-          * \copydetails Ewoms::RichardsModel
-          */
-         /*!
-          * \ingroup VcfvModels
-          * \defgroup VcfvStokesModel (Navier-)Stokes
-          * \brief Compositional/Immiscible Single-Phase Model for Turbulent Flow
-          *
-          * \copydetails Ewoms::StokesModel
-          */
-      /*!
-       * \ingroup VcfvModel
-       * \defgroup VcfvModules Modules
-       * \brief Modules Used by the Vcfv Models
-       */
-          /*!
-           * \ingroup VcfvModules
-           * \defgroup VcfvDarcyVelocity Darcy Velocity
-           * \brief The Darcy Velocity Module
-           *
-           * \copydetails Ewoms::VcfvDarcyVelocityModule
-           */
-
-          /*!
-           * \ingroup VcfvModules
-           * \defgroup VcfvForchheimerVelocity Forchheimer Velocity
-           * \brief The Forchheimer Velocity Module
-           *
-           * \copydetails Ewoms::VcfvForchheimerVelocityModule
-           */
-
-          /*!
-           * \ingroup VcfvModules
-           * \defgroup VcfvDiffusion Molecular Diffusion
-           * \brief A Module for to include molecular diffusion
-           *
-           * \copydetails Ewoms::VcfvDiffusionModule
-           */
-
-          /*!
-           * \ingroup VcfvModules
-           * \defgroup VcfvEnergy Energy
-           * \brief A Module for the Energy Equation 
-           *
-           * \copydetails Ewoms::VcfvEnergyModule
-           */
-
-          /*!
-           * \ingroup VcfvModules
-           * \defgroup VcfvVtk VTK
-           * \brief Various Modules to Write VTK Output
-           */
+    /*!
+     * \ingroup FiniteVolumeDiscretizations
+     * \defgroup EcfvDiscretization Element-Centered-Finite-Volumes
+     * \brief The Element-Centered-Finite-Volume Scheme
+     *
+     * This discretization assigns the primary variables to each of the grid's
+     * elements. The primary variables of an element represent the solution for all
+     * points of the element.
+     */
 
 /*!
- * \defgroup EclBlackOilSimulator ECL compatible black-oil simulator
- * \brief A simulator for ECL input decks which uses the
- *        fully-implicit element centered black-oil model
+ * \defgroup Models Flow Models
+ * \brief Models describing the equations to which physical world adheres to
  */
+  /*!
+   * \ingroup Models
+   * \defgroup ImmiscibleModel Immiscible
+   * \brief Immiscible Multi-Phase Model
+   *
+   * \copydetails Ewoms::ImmiscibleModel
+   */
+   /*!
+    * \ingroup Models
+    * \defgroup PvsModel PVS
+    * \brief Compositional Multi-Phase Model Using Primary Variable Switching
+    *
+    * \copydetails Ewoms::PvsModel
+    */
+   /*!
+    * \ingroup Models
+    * \defgroup NcpModel NCP
+    * \brief Compositional Multi-Phase Model Directly Solving Non-linear Complementarity Problems
+    *
+    * \copydetails Ewoms::NcpModel
+    */
+   /*!
+    * \ingroup Models
+    * \defgroup FlashModel Flash
+    * \brief Compositional Multi-Phase Model Based on Flash Calculations
+    *
+    * \copydetails Ewoms::FlashModel
+    */
+   /*!
+    * \ingroup Models
+    * \defgroup BlackOilModel Black Oil
+    * \brief Partially Miscible Three-Phase Model Based on the Black Oil Assumptions
+    *
+    * \copydetails Ewoms::BlackOilModel
+    */
+   /*!
+    * \ingroup Models
+    * \defgroup RichardsModel Richards
+    * \brief Immiscible Two-Phase Model Using the Richards Equation
+    *
+    * \copydetails Ewoms::RichardsModel
+    */
+   /*!
+    * \ingroup Models
+    * \defgroup StokesModel (Navier-)Stokes
+    * \brief Compositional/Immiscible Single-Phase Model for Turbulent Flow
+    *
+    * \copydetails Ewoms::StokesModel
+    */
+  /*!
+   * \ingroup Models
+   * \defgroup ModelModules Modules
+   * \brief Plug-in modules Used by the Models
+   */
+      /*!
+       * \ingroup ModelModules
+       * \defgroup FluxModules Flux
+       * \brief Flux Modules
+       */
+
+      /*!
+       * \ingroup ModelModules
+       * \defgroup Diffusion Molecular Diffusion
+       * \brief A Module for to molecular diffusion
+       *
+       * \copydetails Ewoms::DiffusionModule
+       */
+
+      /*!
+       * \ingroup ModelModules
+       * \defgroup Energy Energy
+       * \brief A Module for the Energy Equation
+       *
+       * \copydetails Ewoms::EnergyModule
+       */
+
+      /*!
+       * \ingroup ModelModules
+       * \defgroup Vtk VTK output
+       * \brief Various Modules to Write VTK Output
+       */
+
+  /*!
+   * \defgroup EclBlackOilSimulator ECL compatible black-oil simulator
+   * \brief A simulator for ECL input decks which uses the
+   *        fully-implicit element centered black-oil model
+   */

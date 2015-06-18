@@ -40,7 +40,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Base class for all problems which use a finite volume spatial discretization.
  *

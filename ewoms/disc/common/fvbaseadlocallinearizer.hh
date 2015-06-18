@@ -80,7 +80,7 @@ public:
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Calculates the local residual and its Jacobian for a single element of the grid.
  *

@@ -31,7 +31,6 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Newton
  * \ingroup BlackOilModel
  *
  * \brief A newton solver which is specific to the black oil model.

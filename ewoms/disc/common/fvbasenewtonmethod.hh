@@ -89,8 +89,7 @@ SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
- * \ingroup Newton
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief A Newton method for models using a finite volume discretization.
  *

@@ -37,6 +37,8 @@ NEW_PROP_TAG(NumEq);
 }
 
 /*!
+ * \ingroup FiniteVolumeDiscretizations
+ *
  * \brief Class to specify constraints for a finite volume spatial discretization.
  */
 template <class TypeTag>

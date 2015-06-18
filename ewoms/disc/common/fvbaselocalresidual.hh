@@ -41,7 +41,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Element-wise caculation of the residual matrix for models based on a finite
  *        volume spatial discretization.

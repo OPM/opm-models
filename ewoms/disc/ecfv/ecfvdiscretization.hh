@@ -89,7 +89,7 @@ SET_BOOL_PROP(EcfvDiscretization, LinearizeNonLocalElements, true);
 
 namespace Ewoms {
 /*!
- * \ingroup Discretization
+ * \ingroup EcfvDiscretization
  *
  * \brief The base class for the element-centered finite-volume discretization scheme.
  */

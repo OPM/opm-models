@@ -46,7 +46,7 @@ NEW_PROP_TAG(JacobianMatrix);
 } // namespace Properties
 
 /*!
- * \ingroup AuxiliaryEquations
+ * \ingroup ModelModules
  *
  * \brief Base class for specifying auxiliary equations.
  *

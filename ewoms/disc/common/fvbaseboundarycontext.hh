@@ -33,7 +33,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Represents all quantities which available on boundary segments
  */

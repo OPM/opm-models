@@ -20,6 +20,8 @@
 */
 /*!
  * \file
+ *
+ * \copydoc Ewoms::Timer
  */
 #ifndef EWOMS_TIMER_HH
 #define EWOMS_TIMER_HH
@@ -31,7 +33,9 @@
 #endif
 
 namespace Ewoms {
-/*
+/*!
+ * \ingroup Common
+ *
  * \brief Provides an encapsulation to measure the system time
  *
  * This means the wall clock time used by the simulation, the CPU time

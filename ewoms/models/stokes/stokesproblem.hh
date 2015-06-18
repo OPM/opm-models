@@ -35,7 +35,8 @@
 namespace Ewoms {
 
 /*!
- * \ingroup StokesProblems
+ * \ingroup StokesModel
+ *
  * \brief Base class for all problems which use the Stokes model.
  *
  * This implements gravity (if desired) and a function returning the

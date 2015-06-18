@@ -22,6 +22,7 @@
 */
 /*!
  * \file
+ *
  * \copydoc Ewoms::Simulator
  */
 #ifndef EWOMS_SIMULATOR_HH
@@ -52,7 +53,7 @@ NEW_PROP_TAG(InitialTimeStepSize);
 }
 
 /*!
- * \ingroup Simulator
+ * \ingroup Common
  *
  * \brief Manages the initializing and running of time dependent
  *        problems.

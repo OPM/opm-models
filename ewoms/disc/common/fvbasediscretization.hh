@@ -237,7 +237,7 @@ SET_BOOL_PROP(FvBaseDiscretization, RequireScvCenterGradients, false);
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief The base class for the finite volume discretization schemes.
  */

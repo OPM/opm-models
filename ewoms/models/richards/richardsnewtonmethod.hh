@@ -35,7 +35,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Newton
+ * \ingroup RichardsModel
  *
  * \brief A Richards model specific Newton method.
  */

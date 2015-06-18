@@ -33,7 +33,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup FvBaseDiscretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Represents the primary variables used by the a model.
  */

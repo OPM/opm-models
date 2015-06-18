@@ -32,7 +32,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Provide the properties at a face which make sense indepentently
  *        of the conserved quantities.

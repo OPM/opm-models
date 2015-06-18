@@ -43,8 +43,7 @@ NEW_PROP_TAG(FluxModule);
 }
 
 /*!
- * \ingroup Discretization
- *
+ * \ingroup DiscreteFractureModel
  * \brief The base class for the problems of ECFV discretizations which deal
  *        with a multi-phase flow through a porous medium.
  */
