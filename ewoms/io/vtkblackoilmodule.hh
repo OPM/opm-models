@@ -25,13 +25,14 @@
 #ifndef EWOMS_VTK_BLACK_OIL_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_MODULE_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "vtkmultiwriter.hh"
 #include "baseoutputmodule.hh"
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/models/blackoil/blackoilproperties.hh>
-#include <opm/material/localad/Math.hpp>
 
 #include <dune/common/fvector.hh>
 

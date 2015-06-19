@@ -26,6 +26,7 @@
 #define EWOMS_ISTL_CONVERGENCE_CRITERION_HH
 
 #include <dune/common/version.hh>
+#include <dune/common/fvector.hh>
 
 #include <cmath>
 #include <iostream>
