@@ -33,10 +33,15 @@
 #include <ewoms/common/propertysystem.hh>
 #include <opm/material/common/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/timer.hh>
 
 #include <dune/istl/istlexception.hh>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 
 #include <iostream>
 #include <sstream>

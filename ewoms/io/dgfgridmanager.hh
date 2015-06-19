@@ -25,8 +25,6 @@
 #ifndef EWOMS_DGF_GRID_MANAGER_HH
 #define EWOMS_DGF_GRID_MANAGER_HH
 
-#include <ewoms/parallel/mpihelper.hh>
-
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 
 #include <ewoms/io/basegridmanager.hh>

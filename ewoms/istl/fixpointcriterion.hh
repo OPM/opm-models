@@ -27,8 +27,6 @@
 
 #include "convergencecriterion.hh"
 
-#include <ewoms/parallel/mpihelper.hh>
-
 namespace Ewoms {
 /*! \addtogroup Linear
  * \{

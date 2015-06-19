@@ -27,7 +27,6 @@
 #define EWOMS_MULTI_PHASE_BASE_MODEL_HH
 
 #include <opm/material/localad/Math.hpp>
-#include <ewoms/parallel/mpihelper.hh>
 #include "multiphasebaseproperties.hh"
 #include "multiphasebaseproblem.hh"
 #include "multiphasebaseextensivequantities.hh"

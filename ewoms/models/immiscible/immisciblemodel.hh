@@ -27,7 +27,6 @@
 #define EWOMS_IMMISCIBLE_MODEL_HH
 
 #include <opm/material/localad/Math.hpp>
-#include <ewoms/parallel/mpihelper.hh>
 #include "immiscibleproperties.hh"
 #include "immiscibleindices.hh"
 #include "immiscibleextensivequantities.hh"

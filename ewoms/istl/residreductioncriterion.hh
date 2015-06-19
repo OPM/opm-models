@@ -29,8 +29,6 @@
 
 #include <dune/istl/scalarproducts.hh>
 
-#include <ewoms/parallel/mpihelper.hh>
-
 namespace Ewoms {
 /*! \addtogroup Linear
  * \{

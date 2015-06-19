@@ -28,13 +28,18 @@
 #ifndef EWOMS_SIMULATOR_HH
 #define EWOMS_SIMULATOR_HH
 
-#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/io/restart.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/common/propertysystem.hh>
-
 #include <ewoms/common/timer.hh>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 
 #include <iostream>
 #include <iomanip>
@@ -82,7 +87,7 @@ public:
     {
         setupTimer_.start();
 
-        verbose_ = verbose && Ewoms::MpiHelper::getCollectiveCommunication().rank() == 0;
+        verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
         timeStepIdx_ = 0;
         startTime_ = 0.0;
