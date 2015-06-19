@@ -33,6 +33,10 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/io/dgfgridmanager.hh>
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/gridpart/adaptiveleafgridpart.hh>
+#endif
+
 namespace Ewoms {
 namespace Properties {
 ///////////////////////////////////
@@ -67,9 +71,11 @@ NEW_PROP_TAG(ModelParameterGroup);
 //! Property which provides a GridManager (manages grids)
 NEW_PROP_TAG(GridManager);
 
-//! Property provides the name of the file from which the grid ought to be
-//! loaded from
-NEW_PROP_TAG(GridFile);
+NEW_PROP_TAG(GridView);
+
+#if HAVE_DUNE_FEM
+NEW_PROP_TAG(GridPart);
+#endif
 
 //! Property which tells the GridManager how often the grid should be refined
 //! after creation.
@@ -134,11 +140,21 @@ SET_TYPE_PROP(NumericModel, GridManager, Ewoms::DgfGridManager<TypeTag>);
 //! Set a value for the GridFile property
 SET_STRING_PROP(NumericModel, GridFile, "");
 
+#if HAVE_DUNE_FEM
+SET_PROP(NumericModel, GridPart)
+{
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+    typedef Dune::Fem::AdaptiveLeafGridPart<Grid> type;
+};
+
+SET_TYPE_PROP(NumericModel, GridView, typename GET_PROP_TYPE(TypeTag, GridPart)::GridViewType);
+#else
 //! Use the leaf grid view by default.
 //!
 //! Except for spatial refinement, there is rarly a reason to use
 //! anything else...
 SET_TYPE_PROP(NumericModel, GridView, typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView);
+#endif
 
 //! Set a value for the ParameterFile property
 SET_STRING_PROP(NumericModel, ParameterFile, "");

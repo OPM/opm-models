@@ -528,6 +528,16 @@ public:
     { return model().newtonMethod(); }
     // \}
 
+#if HAVE_DUNE_FEM
+    /*!
+     * \brief Mark grid cells for refinement or coarsening
+     */
+    void markForGridAdaptation()
+    {
+#warning TODO
+    }
+#endif
+
     /*!
      * \brief This method writes the complete state of the problem
      *        to the harddisk.

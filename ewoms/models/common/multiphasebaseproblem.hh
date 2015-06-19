@@ -62,6 +62,7 @@ class MultiPhaseBaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
@@ -289,6 +290,36 @@ public:
      */
     const DimVector &gravity() const
     { return gravity_; }
+
+
+    void markForGridAdaptation()
+    {
+      std::cout << "Mark for refinement" << std::endl;
+      ElementContext elemCtx( this->simulator() );
+      auto gridView = this->simulator().gridManager().gridView();
+      auto& grid = this->simulator().gridManager().grid();
+      for( auto it = gridView.template begin<0, Dune::Interior_Partition>(),
+           end = gridView.template end<0, Dune::Interior_Partition>();
+           it != end; ++it )
+      {
+        const auto& element = *it ;
+        elemCtx.updateAll( element );
+
+        Scalar minSat = 1e100 ;
+        Scalar maxSat = -1e100;
+        for( int dofIdx=0; dofIdx < elemCtx.numDof(0); ++dofIdx )
+        {
+          const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, 0 );
+          minSat = std::min( minSat, intQuant.fluidState().saturation( 0 ) );
+          maxSat = std::max( maxSat, intQuant.fluidState().saturation( 0 ) );
+        }
+        const Scalar indicator = (maxSat - minSat)/(0.5*(maxSat+minSat));
+        if( indicator > 0.15 && element.level() < 3 )
+          grid.mark( 1, element );
+        else if ( indicator < 0.025 )
+          grid.mark( -1, element );
+      }
+    }
 
     // \}
 

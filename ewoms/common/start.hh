@@ -35,7 +35,6 @@
 #include "parametersystem.hh"
 
 #include <ewoms/version.hh>
-#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/simulator.hh>
@@ -45,6 +44,11 @@
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/common/parametertreeparser.hh>
+#include <dune/common/parallel/mpihelper.hh>
+
+#if HAVE_DUNE_FEM
+#include <dune/fem/misc/mpimanager.hh>
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -207,9 +211,12 @@ int start(int argc, char **argv)
     }
 
     // initialize MPI, finalize is done automatically on exit
-    const Ewoms::MpiHelper mpiHelper(argc, argv);
-
-    int myRank = mpiHelper.rank();
+#if HAVE_DUNE_FEM
+    Dune::Fem::MPIManager::initialize(argc, argv);
+    int myRank = Dune::Fem::MPIManager::rank();
+#else
+    int myRank = MPIHelper::instance(argc, argv).rank();
+#endif
 
     try
     {
