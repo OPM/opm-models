@@ -153,6 +153,7 @@ public:
 
         Opm::ParserPtr parser(new Opm::Parser());
 
+        std::cout << "Reading the deck file ('" << fileName << "')" << std::endl;
         deck_ = parser->parseFile(fileName);
         eclState_.reset(new Opm::EclipseState(deck_));
 
