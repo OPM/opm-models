@@ -160,7 +160,7 @@ public:
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
         else {
-            assert(priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil);
+            assert(priVars.switchingVarMeaning() == PrimaryVariables::OilMoleFractionInGas);
 
             // if the switching variable is the mole fraction of the oil component in the
             // gas phase, we can directly set the composition of the gas phase
