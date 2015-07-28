@@ -255,6 +255,13 @@ public:
     { return 1.0; }
 
     /*!
+     * \brief Callback used by the model to indicate that the initial solution has been
+     *        determined for all degrees of freedom.
+     */
+    void initialSolutionApplied()
+    {}
+
+    /*!
      * \brief Called at the beginning of an simulation episode.
      */
     void beginEpisode()

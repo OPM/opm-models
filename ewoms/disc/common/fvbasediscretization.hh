@@ -468,6 +468,7 @@ public:
         for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
             solution_[timeIdx] = solution_[/*timeIdx=*/0];
 
+        simulator_.problem().initialSolutionApplied();
     }
 
     /*!
