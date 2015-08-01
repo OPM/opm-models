@@ -83,7 +83,11 @@ protected:
     // this method should be called after the grid has been allocated
     void finalizeInit_()
     {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
         gridView_.reset(new GridView(asImp_().grid().leafGridView()));
+#else
+        gridView_.reset(new GridView(asImp_().grid().leafView()));
+#endif
     }
 
 private:
