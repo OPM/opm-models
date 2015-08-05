@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2013 by Andreas Lauser
 
@@ -30,6 +32,7 @@
 #include <iostream>
 
 namespace Ewoms {
+//! \cond SKIP_THIS
 namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(GridView);
@@ -38,10 +41,10 @@ NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(VtkOutputFormat);
 } // namespace Properties
+//! \endcond
 
 /*!
- * \ingroup Discretization
- * \ingroup Newton
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Writes the intermediate solutions during the Newton scheme
  *        for models using a finite volume discretization

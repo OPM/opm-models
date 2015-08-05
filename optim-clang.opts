@@ -26,6 +26,7 @@ CONFIGURE_FLAGS=" \
   CXX=\"clang++\" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
   --enable-fieldvector-size-is-method \
+  --enable-experimental-grid-extensions \
   --disable-documentation \
   --enable-parallel \
   --disable-mpiruntest"

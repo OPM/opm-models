@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2013 by Andreas Lauser
   Copyright (C) 2009-2011 by Bernd Flemisch
@@ -31,10 +33,15 @@
 #include <ewoms/common/propertysystem.hh>
 #include <opm/material/common/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/common/timer.hh>
 
 #include <dune/istl/istlexception.hh>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 
 #include <iostream>
 #include <sstream>

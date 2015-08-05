@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2014 by Andreas Lauser
 
@@ -170,8 +172,8 @@ public:
                 const auto& inside = intersection.inside();
                 const auto& outside = intersection.outside();
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
-                int insideElemIdx = elementMapper.index(*inside);
-                int outsideElemIdx = elementMapper.index(*outside);
+                int insideElemIdx = elementMapper.index(inside);
+                int outsideElemIdx = elementMapper.index(outside);
 #else
                 int insideElemIdx = elementMapper.map(*inside);
                 int outsideElemIdx = elementMapper.map(*outside);

@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2013 by Andreas Lauser
 
@@ -54,7 +56,7 @@ SET_BOOL_PROP(EclOutputBlackOil, EclOutputWritePressures, true);
 SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteGasDissolutionFactor, true);
 SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteGasFormationVolumeFactor, true);
 SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteOilFormationVolumeFactor, true);
-SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteOilSaturationPressure, true);
+SET_BOOL_PROP(EclOutputBlackOil, EclOutputWriteOilSaturationPressure, false);
 } // namespace Properties
 
 // forward declaration

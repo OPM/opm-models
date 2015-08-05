@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2015 by Andreas Lauser
   Copyright (C) 2011-2012 by Bernd Flemisch
@@ -78,7 +80,7 @@ public:
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Calculates the local residual and its Jacobian for a single element of the grid.
  *

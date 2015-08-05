@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2013-2014 by Andreas Lauser
   Copyright (c) 2013 by SINTEF ICT, Applied Mathematics.
@@ -58,7 +60,7 @@ namespace Ewoms {
 template <class TypeTag>
 class EclGridManager;
 
-/// \cond 0
+/// \cond SKIP_THIS
 
 // required to make the compiler happy if the grid manager is not EclGridManager...
 

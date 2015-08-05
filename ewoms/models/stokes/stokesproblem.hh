@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
   Copyright (C) 2010-2011 by Markus Wolff
@@ -33,7 +35,8 @@
 namespace Ewoms {
 
 /*!
- * \ingroup StokesProblems
+ * \ingroup StokesModel
+ *
  * \brief Base class for all problems which use the Stokes model.
  *
  * This implements gravity (if desired) and a function returning the

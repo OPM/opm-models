@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2012-2013 by Andreas Lauser
 
@@ -30,7 +32,7 @@
 
 namespace Ewoms {
 /*!
- * \ingroup Discretization
+ * \ingroup EcfvDiscretization
  *
  * \brief A class which provides types for DUNE grid handles for
  *        communication.

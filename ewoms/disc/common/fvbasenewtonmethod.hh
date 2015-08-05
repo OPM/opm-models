@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
 
@@ -87,8 +89,7 @@ SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
- * \ingroup Newton
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief A Newton method for models using a finite volume discretization.
  *

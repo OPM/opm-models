@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2013 by Andreas Lauser
 
@@ -18,9 +20,8 @@
 */
 /*!
  * \file
- * \ingroup VcfvDiscretization
  *
- * \brief Declare the basic properties used by the common infrastructure of
+ * \brief Declares the basic properties used by the common infrastructure of
  *        the vertex-centered finite volume discretization.
  */
 #ifndef EWOMS_VCFV_PROPERTIES_HH
@@ -32,19 +33,12 @@
 
 namespace Ewoms {
 namespace Properties {
-/*!
- * \ingroup VcfvDiscretization
- */
-// \{
-
 //! The type tag for models based on the VCFV-scheme
 NEW_TYPE_TAG(VcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
 
 //! Use the two-point gradient approximation scheme instead of first
 //! order finite element ones
 NEW_PROP_TAG(UseTwoPointGradients);
-
-// \}
 }} // namespace Properties, Ewoms
 
 #endif

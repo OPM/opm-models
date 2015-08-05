@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2013 by Andreas Lauser
 
@@ -18,7 +20,6 @@
 */
 /*!
  * \file
- * \ingroup EcfvDiscretization
  *
  * \brief Declare the basic properties used by the common infrastructure of
  *        the element-centered finite volume discretization.
@@ -32,15 +33,8 @@
 
 namespace Ewoms {
 namespace Properties {
-/*!
- * \ingroup EcfvDiscretization
- */
-// \{
-
 //! The type tag for models based on the ECFV-scheme
 NEW_TYPE_TAG(EcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
-
-// \}
 }} // namespace Properties, Ewoms
 
 #endif

@@ -49,6 +49,7 @@ Optional Packages:
   --with-superlu=PATH     user defined path to SuperLU library
   --with-umfpack=PATH     use UMFPACK/SuiteSparse from a specified location
   --with-ert=PATH         Use ERT libraries
+  --with-zoltan=PATH      Use ZOLTAN libraries
   --with-tinyxml=PATH     use TinyXML library from a specified location
                           (Note: if not found, then a bundled library will
                            be used)
@@ -516,11 +517,11 @@ for a in "${VARS[@]}"; do
       ;;
     CFLAGS=*)
       a=${a#CFLAGS=}
-      c_opts=" -DCMAKE_C_FLAGS=\"${a/\"/\\\"}\""
+      c_opts=" -DCMAKE_BUILD_TYPE=Custom -DCMAKE_C_FLAGS=\"${a/\"/\\\"}\""
       ;;
     CXXFLAGS=*)
       a=${a#CXXFLAGS=}
-      cxx_opts=" -DCMAKE_CXX_FLAGS=\"${a/\"/\\\"}\""
+      cxx_opts=" -DCMAKE_BUILD_TYPE=Custom -DCMAKE_CXX_FLAGS=\"${a/\"/\\\"}\""
       ;;
     FC=*)
       a=${a#FC=}
@@ -529,7 +530,7 @@ for a in "${VARS[@]}"; do
       ;;
     FFLAGS=*)
       a=${a#FFLAGS=}
-      fort_opts=" -DCMAKE_Fortran_FLAGS=\"${a/\"/\\\"}\""
+      fort_opts=" -DCMAKE_BUILD_TYPE=Custom -DCMAKE_Fortran_FLAGS=\"${a/\"/\\\"}\""
       ;;
     *)
       ENVVARS="$ENVVARS \"${a/\"/\\\"}\""
@@ -554,7 +555,7 @@ elif test "$c_compiler$c_opts$cxx_compiler$cxx_opts$fort_compiler$fort_opts" != 
 fi
 
 # pass everything on to CMake
-CMDLINE="${ENVVARS}${CMAKE_COMMAND} \"${srcdir}\" ${use_ninja}\"-DCMAKE_INSTALL_PREFIX=$prefix\"${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto}${strip_debug}${use_runpath}${use_tests}${use_samples}${use_underscoring}${c_compiler}${c_opts}${cxx_compiler}${cxx_opts}${fort_compiler}${fort_opts}${boost_opts}${buildname}${site} ${FEATURES}"
+CMDLINE="${ENVVARS}${CMAKE_COMMAND} \"${srcdir}\" ${use_ninja}\"-DCMAKE_INSTALL_PREFIX=$prefix\" -DSIBLING_SEARCH=OFF${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto}${strip_debug}${use_runpath}${use_tests}${use_samples}${use_underscoring}${c_compiler}${c_opts}${cxx_compiler}${cxx_opts}${fort_compiler}${fort_opts}${boost_opts}${buildname}${site} ${FEATURES}"
 echo --- calling CMake ---
 echo "${CMDLINE}"
 eval exec "${CMDLINE}"

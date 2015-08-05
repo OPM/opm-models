@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2013 by Andreas Lauser
 
@@ -23,13 +25,14 @@
 #ifndef EWOMS_VTK_BLACK_OIL_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_MODULE_HH
 
+#include <opm/material/localad/Math.hpp>
+
 #include "vtkmultiwriter.hh"
 #include "baseoutputmodule.hh"
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/models/blackoil/blackoilproperties.hh>
-#include <opm/material/localad/Math.hpp>
 
 #include <dune/common/fvector.hh>
 

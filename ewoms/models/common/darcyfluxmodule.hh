@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2013 by Andreas Lauser
 
@@ -49,7 +51,7 @@ template <class TypeTag>
 class DarcyBaseProblem;
 
 /*!
- * \ingroup DarcyFlux
+ * \ingroup FluxModules
  * \brief Specifies a flux module which uses the Darcy relation.
  */
 template <class TypeTag>
@@ -67,7 +69,7 @@ struct DarcyFluxModule
 };
 
 /*!
- * \ingroup DarcyFlux
+ * \ingroup FluxModules
  * \brief Provides the defaults for the parameters required by the
  *        Darcy velocity approach.
  */
@@ -76,7 +78,7 @@ class DarcyBaseProblem
 { };
 
 /*!
- * \ingroup DarcyFlux
+ * \ingroup FluxModules
  * \brief Provides the intensive quantities for the Darcy flux module
  */
 template <class TypeTag>
@@ -89,7 +91,7 @@ protected:
 };
 
 /*!
- * \ingroup DarcyFlux
+ * \ingroup FluxModules
  * \brief Provides the Darcy flux module
  *
  * The commonly used Darcy relation looses its validity for Reynolds

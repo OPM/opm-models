@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2014 by Andreas Lauser
 
@@ -41,8 +43,7 @@ NEW_PROP_TAG(FluxModule);
 }
 
 /*!
- * \ingroup Discretization
- *
+ * \ingroup DiscreteFractureModel
  * \brief The base class for the problems of ECFV discretizations which deal
  *        with a multi-phase flow through a porous medium.
  */

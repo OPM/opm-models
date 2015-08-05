@@ -128,8 +128,6 @@ EwomsAddApplication(ebos
                     EXE_NAME ebos
                     CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
 
-message("HAVE_DUNE_CORNERPOINT: ${HAVE_DUNE_CORNERPOINT}")
-
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
 # them as long for parallel test runs

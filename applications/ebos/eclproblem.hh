@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2014 by Andreas Lauser
 
@@ -39,12 +41,9 @@
 #include <ewoms/models/blackoil/blackoilmodel.hh>
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
 
-#include <opm/material/fluidmatrixinteractions/PiecewiseLinearTwoPhaseMaterial.hpp>
-#include <opm/material/fluidmatrixinteractions/SplineTwoPhaseMaterial.hpp>
-#include <opm/material/fluidmatrixinteractions/EclDefaultMaterial.hpp>
-#include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-
+#include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WetGasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/LiveOilPvt.hpp>
@@ -96,32 +95,16 @@ SET_PROP(EclBaseProblem, MaterialLaw)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
-
-    typedef Opm::TwoPhaseMaterialTraits<Scalar,
-                                        /*wettingPhaseIdx=*/FluidSystem::waterPhaseIdx,
-                                        /*nonWettingPhaseIdx=*/FluidSystem::oilPhaseIdx,
-                                        Evaluation> OilWaterTraits;
-
-    typedef Opm::TwoPhaseMaterialTraits<Scalar,
-                                        /*wettingPhaseIdx=*/FluidSystem::oilPhaseIdx,
-                                        /*nonWettingPhaseIdx=*/FluidSystem::gasPhaseIdx,
-                                        Evaluation> GasOilTraits;
 
     typedef Opm::ThreePhaseMaterialTraits<Scalar,
                                           /*wettingPhaseIdx=*/FluidSystem::waterPhaseIdx,
                                           /*nonWettingPhaseIdx=*/FluidSystem::oilPhaseIdx,
-                                          /*gasPhaseIdx=*/FluidSystem::gasPhaseIdx,
-                                          Evaluation> Traits;
-
-    typedef typename Opm::PiecewiseLinearTwoPhaseMaterial<OilWaterTraits> OilWaterLaw;
-    typedef typename Opm::PiecewiseLinearTwoPhaseMaterial<GasOilTraits> GasOilLaw;
-
-//    typedef typename Opm::SplineTwoPhaseMaterial<OilWaterTraits> OilWaterLaw;
-//    typedef typename Opm::SplineTwoPhaseMaterial<GasOilTraits> GasOilLaw;
+                                          /*gasPhaseIdx=*/FluidSystem::gasPhaseIdx> Traits;
 
 public:
-    typedef Opm::EclDefaultMaterial<Traits, GasOilLaw, OilWaterLaw> type;
+    typedef Opm::EclMaterialLawManager<Traits> EclMaterialLawManager;
+
+    typedef typename EclMaterialLawManager::MaterialLaw type;
 };
 
 // Enable gravity
@@ -193,8 +176,8 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     // Grid and world dimension
@@ -215,8 +198,11 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GridView::template Codim<0>::Entity Element;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP(TypeTag, MaterialLaw)::EclMaterialLawManager EclMaterialLawManager;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
@@ -371,6 +357,7 @@ public:
      */
     void beginTimeStep()
     { wellManager_.beginTimeStep(); }
+
     /*!
      * \brief Called by the simulator before each Newton-Raphson iteration.
      */
@@ -392,6 +379,8 @@ public:
 
         // write the summary information after each time step
         summaryWriter_.write(wellManager_);
+
+        updateHysteresis_();
 
 #ifndef NDEBUG
         // in debug mode, we don't care about performance, so we check if the model does
@@ -565,12 +554,8 @@ public:
     const MaterialLawParams &materialLawParams(const Context &context,
                                                int spaceIdx, int timeIdx) const
     {
-        int tableIdx = 0;
-        if (materialParamTableIdx_.size() > 0) {
-            int globalSpaceIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
-            tableIdx = materialParamTableIdx_[globalSpaceIdx];
-        }
-        return materialParams_[tableIdx];
+        int globalSpaceIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
+        return materialLawParams_(globalSpaceIdx);
     }
 
     /*!
@@ -595,11 +580,6 @@ public:
     }
 
     /*!
-     * \name Problem parameters
-     */
-    //! \{
-
-    /*!
      * \copydoc FvBaseProblem::name
      */
     std::string name() const
@@ -617,13 +597,6 @@ public:
         return initialFluidStates_[globalDofIdx].temperature(/*phaseIdx=*/0);
     }
 
-    // \}
-
-    /*!
-     * \name Boundary conditions
-     */
-    //! \{
-
     /*!
      * \copydoc FvBaseProblem::boundary
      *
@@ -635,13 +608,6 @@ public:
                   int spaceIdx,
                   int timeIdx) const
     { values.setNoFlow(); }
-
-    //! \}
-
-    /*!
-     * \name Volumetric terms
-     */
-    //! \{
 
     /*!
      * \copydoc FvBaseProblem::initial
@@ -658,6 +624,11 @@ public:
 
         const auto& matParams = materialLawParams(context, spaceIdx, timeIdx);
         values.assignMassConservative(initialFluidStates_[globalDofIdx], matParams);
+    }
+
+    void initialSolutionApplied()
+    {
+        updateHysteresis_();
     }
 
     /*!
@@ -685,8 +656,6 @@ public:
             rate[eqIdx] /= this->model().dofTotalVolume(globalDofIdx);
     }
 
-    //! \}
-
 private:
     static bool enableEclOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput); }
@@ -695,6 +664,7 @@ private:
     {
         auto deck = this->simulator().gridManager().deck();
         auto eclState = this->simulator().gridManager().eclState();
+        const auto& gridManager = this->simulator().gridManager();
 
         // the ROCK keyword has not been specified, so we don't need
         // to read rock parameters
@@ -711,16 +681,20 @@ private:
                 rockRecord->getItem("COMPRESSIBILITY")->getSIDouble(0);
         }
 
-        // ROCKTAB has not been specified, so everything is in the
-        // first region and we don't need to care...
-        if (!eclState->hasIntGridProperty("ROCKTAB"))
+        // PVTNUM has not been specified, so everything is in the first region and we
+        // don't need to care...
+        if (!eclState->hasIntGridProperty("PVTNUM"))
             return;
 
-        const std::vector<int>& rocktabData =
-            eclState->getIntGridProperty("ROCKTAB")->getData();
-        for (size_t elemIdx = 0; elemIdx < rocktabData.size(); ++ elemIdx)
-            // reminder: Eclipse uses FORTRAN indices
-            rockTableIdx_[elemIdx] = rocktabData[elemIdx] - 1;
+        const std::vector<int>& pvtnumData =
+            eclState->getIntGridProperty("PVTNUM")->getData();
+        rockTableIdx_.resize(gridManager.gridView().size(/*codim=*/0));
+        for (size_t elemIdx = 0; elemIdx < rockTableIdx_.size(); ++ elemIdx) {
+            int cartElemIdx = gridManager.cartesianCellId(elemIdx);
+
+            // reminder: Eclipse uses FORTRAN-style indices
+            rockTableIdx_[elemIdx] = pvtnumData[cartElemIdx] - 1;
+        }
     }
 
     void readMaterialParameters_()
@@ -733,7 +707,6 @@ private:
 
         intrinsicPermeability_.resize(numDof);
         porosity_.resize(numDof);
-        materialParams_.resize(numDof);
 
         ////////////////////////////////
         // permeability
@@ -818,79 +791,8 @@ private:
                 porosity_[dofIdx] *= multpvData[gridManager.cartesianCellId(dofIdx)];
         }
 
-        ////////////////////////////////
-        // fluid parameters
-        const auto& swofTables = eclState->getSwofTables();
-        const auto& sgofTables = eclState->getSgofTables();
-
-        // the number of tables for the SWOF and the SGOF keywords
-        // must be identical
-        assert(swofTables.size() == sgofTables.size());
-
-        size_t numSatfuncTables = swofTables.size();
-        materialParams_.resize(numSatfuncTables);
-
-        typedef typename MaterialLawParams::GasOilParams GasOilParams;
-        typedef typename MaterialLawParams::OilWaterParams OilWaterParams;
-
-        for (size_t tableIdx = 0; tableIdx < numSatfuncTables; ++ tableIdx) {
-            // set the parameters of the material law for a given table
-            OilWaterParams owParams;
-            GasOilParams goParams;
-
-            const auto& swofTable = swofTables[tableIdx];
-            const auto& sgofTable = sgofTables[tableIdx];
-
-            const auto &SwColumn = swofTable.getSwColumn();
-
-            owParams.setKrwSamples(SwColumn, swofTable.getKrwColumn());
-            owParams.setKrnSamples(SwColumn, swofTable.getKrowColumn());
-            owParams.setPcnwSamples(SwColumn, swofTable.getPcowColumn());
-
-            // convert the saturations of the SGOF keyword from gas to oil saturations
-            std::vector<double> SoSamples(sgofTable.numRows());
-            for (size_t sampleIdx = 0; sampleIdx < sgofTable.numRows(); ++ sampleIdx)
-                SoSamples[sampleIdx] = 1 - sgofTable.getSgColumn()[sampleIdx];
-
-            goParams.setKrwSamples(SoSamples, sgofTable.getKrogColumn());
-            goParams.setKrnSamples(SoSamples, sgofTable.getKrgColumn());
-            goParams.setPcnwSamples(SoSamples, sgofTable.getPcogColumn());
-
-            owParams.finalize();
-            goParams.finalize();
-
-            // compute the connate water saturation. In ECL decks that is defined as
-            // the first saturation value of the SWOF keyword.
-            Scalar Swco = SwColumn.front();
-            materialParams_[tableIdx].setConnateWaterSaturation(Swco);
-
-            materialParams_[tableIdx].setOilWaterParams(owParams);
-            materialParams_[tableIdx].setGasOilParams(goParams);
-
-            materialParams_[tableIdx].finalize();
-        }
-
-        // set the index of the table to be used
-        if (eclState->hasIntGridProperty("SATNUM")) {
-            const std::vector<int> &satnumData =
-                eclState->getIntGridProperty("SATNUM")->getData();
-
-            materialParamTableIdx_.resize(numDof);
-            for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
-                int cartesianElemIdx = gridManager.cartesianCellId(dofIdx);
-
-                // make sure that all values are in the correct range
-                assert(1 <= satnumData[dofIdx]);
-                assert(satnumData[dofIdx] <= static_cast<int>(numSatfuncTables));
-
-                // ECL uses Fortran-style indices which start at
-                // 1, but this here is C++...
-                materialParamTableIdx_[dofIdx] = satnumData[cartesianElemIdx] - 1;
-            }
-        }
-        else
-            materialParamTableIdx_.clear();
-        ////////////////////////////////
+        // the fluid-matrix interactions for ECL problems are dealt with by a separate class
+        materialLawManager_.initFromDeck(deck, eclState);
     }
 
     void initFluidSystem_()
@@ -1227,18 +1129,41 @@ private:
 
     const MaterialLawParams& materialLawParams_(int globalDofIdx) const
     {
-        int tableIdx = 0;
-        if (materialParamTableIdx_.size() > 0)
-            tableIdx = materialParamTableIdx_[globalDofIdx];
-        return materialParams_[tableIdx];
+        int cartesianCellIdx = this->simulator().gridManager().cartesianCellId(globalDofIdx);
+
+        return materialLawManager_.materialLawParams(cartesianCellIdx);
+    }
+
+    // update the hysteresis parameters of the material laws for the whole grid
+    void updateHysteresis_()
+    {
+        if (!materialLawManager_.enableHysteresis())
+            return;
+
+        ElementContext elemCtx(this->simulator());
+        const auto& gridManager = this->simulator().gridManager();
+        auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+        const auto &elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            const Element& elem = *elemIt;
+            if (elem.partitionType() != Dune::InteriorEntity)
+                continue;
+
+            elemCtx.updateStencil(elem);
+            elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+            int compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+            int cartesianDofIdx = gridManager.cartesianCellId(compressedDofIdx);
+            const auto& intQuants = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+            materialLawManager_.updateHysteresis(intQuants.fluidState(), cartesianDofIdx);
+        }
     }
 
     std::vector<Scalar> porosity_;
     std::vector<DimMatrix> intrinsicPermeability_;
     EclTransmissibility<TypeTag> transmissibilities_;
 
-    std::vector<unsigned short> materialParamTableIdx_;
-    std::vector<MaterialLawParams> materialParams_;
+    EclMaterialLawManager materialLawManager_;
 
     std::vector<unsigned short> rockTableIdx_;
     std::vector<RockParams> rockParams_;

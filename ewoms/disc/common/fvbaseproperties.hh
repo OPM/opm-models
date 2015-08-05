@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
 
@@ -18,7 +20,7 @@
 */
 /*!
  * \file
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Declare the properties used by the infrastructure code of
  *        the finite volume discretizations.
@@ -36,10 +38,6 @@
 
 namespace Ewoms {
 namespace Properties {
-/*!
- * \ingroup Discretization
- */
-// \{
 //! The type tag for models based on the finite volume schemes
 NEW_TYPE_TAG(FvBaseDiscretization,
              INHERITS_FROM(ImplicitModel,
@@ -276,7 +274,5 @@ NEW_PROP_TAG(TimeDiscHistorySize);
 NEW_PROP_TAG(RequireScvCenterGradients);
 
 }} // namespace Properties, Ewoms
-
-// \}
 
 #endif

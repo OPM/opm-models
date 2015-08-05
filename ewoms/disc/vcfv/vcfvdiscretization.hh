@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2013 by Andreas Lauser
 
@@ -91,7 +93,7 @@ SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
+ * \ingroup VcfvDiscretization
  *
  * \brief The base class for the vertex centered finite volume discretization scheme.
  */

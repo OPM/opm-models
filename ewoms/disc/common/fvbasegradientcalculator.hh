@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2013 by Andreas Lauser
 
@@ -33,7 +35,7 @@ template<class TypeTag>
 class EcfvDiscretization;
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief This class calculates gradients of arbitrary quantities at
  *        flux integration points using the two-point approximation scheme
