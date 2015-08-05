@@ -33,6 +33,8 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/io/dgfgridmanager.hh>
 
+#include <ewoms/aux/compatibility.hh>
+
 #if HAVE_DUNE_FEM
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #endif

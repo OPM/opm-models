@@ -34,11 +34,6 @@
 
 #include "parametersystem.hh"
 
-#if HAVE_DUNE_FEM
-#include <dune/fem/misc/mpimanager.hh>
-#include <ewoms/aux/compatibility.hh>
-#endif
-
 #include <ewoms/version.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
@@ -56,6 +51,10 @@
 #endif
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/parallel/mpihelper.hh>
+
+#if HAVE_DUNE_FEM
+#include <dune/fem/misc/mpimanager.hh>
+#endif
 
 #include <fstream>
 #include <iostream>
