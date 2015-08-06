@@ -219,10 +219,10 @@ int start(int argc, char **argv)
     // initialize MPI, finalize is done automatically on exit
 #if HAVE_DUNE_FEM
     Dune::Fem::MPIManager::initialize(argc, argv);
-    int myRank = Dune::Fem::MPIManager::rank();
+    const int myRank = Dune::Fem::MPIManager::rank();
 #else
     const Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
-    int myRank = MPIHelper::instance(argc, argv).rank();
+    const int myRank = mpiHelper.rank();
 #endif
 
     try
