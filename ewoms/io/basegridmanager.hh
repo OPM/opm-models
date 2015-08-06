@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2012-2014 by Andreas Lauser
 
@@ -46,82 +48,6 @@ NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Simulator);
 } // namespace Properties
-
-/*!
- * \cond 0
- *
- * Functions to retrieve the GridView regardless of whether the leaf
- * or a level grid view was chosen.  This code is a bit tricky as it
- * uses the SFINAE rule and also has to work around some C++
- * ideosyncracities...
- */
-namespace BaseGridManagerHelper {
-
-// leaf grid view retrieval methods
-template <class TypeTag, class GridManager>
-typename std::enable_if<std::is_same<typename GET_PROP_TYPE(TypeTag, GridView),
-                                     typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView>::value,
-                        typename GET_PROP_TYPE(TypeTag, GridView)>::type
-gimmeGridView_(GridManager &gridManager)
-{
-    // return the leaf grid view
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-    return gridManager.grid().leafGridView();
-#else
-    return gridManager.grid().leafView();
-#endif
-}
-
-template <class TypeTag, class GridManager>
-const typename std::enable_if<std::is_same<typename GET_PROP_TYPE(TypeTag, GridView),
-                                           typename GET_PROP_TYPE(TypeTag, Grid)::LeafGridView>::value,
-                              typename GET_PROP_TYPE(TypeTag, GridView)>::type
-gimmeGridView_(const GridManager &gridManager)
-{
-    // return the leaf grid view
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-    return gridManager.grid().leafGridView();
-#else
-    return gridManager.grid().leafView();
-#endif
-}
-
-// level grid view retrieval methods
-template <class TypeTag, class GridManager>
-typename std::enable_if<std::is_same<typename GET_PROP_TYPE(TypeTag, GridView),
-                                           typename GET_PROP_TYPE(TypeTag, Grid)::LevelGridView>::value,
-                              typename GET_PROP_TYPE(TypeTag, GridView)>::type
-gimmeGridView_(GridManager &gridManager)
-{
-    // return the chosen level grid view
-    int level = GET_PROP_VALUE(TypeTag, GridViewLevel);
-
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-    return gridManager.grid().levelGridView(level);
-#else
-    return gridManager.grid().levelView(level);
-#endif
-}
-
-template <class TypeTag, class GridManager>
-const typename std::enable_if<std::is_same<typename GET_PROP_TYPE(TypeTag, GridView),
-                                           typename GET_PROP_TYPE(TypeTag, Grid)::LevelGridView>::value,
-                              typename GET_PROP_TYPE(TypeTag, GridView)>::type
-gimmeGridView_(const GridManager &gridManager)
-{
-    // return the chosen level grid view
-    int level = GET_PROP_VALUE(TypeTag, GridViewLevel);
-
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-    return gridManager.grid().levelGridView(level);
-#else
-    return gridManager.grid().levelView(level);
-#endif
-}
-} // namespace BaseGridManagerHelper
-/*!
- * \endcond
- */
 
 /*!
  * \brief Provides the base class for most (all?) grid managers.
@@ -189,7 +115,8 @@ protected:
     {
 #if HAVE_DUNE_FEM
         gridPart_.reset(new GridPart(asImp_().grid()));
-        gridView_.reset(new GridView(gridPart_->gridView()));
+        //gridView_.reset(new GridView(gridPart_->gridView()));
+        gridView_.reset(new GridView(static_cast<GridView> (*gridPart_)));
 #else
         gridView_.reset(new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_())));
 #endif

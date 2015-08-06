@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2014-2015 by Andreas Lauser
 
@@ -103,6 +105,7 @@ public:
             // specified by the updateWellCompletions_() method
             well->beginSpec();
             well->setName(wellName);
+            well->setWellStatus(Well::Shut);
             well->endSpec();
         }
     }

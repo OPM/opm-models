@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2013 by Andreas Lauser
   Copyright (C) 2010-2011 by Markus Wolff
@@ -38,7 +40,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Base class for all problems which use a finite volume spatial discretization.
  *
@@ -251,6 +253,13 @@ public:
 
     Scalar extrusionFactor() const
     { return 1.0; }
+
+    /*!
+     * \brief Callback used by the model to indicate that the initial solution has been
+     *        determined for all degrees of freedom.
+     */
+    void initialSolutionApplied()
+    {}
 
     /*!
      * \brief Called at the beginning of an simulation episode.

@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
   Copyright (C) 2011-2012 by Markus Wolff
@@ -20,18 +22,24 @@
 */
 /*!
  * \file
+ *
  * \copydoc Ewoms::Simulator
  */
 #ifndef EWOMS_SIMULATOR_HH
 #define EWOMS_SIMULATOR_HH
 
-#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/io/restart.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/common/propertysystem.hh>
-
 #include <ewoms/common/timer.hh>
+
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 
 #include <iostream>
 #include <iomanip>
@@ -50,7 +58,7 @@ NEW_PROP_TAG(InitialTimeStepSize);
 }
 
 /*!
- * \ingroup Simulator
+ * \ingroup Common
  *
  * \brief Manages the initializing and running of time dependent
  *        problems.
@@ -79,7 +87,7 @@ public:
     {
         setupTimer_.start();
 
-        verbose_ = verbose && Ewoms::MpiHelper::getCollectiveCommunication().rank() == 0;
+        verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
 
         timeStepIdx_ = 0;
         startTime_ = 0.0;

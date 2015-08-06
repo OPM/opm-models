@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2010-2013 by Andreas Lauser
   Copyright (C) 2011 by Philipp Nuske
@@ -41,6 +43,12 @@
 #include <opm/material/common/Valgrind.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
+#include <dune/common/version.hh>
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#include <dune/common/parallel/mpihelper.hh>
+#else
+#include <dune/common/mpihelper.hh>
+#endif
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -179,10 +187,10 @@ static void resetTerminal_(int signum)
 //! \endcond
 
 /*!
- * \ingroup Startup
+ * \ingroup Common
  *
  * \brief Provides a main function which reads in parameters from the
- *        command line and a parameter file.
+ *        command line and a parameter file and runs the simulation
  *
  * \tparam TypeTag  The type tag of the problem which needs to be solved
  *
@@ -213,6 +221,7 @@ int start(int argc, char **argv)
     Dune::Fem::MPIManager::initialize(argc, argv);
     int myRank = Dune::Fem::MPIManager::rank();
 #else
+    const Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
     int myRank = MPIHelper::instance(argc, argv).rank();
 #endif
 

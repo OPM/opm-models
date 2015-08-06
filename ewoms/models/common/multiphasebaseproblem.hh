@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
   Copyright (C) 2010 by Felix Bode
@@ -54,6 +56,7 @@ class MultiPhaseBaseProblem
     : public FvBaseProblem<TypeTag>
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxBaseProblem
 {
+//! \cond SKIP_THIS
     typedef Ewoms::FvBaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
@@ -67,6 +70,7 @@ class MultiPhaseBaseProblem
     enum { dimWorld = GridView::dimensionworld };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
+//! \endcond
 
 public:
     /*!

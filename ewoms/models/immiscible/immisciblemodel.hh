@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2010-2013 by Andreas Lauser
 
@@ -25,7 +27,6 @@
 #define EWOMS_IMMISCIBLE_MODEL_HH
 
 #include <opm/material/localad/Math.hpp>
-#include <ewoms/parallel/mpihelper.hh>
 #include "immiscibleproperties.hh"
 #include "immiscibleindices.hh"
 #include "immiscibleextensivequantities.hh"

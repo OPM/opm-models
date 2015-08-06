@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2014 by Andreas Lauser
 
@@ -18,6 +20,8 @@
 */
 /*!
  * \file
+ *
+ * \copydoc Ewoms::Timer
  */
 #ifndef EWOMS_TIMER_HH
 #define EWOMS_TIMER_HH
@@ -29,7 +33,9 @@
 #endif
 
 namespace Ewoms {
-/*
+/*!
+ * \ingroup Common
+ *
  * \brief Provides an encapsulation to measure the system time
  *
  * This means the wall clock time used by the simulation, the CPU time

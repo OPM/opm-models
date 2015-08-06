@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2009-2013 by Andreas Lauser
 
@@ -26,8 +28,6 @@
 #include "convergencecriterion.hh"
 
 #include <dune/istl/scalarproducts.hh>
-
-#include <ewoms/parallel/mpihelper.hh>
 
 namespace Ewoms {
 /*! \addtogroup Linear

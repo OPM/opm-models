@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2014 by Andreas Lauser
   Copyright (C) 2009-2011 by Bernd Flemisch
@@ -241,7 +243,7 @@ SET_BOOL_PROP(FvBaseDiscretization, RequireScvCenterGradients, false);
 } // namespace Properties
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief The base class for the finite volume discretization schemes.
  */
@@ -475,6 +477,7 @@ public:
         for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
             solution(timeIdx) = solution(/*timeIdx=*/0);
 
+        simulator_.problem().initialSolutionApplied();
     }
 
     /*!

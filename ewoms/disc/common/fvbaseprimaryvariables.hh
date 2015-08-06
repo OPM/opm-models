@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2011-2014 by Andreas Lauser
 
@@ -31,7 +33,7 @@
 namespace Ewoms {
 
 /*!
- * \ingroup FvBaseDiscretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Represents the primary variables used by the a model.
  */

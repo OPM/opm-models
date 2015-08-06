@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2010-2013 by Andreas Lauser
 
@@ -158,7 +160,7 @@ public:
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
         else {
-            assert(priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil);
+            assert(priVars.switchingVarMeaning() == PrimaryVariables::OilMoleFractionInGas);
 
             // if the switching variable is the mole fraction of the oil component in the
             // gas phase, we can directly set the composition of the gas phase

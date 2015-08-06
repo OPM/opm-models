@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2012-2013 by Andreas Lauser
 
@@ -23,7 +25,6 @@
 #ifndef EWOMS_ECL_GRID_MANAGER_HH
 #define EWOMS_ECL_GRID_MANAGER_HH
 
-#include <ewoms/parallel/mpihelper.hh>
 #include <ewoms/io/basegridmanager.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
@@ -152,6 +153,7 @@ public:
 
         Opm::ParserPtr parser(new Opm::Parser());
 
+        std::cout << "Reading the deck file ('" << fileName << "')" << std::endl;
         deck_ = parser->parseFile(fileName);
         eclState_.reset(new Opm::EclipseState(deck_));
 

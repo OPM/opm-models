@@ -12,7 +12,7 @@ Welcome to the eWoms reference documentation. This documentation has been
 generated using Doxygen, a free source code documentation system for
 documenting C/C++ code.
 
-\section mods Getting Started
+\subsection mods Getting Started
 
 The best entry-point to access this reference documentation is the <a
 class="el" href="modules.html">modules</a> page which structures all

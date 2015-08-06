@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2008-2013 by Andreas Lauser
   Copyright (C) 2011-2012 by Bernd Flemisch
@@ -84,7 +86,7 @@ SET_SCALAR_PROP(FiniteDifferenceLocalLinearizer, BaseEpsilon, 0.9123e-10);
 }
 
 /*!
- * \ingroup Discretization
+ * \ingroup FiniteVolumeDiscretizations
  *
  * \brief Calculates the Jacobian of the local residual for finite volume spatial
  *        discretizations using a finite difference method

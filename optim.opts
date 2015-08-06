@@ -24,6 +24,7 @@ CXX_OPTS=" \
 CONFIGURE_FLAGS=" \
   CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
   --enable-fieldvector-size-is-method \
+  --enable-experimental-grid-extensions \
   --disable-documentation \
   --enable-parallel \
   --disable-mpiruntest"

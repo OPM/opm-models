@@ -1,3 +1,5 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
   Copyright (C) 2012-2013 by Andreas Lauser
   Copyright (C) 2012 by Christoph Grueninger
@@ -38,8 +40,6 @@ namespace Ewoms {
 
 /*!
  * \ingroup StokesModel
- * \ingroup LocalResidual
- *
  * \brief The local residual function for problems using the
  *        Stokes model.
  */
