@@ -550,8 +550,10 @@ public:
 #if HAVE_DUNE_FEM
     /*!
      * \brief Mark grid cells for refinement or coarsening
+     *
+     * \return The number of elements marked for refinement or coarsening.
      */
-    void markForGridAdaptation()
+    int markGridForAdaptation()
     {
         OPM_THROW(Opm::NotAvailable,
                   "This problem does not specify a markForGridAdaptation() method. "

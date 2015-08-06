@@ -1094,7 +1094,7 @@ public:
 #if HAVE_DUNE_FEM
         // adapt the grid if enabled and if all dependencies are available
         if (adaptationManager_->adaptive()) {
-            simulator_.problem().markForGridAdaptation();
+            simulator_.problem().markGridForAdaptation();
             adaptationManager_->adapt();
 
             resetLinearizer();

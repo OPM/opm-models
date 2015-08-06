@@ -292,11 +292,17 @@ public:
     const DimVector &gravity() const
     { return gravity_; }
 
-
-    void markForGridAdaptation()
+#if HAVE_DUNE_FEM
+    /*!
+     * \brief Mark grid cells for refinement or coarsening
+     *
+     * \return The number of elements marked for refinement or coarsening.
+     */
+    int markGridForAdaptation()
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
         std::cout << "Mark for refinement" << std::endl;
+        int numMarked = 0;
         ElementContext elemCtx( this->simulator() );
         auto gridView = this->simulator().gridManager().gridView();
         auto& grid = this->simulator().gridManager().grid();
@@ -316,12 +322,19 @@ public:
                 maxSat = std::max(maxSat, Toolbox::value(intQuant.fluidState().saturation(0)) );
             }
             const Scalar indicator = (maxSat - minSat)/(0.5*(maxSat+minSat));
-            if( indicator > 0.15 && element.level() < 3 )
+            if( indicator > 0.15 && element.level() < 3 ) {
                 grid.mark( 1, element );
-            else if ( indicator < 0.025 )
+                ++ numMarked;
+            }
+            else if ( indicator < 0.025 ) {
                 grid.mark( -1, element );
+                ++ numMarked;
+            }
         }
+
+        return 1; //numMarked;
     }
+#endif // HAVE_DUNE_FEM
 
     // \}
 
