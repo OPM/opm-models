@@ -1086,21 +1086,39 @@ public:
 
     /*!
      * \brief Called by the update() method if it was
-     *        successful. This is primary a hook which the actual
-     *        model can overload.
+     *        successful.
      */
     void updateSuccessful()
+    { }
+
+    /*!
+     * \brief Called by the update() method when the grid should be refined.
+     */
+    void adaptGrid()
     {
 #if HAVE_DUNE_FEM
         // adapt the grid if enabled and if all dependencies are available
-        if (adaptationManager_->adaptive()) {
-            simulator_.problem().markGridForAdaptation();
-            adaptationManager_->adapt();
+        if (enableGridAdaptation_) {
+            int numToAdapt = simulator_.problem().markGridForAdaptation();
 
-            resetLinearizer();
-            finishInit();
-            resizeAndResetIntensiveQuantitiesCache_();
-            updateBoundary_();
+            if (numToAdapt > 0) {
+                adaptationManager_->adapt();
+
+                // if the grid has potentially changed, we need to re-create the
+                // supporting data structures.
+                resetLinearizer();
+                finishInit();
+                updateBoundary_();
+
+                // notify the problem that the grid has changed
+                simulator_.problem().gridChanged();
+
+                // notify the modules for visualization output
+                auto outIt = outputModules_.begin();
+                auto outEndIt = outputModules_.end();
+                for (; outIt != outEndIt; ++outIt)
+                    (*outIt)->allocBuffers();
+            }
         }
 #endif
     }
@@ -1131,6 +1149,9 @@ public:
      */
     void advanceTimeLevel()
     {
+        // at this point we can adapt the grid
+        asImp_().adaptGrid();
+
         // make the current solution the previous one.
         solution(/*timeIdx=*/1) = solution(/*timeIdx=*/0);
 
