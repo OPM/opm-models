@@ -95,13 +95,19 @@ public:
     { return *gridPart_; }
 #endif
 
+    /*!
+     * \brief Returns the number of times the grid has been changed since its creation.
+     *
+     * This basically says how often the grid has been adapted in the current simulation
+     * run.
+     */
     int gridSequenceNumber () const
     {
 #if HAVE_DUNE_FEM
-      typedef Dune::Fem::DofManager< Grid > FemDofManager;
-      return FemDofManager::instance( gridPart().grid() ).sequence();
+        typedef Dune::Fem::DofManager< Grid > FemDofManager;
+        return FemDofManager::instance( gridPart().grid() ).sequence();
 #else
-      return 0; // return the same sequence number >= 0 means the grid never changes
+        return 0; // return the same sequence number >= 0 means the grid never changes
 #endif
     }
 
@@ -126,7 +132,6 @@ protected:
 #else
         gridView_.reset(new GridView(asImp_().grid().leafView()));
 #endif
-        //gridView_.reset(new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_())));
 #endif
     }
 

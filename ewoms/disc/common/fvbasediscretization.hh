@@ -52,6 +52,7 @@
 #include <ewoms/aux/baseauxiliarymodule.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -203,6 +204,9 @@ SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, 1e100);
 //! By default, accept any time step larger than zero
 SET_SCALAR_PROP(FvBaseDiscretization, MinTimeStepSize, 0.0);
 
+//! Disable grid adaptation by default
+SET_BOOL_PROP(FvBaseDiscretization, EnableGridAdaptation, false);
+
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 
@@ -251,6 +255,7 @@ template<class TypeTag>
 class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -307,7 +312,19 @@ class FvBaseDiscretization
         SolutionVector& blockVector() { return blockVector_; }
         const SolutionVector& blockVector() const { return blockVector_; }
     };
-#if ! HAVE_DUNE_FEM
+#if HAVE_DUNE_FEM
+    typedef Dune::Fem::FunctionSpace<typename Grid::ctype,
+                                     Scalar,
+                                     Grid::dimensionworld,
+                                     numEq> FunctionSpace;
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+    typedef Dune::Fem::FiniteVolumeSpace<FunctionSpace, GridPart, 0> DiscreteFunctionSpace;
+    typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
+
+    // adaptation classes
+    typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > RestrictProlong;
+    typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
+#else
     typedef BlockVectorWrapper  DiscreteFunction;
 #endif
 
@@ -330,11 +347,25 @@ public:
         , space_( asImp_().numGridDof() )
 #endif
     {
+        enableGridAdaptation_ = EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation);
+
+#if !HAVE_DUNE_FEM
+        if (enableGridAdaptation_)
+            OPM_THROW(Opm::NotAvailable,
+                      "Grid adaptation currently requires the presence of the dune-fem module");
+#endif
+        bool isEcfv = std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value;
+        if (enableGridAdaptation_ && !isEcfv)
+            OPM_THROW(Opm::NotAvailable,
+                      "Grid adaptation currently only works for the element-centered finite "
+                      "volume discretization (is: " << Dune::className<Discretization>() << ")");
+
         asImp_().updateBoundary_();
 
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
         }
+
 #if HAVE_DUNE_FEM
         // create adaptation objects
         restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
@@ -371,6 +402,7 @@ public:
         // register runtime parameters of the output modules
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGridAdaptation, "Enable adaptive grid refinement/coarsening");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
@@ -447,6 +479,12 @@ public:
             }
         }
     }
+
+    /*!
+     * \brief Returns whether the grid ought to be adapted to the solution during the simulation.
+     */
+    bool enableGridAdaptation() const
+    { return enableGridAdaptation_; }
 
     /*!
      * \brief Applies the initial solution for all degrees of freedom to which the model
@@ -1072,15 +1110,20 @@ public:
 
     /*!
      * \brief Called by the update() method if it was
-     *        successful. This is primary a hook which the actual
-     *        model can overload.
+     *        successful.
      */
     void updateSuccessful()
+    { }
+
+    /*!
+     * \brief Called by the update() method when the grid should be refined.
+     */
+    void adaptGrid()
     {
 #if HAVE_DUNE_FEM
         // adapt the grid if enabled and if all dependencies are available
         // adaptation is only done if markForGridAdaptation returns true
-        if (adaptationManager_->adaptive() )
+        if (enableGridAdaptation_)
         {
             // check if problem allows for adaptation and cells were marked
             if( simulator_.problem().markForGridAdaptation() )
@@ -1088,11 +1131,20 @@ public:
                 // adapt the grid and load balance if necessary
                 adaptationManager_->adapt();
 
-                // reset sizes of local values
+                // if the grid has potentially changed, we need to re-create the
+                // supporting data structures.
                 resetLinearizer();
                 finishInit();
-                resizeAndResetIntensiveQuantitiesCache_();
                 updateBoundary_();
+
+                // notify the problem that the grid has changed
+                simulator_.problem().gridChanged();
+
+                // notify the modules for visualization output
+                auto outIt = outputModules_.begin();
+                auto outEndIt = outputModules_.end();
+                for (; outIt != outEndIt; ++outIt)
+                    (*outIt)->allocBuffers();
             }
         }
 #endif
@@ -1124,6 +1176,9 @@ public:
      */
     void advanceTimeLevel()
     {
+        // at this point we can adapt the grid
+        asImp_().adaptGrid();
+
         // make the current solution the previous one.
         solution(/*timeIdx=*/1) = solution(/*timeIdx=*/0);
 
@@ -1479,7 +1534,9 @@ public:
         // resize the solutions
         if( ! std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
         {
-            std::cerr << "Warning: DiscreteFunction's blockVector resized from outside!" << std::endl;
+            OPM_THROW(Opm::NotAvailable,
+                      "Problems which require auxiliary modules cannot be used in conjunction "
+                      "with dune-fem");
         }
         const size_t nDofs = numTotalDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
@@ -1624,21 +1681,10 @@ protected:
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
 
+    bool enableGridAdaptation_;
+
 #if HAVE_DUNE_FEM
-    typedef Dune::Fem::FunctionSpace<typename Grid::ctype,
-                                     Scalar,
-                                     Grid::dimensionworld,
-                                     numEq> FunctionSpace;
-    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
-    typedef Dune::Fem::FiniteVolumeSpace<FunctionSpace, GridPart, 0> DiscreteFunctionSpace;
-    typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
-
     DiscreteFunctionSpace space_;
-
-    // adaptation classes
-    typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > RestrictProlong;
-    typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
-
     std::unique_ptr< RestrictProlong  > restrictProlong_;
     std::unique_ptr< AdaptationManager> adaptationManager_;
 #else

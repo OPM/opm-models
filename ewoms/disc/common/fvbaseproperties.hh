@@ -163,6 +163,14 @@ NEW_PROP_TAG(ThreadsPerProcess);
 NEW_PROP_TAG(Simulator);
 
 /*!
+ * \brief Switch to enable or disable grid adaptation
+ *
+ * Currently grid adaptation requires the presence of the dune-FEM module. If it is not
+ * available and grid adaptation is enabled, an exception is thrown.
+ */
+NEW_PROP_TAG(EnableGridAdaptation);
+
+/*!
  * \brief Global switch to enable or disable the writing of VTK output files
  *
  * If writing VTK files is disabled, then the WriteVtk$FOO options do

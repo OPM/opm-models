@@ -61,6 +61,7 @@ class MultiPhaseBaseProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
@@ -68,6 +69,7 @@ class MultiPhaseBaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
 
     enum { dimWorld = GridView::dimensionworld };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 //! \endcond
@@ -291,37 +293,54 @@ public:
     const DimVector &gravity() const
     { return gravity_; }
 
-
-    bool markForGridAdaptation()
+    /*!
+     * \brief Mark grid cells for refinement or coarsening
+     *
+     * \return The number of elements marked for refinement or coarsening.
+     */
+    int markGridForAdaptation()
     {
-      std::cout << "Mark for refinement" << std::endl;
-      ElementContext elemCtx( this->simulator() );
-      auto gridView = this->simulator().gridManager().gridView();
-      auto& grid = this->simulator().gridManager().grid();
-      for( auto it = gridView.template begin<0, Dune::Interior_Partition>(),
-           end = gridView.template end<0, Dune::Interior_Partition>();
-           it != end; ++it )
-      {
-        const auto& element = *it ;
-        elemCtx.updateAll( element );
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
 
-        Scalar minSat = 1e100 ;
-        Scalar maxSat = -1e100;
-        for( int dofIdx=0; dofIdx < elemCtx.numDof(0); ++dofIdx )
+        int numMarked = 0;
+        ElementContext elemCtx( this->simulator() );
+        auto gridView = this->simulator().gridManager().gridView();
+        auto& grid = this->simulator().gridManager().grid();
+        auto elemIt = gridView.template begin</*codim=*/0, Dune::Interior_Partition>();
+        auto elemEndIt = gridView.template end</*codim=*/0, Dune::Interior_Partition>();
+        for (; elemIt != elemEndIt; ++elemIt)
         {
-            /*
-          const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, 0 );
-          minSat = std::min( minSat, intQuant.fluidState().saturation( 0 ) );
-          maxSat = std::max( maxSat, intQuant.fluidState().saturation( 0 ) );
-          */
+            const auto& element = *elemIt ;
+            elemCtx.updateAll( element );
+
+            // HACK: this should better be part of an AdaptionCriterion class
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                Scalar minSat = 1e100 ;
+                Scalar maxSat = -1e100;
+                for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx)
+                {
+                    const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, /*timeIdx=*/0 );
+                    minSat = std::min(minSat,
+                                      Toolbox::value(intQuant.fluidState().saturation(phaseIdx)));
+                    maxSat = std::max(maxSat,
+                                      Toolbox::value(intQuant.fluidState().saturation(phaseIdx)));
+                }
+
+                const Scalar indicator = (maxSat - minSat)/(0.5*std::max(0.01, maxSat+minSat));
+                if( indicator > 0.10 && element.level() < 3 ) {
+                    grid.mark( 1, element );
+                    ++ numMarked;
+                }
+                else if ( indicator < 0.025 ) {
+                    grid.mark( -1, element );
+                    ++ numMarked;
+                }
+            }
         }
-        const Scalar indicator = (maxSat - minSat)/(0.5*(maxSat+minSat));
-        if( indicator > 0.15 && element.level() < 3 )
-          grid.mark( 1, element );
-        else if ( indicator < 0.025 )
-          grid.mark( -1, element );
-      }
-      return true;
+
+        // TODO: This should be 1 or communicated, otherwise we get different results on
+        // different cores
+        return 1; //numMarked;
     }
 
     // \}

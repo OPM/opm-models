@@ -153,6 +153,18 @@ public:
     }
 
     /*!
+     * \brief Handle changes of the grid
+     */
+    void gridChanged()
+    {
+        elementMapper_.update();
+        vertexMapper_.update();
+
+        if (enableVtkOutput_())
+            defaultVtkWriter_->gridChanged();
+    }
+
+    /*!
      * \brief Returns the total wall time spend on solving the
      *        system [s].
      */
@@ -540,11 +552,11 @@ public:
      * \note This method has to be overloaded in derived classes to proper implement
      *       marking of grid entities.
      *
-     * \return true if grid adaptation should be done (default return is false)
+     * \return number of marked cells (default is 0)
      */
-    bool markForGridAdaptation()
+    int markForGridAdaptation()
     {
-        return false;
+        return 0;
     }
 
     /*!

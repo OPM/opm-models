@@ -154,8 +154,9 @@ public:
         Opm::ParserPtr parser(new Opm::Parser());
 
         std::cout << "Reading the deck file ('" << fileName << "')" << std::endl;
-        deck_ = parser->parseFile(fileName);
-        eclState_.reset(new Opm::EclipseState(deck_));
+        Opm::ParseMode parseMode;
+        deck_ = parser->parseFile(fileName, parseMode);
+        eclState_.reset(new Opm::EclipseState(deck_, parseMode));
 
 #if EBOS_USE_ALUGRID
         std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
