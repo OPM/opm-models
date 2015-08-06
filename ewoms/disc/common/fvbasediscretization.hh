@@ -314,19 +314,16 @@ public:
     {
         asImp_().updateBoundary_();
 
+#if HAVE_DUNE_FEM
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
-            // solution_[timeIdx].resize(nDofs);
         }
-
-        resizeAndResetIntensiveQuantitiesCache_();
-
-#if HAVE_DUNE_FEM
         // create adaptation objects
         restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
         adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
 #endif
-
+        resizeSolutions( asImp_().numGridDof() );
+        resizeAndResetIntensiveQuantitiesCache_();
         asImp_().registerOutputModules_();
     }
 
@@ -886,20 +883,38 @@ public:
      * \param timeIdx The index of the solution used by the time discretization.
      */
     const SolutionVector &solution(int timeIdx) const
-    { return solution_[timeIdx]->blockVector(); }
+    {
+#if HAVE_DUNE_FEM
+        return solution_[timeIdx]->blockVector();
+#else
+        return solution_[timeIdx];
+#endif
+    }
 
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector &solution(int timeIdx)
-    { return solution_[timeIdx]->blockVector(); }
+    {
+#if HAVE_DUNE_FEM
+        return solution_[timeIdx]->blockVector();
+#else
+        return solution_[timeIdx];
+#endif
+    }
 
   protected:
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector &mutableSolution(int timeIdx) const
-    { return solution_[timeIdx]->blockVector(); }
+    {
+#if HAVE_DUNE_FEM
+        return solution_[timeIdx]->blockVector();
+#else
+        return solution_[timeIdx];
+#endif
+    }
 
   public:
     /*!
@@ -1457,12 +1472,7 @@ public:
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
-        /*
-        int nDof = numTotalDof();
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].resize(nDof);
-        }
-        */
+        resizeSolutions( numTotalDof() );
 
         auxMod->applyInitial();
     }
@@ -1494,6 +1504,15 @@ public:
     { return auxEqModules_[auxEqModIdx]; }
 
 protected:
+    void resizeSolutions( const size_t nDofs )
+    {
+#if ! HAVE_DUNE_FEM
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution_[timeIdx].resize(nDofs);
+        }
+#endif
+    }
+
     void resizeAndResetIntensiveQuantitiesCache_()
     {
         if (storeIntensiveQuantities_()) {
@@ -1599,7 +1618,6 @@ protected:
 
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step
-    //mutable SolutionVector solution_[historySize];
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
 
@@ -1621,6 +1639,8 @@ protected:
 
     std::unique_ptr< RestrictProlong  > restrictProlong_;
     std::unique_ptr< AdaptationManager> adaptationManager_;
+#else
+    mutable SolutionVector solution_[historySize];
 #endif
 
     // all the index of the BoundaryTypes object for a vertex
