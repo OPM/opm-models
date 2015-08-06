@@ -50,6 +50,7 @@
 #endif
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -152,10 +153,10 @@ public:
             caseName_ += std::toupper(rawCaseName[i]);
 
         Opm::ParserPtr parser(new Opm::Parser());
-
+        Opm::ParseMode parseMode;
         std::cout << "Reading the deck file ('" << fileName << "')" << std::endl;
-        deck_ = parser->parseFile(fileName);
-        eclState_.reset(new Opm::EclipseState(deck_));
+        deck_ = parser->parseFile(fileName , parseMode);
+        eclState_.reset(new Opm::EclipseState(deck_, parseMode));
 
 #if EBOS_USE_ALUGRID
         std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
