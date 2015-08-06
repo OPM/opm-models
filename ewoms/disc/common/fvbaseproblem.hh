@@ -541,7 +541,9 @@ public:
      */
     void markForGridAdaptation()
     {
-#warning TODO
+        OPM_THROW(Opm::NotAvailable,
+                  "This problem does not specify a markForGridAdaptation() method. "
+                  "Grid adaptation is thus not available");
     }
 #endif
 

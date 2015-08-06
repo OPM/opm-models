@@ -115,7 +115,7 @@ protected:
     {
 #if HAVE_DUNE_FEM
         gridPart_.reset(new GridPart(asImp_().grid()));
-        gridView_.reset(new GridView(gridPart_->gridView()));
+        gridView_.reset(new GridView(static_cast<GridView>(*gridPart_)));
 #else
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
         gridView_.reset(new GridView(asImp_().grid().leafGridView()));

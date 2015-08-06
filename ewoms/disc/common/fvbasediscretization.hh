@@ -308,7 +308,9 @@ public:
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
+#if HAVE_DUNE_FEM
         , space_( simulator.gridManager().gridPart() )
+#endif
     {
         asImp_().updateBoundary_();
 

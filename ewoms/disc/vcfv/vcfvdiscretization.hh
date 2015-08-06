@@ -155,7 +155,7 @@ public:
     void deserialize(Restarter &res)
     {
         res.template deserializeEntities</*codim=*/dim>(asImp_(), this->gridView_);
-        this->solution_[/*timeIdx=*/1] = this->solution_[/*timeIdx=*/0];
+        this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 
 private:
