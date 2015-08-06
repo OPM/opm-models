@@ -52,6 +52,7 @@
 #include <ewoms/aux/baseauxiliarymodule.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -203,6 +204,9 @@ SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, 1e100);
 //! By default, accept any time step larger than zero
 SET_SCALAR_PROP(FvBaseDiscretization, MinTimeStepSize, 0.0);
 
+//! Disable grid adaptation by default
+SET_BOOL_PROP(FvBaseDiscretization, EnableGridAdaptation, false);
+
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 
@@ -312,6 +316,14 @@ public:
         , space_( simulator.gridManager().gridPart() )
 #endif
     {
+        enableGridAdaptation_ = EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation);
+
+#if !HAVE_DUNE_FEM
+        if (enableGridAdaptation_)
+            OPM_THROW(NotAvailable,
+                      "Grid adaptation currently requires the presence of the dune-fem module");
+#endif
+
         asImp_().updateBoundary_();
 
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
@@ -360,6 +372,7 @@ public:
         // register runtime parameters of the output modules
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGridAdaptation, "Enable adaptive grid refinement/coarsening");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
@@ -1620,6 +1633,8 @@ protected:
     //mutable SolutionVector solution_[historySize];
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
+
+    bool enableGridAdaptation_;
 
 #if HAVE_DUNE_FEM
     typedef Dune::Fem::FunctionSpace<typename Grid::ctype,

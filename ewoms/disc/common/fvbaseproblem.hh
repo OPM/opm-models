@@ -153,6 +153,18 @@ public:
     }
 
     /*!
+     * \brief Handle changes of the grid
+     */
+    void gridChanged()
+    {
+        elementMapper_.update();
+        vertexMapper_.update();
+
+        if (enableVtkOutput_())
+            defaultVtkWriter_->gridChanged();
+    }
+
+    /*!
      * \brief Returns the total wall time spend on solving the
      *        system [s].
      */
