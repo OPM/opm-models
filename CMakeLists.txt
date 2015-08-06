@@ -145,6 +145,12 @@ opm_add_test(lens_immiscible_ecfv
 opm_add_test(finger_immiscible
              CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
 
+opm_add_test(finger_immiscible_adaptive
+             EXE_NAME finger_immiscible
+             CONDITION DUNE_ALUGRID_FOUND AND DUNE_FEM_FOUND
+             NO_COMPILE
+             DRIVER_ARGS --enable-grid-adaptation=true)
+
 opm_add_test(test_navierstokes
              CONDITION (DUNE_ALUGRID_FOUND OR ALUGRID_FOUND) AND SUPERLU_FOUND)
 
