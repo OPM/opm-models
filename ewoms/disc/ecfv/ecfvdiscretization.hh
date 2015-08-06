@@ -148,7 +148,7 @@ public:
                                         DofMapper,
                                         /*commCodim=*/0> GhostSyncHandle;
 
-        auto ghostSync = GhostSyncHandle(this->solution_[/*timeIdx=*/0],
+        auto ghostSync = GhostSyncHandle(this->solution(/*timeIdx=*/0),
                                          asImp_().dofMapper());
         this->gridView().communicate(ghostSync,
                                      Dune::InteriorBorder_All_Interface,
@@ -177,7 +177,7 @@ public:
     void deserialize(Restarter &res)
     {
         res.template deserializeEntities</*codim=*/0>(asImp_(), this->gridView_);
-        this->solution_[/*timeIdx=*/1] = this->solution_[/*timeIdx=*/0];
+        this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 
 private:

@@ -50,6 +50,11 @@
 #include <dune/common/mpihelper.hh>
 #endif
 #include <dune/common/parametertreeparser.hh>
+#include <dune/common/parallel/mpihelper.hh>
+
+#if HAVE_DUNE_FEM
+#include <dune/fem/misc/mpimanager.hh>
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -212,9 +217,12 @@ int start(int argc, char **argv)
     }
 
     // initialize MPI, finalize is done automatically on exit
-    const Dune::MPIHelper& mpiHelper = Dune::MPIHelper::instance(argc, argv);
-
-    int myRank = mpiHelper.rank();
+#if HAVE_DUNE_FEM
+    Dune::Fem::MPIManager::initialize(argc, argv);
+    int myRank = Dune::Fem::MPIManager::rank();
+#else
+    int myRank = MPIHelper::instance(argc, argv).rank();
+#endif
 
     try
     {

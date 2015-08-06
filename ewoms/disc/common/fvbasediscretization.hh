@@ -57,6 +57,12 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/space/common/functionspace.hh>
+#include <dune/fem/space/finitevolume.hh>
+#include <dune/fem/function/blockvectorfunction.hh>
+#endif
+
 #include <limits>
 #include <list>
 #include <sstream>
@@ -246,6 +252,7 @@ class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -301,18 +308,20 @@ public:
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
+        , space_( simulator.gridManager().gridPart() )
     {
         asImp_().updateBoundary_();
 
-        int nDofs = asImp_().numGridDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].resize(nDofs);
-
-            if (storeIntensiveQuantities_()) {
-                intensiveQuantityCache_[timeIdx].resize(nDofs);
-                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
-            }
+            solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
+            // solution_[timeIdx].resize(nDofs);
         }
+
+        resizeAndResetIntensiveQuantitiesCache_();
+
+        // create adaptation objects
+        restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
+        adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
 
         asImp_().registerOutputModules_();
     }
@@ -466,7 +475,7 @@ public:
         // also set the solution of the "previous" time steps to the
         // initial solution.
         for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
-            solution_[timeIdx] = solution_[/*timeIdx=*/0];
+            solution(timeIdx) = solution(/*timeIdx=*/0);
 
         simulator_.problem().initialSolutionApplied();
     }
@@ -606,9 +615,9 @@ public:
                           const SolutionVector &u) const
     {
         SolutionVector tmp(asImp_().solution(/*timeIdx=*/0));
-        solution_[/*timeIdx=*/0] = u;
+        mutableSolution(/*timeIdx=*/0) = u;
         Scalar res = asImp_().globalResidual(dest);
-        solution_[/*timeIdx=*/0] = tmp;
+        mutableSolution(/*timeIdx=*/0) = tmp;
         return res;
     }
 
@@ -873,14 +882,22 @@ public:
      * \param timeIdx The index of the solution used by the time discretization.
      */
     const SolutionVector &solution(int timeIdx) const
-    { return solution_[timeIdx]; }
+    { return solution_[timeIdx]->blockVector(); }
 
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector &solution(int timeIdx)
-    { return solution_[timeIdx]; }
+    { return solution_[timeIdx]->blockVector(); }
 
+  protected:
+    /*!
+     * \copydoc solution(int) const
+     */
+    SolutionVector &mutableSolution(int timeIdx) const
+    { return solution_[timeIdx]->blockVector(); }
+
+  public:
     /*!
      * \brief Returns the operator linearizer for the global jacobian of
      *        the problem.
@@ -1035,7 +1052,20 @@ public:
      *        model can overload.
      */
     void updateSuccessful()
-    { }
+    {
+#if HAVE_DUNE_FEM
+        // adapt the grid if enabled and if all dependencies are available
+        if (adaptationManager_->adaptive()) {
+            simulator_.problem().markForGridAdaptation();
+            adaptationManager_->adapt();
+
+            resetLinearizer();
+            finishInit();
+            resizeAndResetIntensiveQuantitiesCache_();
+            updateBoundary_();
+        }
+#endif
+    }
 
     /*!
      * \brief Called by the update() method if it was
@@ -1050,7 +1080,7 @@ public:
         intensiveQuantityCache_[/*timeIdx=*/0] = intensiveQuantityCache_[/*timeIdx=*/1];
         intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
 
-        solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
+        solution(/*timeIdx=*/0) = solution(/*timeIdx=*/1);
         linearizer_->relinearizeAll();
     }
 
@@ -1064,7 +1094,7 @@ public:
     void advanceTimeLevel()
     {
         // make the current solution the previous one.
-        solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
+        solution(/*timeIdx=*/1) = solution(/*timeIdx=*/0);
 
         // shift the intensive quantities cache by one position in the
         // history
@@ -1125,7 +1155,7 @@ public:
         }
 
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            outstream << solution_[/*timeIdx=*/0][dofIdx][eqIdx] << " ";
+            outstream << solution(/*timeIdx=*/0)[dofIdx][eqIdx] << " ";
         }
     }
 
@@ -1151,7 +1181,7 @@ public:
             if (!instream.good())
                 OPM_THROW(std::runtime_error,
                           "Could not deserialize degree of freedom " << dofIdx);
-            instream >> solution_[/*timeIdx=*/0][dofIdx][eqIdx];
+            instream >> solution(/*timeIdx=*/0)[dofIdx][eqIdx];
         }
     }
 
@@ -1417,9 +1447,11 @@ public:
 
         // resize the solutions
         int nDof = numTotalDof();
+        /*
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDof);
         }
+        */
 
         auxMod->applyInitial();
     }
@@ -1451,6 +1483,19 @@ public:
     { return auxEqModules_[auxEqModIdx]; }
 
 protected:
+    void resizeAndResetIntensiveQuantitiesCache_()
+    {
+        if (storeIntensiveQuantities_()) {
+            const int nDofs = asImp_().numGridDof();
+            for( int timeIdx=0; timeIdx<historySize; ++timeIdx )
+            {
+              intensiveQuantityCache_[timeIdx].resize(nDofs);
+              intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs);
+              std::fill( intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                         intensiveQuantityCacheUpToDate_[timeIdx].end(), false );
+            }
+        }
+    }
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
                                     const Context &context, int dofIdx, int timeIdx)
@@ -1543,9 +1588,29 @@ protected:
 
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step
-    mutable SolutionVector solution_[historySize];
+    //mutable SolutionVector solution_[historySize];
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
+
+#if HAVE_DUNE_FEM
+    typedef Dune::Fem::FunctionSpace<typename Grid::ctype,
+                                     Scalar,
+                                     Grid::dimensionworld,
+                                     numEq> FunctionSpace;
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+    typedef Dune::Fem::FiniteVolumeSpace<FunctionSpace, GridPart, 0> DiscreteFunctionSpace;
+    typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
+
+    DiscreteFunctionSpace space_;
+    mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
+
+    // adaptation classes
+    typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > RestrictProlong;
+    typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
+
+    std::unique_ptr< RestrictProlong  > restrictProlong_;
+    std::unique_ptr< AdaptationManager> adaptationManager_;
+#endif
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
