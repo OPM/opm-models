@@ -25,6 +25,11 @@
  */
 #include "config.h"
 
+#ifdef HAVE_DUNE_FEM
+#warning "HACK: For now, dune-fem cannot be used in conjunction with Dune::CpGrid because CpGrid has some API conformity issues."
+#undef HAVE_DUNE_FEM
+#endif
+
 #include <ewoms/common/quad.hh>
 #include <ewoms/common/start.hh>
 #include <ewoms/models/blackoil/blackoilmodel.hh>

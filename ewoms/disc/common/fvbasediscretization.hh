@@ -315,15 +315,20 @@ public:
         asImp_().updateBoundary_();
 
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+#if HAVE_DUNE_FEM
             solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
-            // solution_[timeIdx].resize(nDofs);
+#else
+            solution(timeIdx).resize(numTotalDof());
+#endif
         }
 
         resizeAndResetIntensiveQuantitiesCache_();
 
+#if HAVE_DUNE_FEM
         // create adaptation objects
         restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
         adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
+#endif
 
         asImp_().registerOutputModules_();
     }
@@ -884,20 +889,38 @@ public:
      * \param timeIdx The index of the solution used by the time discretization.
      */
     const SolutionVector &solution(int timeIdx) const
-    { return solution_[timeIdx]->blockVector(); }
+    {
+#if HAVE_DUNE_FEM
+        return solution_[timeIdx]->blockVector();
+#else
+        return solution_[timeIdx];
+#endif
+    }
 
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector &solution(int timeIdx)
-    { return solution_[timeIdx]->blockVector(); }
+    {
+#if HAVE_DUNE_FEM
+        return solution_[timeIdx]->blockVector();
+#else
+        return solution_[timeIdx];
+#endif
+    }
 
   protected:
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector &mutableSolution(int timeIdx) const
-    { return solution_[timeIdx]->blockVector(); }
+    {
+#if HAVE_DUNE_FEM
+        return solution_[timeIdx]->blockVector();
+#else
+        return solution_[timeIdx];
+#endif
+    }
 
   public:
     /*!
@@ -1444,18 +1467,22 @@ public:
      */
     void addAuxiliaryModule(std::shared_ptr<BaseAuxiliaryModule<TypeTag> > auxMod)
     {
+#if HAVE_DUNE_FEM
+        OPM_THROW(Opm::NotAvailable,
+                  "Problems which require auxiliary modules cannot be used in conjunction "
+                  "with dune-fem");
+#else
         auxMod->setDofOffset(numTotalDof());
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
         int nDof = numTotalDof();
-        /*
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDof);
         }
-        */
 
         auxMod->applyInitial();
+#endif
     }
 
     /*!
@@ -1612,6 +1639,9 @@ protected:
 
     std::unique_ptr< RestrictProlong  > restrictProlong_;
     std::unique_ptr< AdaptationManager> adaptationManager_;
+
+#else
+    mutable std::array< SolutionVector, historySize > solution_;
 #endif
 
     // all the index of the BoundaryTypes object for a vertex

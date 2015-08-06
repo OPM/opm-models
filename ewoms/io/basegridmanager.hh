@@ -93,13 +93,23 @@ public:
      */
     GridPart &gridPart()
     { return *gridPart_; }
+#endif
 
+    /*!
+     * \brief Returns the number of times the grid has been changed since its creation.
+     *
+     * This basically says how often the grid has been adapted in the current simulation
+     * run.
+     */
     int gridSequenceNumber () const
     {
-      typedef Dune::Fem::DofManager< Grid > FemDofManager;
-      return FemDofManager::instance( gridPart().grid() ).sequence();
-    }
+#if HAVE_DUNE_FEM
+        typedef Dune::Fem::DofManager< Grid > FemDofManager;
+        return FemDofManager::instance( gridPart().grid() ).sequence();
+#else
+        return 0;
 #endif
+    }
 
 
     /*!

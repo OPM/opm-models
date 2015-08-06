@@ -221,7 +221,7 @@ int start(int argc, char **argv)
     Dune::Fem::MPIManager::initialize(argc, argv);
     int myRank = Dune::Fem::MPIManager::rank();
 #else
-    int myRank = MPIHelper::instance(argc, argv).rank();
+    int myRank = Dune::MPIHelper::instance(argc, argv).rank();
 #endif
 
     try
