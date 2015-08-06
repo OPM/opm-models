@@ -255,6 +255,7 @@ template<class TypeTag>
 class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -313,25 +314,29 @@ public:
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
 #if HAVE_DUNE_FEM
-        , space_( simulator.gridManager().gridPart() )
+        , feSpace_( simulator.gridManager().gridPart() )
 #endif
     {
         enableGridAdaptation_ = EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation);
 
 #if !HAVE_DUNE_FEM
         if (enableGridAdaptation_)
-            OPM_THROW(NotAvailable,
+            OPM_THROW(Opm::NotAvailable,
                       "Grid adaptation currently requires the presence of the dune-fem module");
 #endif
+        bool isEcfv = std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value;
+        if (enableGridAdaptation_ && !isEcfv)
+            OPM_THROW(Opm::NotAvailable,
+                      "Grid adaptation currently only works for the element-centered finite "
+                      "volume discretization (is: " << Dune::className<Discretization>() << ")");
 
         asImp_().updateBoundary_();
 
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
 #if HAVE_DUNE_FEM
-            solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
-#else
-            solution(timeIdx).resize(numTotalDof());
+            solution_[ timeIdx ].reset( new DiscreteFunction( "solution", feSpace_ ) );
 #endif
+            solution(timeIdx).resize(numTotalDof());
         }
 
         resizeAndResetIntensiveQuantitiesCache_();
@@ -1666,7 +1671,7 @@ protected:
     typedef Dune::Fem::FiniteVolumeSpace<FunctionSpace, GridPart, 0> DiscreteFunctionSpace;
     typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
 
-    DiscreteFunctionSpace space_;
+    DiscreteFunctionSpace feSpace_;
     mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
     // adaptation classes
