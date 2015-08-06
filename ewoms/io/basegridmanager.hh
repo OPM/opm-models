@@ -93,13 +93,17 @@ public:
      */
     GridPart &gridPart()
     { return *gridPart_; }
+#endif
 
     int gridSequenceNumber () const
     {
+#if HAVE_DUNE_FEM
       typedef Dune::Fem::DofManager< Grid > FemDofManager;
       return FemDofManager::instance( gridPart().grid() ).sequence();
-    }
+#else
+      return 0; // return the same sequence number >= 0 means the grid never changes
 #endif
+    }
 
 
     /*!
@@ -117,11 +121,11 @@ protected:
         gridPart_.reset(new GridPart(asImp_().grid()));
         gridView_.reset(new GridView(static_cast<GridView> (*gridPart_)));
 #else
-    #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
         gridView_.reset(new GridView(asImp_().grid().leafGridView()));
-    #else
+#else
         gridView_.reset(new GridView(asImp_().grid().leafView()));
-    #endif
+#endif
         //gridView_.reset(new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_())));
 #endif
     }
