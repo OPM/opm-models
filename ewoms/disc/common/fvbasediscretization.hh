@@ -1532,7 +1532,7 @@ public:
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
-        if( ! std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
+        if( enableGridAdaptation_ &&  ! std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
         {
             OPM_THROW(Opm::NotAvailable,
                       "Problems which require auxiliary modules cannot be used in conjunction "
