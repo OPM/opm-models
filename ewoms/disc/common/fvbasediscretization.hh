@@ -295,6 +295,22 @@ class FvBaseDiscretization
     typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
 
+    class BlockVectorWrapper
+    {
+    protected:
+        SolutionVector blockVector_;
+    public:
+        BlockVectorWrapper( const std::string& name, void* spc )
+            : blockVector_()
+        {}
+
+        SolutionVector& blockVector() { return blockVector_; }
+        const SolutionVector& blockVector() const { return blockVector_; }
+    };
+#if ! HAVE_DUNE_FEM
+    typedef BlockVectorWrapper  DiscreteFunction;
+#endif
+
     // copying a discretization object is not a good idea
     FvBaseDiscretization(const FvBaseDiscretization &);
 
@@ -310,14 +326,16 @@ public:
         , linearizer_(new Linearizer())
 #if HAVE_DUNE_FEM
         , space_( simulator.gridManager().gridPart() )
+#else
+        , space_( 0 )
 #endif
     {
         asImp_().updateBoundary_();
 
-#if HAVE_DUNE_FEM
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
         }
+#if HAVE_DUNE_FEM
         // create adaptation objects
         restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
         adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
@@ -884,11 +902,7 @@ public:
      */
     const SolutionVector &solution(int timeIdx) const
     {
-#if HAVE_DUNE_FEM
         return solution_[timeIdx]->blockVector();
-#else
-        return solution_[timeIdx];
-#endif
     }
 
     /*!
@@ -896,11 +910,7 @@ public:
      */
     SolutionVector &solution(int timeIdx)
     {
-#if HAVE_DUNE_FEM
         return solution_[timeIdx]->blockVector();
-#else
-        return solution_[timeIdx];
-#endif
     }
 
   protected:
@@ -909,11 +919,7 @@ public:
      */
     SolutionVector &mutableSolution(int timeIdx) const
     {
-#if HAVE_DUNE_FEM
         return solution_[timeIdx]->blockVector();
-#else
-        return solution_[timeIdx];
-#endif
     }
 
   public:
@@ -1506,11 +1512,12 @@ public:
 protected:
     void resizeSolutions( const size_t nDofs )
     {
-#if ! HAVE_DUNE_FEM
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].resize(nDofs);
+        if( std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
+        {
+            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+                solution(timeIdx).resize(nDofs);
+            }
         }
-#endif
     }
 
     void resizeAndResetIntensiveQuantitiesCache_()
@@ -1631,7 +1638,6 @@ protected:
     typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
 
     DiscreteFunctionSpace space_;
-    mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
     // adaptation classes
     typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > RestrictProlong;
@@ -1640,8 +1646,9 @@ protected:
     std::unique_ptr< RestrictProlong  > restrictProlong_;
     std::unique_ptr< AdaptationManager> adaptationManager_;
 #else
-    mutable SolutionVector solution_[historySize];
+    void* space_;
 #endif
+    mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
