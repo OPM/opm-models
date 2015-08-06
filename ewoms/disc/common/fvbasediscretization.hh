@@ -1481,7 +1481,7 @@ public:
         {
             std::cerr << "Warning: DiscreteFunction's blockVector resized from outside!" << std::endl;
         }
-        const int nDofs = numTotalDof();
+        const size_t nDofs = numTotalDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution(timeIdx).resize(nDofs);
         }
