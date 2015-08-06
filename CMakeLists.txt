@@ -142,11 +142,14 @@ opm_add_test(lens_immiscible_vcfv
 opm_add_test(lens_immiscible_ecfv
              TEST_ARGS --end-time=3000)
 
-opm_add_test(finger_immiscible
+opm_add_test(finger_immiscible_ecfv
              CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
 
-opm_add_test(finger_immiscible_adaptive
-             EXE_NAME finger_immiscible
+opm_add_test(finger_immiscible_vcfv
+             CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
+
+opm_add_test(finger_immiscible_ecfv_adaptive
+             EXE_NAME finger_immiscible_ecfv
              CONDITION DUNE_ALUGRID_FOUND AND DUNE_FEM_FOUND
              NO_COMPILE
              DRIVER_ARGS --enable-grid-adaptation=true)

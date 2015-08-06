@@ -456,6 +456,12 @@ public:
     }
 
     /*!
+     * \brief Returns whether the grid ought to be adapted to the solution during the simulation.
+     */
+    bool enableGridAdaptation() const
+    { return enableGridAdaptation_; }
+
+    /*!
      * \brief Applies the initial solution for all degrees of freedom to which the model
      *        applies.
      */
