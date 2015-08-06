@@ -300,8 +300,8 @@ class FvBaseDiscretization
     protected:
         SolutionVector blockVector_;
     public:
-        BlockVectorWrapper( const std::string& name, void* spc )
-            : blockVector_()
+        BlockVectorWrapper( const std::string& name, const size_t size )
+            : blockVector_( size )
         {}
 
         SolutionVector& blockVector() { return blockVector_; }
@@ -327,7 +327,7 @@ public:
 #if HAVE_DUNE_FEM
         , space_( simulator.gridManager().gridPart() )
 #else
-        , space_( 0 )
+        , space_( asImp_().numGridDof() )
 #endif
     {
         asImp_().updateBoundary_();
@@ -340,7 +340,6 @@ public:
         restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
         adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
 #endif
-        resizeSolutions( asImp_().numGridDof() );
         resizeAndResetIntensiveQuantitiesCache_();
         asImp_().registerOutputModules_();
     }
@@ -1478,7 +1477,13 @@ public:
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
-        resizeSolutions( numTotalDof() );
+        if( ! std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
+        {
+            std::cerr << "Warning: DiscreteFunction's blockVector resized from outside!" << std::endl;
+        }
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution(timeIdx).resize(nDofs);
+        }
 
         auxMod->applyInitial();
     }
@@ -1510,16 +1515,6 @@ public:
     { return auxEqModules_[auxEqModIdx]; }
 
 protected:
-    void resizeSolutions( const size_t nDofs )
-    {
-        if( std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
-        {
-            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-                solution(timeIdx).resize(nDofs);
-            }
-        }
-    }
-
     void resizeAndResetIntensiveQuantitiesCache_()
     {
         if (storeIntensiveQuantities_()) {
@@ -1646,7 +1641,7 @@ protected:
     std::unique_ptr< RestrictProlong  > restrictProlong_;
     std::unique_ptr< AdaptationManager> adaptationManager_;
 #else
-    void* space_;
+    const size_t space_;
 #endif
     mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
