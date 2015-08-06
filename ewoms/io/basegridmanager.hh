@@ -98,7 +98,8 @@ protected:
     {
 #if HAVE_DUNE_FEM
         gridPart_.reset(new GridPart(asImp_().grid()));
-        gridView_.reset(new GridView(gridPart_->gridView()));
+        //gridView_.reset(new GridView(gridPart_->gridView()));
+        gridView_.reset(new GridView(static_cast<GridView> (*gridPart_)));
 #else
         gridView_.reset(new GridView(BaseGridManagerHelper::gimmeGridView_<TypeTag>(asImp_())));
 #endif
