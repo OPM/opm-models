@@ -535,15 +535,17 @@ public:
     { return model().newtonMethod(); }
     // \}
 
-#if HAVE_DUNE_FEM
     /*!
      * \brief Mark grid cells for refinement or coarsening
+     * \note This method has to be overloaded in derived classes to proper implement
+     *       marking of grid entities.
+     *
+     * \return true if grid adaptation should be done (default return is false)
      */
-    void markForGridAdaptation()
+    bool markForGridAdaptation()
     {
-#warning TODO
+        return false;
     }
-#endif
 
     /*!
      * \brief This method writes the complete state of the problem

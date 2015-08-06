@@ -292,7 +292,7 @@ public:
     { return gravity_; }
 
 
-    void markForGridAdaptation()
+    bool markForGridAdaptation()
     {
       std::cout << "Mark for refinement" << std::endl;
       ElementContext elemCtx( this->simulator() );
@@ -309,9 +309,11 @@ public:
         Scalar maxSat = -1e100;
         for( int dofIdx=0; dofIdx < elemCtx.numDof(0); ++dofIdx )
         {
+            /*
           const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, 0 );
           minSat = std::min( minSat, intQuant.fluidState().saturation( 0 ) );
           maxSat = std::max( maxSat, intQuant.fluidState().saturation( 0 ) );
+          */
         }
         const Scalar indicator = (maxSat - minSat)/(0.5*(maxSat+minSat));
         if( indicator > 0.15 && element.level() < 3 )
@@ -319,6 +321,7 @@ public:
         else if ( indicator < 0.025 )
           grid.mark( -1, element );
       }
+      return true;
     }
 
     // \}

@@ -1055,14 +1055,21 @@ public:
     {
 #if HAVE_DUNE_FEM
         // adapt the grid if enabled and if all dependencies are available
-        if (adaptationManager_->adaptive()) {
-            simulator_.problem().markForGridAdaptation();
-            adaptationManager_->adapt();
+        // adaptation is only done if markForGridAdaptation returns true
+        if (adaptationManager_->adaptive() )
+        {
+            // check if problem allows for adaptation and cells were marked
+            if( simulator_.problem().markForGridAdaptation() )
+            {
+                // adapt the grid and load balance if necessary
+                adaptationManager_->adapt();
 
-            resetLinearizer();
-            finishInit();
-            resizeAndResetIntensiveQuantitiesCache_();
-            updateBoundary_();
+                // reset sizes of local values
+                resetLinearizer();
+                finishInit();
+                resizeAndResetIntensiveQuantitiesCache_();
+                updateBoundary_();
+            }
         }
 #endif
     }
@@ -1446,8 +1453,8 @@ public:
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
-        int nDof = numTotalDof();
         /*
+        int nDof = numTotalDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDof);
         }
