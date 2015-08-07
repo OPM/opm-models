@@ -317,14 +317,17 @@ class FvBaseDiscretization
 #if HAVE_DUNE_FEM
     typedef typename GET_PROP_TYPE(TypeTag, DiscreteFunctionSpace)    DiscreteFunctionSpace;
 
+    // discrete function storing solution data
     typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
 
-    // adaptation classes
+    // problem restriction and prolongation operator for adaptation
     typedef typename GET_PROP_TYPE(TypeTag, Problem)   Problem;
     typedef typename Problem :: RestrictProlongOperator  ProblemRestrictProlongOperator;
 
+    // discrete function restriction and prolongation operator for adaptation
     typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > DiscreteFunctionRestrictProlong;
     typedef Dune::Fem::RestrictProlongTuple< DiscreteFunctionRestrictProlong,  ProblemRestrictProlongOperator > RestrictProlong;
+    // adaptation classes
     typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
 #else
     typedef BlockVectorWrapper  DiscreteFunction;
