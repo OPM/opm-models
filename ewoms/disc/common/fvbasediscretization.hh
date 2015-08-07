@@ -60,7 +60,9 @@
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/space/common/adaptmanager.hh>
+#include <dune/fem/space/common/restrictprolongtuple.hh>
 #include <dune/fem/function/blockvectorfunction.hh>
+#include <dune/fem/misc/capabilities.hh>
 #endif
 
 #include <limits>
@@ -318,7 +320,11 @@ class FvBaseDiscretization
     typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
 
     // adaptation classes
-    typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > RestrictProlong;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem)   Problem;
+    typedef typename Problem :: RestrictProlongOperator  ProblemRestrictProlongOperator;
+
+    typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > DiscreteFunctionRestrictProlong;
+    typedef Dune::Fem::RestrictProlongTuple< DiscreteFunctionRestrictProlong,  ProblemRestrictProlongOperator > RestrictProlong;
     typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
 #else
     typedef BlockVectorWrapper  DiscreteFunction;
@@ -342,10 +348,15 @@ public:
 #else
         , space_( asImp_().numGridDof() )
 #endif
+        , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
     {
-        enableGridAdaptation_ = EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation);
-
-#if !HAVE_DUNE_FEM
+#if HAVE_DUNE_FEM
+        if( enableGridAdaptation_ && ! Dune::Fem::Capabilities::isLocallyAdaptive< Grid >::v )
+        {
+            std::cerr << "WARNING: adaptation enabled, but chosen Grid is not capable of adaptivity" << std::endl;
+            enableGridAdaptation_ = false ;
+        }
+#else
         if (enableGridAdaptation_)
             OPM_THROW(Opm::NotAvailable,
                       "Grid adaptation currently requires the presence of the dune-fem module");
@@ -364,7 +375,9 @@ public:
 
 #if HAVE_DUNE_FEM
         // create adaptation objects
-        restrictProlong_.reset( new RestrictProlong( *(solution_[/*timeIdx=*/ 0]) ) ) ;
+        restrictProlong_.reset(
+            new RestrictProlong( DiscreteFunctionRestrictProlong(*(solution_[/*timeIdx=*/ 0] )),
+                                 simulator.problem().restrictProlongOperator() ) );
         adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
 #endif
         resizeAndResetIntensiveQuantitiesCache_();
@@ -1677,7 +1690,6 @@ protected:
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
 
-    bool enableGridAdaptation_;
 
 #if HAVE_DUNE_FEM
     DiscreteFunctionSpace space_;
@@ -1696,6 +1708,8 @@ protected:
     Scalar gridTotalVolume_;
     std::vector<Scalar> dofTotalVolume_;
     std::vector<bool> isLocalDof_;
+
+    bool enableGridAdaptation_;
 };
 } // namespace Ewoms
 
