@@ -476,9 +476,14 @@ class VcfvStencil
     enum{maxBF = (dim < 3 ? 8 : 24)};
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::Traits::template Codim<0>::Entity            Element;
+public:
+    typedef typename GridView::Traits::template Codim<dim>::Entity          Entity;
+private:
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
     typedef typename GridView::Traits::template Codim<0>::EntityPointer     ElementPointer;
-    typedef typename GridView::Traits::template Codim<dim>::Entity          Vertex;
-    typedef typename GridView::Traits::template Codim<dim>::EntityPointer   VertexPointer;
+    typedef typename GridView::Traits::template Codim<dim>::EntityPointer   EntityPointer;
+#endif
+
     typedef typename Element::Geometry Geometry;
     typedef Dune::FieldVector<Scalar,dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
@@ -1111,9 +1116,9 @@ public:
      *        freedom.
      */
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-    Vertex
+    Entity
 #else
-    VertexPointer
+    EntityPointer
 #endif
     entity( const int dofIdx ) const
     {
