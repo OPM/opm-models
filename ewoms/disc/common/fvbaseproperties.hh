@@ -78,6 +78,9 @@ NEW_PROP_TAG(GridView);
 //! The class describing the stencil of the spatial discretization
 NEW_PROP_TAG(Stencil);
 
+//! The class describing the discrete function space when dune-fem is used, otherwise it points to the stencil class
+NEW_PROP_TAG(DiscreteFunctionSpace);
+
 //! The type of the problem
 NEW_PROP_TAG(Problem);
 //! The type of the base class for all problems which use this model

@@ -59,8 +59,7 @@
 #include <dune/istl/bvector.hh>
 
 #if HAVE_DUNE_FEM
-#include <dune/fem/space/common/functionspace.hh>
-#include <dune/fem/space/finitevolume.hh>
+#include <dune/fem/space/common/adaptmanager.hh>
 #include <dune/fem/function/blockvectorfunction.hh>
 #endif
 
@@ -312,13 +311,10 @@ class FvBaseDiscretization
         SolutionVector& blockVector() { return blockVector_; }
         const SolutionVector& blockVector() const { return blockVector_; }
     };
+
 #if HAVE_DUNE_FEM
-    typedef Dune::Fem::FunctionSpace<typename Grid::ctype,
-                                     Scalar,
-                                     Grid::dimensionworld,
-                                     numEq> FunctionSpace;
-    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
-    typedef Dune::Fem::FiniteVolumeSpace<FunctionSpace, GridPart, 0> DiscreteFunctionSpace;
+    typedef typename GET_PROP_TYPE(TypeTag, DiscreteFunctionSpace)    DiscreteFunctionSpace;
+
     typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
 
     // adaptation classes

@@ -37,6 +37,11 @@
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/space/common/functionspace.hh>
+#include <dune/fem/space/lagrange.hh>
+#endif
+
 namespace Ewoms {
 template <class TypeTag>
 class VcfvDiscretization;
@@ -75,6 +80,24 @@ SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory,
 //! Use P1-finite element gradients by default for the vertex centered
 //! finite volume scheme.
 SET_BOOL_PROP(VcfvDiscretization, UseTwoPointGradients, false);
+
+#if HAVE_DUNE_FEM
+//! Set the DiscreteFunctionSpace
+SET_PROP(VcfvDiscretization, DiscreteFunctionSpace)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar)   Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    typedef Dune::Fem::FunctionSpace<typename GridPart::GridType::ctype,
+                                     Scalar,
+                                     GridPart::GridType::dimensionworld,
+                                     numEq> FunctionSpace;
+public:
+    // Lagrange discrete function space with unknowns at the cell vertices
+    typedef Dune::Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, GridPart, 1 > type;
+};
+#endif
 
 //! Set the border list creator for vertices
 SET_PROP(VcfvDiscretization, BorderListCreator)
