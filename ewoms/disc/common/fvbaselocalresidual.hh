@@ -188,10 +188,11 @@ public:
         assert(static_cast<int>(storage.size()) == numPrimaryDof);
 
 #if !defined NDEBUG
-        for (int i=0; i < numPrimaryDof; i++) {
-            for (int j = 0; j < numEq; ++ j)
+        for (int i=0; i < numDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
-            Valgrind::CheckDefined(residual[i]);
+                Valgrind::CheckDefined(residual[i][j]);
+            }
         }
 #endif
 
@@ -224,7 +225,7 @@ public:
         // meter instead of total mass)
         for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
             if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
-                // non-overlap DOF
+                // interior DOF
                 Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
                 for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
@@ -233,13 +234,6 @@ public:
                     Valgrind::CheckDefined(residual[dofIdx][eqIdx]);
                 }
             }
-#if !defined NDEBUG
-            // in debug mode, we set the residual for the DOFs in the overlap to NaN
-            else {
-                residual[dofIdx] = Toolbox::createConstant(std::numeric_limits<Scalar>::quiet_NaN());
-                Valgrind::SetUndefined(residual[dofIdx]);
-            }
-#endif
         }
     }
 
