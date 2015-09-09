@@ -401,8 +401,8 @@ public:
             GridCommHandleFactory::template sumHandle<Scalar>(dofTotalVolume_,
                                                               asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
-                              Dune::Overlap_All_Interface,
-                              Dune::ForwardCommunication);
+                              Dune::InteriorBorder_All_Interface,
+                              Dune::BackwardCommunication);
 
         // sum up the volumes of the grid partitions
         gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
