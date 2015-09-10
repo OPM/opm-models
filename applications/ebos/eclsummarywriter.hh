@@ -117,11 +117,16 @@ public:
     /*!
      * \brief Adds an entry to the summary file.
      */
-    void write(const WellManager& wellsManager)
+    void write(const WellManager& wellsManager, bool isInitial = false)
     {
-        ErtSummaryTimeStep<TypeTag> ertSumTimeStep(ertSummary_,
-                                                   simulator_.time(),
-                                                   simulator_.episodeIndex());
+        int reportIdx = simulator_.episodeIndex();
+        Scalar t = simulator_.time();
+        if (!isInitial) {
+            t += simulator_.timeStepSize();
+            reportIdx += 1;
+        }
+
+        ErtSummaryTimeStep<TypeTag> ertSumTimeStep(ertSummary_, t, reportIdx);
 
         typedef EclDeckUnits<TypeTag> DeckUnits;
         const auto& deckUnits = simulator_.problem().deckUnits();
