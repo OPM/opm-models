@@ -163,10 +163,12 @@ public:
 #else
         Grid* cpgrid = new Grid();
 #endif
+        std::vector<double> porv = eclState_->getDoubleGridProperty("PORV")->getData();
         cpgrid->processEclipseFormat(eclState_->getEclipseGrid(),
                                      /*isPeriodic=*/false,
                                      /*flipNormals=*/false,
-                                     /*clipZ=*/false);
+                                     /*clipZ=*/false,
+                                     porv);
 
         for (int i = 0; i < dimension; ++i)
             cartesianSize_[i] = cpgrid->logicalCartesianSize()[i];

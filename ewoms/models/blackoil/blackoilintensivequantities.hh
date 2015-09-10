@@ -75,13 +75,11 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        fluidState_.setTemperature(Toolbox::createConstant(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx)));
+        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
 
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
@@ -91,9 +89,15 @@ public:
         // extract the water and the gas saturations for convenience
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
 
-        Evaluation Sg = Toolbox::createConstant(0.0);
+        Evaluation Sg;
         if (priVars.switchingVarMeaning() == PrimaryVariables::GasSaturation)
             Sg = priVars.makeEvaluation(Indices::switchIdx, timeIdx);
+        else if (priVars.switchingVarMeaning() == PrimaryVariables::OilMoleFractionInGas)
+            Sg = 1 - Sw;
+        else {
+            assert(priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil);
+            Sg = 0.0;
+        }
 
         fluidState_.setSaturation(waterPhaseIdx, Sw);
         fluidState_.setSaturation(gasPhaseIdx, Sg);
@@ -109,7 +113,7 @@ public:
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
-            if (Toolbox::value(fluidState_.pressure(phaseIdx)) < 1e5) {
+            if (fluidState_.pressure(phaseIdx) < 1e5) {
                 OPM_THROW(Opm::NumericalIssue,
                           "All pressures must be at least 1 bar.");
             }
@@ -121,33 +125,27 @@ public:
         // update phase compositions. first, set everything to 0...
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fluidState_.setMoleFraction(phaseIdx, compIdx, Toolbox::createConstant(0.0));
+                fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
 
         // ... then set the default composition of all phases (default = assume immscibility)
-        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, Toolbox::createConstant(1.0));
-        fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, Toolbox::createConstant(1.0));
-        fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, Toolbox::createConstant(1.0));
+        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0);
+        fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
+        fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
         if (priVars.switchingVarMeaning() == PrimaryVariables::GasSaturation) {
-            // gas is present, i.e. we use the compositions of the gas-saturated oil and
-            // oil-saturated gas phases if dissolved gas and vaporized oil are
-            // enabled. if they are disabled, continue to assume immiscibility for the
-            // respective phase.
-            Evaluation xgO = Toolbox::createConstant(0.0);
-            Evaluation xoG = Toolbox::createConstant(0.0);
-
-            if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
-
-            else if (FluidSystem::enableDissolvedGas())
-                // TODO (?): use oil instead of gas pressure
+            // if the gas and oil phases are present, we use the compositions of the
+            // gas-saturated oil and oil-saturated gas.
+            Evaluation xoG = 0.0;
+            if (FluidSystem::enableDissolvedGas())
                 xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
-
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
 
+            Evaluation xgO = 0.0;
+            if (FluidSystem::enableVaporizedOil())
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -158,6 +156,12 @@ public:
 
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
+
+            Evaluation xgO = 0.0;
+            if (FluidSystem::enableVaporizedOil())
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
+            fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
+            fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
         else {
             assert(priVars.switchingVarMeaning() == PrimaryVariables::OilMoleFractionInGas);
@@ -168,6 +172,12 @@ public:
 
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
+
+            Evaluation xoG = 0.0;
+            if (FluidSystem::enableDissolvedGas())
+                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
+            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
+            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
 
         // calculate relative permeabilities

@@ -171,7 +171,9 @@ public:
             fsFlash.setSaturation(phaseIdx, FsToolbox::value(fluidState.saturation(phaseIdx)));
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
                 fsFlash.setMoleFraction(phaseIdx, compIdx, FsToolbox::value(fluidState.moleFraction(phaseIdx, compIdx)));
+        }
 
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar rho = FluidSystem::template density<FlashFluidState, Scalar>(fsFlash, paramCache, phaseIdx);
             fsFlash.setDensity(phaseIdx, rho);
         }
@@ -205,7 +207,6 @@ public:
         typedef typename std::remove_const<ConstEvaluation>::type FsEvaluation;
         typedef typename Opm::MathToolbox<FsEvaluation> FsToolbox;
 
-        Scalar po = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
         temperature_ = FsToolbox::value(fluidState.temperature(gasPhaseIdx));
 
         // the pressure of the first phase and the saturation of water
@@ -213,29 +214,22 @@ public:
         (*this)[gasPressureIdx] = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
         (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
 
-        bool gasPresent = (FsToolbox::value(fluidState.saturation(gasPhaseIdx)) > 0.0);
-        bool oilPresent = (FsToolbox::value(fluidState.saturation(oilPhaseIdx)) > 0.0);
+        bool gasPresent = (fluidState.saturation(gasPhaseIdx) > 0.0);
+        bool oilPresent = (fluidState.saturation(oilPhaseIdx) > 0.0);
 
-        Scalar xoGSat = -1e100;
-        if (FluidSystem::enableDissolvedGas())
-            xoGSat = FluidSystem::saturatedOilGasMoleFraction(temperature_, po, pvtRegionIdx_);
-
-        if (gasPresent || !oilPresent)
+        if ((gasPresent && oilPresent) || (!gasPresent && !oilPresent))
+            // gas and oil
             switchingVarMeaning_ = GasSaturation;
-        else if (FsToolbox::value(fluidState.moleFraction(oilPhaseIdx, gasCompIdx)) < xoGSat) {
+        else if (oilPresent) {
+            // only oil
             if (FluidSystem::enableDissolvedGas())
                 switchingVarMeaning_ = GasMoleFractionInOil;
             else
                 switchingVarMeaning_ = GasSaturation;
         }
         else {
-            // if the fluid state passed as an argument represents a state in
-            // thermodynamic equilibrium, xgO < xgOSat holds. since this is not
-            // necessarily the case for the assignNaive() method, we use xgO as primary
-            // variable here and risk ending up with primary variables that are
-            // inconsistent with the fluid state (which is a thing assignNaive only
-            // guarantees if the fluid state is "coherent" with the assumptions of the
-            // model anyway)
+            assert(gasPresent);
+            // only gas
             if (FluidSystem::enableVaporizedOil())
                 switchingVarMeaning_ = OilMoleFractionInGas;
             else
@@ -265,11 +259,12 @@ public:
         Scalar pg = (*this)[Indices::gasPressureIdx];
 
         if (switchingVarMeaning() == GasSaturation) {
+            // both hydrocarbon phases
             Scalar Sw = (*this)[Indices::waterSaturationIdx];
             Scalar Sg = (*this)[Indices::switchIdx];
             Scalar So = 1 - Sw - Sg;
 
-            if (FluidSystem::enableDissolvedGas() && Sg < 0.0 && (1.0 - Sw) > 0.0) {
+            if (Sg < 0.0 && So > 0.0 && FluidSystem::enableDissolvedGas()) {
                 // we switch to the gas mole fraction in the oil phase if some oil phase
                 // is present and dissolved gas is enabled
                 Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_,
@@ -280,7 +275,7 @@ public:
                 return true;
             }
 
-            if (FluidSystem::enableVaporizedOil() && So < 0.0 && (1.0 - Sw) > 0.0) {
+            if (So < 0.0 && Sg > 0.0 && FluidSystem::enableVaporizedOil()) {
                 // we switch to the oil mole fraction in the gas phase if some gas phase
                 // is present and vaporized oil is enabled. TODO (?): use oil instead of
                 // gas pressure!
@@ -294,17 +289,16 @@ public:
             return false;
         }
         else if (switchingVarMeaning() == OilMoleFractionInGas) {
+            // only gas. oil appears as soon as more oil is present as can be dissolved
             Scalar Sw = (*this)[Indices::waterSaturationIdx];
-            Scalar So = 0;
-            Scalar Sg = 1 - Sw - So;
             Scalar xgO = (*this)[Indices::switchIdx];
+            Scalar xgOsat = FluidSystem::saturatedGasOilMoleFraction(temperature_,
+                                                                     pg,
+                                                                     pvtRegionIdx_);
 
-            // we switch to the gas saturation if the oil component cannot be fully
-            // dissolved in the gas phase or if there is no oil phase present.
-            Scalar xgOSat = FluidSystem::saturatedGasOilMoleFraction(temperature_, pg, pvtRegionIdx_);
-            if (Sg <= 0 || xgO >= xgOSat) {
+            if (xgO > xgOsat) {
                 setSwitchingVarMeaning(GasSaturation);
-                (*this)[Indices::switchIdx] = 0;
+                (*this)[Indices::switchIdx] = 1 - Sw;
                 return true;
             }
 
@@ -313,18 +307,15 @@ public:
         else {
             assert(switchingVarMeaning() == GasMoleFractionInOil);
 
-            Scalar Sw = (*this)[Indices::waterSaturationIdx];
-            Scalar Sg = 0;
-            Scalar So = 1 - Sw - Sg;
+            // only oil. gas appears as soon as more gas is present as can be dissolved
             Scalar xoG = (*this)[Indices::switchIdx];
+            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_,
+                                                                     pg,
+                                                                     pvtRegionIdx_);
 
-            // we switch to the gas saturation if the gas component cannot be fully
-            // dissolved in the oil phase or if there is no oil phase present. TODO (?):
-            // use the oil instead of the gas pressure!
-            Scalar xoGSat = FluidSystem::saturatedOilGasMoleFraction(temperature_, pg, pvtRegionIdx_);
-            if (So <= 0 || xoG >= xoGSat) {
+            if (xoG > xoGsat) {
                 setSwitchingVarMeaning(GasSaturation);
-                (*this)[Indices::switchIdx] = 0;
+                (*this)[Indices::switchIdx] = 0.0;
                 return true;
             }
 
