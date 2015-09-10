@@ -29,6 +29,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <ewoms/common/cartesianindexmapper.hh>
 #include <dune/grid/CpGrid.hpp>
 
 // set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
@@ -102,8 +103,12 @@ class EclGridManager : public BaseGridManager<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef std::unique_ptr<Grid> GridPointer;
+
+    typedef Dune :: CartesianIndexMapper< Grid > CartesianIndexMapper ;
+    typedef std::unique_ptr< CartesianIndexMapper > CartesianIndexMapperPointer;
 
     static const int dimension = Grid :: dimension;
 public:
@@ -123,9 +128,7 @@ public:
      * a cornerpoint description of the grid.
      */
     EclGridManager(Simulator &simulator)
-        : ParentType(simulator),
-          cartesianCellId_(),
-          cartesianSize_()
+        : ParentType(simulator)
     {
         std::string fileName = EWOMS_GET_PARAM(TypeTag, std::string, EclDeckFileName);
 
@@ -170,28 +173,51 @@ public:
                                      /*clipZ=*/false,
                                      porv);
 
-        for (int i = 0; i < dimension; ++i)
-            cartesianSize_[i] = cpgrid->logicalCartesianSize()[i];
-
 #if EBOS_USE_ALUGRID
+        std::vector<int> cartesianCellId;
+        std::array<int,dimension> cartesianDimension;
+
+        for (int i = 0; i < dimension; ++i)
+            cartesianDimension[i] = cpgrid->logicalCartesianSize()[i];
+
         Dune::FromToGridFactory< Grid > factory;
         std::vector< int > ordering;
         grid_ = GridPointer(factory.convert(*cpgrid, ordering));
-        if (ordering.empty())
+
+        if (ordering.empty()) {
             // copy cartesian cell index from cp grid
-            cartesianCellId_ = cpgrid->globalCell();
+            cartesianCellId = cpgrid->globalCell();
+        }
         else {
             const int size = ordering.size();
-            cartesianCellId_.reserve(size);
+            cartesianCellId.reserve(size);
             const std::vector<int>& globalCell = cpgrid->globalCell();
             for (int i = 0; i < size; ++i)
-                cartesianCellId_.push_back(globalCell[ordering[i]]);
+                cartesianCellId.push_back(globalCell[ordering[i]]);
         }
+        cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_, cartesianDimension, cartesianCellId ) );
 #else
         grid_ = GridPointer(cpgrid);
+        cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_ ) );
 #endif
 
         this->finalizeInit_();
+    }
+
+    void loadBalance()
+    {
+#if EBOS_USE_ALUGRID
+        auto gridView = grid().leafGridView();
+        auto dataHandle = cartesianIndexMapper_->dataHandle( gridView );
+        grid().loadBalance( *dataHandle );
+
+        // communicate non-interior cells values
+        grid().communicate( *dataHandle, Dune::InteriorBorder_All_Interface, Dune::ForwardCommunication );
+#else
+        // distribute the grid and switch to the distributed view
+        grid().loadBalance();
+        grid().switchToDistributedView();
+#endif
     }
 
     /*!
@@ -244,36 +270,46 @@ public:
     { return caseName_; }
 
     /*!
-     * \brief Returns the logical Cartesian size
+     * \brief Returns the number of Cartesian cells in each direction
      */
-    const std::array<int, dimension>& logicalCartesianSize() const
-    { return cartesianSize_; }
+    const std::array<int, dimension>& cartesianDimensions() const
+    {
+        return cartesianIndexMapper_->cartesianDimensions();
+    }
 
     /*!
-     * \brief Returns the logical Cartesian size
+     * \brief Returns the overall number of Cartesian cells
      */
-    int numLogicalCartesianCells() const
+    int cartesianSize() const
     {
-#if EBOS_USE_ALUGRID
-        int n = cartesianCellId_.size();
-#else
-        int n = grid_->globalCell().size();
-#endif
-        assert(cartesianSize_[0]*cartesianSize_[1]*cartesianSize_[2] == n);
-        return n;
+        return cartesianIndexMapper_->cartesianSize();
     }
 
     /*!
      * \brief Returns the Cartesian cell id for identifaction with Ecl data
      */
-    int cartesianCellId(int compressedCellIdx) const
+    int cartesianIndex(int compressedCellIdx) const
+    {
+        return cartesianIndexMapper_->cartesianIndex( compressedCellIdx );
+    }
+
+    /** \brief return index of the cells in the logical Cartesian grid */
+    int cartesianIndex( const std::array<int,dimension>& coords ) const
     {
 #if EBOS_USE_ALUGRID
-        return cartesianCellId_[compressedCellIdx];
+        return cartesianIndexMapper_->cartesianIndex( coords );
 #else
-        return grid_->globalCell()[compressedCellIdx];
+        int cartIndex = coords[ 0 ];
+        int factor = cartesianDimensions()[ 0 ];
+        for( int i=1; i<dimension; ++i )
+        {
+            cartIndex += coords[ i ] * factor;
+            factor *= cartesianDimensions()[ i ];
+        }
+        return cartIndex;
 #endif
     }
+
 
     /*!
      * \brief Extract Cartesian index triplet (i,j,k) of an active cell.
@@ -281,35 +317,18 @@ public:
      * \param [in] cellIdx Active cell index.
      * \param [out] ijk Cartesian index triplet
      */
-    void getIJK(int cellIdx, std::array<int,3>& ijk) const
+    void cartesianCoordinate(int cellIdx, std::array<int,3>& ijk) const
     {
-        assert(cellIdx < int(numLogicalCartesianCells()));
-        int cartesianCellIdx = cartesianCellId(cellIdx);
-
-        ijk[0] = cartesianCellIdx % cartesianSize_[0];
-        cartesianCellIdx /= cartesianSize_[0];
-
-        ijk[1] = cartesianCellIdx % cartesianSize_[1];
-
-        ijk[2] = cartesianCellIdx / cartesianSize_[1];
-
-#if !defined NDEBUG && !EBOS_USE_ALUGRID
-        // make sure ijk computation is the same as in CpGrid
-        std::array<int,3> checkIjk;
-        grid_->getIJK(cellIdx, checkIjk);
-        for (int i=0; i < 3; ++i)
-            assert(checkIjk[i] == ijk[i]);
-#endif
+        return cartesianIndexMapper_->cartesianCoordinate( cellIdx, ijk );
     }
 
 private:
     std::string caseName_;
     GridPointer grid_;
+    CartesianIndexMapperPointer  cartesianIndexMapper_;
     Opm::DeckConstPtr deck_;
     Opm::EclipseStateConstPtr eclState_;
 
-    std::vector<int> cartesianCellId_;
-    std::array<int,dimension> cartesianSize_;
 };
 
 } // namespace Ewoms
