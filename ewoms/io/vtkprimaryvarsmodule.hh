@@ -39,10 +39,12 @@ NEW_TYPE_TAG(VtkPrimaryVars);
 // create the property tags needed for the primary variables module
 NEW_PROP_TAG(VtkWritePrimaryVars);
 NEW_PROP_TAG(VtkWriteProcessRank);
+NEW_PROP_TAG(VtkWriteDofIndex);
 NEW_PROP_TAG(VtkOutputFormat);
 
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
+SET_BOOL_PROP(VtkPrimaryVars, VtkWriteDofIndex, false);
 } // namespace Properties
 
 /*!
@@ -81,6 +83,8 @@ public:
                              "Include the primary variables in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteProcessRank,
                              "Include the MPI process rank in the VTK output files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDofIndex,
+                             "Include the index of the degrees of freedom in the VTK output files");
     }
 
     /*!
@@ -94,6 +98,8 @@ public:
         if (processRankOutput_())
             this->resizeScalarBuffer_(processRank_,
                                       /*bufferType=*/ParentType::ElementBuffer);
+        if (dofIndexOutput_())
+            this->resizeScalarBuffer_(dofIndex_);
     }
 
     /*!
@@ -110,9 +116,13 @@ public:
 #endif
         if (processRankOutput_() && !processRank_.empty())
             processRank_[elemIdx] = this->simulator_.gridView().comm().rank();
+
         for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
+
+            if (dofIndexOutput_())
+                dofIndex_[I] = I;
 
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (primaryVarsOutput_() && !primaryVars_[eqIdx].empty())
@@ -138,6 +148,8 @@ public:
                                       "process rank",
                                       processRank_,
                                       /*bufferType=*/ParentType::ElementBuffer);
+        if (dofIndexOutput_())
+            this->commitScalarBuffer_(baseWriter, "DOF index", dofIndex_);
     }
 
 private:
@@ -145,9 +157,12 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVars); }
     static bool processRankOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteProcessRank); }
+    static bool dofIndexOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDofIndex); }
 
     EqBuffer primaryVars_;
     ScalarBuffer processRank_;
+    ScalarBuffer dofIndex_;
 };
 
 } // namespace Ewoms
