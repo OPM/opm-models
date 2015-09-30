@@ -113,7 +113,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
 public:
-    typedef Opm::FluidSystems::BlackOil<Scalar, Evaluation> type;
+    typedef Opm::FluidSystems::BlackOil<Scalar> type;
 };
 
 //! Set the number of Newton-Raphson iterations for which the update should be chopped to
