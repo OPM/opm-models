@@ -335,7 +335,19 @@ private:
         // set the row sizes
         int numDomestic = overlap_->numDomestic();
         for (int rowIdx = 0; rowIdx < numDomestic; ++rowIdx) {
-            this->setrowsize(rowIdx, entries_[rowIdx].size());
+            int numCols = 0;
+            const auto &colIndices = entries_[rowIdx];
+            auto colIdxIt = colIndices.begin();
+            const auto &colIdxEndIt = colIndices.end();
+            for (; colIdxIt != colIdxEndIt; ++colIdxIt) {
+                if (*colIdxIt < 0)
+                    // the matrix for the local process does not know about this DOF
+                    continue;
+
+                ++numCols;
+            }
+
+            this->setrowsize(rowIdx, numCols);
         }
         this->endrowsizes();
 
@@ -345,8 +357,13 @@ private:
 
             auto colIdxIt = colIndices.begin();
             const auto &colIdxEndIt = colIndices.end();
-            for (; colIdxIt != colIdxEndIt; ++colIdxIt)
+            for (; colIdxIt != colIdxEndIt; ++colIdxIt) {
+                if (*colIdxIt < 0)
+                    // the matrix for the local process does not know about this DOF
+                    continue;
+
                 this->addindex(rowIdx, *colIdxIt);
+            }
         }
         this->endindices();
 
@@ -364,93 +381,67 @@ private:
         (*numRowsSendBuff_[peerRank])[0] = numOverlapRows;
         numRowsSendBuff_[peerRank]->send(peerRank);
 
-        rowSizesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
+        // allocate the buffers which hold the global indices of each row and the number
+        // of entries which need to be communicated by the respective row
         rowIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
+        rowSizesSendBuff_[peerRank] = new MpiBuffer<Index>(numOverlapRows);
 
-        for (int rowIdx = 0; rowIdx < numOverlapRows; ++ rowIdx)
-            (*rowSizesSendBuff_[peerRank])[rowIdx] = 0;
+        // compute the sets of the indices of the entries which need to be send to the peer
+        typedef std::set<int> ColumnIndexSet;
+        typedef std::map<int, ColumnIndexSet> EntryTuples;
 
-        // create the row size and index MPI buffers for the peer
-        int numEntries = 0;
+        EntryTuples entryIndices;
+        int numEntries = 0; // <- total number of matrix entries to be send to the peer
         for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
             int domesticRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
             int nativeRowIdx = overlap_->domesticToNative(domesticRowIdx);
+            int globalRowIdx = overlap_->domesticToGlobal(domesticRowIdx);
+
+            ColumnIndexSet &colIndices = entryIndices[globalRowIdx];
 
             typedef typename BCRSMatrix::ConstColIterator ColIt;
             ColIt nativeColIt = nativeMatrix[nativeRowIdx].begin();
             ColIt nativeColEndIt = nativeMatrix[nativeRowIdx].end();
-            int numCols = 0;
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
-                int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
+                int nativeColIdx = nativeColIt.index();
+                int domesticColIdx = overlap_->nativeToDomestic(nativeColIdx);
 
-                // make sure to include all off-diagonal entries, even those which belong
-                // to DOFs which are managed by a peer process. For this, we have to
-                // re-map the column index of the black-listed index to a native one.
-                if (domesticColIdx < 0)
-                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIt.index());
+                if (domesticColIdx < 0) {
+                    // the native column index is blacklisted, use the corresponding
+                    // index in the domestic overlap.
+                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIdx);
+                    assert(domesticColIdx >= 0);
+                }
 
-                // if the native index cannot be mapped to a domestic one (i.e., it is in
-                // the grid overlap but the black-list does not care to map it to a
-                // domestic index), ignore it.
-                if (domesticColIdx < 0)
-                    continue;
-
-                if (overlap_->isLocal(domesticColIdx) && !overlap_->peerHasIndex(peerRank, domesticColIdx))
-                    continue;
-
-                ++numCols;
+                int globalColIdx = overlap_->domesticToGlobal(domesticColIdx);
+                colIndices.insert(globalColIdx);
+                ++numEntries;
             }
+        };
 
-            (*rowSizesSendBuff_[peerRank])[overlapOffset] = numCols;
-            (*rowIndicesSendBuff_[peerRank])[overlapOffset] = overlap_->domesticToGlobal(domesticRowIdx);
-            numEntries += numCols;
+        // fill the send buffers
+        entryColIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numEntries);
+        int overlapEntryIdx = 0;
+        for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
+            int domesticRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
+            int globalRowIdx = overlap_->domesticToGlobal(domesticRowIdx);
 
-            Valgrind::CheckDefined((*rowSizesSendBuff_[peerRank])[overlapOffset]);
-            Valgrind::CheckDefined(numCols);
+            (*rowIndicesSendBuff_[peerRank])[overlapOffset] = globalRowIdx;
+
+            const ColumnIndexSet &colIndexSet = entryIndices[globalRowIdx];
+            auto* rssb = rowSizesSendBuff_[peerRank];
+            (*rssb)[overlapOffset] = colIndexSet.size();
+            for (auto it = colIndexSet.begin(); it != colIndexSet.end(); ++it) {
+                int globalColIdx = *it;
+
+                (*entryColIndicesSendBuff_[peerRank])[overlapEntryIdx] = globalColIdx;
+                ++ overlapEntryIdx;
+            }
         }
 
         // actually communicate with the peer
         rowSizesSendBuff_[peerRank]->send(peerRank);
         rowIndicesSendBuff_[peerRank]->send(peerRank);
-
-        // create and fill the MPI buffer for the indices of the
-        // matrix entries
-        entryColIndicesSendBuff_[peerRank] = new MpiBuffer<Index>(numEntries);
-        int buffIdx = 0;
-        for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
-            int domesticRowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
-            int nativeRowIdx = overlap_->domesticToNative(domesticRowIdx);
-
-            typedef typename BCRSMatrix::ConstColIterator ColIt;
-            ColIt nativeColIt = nativeMatrix[nativeRowIdx].begin();
-            ColIt nativeColEndIt = nativeMatrix[nativeRowIdx].end();
-            for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
-                int domesticColIdx = overlap_->nativeToDomestic(nativeColIt.index());
-
-                // make sure to include all off-diagonal entries, even those which belong
-                // to DOFs which are managed by a peer process. For this, we have to
-                // re-map the column index of the black-listed index to a native one.
-                if (domesticColIdx < 0)
-                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIt.index());
-
-                // if the native index cannot be mapped to a domestic one (i.e., it is in
-                // the grid overlap but the black-list does not care to map it to a
-                // domestic index), ignore it.
-                if (domesticColIdx < 0)
-                    continue;
-
-                if (overlap_->isLocal(domesticColIdx) && !overlap_->peerHasIndex(peerRank, domesticColIdx))
-                    continue;
-
-                int globalColIdx = overlap_->domesticToGlobal(domesticColIdx);
-
-                (*entryColIndicesSendBuff_[peerRank])[buffIdx] = globalColIdx;
-                ++ buffIdx;
-            }
-        }
-
-        // actually send the column indices for the overlap rows to
-        // the peer
         entryColIndicesSendBuff_[peerRank]->send(peerRank);
 
         // create the send buffers for the values of the matrix
@@ -544,7 +535,7 @@ private:
     void syncCopy_()
     {
         // first, send all entries to the peers
-        const PeerSet &peerSet = overlap_->foreignOverlap().peerSet();
+        const PeerSet &peerSet = overlap_->peerSet();
         typename PeerSet::const_iterator peerIt = peerSet.begin();
         typename PeerSet::const_iterator peerEndIt = peerSet.end();
         for (; peerIt != peerEndIt; ++peerIt) {
@@ -614,11 +605,14 @@ private:
         int k = 0;
         for (Index i = 0; i < static_cast<Index>(mpiRowIndicesRecvBuff.size()); ++i) {
             Index domRowIdx = mpiRowIndicesRecvBuff[i];
-            for (Index j = 0; j < static_cast<Index>(mpiRowSizesRecvBuff[i]); ++j) {
+            for (Index j = 0; j < static_cast<Index>(mpiRowSizesRecvBuff[i]); ++j, ++k) {
                 Index domColIdx = mpiColIndicesRecvBuff[k];
 
+                if (domColIdx < 0)
+                    // the matrix for the current process does not know about this DOF
+                    continue;
+
                 (*this)[domRowIdx][domColIdx] += mpiRecvBuff[k];
-                ++k;
             }
         }
 #endif // HAVE_MPI
@@ -639,15 +633,14 @@ private:
         int k = 0;
         for (int i = 0; i < mpiRowIndicesRecvBuff.size(); ++i) {
             Index domRowIdx = mpiRowIndicesRecvBuff[i];
-            for (int j = 0; j < mpiRowSizesRecvBuff[i]; ++j) {
+            for (int j = 0; j < mpiRowSizesRecvBuff[i]; ++j, ++k) {
                 Index domColIdx = mpiColIndicesRecvBuff[k];
 
-                if (!overlap_->iAmMasterOf(domRowIdx)
-                    || !overlap_->iAmMasterOf(domColIdx)) {
-                    (*this)[domRowIdx][domColIdx] = mpiRecvBuff[k];
-                }
+                if (domColIdx < 0)
+                    // the matrix for the current process does not know about this DOF
+                    continue;
 
-                ++k;
+                (*this)[domRowIdx][domColIdx] = mpiRecvBuff[k];
             }
         }
 #endif // HAVE_MPI
@@ -655,9 +648,8 @@ private:
 
     void globalToDomesticBuff_(MpiBuffer<Index> &idxBuff)
     {
-        for (unsigned i = 0; i < idxBuff.size(); ++i) {
+        for (unsigned i = 0; i < idxBuff.size(); ++i)
             idxBuff[i] = overlap_->globalToDomestic(idxBuff[i]);
-        }
     }
 
     int myRank_;

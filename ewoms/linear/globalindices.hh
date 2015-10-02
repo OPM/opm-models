@@ -96,9 +96,12 @@ public:
      */
     int globalToDomestic(int globalIdx) const
     {
-        assert(globalToDomestic_.find(globalIdx) != globalToDomestic_.end());
+        const auto& tmp = globalToDomestic_.find(globalIdx);
 
-        return globalToDomestic_.find(globalIdx)->second;
+        if (tmp == globalToDomestic_.end())
+            return -1;
+
+        return tmp->second;
     }
 
     /*!
