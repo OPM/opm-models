@@ -343,7 +343,8 @@ protected:
     // extend the foreign overlaps by 'overlapSize' levels. this uses
     // a greedy algorithm which extends the region by one level and
     // then calls itself recursively...
-    void extendForeignOverlap_(const BCRSMatrix &A, SeedList &seedList,
+    void extendForeignOverlap_(const BCRSMatrix &A,
+                               SeedList &seedList,
                                int borderDistance,
                                int overlapSize)
     {

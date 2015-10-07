@@ -83,9 +83,8 @@ public:
             x.sync();
         }
         else
-            OPM_THROW(Opm::NumericalIssue, "Preconditioner threw an "
-                                             "exception in pre() method on "
-                                             "some process.");
+            OPM_THROW(Opm::NumericalIssue,
+                      "Preconditioner threw an exception in pre() method on some process.");
 #else
         seqPreCond_.pre(x, y);
 #endif
