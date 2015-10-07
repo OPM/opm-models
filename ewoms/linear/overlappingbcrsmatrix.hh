@@ -406,12 +406,16 @@ private:
                 int nativeColIdx = nativeColIt.index();
                 int domesticColIdx = overlap_->nativeToDomestic(nativeColIdx);
 
-                if (domesticColIdx < 0) {
-                    // the native column index is blacklisted, use the corresponding
+                if (domesticColIdx < 0)
+                    // the native column index may be blacklisted, use the corresponding
                     // index in the domestic overlap.
                     domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIdx);
-                    assert(domesticColIdx >= 0);
-                }
+
+                if (domesticColIdx < 0)
+                    // the column may still not be known locally, i.e. the corresponding
+                    // DOF of the row is at the process's front. we don't need this
+                    // entry.
+                    continue;
 
                 int globalColIdx = overlap_->domesticToGlobal(domesticColIdx);
                 colIndices.insert(globalColIdx);
