@@ -206,8 +206,7 @@ opm_add_test(co2injection_ncp_ni_ecfv_parallel
              NO_COMPILE
              PROCESSORS 4
              CONDITION MPI_FOUND
-             DRIVER_ARGS --parallel-simulation=4
-             TEST_ARGS --end-time=10 --initial-time-step-size=1)
+             DRIVER_ARGS --parallel-simulation=4)
 
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)
