@@ -222,7 +222,7 @@ private:
                 // to DOFs which are managed by a peer process. For this, we have to
                 // re-map the column index of the black-listed index to a native one.
                 if (domesticColIdx < 0)
-                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIt.index());
 
                 if (domesticColIdx < 0)
                     // there is no domestic index which corresponds to a black-listed
@@ -282,7 +282,7 @@ private:
                 // to DOFs which are managed by a peer process. For this, we have to
                 // re-map the column index of the black-listed index to a native one.
                 if (domesticColIdx < 0) {
-                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIt.index());
                 }
 
                 if (domesticColIdx < 0)
@@ -387,7 +387,7 @@ private:
                 // to DOFs which are managed by a peer process. For this, we have to
                 // re-map the column index of the black-listed index to a native one.
                 if (domesticColIdx < 0)
-                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIt.index());
 
                 // if the native index cannot be mapped to a domestic one (i.e., it is in
                 // the grid overlap but the black-list does not care to map it to a
@@ -431,7 +431,7 @@ private:
                 // to DOFs which are managed by a peer process. For this, we have to
                 // re-map the column index of the black-listed index to a native one.
                 if (domesticColIdx < 0)
-                    domesticColIdx = overlap_->blackList().nativeToDomesticIndex(nativeColIt.index());
+                    domesticColIdx = overlap_->blackList().nativeToDomestic(nativeColIt.index());
 
                 // if the native index cannot be mapped to a domestic one (i.e., it is in
                 // the grid overlap but the black-list does not care to map it to a
