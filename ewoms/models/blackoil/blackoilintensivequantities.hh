@@ -114,7 +114,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
             if (fluidState_.pressure(phaseIdx) < 1e5) {
-                OPM_THROW(Opm::NumericalIssue,
+                OPM_THROW(Opm::NumericalProblem,
                           "All pressures must be at least 1 bar.");
             }
         }

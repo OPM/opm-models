@@ -266,7 +266,7 @@ protected:
 
                 for (unsigned i = 0; i < potentialGrad_[phaseIdx].size(); ++i) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][i]))) {
-                        OPM_THROW(Opm::NumericalIssue,
+                        OPM_THROW(Opm::NumericalProblem,
                                   "Non-finite potential gradient for phase '"
                                   << FluidSystem::phaseName(phaseIdx) << "'");
                     }
@@ -388,7 +388,7 @@ protected:
                 Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 for (unsigned i = 0; i < potentialGrad_[phaseIdx].size(); ++i) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][i]))) {
-                        OPM_THROW(Opm::NumericalIssue,
+                        OPM_THROW(Opm::NumericalProblem,
                                   "Non finite potential gradient for phase '"
                                   << FluidSystem::phaseName(phaseIdx) << "'");
                     }

@@ -28,8 +28,8 @@
 
 #include "nullconvergencewriter.hh"
 
-#include <opm/material/common/Exceptions.hpp>
-#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <ewoms/common/propertysystem.hh>
 #include <opm/material/common/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
@@ -404,7 +404,7 @@ public:
             asImp_().failed_();
             return false;
         }
-        catch (const Opm::NumericalIssue &e)
+        catch (const Opm::NumericalProblem &e)
         {
             linearizeTime_ += linearizeTimer_.realTimeElapsed();
             solveTime_ += solveTimer_.realTimeElapsed();
@@ -553,7 +553,7 @@ protected:
     /*!
      * \brief Solve the linear system of equations \f$\mathbf{A}x - b = 0\f$.
      *
-     * Throws Opm::NumericalIssue if the linear solver didn't
+     * Throws Opm::NumericalProblem if the linear solver didn't
      * converge.
      *
      * \param A The matrix of the linear system of equations
@@ -603,7 +603,7 @@ protected:
         // make sure that the error never grows beyond the maximum
         // allowed one
         if (error_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError))
-            OPM_THROW(Opm::NumericalIssue,
+            OPM_THROW(Opm::NumericalProblem,
                       "Newton: Error " << error_
                       << " is larger than maximum allowed error of "
                       << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError));
@@ -634,7 +634,7 @@ protected:
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.two_norm2()))
-            OPM_THROW(Opm::NumericalIssue, "Non-finite update!");
+            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         for (unsigned dofIdx = 0; dofIdx < currentSolution.size(); ++dofIdx) {
             asImp_().updatePrimaryVariables_(dofIdx,

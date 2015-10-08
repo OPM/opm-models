@@ -30,7 +30,7 @@
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/common/propertysystem.hh>
-#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>

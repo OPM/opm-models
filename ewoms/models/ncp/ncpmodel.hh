@@ -46,8 +46,8 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-#include <opm/material/common/ErrorMacros.hpp>
-#include <opm/material/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>
@@ -348,7 +348,7 @@ public:
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 }
                 if (minActivityCoeff_[globalIdx][compIdx] <= 0)
-                    OPM_THROW(Opm::NumericalIssue,
+                    OPM_THROW(Opm::NumericalProblem,
                               "The minumum activity coefficient for component " << compIdx
                               << " on DOF " << globalIdx << " is negative or zero!");
             }

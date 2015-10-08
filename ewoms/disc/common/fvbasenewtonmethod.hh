@@ -152,7 +152,7 @@ protected:
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.two_norm2()))
-            OPM_THROW(Opm::NumericalIssue, "Non-finite update!");
+            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         Scalar relinearizationTol = 0.0;
 

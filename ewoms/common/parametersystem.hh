@@ -31,8 +31,8 @@
 #define EWOMS_PARAMETERS_HH
 
 #include <ewoms/common/propertysystem.hh>
-#include <opm/material/common/ErrorMacros.hpp>
-#include <opm/material/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 #include <opm/material/common/ClassName.hpp>
 
 #include <dune/common/parametertree.hh>
