@@ -389,7 +389,7 @@ protected:
         int newtonIter = 0;
         while (deltaV.two_norm() > 1e-11) {
             if (newtonIter >= 50)
-                OPM_THROW(Opm::NumericalIssue,
+                OPM_THROW(Opm::NumericalProblem,
                           "Could not determine Forchheimer velocity within "
                           << newtonIter << " iterations");
             ++newtonIter;

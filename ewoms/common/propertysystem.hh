@@ -41,8 +41,8 @@
 #define EWOMS_PROPERTIES_HH
 
 #include <opm/material/common/ClassName.hpp>
-#include <opm/material/common/ErrorMacros.hpp>
-#include <opm/material/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <type_traits> // required for 'is_base_of<A, B>'
 

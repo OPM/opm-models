@@ -25,8 +25,8 @@
 #ifndef EWOMS_RESTART_HH
 #define EWOMS_RESTART_HH
 
-#include <opm/material/common/Exceptions.hpp>
-#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <string>
 #include <fstream>
