@@ -960,10 +960,12 @@ public:
         // fill boundary face data:
         IntersectionIterator endit = gridView_.iend(e);
         for (IntersectionIterator it = gridView_.ibegin(e); it != endit; ++it) {
-            if (!it->boundary())
+            const auto& intersection = *it ;
+
+            if ( ! intersection.boundary())
                 continue;
 
-            int face = it->indexInInside();
+            int face = intersection.indexInInside();
             int numVerticesOfFace = referenceElement.size(face, 1, dim);
             for (int vertInFace = 0; vertInFace < numVerticesOfFace; vertInFace++)
             {
@@ -979,7 +981,7 @@ public:
                     boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(vertInElement, dim)
                         + referenceElement.position(face, 1);
                     boundaryFace_[bfIdx].ipLocal_ *= 0.5;
-                    boundaryFace_[bfIdx].area_ = 0.5*it->geometry().volume();
+                    boundaryFace_[bfIdx].area_ = 0.5 * intersection.geometry().volume();
                 }
                 else if (dim == 3) {
                     int leftEdge;
@@ -1004,7 +1006,7 @@ public:
                 boundaryFace_[bfIdx].j = vertInElement;
 
                 // ASSUME constant normal on the segment of the boundary face
-                boundaryFace_[bfIdx].normal_ = it->centerUnitOuterNormal();
+                boundaryFace_[bfIdx].normal_ = intersection.centerUnitOuterNormal();
             }
         }
 
