@@ -252,16 +252,17 @@ public:
         boundaryFaces_.resize(0);
 
         for (; isIt != endIsIt; ++isIt) {
+            const auto& intersection = *isIt;
             // if the current intersection has a neighbor, add a
             // degree of freedom and an internal face, else add a
             // boundary face
-            if (isIt->neighbor()) {
-                elements_.push_back(isIt->outside());
-                subControlVolumes_.push_back(SubControlVolume(isIt->outside()));
-                interiorFaces_.push_back(SubControlVolumeFace(*isIt, subControlVolumes_.size() - 1));
+            if (intersection.neighbor()) {
+                elements_.push_back(intersection.outside());
+                subControlVolumes_.push_back(SubControlVolume(intersection.outside()));
+                interiorFaces_.push_back(SubControlVolumeFace(intersection, subControlVolumes_.size() - 1));
             }
             else {
-                boundaryFaces_.push_back(SubControlVolumeFace(*isIt, - 10000));
+                boundaryFaces_.push_back(SubControlVolumeFace(intersection, - 10000));
             }
         }
     }
