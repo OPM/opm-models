@@ -156,7 +156,11 @@ public:
             caseName_ += std::toupper(rawCaseName[i]);
 
         Opm::ParserPtr parser(new Opm::Parser());
-        Opm::ParseMode parseMode({{ Opm::ParseMode::PARSE_RANDOM_SLASH , Opm::InputError::IGNORE }});
+        typedef std::pair<std::string, Opm::InputError::Action> ParseModePair;
+        typedef std::vector<ParseModePair> ParseModePairs;
+        ParseModePairs tmp;
+        tmp.push_back(ParseModePair(Opm::ParseMode::PARSE_RANDOM_SLASH , Opm::InputError::IGNORE));
+        Opm::ParseMode parseMode(tmp);
         std::cout << "Reading the deck file ('" << fileName << "')" << std::endl;
         deck_ = parser->parseFile(fileName , parseMode);
         eclState_.reset(new Opm::EclipseState(deck_, parseMode));
