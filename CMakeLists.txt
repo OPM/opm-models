@@ -249,7 +249,8 @@ opm_add_test(obstacle_pvs_restart
              DRIVER_ARGS --restart
              TEST_ARGS --pvs-verbosity=2 --end-time=15000)
 
-opm_add_test(art2dgf)
+opm_add_test(art2dgf
+             DRIVER_ARGS --plain)
 
 
 # the test for the plain stokes model is completes quite
