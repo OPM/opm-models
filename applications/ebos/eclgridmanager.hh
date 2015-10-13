@@ -178,27 +178,15 @@ public:
                                      porv);
 
 #if EBOS_USE_ALUGRID
-        std::vector<int> cartesianCellId;
+        // copy cartesian ids
+        std::vector<int> cartesianCellId( cpgrid->globalCell() );
         std::array<int,dimension> cartesianDimension;
 
         for (int i = 0; i < dimension; ++i)
             cartesianDimension[i] = cpgrid->logicalCartesianSize()[i];
 
         Dune::FromToGridFactory< Grid > factory;
-        std::vector< int > ordering;
-        grid_ = GridPointer(factory.convert(*cpgrid, ordering));
-
-        if (ordering.empty()) {
-            // copy cartesian cell index from cp grid
-            cartesianCellId = cpgrid->globalCell();
-        }
-        else {
-            const int size = ordering.size();
-            cartesianCellId.reserve(size);
-            const std::vector<int>& globalCell = cpgrid->globalCell();
-            for (int i = 0; i < size; ++i)
-                cartesianCellId.push_back(globalCell[ordering[i]]);
-        }
+        grid_ = GridPointer(factory.convert(*cpgrid, cartesianCellId));
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_, cartesianDimension, cartesianCellId ) );
 #else
         grid_ = GridPointer(cpgrid);
