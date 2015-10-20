@@ -31,11 +31,16 @@
 
 #include <ewoms/common/cartesianindexmapper.hh>
 #include <dune/grid/CpGrid.hpp>
+#include <dune/grid/polyhedralgrid.hh>
+
+#include <ewoms/io/polyhedralgridconverter.hh>
+
+#define EBOS_USE_ALUGRID 1
 
 // set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
 // the macro is only used by this file...
 #if EBOS_USE_ALUGRID
-#define DISABLE_ALUGRID_SFC_ORDERING 1
+//#define DISABLE_ALUGRID_SFC_ORDERING 1
 #if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
 #warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
 #warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
@@ -108,8 +113,8 @@ class EclGridManager : public BaseGridManager<TypeTag>
 
     typedef std::unique_ptr<Grid> GridPointer;
 
-    typedef Dune::CpGrid  EquilGrid;
-    typedef std::unique_ptr<EquilGrid>  EquilGridPointer;
+    typedef Dune::PolyhedralGrid< Grid::dimension, Grid::dimensionworld > EquilGrid;
+    typedef std::unique_ptr< EquilGrid >  EquilGridPointer;
 
     typedef Dune :: CartesianIndexMapper< Grid > CartesianIndexMapper ;
     typedef std::unique_ptr< CartesianIndexMapper > CartesianIndexMapperPointer;
@@ -189,8 +194,12 @@ public:
         Dune::FromToGridFactory< Grid > factory;
         grid_ = GridPointer(factory.convert(*cpgrid, cartesianCellId));
         // store cpgrid for equil initialization
-        equilgrid_ = EquilGridPointer( cpgrid );
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_, cartesianDimension, cartesianCellId ) );
+
+        UnstructuredGrid* ug = dune2UnstructuredGrid(  grid_->leafGridView(),
+                                                      *cartesianIndexMapper_,
+                                                      true, true );
+        equilgrid_ = EquilGridPointer( new EquilGrid( *ug ) );
 #else
         grid_ = GridPointer(cpgrid);
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_ ) );
