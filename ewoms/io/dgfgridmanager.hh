@@ -141,7 +141,7 @@ protected:
     void addFractures( Dune::GridPtr< Grid >& dgfPointer )
     {
         // check if fractures are available (only 2d currently)
-        if( Grid::dimension == 2 && dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
+        if( dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
         {
             typedef typename  Grid::LevelGridView GridView;
             GridView gridView = dgfPointer->levelGridView( 0 );
@@ -149,6 +149,8 @@ protected:
             // first create a map of the dune to ART vertex indices
             typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
                                                               Dune::MCMGElementLayout>  ElementMapper;
+
+            const int edgeCodim = Grid::dimension - 1;
 
             ElementMapper elementMapper( gridView );
             const auto endIt = gridView.template end< 0 > ();
@@ -158,16 +160,16 @@ protected:
                 const Dune::ReferenceElement< Scalar, Grid::dimension > & refElem =
                       Dune::ReferenceElements< Scalar, Grid::dimension >::general( element.type() );
 
-                const int edges = refElem.size( 1 );
+                const int edges = refElem.size( edgeCodim );
                 for( int edge = 0; edge < edges; ++edge )
                 {
-                    const int vertices = refElem.size( edge, 1, Grid::dimension );
+                    const int vertices = refElem.size( edge, edgeCodim, Grid::dimension );
                     std::vector< int > vertexIndices;
                     vertexIndices.reserve( Grid::dimension );
                     for( int vx = 0; vx<vertices; ++vx )
                     {
                         // get local vertex number from edge
-                        const int localVx = refElem.subEntity( edge, 1, vx, Grid::dimension );
+                        const int localVx = refElem.subEntity( edge, edgeCodim, vx, Grid::dimension );
 
 #if DUNE_VERSION_NEWER(DUNE_GRID,2,4)
                         // get vertex
