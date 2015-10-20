@@ -148,7 +148,7 @@ protected:
 
             // first create a map of the dune to ART vertex indices
             typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                              Dune::MCMGElementLayout>  ElementMapper;
+                                                              Dune::MCMGVertexLayout>  ElementMapper;
 
             const int edgeCodim = Grid::dimension - 1;
 
