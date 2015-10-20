@@ -18,21 +18,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*!
- * \file
- * \copydoc Ewoms::ArtGridManager
- */
-#ifndef EWOMS_ART_GRID_MANAGER_HH
-#define EWOMS_ART_GRID_MANAGER_HH
-
-#include <ewoms/models/discretefracture/fracturemapper.hh>
-#include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/propertysystem.hh>
-#include <opm/material/common/Valgrind.hpp>
-
-#include <ewoms/io/basegridmanager.hh>
-#include <dune/grid/common/mcmgmapper.hh>
-#include <dune/grid/common/gridfactory.hh>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
@@ -47,55 +33,28 @@
 #include <memory>
 
 namespace Ewoms {
-namespace Properties {
-NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(Grid);
-NEW_PROP_TAG(GridManager);
-NEW_PROP_TAG(GridFile);
-NEW_PROP_TAG(EnableFractures);
-} // namespace Properties
-} // namespace Ewoms
-
-namespace Ewoms {
 /*!
  * \brief Reads in mesh files in the ART format.
  *
  * This file format is used to specify grids with fractures.
  */
-template <class TypeTag>
-class ArtGridManager : public BaseGridManager<TypeTag>
-{
-    typedef BaseGridManager<TypeTag> ParentType;
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
 
-    typedef Dune::FieldVector<double, 2> GlobalPosition;
-    typedef Ewoms::FractureMapper<TypeTag> FractureMapper;
-    typedef std::shared_ptr<Grid> GridPointer;
-
-public:
-    /*!
-     * \brief Register all run-time parameters for the grid manager.
-     */
-    static void registerParameters()
-    {
-        EWOMS_REGISTER_PARAM(TypeTag, std::string, GridFile,
-                             "The file name of the DGF file to load");
-    }
-
+ struct Art2DGF
+ {
     /*!
      * \brief Create the Grid
      */
-    ArtGridManager(Simulator &simulator)
-        : ParentType(simulator)
+    static void convert( const std::string& artFileName,
+                         std::ostream& dgfFile,
+                         const int precision = 16 )
     {
+        typedef double Scalar;
+        typedef Dune::FieldVector< Scalar, 2 > GlobalPosition;
         enum ParseMode { Vertex, Edge, Element, Finished };
-        const std::string artFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
-        std::vector<GlobalPosition> vertexPos;
+        std::vector< std::pair<GlobalPosition, int > > vertexPos;
         std::vector<std::pair<int, int> > edges;
         std::vector<std::pair<int, int> > fractureEdges;
-        Dune::GridFactory<Grid> gridFactory;
+        std::vector< std::vector< unsigned int > > elements;
         std::ifstream inStream(artFileName);
         if (!inStream.is_open()) {
             OPM_THROW(std::runtime_error,
@@ -150,8 +109,7 @@ public:
                 // coordinate. the last number is the Z coordinate
                 // which we ignore (so far)
                 iss >> coord[0] >> coord[1];
-                gridFactory.insertVertex(coord);
-                vertexPos.push_back(coord);
+                vertexPos.push_back( std::make_pair( coord, 0 ) );
             }
             else if (curParseMode == Edge) {
                 // read an edge and update the fracture mapper
@@ -184,6 +142,8 @@ public:
                 // add the edge to the fracture mapper if it is a fracture
                 if (dataVal < 0) {
                     fractureEdges.push_back(edge);
+                    vertexPos[ edge.first  ].second = 1;
+                    vertexPos[ edge.second ].second = 1;
                 }
             }
             else if (curParseMode == Element) {
@@ -239,103 +199,79 @@ public:
                 // mathematically positive direction. if not, swap the
                 // first two.
                 Dune::FieldMatrix<Scalar, 2, 2> mat;
-                mat[0] = vertexPos[vertIndices[1]];
-                mat[0] -= vertexPos[vertIndices[0]];
-                mat[1] = vertexPos[vertIndices[2]];
-                mat[1] -= vertexPos[vertIndices[0]];
+                mat[0] = vertexPos[vertIndices[1]].first;
+                mat[0] -= vertexPos[vertIndices[0]].first;
+                mat[1] = vertexPos[vertIndices[2]].first;
+                mat[1] -= vertexPos[vertIndices[0]].first;
                 assert(std::abs(mat.determinant()) > 1e-50);
                 if (mat.determinant() < 0)
                     std::swap(vertIndices[2], vertIndices[1]);
 
-                // insert the element into the dune grid
-                gridFactory.insertElement(
-                    Dune::GeometryType(Dune::GeometryType::simplex, 2),
-                    vertIndices);
+                elements.push_back( vertIndices );
             }
             else if (curParseMode == Finished) {
                 assert(curLine.size() == 0);
             }
         }
 
-        gridPtr_ = GridPointer(gridFactory.createGrid());
+        dgfFile << "DGF" << std::endl << std::endl;
 
-        /////
-        // add the fracture edges
-        /////
+        dgfFile << "GridParameter" << std::endl
+                << "overlap 1" << std::endl
+                << "closure green" << std::endl
+                << "#" << std::endl << std::endl;
 
-        // first create a map of the dune to ART vertex indices
-        typedef Dune::MultipleCodimMultipleGeomTypeMapper<typename Grid::LeafGridView,
-                                                          Dune::MCMGVertexLayout>
-            VertexMapper;
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
-        VertexMapper vertexMapper(gridPtr_->leafGridView());
-#else
-        VertexMapper vertexMapper(gridPtr_->leafView());
-#endif
-        std::vector<int> artToDuneVertexIndex(vertexPos.size());
-        const auto gridView = gridPtr_->leafView();
-        auto vIt = gridView.template begin</*codim=*/2>();
-        const auto &vEndIt = gridView.template end</*codim=*/2>();
-        for (; vIt != vEndIt; ++vIt) {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int duneIdx = vertexMapper.index(*vIt);
-#else
-            int duneIdx = vertexMapper.map(*vIt);
-#endif
-            int artIdx = gridFactory.insertionIndex(*vIt);
-            artToDuneVertexIndex[artIdx] = duneIdx;
+        dgfFile << "Vertex" << std::endl;
+        const bool hasFractures = fractureEdges.size() > 0;
+        if( hasFractures )
+        {
+            dgfFile << "parameters 1" << std::endl;
+        }
+        dgfFile << std::scientific;
+        dgfFile.precision( precision );
+        const size_t vxSize = vertexPos.size();
+        for( size_t i=0; i<vxSize; ++i)
+        {
+            dgfFile << vertexPos[ i ].first;
+            if( hasFractures )
+            {
+                dgfFile << " " << vertexPos[ i ].second;
+            }
+            dgfFile << std::endl;
         }
 
-        // add all fracture edges (using DUNE indices)
-        auto feIt = fractureEdges.begin();
-        const auto &feEndIt = fractureEdges.end();
-        for (; feIt != feEndIt; ++feIt) {
-            fractureMapper_.addFractureEdge(artToDuneVertexIndex[feIt->first],
-                                            artToDuneVertexIndex[feIt->second]);
+        dgfFile << "#" << std::endl << std::endl;
+
+        dgfFile << "Simplex" << std::endl;
+        const size_t elSize = elements.size();
+        for( size_t i=0; i<elSize; ++i )
+        {
+            const size_t elVx = elements[ i ].size();
+            for( size_t j=0; j<elVx; ++j )
+                dgfFile << elements[ i ][ j ] << " ";
+            dgfFile << std::endl;
         }
 
-        this->finalizeInit_();
+        dgfFile << "#" << std::endl << std::endl;
+        dgfFile << "BoundaryDomain" << std::endl;
+        dgfFile << "default 1" << std::endl;
+        dgfFile << "#" << std::endl << std::endl;
+        dgfFile << "#" << std::endl;
     }
+ };
 
-    /*!
-     * \brief Returns a reference to the grid.
-     */
-    Grid& grid()
-    { return *gridPtr_; }
-
-    /*!
-     * \brief Returns a reference to the grid.
-     */
-    const Grid& grid() const
-    { return *gridPtr_; }
-
-    /*!
-     * \brief Distributes the grid on all processes of a parallel
-     *        computation.
-     */
-    void loadBalance()
-    { gridPtr_->loadBalance(); }
-
-    /*!
-     * \brief Returns the fracture mapper
-     *
-     * The fracture mapper determines the topology of the fractures.
-     */
-    FractureMapper &fractureMapper()
-    { return fractureMapper_; }
-
-    /*!
-     * \brief Returns the fracture mapper
-     *
-     * The fracture mapper determines the topology of the fractures.
-     */
-    const FractureMapper &fractureMapper() const
-    { return fractureMapper_; }
-
-private:
-    GridPointer gridPtr_;
-    FractureMapper fractureMapper_;
-};
 } // namespace Ewoms
 
-#endif // EWOMS_ART_GRID_MANAGER_HH
+int main( int argc, char** argv )
+{
+    if( argc > 1 )
+    {
+        std::string filename( argv[ 1 ] );
+        std::string dgfname( filename );
+        dgfname += ".dgf";
+
+        std::ofstream dgfFile( dgfname );
+        Ewoms::Art2DGF::convert( filename, dgfFile );
+    }
+    return 0;
+}
