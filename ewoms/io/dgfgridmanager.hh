@@ -87,7 +87,7 @@ public:
             Dune::GridPtr< Grid > dgfPointer( dgfFileName );
 
             // this is only implemented for 2d currently
-            addFractures( dgfPointer );
+            addFractures_( dgfPointer );
 
             // store pointer to dune grid
             gridPtr_.reset( dgfPointer.release() );
@@ -138,7 +138,7 @@ public:
     { return fractureMapper_; }
 
 protected:
-    void addFractures( Dune::GridPtr< Grid >& dgfPointer )
+    void addFractures_( Dune::GridPtr< Grid >& dgfPointer )
     {
         // check if fractures are available (only 2d currently)
         if( dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
@@ -157,8 +157,13 @@ protected:
             for( auto eIt = gridView.template begin< 0 >(); eIt != endIt; ++eIt )
             {
                 const auto& element = *eIt;
-                const Dune::ReferenceElement< Scalar, Grid::dimension > & refElem =
+#if DUNE_VERSION_NEWER(DUNE_GRID,2,3)
+                const auto& refElem =
                       Dune::ReferenceElements< Scalar, Grid::dimension >::general( element.type() );
+#else
+                const auto& refElem =
+                      Dune::GenericReferenceElements< Scalar, Grid::dimension >::general( element.type() );
+#endif
 
                 const int edges = refElem.size( edgeCodim );
                 for( int edge = 0; edge < edges; ++edge )
