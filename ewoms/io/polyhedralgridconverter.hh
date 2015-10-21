@@ -51,6 +51,10 @@ namespace Ewoms
                          const bool faceTags,
                          const bool onlyInterior = true )
   {
+      // if grid is empty return nullptr
+      if( gridView.grid().size( 0 ) == 0 )
+          return nullptr;
+
       typedef double ctype;
       typedef typename GridView :: template Codim< 0 > :: template Partition<
           Dune :: All_Partition > :: Iterator Iterator;

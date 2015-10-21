@@ -35,6 +35,8 @@
 
 #include <ewoms/io/polyhedralgridconverter.hh>
 
+#define EBOS_USE_ALUGRID 1
+
 // set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
 // the macro is only used by this file...
 #if EBOS_USE_ALUGRID
@@ -115,10 +117,26 @@ protected:
 
 #if EBOS_USE_ALUGRID
     typedef Dune::PolyhedralGrid< Grid::dimension, Grid::dimensionworld > EquilGrid;
+    struct EquilGridDeleter
+    {
+        void operator()(EquilGrid* polyhedralGrid)
+        {
+            if( polyhedralGrid )
+            {
+                const UnstructuredGrid& ug = static_cast< const UnstructuredGrid& > (*polyhedralGrid);
+
+                UnstructuredGrid* ugPtr = (UnstructuredGrid *) &ug;
+                delete polyhedralGrid;
+                destroy_grid( ugPtr );
+            }
+        }
+    };
+
+    typedef std::unique_ptr< EquilGrid, EquilGridDeleter > EquilGridPointer;
 #else
     typedef Dune::CpGrid EquilGrid;
-#endif
     typedef std::unique_ptr< EquilGrid >  EquilGridPointer;
+#endif
 
     typedef Dune :: CartesianIndexMapper< Grid > CartesianIndexMapper ;
     typedef std::unique_ptr< CartesianIndexMapper > CartesianIndexMapperPointer;
@@ -203,7 +221,10 @@ public:
         UnstructuredGrid* ug = dune2UnstructuredGrid(  grid_->leafGridView(),
                                                       *cartesianIndexMapper_,
                                                       true, true );
-        equilgrid_ = EquilGridPointer( new EquilGrid( *ug ) );
+        if( ug )
+        {
+            equilgrid_ = EquilGridPointer( new EquilGrid( *ug ) );
+        }
 #else
         grid_ = GridPointer(cpgrid);
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_ ) );
