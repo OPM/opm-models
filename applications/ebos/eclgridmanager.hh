@@ -217,14 +217,6 @@ public:
         grid_ = GridPointer(factory.convert(*cpgrid, cartesianCellId));
         // store cpgrid for equil initialization
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_, cartesianDimension, cartesianCellId ) );
-
-        UnstructuredGrid* ug = dune2UnstructuredGrid(  grid_->leafGridView(),
-                                                      *cartesianIndexMapper_,
-                                                      true, true );
-        if( ug )
-        {
-            equilgrid_ = EquilGridPointer( new EquilGrid( *ug ) );
-        }
 #else
         grid_ = GridPointer(cpgrid);
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_ ) );
@@ -236,12 +228,15 @@ public:
     void loadBalance()
     {
 #if EBOS_USE_ALUGRID
+        releaseEquilGrid();
+
         auto gridView = grid().leafGridView();
         auto dataHandle = cartesianIndexMapper_->dataHandle( gridView );
         grid().loadBalance( *dataHandle );
 
         // communicate non-interior cells values
         grid().communicate( *dataHandle, Dune::InteriorBorder_All_Interface, Dune::ForwardCommunication );
+
 #else
         // distribute the grid and switch to the distributed view
         grid().loadBalance();
@@ -354,6 +349,9 @@ public:
     const EquilGrid& equilGrid() const
     {
 #if EBOS_USE_ALUGRID
+        if( ! equilgrid_ )
+            createEquilGrid();
+
         assert( equilgrid_ );
         return *equilgrid_;
 #else
@@ -366,10 +364,22 @@ public:
         equilgrid_.reset();
     }
 
+    void createEquilGrid() const
+    {
+#if EBOS_USE_ALUGRID
+        UnstructuredGrid* ug = dune2UnstructuredGrid( grid_->leafGridView(),
+                                                      *cartesianIndexMapper_,
+                                                      true, false );
+        if( ug )
+        {
+            equilgrid_ = EquilGridPointer( new EquilGrid( *ug ) );
+        }
+#endif
+    }
 private:
     std::string caseName_;
     GridPointer   grid_;
-    EquilGridPointer equilgrid_;
+    mutable EquilGridPointer equilgrid_;
     CartesianIndexMapperPointer  cartesianIndexMapper_;
     Opm::DeckConstPtr deck_;
     Opm::EclipseStateConstPtr eclState_;
