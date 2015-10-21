@@ -35,8 +35,6 @@
 
 #include <ewoms/io/polyhedralgridconverter.hh>
 
-#define EBOS_USE_ALUGRID 1
-
 // set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
 // the macro is only used by this file...
 #if EBOS_USE_ALUGRID
