@@ -32,6 +32,7 @@
 
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
 #include <ewoms/io/baseoutputwriter.hh>
+#include <ewoms/parallel/collecttoiorank.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 
@@ -136,6 +137,8 @@ class EclWriter : public BaseOutputWriter
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
 
+    typedef CollectDataToIORank< GridManager > CollectDataToIORankType;
+
     typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
     typedef BaseOutputWriter::VectorBuffer VectorBuffer;
     typedef BaseOutputWriter::TensorBuffer TensorBuffer;
@@ -148,6 +151,7 @@ public:
         , gridView_(simulator_.gridView())
         , elementMapper_(gridView_)
         , vertexMapper_(gridView_)
+        , collectToIORank_( simulator_.gridManager() )
     {
         reportStepIdx_ = 0;
     }
@@ -181,7 +185,7 @@ public:
      */
     void beginWrite(double t)
     {
-        if (enableEclOutput_() && reportStepIdx_ == 0)
+        if (enableEclOutput_() && reportStepIdx_ == 0 && collectToIORank_.isIORank() )
             EclWriterHelper<TypeTag, GridManager>::writeHeaders_(*this);
     }
 
@@ -263,7 +267,7 @@ public:
     {
         if (onlyDiscard || !enableEclOutput_()) {
             // detach all buffers
-            attachedBuffers_.resize(0);
+            attachedBuffers_.clear();
             return;
         }
 
@@ -271,23 +275,31 @@ public:
         OPM_THROW(std::runtime_error,
                   "The ERT libraries must be available to write ECL output!");
 #else
-        ErtRestartFile restartFile(simulator_, reportStepIdx_);
-        restartFile.writeHeader(simulator_, reportStepIdx_);
+        // collect all data to I/O rank and store in attachedBuffers_
+        // this also reorders the data such that it fits the underlying eclGrid
+        const bool isIORank = collectToIORank_.collect( attachedBuffers_ );
 
-        ErtSolution solution(restartFile);
-        auto bufIt = attachedBuffers_.begin();
-        const auto &bufEndIt = attachedBuffers_.end();
-        for (; bufIt != bufEndIt; ++ bufIt) {
-            const std::string &name = bufIt->first;
-            const ScalarBuffer &buffer = *bufIt->second;
+        // write output on I/O rank
+        if( isIORank )
+        {
+            ErtRestartFile restartFile(simulator_, reportStepIdx_);
+            restartFile.writeHeader(simulator_, reportStepIdx_);
 
-            std::shared_ptr<const ErtKeyword<float>>
-                bufKeyword(new ErtKeyword<float>(name, buffer));
-            solution.add(bufKeyword);
+            ErtSolution solution(restartFile);
+            auto bufIt = attachedBuffers_.begin();
+            const auto &bufEndIt = attachedBuffers_.end();
+            for (; bufIt != bufEndIt; ++ bufIt) {
+                const std::string &name = bufIt->first;
+                const ScalarBuffer &buffer = *bufIt->second;
+
+                std::shared_ptr<const ErtKeyword<float>>
+                    bufKeyword(new ErtKeyword<float>(name, buffer));
+                solution.add(bufKeyword);
+            }
         }
 
         // detach all buffers
-        attachedBuffers_.resize(0);
+        attachedBuffers_.clear();
 
         // next time we take the next report step
         ++ reportStepIdx_;
@@ -346,6 +358,7 @@ private:
 
     ElementMapper elementMapper_;
     VertexMapper vertexMapper_;
+    CollectDataToIORankType collectToIORank_;
 
     double curTime_;
     int reportStepIdx_;

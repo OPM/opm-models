@@ -35,8 +35,6 @@
 
 #include <ewoms/io/polyhedralgridconverter.hh>
 
-#define EBOS_USE_ALUGRID 1
-
 // set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
 // the macro is only used by this file...
 #if EBOS_USE_ALUGRID
@@ -108,12 +106,18 @@ class EclGridManager : public BaseGridManager<TypeTag>
     typedef BaseGridManager<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+public:
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
+protected:
     typedef std::unique_ptr<Grid> GridPointer;
 
+#if EBOS_USE_ALUGRID
     typedef Dune::PolyhedralGrid< Grid::dimension, Grid::dimensionworld > EquilGrid;
+#else
+    typedef Dune::CpGrid EquilGrid;
+#endif
     typedef std::unique_ptr< EquilGrid >  EquilGridPointer;
 
     typedef Dune :: CartesianIndexMapper< Grid > CartesianIndexMapper ;
