@@ -31,10 +31,14 @@
 
 #include <ewoms/common/cartesianindexmapper.hh>
 #include <dune/grid/CpGrid.hpp>
+#include <dune/grid/polyhedralgrid.hh>
+
+#include <ewoms/io/polyhedralgridconverter.hh>
 
 // set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
 // the macro is only used by this file...
 #if EBOS_USE_ALUGRID
+//#define DISABLE_ALUGRID_SFC_ORDERING 1
 #if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
 #warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
 #warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
@@ -107,8 +111,16 @@ class EclGridManager : public BaseGridManager<TypeTag>
 
     typedef std::unique_ptr<Grid> GridPointer;
 
+#if EBOS_USE_ALUGRID
+    typedef Dune::PolyhedralGrid< Grid::dimension, Grid::dimensionworld > EquilGrid;
+#else
+    typedef Dune::CpGrid EquilGrid;
+#endif
+    typedef std::unique_ptr< EquilGrid >  EquilGridPointer;
+
     typedef Dune :: CartesianIndexMapper< Grid > CartesianIndexMapper ;
     typedef std::unique_ptr< CartesianIndexMapper > CartesianIndexMapperPointer;
+
 
     static const int dimension = Grid :: dimension;
 public:
@@ -165,17 +177,13 @@ public:
         deck_ = parser->parseFile(fileName , parseMode);
         eclState_.reset(new Opm::EclipseState(deck_, parseMode));
 
-#if EBOS_USE_ALUGRID
-        std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
-#else
-        Grid* cpgrid = new Grid();
-#endif
+        Dune::CpGrid* cpgrid = new Dune::CpGrid();
         std::vector<double> porv = eclState_->getDoubleGridProperty("PORV")->getData();
         cpgrid->processEclipseFormat(eclState_->getEclipseGrid(),
-                                     /*isPeriodic=*/false,
-                                     /*flipNormals=*/false,
-                                     /*clipZ=*/false,
-                                     porv);
+                                      /*isPeriodic=*/false,
+                                      /*flipNormals=*/false,
+                                      /*clipZ=*/false,
+                                      porv);
 
 #if EBOS_USE_ALUGRID
         // copy cartesian ids
@@ -187,7 +195,13 @@ public:
 
         Dune::FromToGridFactory< Grid > factory;
         grid_ = GridPointer(factory.convert(*cpgrid, cartesianCellId));
+        // store cpgrid for equil initialization
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_, cartesianDimension, cartesianCellId ) );
+
+        UnstructuredGrid* ug = dune2UnstructuredGrid(  grid_->leafGridView(),
+                                                      *cartesianIndexMapper_,
+                                                      true, true );
+        equilgrid_ = EquilGridPointer( new EquilGrid( *ug ) );
 #else
         grid_ = GridPointer(cpgrid);
         cartesianIndexMapper_.reset( new CartesianIndexMapper( *grid_ ) );
@@ -314,9 +328,25 @@ public:
         return cartesianIndexMapper_->cartesianCoordinate( cellIdx, ijk );
     }
 
+    const EquilGrid& equilGrid() const
+    {
+#if EBOS_USE_ALUGRID
+        assert( equilgrid_ );
+        return *equilgrid_;
+#else
+        return grid();
+#endif
+    }
+
+    void releaseEquilGrid()
+    {
+        equilgrid_.reset();
+    }
+
 private:
     std::string caseName_;
-    GridPointer grid_;
+    GridPointer   grid_;
+    EquilGridPointer equilgrid_;
     CartesianIndexMapperPointer  cartesianIndexMapper_;
     Opm::DeckConstPtr deck_;
     Opm::EclipseStateConstPtr eclState_;
