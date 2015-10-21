@@ -960,7 +960,7 @@ public:
         // fill boundary face data:
         IntersectionIterator endit = gridView_.iend(e);
         for (IntersectionIterator it = gridView_.ibegin(e); it != endit; ++it) {
-            const auto& intersection = *it ;
+            const typename IntersectionIterator::Intersection& intersection = *it ;
 
             if ( ! intersection.boundary())
                 continue;
