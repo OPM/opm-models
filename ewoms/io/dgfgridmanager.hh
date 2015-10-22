@@ -144,7 +144,11 @@ protected:
         if( dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
         {
             typedef typename  Grid::LevelGridView GridView;
+#if DUNE_VERSION_NEWER(DUNE_GRID,2,3)
             GridView gridView = dgfPointer->levelGridView( 0 );
+#else
+            GridView gridView = dgfPointer->levelView( 0 );
+#endif
 
             // first create a map of the dune to ART vertex indices
             typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
@@ -188,7 +192,11 @@ protected:
                         // if vertex has parameter 1 insert as a fracture vertex
                         if( dgfPointer.parameters( vertex )[ 0 ] > 0 )
                         {
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,4)
                             vertexIndices.push_back( elementMapper.subIndex( element, localVx, Grid::dimension ) );
+#else
+                            vertexIndices.push_back( elementMapper.map( element, localVx, Grid::dimension ) );
+#endif
                         }
                     }
                     // if 2 vertices have been found with flag 1 insert a fracture edge
