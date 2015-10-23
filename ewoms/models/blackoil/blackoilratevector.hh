@@ -112,10 +112,9 @@ public:
     {
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] =
-                fluidState.density(phaseIdx)
-                * fluidState.massFraction(phaseIdx, compIdx)
-                * volume
-                / FluidSystem::molarMass(compIdx);
+                fluidState.molarDensity(phaseIdx)
+                * fluidState.moleFraction(phaseIdx, compIdx)
+                * volume;
     }
 
     /*!
