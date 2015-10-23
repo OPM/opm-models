@@ -1,3 +1,25 @@
+Notable Differences Between eWoms 2015.04 and eWoms 2015.10
+===========================================================
+
+- An automatic differentiation framework has been added. Compared to
+  the default linearization method (i.e., finite differences)
+  automatic differentiation is about 20% faster and is also slightly
+  more accurate. Due to technical reasons, it can only be used with
+  the element-centered finite volume discretization (ECFV) at the
+  moment. Automatic differentiation can be used by adding the line
+
+  SET_TAG_PROP(YourProblemTypeTag, LocalLinearizerSplice, AutoDiffLocalLinearizer);
+
+  to the problem file.
+- The ECL material relations have received a significant
+  overhaul. Advanced features like end-point scaling and
+  runtime-selectable saturation functions are now supported.
+- The ECL Black-Oil Simulator (ebos) has received many bug fixes and
+  new features. Amongst others, it now uses automatic differentiation,
+  supports specififying the the steady-state of the reservoir as
+  initial condition (using the EQUIL) keyword and it supports scenarios
+  involving wet-gas and dry-oil.
+
 Notable Differences Between eWoms 2013.10 and eWoms 2015.04
 ===========================================================
 
