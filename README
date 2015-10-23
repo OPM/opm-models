@@ -32,7 +32,7 @@ have diverged considerably since they separated.
 INSTALLATION
 ============
 
-For compiling and installing eWoms the 'dunecontrol' script from
+For compiling and installing eWoms, the 'dunecontrol' script from
 DUNE's build system should be used. For further details see the
 INSTALL file.
 
