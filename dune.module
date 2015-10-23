@@ -1,15 +1,17 @@
-################################ 
-# Dune module information file. This file gets parsed by dunecontrol
+####################################################################
+# Dune module information file: This file gets parsed by dunecontrol
 # and by the CMake build scripts.
-################################
+####################################################################
+
 Module: ewoms
-Version: 2015.10-git
-Codename: Pumpkin
 Description: The eWoms simulation framework for flow  and transport in porous media
-Url: http://opm-project.org/ewoms
-MaintainerName: Andreas Lauser
+Version: 2016.04-pre
+Label: 2016.04-pre
 Maintainer: and@poware.org
+MaintainerName: Andreas Lauser
+Url: http://opm-project.org
 Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2) opm-common opm-material
+Codename: Pumpkin
 
 # actually, we also suggest opm-parser, but this dependency only makes
 # any sense if dune-cornerpoint is available and opm-parser is a
