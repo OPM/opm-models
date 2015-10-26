@@ -3,7 +3,8 @@
 # and by the CMake build scripts.
 ################################
 Module: ewoms
-Version: 2015.10.0-git
+Version: 2015.10
+Label: 2015.10
 Codename: Pumpkin
 Description: The eWoms simulation framework for flow  and transport in porous media
 Url: http://opm-project.org/ewoms
