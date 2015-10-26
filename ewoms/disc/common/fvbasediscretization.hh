@@ -402,7 +402,7 @@ public:
                                                               asImp_().dofMapper());
         gridView_.communicate(*sumHandle,
                               Dune::InteriorBorder_All_Interface,
-                              Dune::BackwardCommunication);
+                              Dune::ForwardCommunication);
 
         // sum up the volumes of the grid partitions
         gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
