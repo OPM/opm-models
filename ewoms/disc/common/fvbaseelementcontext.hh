@@ -91,6 +91,7 @@ public:
     {
         // remember the simulator object
         simulatorPtr_ = &simulator;
+        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
     }
 
     /*!
@@ -151,8 +152,17 @@ public:
      */
     void updateAllIntensiveQuantities()
     {
-        for (unsigned timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
-            updateIntensiveQuantities(timeIdx);
+        if (!enableStorageCache_) {
+            // if the storage cache is disabled, we need to calculate the storage term
+            // from scratch, i.e. we need the intensive quantities of all of the history.
+            for (unsigned timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
+                updateIntensiveQuantities(timeIdx);
+        }
+        else
+            // if the storage cache is enabled, we only need to recalculate the storage
+            // term for the most recent point of history (i.e., for the current iterative
+            // solution)
+            updateIntensiveQuantities(/*timeIdx=*/0);
     }
 
     /*!
@@ -188,7 +198,7 @@ public:
         updateSingleIntQuants_(priVars, dofIdx, timeIdx);
 
         // update gradients inside a sub control volume
-        unsigned nDof = numDof(/*timeIdx=*/0);
+        unsigned nDof = numDof(timeIdx);
         for (unsigned gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
             dofVars_[gradDofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
                                                                                  gradDofIdx,
@@ -493,6 +503,7 @@ protected:
 
     DofVarsVector dofVars_;
 
+    bool enableStorageCache_;
     IntensiveQuantities intensiveQuantitiesSaved_;
     PrimaryVariables priVarsSaved_;
 

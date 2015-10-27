@@ -26,6 +26,8 @@
 #ifndef EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 #define EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 
+#include <ewoms/common/parametersystem.hh>
+
 #include <opm/material/common/Valgrind.hpp>
 
 #include <dune/istl/bvector.hh>
@@ -82,7 +84,9 @@ private:
 
 public:
     FvBaseLocalResidual()
-    { }
+    {
+        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
+    }
 
     ~FvBaseLocalResidual()
     { }
@@ -565,11 +569,36 @@ protected:
                                     /*timeIdx=*/0);
             Valgrind::CheckDefined(tmp);
 
-            asImp_().computeStorage(tmp2,
-                                    elemCtx,
-                                    dofIdx,
-                                    /*timeIdx=*/1);
-            Valgrind::CheckDefined(tmp2);
+            if (enableStorageCache_) {
+                const auto& model = elemCtx.model();
+                int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                if (model.newtonMethod().numIterations() == 0) {
+                    // if the storage term is cached and we're in the first iteration of
+                    // the time step, update the storage term cache (this assumes that
+                    // the initial solution is the same for each time index.)
+                    for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
+                    Valgrind::CheckDefined(tmp2);
+
+                    model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
+                }
+                else {
+                    // if the storage term is cached and we're not looking at the first
+                    // iteration of the time step, we take the cached data.
+                    tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
+                    Valgrind::CheckDefined(tmp2);
+                }
+            }
+            else {
+                // if the mass storage at the beginning of the time step is not cached,
+                // we re-calculate it from scratch.
+                tmp2 = 0.0;
+                asImp_().computeStorage(tmp2,
+                                        elemCtx,
+                                        dofIdx,
+                                        /*timeIdx=*/1);
+                Valgrind::CheckDefined(tmp2);
+            }
 
             tmp -= tmp2;
             for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
@@ -581,7 +610,7 @@ protected:
             Valgrind::CheckDefined(storage[dofIdx]);
             Valgrind::CheckDefined(residual[dofIdx]);
 
-            // subtract the source term from the residual
+            // deal with the source term
             asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
             for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
                 sourceRate[eqIdx] *= scvVolume;
@@ -622,6 +651,8 @@ private:
       assert(static_cast<const Implementation*>(this) != 0);
       return *static_cast<const Implementation*>(this);
     }
+
+    bool enableStorageCache_;
 
     LocalBlockVector internalResidual_;
     LocalBlockVector internalStorageTerm_;

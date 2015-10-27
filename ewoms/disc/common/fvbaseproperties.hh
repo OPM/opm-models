@@ -226,6 +226,15 @@ NEW_PROP_TAG(MaxTimeStepDivisions);
 NEW_PROP_TAG(EnableIntensiveQuantityCache);
 
 /*!
+ * \brief Specify whether the storage terms for previous solutions should be cached.
+ *
+ * This potentially reduces the CPU time, but comes at the cost of higher memory
+ * consumption. And it may lead to problems with partial relinearization and
+ * linearization recycling.
+ */
+NEW_PROP_TAG(EnableStorageCache);
+
+/*!
  * \brief Specify whether to use the already calculated solutions as
  *        starting values of the intensive quantities.
  *
