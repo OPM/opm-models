@@ -139,13 +139,13 @@ public:
             // gas-saturated oil and oil-saturated gas.
             Evaluation xoG = 0.0;
             if (FluidSystem::enableDissolvedGas())
-                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx);
+                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
 
             Evaluation xgO = 0.0;
             if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, pvtRegionIdx);
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -159,7 +159,7 @@ public:
 
             Evaluation xgO = 0.0;
             if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, pvtRegionIdx);
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -175,7 +175,7 @@ public:
 
             Evaluation xoG = 0.0;
             if (FluidSystem::enableDissolvedGas())
-                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx);
+                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
