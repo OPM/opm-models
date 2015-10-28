@@ -844,12 +844,13 @@ struct Splices
 template <class TypeTag, class PropertyTag>
 struct GetProperty
 {
-    template <class CurTree,
-              bool directlyDefined =
+    // find the type tag for which the property is defined
+    template <class CurTree, bool directlyDefined =
                   propertyDefinedOnSelf<TypeTag,
                                         CurTree,
                                         PropertyTag>::value>
-    struct GetEffectiveTypeTag_;
+    struct GetEffectiveTypeTag_
+    { typedef typename CurTree::SelfType type; };
 
     template <class ...Elements>
     struct SearchTypeTagList_;
@@ -932,11 +933,6 @@ struct GetProperty
     template <class CurTree>
     struct SearchSplicesThenChildren_<CurTree, void>
     { typedef typename SearchTypeTagTuple_<typename CurTree::ChildrenTuple>::type type; };
-
-    // find the type tag for which the property is defined
-    template <class CurTree, bool directlyDefined>
-    struct GetEffectiveTypeTag_
-    { typedef typename CurTree::SelfType type; };
 
     template <class CurTree>
     struct GetEffectiveTypeTag_<CurTree, /*directlyDefined = */false>
