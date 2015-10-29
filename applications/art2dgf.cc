@@ -264,14 +264,22 @@ namespace Ewoms {
 
 int main( int argc, char** argv )
 {
-    if( argc > 1 )
-    {
-        std::string filename( argv[ 1 ] );
-        std::string dgfname( filename );
-        dgfname += ".dgf";
-
-        std::ofstream dgfFile( dgfname );
-        Ewoms::Art2DGF::convert( filename, dgfFile );
+    if (argc != 2) {
+        std::cout << "Converts a grid file from the ART file format to DGF (Dune grid format)\n"
+                  << "\n"
+                  << "Usage: " << argv[0] << " ART_FILENAME\n"
+                  << "\n"
+                  << "The result will be written to the file $ART_FILENAME.dgf\n";
+        return 1;
     }
+
+    std::string filename( argv[ 1 ] );
+    std::string dgfname( filename );
+    dgfname += ".dgf";
+
+    std::cout << "Converting ART file \"" << filename << "\" to DGF file \"" << dgfname << "\"\n";
+    std::ofstream dgfFile( dgfname );
+    Ewoms::Art2DGF::convert( filename, dgfFile );
+
     return 0;
 }

@@ -130,6 +130,16 @@ EwomsAddApplication(ebos
                     EXE_NAME ebos
                     CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
 
+# the ART to DGF file format conversion utility
+EwomsAddApplication(art2dgf
+                    SOURCES applications/art2dgf.cc
+                    EXE_NAME art2dgf)
+
+opm_add_test(art2dgf
+  NO_COMPILE
+  DRIVER_ARGS --plain
+  TEST_ARGS "data/fracture.art")
+
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
 # them as long for parallel test runs
@@ -248,9 +258,6 @@ opm_add_test(obstacle_pvs_restart
              DEPENDS obstacle_pvs
              DRIVER_ARGS --restart
              TEST_ARGS --pvs-verbosity=2 --end-time=15000)
-
-opm_add_test(art2dgf
-             DRIVER_ARGS --plain)
 
 
 # the test for the plain stokes model is completes quite
