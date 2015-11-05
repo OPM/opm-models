@@ -1,17 +1,17 @@
 What is eWoms?
 ==============
 
-eWoms [0, 5] is an module of the Open Porous Media initiative (OPM)
-[6] which is focused on implementing fully-implicit general-purpose
-models for flow and transport in porous media. This means that its
-goals are to be a easily usable, well maintainable, high performance
-framework which is -- in principle -- capable of capturing all
-macro-scale scenarios relevant for academic research and industrial
-applications that involve flow and transport processes in porous
-media. Like all other OPM modules eWoms is available under the terms
-of the GNU General Public License (GPL). In contrast to the other OPM
-modules eWoms is licensed under version 2 (instead of version 3) or -
-at your option - any later version of the GPL.
+eWoms [0] is an module of the Open Porous Media initiative (OPM) [5]
+which is focused on implementing fully-implicit general-purpose models
+for flow and transport in porous media. This means that its goals are
+to be a easily usable, well maintainable, high performance framework
+which is -- in principle -- capable of capturing all macro-scale
+scenarios relevant for academic research and industrial applications
+that involve flow and transport processes in porous media. Like all
+other OPM modules eWoms is available under the terms of the GNU
+General Public License (GPL). In contrast to the other OPM modules
+eWoms is licensed under version 2 (instead of version 3) or - at your
+option - any later version of the GPL.
 
 eWoms uses an agile development model similar to the one of the other
 OPM modules. This means that, the development branch is considered
@@ -64,5 +64,4 @@ Links
 [2] http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 [3] http://www.gnu.org/licenses/gpl-3.0.html
 [4] https://github.com
-[5] http://www.opm-project.org/ewoms/
-[6] http://www.opm-project.org
+[5] http://www.opm-project.org
