@@ -198,14 +198,6 @@ public:
 
         // evaluate the storage and the source terms
         asImp_().evalVolumeTerms_(residual, storage, elemCtx);
-        for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
-            for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
-                storage[dofIdx][eqIdx] /= elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
-
-                assert(std::isfinite(Toolbox::value(residual[dofIdx][eqIdx])));
-                Valgrind::CheckDefined(residual[dofIdx][eqIdx]);
-            }
-        }
 
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
