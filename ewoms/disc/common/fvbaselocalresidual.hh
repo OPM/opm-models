@@ -174,57 +174,37 @@ public:
               LocalBlockVector &storage,
               const ElementContext &elemCtx) const
     {
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
+        assert(static_cast<int>(residual.size()) == elemCtx.numDof(/*timeIdx=*/0));
+        assert(static_cast<int>(storage.size()) == elemCtx.numPrimaryDof(/*timeIdx=*/0));
 
-        typedef Opm::MathToolbox<Evaluation> Toolbox;
-
-        residual = Toolbox::createConstant(0.0);
-        storage = Toolbox::createConstant(0.0);
+        residual = 0.0;
+        storage = 0.0;
 
         // evaluate the flux terms
         asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
-        assert(static_cast<int>(residual.size()) == numDof);
-        assert(static_cast<int>(storage.size()) == numPrimaryDof);
-
-#if !defined NDEBUG
-        for (int i=0; i < numDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
-                Valgrind::CheckDefined(residual[i][j]);
-            }
-        }
-#endif
 
         // evaluate the storage and the source terms
         asImp_().evalVolumeTerms_(residual, storage, elemCtx);
 
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
-#if !defined NDEBUG
-        for (int i=0; i < numDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
-                Valgrind::CheckDefined(residual[i][j]);
-            }
-        }
-#endif
 
         // evaluate the constraint DOFs
         asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);;
         for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
             if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
                 // interior DOF
                 Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
-                for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+                assert(std::isfinite(dofVolume));
+                Valgrind::CheckDefined(dofVolume);
+
+                for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                     residual[dofIdx][eqIdx] /= dofVolume;
-                    assert(std::isfinite(Toolbox::value(residual[dofIdx][eqIdx])));
-                    Valgrind::CheckDefined(residual[dofIdx][eqIdx]);
-                }
             }
         }
     }
@@ -271,7 +251,7 @@ public:
             // all primary sub control volumes
             int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
             for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
-                storage[dofIdx] = Toolbox::createConstant(0.0);
+                storage[dofIdx] = 0.0;
                 asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
 
                 for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -290,7 +270,7 @@ public:
             Dune::FieldVector<Scalar, numEq> tmp;
             int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
             for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
-                tmp = 0;
+                tmp = 0.0;
                 asImp_().computeStorage(tmp,
                                         elemCtx,
                                         dofIdx,
@@ -301,7 +281,7 @@ public:
 
 
                 for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                    storage[dofIdx][eqIdx] = Toolbox::createConstant(tmp[eqIdx]);
+                    storage[dofIdx][eqIdx] = tmp[eqIdx];
             }
         }
     }
@@ -329,12 +309,13 @@ public:
 
             Valgrind::SetUndefined(flux);
             asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx, timeIdx);
+            Valgrind::CheckDefined(flux);
 
             Scalar alpha = elemCtx.extensiveQuantities(scvfIdx, timeIdx).extrusionFactor();
             alpha *= face.area();
+            Valgrind::CheckDefined(alpha);
             for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 flux[eqIdx] *= alpha;
-            Valgrind::CheckDefined(flux);
 
             // The balance equation for a finite volume is given by
             //
@@ -352,6 +333,18 @@ public:
             residual[i] += flux;
             residual[j] -= flux;
         }
+
+#if !defined NDEBUG
+        // in debug mode, ensure that the residual is well-defined
+        int numDof = elemCtx.numDof(timeIdx);
+        for (int i=0; i < numDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
+                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                Valgrind::CheckDefined(residual[i][j]);
+            }
+        }
+#endif
+
     }
 
     /////////////////////////////
@@ -432,6 +425,18 @@ protected:
                                  faceIdx,
                                  timeIdx);
         }
+
+#if !defined NDEBUG
+        // in debug mode, ensure that the residual and the storage terms are well-defined
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (int i=0; i < numDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
+                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                Valgrind::CheckDefined(residual[i][j]);
+            }
+        }
+#endif
+
     }
 
     /*!
@@ -503,6 +508,24 @@ protected:
                 storage[dofIdx][eqIdx] = 0.0;
             }
         }
+
+#if !defined NDEBUG
+        // in debug mode, ensure that the residual and the storage terms are well-defined
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (int i=0; i < numDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
+                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                Valgrind::CheckDefined(residual[i][j]);
+            }
+        }
+
+        for (int i=0; i < numPrimaryDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
+                assert(std::isfinite(Toolbox::value(storage[i][j])));
+                Valgrind::CheckDefined(storage[i][j]);
+            }
+        }
+#endif
     }
 
     /*!
@@ -518,7 +541,7 @@ protected:
         EqVector tmp2;
         RateVector sourceRate;
 
-        tmp = Toolbox::createConstant(0.0);
+        tmp = 0.0;
         tmp2 = 0.0;
 
         // evaluate the volumetric terms (storage + source terms)
@@ -564,11 +587,26 @@ protected:
                 sourceRate[eqIdx] *= scvVolume;
             residual[dofIdx] -= sourceRate;
 
-            // make sure that only defined quantities were used
-            // to calculate the residual.
-            Valgrind::CheckDefined(storage[dofIdx]);
             Valgrind::CheckDefined(residual[dofIdx]);
         }
+
+#if !defined NDEBUG
+        // in debug mode, ensure that the residual and the storage terms are well-defined
+        int numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (int i=0; i < numDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
+                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                Valgrind::CheckDefined(residual[i][j]);
+            }
+        }
+
+        for (int i=0; i < numPrimaryDof; i++) {
+            for (int j = 0; j < numEq; ++ j) {
+                assert(std::isfinite(Toolbox::value(storage[i][j])));
+                Valgrind::CheckDefined(storage[i][j]);
+            }
+        }
+#endif
     }
 
 
