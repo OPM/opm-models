@@ -174,8 +174,8 @@ public:
               LocalBlockVector &storage,
               const ElementContext &elemCtx) const
     {
-        assert(static_cast<int>(residual.size()) == elemCtx.numDof(/*timeIdx=*/0));
-        assert(static_cast<int>(storage.size()) == elemCtx.numPrimaryDof(/*timeIdx=*/0));
+        assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
+        assert(storage.size() == elemCtx.numPrimaryDof(/*timeIdx=*/0));
 
         residual = 0.0;
         storage = 0.0;

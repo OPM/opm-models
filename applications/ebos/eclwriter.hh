@@ -361,7 +361,7 @@ private:
     CollectDataToIORankType collectToIORank_;
 
     double curTime_;
-    int reportStepIdx_;
+    unsigned reportStepIdx_;
 
     std::list<std::pair<std::string, ScalarBuffer*> > attachedBuffers_;
 };

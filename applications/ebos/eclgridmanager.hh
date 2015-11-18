@@ -164,7 +164,7 @@ public:
 
         // compute the base name of the input file name
         const char directorySeparator = '/';
-        int i;
+        unsigned i;
         for (i = fileName.size(); i >= 0; -- i)
             if (fileName[i] == directorySeparator)
                 break;
@@ -208,7 +208,7 @@ public:
         std::vector<int> cartesianCellId( cpgrid->globalCell() );
         std::array<int,dimension> cartesianDimension;
 
-        for (int i = 0; i < dimension; ++i)
+        for (unsigned i = 0; i < dimension; ++i)
             cartesianDimension[i] = cpgrid->logicalCartesianSize()[i];
 
         Dune::FromToGridFactory< Grid > factory;
@@ -310,20 +310,20 @@ public:
     /*!
      * \brief Returns the Cartesian cell id for identifaction with Ecl data
      */
-    int cartesianIndex(int compressedCellIdx) const
+    unsigned cartesianIndex(unsigned compressedCellIdx) const
     {
         return cartesianIndexMapper_->cartesianIndex( compressedCellIdx );
     }
 
     /** \brief return index of the cells in the logical Cartesian grid */
-    int cartesianIndex( const std::array<int,dimension>& coords ) const
+    unsigned cartesianIndex( const std::array<int,dimension>& coords ) const
     {
 #if EBOS_USE_ALUGRID
         return cartesianIndexMapper_->cartesianIndex( coords );
 #else
-        int cartIndex = coords[ 0 ];
+        unsigned cartIndex = coords[ 0 ];
         int factor = cartesianDimensions()[ 0 ];
-        for( int i=1; i<dimension; ++i )
+        for( unsigned i=1; i<dimension; ++i )
         {
             cartIndex += coords[ i ] * factor;
             factor *= cartesianDimensions()[ i ];
@@ -339,7 +339,7 @@ public:
      * \param [in] cellIdx Active cell index.
      * \param [out] ijk Cartesian index triplet
      */
-    void cartesianCoordinate(int cellIdx, std::array<int,3>& ijk) const
+    void cartesianCoordinate(unsigned cellIdx, std::array<int,3>& ijk) const
     {
         return cartesianIndexMapper_->cartesianCoordinate( cellIdx, ijk );
     }

@@ -79,7 +79,7 @@ public:
      * \param elemCtx The current execution context
      */
     template <bool prepareValues = true, bool prepareGradients = true>
-    void prepare(const ElementContext &elemCtx, int timeIdx)
+    void prepare(const ElementContext &elemCtx, unsigned timeIdx)
     {
         if (GET_PROP_VALUE(TypeTag, UseTwoPointGradients)) {
             ParentType::template prepare<prepareValues, prepareGradients>(elemCtx, timeIdx);
@@ -92,7 +92,7 @@ public:
         localFiniteElement_ = &localFE;
 
         // loop over all face centeres
-        for (int faceIdx = 0; faceIdx < stencil.numInteriorFaces(); ++faceIdx) {
+        for (unsigned faceIdx = 0; faceIdx < stencil.numInteriorFaces(); ++faceIdx) {
             const auto &localFacePos = stencil.interiorFace(faceIdx).localPos();
 
             // Evaluate the P1 shape functions and their gradients at all
@@ -112,8 +112,8 @@ public:
                 const auto &jacInvT =
                     geom.jacobianInverseTransposed(localFacePos);
 
-                int numVertices = elemCtx.numDof(timeIdx);
-                for (int vertIdx = 0; vertIdx < numVertices; vertIdx++) {
+                unsigned numVertices = elemCtx.numDof(timeIdx);
+                for (unsigned vertIdx = 0; vertIdx < numVertices; vertIdx++) {
                     jacInvT.mv(/*xVector=*/localGradient[vertIdx][0],
                                /*destVector=*/p1Gradient_[faceIdx][vertIdx]);
                 }
@@ -151,7 +151,7 @@ public:
         // use P1 finite element gradients..
         QuantityType value(0.0);
         QuantityType tmp;
-        for (int vertIdx = 0; vertIdx < elemCtx.numDof(/*timeIdx=*/0); ++vertIdx) {
+        for (unsigned vertIdx = 0; vertIdx < elemCtx.numDof(/*timeIdx=*/0); ++vertIdx) {
             tmp = quantityCallback(vertIdx);
             tmp *= p1Value_[fapIdx][vertIdx];
             value += tmp;
@@ -198,7 +198,7 @@ public:
         // If the user does not want two-point gradients, we use P1
         // finite element gradients...
         quantityGrad = 0.0;
-        for (int vertIdx = 0; vertIdx < elemCtx.numDof(/*timeIdx=*/0); ++vertIdx) {
+        for (unsigned vertIdx = 0; vertIdx < elemCtx.numDof(/*timeIdx=*/0); ++vertIdx) {
             Scalar dofVal = quantityCallback(vertIdx);
 
             auto tmp = p1Gradient_[fapIdx][vertIdx];
@@ -237,7 +237,7 @@ public:
      */
     template <class QuantityCallback>
     auto calculateBoundaryValue(const ElementContext &elemCtx,
-                                int fapIdx,
+                                unsigned fapIdx,
                                 const QuantityCallback &quantityCallback)
         ->  decltype(ParentType::calculateBoundaryValue(elemCtx, fapIdx, quantityCallback))
     { return ParentType::calculateBoundaryValue(elemCtx, fapIdx, quantityCallback); }
@@ -259,7 +259,7 @@ public:
     template <class QuantityCallback, class EvalDimVector>
     void calculateBoundaryGradient(EvalDimVector &quantityGrad,
                                    const ElementContext &elemCtx,
-                                   int fapIdx,
+                                   unsigned fapIdx,
                                    const QuantityCallback &quantityCallback) const
     { ParentType::calculateBoundaryGradient(quantityGrad, elemCtx, fapIdx, quantityCallback); }
 

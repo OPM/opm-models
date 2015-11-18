@@ -45,7 +45,7 @@ namespace Ewoms {
 /*!
  * \cond SKIP_THIS
  */
-template <class Scalar, int dim, int basicGeomType>
+template <class Scalar, unsigned dim, int basicGeomType>
 class VcfvScvGeometries;
 
 ////////////////////
@@ -61,7 +61,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static int init()
+    static void init()
     {
         // 1D LINE SEGMENTS
         Scalar scvCorners[numScv][ScvLocalGeometry::numCorners][dim] = {
@@ -77,11 +77,9 @@ public:
         };
         for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvLocalGeometry::numCorners);
-
-        return 0;
     }
 
-    static const ScvLocalGeometry &get(int scvIdx)
+    static const ScvLocalGeometry &get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
 private:
@@ -103,7 +101,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(int scvIdx)
+    static const ScvLocalGeometry &get(unsigned scvIdx)
     { OPM_THROW(std::logic_error,
                 "Not implemented: "
                 "VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
@@ -122,10 +120,10 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(int scvIdx)
+    static const ScvLocalGeometry &get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
-    static int init()
+    static void init()
     {
         // 2D SIMPLEX
         Scalar scvCorners[numScv][ScvLocalGeometry::numCorners][dim] =
@@ -152,10 +150,8 @@ public:
             }
         };
 
-        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+        for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvLocalGeometry::numCorners);
-
-        return 0;
     }
 
 private:
@@ -177,10 +173,10 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(int scvIdx)
+    static const ScvLocalGeometry &get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
-    static int init()
+    static void init()
     {
         // 2D CUBE
         Scalar scvCorners[numScv][ScvLocalGeometry::numCorners][dim] =
@@ -214,10 +210,8 @@ public:
             }
         };
 
-        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+        for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvLocalGeometry::numCorners);
-
-        return 0;
     }
 
     static ScvLocalGeometry scvGeoms_[numScv];
@@ -241,10 +235,10 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(int scvIdx)
+    static const ScvLocalGeometry &get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
-    static int init()
+    static void init()
     {
         // 3D SIMPLEX
         Scalar scvCorners[numScv][ScvLocalGeometry::numCorners][dim] =
@@ -298,10 +292,8 @@ public:
             }
         };
 
-        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+        for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx],  ScvLocalGeometry::numCorners);
-
-        return 0;
     }
 
 private:
@@ -323,10 +315,10 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(int scvIdx)
+    static const ScvLocalGeometry &get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
-    static int init()
+    static void init()
     {
         // 3D CUBE
         Scalar scvCorners[numScv][ScvLocalGeometry::numCorners][dim] =
@@ -428,10 +420,8 @@ public:
             },
         };
 
-        for (int scvIdx = 0; scvIdx < numScv; ++scvIdx)
+        for (unsigned scvIdx = 0; scvIdx < numScv; ++scvIdx)
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvLocalGeometry::numCorners);
-
-        return 0;
     }
 private:
     static ScvLocalGeometry scvGeoms_[numScv];
@@ -530,23 +520,23 @@ class VcfvStencil
                        const GlobalPosition& p5)
     {
         DimVector a(p4);
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             a[k] -= p0[k];
         DimVector b(p1);
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             b[k] -= p3[k];
         DimVector m;
         crossProduct(m, a, b);
 
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             a[k] = p1[k] - p0[k];
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             b[k] = p2[k] - p0[k];
         DimVector n;
         crossProduct(n, a, b);
         n += m;
 
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             a[k] = p5[k] - p0[k];
 
         return std::abs(1.0/6.0*(n*a));
@@ -573,10 +563,10 @@ class VcfvStencil
                                  const GlobalPosition& p3)
     {
         DimVector a(p2);
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             a[k] -= p0[k];
         DimVector b(p3);
-        for (int k = 0; k < dimWorld; ++k)
+        for (unsigned k = 0; k < dimWorld; ++k)
             b[k] -= p1[k];
 
         crossProduct(normal, a, b);
@@ -593,21 +583,21 @@ class VcfvStencil
         return normal.two_norm();
     }
 
-    void getFaceIndices(int numElemVertices, int k, int& leftFace, int& rightFace)
+    void getFaceIndices(unsigned numElemVertices, unsigned k, unsigned& leftFace, unsigned& rightFace)
     {
-        static const int edgeToFaceTet[2][6] = {
+        static const unsigned edgeToFaceTet[2][6] = {
             {1, 0, 3, 2, 1, 3},
             {0, 2, 0, 1, 3, 2}
         };
-        static const int edgeToFacePyramid[2][8] = {
+        static const unsigned edgeToFacePyramid[2][8] = {
             {1, 2, 3, 4, 1, 3, 4, 2},
             {0, 0, 0, 0, 3, 2, 1, 4}
         };
-        static const int edgeToFacePrism[2][9] = {
+        static const unsigned edgeToFacePrism[2][9] = {
             {1, 0, 2, 0, 1, 2, 4, 4, 4},
             {0, 2, 1, 3, 3, 3, 0, 1, 2}
         };
-        static const int edgeToFaceHex[2][12] = {
+        static const unsigned edgeToFaceHex[2][12] = {
             {0, 2, 3, 1, 4, 1, 2, 4, 0, 5, 5, 3},
             {2, 1, 0, 3, 0, 4, 4, 3, 5, 1, 2, 5}
         };
@@ -637,7 +627,7 @@ class VcfvStencil
         }
     }
 
-    void getEdgeIndices(int numElemVertices, int face, int vert, int& leftEdge, int& rightEdge)
+    void getEdgeIndices(unsigned numElemVertices, unsigned face, unsigned vert, unsigned& leftEdge, unsigned& rightEdge)
     {
         static const int faceAndVertexToLeftEdgeTet[4][4] = {
                 { 0, 0, 2, -1},
@@ -731,7 +721,7 @@ public:
         const GlobalPosition center() const
         { return global(localGeometry_->center()); }
 
-        const GlobalPosition corner(int cornerIdx) const
+        const GlobalPosition corner(unsigned cornerIdx) const
         { return global(localGeometry_->corner(cornerIdx)); }
 
         const GlobalPosition global(const LocalPosition &localPos) const
@@ -779,10 +769,10 @@ public:
         const DimVector &normal() const
         { return normal_; }
 
-        int interiorIndex() const
+        unsigned interiorIndex() const
         { return i; }
 
-        int exteriorIndex() const
+        unsigned exteriorIndex() const
         { return j; }
 
         Scalar area() const
@@ -795,7 +785,7 @@ public:
         { return ipGlobal_; }
 
         //! scvf seperates corner i and j of elem
-        int i,j;
+        unsigned i,j;
         //! integration point in local coords
         LocalPosition ipLocal_;
         //! integration point in global coords
@@ -875,18 +865,18 @@ public:
         elementGlobal = geometry.global(elementLocal);
 
         // corners:
-        for (int vert = 0; vert < numVertices; vert++) {
+        for (unsigned vert = 0; vert < numVertices; vert++) {
             subContVol[vert].local = referenceElement.position(vert, dim);
             subContVol[vert].global = geometry.global(subContVol[vert].local);
         }
 
         // edges:
-        for (int edge = 0; edge < numEdges; edge++) {
+        for (unsigned edge = 0; edge < numEdges; edge++) {
             edgeCoord[edge] = geometry.global(referenceElement.position(edge, dim-1));
         }
 
         // faces:
-        for (int face = 0; face < numFaces; face++) {
+        for (unsigned face = 0; face < numFaces; face++) {
             faceCoord[face] = geometry.global(referenceElement.position(face, 1));
         }
 
@@ -898,9 +888,9 @@ public:
         fillSubContVolData_();
 
         // fill sub control volume face data:
-        for (int k = 0; k < numEdges; k++) { // begin loop over edges / sub control volume faces
-            int i = referenceElement.subEntity(k, dim-1, 0, dim);
-            int j = referenceElement.subEntity(k, dim-1, 1, dim);
+        for (unsigned k = 0; k < numEdges; k++) { // begin loop over edges / sub control volume faces
+            unsigned i = referenceElement.subEntity(k, dim-1, 0, dim);
+            unsigned j = referenceElement.subEntity(k, dim-1, 1, dim);
             if (numEdges == 4 && (i == 2 || j == 2))
                 std::swap(i, j);
             subContVolFace[k].i = i;
@@ -923,12 +913,12 @@ public:
                 ipLocal_ = referenceElement.position(k, dim-1) + elementLocal;
                 ipLocal_ *= 0.5;
                 subContVolFace[k].ipLocal_ = ipLocal_;
-                for (int m = 0; m < dimWorld; ++m)
+                for (unsigned m = 0; m < dimWorld; ++m)
                     diffVec[m] = elementGlobal[m] - edgeCoord[k][m];
                 subContVolFace[k].normal_[0] = diffVec[1];
                 subContVolFace[k].normal_[1] = -diffVec[0];
 
-                for (int m = 0; m < dimWorld; ++m)
+                for (unsigned m = 0; m < dimWorld; ++m)
                     diffVec[m] = subContVol[j].global[m] - subContVol[i].global[m];
                 // make sure the normal points to the right direction
                 if (subContVolFace[k].normal_ * diffVec < 0)
@@ -938,8 +928,8 @@ public:
                 subContVolFace[k].normal_ /= subContVolFace[k].area_;
             }
             else if (dim==3) {
-                int leftFace;
-                int rightFace;
+                unsigned leftFace;
+                unsigned rightFace;
                 getFaceIndices(numVertices, k, leftFace, rightFace);
                 ipLocal_ = referenceElement.position(k, dim-1) + elementLocal
                     + referenceElement.position(leftFace, 1)
@@ -965,12 +955,12 @@ public:
             if ( ! intersection.boundary())
                 continue;
 
-            int face = intersection.indexInInside();
-            int numVerticesOfFace = referenceElement.size(face, 1, dim);
-            for (int vertInFace = 0; vertInFace < numVerticesOfFace; vertInFace++)
+            unsigned face = intersection.indexInInside();
+            unsigned numVerticesOfFace = referenceElement.size(face, 1, dim);
+            for (unsigned vertInFace = 0; vertInFace < numVerticesOfFace; vertInFace++)
             {
-                int vertInElement = referenceElement.subEntity(face, 1, vertInFace, dim);
-                int bfIdx = numBoundarySegments_;
+                unsigned vertInElement = referenceElement.subEntity(face, 1, vertInFace, dim);
+                unsigned bfIdx = numBoundarySegments_;
                 ++numBoundarySegments_;
 
                 if (dim == 1) {
@@ -984,8 +974,8 @@ public:
                     boundaryFace_[bfIdx].area_ = 0.5 * intersection.geometry().volume();
                 }
                 else if (dim == 3) {
-                    int leftEdge;
-                    int rightEdge;
+                    unsigned leftEdge;
+                    unsigned rightEdge;
                     getEdgeIndices(numVertices, face, vertInElement, leftEdge, rightEdge);
                     boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(vertInElement, dim)
                         + referenceElement.position(face, 1)
@@ -1019,14 +1009,14 @@ public:
 
         // get the local geometries of the sub control volumes
         if (geomType.isTriangle() || geomType.isTetrahedron()) {
-            for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
+            for (unsigned vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
                 subContVol[vertIdx].geometry_.element_ = &element;
                 subContVol[vertIdx].geometry_.localGeometry_ =
                     &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::simplex>::get(vertIdx);
             }
         }
         else if (geomType.isLine() || geomType.isQuadrilateral() || geomType.isHexahedron()) {
-            for (int vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
+            for (unsigned vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
                 subContVol[vertIdx].geometry_.element_ = &element;
                 subContVol[vertIdx].geometry_.localGeometry_ =
                     &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
@@ -1048,54 +1038,54 @@ public:
 #endif
         std::vector<ShapeJacobian> localJac;
 
-        for (int scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
+        for (unsigned scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
             const auto &localCenter = subContVol[scvIdx].localGeometry().center();
             localFiniteElement.localBasis().evaluateJacobian(localCenter, localJac);
             const auto &globalPos = subContVol[scvIdx].geometry().center();
 
             const auto jacInvT = geom.jacobianInverseTransposed(globalPos);
-            for (int vert = 0; vert < numVertices; vert++) {
+            for (unsigned vert = 0; vert < numVertices; vert++) {
                 jacInvT.mv(localJac[vert][0], subContVol[scvIdx].gradCenter[vert]);
             }
         }
     }
 
-    int numDof() const
+    unsigned numDof() const
     { return numVertices; }
 
-    int numPrimaryDof() const
+    unsigned numPrimaryDof() const
     { return numDof(); }
 
-    Dune::PartitionType partitionType(int scvIdx) const
+    Dune::PartitionType partitionType(unsigned scvIdx) const
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
     { return element_.template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
 #else
     { return elementPtr_->template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
 #endif
 
-    const SubControlVolume &subControlVolume(int scvIdx) const
+    const SubControlVolume &subControlVolume(unsigned scvIdx) const
     {
         assert(0 <= scvIdx && scvIdx < numDof());
         return subContVol[scvIdx];
     }
 
-    int numInteriorFaces() const
+    unsigned numInteriorFaces() const
     { return numEdges; }
 
-    int numBoundaryFaces() const
+    unsigned numBoundaryFaces() const
     { return numBoundarySegments_; }
 
-    const SubControlVolumeFace &interiorFace(int faceIdx) const
+    const SubControlVolumeFace &interiorFace(unsigned faceIdx) const
     { return subContVolFace[faceIdx]; }
 
-    const BoundaryFace &boundaryFace(int bfIdx) const
+    const BoundaryFace &boundaryFace(unsigned bfIdx) const
     { return boundaryFace_[bfIdx]; }
 
     /*!
      * \brief Return the global space index given the index of a degree of
      *        freedom.
      */
-    int globalSpaceIndex(int dofIdx) const
+    unsigned globalSpaceIndex(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
@@ -1152,7 +1142,7 @@ private:
         else if (dim == 3) {
             switch (numVertices) {
             case 4: // 3D, tetrahedron
-                for (int k = 0; k < numVertices; k++)
+                for (unsigned k = 0; k < numVertices; k++)
                     subContVol[k].volume_ = elementVolume / 4.0;
                 break;
             case 5: // 3D, pyramid
@@ -1343,17 +1333,17 @@ private:
     SubControlVolumeFace subContVolFace[maxNE];
     //! data of the boundary faces
     BoundaryFace boundaryFace_[maxBF];
-    int numBoundarySegments_;
+    unsigned numBoundarySegments_;
     //! global coordinates of the edge centers
     GlobalPosition edgeCoord[maxNE];
     //! global coordinates of the face centers
     GlobalPosition faceCoord[maxNF];
     //! number of verts
-    int numVertices;
+    unsigned numVertices;
     //! number of edges
-    int numEdges;
+    unsigned numEdges;
     //! number of faces (0 in < 3D)
-    int numFaces;
+    unsigned numFaces;
     Dune::GeometryType geometryType_;
 };
 

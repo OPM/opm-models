@@ -443,7 +443,7 @@ public:
         auto elemEndIt = this->gridView().template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++ elemIt) {
             elemCtx.updateStencil(*elemIt);
-            for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timIdx=*/0); ++dofIdx) {
+            for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timIdx=*/0); ++dofIdx) {
                 int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timIdx=*/0);
                 updatePvtRegionIndex_(this->solution_[/*timeIdx=*/0][globalDofIdx],
                                       elemCtx, dofIdx, /*timeIdx=*/0);

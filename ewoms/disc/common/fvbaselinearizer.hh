@@ -272,9 +272,9 @@ public:
 
         // set the intensive quantities cache
         auto &model = model_();
-        int numGridDof = model.numGridDof();
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            for (int dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+        unsigned numGridDof = model.numGridDof();
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
                 model.setIntensiveQuantitiesCacheEntryValidity(dofIdx, timeIdx, false);
             }
         }
@@ -347,7 +347,7 @@ public:
      * Calling this method usually means that the interpretation of the primary variables
      * for the DOF has changed.
      */
-    void markDofRed(int dofIdx)
+    void markDofRed(unsigned dofIdx)
     {
         if (enablePartialRelinearization_())
             dofError_[dofIdx] = 1e100;
@@ -357,7 +357,7 @@ public:
     /*!
      * \brief Returns the "relinearization color" of a degree of freedom
      */
-    EntityColor dofColor(int dofIdx) const
+    EntityColor dofColor(unsigned dofIdx) const
     {
         if (!enablePartialRelinearization_())
             return Red;
@@ -367,7 +367,7 @@ public:
     /*!
      * \brief Returns the "relinearization color" of an element
      */
-    EntityColor elementColor(int elemIdx) const
+    EntityColor elementColor(unsigned elemIdx) const
     {
         if (!enablePartialRelinearization_())
             return Red;
@@ -389,7 +389,7 @@ public:
     /*!
      * \brief Returns the error for a given degree of freedom after the last iteration.
      */
-    Scalar dofError(int dofIdx) const
+    Scalar dofError(unsigned dofIdx) const
     { return dofError_[dofIdx]; }
 
     /*!
@@ -434,8 +434,8 @@ private:
         }
 
         // mark all elements that connect to red ones as yellow
-        int numGridDof = this->model_().numGridDof();
-        for (int dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+        unsigned numGridDof = this->model_().numGridDof();
+        for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
             if (dofColor_[dofIdx] != Red)
                 continue;
 
@@ -443,7 +443,7 @@ private:
             ColIterator colIt = (*matrix_)[dofIdx].begin();
             const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
             for (; colIt != colEndIt; ++colIt) {
-                int dof2Idx = colIt.index();
+                unsigned dof2Idx = colIt.index();
                 if (dof2Idx >= numGridDof)
                     break; // auxiliary equation
 
@@ -469,17 +469,17 @@ private:
                 stencil.updateTopology(elem);
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
-                int elemIdx = elemMapper.index(elem);
+                unsigned elemIdx = elemMapper.index(elem);
 #else
-                int elemIdx = elemMapper.map(elem);
+                unsigned elemIdx = elemMapper.map(elem);
 #endif
-                int numElemDof = stencil.numDof();
+                unsigned numElemDof = stencil.numDof();
 
                 // determine the element color: it is red if any of the DOFs in its
                 // stencil are non-green, else it is green.
                 elementColor_[elemIdx] = Green;
-                for (int elemDofIdx = 0; elemDofIdx < numElemDof; ++elemDofIdx) {
-                    int dofIdx = stencil.globalSpaceIndex(elemDofIdx);
+                for (unsigned elemDofIdx = 0; elemDofIdx < numElemDof; ++elemDofIdx) {
+                    unsigned dofIdx = stencil.globalSpaceIndex(elemDofIdx);
                     if (dofColor_[dofIdx] != Green) {
                         elementColor_[elemIdx] = Red;
                         break;
@@ -539,9 +539,9 @@ private:
     {
         // calculate the number of DOFs and elements for the local process and for the
         // whole simulation
-        int numGridDof = model_().numGridDof();
-        int numAllDof =  model_().numTotalDof();
-        int numElems = gridView_().size(/*codim=*/0);
+        unsigned numGridDof = model_().numGridDof();
+        unsigned numAllDof =  model_().numTotalDof();
+        unsigned numElems = gridView_().size(/*codim=*/0);
         numTotalElems_ = gridView_().comm().sum(numElems);
 
         // initialize the BCRS matrix for the Jacobian
@@ -578,7 +578,7 @@ private:
     // Construct the BCRS matrix for the global jacobian
     void createMatrix_()
     {
-        int numAllDof =  model_().numTotalDof();
+        unsigned numAllDof =  model_().numTotalDof();
 
         // allocate raw matrix
         matrix_ = new Matrix(numAllDof, numAllDof, Matrix::random);
@@ -595,11 +595,11 @@ private:
             const Element &elem = *elemIt;
             stencil.update(elem);
 
-            for (int primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof(); ++primaryDofIdx) {
-                int myIdx = stencil.globalSpaceIndex(primaryDofIdx);
+            for (unsigned primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof(); ++primaryDofIdx) {
+                unsigned myIdx = stencil.globalSpaceIndex(primaryDofIdx);
 
-                for (int dofIdx = 0; dofIdx < stencil.numDof(); ++dofIdx) {
-                    int neighborIdx = stencil.globalSpaceIndex(dofIdx);
+                for (unsigned dofIdx = 0; dofIdx < stencil.numDof(); ++dofIdx) {
+                    unsigned neighborIdx = stencil.globalSpaceIndex(dofIdx);
                     neighbors[myIdx].insert(neighborIdx);
                 }
             }
@@ -608,19 +608,19 @@ private:
         // add the additional neighbors and degrees of freedom caused by the auxiliary
         // equations
         const auto& model = model_();
-        int numAuxMod = model.numAuxiliaryModules();
-        for (int auxModIdx = 0; auxModIdx < numAuxMod; ++auxModIdx)
+        unsigned numAuxMod = model.numAuxiliaryModules();
+        for (unsigned auxModIdx = 0; auxModIdx < numAuxMod; ++auxModIdx)
             model.auxiliaryModule(auxModIdx)->addNeighbors(neighbors);
 
         // allocate space for the rows of the matrix
-        for (int dofIdx = 0; dofIdx < numAllDof; ++ dofIdx)
+        for (unsigned dofIdx = 0; dofIdx < numAllDof; ++ dofIdx)
             matrix_->setrowsize(dofIdx, neighbors[dofIdx].size());
         matrix_->endrowsizes();
 
         // fill the rows with indices. each degree of freedom talks to
         // all of its neighbors. (it also talks to itself since
         // degrees of freedom are sometimes quite egocentric.)
-        for (int dofIdx = 0; dofIdx < numAllDof; ++ dofIdx) {
+        for (unsigned dofIdx = 0; dofIdx < numAllDof; ++ dofIdx) {
             typename NeighborSet::iterator nIt = neighbors[dofIdx].begin();
             typename NeighborSet::iterator nEndIt = neighbors[dofIdx].end();
             for (; nIt != nEndIt; ++nIt)
@@ -721,8 +721,8 @@ private:
         // here and be done with it...
         Scalar curDt = problem_().simulator().timeStepSize();
         if (reuseLinearization_) {
-            int numGridDof = model_().numGridDof();
-            for (int dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+            unsigned numGridDof = model_().numGridDof();
+            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
                 // use the flux term plus the source term as the residual: the numerator
                 // in the d(storage)/dt term is 0 for the first iteration of a time step
                 // because the initial guess for the next solution is the value of the
@@ -779,9 +779,9 @@ private:
     {
         if (enablePartialRelinearization_()) {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int globalElemIdx = model_().elementMapper().index(elem);
+            unsigned globalElemIdx = model_().elementMapper().index(elem);
 #else
-            int globalElemIdx = model_().elementMapper().map(elem);
+            unsigned globalElemIdx = model_().elementMapper().map(elem);
 #endif
             if (elementColor(globalElemIdx) == Green) {
                 linearizeGreenElement_(elem);
@@ -800,8 +800,8 @@ private:
 
         // update the right hand side and the Jacobian matrix
         ScopedLock addLock(globalMatrixMutex_);
-        int numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
-        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
+        unsigned numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
             int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
 
             // we only need to update the Jacobian matrix for entries which connect two
@@ -819,7 +819,7 @@ private:
             }
 
             // update the global Jacobian matrix
-            for (int dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
+            for (unsigned dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
                 int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
 
@@ -845,14 +845,14 @@ private:
         localResidual.eval(*elementCtx);
 
         ScopedLock addLock(globalMatrixMutex_);
-        for (int dofIdx=0; dofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
+        for (unsigned dofIdx=0; dofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
             int globI = elementCtx->globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
             // update the right hand side
-            for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 residual_[globI][eqIdx] += Toolbox::value(localResidual.residual(dofIdx)[eqIdx]);
             if (enableLinearizationRecycling_())
-                for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                     storageTerm_[globI][eqIdx] += Toolbox::value(localResidual.storageTerm(dofIdx)[eqIdx]);
         }
         addLock.unlock();
@@ -886,8 +886,8 @@ private:
     std::vector<Scalar> dofError_;
     std::vector<EntityColor> elementColor_;
 
-    int numTotalElems_;
-    int numGreenElems_;
+    unsigned numTotalElems_;
+    unsigned numGreenElems_;
 
     Scalar relinearizationTolerance_;
     Scalar relinearizationAccuracy_;

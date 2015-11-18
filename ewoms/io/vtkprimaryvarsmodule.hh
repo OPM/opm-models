@@ -117,7 +117,7 @@ public:
         if (processRankOutput_() && !processRank_.empty())
             processRank_[elemIdx] = this->simulator_.gridView().comm().rank();
 
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
+        for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
 

@@ -273,7 +273,7 @@ public:
     /*!
      * \brief Save the grid to an .EGRID file.
      */
-    void write(const std::string& fileName, int reportStepIdx)
+    void write(const std::string& fileName, unsigned reportStepIdx)
     {
 #if HAVE_ERT
         // we convert the units ourselfs, so we set convertFromMetric to
@@ -298,15 +298,15 @@ private:
  */
 class ErtRestartFile
 {
-    static const int numIwellItemsPerWell = 11;
-    static const int numZwelStringsPerWell = 3;
-    static const int numIconItemsPerConnection = 15;
+    static const unsigned numIwellItemsPerWell = 11;
+    static const unsigned numZwelStringsPerWell = 3;
+    static const unsigned numIconItemsPerConnection = 15;
 
 public:
     ErtRestartFile(const ErtRestartFile &) = delete;
 
     template <class Simulator>
-    ErtRestartFile(const Simulator &simulator, int reportStepIdx)
+    ErtRestartFile(const Simulator &simulator, unsigned reportStepIdx)
     {
         std::string caseName = getErtCaseName__(simulator.gridManager());
 
@@ -336,7 +336,7 @@ public:
      * pierced by them.
      */
     template <class Simulator>
-    void writeHeader(const Simulator &simulator, int reportStepIdx)
+    void writeHeader(const Simulator &simulator, unsigned reportStepIdx)
     {
         const auto eclGrid = getEclGrid__(simulator.gridManager());
         const auto eclState = simulator.gridManager().eclState();
@@ -608,7 +608,7 @@ class ErtSummaryTimeStep
 public:
     ErtSummaryTimeStep(ErtSummary<TypeTag>& summaryHandle,
                        double timeInSeconds,
-                       int reportStepIdx)
+                       unsigned reportStepIdx)
     {
         ertHandle_ = ecl_sum_add_tstep(summaryHandle.ertHandle(), reportStepIdx, timeInSeconds);
     }

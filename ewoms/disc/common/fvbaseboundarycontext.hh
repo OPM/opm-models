@@ -109,31 +109,31 @@ public:
     /*!
      * \copydoc Ewoms::ElementContext::numDof()
      */
-    int numDof(int timeIdx) const
+    unsigned numDof(unsigned timeIdx) const
     { return elemCtx_.numDof(timeIdx); }
 
     /*!
      * \copydoc Ewoms::ElementContext::numPrimaryDof()
      */
-    int numPrimaryDof(int timeIdx) const
+    unsigned numPrimaryDof(unsigned timeIdx) const
     { return elemCtx_.numPrimaryDof(timeIdx); }
 
     /*!
      * \copydoc Ewoms::ElementContext::numInteriorFaces()
      */
-    int numInteriorFaces(int timeIdx) const
+    unsigned numInteriorFaces(unsigned timeIdx) const
     { return elemCtx_.numInteriorFaces(timeIdx); }
 
     /*!
      * \brief Return the number of boundary segments of the current element
      */
-    int numBoundaryFaces(int timeIdx) const
+    unsigned numBoundaryFaces(unsigned timeIdx) const
     { return elemCtx_.stencil(timeIdx).numBoundaryFaces(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::stencil()
      */
-    const Stencil &stencil(int timeIdx) const
+    const Stencil &stencil(unsigned timeIdx) const
     { return elemCtx_.stencil(timeIdx); }
 
     /*!
@@ -142,7 +142,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    Vector normal(int boundaryFaceIdx, int timeIdx) const
+    Vector normal(unsigned boundaryFaceIdx, unsigned timeIdx) const
     {
         auto tmp = stencil(timeIdx).boundaryFace[boundaryFaceIdx].normal;
         tmp /= tmp.two_norm();
@@ -152,7 +152,7 @@ public:
     /*!
      * \brief Returns the area [m^2] of a given boudary segment.
      */
-    Scalar boundarySegmentArea(int boundaryFaceIdx, int timeIdx) const
+    Scalar boundarySegmentArea(unsigned boundaryFaceIdx, unsigned timeIdx) const
     { return elemCtx_.stencil(timeIdx).boundaryFace(boundaryFaceIdx).area(); }
 
     /*!
@@ -161,7 +161,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const GlobalPosition &pos(int boundaryFaceIdx, int timeIdx) const
+    const GlobalPosition &pos(unsigned boundaryFaceIdx, unsigned timeIdx) const
     { return stencil(timeIdx).boundaryFace(boundaryFaceIdx).integrationPos(); }
 
     /*!
@@ -170,9 +170,9 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const GlobalPosition &cvCenter(int boundaryFaceIdx, int timeIdx) const
+    const GlobalPosition &cvCenter(unsigned boundaryFaceIdx, unsigned timeIdx) const
     {
-        int scvIdx = stencil(timeIdx).boundaryFace(boundaryFaceIdx).interiorIndex();
+        unsigned scvIdx = stencil(timeIdx).boundaryFace(boundaryFaceIdx).interiorIndex();
         return stencil(timeIdx).subControlVolume(scvIdx).globalPos();
     }
 
@@ -183,7 +183,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    short interiorScvIndex(int boundaryFaceIdx, int timeIdx) const
+    unsigned interiorScvIndex(unsigned boundaryFaceIdx, unsigned timeIdx) const
     {
         return stencil(timeIdx).boundaryFace(boundaryFaceIdx).interiorIndex();
     }
@@ -195,7 +195,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    int globalSpaceIndex(int boundaryFaceIdx, int timeIdx) const
+    unsigned globalSpaceIndex(unsigned boundaryFaceIdx, unsigned timeIdx) const
     { return elemCtx_.globalSpaceIndex(interiorScvIndex(boundaryFaceIdx, timeIdx), timeIdx); }
 
     /*!
@@ -205,9 +205,9 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const IntensiveQuantities &intensiveQuantities(int boundaryFaceIdx, int timeIdx) const
+    const IntensiveQuantities &intensiveQuantities(unsigned boundaryFaceIdx, unsigned timeIdx) const
     {
-        short interiorScvIdx = this->interiorScvIndex(boundaryFaceIdx, timeIdx);
+        unsigned interiorScvIdx = this->interiorScvIndex(boundaryFaceIdx, timeIdx);
         return elemCtx_.intensiveQuantities(interiorScvIdx, timeIdx);
     }
 
@@ -217,7 +217,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const ExtensiveQuantities &extensiveQuantities(int boundaryFaceIdx, int timeIdx) const
+    const ExtensiveQuantities &extensiveQuantities(unsigned boundaryFaceIdx, unsigned timeIdx) const
     { return elemCtx_.boundaryExtensiveQuantities(boundaryFaceIdx, timeIdx); }
 
     /*!
@@ -229,7 +229,7 @@ public:
      *
      * \param boundaryFaceIdx The local index of the boundary segment
      */
-    const Intersection &intersection(int boundaryFaceIdx) const
+    const Intersection &intersection(unsigned boundaryFaceIdx) const
     { return *intersectionIt_; }
 
     /*!

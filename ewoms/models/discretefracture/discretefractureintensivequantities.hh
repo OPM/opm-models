@@ -69,13 +69,13 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, int vertexIdx, int timeIdx)
+    void update(const ElementContext &elemCtx, unsigned vertexIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, vertexIdx, timeIdx);
 
         const auto &problem = elemCtx.problem();
         const auto &fractureMapper = problem.fractureMapper();
-        int globalVertexIdx = elemCtx.globalSpaceIndex(vertexIdx, timeIdx);
+        unsigned globalVertexIdx = elemCtx.globalSpaceIndex(vertexIdx, timeIdx);
 
         Valgrind::SetUndefined(fractureFluidState_);
         Valgrind::SetUndefined(fractureVolume_);
@@ -107,8 +107,8 @@ public:
         // account for this.
         fractureVolume_ = 0;
         const auto &vertexPos = elemCtx.pos(vertexIdx, timeIdx);
-        for (int vertex2Idx = 0; vertex2Idx < elemCtx.numDof(/*timeIdx=*/0); ++ vertex2Idx) {
-            int globalVertex2Idx = elemCtx.globalSpaceIndex(vertex2Idx, timeIdx);
+        for (unsigned vertex2Idx = 0; vertex2Idx < elemCtx.numDof(/*timeIdx=*/0); ++ vertex2Idx) {
+            unsigned globalVertex2Idx = elemCtx.globalSpaceIndex(vertex2Idx, timeIdx);
 
             if (vertexIdx == vertex2Idx ||
                 !fractureMapper.isFractureEdge(globalVertexIdx, globalVertex2Idx))
@@ -153,7 +153,7 @@ public:
         Scalar saturations[numPhases];
         MaterialLaw::saturations(saturations, fractureMatParams,
                                  fractureFluidState_);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fractureFluidState_.setSaturation(phaseIdx, saturations[phaseIdx]);
 
         // Make sure that the wetting saturation in the fracture does
@@ -179,7 +179,7 @@ public:
      *
      * \param phaseIdx The phase index
      */
-    Scalar fractureRelativePermeability(int phaseIdx) const
+    Scalar fractureRelativePermeability(unsigned phaseIdx) const
     { return fractureRelativePermeabilities_[phaseIdx]; }
 
     /*!
@@ -188,7 +188,7 @@ public:
      *
      * \param phaseIdx The phase index
      */
-    Scalar fractureMobility(int phaseIdx) const
+    Scalar fractureMobility(unsigned phaseIdx) const
     {
         return fractureRelativePermeabilities_[phaseIdx]
                / fractureFluidState_.viscosity(phaseIdx);

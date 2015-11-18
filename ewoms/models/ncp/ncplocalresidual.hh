@@ -74,16 +74,16 @@ public:
     template <class LhsEval>
     void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
                          const ElementContext &elemCtx,
-                         int dofIdx,
-                         int timeIdx,
-                         int phaseIdx) const
+                         unsigned dofIdx,
+                         unsigned timeIdx,
+                         unsigned phaseIdx) const
     {
         const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
         const auto &fluidState = intQuants.fluidState();
 
         // compute storage term of all components within all phases
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            int eqIdx = conti0EqIdx + compIdx;
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            unsigned eqIdx = conti0EqIdx + compIdx;
             storage[eqIdx] +=
                 Toolbox::template toLhs<LhsEval>(fluidState.molarity(phaseIdx, compIdx))
                 * Toolbox::template toLhs<LhsEval>(fluidState.saturation(phaseIdx))
@@ -99,11 +99,11 @@ public:
     template <class LhsEval>
     void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                         const ElementContext &elemCtx,
-                        int dofIdx,
-                        int timeIdx) const
+                        unsigned dofIdx,
+                        unsigned timeIdx) const
     {
         storage = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
         EnergyModule::addSolidHeatStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
@@ -113,7 +113,7 @@ public:
      * \copydoc ImmiscibleLocalResidual::computeFlux
      */
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
-                     int scvfIdx, int timeIdx) const
+                     unsigned scvfIdx, unsigned timeIdx) const
     {
         flux = Toolbox::createConstant(0.0);
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -127,15 +127,15 @@ public:
      * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
     void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          int scvfIdx, int timeIdx) const
+                          unsigned scvfIdx, unsigned timeIdx) const
     {
         const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-        int interiorIdx = extQuants.interiorIndex();
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        unsigned interiorIdx = extQuants.interiorIndex();
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream DOFs
             // of the current phase
-            int upIdx = extQuants.upstreamIndex(phaseIdx);
+            unsigned upIdx = extQuants.upstreamIndex(phaseIdx);
             const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
             // this is a bit hacky because it is specific to the element-centered
@@ -146,7 +146,7 @@ public:
                     up.fluidState().molarDensity(phaseIdx)
                     * extQuants.volumeFlux(phaseIdx);
 
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     flux[conti0EqIdx + compIdx] +=
                         tmp*up.fluidState().moleFraction(phaseIdx, compIdx);
                 }
@@ -156,7 +156,7 @@ public:
                     Toolbox::value(up.fluidState().molarDensity(phaseIdx))
                     * extQuants.volumeFlux(phaseIdx);
 
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     flux[conti0EqIdx + compIdx] +=
                         tmp*Toolbox::value(up.fluidState().moleFraction(phaseIdx, compIdx));
                 }
@@ -170,7 +170,7 @@ public:
      * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
     void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          int scvfIdx, int timeIdx) const
+                          unsigned scvfIdx, unsigned timeIdx) const
     {
         DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -184,8 +184,8 @@ public:
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
-                       int dofIdx,
-                       int timeIdx) const
+                       unsigned dofIdx,
+                       unsigned timeIdx) const
     {
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
@@ -198,11 +198,11 @@ public:
      */
     void evalConstraints_(ElemEvalEqVector& residual,
                           ElemEvalEqVector& storageTerm,
-                          const ElementContext& elemCtx, int timeIdx) const
+                          const ElementContext& elemCtx, unsigned timeIdx) const
     {
         // set the auxiliary functions
-        for (int dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 residual[dofIdx][ncp0EqIdx + phaseIdx] =
                     phaseNcp_(elemCtx, dofIdx, timeIdx, phaseIdx);
             }
@@ -216,9 +216,9 @@ public:
      * \brief Returns the value of the NCP-function for a phase.
      */
     Evaluation phaseNcp_(const ElementContext &elemCtx,
-                         int dofIdx,
-                         int timeIdx,
-                         int phaseIdx) const
+                         unsigned dofIdx,
+                         unsigned timeIdx,
+                         unsigned phaseIdx) const
     {
         const auto &fluidState = elemCtx.intensiveQuantities(dofIdx, timeIdx).fluidState();
 
@@ -232,7 +232,7 @@ public:
      *        present.
      */
     template <class FluidState>
-    Evaluation phasePresentIneq_(const FluidState &fluidState, int phaseIdx) const
+    Evaluation phasePresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
     { return fluidState.saturation(phaseIdx); }
 
     /*!
@@ -240,11 +240,11 @@ public:
      *        present.
      */
     template <class FluidState>
-    Evaluation phaseNotPresentIneq_(const FluidState &fluidState, int phaseIdx) const
+    Evaluation phaseNotPresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
     {
         // difference of sum of mole fractions in the phase from 100%
         Evaluation a = 1;
-        for (int i = 0; i < numComponents; ++i)
+        for (unsigned i = 0; i < numComponents; ++i)
             a -= fluidState.moleFraction(phaseIdx, i);
         return a;
     }

@@ -134,7 +134,7 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
+        for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto &fs = intQuants.fluidState();
@@ -144,7 +144,7 @@ public:
             if (heatConductivityOutput_())
                 heatConductivity_[I] = Toolbox::value(intQuants.heatConductivity());
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (enthalpyOutput_())
                     enthalpy_[phaseIdx][I] = Toolbox::value(fs.enthalpy(phaseIdx));
                 if (internalEnergyOutput_())

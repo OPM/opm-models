@@ -82,10 +82,10 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <bool prepareValues = true, bool prepareGradients = true>
-    void prepare(const ElementContext &elemCtx, int timeIdx)
+    void prepare(const ElementContext &elemCtx, unsigned timeIdx)
     {
         const auto &stencil = elemCtx.stencil(timeIdx);
-        for (int fapIdx = 0; fapIdx < stencil.numInteriorFaces(); ++ fapIdx) {
+        for (unsigned fapIdx = 0; fapIdx < stencil.numInteriorFaces(); ++ fapIdx) {
             const auto &scvf = stencil.interiorFace(fapIdx);
             const auto &normal = scvf.normal();
             const auto &interiorPos = stencil.subControlVolume(scvf.interiorIndex()).globalPos();
@@ -93,7 +93,7 @@ public:
 
             interiorDistance_[fapIdx] = 0;
             exteriorDistance_[fapIdx] = 0;
-            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
                 interiorDistance_[fapIdx] +=
                     (interiorPos[dimIdx] - scvf.integrationPos()[dimIdx])
                     * normal[dimIdx];
@@ -122,7 +122,7 @@ public:
      */
     template <class QuantityCallback>
     auto calculateValue(const ElementContext &elemCtx,
-                        int fapIdx,
+                        unsigned fapIdx,
                         const QuantityCallback &quantityCallback) const
         -> typename std::remove_reference<decltype(quantityCallback.operator()(0))>::type
     {
@@ -153,7 +153,7 @@ public:
     template <class QuantityCallback>
     void calculateGradient(EvalDimVector &quantityGrad,
                            const ElementContext &elemCtx,
-                           int fapIdx,
+                           unsigned fapIdx,
                            const QuantityCallback &quantityCallback) const
     {
         const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
@@ -174,7 +174,7 @@ public:
             - quantityCallback(face.interiorIndex());
 
         Scalar distSquared = 0;
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             quantityGrad[dimIdx] = deltay;
 
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
@@ -185,7 +185,7 @@ public:
         // sub-control volumes: the gradient is the normalized directional vector between
         // the two centers times the ratio of the difference of the values and their
         // distance, i.e., d/abs(d) * delta y / abs(d) = d*delta y / abs(d)^2.
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
             quantityGrad[dimIdx] *= tmp/distSquared;
         }
@@ -207,7 +207,7 @@ public:
      */
     template <class QuantityCallback>
     auto calculateBoundaryValue(const ElementContext &elemCtx,
-                                int fapIdx,
+                                unsigned fapIdx,
                                 const QuantityCallback &quantityCallback)
         -> decltype(quantityCallback.boundaryValue())
     { return quantityCallback.boundaryValue(); }
@@ -229,7 +229,7 @@ public:
     template <class QuantityCallback>
     void calculateBoundaryGradient(EvalDimVector &quantityGrad,
                                    const ElementContext &elemCtx,
-                                   int faceIdx,
+                                   unsigned faceIdx,
                                    const QuantityCallback &quantityCallback) const
     {
         const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
@@ -241,7 +241,7 @@ public:
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
 
         Scalar distSquared = 0;
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
 
@@ -253,7 +253,7 @@ public:
         // normalized directional vector between the two centers times the ratio of the
         // difference of the values and their distance, i.e., d/abs(d) * deltay / abs(d)
         // = d*deltay / abs(d)^2.
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
             quantityGrad[dimIdx] *= tmp/distSquared;
         }

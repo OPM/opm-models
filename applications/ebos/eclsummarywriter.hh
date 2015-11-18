@@ -89,9 +89,9 @@ class EclSummaryWriter
         smspec_node_type* woptErtHandle;
     };
 
-    static const int waterPhaseIdx = FluidSystem::waterPhaseIdx;
-    static const int gasPhaseIdx = FluidSystem::gasPhaseIdx;
-    static const int oilPhaseIdx = FluidSystem::oilPhaseIdx;
+    static const unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
+    static const unsigned gasPhaseIdx = FluidSystem::gasPhaseIdx;
+    static const unsigned oilPhaseIdx = FluidSystem::oilPhaseIdx;
 
 public:
     EclSummaryWriter(const Simulator &simulator)
@@ -119,7 +119,7 @@ public:
      */
     void write(const WellManager& wellsManager, bool isInitial = false)
     {
-        int reportIdx = simulator_.episodeIndex();
+        unsigned reportIdx = simulator_.episodeIndex();
         Scalar t = simulator_.time();
         if (!isInitial) {
             t += simulator_.timeStepSize();
@@ -132,7 +132,7 @@ public:
         const auto& deckUnits = simulator_.problem().deckUnits();
 
         // add the well quantities
-        for (int wellIdx = 0; wellIdx < wellsManager.numWells(); ++wellIdx) {
+        for (unsigned wellIdx = 0; wellIdx < wellsManager.numWells(); ++wellIdx) {
             const auto& well = wellsManager.well(wellIdx);
             const auto& summaryInfo = ertWellInfo_.at(well->name());
 
@@ -507,9 +507,9 @@ private:
                 "FAQR", "FAQRG", "AAQR", "AAQRG",
                 "FAQT", "FAQTG", "AAQT", "AAQTG",
         };
-        int numSummaryKeywords = sizeof(allKw)/sizeof(allKw[0]);
+        unsigned numSummaryKeywords = sizeof(allKw)/sizeof(allKw[0]);
 
-        for (int kwIdx = 0; kwIdx < numSummaryKeywords; ++kwIdx)
+        for (unsigned kwIdx = 0; kwIdx < numSummaryKeywords; ++kwIdx)
             summaryKeywords_.insert(allKw[kwIdx]);
     }
 
