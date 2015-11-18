@@ -72,7 +72,7 @@ SET_TYPE_PROP(FlashModel, FlashSolver,
                             typename GET_PROP_TYPE(TypeTag, FluidSystem)>);
 
 //! Let the flash solver choose its tolerance by default
-SET_SCALAR_PROP(FlashModel, FlashTolerance, 0.0);
+SET_SCALAR_PROP(FlashModel, FlashTolerance, -1.0);
 
 //! the Model property
 SET_TYPE_PROP(FlashModel, Model, Ewoms::FlashModel<TypeTag>);
