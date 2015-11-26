@@ -84,7 +84,7 @@ public:
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
-        int pvtRegionIdx = priVars.pvtRegionIndex();
+        pvtRegionIdx_ = priVars.pvtRegionIndex();
 
         // extract the water and the gas saturations for convenience
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
@@ -98,6 +98,9 @@ public:
             assert(priVars.switchingVarMeaning() == PrimaryVariables::GasMoleFractionInOil);
             Sg = 0.0;
         }
+
+        Valgrind::CheckDefined(Sg);
+        Valgrind::CheckDefined(Sw);
 
         fluidState_.setSaturation(waterPhaseIdx, Sw);
         fluidState_.setSaturation(gasPhaseIdx, Sg);
@@ -139,13 +142,13 @@ public:
             // gas-saturated oil and oil-saturated gas.
             Evaluation xoG = 0.0;
             if (FluidSystem::enableDissolvedGas())
-                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
+                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
 
             Evaluation xgO = 0.0;
             if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, pvtRegionIdx_);
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -159,7 +162,7 @@ public:
 
             Evaluation xgO = 0.0;
             if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, /*regionIdx=*/0);
+                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, pvtRegionIdx_);
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -175,7 +178,7 @@ public:
 
             Evaluation xoG = 0.0;
             if (FluidSystem::enableDissolvedGas())
-                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, /*regionIdx=*/0);
+                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }
@@ -186,7 +189,7 @@ public:
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.setRegionIndex(pvtRegionIdx);
+        paramCache.setRegionIndex(pvtRegionIdx_);
         paramCache.updateAll(fluidState_);
 
         // set the phase densities and viscosities
@@ -266,12 +269,29 @@ public:
     const Evaluation& porosity() const
     { return porosity_; }
 
+    /*!
+     * \brief Returns the index of the PVT region used to calculate the thermodynamic
+     *        quantities.
+     *
+     * This allows to specify different Pressure-Volume-Temperature (PVT) relations in
+     * different parts of the spatial domain. Note that this concept should be seen as a
+     * work-around of the fact that the black-oil model does not capture the
+     * thermodynamics well enough. (Because there is, err, only a single real world with
+     * in which all substances follow the same physical laws and hence the same
+     * thermodynamics.) Anyway: Since the ECL file format uses multiple PVT regions, we
+     * support it as well in our black-oil model. (Note that, if it is not explicitly
+     * specified, the PVT region index is 0.)
+     */
+    int pvtRegionIndex() const
+    { return pvtRegionIdx_; }
+
 private:
     FluidState fluidState_;
     Evaluation porosity_;
     DimMatrix intrinsicPerm_;
     Evaluation relativePermeability_[numPhases];
     Evaluation mobility_[numPhases];
+    int pvtRegionIdx_;
 };
 
 } // namespace Ewoms
