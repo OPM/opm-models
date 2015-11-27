@@ -172,7 +172,7 @@ public:
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updateIntensiveQuantities(unsigned timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numDof(/*timeIdx=*/0)); }
+    { updateIntensiveQuantities_(timeIdx, numDof(timeIdx)); }
 
     /*!
      * \brief Compute the intensive quantities of all sub-control volumes of the current
@@ -181,7 +181,7 @@ public:
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updatePrimaryIntensiveQuantities(unsigned timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(/*timeIdx=*/0)); }
+    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(timeIdx)); }
 
     /*!
      * \brief Compute the intensive quantities of a single sub-control volume of the
@@ -365,7 +365,15 @@ public:
      */
     const IntensiveQuantities &intensiveQuantities(unsigned dofIdx, unsigned timeIdx) const
     {
+#ifndef NDEBUG
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
+
+        if (enableStorageCache_ && timeIdx != 0)
+            OPM_THROW(std::logic_error,
+                      "If caching of the storage term is enabled, only the intensive quantities "
+                      "for the most-recent substep (i.e. time index 0) are available!");
+#endif
+
         return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
@@ -497,6 +505,13 @@ protected:
 
     void updateSingleIntQuants_(const PrimaryVariables &priVars, unsigned dofIdx, unsigned timeIdx)
     {
+#ifndef NDEBUG
+        if (enableStorageCache_ && timeIdx != 0)
+            OPM_THROW(std::logic_error,
+                      "If caching of the storage term is enabled, only the intensive quantities "
+                      "for the most-recent substep (i.e. time index 0) are available!");
+#endif
+
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
         dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
     }

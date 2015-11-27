@@ -605,6 +605,15 @@ public:
     }
 
     /*!
+     * \brief Returns true iff the storage term is cached.
+     *
+     * Be aware that calling the *CachedStorage() methods if the storage cache is
+     * disabled will crash the program.
+     */
+    bool enableStorageCache() const
+    { return enableStorageCache_; }
+
+    /*!
      * \brief Retrieve an entry of the cache for the storage term.
      *
      * This is supposed to represent a DOF's total amount of conservation quantities per
@@ -750,7 +759,9 @@ public:
                     continue; // ignore ghost and overlap elements
 
                 elemCtx.updateStencil(elem);
-                elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
+
+                if (timeIdx == 0 || !enableStorageCache())
+                    elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
                 unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 elemStorage.resize(numPrimaryDof);
