@@ -164,7 +164,7 @@ public:
 
         // compute the base name of the input file name
         const char directorySeparator = '/';
-        unsigned i;
+        long int i;
         for (i = fileName.size(); i >= 0; -- i)
             if (fileName[i] == directorySeparator)
                 break;
