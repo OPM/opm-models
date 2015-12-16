@@ -209,6 +209,9 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
 // disable partial relinearization by default
 SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
 
+// disable caching the storage term by default
+SET_BOOL_PROP(FvBaseDiscretization, EnableStorageCache, false);
+
 // disable constraints by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableConstraints, false);
 
@@ -302,6 +305,8 @@ public:
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
     {
+        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
+
         asImp_().updateBoundary_();
 
         unsigned nDofs = asImp_().numGridDof();
@@ -312,6 +317,9 @@ public:
                 intensiveQuantityCache_[timeIdx].resize(nDofs);
                 intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
             }
+
+            if (enableStorageCache_)
+                storageCache_[timeIdx].resize(nDofs);
         }
 
         asImp_().registerOutputModules_();
@@ -347,6 +355,7 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableStorageCache, "Store previous storage terms and avoid re-calculating them.");
     }
 
     /*!
@@ -596,6 +605,48 @@ public:
     }
 
     /*!
+     * \brief Returns true iff the storage term is cached.
+     *
+     * Be aware that calling the *CachedStorage() methods if the storage cache is
+     * disabled will crash the program.
+     */
+    bool enableStorageCache() const
+    { return enableStorageCache_; }
+
+    /*!
+     * \brief Retrieve an entry of the cache for the storage term.
+     *
+     * This is supposed to represent a DOF's total amount of conservation quantities per
+     * volume unit at a given time. The user is responsible for making sure that the
+     * value of this is correct and that it can be used before this method is called.
+     *
+     * \param globalDofIdx The index of the relevant degree of freedom in a grid-global vector
+     * \param timeIdx The relevant index for the time discretization
+     */
+    const EqVector& cachedStorage(int globalIdx, int timeIdx) const
+    {
+        assert(enableStorageCache_);
+        return storageCache_[timeIdx][globalIdx];
+    }
+
+    /*!
+     * \brief Set an entry of the cache for the storage term.
+     *
+     * This is supposed to represent a DOF's total amount of conservation quantities per
+     * volume unit at a given time. The user is responsible for making sure that the
+     * storage cache is enabled before this method is called.
+     *
+     * \param globalDofIdx The index of the relevant degree of freedom in a grid-global vector
+     * \param timeIdx The relevant index for the time discretization
+     * \param value The new value of the cache for the storage term
+     */
+    void updateCachedStorage(int globalIdx, int timeIdx, const EqVector& value) const
+    {
+        assert(enableStorageCache_);
+        storageCache_[timeIdx][globalIdx] = value;
+    }
+
+    /*!
      * \brief Compute the global residual for an arbitrary solution
      *        vector.
      *
@@ -708,7 +759,9 @@ public:
                     continue; // ignore ghost and overlap elements
 
                 elemCtx.updateStencil(elem);
-                elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
+
+                if (timeIdx == 0 || !enableStorageCache())
+                    elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
                 unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 elemStorage.resize(numPrimaryDof);
@@ -1555,6 +1608,9 @@ protected:
     Scalar gridTotalVolume_;
     std::vector<Scalar> dofTotalVolume_;
     std::vector<bool> isLocalDof_;
+
+    mutable GlobalEqVector storageCache_[historySize];
+    bool enableStorageCache_;
 };
 } // namespace Ewoms
 

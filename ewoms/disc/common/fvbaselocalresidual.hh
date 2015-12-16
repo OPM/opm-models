@@ -26,6 +26,8 @@
 #ifndef EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 #define EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 
+#include <ewoms/common/parametersystem.hh>
+
 #include <opm/material/common/Valgrind.hpp>
 
 #include <dune/istl/bvector.hh>
@@ -82,7 +84,9 @@ private:
 
 public:
     FvBaseLocalResidual()
-    { }
+    {
+        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
+    }
 
     ~FvBaseLocalResidual()
     { }
@@ -106,7 +110,7 @@ public:
      *
      * \copydetails Doxygen::ecfvScvIdxParam
      */
-    const VectorBlock &residual(int dofIdx) const
+    const VectorBlock &residual(unsigned dofIdx) const
     { return internalResidual_[dofIdx]; }
 
     /*!
@@ -122,7 +126,7 @@ public:
      *
      * \copydetails Doxygen::ecfvScvIdxParam
      */
-    const VectorBlock &storageTerm(int dofIdx) const
+    const VectorBlock &storageTerm(unsigned dofIdx) const
     { return internalStorageTerm_[dofIdx]; }
 
     /*!
@@ -155,8 +159,8 @@ public:
      */
     void eval(const ElementContext &elemCtx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         internalResidual_.resize(numDof);
         internalStorageTerm_.resize(numPrimaryDof);
         asImp_().eval(internalResidual_, internalStorageTerm_, elemCtx);
@@ -189,13 +193,13 @@ public:
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
 
-        // evaluate the constraint DOFs
+        // evaluate the constraunsigned DOFs
         asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);;
-        for (int dofIdx=0; dofIdx < numDof; ++dofIdx) {
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);;
+        for (unsigned dofIdx=0; dofIdx < numDof; ++dofIdx) {
             if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
                 // interior DOF
                 Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
@@ -203,7 +207,7 @@ public:
                 assert(std::isfinite(dofVolume));
                 Valgrind::CheckDefined(dofVolume);
 
-                for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                     residual[dofIdx][eqIdx] /= dofVolume;
             }
         }
@@ -219,9 +223,9 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalStorage(const ElementContext &elemCtx, int timeIdx)
+    void evalStorage(const ElementContext &elemCtx, unsigned timeIdx)
     {
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         internalStorageTerm_.resize(numPrimaryDof);
         evalStorage(internalStorageTerm_,
                     elemCtx,
@@ -241,7 +245,7 @@ public:
      */
     void evalStorage(LocalBlockVector &storage,
                      const ElementContext &elemCtx,
-                     int timeIdx) const
+                     unsigned timeIdx) const
     {
         if (timeIdx == 0) {
             // for the most current solution, the storage term depends on the current
@@ -249,12 +253,12 @@ public:
 
             // calculate the amount of conservation each quantity inside
             // all primary sub control volumes
-            int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-            for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
+            unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+            for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                 storage[dofIdx] = 0.0;
                 asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
 
-                for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                     storage[dofIdx][eqIdx] *=
                         elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
                         * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
@@ -264,24 +268,31 @@ public:
         else {
             // for all previous solutions, the storage term does _not_ depend on the
             // current primary variables, so we use scalars to store it.
+            if (elemCtx.model().enableStorageCache()) {
+                unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
+                for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
+                    unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+                    storage[dofIdx] = elemCtx.model().cachedStorage(globalDofIdx, timeIdx);
+                }
+            }
+            else {
+                // calculate the amount of conservation each quantity inside
+                // all primary sub control volumes
+                Dune::FieldVector<Scalar, numEq> tmp;
+                unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+                for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
+                    tmp = 0.0;
+                    asImp_().computeStorage(tmp,
+                                            elemCtx,
+                                            dofIdx,
+                                            timeIdx);
+                    tmp *=
+                        elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
+                        * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
 
-            // calculate the amount of conservation each quantity inside
-            // all primary sub control volumes
-            Dune::FieldVector<Scalar, numEq> tmp;
-            int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-            for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
-                tmp = 0.0;
-                asImp_().computeStorage(tmp,
-                                        elemCtx,
-                                        dofIdx,
-                                        timeIdx);
-                tmp *=
-                    elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
-                    * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
-
-
-                for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                    storage[dofIdx][eqIdx] = tmp[eqIdx];
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                        storage[dofIdx][eqIdx] = tmp[eqIdx];
+                }
             }
         }
     }
@@ -295,17 +306,17 @@ public:
      */
     void evalFluxes(LocalBlockVector &residual,
                     const ElementContext &elemCtx,
-                    int timeIdx) const
+                    unsigned timeIdx) const
     {
         RateVector flux;
 
         const auto &stencil = elemCtx.stencil(timeIdx);
         // calculate the mass flux over the sub-control volume faces
-        int numInteriorFaces = elemCtx.numInteriorFaces(timeIdx);
-        for (int scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
+        unsigned numInteriorFaces = elemCtx.numInteriorFaces(timeIdx);
+        for (unsigned scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
             const auto &face = stencil.interiorFace(scvfIdx);
-            int i = face.interiorIndex();
-            int j = face.exteriorIndex();
+            unsigned i = face.interiorIndex();
+            unsigned j = face.exteriorIndex();
 
             Valgrind::SetUndefined(flux);
             asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx, timeIdx);
@@ -314,7 +325,7 @@ public:
             Scalar alpha = elemCtx.extensiveQuantities(scvfIdx, timeIdx).extrusionFactor();
             alpha *= face.area();
             Valgrind::CheckDefined(alpha);
-            for (int eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 flux[eqIdx] *= alpha;
 
             // The balance equation for a finite volume is given by
@@ -336,9 +347,9 @@ public:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual is well-defined
-        int numDof = elemCtx.numDof(timeIdx);
-        for (int i=0; i < numDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
+        unsigned numDof = elemCtx.numDof(timeIdx);
+        for (unsigned i=0; i < numDof; i++) {
+            for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
                 Valgrind::CheckDefined(residual[i][j]);
             }
@@ -361,8 +372,8 @@ public:
      */
     void computeStorage(EqVector &storage,
                         const ElementContext &elemCtx,
-                        int dofIdx,
-                        int timeIdx) const
+                        unsigned dofIdx,
+                        unsigned timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: The local residual " << Opm::className<Implementation>()
@@ -378,8 +389,8 @@ public:
      */
     void computeFlux(RateVector &flux,
                      const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+                     unsigned scvfIdx,
+                     unsigned timeIdx) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: The local residual " << Opm::className<Implementation>()
@@ -394,8 +405,8 @@ public:
      */
     void computeSource(RateVector &source,
                        const ElementContext &elemCtx,
-                       int dofIdx,
-                       int timeIdx) const
+                       unsigned dofIdx,
+                       unsigned timeIdx) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: The local residual " << Opm::className<Implementation>()
@@ -408,7 +419,7 @@ protected:
      */
     void evalBoundary_(LocalBlockVector &residual,
                        const ElementContext &elemCtx,
-                       int timeIdx) const
+                       unsigned timeIdx) const
     {
         if (!elemCtx.onBoundary())
             return;
@@ -416,8 +427,8 @@ protected:
         BoundaryContext boundaryCtx(elemCtx);
 
         // evaluate the boundary for all boundary faces of the current context
-        int numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
-        for (int faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx) {
+        unsigned numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
+        for (unsigned faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx) {
             // add the residual of all vertices of the boundary
             // segment
             evalBoundarySegment_(residual,
@@ -428,9 +439,9 @@ protected:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual and the storage terms are well-defined
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int i=0; i < numDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (unsigned i=0; i < numDof; i++) {
+            for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
                 Valgrind::CheckDefined(residual[i][j]);
             }
@@ -445,8 +456,8 @@ protected:
      */
     void evalBoundarySegment_(LocalBlockVector &residual,
                               const BoundaryContext &boundaryCtx,
-                              int boundaryFaceIdx,
-                              int timeIdx) const
+                              unsigned boundaryFaceIdx,
+                              unsigned timeIdx) const
     {
         BoundaryRateVector values;
 
@@ -458,7 +469,7 @@ protected:
         Valgrind::CheckDefined(values);
 
         const auto &stencil = boundaryCtx.stencil(timeIdx);
-        int dofIdx = stencil.boundaryFace(boundaryFaceIdx).interiorIndex();
+        unsigned dofIdx = stencil.boundaryFace(boundaryFaceIdx).interiorIndex();
         const auto &insideIntQuants = boundaryCtx.elementContext().intensiveQuantities(dofIdx, timeIdx);
         for (unsigned eqIdx = 0; eqIdx < values.size(); ++eqIdx)
             values[eqIdx] *=
@@ -471,12 +482,12 @@ protected:
     }
 
     /*!
-     * \brief Set the values of the constraint volumes of the current element.
+     * \brief Set the values of the constraunsigned volumes of the current element.
      */
     void evalConstraints_(LocalBlockVector &residual,
                           LocalBlockVector &storage,
                           const ElementContext &elemCtx,
-                          int timeIdx) const
+                          unsigned timeIdx) const
     {
         if (!GET_PROP_VALUE(TypeTag, EnableConstraints))
             return;
@@ -484,9 +495,9 @@ protected:
         const auto &problem = elemCtx.problem();
         Constraints constraints;
         ConstraintsContext constraintsCtx(elemCtx);
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
-            // ask the problem for the constraint values
+        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
+            // ask the problem for the constraunsigned values
             constraints.reset();
             problem.constraints(constraints, elemCtx, dofIdx, timeIdx);
 
@@ -495,11 +506,11 @@ protected:
 
             // enforce the constraints
             const PrimaryVariables &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (!constraints.isConstraint(eqIdx))
                     continue;
 
-                int pvIdx = constraints.eqToPvIndex(eqIdx);
+                unsigned pvIdx = constraints.eqToPvIndex(eqIdx);
 
                 assert(0 <= pvIdx && pvIdx < numEq);
                 Valgrind::CheckDefined(constraints[pvIdx]);
@@ -511,16 +522,16 @@ protected:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual and the storage terms are well-defined
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int i=0; i < numDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (unsigned i=0; i < numDof; i++) {
+            for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
                 Valgrind::CheckDefined(residual[i][j]);
             }
         }
 
-        for (int i=0; i < numPrimaryDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
+        for (unsigned i=0; i < numPrimaryDof; i++) {
+            for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(storage[i][j])));
                 Valgrind::CheckDefined(storage[i][j]);
             }
@@ -545,8 +556,8 @@ protected:
         tmp2 = 0.0;
 
         // evaluate the volumetric terms (storage + source terms)
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
+        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
             Scalar extrusionFactor =
                 elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
             Scalar scvVolume =
@@ -565,14 +576,39 @@ protected:
                                     /*timeIdx=*/0);
             Valgrind::CheckDefined(tmp);
 
-            asImp_().computeStorage(tmp2,
-                                    elemCtx,
-                                    dofIdx,
-                                    /*timeIdx=*/1);
-            Valgrind::CheckDefined(tmp2);
+            if (enableStorageCache_) {
+                const auto& model = elemCtx.model();
+                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                if (model.newtonMethod().numIterations() == 0) {
+                    // if the storage term is cached and we're in the first iteration of
+                    // the time step, update the storage term cache (this assumes that
+                    // the initial solution is the same for each time index.)
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
+                    Valgrind::CheckDefined(tmp2);
+
+                    model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
+                }
+                else {
+                    // if the storage term is cached and we're not looking at the first
+                    // iteration of the time step, we take the cached data.
+                    tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
+                    Valgrind::CheckDefined(tmp2);
+                }
+            }
+            else {
+                // if the mass storage at the beginning of the time step is not cached,
+                // we re-calculate it from scratch.
+                tmp2 = 0.0;
+                asImp_().computeStorage(tmp2,
+                                        elemCtx,
+                                        dofIdx,
+                                        /*timeIdx=*/1);
+                Valgrind::CheckDefined(tmp2);
+            }
 
             tmp -= tmp2;
-            for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
+            for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++)
                 tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
 
             storage[dofIdx] += tmp;
@@ -581,9 +617,9 @@ protected:
             Valgrind::CheckDefined(storage[dofIdx]);
             Valgrind::CheckDefined(residual[dofIdx]);
 
-            // subtract the source term from the residual
+            // deal with the source term
             asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
-            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
                 sourceRate[eqIdx] *= scvVolume;
             residual[dofIdx] -= sourceRate;
 
@@ -592,16 +628,16 @@ protected:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual and the storage terms are well-defined
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int i=0; i < numDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (unsigned i=0; i < numDof; i++) {
+            for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
                 Valgrind::CheckDefined(residual[i][j]);
             }
         }
 
-        for (int i=0; i < numPrimaryDof; i++) {
-            for (int j = 0; j < numEq; ++ j) {
+        for (unsigned i=0; i < numPrimaryDof; i++) {
+            for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(storage[i][j])));
                 Valgrind::CheckDefined(storage[i][j]);
             }
@@ -622,6 +658,8 @@ private:
       assert(static_cast<const Implementation*>(this) != 0);
       return *static_cast<const Implementation*>(this);
     }
+
+    bool enableStorageCache_;
 
     LocalBlockVector internalResidual_;
     LocalBlockVector internalStorageTerm_;

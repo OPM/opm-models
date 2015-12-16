@@ -91,6 +91,7 @@ public:
     {
         // remember the simulator object
         simulatorPtr_ = &simulator;
+        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
     }
 
     /*!
@@ -151,8 +152,17 @@ public:
      */
     void updateAllIntensiveQuantities()
     {
-        for (unsigned timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
-            updateIntensiveQuantities(timeIdx);
+        if (!enableStorageCache_) {
+            // if the storage cache is disabled, we need to calculate the storage term
+            // from scratch, i.e. we need the intensive quantities of all of the history.
+            for (unsigned timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
+                updateIntensiveQuantities(timeIdx);
+        }
+        else
+            // if the storage cache is enabled, we only need to recalculate the storage
+            // term for the most recent point of history (i.e., for the current iterative
+            // solution)
+            updateIntensiveQuantities(/*timeIdx=*/0);
     }
 
     /*!
@@ -162,7 +172,7 @@ public:
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updateIntensiveQuantities(unsigned timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numDof(/*timeIdx=*/0)); }
+    { updateIntensiveQuantities_(timeIdx, numDof(timeIdx)); }
 
     /*!
      * \brief Compute the intensive quantities of all sub-control volumes of the current
@@ -171,7 +181,7 @@ public:
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updatePrimaryIntensiveQuantities(unsigned timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(/*timeIdx=*/0)); }
+    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(timeIdx)); }
 
     /*!
      * \brief Compute the intensive quantities of a single sub-control volume of the
@@ -188,7 +198,7 @@ public:
         updateSingleIntQuants_(priVars, dofIdx, timeIdx);
 
         // update gradients inside a sub control volume
-        unsigned nDof = numDof(/*timeIdx=*/0);
+        unsigned nDof = numDof(timeIdx);
         for (unsigned gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
             dofVars_[gradDofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
                                                                                  gradDofIdx,
@@ -355,7 +365,15 @@ public:
      */
     const IntensiveQuantities &intensiveQuantities(unsigned dofIdx, unsigned timeIdx) const
     {
+#ifndef NDEBUG
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
+
+        if (enableStorageCache_ && timeIdx != 0)
+            OPM_THROW(std::logic_error,
+                      "If caching of the storage term is enabled, only the intensive quantities "
+                      "for the most-recent substep (i.e. time index 0) are available!");
+#endif
+
         return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
@@ -487,12 +505,20 @@ protected:
 
     void updateSingleIntQuants_(const PrimaryVariables &priVars, unsigned dofIdx, unsigned timeIdx)
     {
+#ifndef NDEBUG
+        if (enableStorageCache_ && timeIdx != 0)
+            OPM_THROW(std::logic_error,
+                      "If caching of the storage term is enabled, only the intensive quantities "
+                      "for the most-recent substep (i.e. time index 0) are available!");
+#endif
+
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
         dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
     }
 
     DofVarsVector dofVars_;
 
+    bool enableStorageCache_;
     IntensiveQuantities intensiveQuantitiesSaved_;
     PrimaryVariables priVarsSaved_;
 
