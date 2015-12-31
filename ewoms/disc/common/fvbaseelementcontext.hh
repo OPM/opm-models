@@ -92,6 +92,7 @@ public:
         // remember the simulator object
         simulatorPtr_ = &simulator;
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
+        haveStashedIntensiveQuantities_ = false;
     }
 
     /*!
@@ -152,6 +153,8 @@ public:
      */
     void updateAllIntensiveQuantities()
     {
+        haveStashedIntensiveQuantities_ = false;
+
         if (!enableStorageCache_) {
             // if the storage cache is disabled, we need to calculate the storage term
             // from scratch, i.e. we need the intensive quantities of all of the history.
@@ -422,16 +425,26 @@ public:
     }
 
     /*!
+     * \brief Returns true if no intensive quanties are stashed
+     *
+     * In most cases quantities are stashed only if a partial derivative is to be
+     * calculated via finite difference methods.
+     */
+    bool haveStashedIntensiveQuantities() const
+    { return haveStashedIntensiveQuantities_; }
+
+    /*!
      * \brief Stash the intensive quantities for a degree of freedom on internal memory.
      *
      * \param dofIdx The local index of the degree of freedom in the current element.
      */
-    void saveIntensiveQuantities(unsigned dofIdx)
+    void stashIntensiveQuantities(unsigned dofIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(/*timeIdx=*/0));
 
-        intensiveQuantitiesSaved_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
-        priVarsSaved_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
+        intensiveQuantitiesStashed_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
+        priVarsStashed_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
+        haveStashedIntensiveQuantities_ = true;
     }
 
     /*!
@@ -441,8 +454,9 @@ public:
      */
     void restoreIntensiveQuantities(unsigned dofIdx)
     {
-        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
-        dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesSaved_;
+        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsStashed_;
+        dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesStashed_;
+        haveStashedIntensiveQuantities_ = false;
     }
 
     /*!
@@ -519,8 +533,9 @@ protected:
     DofVarsVector dofVars_;
 
     bool enableStorageCache_;
-    IntensiveQuantities intensiveQuantitiesSaved_;
-    PrimaryVariables priVarsSaved_;
+    bool haveStashedIntensiveQuantities_;
+    IntensiveQuantities intensiveQuantitiesStashed_;
+    PrimaryVariables priVarsStashed_;
 
     GradientCalculator gradientCalculator_;
 

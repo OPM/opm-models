@@ -579,7 +579,9 @@ protected:
             if (enableStorageCache_) {
                 const auto& model = elemCtx.model();
                 unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (model.newtonMethod().numIterations() == 0) {
+                if (model.newtonMethod().numIterations() == 0 &&
+                    !elemCtx.haveStashedIntensiveQuantities())
+                {
                     // if the storage term is cached and we're in the first iteration of
                     // the time step, update the storage term cache (this assumes that
                     // the initial solution is the same for each time index.)

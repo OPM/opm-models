@@ -587,6 +587,14 @@ public:
         if (!storeIntensiveQuantities())
             return;
 
+        if (enableStorageCache())
+            // if the storage term is cached, the intensive quantities of the previous
+            // time steps do not need to be accessed, and we can thus spare ourselves to
+            // copy the objects for the intensive quantities.
+            return;
+
+        assert(numSlots > 0);
+
         for (unsigned timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
             intensiveQuantityCache_[timeIdx + numSlots] = intensiveQuantityCache_[timeIdx];
             intensiveQuantityCacheUpToDate_[timeIdx + numSlots] = intensiveQuantityCacheUpToDate_[timeIdx];
