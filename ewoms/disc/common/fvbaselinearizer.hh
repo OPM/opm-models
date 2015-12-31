@@ -75,6 +75,7 @@ class FvBaseLinearizer
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
@@ -198,6 +199,14 @@ public:
     const GlobalEqVector &residual() const
     { return residual_; }
 
+    /*!
+     * \brief Returns the map of constraint degrees of freedom.
+     *
+     * (This object is only non-empty if the EnableConstraints property is true.)
+     */
+    const std::map<int, Constraints>& constraintsMap() const
+    { return constraintsMap_; }
+
 private:
     Simulator &simulator_()
     { return *simulatorPtr_; }
@@ -296,6 +305,7 @@ private:
     // reset the global linear system of equations.
     void resetSystem_()
     {
+        constraintsMap_.clear();
         residual_ = 0.0;
         (*matrix_) = 0;
     }
@@ -326,6 +336,8 @@ private:
         }
 
         linearizeAuxiliaryEquations_();
+
+        linearizeConstraints_();
     }
 
     // linearize an element in the interior of the process' grid partition
@@ -345,6 +357,19 @@ private:
         unsigned numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
         for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
             int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
+
+            // deal with constraint degrees of freedom
+            if (enableConstraints_()) {
+                Constraints constraints;
+                elementCtx->problem().constraints(constraints,
+                                                  *elementCtx,
+                                                  primaryDofIdx,
+                                                  /*timeIdx=*/0);
+                if (constraints.isActive()) {
+                    constraintsMap_[globI] = constraints;
+                    continue;
+                }
+            }
 
             // update the right hand side
             residual_[globI] += localLinearizer.residual(primaryDofIdx);
@@ -366,13 +391,51 @@ private:
             model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
     }
 
+    // apply the constraints to the linearized system of equations. (i.e., the
+    // Jacobian matrix becomes trivial and the right hand side zero)
+    void linearizeConstraints_()
+    {
+        if (!enableConstraints_())
+            return;
+
+        MatrixBlock idBlock = 0.0;
+        for (int i = 0; i < numEq; ++i)
+            idBlock[i][i] = 1.0;
+
+        auto it = constraintsMap_.begin();
+        const auto& endIt = constraintsMap_.end();
+        for (; it != endIt; ++it) {
+            int constraintDofIdx = it->first;
+
+            // reset the column of the Jacobian matrix
+            auto colIt = (*matrix_)[constraintDofIdx].begin();
+            const auto& colEndIt = (*matrix_)[constraintDofIdx].end();
+            for (; colIt != colEndIt; ++colIt)
+                *colIt = 0.0;
+
+            // put an identity matrix on the main diagonal of the Jacobian
+            (*matrix_)[constraintDofIdx][constraintDofIdx] = idBlock;
+
+            // make the right-hand side of constraint DOFs zero
+            residual_[constraintDofIdx] = 0.0;
+        }
+    }
+
+    static bool enableConstraints_()
+    { return GET_PROP_VALUE(TypeTag, EnableConstraints); }
+
     Simulator *simulatorPtr_;
     std::vector<ElementContext*> elementCtx_;
+
+    // The constraint equations (only non-empty if the
+    // EnableConstraints property is true)
+    std::map<int, Constraints> constraintsMap_;
 
     // the jacobian matrix
     Matrix *matrix_;
     // the right-hand side
     GlobalEqVector residual_;
+
 
     OmpMutex globalMatrixMutex_;
 };

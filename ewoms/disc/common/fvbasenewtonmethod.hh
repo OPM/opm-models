@@ -128,10 +128,6 @@ protected:
                  const GlobalEqVector &solutionUpdate,
                  const GlobalEqVector &currentResidual)
     {
-        // first, write out the next solution to make convergence
-        // analysis possible
-        this->writeConvergence_(currentSolution, solutionUpdate);
-
         ParentType::update_(nextSolution, currentSolution, solutionUpdate, currentResidual);
 
         // make sure that the intensive quantities get recalculated at the next

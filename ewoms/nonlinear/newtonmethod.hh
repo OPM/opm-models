@@ -82,6 +82,12 @@ NEW_PROP_TAG(SolutionVector);
 //! Specifies the type of a solution for a single degee of freedom
 NEW_PROP_TAG(PrimaryVariables);
 
+//! Specifies whether the problem to be simulated exhibits contraint degrees of freedom
+NEW_PROP_TAG(EnableConstraints);
+
+//! Specifies the type of objects which specify constraints for a single degee of freedom
+NEW_PROP_TAG(Constraints);
+
 //! Vector containing a quantity of for equation on the whole grid
 NEW_PROP_TAG(GlobalEqVector);
 
@@ -170,6 +176,7 @@ class NewtonMethod
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
@@ -583,18 +590,26 @@ protected:
                       const GlobalEqVector &currentResidual,
                       const GlobalEqVector &solutionUpdate)
     {
+        const auto& constraintsMap = model().linearizer().constraintsMap();
         lastError_ = error_;
 
         // calculate the error as the maximum weighted tolerance of
         // the solution's residual
         error_ = 0;
-        for (unsigned i = 0; i < currentResidual.size(); ++i) {
-            if (i >= model().numGridDof() || model().dofTotalVolume(i) <= 0)
+        for (unsigned dofIdx = 0; dofIdx < currentResidual.size(); ++dofIdx) {
+            // do not consider auxiliary DOFs for the error
+            if (dofIdx >= model().numGridDof() || model().dofTotalVolume(dofIdx) <= 0)
                 continue;
 
-            const auto &r = currentResidual[i];
-            for (unsigned j = 0; j < r.size(); ++j)
-                error_ = std::max(std::abs(r[j] * model().eqWeight(i, j)), error_);
+            // also do not consider DOFs which are constraint
+            if (enableConstraints_()) {
+                if (constraintsMap.count(dofIdx) > 0)
+                    continue;
+            }
+
+            const auto &r = currentResidual[dofIdx];
+            for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx)
+                error_ = std::max(std::abs(r[eqIdx] * model().eqWeight(dofIdx, eqIdx)), error_);
         }
 
         // take the other processes into account
@@ -628,6 +643,8 @@ protected:
                  const GlobalEqVector &solutionUpdate,
                  const GlobalEqVector &currentResidual)
     {
+        const auto& constraintsMap = model().linearizer().constraintsMap();
+
         // first, write out the current solution to make convergence
         // analysis possible
         asImp_().writeConvergence_(currentSolution, solutionUpdate);
@@ -636,14 +653,45 @@ protected:
         if (!std::isfinite(solutionUpdate.two_norm2()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        for (unsigned dofIdx = 0; dofIdx < currentSolution.size(); ++dofIdx) {
-            asImp_().updatePrimaryVariables_(dofIdx,
-                                             nextSolution[dofIdx],
-                                             currentSolution[dofIdx],
-                                             solutionUpdate[dofIdx],
-                                             currentResidual[dofIdx]);
+        const auto& numGridDof = model().numGridDof();
+        for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+            if (enableConstraints_()) {
+                if (constraintsMap.count(dofIdx) > 0) {
+                    const auto& constraints = constraintsMap.at(dofIdx);
+                    asImp_().updateConstraintDof_(dofIdx,
+                                                  nextSolution[dofIdx],
+                                                  constraints);
+                }
+                else
+                    asImp_().updatePrimaryVariables_(dofIdx,
+                                                     nextSolution[dofIdx],
+                                                     currentSolution[dofIdx],
+                                                     solutionUpdate[dofIdx],
+                                                     currentResidual[dofIdx]);
+            }
+            else
+                asImp_().updatePrimaryVariables_(dofIdx,
+                                                 nextSolution[dofIdx],
+                                                 currentSolution[dofIdx],
+                                                 solutionUpdate[dofIdx],
+                                                 currentResidual[dofIdx]);
+        }
+
+        // update the DOFs of the auxiliary equations
+        const auto& numDof = model().numTotalDof();
+        for (unsigned dofIdx = numGridDof; dofIdx < numDof; ++dofIdx) {
+            nextSolution[dofIdx] = currentSolution[dofIdx];
+            nextSolution[dofIdx] -= solutionUpdate[dofIdx];
         }
     }
+
+    /*!
+     * \brief Update the primary variables for a degree of freedom which is constraint.
+     */
+    void updateConstraintDof_(int globalDofIdx,
+                              PrimaryVariables& nextValue,
+                              const Constraints& constraints)
+    { nextValue = constraints; }
 
     /*!
      * \brief Update a single primary variables object.
@@ -750,6 +798,9 @@ protected:
     // maximum number of iterations we do before giving up
     int maxIterations_() const
     { return EWOMS_GET_PARAM(TypeTag, int, NewtonMaxIterations); }
+
+    static bool enableConstraints_()
+    { return GET_PROP_VALUE(TypeTag, EnableConstraints); }
 
     Simulator &simulator_;
 

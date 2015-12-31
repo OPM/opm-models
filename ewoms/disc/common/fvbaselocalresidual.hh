@@ -63,7 +63,6 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
-    typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
@@ -71,7 +70,6 @@ private:
 
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryContext) BoundaryContext;
-    typedef typename GET_PROP_TYPE(TypeTag, ConstraintsContext) ConstraintsContext;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
@@ -190,9 +188,6 @@ public:
 
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
-
-        // evaluate the constraunsigned DOFs
-        asImp_().evalConstraints_(residual, storage, elemCtx, /*timeIdx=*/0);
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
@@ -476,64 +471,6 @@ protected:
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             residual[dofIdx][eqIdx] += values[eqIdx];
         }
-    }
-
-    /*!
-     * \brief Set the values of the constraunsigned volumes of the current element.
-     */
-    void evalConstraints_(LocalBlockVector &residual,
-                          LocalBlockVector &storage,
-                          const ElementContext &elemCtx,
-                          unsigned timeIdx) const
-    {
-        if (!GET_PROP_VALUE(TypeTag, EnableConstraints))
-            return;
-
-        const auto &problem = elemCtx.problem();
-        Constraints constraints;
-        ConstraintsContext constraintsCtx(elemCtx);
-        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
-            // ask the problem for the constraunsigned values
-            constraints.reset();
-            problem.constraints(constraints, elemCtx, dofIdx, timeIdx);
-
-            if (!constraints.isConstraint())
-                continue;
-
-            // enforce the constraints
-            const PrimaryVariables &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                if (!constraints.isConstraint(eqIdx))
-                    continue;
-
-                unsigned pvIdx = constraints.eqToPvIndex(eqIdx);
-
-                assert(0 <= pvIdx && pvIdx < numEq);
-                Valgrind::CheckDefined(constraints[pvIdx]);
-
-                residual[dofIdx][eqIdx] = priVars.makeEvaluation(pvIdx, timeIdx) - constraints[pvIdx];
-                storage[dofIdx][eqIdx] = 0.0;
-            }
-        }
-
-#if !defined NDEBUG
-        // in debug mode, ensure that the residual and the storage terms are well-defined
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (unsigned i=0; i < numDof; i++) {
-            for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
-                Valgrind::CheckDefined(residual[i][j]);
-            }
-        }
-
-        for (unsigned i=0; i < numPrimaryDof; i++) {
-            for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(storage[i][j])));
-                Valgrind::CheckDefined(storage[i][j]);
-            }
-        }
-#endif
     }
 
     /*!
