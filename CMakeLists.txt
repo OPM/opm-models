@@ -182,7 +182,6 @@ foreach(tapp co2injection_flash_ni_vcfv
              co2injection_pvs_ni_ecfv
              powerinjection_forchheimer
              powerinjection_darcy
-             reservoir_blackoil
              cuvette_pvs
              infiltration_pvs
              lens_richards_vcfv
@@ -197,6 +196,11 @@ foreach(tapp co2injection_flash_ni_vcfv
              groundwater_immiscible)
   opm_add_test(${tapp})
 endforeach()
+
+opm_add_test(reservoir_blackoil_vcfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
 
 opm_add_test(fracture_discretefracture
              CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
