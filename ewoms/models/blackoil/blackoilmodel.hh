@@ -276,12 +276,16 @@ public:
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
         if (globalDofIdx >= (int) this->numGridDof())
-            return 1;
+            return 1.0;
 
+        // the pressures usually are in the range of 100 to 500 bars for typical oil
+        // reservoirs.
         if (Indices::pressureSwitchIdx == pvIdx)
-            return 10/referencePressure_;
+            return 1.0/300e5;
 
-        return 1;
+        // if the primary variable is not a pressure, it is either a mole fraction or a
+        // saturation. both are in the range [0, 1]
+        return 1.0;
     }
 
     /*!
@@ -292,58 +296,13 @@ public:
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
         if (globalDofIdx >= (int) this->numGridDof())
-            return 1;
+            return 1.0;
 
         int compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
 
         // make all kg equal
         return FluidSystem::molarMass(compIdx);
-    }
-
-    /*!
-     * \copydoc FvBaseDiscretization::updateBegin
-     */
-    void updateBegin()
-    {
-        ParentType::updateBegin();
-
-        // find the a reference pressure. The first degree of freedom
-        // might correspond to non-interior entities which would lead
-        // to an undefined value, so we have to iterate...
-        for (size_t dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
-            if (this->isLocalDof(dofIdx)) {
-                referencePressure_ = this->solution(/*timeIdx=*/0)[dofIdx][Indices::pressureSwitchIdx];
-                break;
-            }
-        }
-    }
-
-    /*!
-     * \internal
-     * \brief Do the primary variable switching after a Newton iteration.
-     *
-     * This is an internal method that needs to be public because it
-     * gets called by the Newton method after an update.
-     */
-    void switchPrimaryVars_()
-    {
-        numSwitched_ = 0;
-
-        int numDof = this->numGridDof();
-        for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
-            auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
-            if (priVars.adaptPrimaryVariables())
-                ++numSwitched_;
-        }
-
-        // make sure that if there was a variable switch in an
-        // other partition we will also set the switch flag
-        // for our partition.
-        numSwitched_ = this->gridView_.comm().sum(numSwitched_);
-
-        this->simulator_.model().newtonMethod().endIterMsg()
-            << ", num switched=" << numSwitched_;
     }
 
     /*!
@@ -487,9 +446,6 @@ private:
         int regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
         priVars.setPvtRegionIndex(regionIdx);
     }
-
-    mutable Scalar referencePressure_;
-    int numSwitched_;
 };
 } // namespace Ewoms
 

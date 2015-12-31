@@ -67,6 +67,12 @@ public:
                              " limited");
     }
 
+    /*!
+     * \brief Returns the number of degrees of freedom for which the
+     *        interpretation has changed for the most recent iteration.
+     */
+    int numPriVarsSwitched() const
+    { return numPriVarsSwitched_; }
 
     // HACK which is necessary because GCC 4.4 does not support
     // being a friend of typedefs
@@ -77,13 +83,36 @@ protected:
 */
 
     /*!
+     * \copydoc FvBaseNewtonMethod::beginIteration_
+     */
+    void beginIteration_()
+    {
+        numPriVarsSwitched_ = 0;
+        ParentType::beginIteration_();
+    }
+
+    /*!
      * \copydoc FvBaseNewtonMethod::endIteration_
      */
     void endIteration_(SolutionVector &uCurrentIter,
                        const SolutionVector &uLastIter)
     {
+#if HAVE_MPI
+        // in the MPI enabled case we need to add up the number of DOF
+        // for which the interpretation changed over all processes.
+        int localSwitched = numPriVarsSwitched_;
+        MPI_Allreduce(&localSwitched,
+                      &numPriVarsSwitched_,
+                      /*num=*/1,
+                      MPI_INT,
+                      MPI_SUM,
+                      MPI_COMM_WORLD);
+#endif // HAVE_MPI
+
+        this->simulator_.model().newtonMethod().endIterMsg()
+            << ", num switched=" << numPriVarsSwitched_;
+
         ParentType::endIteration_(uCurrentIter, uLastIter);
-        this->problem().model().switchPrimaryVars_();
     }
 
     /*!
@@ -120,10 +149,16 @@ protected:
             // do the actual update
             nextValue[eqIdx] = currentValue[eqIdx] - delta;
         }
+
+        // switch the new primary variables to something which is
+        // physically meaningful
+        if (nextValue.adaptPrimaryVariables())
+            ++ numPriVarsSwitched_;
     }
 
 private:
     int numChoppedIterations_;
+    int numPriVarsSwitched_;
 };
 } // namespace Ewoms
 
