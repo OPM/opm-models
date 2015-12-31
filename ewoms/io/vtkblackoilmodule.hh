@@ -100,6 +100,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
 
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
+    enum { waterCompIdx = FluidSystem::waterCompIdx };
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
@@ -191,26 +192,26 @@ public:
             const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
             typedef typename std::remove_const<typename std::remove_reference<decltype(fs)>::type>::type FluidState;
             int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-            int regionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
-            Scalar x_oG = Toolbox::value(fs.moleFraction(oilPhaseIdx, gasCompIdx));
-            Scalar x_gO = Toolbox::value(fs.moleFraction(gasPhaseIdx, oilCompIdx));
+
+            int pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
             Scalar X_oG = Toolbox::value(fs.massFraction(oilPhaseIdx, gasCompIdx));
             Scalar X_gO = Toolbox::value(fs.massFraction(gasPhaseIdx, oilCompIdx));
-            Scalar Rs = FluidSystem::convertXoGToRs(X_oG, regionIdx);
-            Scalar Rv = FluidSystem::convertXgOToRv(X_gO, regionIdx);
+            Scalar Rs = FluidSystem::convertXoGToRs(X_oG, pvtRegionIdx);
+            Scalar Rv = FluidSystem::convertXgOToRv(X_gO, pvtRegionIdx);
+
 
             Scalar RsSat =
                 FluidSystem::template saturatedDissolutionFactor<FluidState, Scalar>(fs,
                                                                                      oilPhaseIdx,
-                                                                                     regionIdx);
+                                                                                     pvtRegionIdx);
             Scalar RvSat =
                 FluidSystem::template saturatedDissolutionFactor<FluidState, Scalar>(fs,
                                                                                      gasPhaseIdx,
-                                                                                     regionIdx);
-            Scalar X_oG_sat = FluidSystem::convertRsToXoG(RsSat, regionIdx);
-            Scalar X_gO_sat = FluidSystem::convertRvToXgO(RvSat, regionIdx);
-            Scalar x_oG_sat = FluidSystem::convertXoGToxoG(X_oG_sat, regionIdx);
-            Scalar x_gO_sat = FluidSystem::convertXgOToxgO(X_gO_sat, regionIdx);
+                                                                                     pvtRegionIdx);
+            Scalar X_oG_sat = FluidSystem::convertRsToXoG(RsSat, pvtRegionIdx);
+            Scalar X_gO_sat = FluidSystem::convertRvToXgO(RvSat, pvtRegionIdx);
+            Scalar x_oG_sat = FluidSystem::convertXoGToxoG(X_oG_sat, pvtRegionIdx);
+            Scalar x_gO_sat = FluidSystem::convertXgOToxgO(X_gO_sat, pvtRegionIdx);
 
             if (gasDissolutionFactorOutput_())
                 gasDissolutionFactor_[globalDofIdx] = Rs;
@@ -218,29 +219,29 @@ public:
                 oilVaporizationFactor_[globalDofIdx] = Rv;
             if (oilFormationVolumeFactorOutput_())
                 oilFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, regionIdx);
+                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
             if (gasFormationVolumeFactorOutput_())
                 gasFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, regionIdx);
+                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
             if (waterFormationVolumeFactorOutput_())
                 waterFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, waterPhaseIdx, regionIdx);
+                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, waterPhaseIdx, pvtRegionIdx);
             if (oilSaturationPressureOutput_())
                 oilSaturationPressure_[globalDofIdx] =
-                    FluidSystem::template saturationPressure<FluidState, Scalar>(fs, oilPhaseIdx, regionIdx);
+                    FluidSystem::template saturationPressure<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
             if (gasSaturationPressureOutput_())
                 gasSaturationPressure_[globalDofIdx] =
-                    FluidSystem::template saturationPressure<FluidState, Scalar>(fs, gasPhaseIdx, regionIdx);
+                    FluidSystem::template saturationPressure<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
             if (saturatedOilGasDissolutionFactorOutput_())
                 saturatedOilGasDissolutionFactor_[globalDofIdx] = RsSat;
             if (saturatedGasOilVaporizationFactorOutput_())
                 saturatedGasOilVaporizationFactor_[globalDofIdx] = RvSat;
             if (saturatedOilFormationVolumeFactorOutput_())
                 saturatedOilFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template saturatedFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, regionIdx);
+                    FluidSystem::template saturatedFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
             if (saturatedGasFormationVolumeFactorOutput_())
                 saturatedGasFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template saturatedFormationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, regionIdx);
+                    FluidSystem::template saturatedFormationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
         }
     }
 
