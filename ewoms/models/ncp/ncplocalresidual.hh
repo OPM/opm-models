@@ -190,62 +190,59 @@ public:
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(source);
-    }
 
-
-    /*!
-     * \brief Set the values of the constraint volumes of the current element.
-     */
-    void evalConstraints_(ElemEvalEqVector& residual,
-                          ElemEvalEqVector& storageTerm,
-                          const ElementContext& elemCtx, unsigned timeIdx) const
-    {
-        // set the auxiliary functions
-        for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                residual[dofIdx][ncp0EqIdx + phaseIdx] =
-                    phaseNcp_(elemCtx, dofIdx, timeIdx, phaseIdx);
-            }
+        // evaluate the NCPs (i.e., the "phase presence" equations)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            source[ncp0EqIdx + phaseIdx] =
+                phaseNcp(elemCtx, dofIdx, timeIdx, phaseIdx);
         }
-
-        // overwrite the constraint equations
-        ParentType::evalConstraints_(residual, storageTerm, elemCtx, timeIdx);
     }
 
     /*!
      * \brief Returns the value of the NCP-function for a phase.
      */
-    Evaluation phaseNcp_(const ElementContext &elemCtx,
-                         unsigned dofIdx,
-                         unsigned timeIdx,
-                         unsigned phaseIdx) const
+    template <class LhsEval = Evaluation>
+    LhsEval phaseNcp(const ElementContext &elemCtx,
+                     unsigned dofIdx,
+                     unsigned timeIdx,
+                     unsigned phaseIdx) const
     {
         const auto &fluidState = elemCtx.intensiveQuantities(dofIdx, timeIdx).fluidState();
+        typedef typename std::remove_const<typename std::remove_reference<decltype(fluidState)>::type>::type FluidState;
 
-        const Evaluation& a = phaseNotPresentIneq_(fluidState, phaseIdx);
-        const Evaluation& b = phasePresentIneq_(fluidState, phaseIdx);
-        return Toolbox::min(a, b);
+        typedef Opm::MathToolbox<LhsEval> LhsToolbox;
+
+        const LhsEval& a = phaseNotPresentIneq_<FluidState, LhsEval>(fluidState, phaseIdx);
+        const LhsEval& b = phasePresentIneq_<FluidState, LhsEval>(fluidState, phaseIdx);
+        return LhsToolbox::min(a, b);
     }
 
+private:
     /*!
      * \brief Returns the value of the inequality where a phase is
      *        present.
      */
-    template <class FluidState>
-    Evaluation phasePresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
-    { return fluidState.saturation(phaseIdx); }
+    template <class FluidState, class LhsEval>
+    LhsEval phasePresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
+    {
+        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
+
+        return FsToolbox::template toLhs<LhsEval>(fluidState.saturation(phaseIdx));
+    }
 
     /*!
      * \brief Returns the value of the inequality where a phase is not
      *        present.
      */
-    template <class FluidState>
-    Evaluation phaseNotPresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
+    template <class FluidState, class LhsEval>
+    LhsEval phaseNotPresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
     {
+        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
+
         // difference of sum of mole fractions in the phase from 100%
-        Evaluation a = 1;
+        LhsEval a = 1.0;
         for (unsigned i = 0; i < numComponents; ++i)
-            a -= fluidState.moleFraction(phaseIdx, i);
+            a -= FsToolbox::template toLhs<LhsEval>(fluidState.moleFraction(phaseIdx, i));
         return a;
     }
 };
