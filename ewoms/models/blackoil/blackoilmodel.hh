@@ -241,12 +241,12 @@ public:
     {
         std::ostringstream oss;
 
-        if (pvIdx == Indices::gasPressureIdx)
-            oss << "pressure_" << FluidSystem::phaseName(FluidSystem::gasPhaseIdx);
-        else if (pvIdx == Indices::waterSaturationIdx)
+        if (pvIdx == Indices::waterSaturationIdx)
             oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
-        else if (pvIdx == Indices::switchIdx)
-            oss << "switching";
+        else if (pvIdx == Indices::pressureSwitchIdx)
+            oss << "switching,pressure";
+        else if (pvIdx == Indices::compositionSwitchIdx)
+            oss << "switching,composition";
         else
             assert(false);
 
@@ -278,7 +278,7 @@ public:
         if (globalDofIdx >= (int) this->numGridDof())
             return 1;
 
-        if (Indices::gasPressureIdx == pvIdx)
+        if (Indices::pressureSwitchIdx == pvIdx)
             return 10/referencePressure_;
 
         return 1;
@@ -313,7 +313,7 @@ public:
         // to an undefined value, so we have to iterate...
         for (size_t dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
             if (this->isLocalDof(dofIdx)) {
-                referencePressure_ = this->solution(/*timeIdx=*/0)[dofIdx][Indices::gasPressureIdx];
+                referencePressure_ = this->solution(/*timeIdx=*/0)[dofIdx][Indices::pressureSwitchIdx];
                 break;
             }
         }
@@ -333,7 +333,7 @@ public:
         int numDof = this->numGridDof();
         for (int globalDofIdx = 0; globalDofIdx < numDof; ++globalDofIdx) {
             auto &priVars = this->solution(/*timeIdx=*/0)[globalDofIdx];
-            if (priVars.adaptSwitchingVariable())
+            if (priVars.adaptPrimaryVariables())
                 ++numSwitched_;
         }
 
@@ -374,7 +374,7 @@ public:
             outstream << priVars[eqIdx] << " ";
 
         // write the pseudo primary variables
-        outstream << priVars.switchingVarMeaning() << " ";
+        outstream << priVars.primaryVarsMeaning() << " ";
         outstream << priVars.pvtRegionIndex() << " ";
     }
 
@@ -406,8 +406,8 @@ public:
         }
 
         // read the pseudo primary variables
-        int switchingVarMeaning;
-        instream >> switchingVarMeaning;
+        int primaryVarsMeaning;
+        instream >> primaryVarsMeaning;
 
         int pvtRegionIdx;
         instream >> pvtRegionIdx;
@@ -416,8 +416,8 @@ public:
             OPM_THROW(std::runtime_error,
                       "Could not deserialize degree of freedom " << dofIdx);
 
-        typedef typename PrimaryVariables::SwitchingVarMeaning SVM;
-        priVars.setSwitchingVarMeaning(static_cast<SVM>(switchingVarMeaning));
+        typedef typename PrimaryVariables::PrimaryVarsMeaning PVM;
+        priVars.setPrimaryVarsMeaning(static_cast<PVM>(primaryVarsMeaning));
         priVars.setPvtRegionIndex(pvtRegionIdx);
     }
 
