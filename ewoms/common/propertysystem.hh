@@ -691,14 +691,31 @@ public:
             OPM_THROW(std::runtime_error,
                       "Unknown type tag key '" << typeTagName << "'");
 
-        // check whether the propery is defined for the type tag
-        // currently checked
+        // check whether the propery is directly defined for the type tag currently
+        // checked, ...
         const auto &propIt = keyIt->second.find(propertyName);
         const auto &propEndIt = keyIt->second.end();
         if (propIt != propEndIt)
             return propIt->second.propertyValue();
 
-        // if not, check all children
+        // ..., if not, check all splices,  ...
+        typedef TypeTagRegistry::SpliceList SpliceList;
+        const SpliceList &splices = TypeTagRegistry::splices(typeTagName);
+        SpliceList::const_iterator spliceIt = splices.begin();
+        for (; spliceIt != splices.end(); ++spliceIt) {
+            const auto &spliceTypeTagName =
+                PropertyRegistry::getSpliceTypeTagName(typeTagName,
+                                                       (*spliceIt)->propertyName());
+
+            if (spliceTypeTagName == "")
+                continue;
+
+            const auto &tmp = getSpliceTypeTagName(spliceTypeTagName, propertyName);
+            if (tmp != "")
+                return tmp;
+        }
+
+        // .. if still not, check all normal children.
         typedef TypeTagRegistry::ChildrenList ChildrenList;
         const ChildrenList &children = TypeTagRegistry::children(typeTagName);
         ChildrenList::const_iterator ttagIt = children.begin();
