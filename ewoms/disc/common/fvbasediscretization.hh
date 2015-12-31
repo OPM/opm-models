@@ -587,11 +587,17 @@ public:
         if (!storeIntensiveQuantities())
             return;
 
-        if (enableStorageCache())
+        if (enableStorageCache()) {
+            // invalidate the cache for the most recent time index
+            std::fill(intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].begin(),
+                      intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].end(),
+                      false);
+
             // if the storage term is cached, the intensive quantities of the previous
             // time steps do not need to be accessed, and we can thus spare ourselves to
             // copy the objects for the intensive quantities.
             return;
+        }
 
         assert(numSlots > 0);
 
@@ -752,6 +758,10 @@ public:
             ElementIterator elemIt = gridView().template begin</*codim=*/0>();
             LocalBlockVector elemStorage;
 
+            // in this method, we need to disable the storage cache because we want to
+            // evaluate the storage term for other time indices than the most recent one
+            elemCtx.setEnableStorageCache(false);
+
             for (threadedElemIt.beginParallel(elemIt);
                  !threadedElemIt.isFinished(elemIt);
                  threadedElemIt.increment(elemIt))
@@ -761,9 +771,7 @@ public:
                     continue; // ignore ghost and overlap elements
 
                 elemCtx.updateStencil(elem);
-
-                if (timeIdx == 0 || !enableStorageCache())
-                    elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
+                elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
                 unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 elemStorage.resize(numPrimaryDof);
@@ -791,9 +799,6 @@ public:
     void checkConservativeness(Scalar tolerance = -1, bool verbose=false) const
     {
 #ifndef NDEBUG
-        EqVector storageBeginTimeStep;
-        EqVector storageEndTimeStep;
-
         Scalar totalBoundaryArea(0.0);
         Scalar totalVolume(0.0);
         EvalEqVector totalRate(Toolbox::createConstant(0.0));
@@ -810,11 +815,15 @@ public:
         // we assume the implicit Euler time discretization for now...
         assert(historySize == 2);
 
+        EqVector storageBeginTimeStep(0.0);
         globalStorage(storageBeginTimeStep, /*timeIdx=*/1);
+
+        EqVector storageEndTimeStep(0.0);
         globalStorage(storageEndTimeStep, /*timeIdx=*/0);
 
         // calculate the rate at the boundary and the source rate
         ElementContext elemCtx(simulator_);
+        elemCtx.setEnableStorageCache(false);
         auto eIt = simulator_.gridView().template begin</*codim=*/0>();
         const auto &elemEndIt = simulator_.gridView().template end</*codim=*/0>();
         for (; eIt != elemEndIt; ++eIt) {

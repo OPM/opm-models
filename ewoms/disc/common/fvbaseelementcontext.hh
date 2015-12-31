@@ -477,6 +477,21 @@ public:
     const ExtensiveQuantities &extensiveQuantities(unsigned fluxIdx, unsigned timeIdx) const
     { return extensiveQuantities_[fluxIdx]; }
 
+    /*!
+     * \brief Returns true iff the cache for the storage term ought to be used for this context.
+     *
+     * If it is used, intensive quantities can only be accessed for the most recent time
+     * index. (time index 0.)
+     */
+    bool enableStorageCache() const
+    { return enableStorageCache_; }
+
+    /*!
+     * \brief Specifies if the cache for the storage term ought to be used for this context.
+     */
+    void setEnableStorageCache(bool yesno)
+    { enableStorageCache_ = yesno; }
+
 protected:
     /*!
      * \brief Update the first 'n' intensive quantities objects from the primary variables.
@@ -532,10 +547,11 @@ protected:
 
     DofVarsVector dofVars_;
 
-    bool enableStorageCache_;
-    bool haveStashedIntensiveQuantities_;
     IntensiveQuantities intensiveQuantitiesStashed_;
     PrimaryVariables priVarsStashed_;
+
+    bool enableStorageCache_;
+    bool haveStashedIntensiveQuantities_;
 
     GradientCalculator gradientCalculator_;
 

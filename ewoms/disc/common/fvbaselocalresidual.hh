@@ -84,9 +84,7 @@ private:
 
 public:
     FvBaseLocalResidual()
-    {
-        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
-    }
+    { }
 
     ~FvBaseLocalResidual()
     { }
@@ -258,17 +256,16 @@ public:
                 storage[dofIdx] = 0.0;
                 asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
 
-                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                    storage[dofIdx][eqIdx] *=
-                        elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
-                        * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
-                }
+                // multiply the with the volume of the associated DOF
+                storage[dofIdx] *=
+                    elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
+                    * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
             }
         }
         else {
             // for all previous solutions, the storage term does _not_ depend on the
             // current primary variables, so we use scalars to store it.
-            if (elemCtx.model().enableStorageCache()) {
+            if (elemCtx.enableStorageCache()) {
                 unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                     unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
@@ -576,7 +573,7 @@ protected:
                                     /*timeIdx=*/0);
             Valgrind::CheckDefined(tmp);
 
-            if (enableStorageCache_) {
+            if (elemCtx.enableStorageCache()) {
                 const auto& model = elemCtx.model();
                 unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                 if (model.newtonMethod().numIterations() == 0 &&
@@ -654,8 +651,6 @@ private:
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
-
-    bool enableStorageCache_;
 
     LocalBlockVector internalResidual_;
     LocalBlockVector internalStorageTerm_;
