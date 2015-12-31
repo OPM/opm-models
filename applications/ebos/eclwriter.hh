@@ -265,7 +265,7 @@ public:
      */
     void endWrite(bool onlyDiscard = false)
     {
-        if (onlyDiscard || !enableEclOutput_()) {
+        if (onlyDiscard || !enableEclOutput_() || !simulator_.episodeWillBeOver()) {
             // detach all buffers
             attachedBuffers_.clear();
             return;
