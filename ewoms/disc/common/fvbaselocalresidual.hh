@@ -648,16 +648,10 @@ protected:
 
 private:
     Implementation &asImp_()
-    {
-      assert(static_cast<Implementation*>(this) != 0);
-      return *static_cast<Implementation*>(this);
-    }
+    { return *static_cast<Implementation*>(this); }
 
     const Implementation &asImp_() const
-    {
-      assert(static_cast<const Implementation*>(this) != 0);
-      return *static_cast<const Implementation*>(this);
-    }
+    { return *static_cast<const Implementation*>(this); }
 
     bool enableStorageCache_;
 
