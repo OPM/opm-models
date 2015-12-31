@@ -338,9 +338,8 @@ protected:
     }
 
     /*!
-     * \brief Updates the current local Jacobian matrix with the
-     *        partial derivatives of all equations in regard to the
-     *        primary variable 'pvIdx' at vertex 'dofIdx' .
+     * \brief Updates the current local Jacobian matrix with the partial derivatives of
+     *        all equations in regard to the primary variable 'pvIdx' at vertex 'dofIdx'.
      */
     void updateLocalLinearization_(const ElementContext &elemCtx,
                                    int primaryDofIdx)

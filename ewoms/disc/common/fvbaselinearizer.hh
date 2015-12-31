@@ -101,39 +101,11 @@ class FvBaseLinearizer
 //! \endcond
 
 public:
-    /*!
-     * \brief The colors of elements and degrees of freedom required
-     *        for partial relinearization.
-     */
-    enum EntityColor {
-        /*!
-         * Degree of freedom/element that needs to be relinearized
-         * because some error is above the tolerance
-         */
-        Red = 2,
-
-        /*!
-         * Degree of freedom/element that needs to be relinearized because a
-         * neighboring element/degree of freedom is red
-         */
-        Yellow = 1,
-
-        /*!
-         * Degree of freedom/element that does not need to be relinearized
-         */
-        Green = 0
-    };
-
     FvBaseLinearizer()
     {
         simulatorPtr_ = 0;
 
         matrix_ = 0;
-
-        // set relinearization accuracies to 0, so that if partial relinearization of the
-        // system of equations is disabled, the relinearization accuracy is always
-        // smaller than the current tolerance
-        relinearizationAccuracy_ = 0.0;
     }
 
     ~FvBaseLinearizer()
@@ -149,11 +121,7 @@ public:
      * \brief Register all run-time parameters for the Jacobian linearizer.
      */
     static void registerParameters()
-    {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialRelinearization,
-                             "relinearize only those degrees of freedom that have changed "
-                             "'sufficiently' between two Newton iterations");
-    }
+    { }
 
     /*!
      * \brief Initialize the linearizer.
@@ -197,11 +165,6 @@ public:
         if (!matrix_)
             initFirstIteration_();
 
-        // store the data required for the end-of-iteration message here because the
-        // linearize_() method modifies them for the next iteration...
-        int curNumRelin = numTotalElems_ - numGreenElems_;
-        Scalar curRelAcc = relinearizationAccuracy_;
-
         int succeeded;
         try {
             linearize_();
@@ -221,152 +184,7 @@ public:
             OPM_THROW(Opm::NumericalProblem,
                        "A process did not succeed in linearizing the system");
         }
-
-        if (enablePartialRelinearization_()) {
-            model_().newtonMethod().endIterMsg()
-                << ", relinearized " << curNumRelin << " of " << numTotalElems_
-                << " elements (" << 100*Scalar(curNumRelin)/numTotalElems_ << "%)"
-                << " and achieved a accuracy of " << curRelAcc;
-        }
     }
-
-    /*!
-     * \brief If partial relinearization is enabled, this method causes all
-     *        elements to be relinearized in the next linearize() call.
-     */
-    void relinearizeAll()
-    {
-        // do not use partial relinearization for the next iteration
-        relinearizationAccuracy_ = 0.0;
-        relinearizationTolerance_ = 0.0;
-        numGreenElems_ = 0;
-        if (enablePartialRelinearization_()) {
-            std::fill(dofError_.begin(), dofError_.end(), 1e100);
-            std::fill(dofColor_.begin(), dofColor_.end(), Red);
-            std::fill(elementColor_.begin(), elementColor_.end(), Red);
-        }
-
-        // set the intensive quantities cache
-        auto &model = model_();
-        unsigned numGridDof = model.numGridDof();
-        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
-                model.setIntensiveQuantitiesCacheEntryValidity(dofIdx, timeIdx, false);
-            }
-        }
-    }
-
-    /*!
-     * \brief Returns the largest error of a "green" degree of freedom for the
-     *        most recent call of the linearize() method.
-     *
-     * This only has an effect if partial Jacobian relinearization is enabled. If it is
-     * disabled, then this method always returns 0.
-     *
-     * This returns the _actual_ error computed as seen by computeColors(), not the
-     * tolerance which it was given.
-     */
-    Scalar relinearizationAccuracy() const
-    { return relinearizationAccuracy_; }
-
-    /*!
-     * \brief The maximum deflection seen for any DOF after an Newton update.
-     */
-    Scalar maxDofError() const
-    { return maxDofError_; }
-
-    /*!
-     * \brief Update the distance where the non-linear system was
-     *        originally insistently linearized and the point where it
-     *        will be linerized the next time.
-     *
-     * This only has an effect if partial relinearize is enabled.
-     *
-     * \param uDelta The negative difference between the last and the next iterative solution.
-     * \param resid The residual (right-hand side) for the current Newton iteration
-     */
-    void updateRelinearizationErrors(const GlobalEqVector &uDelta, const GlobalEqVector &resid)
-    {
-        if (!enablePartialRelinearization_())
-            return;
-
-        unsigned numGridDof = model_().numGridDof();
-
-        // update the vector which stores the error for partial
-        // relinearization for each degree of freedom
-        maxDofError_ = 0;
-        for (unsigned globalDofIdx = 0; globalDofIdx < numGridDof; ++globalDofIdx) {
-            if (!model_().isLocalDof(globalDofIdx)) {
-                // ignore degrees of freedom of overlap and ghost degrees of freedom
-                dofError_[globalDofIdx] = 0;
-                continue;
-            }
-
-            // compute the error of the solution at a given DOF. we use the weighted
-            // magnitude of the deviation between the solution for two consecutive
-            // iterations.
-            const auto &d = uDelta[globalDofIdx];
-            Scalar distRel = 0;
-            for (unsigned pvIdx = 0; pvIdx < d.size(); ++pvIdx) {
-                Scalar tmp = std::abs(d[pvIdx]*model_().primaryVarWeight(globalDofIdx, pvIdx));
-                distRel = std::max(distRel, tmp);
-            }
-            Valgrind::CheckDefined(distRel);
-            dofError_[globalDofIdx] += distRel;
-            maxDofError_ = std::max(maxDofError_, dofError_[globalDofIdx]);
-        }
-    }
-
-    /*!
-     * \brief Ensure that a given degree of freedom is relinarized in the next iteration.
-     *
-     * Calling this method usually means that the interpretation of the primary variables
-     * for the DOF has changed.
-     */
-    void markDofRed(unsigned dofIdx)
-    {
-        if (enablePartialRelinearization_())
-            dofError_[dofIdx] = 1e100;
-        this->model_().setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, false);
-    }
-
-    /*!
-     * \brief Returns the "relinearization color" of a degree of freedom
-     */
-    EntityColor dofColor(unsigned dofIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-        return dofColor_[dofIdx];
-    }
-
-    /*!
-     * \brief Returns the "relinearization color" of an element
-     */
-    EntityColor elementColor(unsigned elemIdx) const
-    {
-        if (!enablePartialRelinearization_())
-            return Red;
-        return elementColor_[elemIdx];
-    }
-
-    /*!
-     * \brief Returns the maximum error for which a degree of freedom is not relinearized.
-     */
-    Scalar relinearizationTolerance() const
-    { return relinearizationTolerance_; }
-
-    /*!
-     * \brief Sets the maximum error for which a degree of freedom is not relinearized.
-     */
-    void setRelinearizationTolerance(Scalar tolerance)
-    { relinearizationTolerance_ = tolerance; }
-
-    /*!
-     * \brief Returns the error for a given degree of freedom after the last iteration.
-     */
-    Scalar dofError(unsigned dofIdx) const
-    { return dofError_[dofIdx]; }
 
     /*!
      * \brief Return constant reference to global Jacobian matrix.
@@ -381,110 +199,6 @@ public:
     { return residual_; }
 
 private:
-    /*!
-     * \brief Determine the colors of the degrees of freedom and of
-     *        the elements for partial re-linarization for a given
-     *        tolerance.
-     */
-    void computeColors_()
-    {
-        if (!enablePartialRelinearization_())
-            return;
-
-        // mark the red degrees of freedom and update the tolerance of
-        // the linearization which actually will get achieved
-        for (unsigned dofIdx = 0; dofIdx < dofColor_.size(); ++dofIdx) {
-            if (dofError_[dofIdx] > relinearizationTolerance_) {
-                // mark the degree of freedom 'red' if discrepancy is
-                // larger than the given tolerance
-                dofColor_[dofIdx] = Red;
-                dofError_[dofIdx] = 0.0;
-            }
-            else if (!model_().isLocalDof(dofIdx)) {
-                // always mark non-local degrees of freedom as red
-                dofColor_[dofIdx] = Red;
-                dofError_[dofIdx] = 0.0;
-            }
-            else
-                dofColor_[dofIdx] = Green;
-        }
-
-        // mark all elements that connect to red ones as yellow
-        unsigned numGridDof = this->model_().numGridDof();
-        for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
-            if (dofColor_[dofIdx] != Red)
-                continue;
-
-            typedef typename JacobianMatrix::ColIterator ColIterator;
-            ColIterator colIt = (*matrix_)[dofIdx].begin();
-            const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
-            for (; colIt != colEndIt; ++colIt) {
-                unsigned dof2Idx = colIt.index();
-                if (dof2Idx >= numGridDof)
-                    break; // auxiliary equation
-
-                if (dofColor_[dof2Idx] != Red)
-                    dofColor_[dof2Idx] = Yellow;
-            }
-        }
-
-        // calculate the element colors from the DOF colors. for the element centered
-        // finite volume discretization, we can just copy the values. For other
-        // discretizations, we need to loop over the grid and check if an element's
-        // stencil contains a non-green DOFs.
-        if (std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value)
-            elementColor_ = dofColor_;
-        else {
-            const auto& gridView = this->model_().gridView();
-            const auto& elemMapper = this->model_().elementMapper();
-            Stencil stencil(gridView);
-            ElementIterator elemIt = gridView.template begin</*codim=*/0>();
-            const ElementIterator& elemEndIt = gridView.template end</*codim=*/0>();
-            for (; elemIt != elemEndIt; ++elemIt) {
-                const Element& elem = *elemIt;
-                stencil.updateTopology(elem);
-
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
-                unsigned elemIdx = elemMapper.index(elem);
-#else
-                unsigned elemIdx = elemMapper.map(elem);
-#endif
-                unsigned numElemDof = stencil.numDof();
-
-                // determine the element color: it is red if any of the DOFs in its
-                // stencil are non-green, else it is green.
-                elementColor_[elemIdx] = Green;
-                for (unsigned elemDofIdx = 0; elemDofIdx < numElemDof; ++elemDofIdx) {
-                    unsigned dofIdx = stencil.globalSpaceIndex(elemDofIdx);
-                    if (dofColor_[dofIdx] != Green) {
-                        elementColor_[elemIdx] = Red;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // gather statistics
-        relinearizationAccuracy_ = 0;
-        numGreenElems_ = 0;
-        for (unsigned dofIdx = 0; dofIdx < dofColor_.size(); ++dofIdx) {
-            if (dofColor_[dofIdx] != Red) {
-                relinearizationAccuracy_ =
-                    std::max(relinearizationAccuracy_, dofError_[dofIdx]);
-
-                if (dofColor_[dofIdx] == Green)
-                    ++numGreenElems_;
-                continue;
-            }
-        }
-
-        relinearizationAccuracy_ = gridView_().comm().max(relinearizationAccuracy_);
-        numGreenElems_ = gridView_().comm().sum(numGreenElems_);
-    }
-
-    static bool enablePartialRelinearization_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
-
     Simulator &simulator_()
     { return *simulatorPtr_; }
     const Simulator &simulator_() const
@@ -511,34 +225,18 @@ private:
 
     void initFirstIteration_()
     {
-        // calculate the number of DOFs and elements for the local process and for the
-        // whole simulation
-        unsigned numGridDof = model_().numGridDof();
-        unsigned numAllDof =  model_().numTotalDof();
-        unsigned numElems = gridView_().size(/*codim=*/0);
-        numTotalElems_ = gridView_().comm().sum(numElems);
-
         // initialize the BCRS matrix for the Jacobian
         createMatrix_();
 
-        // initialize the jacobian matrix and the right hand side
-        // vector
+        // initialize the jacobian matrix and the right hand side vector
         *matrix_ = 0;
-        residual_.resize(numAllDof);
+        residual_.resize(model_().numTotalDof());
         residual_ = 0;
 
         // create the per-thread context objects
         elementCtx_.resize(ThreadManager::maxThreads());
         for (int threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
             elementCtx_[threadId] = new ElementContext(simulator_());
-
-        // initialize data needed for partial relinearization
-        if (enablePartialRelinearization_()) {
-            dofColor_.resize(numGridDof);
-            dofError_.resize(numGridDof);
-            elementColor_.resize(numElems);
-            relinearizeAll();
-        }
     }
 
     // Construct the BCRS matrix for the global jacobian
@@ -595,82 +293,16 @@ private:
         matrix_->endindices();
     }
 
-    // reset the global linear system of equations. if partial
-    // relinearization is enabled, this means that the Jacobian matrix
-    // must only be erased partially!
+    // reset the global linear system of equations.
     void resetSystem_()
     {
-        size_t numGridDof = model_().numGridDof();
-        size_t numTotalDof = model_().numTotalDof();
-
-        if (!enablePartialRelinearization_()) {
-            // if partial re-linearization is not enabled, we can just reset everything!
-            residual_ = 0.0;
-            (*matrix_) = 0;
-
-            return;
-        }
-
-        // always reset the right hand side completely
         residual_ = 0.0;
-
-        // reset the rows in the Jacobian which correspond to DOFs of auxiliary equations
-        for (unsigned dofIdx = numGridDof; dofIdx < numTotalDof; ++dofIdx) {
-            // reset the row of the Jacobian matrix
-            typedef typename JacobianMatrix::ColIterator ColIterator;
-            ColIterator colIt = (*matrix_)[dofIdx].begin();
-            const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
-            for (; colIt != colEndIt; ++colIt) {
-                (*colIt) = 0.0;
-            }
-        }
-
-        // partially reset the current linearization for rows corresponding to grid DOFs
-        for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
-            if (dofColor(dofIdx) == Green) {
-                // for green DOFs we keep the left hand side of the current linearization
-                // except for the entries of the Jacobian matrix which connect the green
-                // DOF with auxiliary equations. the implementation of this this is
-                // slightly hacky because it implicitly assumes that all auxiliary DOFs
-                // are placed after the grid DOFs and that auxiliary DOFs don't change
-                // any entries of grid DOFs. For auxiliary equations where this is not
-                // the case, we would need to mark all grid DOFs which have a connection
-                // to an auxiliary DOF as red...
-                typedef typename JacobianMatrix::ColIterator ColIterator;
-                ColIterator colIt = (*matrix_)[dofIdx].beforeEnd();
-                const ColIterator colBeginIt = (*matrix_)[dofIdx].beforeBegin();
-                for (; colIt != colBeginIt; -- colIt) {
-                    if (colIt.index() < numGridDof)
-                        // the column corresponds to a grid DOF. we have reset
-                        // everything.
-                        break;
-
-                    // the column corresponds to an auxiliary DOF
-                    (*colIt) = 0.0;
-                }
-            }
-            else {
-                // red or yellow DOF
-
-                // reset all entries in the row of the Jacobian which connect two non-green
-                // degrees of freedom
-                typedef typename JacobianMatrix::ColIterator ColIterator;
-                ColIterator colIt = (*matrix_)[dofIdx].begin();
-                const ColIterator &colEndIt = (*matrix_)[dofIdx].end();
-                for (; colIt != colEndIt; ++colIt) {
-                    if (colIt.index() >= numGridDof || dofColor_[colIt.index()] != Green)
-                        // the entry either corresponds to an auxiliary DOF or to a non-green
-                        // grid DOF.
-                        (*colIt) = 0.0;
-                }
-            }
-        }
+        (*matrix_) = 0;
     }
 
     // linearize the whole system
     void linearize_()
     {
-        computeColors_();
         resetSystem_();
 
         // relinearize the elements...
@@ -699,18 +331,6 @@ private:
     // linearize an element in the interior of the process' grid partition
     void linearizeElement_(const Element &elem)
     {
-        if (enablePartialRelinearization_()) {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            unsigned globalElemIdx = model_().elementMapper().index(elem);
-#else
-            unsigned globalElemIdx = model_().elementMapper().map(elem);
-#endif
-            if (elementColor(globalElemIdx) == Green) {
-                linearizeGreenElement_(elem);
-                return;
-            }
-        }
-
         int threadId = ThreadManager::threadId();
 
         ElementContext *elementCtx = elementCtx_[threadId];
@@ -726,12 +346,6 @@ private:
         for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
             int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
 
-            // we only need to update the Jacobian matrix for entries which connect two
-            // non-green DOFs. if the row DOF corresponds to a green one, we can skip the
-            // whole row...
-            if (dofColor(globI) == Green)
-                continue;
-
             // update the right hand side
             residual_[globI] += localLinearizer.residual(primaryDofIdx);
 
@@ -739,35 +353,8 @@ private:
             for (unsigned dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
                 int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
-
-                // only update the jacobian matrix for non-green degrees of freedom
-                if (dofColor(globJ) == Green)
-                    continue;
-
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
             }
-        }
-        addLock.unlock();
-    }
-
-    // "linearize" a green element. green elements only get the
-    // residual updated, but the Jacobian is left alone...
-    void linearizeGreenElement_(const Element &elem)
-    {
-        int threadId = ThreadManager::threadId();
-        ElementContext *elementCtx = elementCtx_[threadId];
-
-        elementCtx->updateAll(elem);
-        auto& localResidual = model_().localResidual(threadId);
-        localResidual.eval(*elementCtx);
-
-        ScopedLock addLock(globalMatrixMutex_);
-        for (unsigned dofIdx=0; dofIdx < elementCtx->numPrimaryDof(/*timeIdx=*/0); ++ dofIdx) {
-            int globI = elementCtx->globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-            // update the right hand side
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
-                residual_[globI][eqIdx] += Toolbox::value(localResidual.residual(dofIdx)[eqIdx]);
         }
         addLock.unlock();
     }
@@ -786,18 +373,6 @@ private:
     Matrix *matrix_;
     // the right-hand side
     GlobalEqVector residual_;
-
-    // data required for partial relinearization
-    std::vector<EntityColor> dofColor_;
-    std::vector<Scalar> dofError_;
-    std::vector<EntityColor> elementColor_;
-
-    unsigned numTotalElems_;
-    unsigned numGreenElems_;
-
-    Scalar relinearizationTolerance_;
-    Scalar relinearizationAccuracy_;
-    Scalar maxDofError_;
 
     OmpMutex globalMatrixMutex_;
 };

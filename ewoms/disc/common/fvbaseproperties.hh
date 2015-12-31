@@ -181,11 +181,6 @@ NEW_PROP_TAG(EnableVtkOutput);
  */
 NEW_PROP_TAG(VtkOutputFormat);
 
-//! Specify whether the system of equations should be only
-//! relinearized for elements where at least one degree of freedom is
-//! above the specified tolerance
-NEW_PROP_TAG(EnablePartialRelinearization);
-
 //! Specify whether the some degrees of fredom can be constraint
 NEW_PROP_TAG(EnableConstraints);
 

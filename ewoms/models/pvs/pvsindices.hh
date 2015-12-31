@@ -49,8 +49,7 @@ class PvsIndices
     typedef Ewoms::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
-    //! Number of partial differential equations or primary variables,
-    //! respectively
+    //! Number of partial differential equations or primary variables, respectively
     static const int numEq = numComponents + EnergyIndices::numEq_;
 
     // Primary variable indices

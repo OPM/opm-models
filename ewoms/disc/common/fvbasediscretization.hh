@@ -203,9 +203,6 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 //! Set the format of the VTK output to ASCII by default
 SET_INT_PROP(FvBaseDiscretization, VtkOutputFormat, Dune::VTK::ascii);
 
-// disable partial relinearization by default
-SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
-
 // disable caching the storage term by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableStorageCache, false);
 
@@ -310,7 +307,7 @@ public:
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[timeIdx].resize(nDofs);
 
-            if (storeIntensiveQuantities_()) {
+            if (storeIntensiveQuantities()) {
                 intensiveQuantityCache_[timeIdx].resize(nDofs);
                 intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
             }
@@ -417,7 +414,7 @@ public:
         for (int threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
             localLinearizer_[threadId].init(simulator_);
 
-        if (storeIntensiveQuantities_()) {
+        if (storeIntensiveQuantities()) {
             // invalidate all cached intensive quantities
             for (unsigned timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
                 std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
@@ -553,7 +550,7 @@ public:
                                          unsigned globalIdx,
                                          unsigned timeIdx) const
     {
-        if (!storeIntensiveQuantities_())
+        if (!storeIntensiveQuantities())
             return;
 
         intensiveQuantityCache_[timeIdx][globalIdx] = intQuants;
@@ -571,7 +568,7 @@ public:
                                                   unsigned timeIdx,
                                                   bool newValue) const
     {
-        if (!storeIntensiveQuantities_())
+        if (!storeIntensiveQuantities())
             return;
 
         intensiveQuantityCacheUpToDate_[timeIdx][globalIdx] = newValue;
@@ -587,7 +584,7 @@ public:
      */
     void shiftIntensiveQuantityCache(unsigned numSlots = 1)
     {
-        if (!storeIntensiveQuantities_())
+        if (!storeIntensiveQuantities())
             return;
 
         for (unsigned timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
@@ -1101,7 +1098,6 @@ public:
         intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
 
         solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
-        linearizer_->relinearizeAll();
     }
 
     /*!
@@ -1365,7 +1361,6 @@ public:
             PrimaryVariables uNew(uOld);
             uNew -= deltaU[globalIdx];
             (*relError)[globalIdx] = asImp_().relativeDofError(globalIdx, uOld, uNew);
-            (*dofColor)[globalIdx] = linearizer().dofColor(globalIdx);
         }
 
         DiscBaseOutputModule::attachScalarDofData_(writer, *relError, "relErr");
@@ -1500,14 +1495,17 @@ public:
     std::shared_ptr<const BaseAuxiliaryModule<TypeTag> > auxiliaryModule(unsigned auxEqModIdx) const
     { return auxEqModules_[auxEqModIdx]; }
 
+    /*!
+     * \brief Returns true if the cache for intensive quantities is enabled
+     */
+    static bool storeIntensiveQuantities()
+    { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
+
 protected:
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
                                     const Context &context, unsigned dofIdx, unsigned timeIdx)
     { }
-
-    static bool storeIntensiveQuantities_()
-    { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
 
     static bool enableIntensiveQuantitiesCache_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache); }
