@@ -33,6 +33,7 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/localad/Math.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -98,6 +99,8 @@ public:
                                 const MaterialLawParams &matParams,
                                 bool isInEquilibrium = false)
     {
+        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
+
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
         for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
@@ -122,7 +125,8 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
-                    fluidState.saturation(phaseIdx) * fluidState.molarity(phaseIdx, compIdx);
+                    FsToolbox::value(fluidState.saturation(phaseIdx))
+                    * FsToolbox::value(fluidState.molarity(phaseIdx, compIdx));
             }
         }
 
@@ -142,23 +146,26 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState)
+    void assignNaive(const FluidState &fluidState, unsigned refPhaseIdx = 0)
     {
+        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
+
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
-        // assign fugacities
+        // assign fugacities.
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[fugacity0Idx + compIdx] = fluidState.fugacity(/*phaseIdx=*/0, compIdx);
+            Scalar fug = FsToolbox::value(fluidState.fugacity(refPhaseIdx, compIdx));
+            (*this)[fugacity0Idx + compIdx] = fug;
         }
 
         // assign pressure of first phase
-        (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
+        (*this)[pressure0Idx] = FsToolbox::value(fluidState.pressure(/*phaseIdx=*/0));
 
         // assign first M - 1 saturations
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-            (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
+            (*this)[saturation0Idx + phaseIdx] = FsToolbox::value(fluidState.saturation(phaseIdx));
     }
 };
 
