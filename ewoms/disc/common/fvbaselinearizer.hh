@@ -150,9 +150,6 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableLinearizationRecycling,
-                             "Re-use of the linearized system of equations at the first "
-                             "iteration of the next time step");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnablePartialRelinearization,
                              "relinearize only those degrees of freedom that have changed "
                              "'sufficiently' between two Newton iterations");
@@ -200,11 +197,6 @@ public:
         if (!matrix_)
             initFirstIteration_();
 
-        // we need to store whether the linearization was recycled
-        // here because the linearize_ method modifies the
-        // reuseLinearization_ attribute!
-        bool linearizationReused = reuseLinearization_;
-
         // store the data required for the end-of-iteration message here because the
         // linearize_() method modifies them for the next iteration...
         int curNumRelin = numTotalElems_ - numGreenElems_;
@@ -230,7 +222,7 @@ public:
                        "A process did not succeed in linearizing the system");
         }
 
-        if (!linearizationReused && enablePartialRelinearization_()) {
+        if (enablePartialRelinearization_()) {
             model_().newtonMethod().endIterMsg()
                 << ", relinearized " << curNumRelin << " of " << numTotalElems_
                 << " elements (" << 100*Scalar(curNumRelin)/numTotalElems_ << "%)"
@@ -239,27 +231,11 @@ public:
     }
 
     /*!
-     * \brief If linearization recycling is enabled, this method
-     *        specifies whether the next call to linearize() just
-     *        rescales the storage term or does a full relinearization
-     *
-     * \param yesno If true, only rescale; else always do a full relinearization.
-     */
-    void setLinearizationReusable(bool yesno = true)
-    {
-        if (enableLinearizationRecycling_())
-            reuseLinearization_ = yesno;
-    }
-
-    /*!
      * \brief If partial relinearization is enabled, this method causes all
      *        elements to be relinearized in the next linearize() call.
      */
     void relinearizeAll()
     {
-        // do not reuse the current linearization
-        reuseLinearization_ = false;
-
         // do not use partial relinearization for the next iteration
         relinearizationAccuracy_ = 0.0;
         relinearizationTolerance_ = 0.0;
@@ -506,8 +482,6 @@ private:
         numGreenElems_ = gridView_().comm().sum(numGreenElems_);
     }
 
-    static bool enableLinearizationRecycling_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
     static bool enablePartialRelinearization_()
     { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
 
@@ -558,15 +532,7 @@ private:
         for (int threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
             elementCtx_[threadId] = new ElementContext(simulator_());
 
-        // initialize the storage part of the Jacobian matrix. Since we only need this if
-        // linearization recycling is enabled, we do not waste space if it is disabled
-        if (enableLinearizationRecycling_()) {
-            storageJacobian_.resize(numGridDof);
-            storageTerm_.resize(numGridDof);
-       }
-
         // initialize data needed for partial relinearization
-        reuseLinearization_ = false;
         if (enablePartialRelinearization_()) {
             dofColor_.resize(numGridDof);
             dofError_.resize(numGridDof);
@@ -642,22 +608,11 @@ private:
             residual_ = 0.0;
             (*matrix_) = 0;
 
-            // reset the parts needed for linearization recycling
-            if (enableLinearizationRecycling_()) {
-                for (unsigned dofIdx=0; dofIdx < numGridDof; ++ dofIdx) {
-                    storageTerm_[dofIdx] = 0.0;
-                    storageJacobian_[dofIdx] = 0.0;
-                }
-            }
-
             return;
         }
 
         // always reset the right hand side completely
         residual_ = 0.0;
-        if (enableLinearizationRecycling_())
-            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx)
-                storageTerm_[dofIdx] = 0.0;
 
         // reset the rows in the Jacobian which correspond to DOFs of auxiliary equations
         for (unsigned dofIdx = numGridDof; dofIdx < numTotalDof; ++dofIdx) {
@@ -696,8 +651,6 @@ private:
             }
             else {
                 // red or yellow DOF
-                if (enableLinearizationRecycling_())
-                    storageJacobian_[dofIdx] = 0.0;
 
                 // reset all entries in the row of the Jacobian which connect two non-green
                 // degrees of freedom
@@ -717,37 +670,6 @@ private:
     // linearize the whole system
     void linearize_()
     {
-        // if we can "recycle" the current linearization, we do it
-        // here and be done with it...
-        Scalar curDt = problem_().simulator().timeStepSize();
-        if (reuseLinearization_) {
-            unsigned numGridDof = model_().numGridDof();
-            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
-                // use the flux term plus the source term as the residual: the numerator
-                // in the d(storage)/dt term is 0 for the first iteration of a time step
-                // because the initial guess for the next solution is the value of the
-                // last time step.
-                residual_[dofIdx] -= storageTerm_[dofIdx];
-
-                // rescale the contributions of the storage term to the Jacobian matrix
-                MatrixBlock &J_ii = (*matrix_)[dofIdx][dofIdx];
-
-                J_ii -= storageJacobian_[dofIdx];
-                storageJacobian_[dofIdx] *= oldDt_/curDt;
-                J_ii += storageJacobian_[dofIdx];
-            }
-
-            reuseLinearization_ = false;
-            oldDt_ = curDt;
-
-            linearizeAuxiliaryEquations_();
-
-            problem_().newtonMethod().endIterMsg()
-                << ", linear system of equations rescaled using previous time step";
-            return;
-        }
-
-        oldDt_ = curDt;
         computeColors_();
         resetSystem_();
 
@@ -813,11 +735,6 @@ private:
             // update the right hand side
             residual_[globI] += localLinearizer.residual(primaryDofIdx);
 
-            if (enableLinearizationRecycling_()) {
-                storageTerm_[globI] += localLinearizer.residualStorage(primaryDofIdx);
-                storageJacobian_[globI] += localLinearizer.jacobianStorage(primaryDofIdx);
-            }
-
             // update the global Jacobian matrix
             for (unsigned dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
                 int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
@@ -851,9 +768,6 @@ private:
             // update the right hand side
             for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 residual_[globI][eqIdx] += Toolbox::value(localResidual.residual(dofIdx)[eqIdx]);
-            if (enableLinearizationRecycling_())
-                for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
-                    storageTerm_[globI][eqIdx] += Toolbox::value(localResidual.storageTerm(dofIdx)[eqIdx]);
         }
         addLock.unlock();
     }
@@ -872,14 +786,6 @@ private:
     Matrix *matrix_;
     // the right-hand side
     GlobalEqVector residual_;
-
-    // attributes required for jacobian matrix recycling
-    bool reuseLinearization_;
-    // The storage part of the local Jacobian
-    std::vector<MatrixBlock> storageJacobian_;
-    std::vector<VectorBlock> storageTerm_;
-    // time step size used for the last linearization
-    Scalar oldDt_;
 
     // data required for partial relinearization
     std::vector<EntityColor> dofColor_;

@@ -203,9 +203,6 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 //! Set the format of the VTK output to ASCII by default
 SET_INT_PROP(FvBaseDiscretization, VtkOutputFormat, Dune::VTK::ascii);
 
-// disable linearization recycling by default
-SET_BOOL_PROP(FvBaseDiscretization, EnableLinearizationRecycling, false);
-
 // disable partial relinearization by default
 SET_BOOL_PROP(FvBaseDiscretization, EnablePartialRelinearization, false);
 

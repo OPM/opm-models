@@ -68,9 +68,6 @@ NEW_PROP_TAG(NewtonMethod);
 //! the current solution deviates too much from the evaluation point
 NEW_PROP_TAG(EnablePartialRelinearization);
 
-//! Enable linearization recycling?
-NEW_PROP_TAG(EnableLinearizationRecycling);
-
 /*!
  * \brief The desired residual reduction of the linear solver.
  *
@@ -228,10 +225,7 @@ protected:
     {
         ParentType::succeeded_();
 
-        if (enableLinearizationRecycling_())
-            model_().linearizer().setLinearizationReusable(true);
-        else
-            model_().linearizer().relinearizeAll();
+        model_().linearizer().relinearizeAll();
     }
 
     /*!
@@ -259,13 +253,6 @@ private:
      */
     bool enablePartialRelinearization_() const
     { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
-
-    /*!
-     * \brief Returns true iff the linearizer recycles the
-     *        linearization if possible.
-     */
-    bool enableLinearizationRecycling_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
 };
 } // namespace Ewoms
 
