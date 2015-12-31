@@ -118,7 +118,7 @@ SET_SCALAR_PROP(NcpModel, NcpPressureBaseWeight, 1.0);
 //! The weight for the saturation primary variables
 SET_SCALAR_PROP(NcpModel, NcpSaturationsBaseWeight, 1.0);
 //! The unmodified weight for the fugacity primary variables
-SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0);
+SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0e-6);
 
 } // namespace Properties
 
@@ -404,13 +404,13 @@ public:
     {
         Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
-            // energy related equation
+            // an energy related equation
             return tmp;
         // an NCP
         else if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases)
             return 1.0;
 
-        // mass conservation equation
+        // a mass conservation equation
         unsigned compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numComponents);
 
