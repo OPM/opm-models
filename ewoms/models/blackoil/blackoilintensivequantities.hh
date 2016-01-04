@@ -122,9 +122,6 @@ public:
             }
         }
 
-        // oil phase temperature and pressure
-        const auto& T = fluidState_.temperature(oilPhaseIdx);
-
         // update phase compositions. first, set everything to 0...
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
@@ -141,14 +138,22 @@ public:
             // if the gas and oil phases are present, we use the compositions of the
             // gas-saturated oil and oil-saturated gas.
             Evaluation xoG = 0.0;
-            if (FluidSystem::enableDissolvedGas())
-                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
+            if (FluidSystem::enableDissolvedGas()) {
+                const Evaluation& RsSat =
+                    FluidSystem::saturatedDissolutionFactor(fluidState_, oilPhaseIdx, pvtRegionIdx_);
+                const Evaluation& XoGSat = FluidSystem::convertRsToXoG(RsSat, pvtRegionIdx_);
+                xoG = FluidSystem::convertXoGToxoG(XoGSat, pvtRegionIdx_);
+            }
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
 
             Evaluation xgO = 0.0;
-            if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, pvtRegionIdx_);
+            if (FluidSystem::enableVaporizedOil()) {
+                const Evaluation& RvSat =
+                    FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx_);
+                const Evaluation& XgOSat = FluidSystem::convertRvToXgO(RvSat, pvtRegionIdx_);
+                xgO = FluidSystem::convertXgOToxgO(XgOSat, pvtRegionIdx_);
+            }
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -161,8 +166,12 @@ public:
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
 
             Evaluation xgO = 0.0;
-            if (FluidSystem::enableVaporizedOil())
-                xgO = FluidSystem::saturatedGasOilMoleFraction(T, pg, pvtRegionIdx_);
+            if (FluidSystem::enableVaporizedOil()) {
+                const Evaluation& RvSat =
+                    FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx_);
+                const Evaluation& XgOSat = FluidSystem::convertRvToXgO(RvSat, pvtRegionIdx_);
+                xgO = FluidSystem::convertXgOToxgO(XgOSat, pvtRegionIdx_);
+            }
             fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgO);
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
@@ -177,8 +186,12 @@ public:
             fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
 
             Evaluation xoG = 0.0;
-            if (FluidSystem::enableDissolvedGas())
-                xoG = FluidSystem::saturatedOilGasMoleFraction(T, pg, pvtRegionIdx_);
+            if (FluidSystem::enableDissolvedGas()) {
+                const Evaluation& RsSat =
+                    FluidSystem::saturatedDissolutionFactor(fluidState_, oilPhaseIdx, pvtRegionIdx_);
+                const Evaluation& XoGSat = FluidSystem::convertRsToXoG(RsSat, pvtRegionIdx_);
+                xoG = FluidSystem::convertXoGToxoG(XoGSat, pvtRegionIdx_);
+            }
             fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
             fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1 - xoG);
         }

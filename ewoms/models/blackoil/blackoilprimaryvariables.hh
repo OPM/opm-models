@@ -267,9 +267,10 @@ public:
             if (Sg < 0.0 && So > 0.0 && FluidSystem::enableDissolvedGas()) {
                 // we switch to the gas mole fraction in the oil phase if some oil phase
                 // is present and dissolved gas is enabled
-                Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_,
-                                                                         pg,
-                                                                         pvtRegionIdx_);
+                Scalar Rssat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, temperature_, pg);
+                Scalar XoGsat = FluidSystem::convertRsToXoG(Rssat, pvtRegionIdx_);
+                Scalar xoGsat = FluidSystem::convertXoGToxoG(XoGsat, pvtRegionIdx_);
+
                 setSwitchingVarMeaning(GasMoleFractionInOil);
                 (*this)[Indices::switchIdx] = xoGsat;
                 return true;
@@ -279,9 +280,10 @@ public:
                 // we switch to the oil mole fraction in the gas phase if some gas phase
                 // is present and vaporized oil is enabled. TODO (?): use oil instead of
                 // gas pressure!
-                Scalar xgOsat = FluidSystem::saturatedGasOilMoleFraction(temperature_,
-                                                                         pg,
-                                                                         pvtRegionIdx_);
+                Scalar Rvsat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, temperature_, pg);
+                Scalar XgOsat = FluidSystem::convertRvToXgO(Rvsat, pvtRegionIdx_);
+                Scalar xgOsat = FluidSystem::convertXgOToxgO(XgOsat, pvtRegionIdx_);
+
                 setSwitchingVarMeaning(OilMoleFractionInGas);
                 (*this)[Indices::switchIdx] = xgOsat;
                 return true;
@@ -292,9 +294,9 @@ public:
             // only gas. oil appears as soon as more oil is present as can be dissolved
             Scalar Sw = (*this)[Indices::waterSaturationIdx];
             Scalar xgO = (*this)[Indices::switchIdx];
-            Scalar xgOsat = FluidSystem::saturatedGasOilMoleFraction(temperature_,
-                                                                     pg,
-                                                                     pvtRegionIdx_);
+            Scalar Rvsat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, temperature_, pg);
+            Scalar XgOsat = FluidSystem::convertRvToXgO(Rvsat, pvtRegionIdx_);
+            Scalar xgOsat = FluidSystem::convertXgOToxgO(XgOsat, pvtRegionIdx_);
 
             if (xgO > xgOsat) {
                 setSwitchingVarMeaning(GasSaturation);
@@ -309,9 +311,9 @@ public:
 
             // only oil. gas appears as soon as more gas is present as can be dissolved
             Scalar xoG = (*this)[Indices::switchIdx];
-            Scalar xoGsat = FluidSystem::saturatedOilGasMoleFraction(temperature_,
-                                                                     pg,
-                                                                     pvtRegionIdx_);
+            Scalar Rssat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, temperature_, pg);
+            Scalar XoGsat = FluidSystem::convertRsToXoG(Rssat, pvtRegionIdx_);
+            Scalar xoGsat = FluidSystem::convertXoGToxoG(XoGsat, pvtRegionIdx_);
 
             if (xoG > xoGsat) {
                 setSwitchingVarMeaning(GasSaturation);
