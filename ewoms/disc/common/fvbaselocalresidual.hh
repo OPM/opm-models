@@ -252,9 +252,11 @@ public:
                 asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
 
                 // multiply the with the volume of the associated DOF
-                storage[dofIdx] *=
+                Scalar alpha =
                     elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
                     * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                    storage[dofIdx][eqIdx] *= alpha;
             }
         }
         else {
