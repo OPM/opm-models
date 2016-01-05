@@ -29,10 +29,10 @@
 #include <opm/material/localad/Evaluation.hpp>
 
 #include "ertwrappers.hh"
+#include "collecttoiorank.hh"
 
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
 #include <ewoms/io/baseoutputwriter.hh>
-#include <ewoms/parallel/collecttoiorank.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 
