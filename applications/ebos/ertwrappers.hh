@@ -55,29 +55,15 @@
 
 namespace Ewoms {
 
-// forward definition of the EclGridManager class. We need this for
-// specialization...
-template <class TypeTag>
-class EclGridManager;
-
 /// \cond SKIP_THIS
 
-// required to make the compiler happy if the grid manager is not EclGridManager...
-
+// force the grid manager to exhibit caseName() and eclGrid() methods
 template <class GridManager>
-std::string getErtCaseName__(const GridManager &gridManager)
-{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write ECL files"); }
-
-template <class TypeTag>
-std::string getErtCaseName__(const EclGridManager<TypeTag> &gridManager)
+std::string getErtCaseName__(const GridManager& gridManager)
 { return gridManager.caseName(); }
 
 template <class GridManager>
 const Opm::EclipseGridConstPtr getEclGrid__(const GridManager &gridManager)
-{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write ECL files"); }
-
-template <class TypeTag>
-const Opm::EclipseGridConstPtr getEclGrid__(const EclGridManager<TypeTag> &gridManager)
 { return gridManager.eclGrid(); }
 
 /// \endcond

@@ -384,7 +384,7 @@ namespace Ewoms
         IndexMapType                    localIndexMap_;
         IndexMapStorageType             indexMaps_;
         // true if we are on I/O rank
-        const bool                      isIORank_;
+        bool                            isIORank_;
     };
 
 } // end namespace Opm

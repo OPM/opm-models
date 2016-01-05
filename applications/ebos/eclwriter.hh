@@ -54,29 +54,8 @@ NEW_PROP_TAG(EnableEclOutput);
 template <class TypeTag>
 class EclWriter;
 
-template <class TypeTag>
-class EclGridManager;
-
-// we need to use specialization here because we need to call
-// EclGridManager-specific methods.
-
-// this is the stub class for non-cornerpoint grids
 template <class TypeTag, class GridManagerType>
 class EclWriterHelper
-{
-    friend class EclWriter<TypeTag>;
-
-    static void writeHeaders_(EclWriter<TypeTag> &writer)
-    {
-        OPM_THROW(std::logic_error,
-                  "Ecl binary output requires to use Ewoms::EclGridManager (is: "
-                  << Dune::className<GridManagerType>());
-    }
-};
-
-// this is the "real" code for cornerpoint grids
-template <class TypeTag>
-class EclWriterHelper<TypeTag, Ewoms::EclGridManager<TypeTag> >
 {
     friend class EclWriter<TypeTag>;
 
