@@ -98,8 +98,6 @@ public:
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         const auto &problem = elemCtx.problem();
         Scalar flashTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, FlashTolerance);
-        if (flashTolerance <= 0)
-            flashTolerance = std::numeric_limits<Scalar>::epsilon()*1e7;
 
         // extract the total molar densities of the components
         ComponentVector cTotal;

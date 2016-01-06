@@ -99,7 +99,7 @@ public:
         if (!phasePresenceOutput_())
             return;
 
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
+        for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             // calculate the phase presence
             int phasePresence = elemCtx.primaryVars(i, /*timeIdx=*/0).phasePresence();
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);

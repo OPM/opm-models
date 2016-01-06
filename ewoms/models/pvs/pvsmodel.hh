@@ -283,8 +283,8 @@ public:
         std::ostringstream oss;
         if (pvIdx == Indices::pressure0Idx)
             oss << "pressure_" << FluidSystem::phaseName(/*phaseIdx=*/0);
-        else if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx
-                                                         + numPhases - 1)
+        else if (Indices::switch0Idx <= pvIdx
+                 && pvIdx < Indices::switch0Idx + numPhases - 1)
             oss << "switch_" << pvIdx - Indices::switch0Idx;
         else if (Indices::switch0Idx + numPhases - 1 <= pvIdx
                  && pvIdx < Indices::switch0Idx + numComponents - 1)
@@ -504,7 +504,6 @@ public:
                                              intQuants.fluidState(),
                                              oldPhasePresence,
                                              priVars);
-                    this->linearizer().markDofRed(globalIdx);
                     ++numSwitched_;
                 }
             }

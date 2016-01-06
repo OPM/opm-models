@@ -41,8 +41,8 @@
 #define EWOMS_PROPERTIES_HH
 
 #include <opm/material/common/ClassName.hpp>
-#include <opm/material/common/ErrorMacros.hpp>
-#include <opm/material/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <type_traits> // required for 'is_base_of<A, B>'
 
@@ -691,14 +691,31 @@ public:
             OPM_THROW(std::runtime_error,
                       "Unknown type tag key '" << typeTagName << "'");
 
-        // check whether the propery is defined for the type tag
-        // currently checked
+        // check whether the propery is directly defined for the type tag currently
+        // checked, ...
         const auto &propIt = keyIt->second.find(propertyName);
         const auto &propEndIt = keyIt->second.end();
         if (propIt != propEndIt)
             return propIt->second.propertyValue();
 
-        // if not, check all children
+        // ..., if not, check all splices,  ...
+        typedef TypeTagRegistry::SpliceList SpliceList;
+        const SpliceList &splices = TypeTagRegistry::splices(typeTagName);
+        SpliceList::const_iterator spliceIt = splices.begin();
+        for (; spliceIt != splices.end(); ++spliceIt) {
+            const auto &spliceTypeTagName =
+                PropertyRegistry::getSpliceTypeTagName(typeTagName,
+                                                       (*spliceIt)->propertyName());
+
+            if (spliceTypeTagName == "")
+                continue;
+
+            const auto &tmp = getSpliceTypeTagName(spliceTypeTagName, propertyName);
+            if (tmp != "")
+                return tmp;
+        }
+
+        // .. if still not, check all normal children.
         typedef TypeTagRegistry::ChildrenList ChildrenList;
         const ChildrenList &children = TypeTagRegistry::children(typeTagName);
         ChildrenList::const_iterator ttagIt = children.begin();
@@ -844,12 +861,13 @@ struct Splices
 template <class TypeTag, class PropertyTag>
 struct GetProperty
 {
-    template <class CurTree,
-              bool directlyDefined =
+    // find the type tag for which the property is defined
+    template <class CurTree, bool directlyDefined =
                   propertyDefinedOnSelf<TypeTag,
                                         CurTree,
                                         PropertyTag>::value>
-    struct GetEffectiveTypeTag_;
+    struct GetEffectiveTypeTag_
+    { typedef typename CurTree::SelfType type; };
 
     template <class ...Elements>
     struct SearchTypeTagList_;
@@ -932,11 +950,6 @@ struct GetProperty
     template <class CurTree>
     struct SearchSplicesThenChildren_<CurTree, void>
     { typedef typename SearchTypeTagTuple_<typename CurTree::ChildrenTuple>::type type; };
-
-    // find the type tag for which the property is defined
-    template <class CurTree, bool directlyDefined>
-    struct GetEffectiveTypeTag_
-    { typedef typename CurTree::SelfType type; };
 
     template <class CurTree>
     struct GetEffectiveTypeTag_<CurTree, /*directlyDefined = */false>

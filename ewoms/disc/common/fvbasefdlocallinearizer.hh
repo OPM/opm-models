@@ -428,7 +428,7 @@ protected:
     {
         // save all quantities which depend on the specified primary
         // variable at the given sub control volume
-        elemCtx.saveIntensiveQuantities(dofIdx);
+        elemCtx.stashIntensiveQuantities(dofIdx);
 
         PrimaryVariables priVars(elemCtx.primaryVars(dofIdx, /*timeIdx=*/0));
         Scalar eps = asImp_().numericEpsilon(elemCtx, dofIdx, pvIdx);

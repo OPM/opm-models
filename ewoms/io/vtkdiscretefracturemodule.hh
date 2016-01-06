@@ -151,10 +151,10 @@ public:
             this->resizeScalarBuffer_(fractureVolumeFraction_);
 
         if (velocityOutput_()) {
-            int nDof = this->simulator_.model().numGridDof();
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            unsigned nDof = this->simulator_.model().numGridDof();
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 fractureVelocity_[phaseIdx].resize(nDof);
-                for (int dofIdx = 0; dofIdx < nDof; ++dofIdx) {
+                for (unsigned dofIdx = 0; dofIdx < nDof; ++dofIdx) {
                     fractureVelocity_[phaseIdx][dofIdx].resize(dimWorld);
                     fractureVelocity_[phaseIdx][dofIdx] = 0.0;
                 }
@@ -171,8 +171,8 @@ public:
     {
         const auto &fractureMapper = elemCtx.simulator().gridManager().fractureMapper();
 
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+        for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             if (!fractureMapper.isFractureVertex(I))
                 continue;
 
@@ -186,7 +186,7 @@ public:
                 fractureIntrinsicPermeability_[I] = K[0][0];
             }
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (saturationOutput_())
                     fractureSaturation_[phaseIdx][I] = fs.saturation(phaseIdx);
                 if (mobilityOutput_())
@@ -201,19 +201,19 @@ public:
 
         if (velocityOutput_()) {
             // calculate velocities if requested by the simulator
-            for (int scvfIdx = 0; scvfIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ scvfIdx) {
+            for (unsigned scvfIdx = 0; scvfIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ scvfIdx) {
                 const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, /*timeIdx=*/0);
 
-                int i = extQuants.interiorIndex();
-                int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+                unsigned i = extQuants.interiorIndex();
+                unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
-                int j = extQuants.exteriorIndex();
-                int J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
+                unsigned j = extQuants.exteriorIndex();
+                unsigned J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
 
                 if (!fractureMapper.isFractureEdge(I, J))
                     continue;
 
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = std::max(1e-16, std::abs(extQuants.fractureVolumeFlux(phaseIdx)));
                     Valgrind::CheckDefined(extQuants.extrusionFactor());
                     assert(extQuants.extrusionFactor() > 0);
@@ -222,7 +222,7 @@ public:
                     Dune::FieldVector<Scalar, dim> v(extQuants.fractureFilterVelocity(phaseIdx));
                     v *= weight;
 
-                    for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+                    for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
                         fractureVelocity_[phaseIdx][I][dimIdx] += v[dimIdx];
                         fractureVelocity_[phaseIdx][J][dimIdx] += v[dimIdx];
                     }
@@ -263,12 +263,12 @@ public:
         }
 
         if (velocityOutput_()) {
-            int nDof = this->simulator_.model().numGridDof();
+            unsigned nDof = this->simulator_.model().numGridDof();
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
-                for (int dofIdx = 0; dofIdx < nDof; ++dofIdx)
+                for (unsigned dofIdx = 0; dofIdx < nDof; ++dofIdx)
                     fractureVelocity_[phaseIdx][dofIdx] /=
                         std::max<Scalar>(1e-20, fractureVelocityWeight_[phaseIdx][dofIdx]);
                 // commit the phase velocity

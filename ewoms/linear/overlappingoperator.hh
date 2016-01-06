@@ -54,7 +54,7 @@ public:
     virtual void apply(const DomainVector &x, RangeVector &y) const
     {
         A_.mv(x, y);
-        y.syncFront();
+        y.sync();
     }
 
     //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
@@ -62,7 +62,7 @@ public:
                                RangeVector &y) const
     {
         A_.usmv(alpha, x, y);
-        y.syncFront();
+        y.sync();
     }
 
     //! returns the matrix

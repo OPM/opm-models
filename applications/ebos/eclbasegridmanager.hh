@@ -1,8 +1,6 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2012-2013 by Andreas Lauser
-
   This file is part of the Open Porous Media project (OPM).
 
   OPM is free software: you can redistribute it and/or modify
@@ -20,34 +18,14 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::EclGridManager
+ * \copydoc Ewoms::EclBaseGridManager
  */
-#ifndef EWOMS_ECL_GRID_MANAGER_HH
-#define EWOMS_ECL_GRID_MANAGER_HH
+#ifndef EWOMS_ECL_BASE_GRID_MANAGER_HH
+#define EWOMS_ECL_BASE_GRID_MANAGER_HH
 
 #include <ewoms/io/basegridmanager.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
-
-#include <dune/grid/CpGrid.hpp>
-
-// set the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly hacky, but
-// the macro is only used by this file...
-#if EBOS_USE_ALUGRID
-#if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
-#warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
-#warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
-#undef EBOS_USE_ALUGRID
-#define EBOS_USE_ALUGRID 0
-#endif
-#else
-#define EBOS_USE_ALUGRID 0
-#endif
-
-#if EBOS_USE_ALUGRID
-#include <dune/alugrid/grid.hh>
-#include <dune/alugrid/common/fromtogridfactory.hh>
-#endif
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -57,37 +35,23 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include <dune/grid/yaspgrid.hh>
-#include <dune/common/fvector.hh>
-#include <dune/common/version.hh>
-
 #include <vector>
+#include <array>
 
 namespace Ewoms {
 template <class TypeTag>
-class EclProblem;
-
-template <class TypeTag>
-class EclGridManager;
+class EclBaseGridManager;
 
 namespace Properties {
-NEW_TYPE_TAG(EclGridManager);
+NEW_TYPE_TAG(EclBaseGridManager);
 
 // declare the properties required by the for the ecl grid manager
 NEW_PROP_TAG(Grid);
+NEW_PROP_TAG(EquilGrid);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(EclDeckFileName);
 
-SET_STRING_PROP(EclGridManager, EclDeckFileName, "data/ecl.DATA");
-
-// set the Grid and GridManager properties
-#if EBOS_USE_ALUGRID
-SET_TYPE_PROP(EclGridManager, Grid, Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming>);
-#else
-SET_TYPE_PROP(EclGridManager, Grid, Dune::CpGrid);
-#endif
-
-SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
+SET_STRING_PROP(EclBaseGridManager, EclDeckFileName, "ECLDECK.DATA");
 } // namespace Properties
 
 /*!
@@ -96,16 +60,20 @@ SET_TYPE_PROP(EclGridManager, GridManager, Ewoms::EclGridManager<TypeTag>);
  * \brief Helper class for grid instantiation of ECL file-format using problems.
  */
 template <class TypeTag>
-class EclGridManager : public BaseGridManager<TypeTag>
+class EclBaseGridManager : public BaseGridManager<TypeTag>
 {
     typedef BaseGridManager<TypeTag> ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, GridManager) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+
+public:
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
-    typedef std::unique_ptr<Grid> GridPointer;
+protected:
+    static const int dimension = Grid::dimension;
 
-    static const int dimension = Grid :: dimension;
 public:
     /*!
      * \brief Register all run-time parameters for the grid manager.
@@ -122,16 +90,14 @@ public:
      * This is the file format used by the commercial ECLiPSE simulator. Usually it uses
      * a cornerpoint description of the grid.
      */
-    EclGridManager(Simulator &simulator)
-        : ParentType(simulator),
-          cartesianCellId_(),
-          cartesianSize_()
+    EclBaseGridManager(Simulator &simulator)
+        : ParentType(simulator)
     {
         std::string fileName = EWOMS_GET_PARAM(TypeTag, std::string, EclDeckFileName);
 
         // compute the base name of the input file name
         const char directorySeparator = '/';
-        int i;
+        long int i;
         for (i = fileName.size(); i >= 0; -- i)
             if (fileName[i] == directorySeparator)
                 break;
@@ -153,58 +119,19 @@ public:
             caseName_ += std::toupper(rawCaseName[i]);
 
         Opm::ParserPtr parser(new Opm::Parser());
-        Opm::ParseMode parseMode({{ Opm::ParseMode::PARSE_RANDOM_SLASH , Opm::InputError::IGNORE }});
-        std::cout << "Reading the deck file ('" << fileName << "')" << std::endl;
+        typedef std::pair<std::string, Opm::InputError::Action> ParseModePair;
+        typedef std::vector<ParseModePair> ParseModePairs;
+        ParseModePairs tmp;
+        tmp.push_back(ParseModePair(Opm::ParseMode::PARSE_RANDOM_SLASH , Opm::InputError::IGNORE));
+        Opm::ParseMode parseMode(tmp);
+        std::cout << "Reading the deck file '" << fileName << "'" << std::endl;
         deck_ = parser->parseFile(fileName , parseMode);
         eclState_.reset(new Opm::EclipseState(deck_, parseMode));
 
-#if EBOS_USE_ALUGRID
-        std::unique_ptr< Dune::CpGrid > cpgrid(new Dune::CpGrid());
-#else
-        Grid* cpgrid = new Grid();
-#endif
-        std::vector<double> porv = eclState_->getDoubleGridProperty("PORV")->getData();
-        cpgrid->processEclipseFormat(eclState_->getEclipseGrid(),
-                                     /*isPeriodic=*/false,
-                                     /*flipNormals=*/false,
-                                     /*clipZ=*/false,
-                                     porv);
+        asImp_().createGrids_();
 
-        for (int i = 0; i < dimension; ++i)
-            cartesianSize_[i] = cpgrid->logicalCartesianSize()[i];
-
-#if EBOS_USE_ALUGRID
-        Dune::FromToGridFactory< Grid > factory;
-        std::vector< int > ordering;
-        grid_ = GridPointer(factory.convert(*cpgrid, ordering));
-        if (ordering.empty())
-            // copy cartesian cell index from cp grid
-            cartesianCellId_ = cpgrid->globalCell();
-        else {
-            const int size = ordering.size();
-            cartesianCellId_.reserve(size);
-            const std::vector<int>& globalCell = cpgrid->globalCell();
-            for (int i = 0; i < size; ++i)
-                cartesianCellId_.push_back(globalCell[ordering[i]]);
-        }
-#else
-        grid_ = GridPointer(cpgrid);
-#endif
-
-        this->finalizeInit_();
+        asImp_().finalizeInit_();
     }
-
-    /*!
-     * \brief Return a reference to the grid.
-     */
-    Grid& grid()
-    { return *grid_; }
-
-    /*!
-     * \brief Return a reference to the grid.
-     */
-    const Grid& grid() const
-    { return *grid_; }
 
     /*!
      * \brief Return a pointer to the parsed ECL deck
@@ -244,35 +171,36 @@ public:
     { return caseName_; }
 
     /*!
-     * \brief Returns the logical Cartesian size
+     * \brief Returns the number of logically Cartesian cells in each direction
      */
-    const std::array<int, dimension>& logicalCartesianSize() const
-    { return cartesianSize_; }
+    const std::array<int, dimension>& cartesianDimensions() const
+    { return asImp_().cartesianIndexMapper().cartesianDimensions(); }
 
     /*!
-     * \brief Returns the logical Cartesian size
+     * \brief Returns the overall number of cells of the logically Cartesian grid
      */
-    int numLogicalCartesianCells() const
-    {
-#if EBOS_USE_ALUGRID
-        int n = cartesianCellId_.size();
-#else
-        int n = grid_->globalCell().size();
-#endif
-        assert(cartesianSize_[0]*cartesianSize_[1]*cartesianSize_[2] == n);
-        return n;
-    }
+    int cartesianSize() const
+    { return asImp_().cartesianIndexMapper().cartesianSize(); }
 
     /*!
-     * \brief Returns the Cartesian cell id for identifaction with Ecl data
+     * \brief Returns the Cartesian cell id for identifaction with ECL data
      */
-    int cartesianCellId(int compressedCellIdx) const
+    unsigned cartesianIndex(unsigned compressedCellIdx) const
+    { return asImp_().cartesianIndexMapper().cartesianIndex(compressedCellIdx); }
+
+    /*!
+     * \brief Return the index of the cells in the logical Cartesian grid
+     */
+    unsigned cartesianIndex(const std::array<int,dimension>& coords) const
     {
-#if EBOS_USE_ALUGRID
-        return cartesianCellId_[compressedCellIdx];
-#else
-        return grid_->globalCell()[compressedCellIdx];
-#endif
+        unsigned cartIndex = coords[0];
+        int factor = cartesianDimensions()[0];
+        for (unsigned i = 1; i < dimension; ++i) {
+            cartIndex += coords[i]*factor;
+            factor *= cartesianDimensions()[i];
+        }
+
+        return cartIndex;
     }
 
     /*!
@@ -281,35 +209,20 @@ public:
      * \param [in] cellIdx Active cell index.
      * \param [out] ijk Cartesian index triplet
      */
-    void getIJK(int cellIdx, std::array<int,3>& ijk) const
-    {
-        assert(cellIdx < int(numLogicalCartesianCells()));
-        int cartesianCellIdx = cartesianCellId(cellIdx);
-
-        ijk[0] = cartesianCellIdx % cartesianSize_[0];
-        cartesianCellIdx /= cartesianSize_[0];
-
-        ijk[1] = cartesianCellIdx % cartesianSize_[1];
-
-        ijk[2] = cartesianCellIdx / cartesianSize_[1];
-
-#if !defined NDEBUG && !EBOS_USE_ALUGRID
-        // make sure ijk computation is the same as in CpGrid
-        std::array<int,3> checkIjk;
-        grid_->getIJK(cellIdx, checkIjk);
-        for (int i=0; i < 3; ++i)
-            assert(checkIjk[i] == ijk[i]);
-#endif
-    }
+    void cartesianCoordinate(unsigned cellIdx, std::array<int,3>& ijk) const
+    { return asImp_().cartesianIndexMapper().cartesianCoordinate(cellIdx, ijk); }
 
 private:
+    Implementation& asImp_()
+    { return *static_cast<Implementation*>(this); }
+
+    const Implementation& asImp_() const
+    { return *static_cast<const Implementation*>(this); }
+
     std::string caseName_;
-    GridPointer grid_;
     Opm::DeckConstPtr deck_;
     Opm::EclipseStateConstPtr eclState_;
 
-    std::vector<int> cartesianCellId_;
-    std::array<int,dimension> cartesianSize_;
 };
 
 } // namespace Ewoms

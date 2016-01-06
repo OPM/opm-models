@@ -26,10 +26,12 @@
 #define EWOMS_DGF_GRID_MANAGER_HH
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
+#include <ewoms/models/discretefracture/fracturemapper.hh>
 
 #include <ewoms/io/basegridmanager.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
+
 
 #include <type_traits>
 #include <string>
@@ -54,8 +56,9 @@ class DgfGridManager : public BaseGridManager<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
+    typedef Ewoms::FractureMapper<TypeTag> FractureMapper;
 
-    typedef Dune::GridPtr<Grid> GridPointer;
+    typedef std::unique_ptr< Grid > GridPointer;
 
 public:
     /*!
@@ -79,7 +82,16 @@ public:
         const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
         unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
 
-        gridPtr_ = GridPointer(dgfFileName.c_str(), Dune::MPIHelper::getCommunicator());
+        {
+            // create DGF GridPtr from a dgf file
+            Dune::GridPtr< Grid > dgfPointer( dgfFileName );
+
+            // this is only implemented for 2d currently
+            addFractures_( dgfPointer );
+
+            // store pointer to dune grid
+            gridPtr_.reset( dgfPointer.release() );
+        }
 
         if (numRefinments > 0)
             gridPtr_->globalRefine(numRefinments);
@@ -100,18 +112,6 @@ public:
     { return *gridPtr_; }
 
     /*!
-     * \brief Returns a reference to the DGF grid pointer.
-     */
-    GridPointer& dgfGridPointer()
-    { return gridPtr_; }
-
-    /*!
-     * \brief Returns a constant reference to the DGF grid pointer.
-     */
-    const GridPointer& dgfGridPointer() const
-    { return gridPtr_; }
-
-    /*!
      * \brief Distributes the grid on all processes of a parallel
      *        computation.
      *
@@ -119,10 +119,99 @@ public:
      * the DGF...
      */
     void loadBalance()
-    { gridPtr_.loadBalance(); }
+    { gridPtr_->loadBalance(); }
+
+    /*!
+     * \brief Returns the fracture mapper
+     *
+     * The fracture mapper determines the topology of the fractures.
+     */
+    FractureMapper &fractureMapper()
+    { return fractureMapper_; }
+
+    /*!
+     * \brief Returns the fracture mapper
+     *
+     * The fracture mapper determines the topology of the fractures.
+     */
+    const FractureMapper &fractureMapper() const
+    { return fractureMapper_; }
+
+protected:
+    void addFractures_( Dune::GridPtr< Grid >& dgfPointer )
+    {
+        // check if fractures are available (only 2d currently)
+        if( dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
+        {
+            typedef typename  Grid::LevelGridView GridView;
+#if DUNE_VERSION_NEWER(DUNE_GRID,2,3)
+            GridView gridView = dgfPointer->levelGridView( 0 );
+#else
+            GridView gridView = dgfPointer->levelView( 0 );
+#endif
+
+            // first create a map of the dune to ART vertex indices
+            typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
+                                                              Dune::MCMGVertexLayout>  ElementMapper;
+
+            const int edgeCodim = Grid::dimension - 1;
+
+            ElementMapper elementMapper( gridView );
+            const auto endIt = gridView.template end< 0 > ();
+            for( auto eIt = gridView.template begin< 0 >(); eIt != endIt; ++eIt )
+            {
+                const auto& element = *eIt;
+#if DUNE_VERSION_NEWER(DUNE_GRID,2,3)
+                const auto& refElem =
+                      Dune::ReferenceElements< Scalar, Grid::dimension >::general( element.type() );
+#else
+                const auto& refElem =
+                      Dune::GenericReferenceElements< Scalar, Grid::dimension >::general( element.type() );
+#endif
+
+                const int edges = refElem.size( edgeCodim );
+                for( int edge = 0; edge < edges; ++edge )
+                {
+                    const int vertices = refElem.size( edge, edgeCodim, Grid::dimension );
+                    std::vector< int > vertexIndices;
+                    vertexIndices.reserve( Grid::dimension );
+                    for( int vx = 0; vx<vertices; ++vx )
+                    {
+                        // get local vertex number from edge
+                        const int localVx = refElem.subEntity( edge, edgeCodim, vx, Grid::dimension );
+
+#if DUNE_VERSION_NEWER(DUNE_GRID,2,4)
+                        // get vertex
+                        const auto vertex = element.template subEntity< Grid::dimension >( localVx );
+#else
+                        // get vertex
+                        const auto vertexPtr = element.template subEntity< Grid::dimension >( localVx );
+                        const auto& vertex = *vertexPtr ;
+#endif
+
+                        // if vertex has parameter 1 insert as a fracture vertex
+                        if( dgfPointer.parameters( vertex )[ 0 ] > 0 )
+                        {
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,4)
+                            vertexIndices.push_back( elementMapper.subIndex( element, localVx, Grid::dimension ) );
+#else
+                            vertexIndices.push_back( elementMapper.map( element, localVx, Grid::dimension ) );
+#endif
+                        }
+                    }
+                    // if 2 vertices have been found with flag 1 insert a fracture edge
+                    if( int(vertexIndices.size()) == Grid::dimension )
+                    {
+                        fractureMapper_.addFractureEdge(vertexIndices[ 0 ], vertexIndices[ 1 ] );
+                    }
+                }
+            }
+        }
+    }
 
 private:
-    GridPointer gridPtr_;
+    GridPointer    gridPtr_;
+    FractureMapper fractureMapper_;
 };
 
 } // namespace Ewoms

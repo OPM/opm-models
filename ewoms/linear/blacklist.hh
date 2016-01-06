@@ -63,7 +63,7 @@ public:
     void addIndex(Index nativeIdx)
     { nativeBlackListedIndices_.insert(nativeIdx); }
 
-    Index nativeToDomesticIndex(Index nativeIdx) const
+    Index nativeToDomestic(Index nativeIdx) const
     {
         auto it = nativeToDomesticMap_.find(nativeIdx);
         if (it == nativeToDomesticMap_.end())
@@ -106,7 +106,7 @@ public:
         const auto &idxEndIt = nativeBlackListedIndices_.end();
         for (; idxIt != idxEndIt; ++idxIt)
             std::cout << " (native index: " << *idxIt
-                      << ", domestic index: " << nativeToDomesticIndex(*idxIt) << ")\n";
+                      << ", domestic index: " << nativeToDomestic(*idxIt) << ")\n";
         std::cout << "blacklisted indices of the peers in my own domain:\n";
         auto peerListIt = peerBlackLists_.begin();
         const auto& peerListEndIt = peerBlackLists_.end();

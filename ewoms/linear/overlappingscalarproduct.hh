@@ -54,10 +54,10 @@ public:
                    const OverlappingBlockVector &y)
     {
         double sum = 0;
-        int numDom = overlap_.numDomestic();
-        for (int domIdx = 0; domIdx < numDom; ++domIdx) {
-            if (overlap_.iAmMasterOf(domIdx))
-                sum += x[domIdx] * y[domIdx];
+        int numLocal = overlap_.numLocal();
+        for (int localIdx = 0; localIdx < numLocal; ++localIdx) {
+            if (overlap_.iAmMasterOf(localIdx))
+                sum += x[localIdx] * y[localIdx];
         }
 
         // compute the global sum

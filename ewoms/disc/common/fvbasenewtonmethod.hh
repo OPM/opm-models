@@ -64,21 +64,6 @@ NEW_PROP_TAG(DiscNewtonMethod);
 //! The class implementing the Newton algorithm
 NEW_PROP_TAG(NewtonMethod);
 
-//! Specifies whether the linearization should only be relinearized if
-//! the current solution deviates too much from the evaluation point
-NEW_PROP_TAG(EnablePartialRelinearization);
-
-//! Enable linearization recycling?
-NEW_PROP_TAG(EnableLinearizationRecycling);
-
-/*!
- * \brief The desired residual reduction of the linear solver.
- *
- * In the context of this class, this is needed to implement partial
- * relinearization of the linearized system of equations.
- */
-NEW_PROP_TAG(LinearSolverTolerance);
-
 // set default values
 SET_TYPE_PROP(FvBaseNewtonMethod, DiscNewtonMethod,
               Ewoms::FvBaseNewtonMethod<TypeTag>);
@@ -143,61 +128,15 @@ protected:
                  const GlobalEqVector &solutionUpdate,
                  const GlobalEqVector &currentResidual)
     {
-        auto& model = this->model();
-        auto& linearizer = model.linearizer();
+        ParentType::update_(nextSolution, currentSolution, solutionUpdate, currentResidual);
 
-        // first, write out the next solution to make convergence
-        // analysis possible
-        this->writeConvergence_(currentSolution, solutionUpdate);
-
-        // make sure not to swallow non-finite values at this point
-        if (!std::isfinite(solutionUpdate.two_norm2()))
-            OPM_THROW(Opm::NumericalIssue, "Non-finite update!");
-
-        Scalar relinearizationTol = 0.0;
-
-        // compute the DOF and element colors for partial relinearization
-        if (enablePartialRelinearization_()) {
-            linearizer.updateRelinearizationErrors(solutionUpdate, currentResidual);
-
-            // we chose to relinearize all DOFs for which the solution is to be deflected
-            // by more than a thousandth of the maximum deflection.
-            relinearizationTol = 1e-1*linearizer.maxDofError();
-
-            // decrease the relinearization tolerance until at least 15% of the DOFs are
-            // relinearized. (or by at most 6 orders of magnitude.)
-            for (unsigned i = 0; i < 6; ++i) {
-                unsigned numRelinearized = 0;
-                for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
-                    if (linearizer.dofError(dofIdx) > relinearizationTol)
-                        ++numRelinearized;
-                }
-
-                if (numRelinearized*100 >= model.numGridDof()*15)
-                    break;
-
-                relinearizationTol /= 10;
-            }
-
-            // tell the linarizer what tolerance it should use
-            linearizer.setRelinearizationTolerance(relinearizationTol);
-        }
-
-        // update the solution for the grid DOFs
-        for (unsigned dofIdx = 0; dofIdx < model.numGridDof(); ++dofIdx) {
-            asImp_().updatePrimaryVariables_(dofIdx,
-                                             nextSolution[dofIdx],
-                                             currentSolution[dofIdx],
-                                             solutionUpdate[dofIdx],
-                                             currentResidual[dofIdx]);
-            model.setIntensiveQuantitiesCacheEntryValidity(dofIdx, /*timeIdx=*/0, false);
-        }
-
-        // update the DOFs of the auxiliary equations
-        int nTotalDof = model.numTotalDof();
-        for (int dofIdx = model.numGridDof(); dofIdx < nTotalDof; ++dofIdx) {
-            nextSolution[dofIdx] = currentSolution[dofIdx];
-            nextSolution[dofIdx] -= solutionUpdate[dofIdx];
+        // make sure that the intensive quantities get recalculated at the next
+        // linearization
+        if (model_().storeIntensiveQuantities()) {
+            for (unsigned dofIdx = 0; dofIdx < model_().numGridDof(); ++dofIdx)
+                model_().setIntensiveQuantitiesCacheEntryValidity(dofIdx,
+                                                                  /*timeIdx=*/0,
+                                                                  /*valid=*/false);
         }
     }
 
@@ -209,29 +148,6 @@ protected:
         model_().syncOverlap();
 
         ParentType::beginIteration_();
-    }
-
-    /*!
-     * \brief Called if the Newton method broke down.
-     */
-    void failed_()
-    {
-        ParentType::failed_();
-
-        model_().linearizer().relinearizeAll();
-    }
-
-    /*!
-     * \brief Called when the Newton method was successful.
-     */
-    void succeeded_()
-    {
-        ParentType::succeeded_();
-
-        if (enableLinearizationRecycling_())
-            model_().linearizer().setLinearizationReusable(true);
-        else
-            model_().linearizer().relinearizeAll();
     }
 
     /*!
@@ -252,20 +168,6 @@ private:
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
-
-    /*!
-     * \brief Returns true iff the linearizer uses partial
-     *        relinearization.
-     */
-    bool enablePartialRelinearization_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnablePartialRelinearization); }
-
-    /*!
-     * \brief Returns true iff the linearizer recycles the
-     *        linearization if possible.
-     */
-    bool enableLinearizationRecycling_() const
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableLinearizationRecycling); }
 };
 } // namespace Ewoms
 

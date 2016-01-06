@@ -48,36 +48,22 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
 #include "eclwellmanager.hh"
 
 namespace Ewoms {
 
-// forward definition of the EclGridManager class. We need this for
-// specialization...
-template <class TypeTag>
-class EclGridManager;
-
 /// \cond SKIP_THIS
 
-// required to make the compiler happy if the grid manager is not EclGridManager...
-
+// force the grid manager to exhibit caseName() and eclGrid() methods
 template <class GridManager>
-std::string getErtCaseName__(const GridManager &gridManager)
-{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write ECL files"); }
-
-template <class TypeTag>
-std::string getErtCaseName__(const EclGridManager<TypeTag> &gridManager)
+std::string getErtCaseName__(const GridManager& gridManager)
 { return gridManager.caseName(); }
 
 template <class GridManager>
 const Opm::EclipseGridConstPtr getEclGrid__(const GridManager &gridManager)
-{ OPM_THROW(std::logic_error, "You need to chose the EclGridManager to write ECL files"); }
-
-template <class TypeTag>
-const Opm::EclipseGridConstPtr getEclGrid__(const EclGridManager<TypeTag> &gridManager)
 { return gridManager.eclGrid(); }
 
 /// \endcond
@@ -273,7 +259,7 @@ public:
     /*!
      * \brief Save the grid to an .EGRID file.
      */
-    void write(const std::string& fileName, int reportStepIdx)
+    void write(const std::string& fileName, unsigned reportStepIdx)
     {
 #if HAVE_ERT
         // we convert the units ourselfs, so we set convertFromMetric to
@@ -298,15 +284,15 @@ private:
  */
 class ErtRestartFile
 {
-    static const int numIwellItemsPerWell = 11;
-    static const int numZwelStringsPerWell = 3;
-    static const int numIconItemsPerConnection = 15;
+    static const unsigned numIwellItemsPerWell = 11;
+    static const unsigned numZwelStringsPerWell = 3;
+    static const unsigned numIconItemsPerConnection = 15;
 
 public:
     ErtRestartFile(const ErtRestartFile &) = delete;
 
     template <class Simulator>
-    ErtRestartFile(const Simulator &simulator, int reportStepIdx)
+    ErtRestartFile(const Simulator &simulator, unsigned reportStepIdx)
     {
         std::string caseName = getErtCaseName__(simulator.gridManager());
 
@@ -336,7 +322,7 @@ public:
      * pierced by them.
      */
     template <class Simulator>
-    void writeHeader(const Simulator &simulator, int reportStepIdx)
+    void writeHeader(const Simulator &simulator, unsigned reportStepIdx)
     {
         const auto eclGrid = getEclGrid__(simulator.gridManager());
         const auto eclState = simulator.gridManager().eclState();
@@ -608,7 +594,7 @@ class ErtSummaryTimeStep
 public:
     ErtSummaryTimeStep(ErtSummary<TypeTag>& summaryHandle,
                        double timeInSeconds,
-                       int reportStepIdx)
+                       unsigned reportStepIdx)
     {
         ertHandle_ = ecl_sum_add_tstep(summaryHandle.ertHandle(), reportStepIdx, timeInSeconds);
     }

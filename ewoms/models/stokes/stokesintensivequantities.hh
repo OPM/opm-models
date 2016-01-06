@@ -75,7 +75,7 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void update(const ElementContext &elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
@@ -93,7 +93,7 @@ public:
 
         // set the phase composition
         Scalar sumx = 0;
-        for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 1; compIdx < numComponents; ++compIdx) {
             fluidState_.setMoleFraction(phaseIdx, compIdx,
                                         priVars[moleFrac1Idx + compIdx - 1]);
             sumx += priVars[moleFrac1Idx + compIdx - 1];
@@ -111,7 +111,7 @@ public:
         EnergyIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
 
         // the effective velocity of the control volume
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             velocityCenter_[dimIdx] = priVars[Indices::velocity0Idx + dimIdx];
 
         // the gravitational acceleration applying to the material
@@ -122,12 +122,12 @@ public:
     /*!
      * \copydoc IntensiveQuantities::updateScvGradients
      */
-    void updateScvGradients(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void updateScvGradients(const ElementContext &elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         // calculate the pressure gradient at the SCV using finite
         // element gradients
         pressureGrad_ = 0.0;
-        for (int i = 0; i < elemCtx.numDof(/*timeIdx=*/0); ++i) {
+        for (unsigned i = 0; i < elemCtx.numDof(/*timeIdx=*/0); ++i) {
             const auto &feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
             Valgrind::CheckDefined(feGrad);
             DimVector tmp(feGrad);
@@ -210,7 +210,7 @@ public:
 
 private:
     DimVector velocityAtPos_(const ElementContext &elemCtx,
-                             int timeIdx,
+                             unsigned timeIdx,
                              const LocalPosition &localPos) const
     {
         auto &feCache =
@@ -224,7 +224,7 @@ private:
         localFiniteElement.localBasis().evaluateFunction(localPos, shapeValue);
 
         DimVector result(0.0);
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); dofIdx++) {
+        for (unsigned dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); dofIdx++) {
             result.axpy(shapeValue[dofIdx][0], elemCtx.intensiveQuantities(dofIdx, timeIdx).velocityCenter());
         }
 

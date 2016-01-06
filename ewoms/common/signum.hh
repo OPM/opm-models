@@ -1,7 +1,7 @@
 // -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 // vi: set et ts=4 sw=4 sts=4:
 /*
-  Copyright (C) 2012-2013 by Andreas Lauser
+  Copyright (C) 2015 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -20,23 +20,24 @@
 */
 /*!
  * \file
- *
- * \brief Test for the black-oil VCVF discretization.
+ * \copydoc sgn()
  */
-#include "config.h"
-
-#include <ewoms/common/start.hh>
-#include <ewoms/models/blackoil/blackoilmodel.hh>
-#include "problems/reservoirproblem.hh"
+#ifndef EWOMS_SIGNUM_HH
+#define EWOMS_SIGNUM_HH
 
 namespace Ewoms {
-namespace Properties {
-NEW_TYPE_TAG(ReservoirProblem, INHERITS_FROM(BlackOilModel, ReservoirBaseProblem));
-}
-}
+/*!
+ * \brief Template function which returns the sign of a floating point value
+ *
+ * This is a type safe and fast implementation of a sign() function for arbitrary
+ * floating point values. It a slightly modified variant of
+ *
+ * https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+ */
+template <class Scalar>
+int signum(Scalar val)
+{ return (0 < val) - (val < 0); }
 
-int main(int argc, char **argv)
-{
-    typedef TTAG(ReservoirProblem) ProblemTypeTag;
-    return Ewoms::start<ProblemTypeTag>(argc, argv);
-}
+} // namespace Ewoms
+
+#endif

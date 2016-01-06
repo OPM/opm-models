@@ -177,7 +177,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase in question
      */
-    bool phaseIsConsidered(int phaseIdx) const
+    bool phaseIsConsidered(unsigned phaseIdx) const
     { return true; }
 
     /*!
@@ -187,7 +187,7 @@ public:
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::phaseIdxParam
      */
-    void globalPhaseStorage(EqVector &storage, int phaseIdx)
+    void globalPhaseStorage(EqVector &storage, unsigned phaseIdx)
     {
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
@@ -219,7 +219,7 @@ public:
 
                 const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
 
-                for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+                for (unsigned dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
                     const auto &scv = stencil.subControlVolume(dofIdx);
                     const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 

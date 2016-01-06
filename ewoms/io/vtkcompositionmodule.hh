@@ -148,7 +148,7 @@ public:
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
-        for (int i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
+        for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto &fs = intQuants.fluidState();

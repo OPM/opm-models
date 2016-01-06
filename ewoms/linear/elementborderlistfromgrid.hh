@@ -65,7 +65,20 @@ class ElementBorderListFromGrid
             , map_(map)
             , blackList_(blackList)
             , borderList_(borderList)
-        {}
+        {
+            auto elemIt = gridView_.template begin<0>();
+            const auto& elemEndIt = gridView_.template end<0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                if (elemIt->partitionType() != Dune::InteriorEntity) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+                    int elemIdx = map_.index(*elemIt);
+#else
+                    int elemIdx = map_.map(*elemIt);
+#endif
+                    blackList_.addIndex(elemIdx);
+                }
+            }
+        }
 
         // data handle methods
         bool contains(int dim, int codim) const
@@ -88,8 +101,6 @@ class ElementBorderListFromGrid
 #endif
             buff.write(static_cast<int>(gridView_.comm().rank()));
             buff.write(myIdx);
-
-            blackList_.addIndex(myIdx);
         }
 
         template <class MessageBufferImp>

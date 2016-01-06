@@ -62,16 +62,13 @@ public:
      * \brief Copy constructor.
      */
     OverlappingBlockVector(const OverlappingBlockVector &obv)
-        : ParentType(obv), numIndicesSendBuff_(obv.numIndicesSendBuff_),
-          indicesSendBuff_(obv.indicesSendBuff_),
-          indicesRecvBuff_(obv.indicesRecvBuff_),
-          valuesSendBuff_(obv.valuesSendBuff_),
-          valuesRecvBuff_(obv.valuesRecvBuff_),
-          numFrontIndicesSendBuff_(obv.numFrontIndicesSendBuff_),
-          frontIndicesSendBuff_(obv.frontIndicesSendBuff_),
-          frontIndicesRecvBuff_(obv.frontIndicesRecvBuff_),
-          frontValuesSendBuff_(obv.frontValuesSendBuff_),
-          frontValuesRecvBuff_(obv.frontValuesRecvBuff_), overlap_(obv.overlap_)
+        : ParentType(obv)
+        , numIndicesSendBuff_(obv.numIndicesSendBuff_)
+        , indicesSendBuff_(obv.indicesSendBuff_)
+        , indicesRecvBuff_(obv.indicesRecvBuff_)
+        , valuesSendBuff_(obv.valuesSendBuff_)
+        , valuesRecvBuff_(obv.valuesRecvBuff_)
+        , overlap_(obv.overlap_)
     {}
 
     /*!
@@ -98,11 +95,6 @@ public:
         indicesRecvBuff_ = obv.indicesRecvBuff_;
         valuesSendBuff_ = obv.valuesSendBuff_;
         valuesRecvBuff_ = obv.valuesRecvBuff_;
-        numFrontIndicesSendBuff_ = obv.numFrontIndicesSendBuff_;
-        frontIndicesSendBuff_ = obv.frontIndicesSendBuff_;
-        frontIndicesRecvBuff_ = obv.frontIndicesRecvBuff_;
-        frontValuesSendBuff_ = obv.frontValuesSendBuff_;
-        frontValuesRecvBuff_ = obv.frontValuesRecvBuff_;
         overlap_ = obv.overlap_;
         return *this;
     }
@@ -127,6 +119,28 @@ public:
         // add up the contents of border rows, for the remaining rows,
         // get the values from their respective master process.
         syncAddBorder();
+    }
+
+    /*!
+     * \brief Assign an overlapping block vector from a non-overlapping one, border
+     *        entries are assigned using their respective master ranks.
+     */
+    void assign(const BlockVector &nativeBlockVector)
+    {
+        int numDomestic = overlap_->numDomestic();
+
+        // assign the local rows from the non-overlapping block vector
+        for (int domRowIdx = 0; domRowIdx < numDomestic; ++domRowIdx) {
+            int nativeRowIdx = overlap_->domesticToNative(domRowIdx);
+            if (nativeRowIdx < 0)
+                (*this)[domRowIdx] = 0.0;
+            else
+                (*this)[domRowIdx] = nativeBlockVector[nativeRowIdx];
+        }
+
+        // add up the contents of border rows, for the remaining rows,
+        // get the values from their respective master process.
+        sync();
     }
 
     /*!
@@ -203,33 +217,6 @@ public:
     }
 
     /*!
-     * \brief Syncronize the values of the front indices by copying
-     *        them from their respective master.
-     */
-    void syncFront()
-    {
-        typename PeerSet::const_iterator peerIt;
-        typename PeerSet::const_iterator peerEndIt = overlap_->peerSet().end();
-
-        // send all entries to all peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            int peerRank = *peerIt;
-            sendFrontEntries_(peerRank);
-        }
-
-        // recieve all entries to the peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            int peerRank = *peerIt;
-            receiveFront_(peerRank);
-        }
-
-        // wait until we have send everything
-        waitSendFinished_();
-    }
-
-    /*!
      * \brief Syncronize all values of the block vector from the
      *        master rank, but add up the entries on the border.
      */
@@ -255,20 +242,6 @@ public:
         // wait until we have send everything
         waitSendFinished_();
 
-    }
-
-    /*!
-     * \brief Set all front indices to 0
-     */
-    void resetFront()
-    {
-        // set all front rows to 0
-        int nLocal = overlap_->numLocal();
-        int nDomestic = overlap_->numDomestic();
-        for (int j = nLocal; j < nDomestic; ++j) {
-            if (overlap_->isFront(j))
-                (*this)[j] = 0.0;
-        }
     }
 
     void print() const
@@ -355,83 +328,6 @@ private:
                 indicesSendBuff[i] = overlap_->globalToDomestic(indicesSendBuff[i]);
             }
         }
-
-        // send all front indices to the peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            int peerRank = *peerIt;
-
-            int numFrontEntries = overlap_->numFront(peerRank);
-            numFrontIndicesSendBuff_[peerRank] =
-                std::shared_ptr<MpiBuffer<int> >(new MpiBuffer<int>(1));
-            frontIndicesSendBuff_[peerRank] =
-                std::shared_ptr<MpiBuffer<Index> >(new MpiBuffer<Index>(numFrontEntries));
-            frontValuesSendBuff_[peerRank] =
-                std::shared_ptr<MpiBuffer<FieldVector> >(new MpiBuffer<FieldVector>(numFrontEntries));
-
-            // fill the indices buffer with global indices
-            MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
-            int numOverlapRows = overlap_->foreignOverlapSize(peerRank);
-            int mpiBuffOffset = 0;
-            for (int overlapOffset = 0; overlapOffset < numOverlapRows; ++overlapOffset) {
-                int rowIdx = overlap_->foreignOverlapOffsetToDomesticIdx(peerRank, overlapOffset);
-                if (!overlap_->isFrontFor(peerRank, rowIdx))
-                    continue;
-
-                frontIndicesSendBuff[mpiBuffOffset] = overlap_->domesticToGlobal(rowIdx);
-                ++ mpiBuffOffset;
-            }
-
-            // first, send the number of indices
-            (*numFrontIndicesSendBuff_[peerRank])[0] = numFrontEntries;
-            numFrontIndicesSendBuff_[peerRank]->send(peerRank);
-
-            // then, send the indices themselfs
-            frontIndicesSendBuff.send(peerRank);
-        }
-
-        // receive the indices from the peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            int peerRank = *peerIt;
-
-            // receive size of overlap to peer
-            MpiBuffer<int> numFrontRowsRecvBuff(1);
-            numFrontRowsRecvBuff.receive(peerRank);
-            int numFrontRows = numFrontRowsRecvBuff[0];
-
-            // then, create the MPI buffers
-            frontIndicesRecvBuff_[peerRank] = std::shared_ptr<MpiBuffer<Index> >(
-                new MpiBuffer<Index>(numFrontRows));
-            frontValuesRecvBuff_[peerRank] = std::make_shared<MpiBuffer<FieldVector> >(numFrontRows);
-            MpiBuffer<Index> &frontIndicesRecvBuff = *frontIndicesRecvBuff_[peerRank];
-
-            // next, receive the actual indices
-            frontIndicesRecvBuff.receive(peerRank);
-
-            // finally, translate the global indices to domestic ones
-            for (int i = 0; i < numFrontRows; ++i) {
-                int globalRowIdx = frontIndicesRecvBuff[i];
-                int domRowIdx = overlap_->globalToDomestic(globalRowIdx);
-
-                frontIndicesRecvBuff[i] = domRowIdx;
-            }
-        }
-
-        // wait for all send operations to complete
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            int peerRank = *peerIt;
-            numFrontIndicesSendBuff_[peerRank]->wait();
-            frontIndicesSendBuff_[peerRank]->wait();
-
-            // convert the global indices of the send buffer to
-            // domestic ones
-            MpiBuffer<Index> &frontIndicesSendBuff = *frontIndicesSendBuff_[peerRank];
-            for (unsigned i = 0; i < frontIndicesSendBuff.size(); ++i) {
-                frontIndicesSendBuff[i] = overlap_->globalToDomestic(frontIndicesSendBuff[i]);
-            }
-        }
 #endif // HAVE_MPI
     }
 
@@ -459,30 +355,6 @@ private:
         }
     }
 
-    void sendFrontEntries_(int peerRank)
-    {
-        // copy the values into the send buffer
-        const MpiBuffer<Index> &indices = *frontIndicesSendBuff_[peerRank];
-        MpiBuffer<FieldVector> &values = *frontValuesSendBuff_[peerRank];
-        for (Index i = 0; i < static_cast<Index>(indices.size()); ++i)
-            values[i] = (*this)[indices[i]];
-
-        values.send(peerRank);
-    }
-
-    void waitSendFrontFinished_()
-    {
-        typename PeerSet::const_iterator peerIt;
-        typename PeerSet::const_iterator peerEndIt = overlap_->peerSet().end();
-
-        // send all entries to all peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            int peerRank = *peerIt;
-            frontValuesSendBuff_[peerRank]->wait();
-        }
-    }
-
     void receiveFromMaster_(int peerRank)
     {
         const MpiBuffer<Index> &indices = *indicesRecvBuff_[peerRank];
@@ -497,21 +369,6 @@ private:
             if (overlap_->masterRank(domRowIdx) == peerRank) {
                 (*this)[domRowIdx] = values[j];
             }
-        }
-    }
-
-    void receiveFront_(int peerRank)
-    {
-        const MpiBuffer<Index> &frontIndices = *frontIndicesRecvBuff_[peerRank];
-        MpiBuffer<FieldVector> &frontValues = *frontValuesRecvBuff_[peerRank];
-
-        // receive the values from the peer
-        frontValues.receive(peerRank);
-
-        // copy them into the block vector
-        for (unsigned j = 0; j < frontIndices.size(); ++j) {
-            Index domRowIdx = frontIndices[j];
-            (*this)[domRowIdx] = frontValues[j];
         }
     }
 
@@ -553,14 +410,6 @@ private:
     std::map<ProcessRank, std::shared_ptr<MpiBuffer<Index> > > indicesRecvBuff_;
     std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > > valuesSendBuff_;
     std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > > valuesRecvBuff_;
-
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<int> > > numFrontIndicesSendBuff_;
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<Index> > > frontIndicesSendBuff_;
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<Index> > > frontIndicesRecvBuff_;
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > >
-    frontValuesSendBuff_;
-    std::map<ProcessRank, std::shared_ptr<MpiBuffer<FieldVector> > >
-    frontValuesRecvBuff_;
 
     const Overlap *overlap_;
 };

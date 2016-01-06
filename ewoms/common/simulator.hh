@@ -587,13 +587,6 @@ public:
             prePostProcessTimer.start();
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
-                // make the linearization not usable for the first iteration of the next
-                // time step at the end of each episode. Strictly speaking, this is a
-                // layering violation as the simulator is not supposed to know any
-                // specifics of the non-linear solver, but this call is too easy to
-                // forget within the problem's endEpisode(), so we do it here anyway!
-                model_->linearizer().setLinearizationReusable(false);
-
                 // Notify the problem about the end of the current episode...
                 problem_->endEpisode();
                 episodeBegins = true;

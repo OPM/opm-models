@@ -38,21 +38,26 @@ struct BlackOilIndices
 {
     // Primary variable indices
 
-    //! Index of pressure of the gas phase in a vector of primary
-    //! variables
-    static const int gasPressureIdx  = PVOffset + 0;
-
     //! The index of the water saturation
-    static const int waterSaturationIdx  = PVOffset + 1;
+    static const int waterSaturationIdx  = PVOffset + 0;
 
     /*!
-     * \brief Index of the switching variable.
+     * \brief Index of one pressure in a vector of primary variables
      *
-     * Depending on the phases present, this variable is either
-     * interpreted as the saturation of the gas phase, or as the mole
-     * fraction of the gas component in the oil phase.
+     * If the oil phase is not present, this variable represents the gas phase pressure,
+     * else it represents the oil phase pressure.
      */
-    static const int switchIdx = PVOffset + 2;
+    static const int pressureSwitchIdx  = PVOffset + 1;
+
+    /*!
+     * \brief Index of the switching variable which determines the composition of the
+     *        hydrocarbon phases.
+     *
+     * Depending on the phases present, this variable is either interpreted as the
+     * saturation of the gas phase, as the mole fraction of the gas component in the oil
+     * phase or as the mole fraction of the oil component in the gas phase.
+     */
+    static const int compositionSwitchIdx = PVOffset + 2;
 
     // indices of the equations
 

@@ -69,7 +69,7 @@ public:
      * \brief Returns the number of additional degrees of freedom required for the
      *        auxiliary module.
      */
-    virtual int numDofs() const = 0;
+    virtual unsigned numDofs() const = 0;
 
     /*!
      * \brief Set the offset in the global system of equations for the first degree of
@@ -89,7 +89,7 @@ public:
      * \brief Given a degree of freedom relative to the current auxiliary equation,
      *        return the corresponding index in the global system of equations.
      */
-    int localToGlobalDof(int localDofIdx) const
+    int localToGlobalDof(unsigned localDofIdx) const
     {
         assert(0 <= localDofIdx);
         assert(localDofIdx < numDofs());

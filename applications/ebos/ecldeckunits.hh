@@ -26,8 +26,6 @@
 #ifndef EWOMS_ECL_DECK_UNITS_HH
 #define EWOMS_ECL_DECK_UNITS_HH
 
-#include "eclgridmanager.hh"
-
 #include <ewoms/common/simulator.hh>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>

@@ -192,16 +192,6 @@ NEW_PROP_TAG(EnableVtkOutput);
  */
 NEW_PROP_TAG(VtkOutputFormat);
 
-//! Specify whether the linear system of equations of the last
-//! iteration of a time step should be re-used as the jacobian of the
-//! first iteration of the next time step.
-NEW_PROP_TAG(EnableLinearizationRecycling);
-
-//! Specify whether the system of equations should be only
-//! relinearized for elements where at least one degree of freedom is
-//! above the specified tolerance
-NEW_PROP_TAG(EnablePartialRelinearization);
-
 //! Specify whether the some degrees of fredom can be constraint
 NEW_PROP_TAG(EnableConstraints);
 
@@ -235,6 +225,14 @@ NEW_PROP_TAG(MaxTimeStepDivisions);
  * which eats some of the computational benefits again.
  */
 NEW_PROP_TAG(EnableIntensiveQuantityCache);
+
+/*!
+ * \brief Specify whether the storage terms for previous solutions should be cached.
+ *
+ * This potentially reduces the CPU time, but comes at the cost of higher memory
+ * consumption.
+ */
+NEW_PROP_TAG(EnableStorageCache);
 
 /*!
  * \brief Specify whether to use the already calculated solutions as

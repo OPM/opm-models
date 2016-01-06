@@ -28,7 +28,7 @@
 
 #include "overlaptypes.hh"
 
-#include <opm/material/common/ErrorMacros.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>

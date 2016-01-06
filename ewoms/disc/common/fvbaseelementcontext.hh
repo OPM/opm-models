@@ -91,6 +91,8 @@ public:
     {
         // remember the simulator object
         simulatorPtr_ = &simulator;
+        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
+        haveStashedIntensiveQuantities_ = false;
     }
 
     /*!
@@ -151,8 +153,19 @@ public:
      */
     void updateAllIntensiveQuantities()
     {
-        for (int timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
-            updateIntensiveQuantities(timeIdx);
+        haveStashedIntensiveQuantities_ = false;
+
+        if (!enableStorageCache_) {
+            // if the storage cache is disabled, we need to calculate the storage term
+            // from scratch, i.e. we need the intensive quantities of all of the history.
+            for (unsigned timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
+                updateIntensiveQuantities(timeIdx);
+        }
+        else
+            // if the storage cache is enabled, we only need to recalculate the storage
+            // term for the most recent point of history (i.e., for the current iterative
+            // solution)
+            updateIntensiveQuantities(/*timeIdx=*/0);
     }
 
     /*!
@@ -161,8 +174,8 @@ public:
      *
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    void updateIntensiveQuantities(int timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numDof(/*timeIdx=*/0)); }
+    void updateIntensiveQuantities(unsigned timeIdx)
+    { updateIntensiveQuantities_(timeIdx, numDof(timeIdx)); }
 
     /*!
      * \brief Compute the intensive quantities of all sub-control volumes of the current
@@ -170,8 +183,8 @@ public:
      *
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    void updatePrimaryIntensiveQuantities(int timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(/*timeIdx=*/0)); }
+    void updatePrimaryIntensiveQuantities(unsigned timeIdx)
+    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(timeIdx)); }
 
     /*!
      * \brief Compute the intensive quantities of a single sub-control volume of the
@@ -183,13 +196,13 @@ public:
      *               which should be updated.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    void updateIntensiveQuantities(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
+    void updateIntensiveQuantities(const PrimaryVariables &priVars, unsigned dofIdx, unsigned timeIdx)
     {
         updateSingleIntQuants_(priVars, dofIdx, timeIdx);
 
         // update gradients inside a sub control volume
-        int nDof = numDof(/*timeIdx=*/0);
-        for (int gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
+        unsigned nDof = numDof(timeIdx);
+        for (unsigned gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
             dofVars_[gradDofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
                                                                                  gradDofIdx,
                                                                                  timeIdx);
@@ -212,11 +225,11 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    void updateExtensiveQuantities(int timeIdx)
+    void updateExtensiveQuantities(unsigned timeIdx)
     {
         gradientCalculator_.prepare(/*context=*/*this, timeIdx);
 
-        for (int fluxIdx = 0; fluxIdx < numInteriorFaces(timeIdx); fluxIdx++) {
+        for (unsigned fluxIdx = 0; fluxIdx < numInteriorFaces(timeIdx); fluxIdx++) {
             extensiveQuantities_[fluxIdx].update(/*context=*/ *this,
                                                  /*localIndex=*/fluxIdx,
                                                  timeIdx);
@@ -256,27 +269,27 @@ public:
     /*!
      * \brief Return the number of sub-control volumes of the current element.
      */
-    int numDof(int timeIdx) const
+    unsigned numDof(unsigned timeIdx) const
     { return stencil(timeIdx).numDof(); }
 
     /*!
      * \brief Return the number of primary degrees of freedom of the current element.
      */
-    int numPrimaryDof(int timeIdx) const
+    unsigned numPrimaryDof(unsigned timeIdx) const
     { return stencil(timeIdx).numPrimaryDof(); }
 
     /*!
      * \brief Return the number of non-boundary faces which need to be
      *        considered for the flux apporixmation.
      */
-    int numInteriorFaces(int timeIdx) const
+    unsigned numInteriorFaces(unsigned timeIdx) const
     { return stencil(timeIdx).numInteriorFaces(); }
 
     /*!
      * \brief Return the number of boundary faces which need to be
      *        considered for the flux apporixmation.
      */
-    int numBoundaryFaces(int timeIdx) const
+    unsigned numBoundaryFaces(unsigned timeIdx) const
     { return stencil(timeIdx).numBoundaryFaces(); }
 
     /*!
@@ -285,7 +298,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const Stencil &stencil(int timeIdx) const
+    const Stencil &stencil(unsigned timeIdx) const
     { return stencil_; }
 
     /*!
@@ -296,7 +309,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const GlobalPosition &pos(int dofIdx, int timeIdx) const
+    const GlobalPosition &pos(unsigned dofIdx, unsigned timeIdx) const
     { return stencil_.subControlVolume(dofIdx).globalPos(); }
 
     /*!
@@ -307,7 +320,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    int globalSpaceIndex(int dofIdx, int timeIdx) const
+    int globalSpaceIndex(unsigned dofIdx, unsigned timeIdx) const
     { return stencil(timeIdx).globalSpaceIndex(dofIdx); }
 
 
@@ -320,7 +333,7 @@ public:
      * \param dofIdx The local index of the degree of freedom in the current element.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    Scalar dofVolume(int dofIdx, int timeIdx) const
+    Scalar dofVolume(unsigned dofIdx, unsigned timeIdx) const
     { return stencil(timeIdx).subControlVolume(dofIdx).volume();  }
 
     /*!
@@ -333,7 +346,7 @@ public:
      * \param dofIdx The local index of the degree of freedom in the current element.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    Scalar dofTotalVolume(int dofIdx, int timeIdx) const
+    Scalar dofTotalVolume(unsigned dofIdx, unsigned timeIdx) const
     { return model().dofTotalVolume(globalSpaceIndex(dofIdx, timeIdx)); }
 
     /*!
@@ -353,9 +366,17 @@ public:
      * \param dofIdx The local index of the degree of freedom in the current element.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    const IntensiveQuantities &intensiveQuantities(int dofIdx, int timeIdx) const
+    const IntensiveQuantities &intensiveQuantities(unsigned dofIdx, unsigned timeIdx) const
     {
+#ifndef NDEBUG
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
+
+        if (enableStorageCache_ && timeIdx != 0)
+            OPM_THROW(std::logic_error,
+                      "If caching of the storage term is enabled, only the intensive quantities "
+                      "for the most-recent substep (i.e. time index 0) are available!");
+#endif
+
         return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
@@ -367,7 +388,7 @@ public:
      * \param dofIdx The local index of the degree of freedom in the current element.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    const IntensiveQuantities *thermodynamicHint(int dofIdx, int timeIdx) const
+    const IntensiveQuantities *thermodynamicHint(unsigned dofIdx, unsigned timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].thermodynamicHint[timeIdx];
@@ -375,7 +396,7 @@ public:
     /*!
      * \copydoc intensiveQuantities()
      */
-    IntensiveQuantities &intensiveQuantities(int dofIdx, int timeIdx)
+    IntensiveQuantities &intensiveQuantities(unsigned dofIdx, unsigned timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].intensiveQuantities[timeIdx];
@@ -389,7 +410,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    PrimaryVariables &primaryVars(int dofIdx, int timeIdx)
+    PrimaryVariables &primaryVars(unsigned dofIdx, unsigned timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].priVars[timeIdx];
@@ -397,23 +418,33 @@ public:
     /*!
      * \copydoc primaryVars()
      */
-    const PrimaryVariables &primaryVars(int dofIdx, int timeIdx) const
+    const PrimaryVariables &primaryVars(unsigned dofIdx, unsigned timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].priVars[timeIdx];
     }
 
     /*!
+     * \brief Returns true if no intensive quanties are stashed
+     *
+     * In most cases quantities are stashed only if a partial derivative is to be
+     * calculated via finite difference methods.
+     */
+    bool haveStashedIntensiveQuantities() const
+    { return haveStashedIntensiveQuantities_; }
+
+    /*!
      * \brief Stash the intensive quantities for a degree of freedom on internal memory.
      *
      * \param dofIdx The local index of the degree of freedom in the current element.
      */
-    void saveIntensiveQuantities(int dofIdx)
+    void stashIntensiveQuantities(unsigned dofIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(/*timeIdx=*/0));
 
-        intensiveQuantitiesSaved_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
-        priVarsSaved_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
+        intensiveQuantitiesStashed_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
+        priVarsStashed_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
+        haveStashedIntensiveQuantities_ = true;
     }
 
     /*!
@@ -421,10 +452,11 @@ public:
      *
      * \param dofIdx The local index of the degree of freedom in the current element.
      */
-    void restoreIntensiveQuantities(int dofIdx)
+    void restoreIntensiveQuantities(unsigned dofIdx)
     {
-        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsSaved_;
-        dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesSaved_;
+        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsStashed_;
+        dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesStashed_;
+        haveStashedIntensiveQuantities_ = false;
     }
 
     /*!
@@ -442,8 +474,23 @@ public:
      *               extensive quantities are requested
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    const ExtensiveQuantities &extensiveQuantities(int fluxIdx, int timeIdx) const
+    const ExtensiveQuantities &extensiveQuantities(unsigned fluxIdx, unsigned timeIdx) const
     { return extensiveQuantities_[fluxIdx]; }
+
+    /*!
+     * \brief Returns true iff the cache for the storage term ought to be used for this context.
+     *
+     * If it is used, intensive quantities can only be accessed for the most recent time
+     * index. (time index 0.)
+     */
+    bool enableStorageCache() const
+    { return enableStorageCache_; }
+
+    /*!
+     * \brief Specifies if the cache for the storage term ought to be used for this context.
+     */
+    void setEnableStorageCache(bool yesno)
+    { enableStorageCache_ = yesno; }
 
 protected:
     /*!
@@ -451,14 +498,14 @@ protected:
      *
      * This method considers the intensive quantities cache.
      */
-    void updateIntensiveQuantities_(int timeIdx, int numDof)
+    void updateIntensiveQuantities_(unsigned timeIdx, unsigned numDof)
     {
         // update the intensive quantities for the whole history
         const SolutionVector &globalSol = model().solution(timeIdx);
 
         // update the non-gradient quantities
-        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
-            int globalIdx = globalSpaceIndex(dofIdx, timeIdx);
+        for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
+            unsigned globalIdx = globalSpaceIndex(dofIdx, timeIdx);
             const PrimaryVariables& dofSol = globalSol[globalIdx];
 
             dofVars_[dofIdx].thermodynamicHint[timeIdx] =
@@ -478,23 +525,33 @@ protected:
         }
 
         // update gradients
-        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
+        for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
             dofVars_[dofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
                                                                              dofIdx,
                                                                              timeIdx);
         }
     }
 
-    void updateSingleIntQuants_(const PrimaryVariables &priVars, int dofIdx, int timeIdx)
+    void updateSingleIntQuants_(const PrimaryVariables &priVars, unsigned dofIdx, unsigned timeIdx)
     {
+#ifndef NDEBUG
+        if (enableStorageCache_ && timeIdx != 0)
+            OPM_THROW(std::logic_error,
+                      "If caching of the storage term is enabled, only the intensive quantities "
+                      "for the most-recent substep (i.e. time index 0) are available!");
+#endif
+
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
         dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
     }
 
     DofVarsVector dofVars_;
 
-    IntensiveQuantities intensiveQuantitiesSaved_;
-    PrimaryVariables priVarsSaved_;
+    IntensiveQuantities intensiveQuantitiesStashed_;
+    PrimaryVariables priVarsStashed_;
+
+    bool enableStorageCache_;
+    bool haveStashedIntensiveQuantities_;
 
     GradientCalculator gradientCalculator_;
 

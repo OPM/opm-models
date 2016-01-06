@@ -11,9 +11,8 @@ Getting started
 In order to compile eWoms, you first have to install the following
 DUNE and OPM modules by following their installation instructions:
 
-  - opm-parser         from [3]
-  - opm-core           from [3]
   - opm-material       from [3]
+  - opm-common         from [3]
   - dune-common        from [0]
   - dune-geometry      from [0]
   - dune-grid          from [0]
@@ -23,6 +22,8 @@ DUNE and OPM modules by following their installation instructions:
 If you like to use the ECL Black-Oil simulator (ebos), you also need
 the following modules:
 
+  - opm-parser         from [3]
+  - opm-core           from [3]
   - dune-cornerpoint   from [3]
 
 For eWoms, the latest release or development branch version of the
@@ -36,7 +37,7 @@ libraries. In this context, it is advisable to adapt the option files
 $EWOMS_DIR/optim.opts or $EWOMS_DIR/debug.opts to your particular
 needs.
 
-After you've obtained the required software, compile eWoms using
+After you've obtained the required modules, you can compile eWoms using
 
   $PATH_TO_DUNECONTROL/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=ewoms all
 
@@ -47,7 +48,7 @@ eWoms uses CTest for regression testing [1]. We encourage you to
 participate - it's easy: If you set up an build directory for eWoms
 with the examples enabled as described above, just run
 
-   ctest -D Experimental
+   ctest -D Experimental -j$NUM_CORES
 
 After a while, your results will appear on the eWoms CDash 
 dashboard [2].
@@ -57,5 +58,5 @@ Links
 
 [0] http://dune-project.org/download.html
 [1] http://cmake.org/Wiki/CMake/Testing_With_CTest
-[2] http://opm-project.org/CDash/index.php?project=eWoms
-[3] http://opm-project.org/download.php
+[2] http://cdash.opm-project.org/index.php?project=eWoms
+[3] http://opm-project.org/?page_id=36

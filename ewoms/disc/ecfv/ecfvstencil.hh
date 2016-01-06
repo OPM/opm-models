@@ -159,7 +159,7 @@ public:
         SubControlVolumeFace()
         {}
 
-        SubControlVolumeFace(const Intersection &intersection, int localNeighborIdx)
+        SubControlVolumeFace(const Intersection &intersection, unsigned localNeighborIdx)
         {
             exteriorIdx_ = localNeighborIdx;
 
@@ -174,7 +174,7 @@ public:
          * \brief Returns the local index of the degree of freedom to
          *        the face's interior.
          */
-        int interiorIndex() const
+        unsigned interiorIndex() const
         {
             // The local index of the control volume in the interior
             // of a face of the stencil in the element centered finite
@@ -188,7 +188,7 @@ public:
          * \brief Returns the local index of the degree of freedom to
          *        the face's outside.
          */
-        int exteriorIndex() const
+        unsigned exteriorIndex() const
         { return exteriorIdx_; }
 
         /*!
@@ -212,8 +212,8 @@ public:
         { return area_; }
 
     private:
-        int interiorIdx_;
-        int exteriorIdx_;
+        unsigned interiorIdx_;
+        unsigned exteriorIdx_;
 
         Scalar area_;
 
@@ -254,16 +254,17 @@ public:
         boundaryFaces_.resize(0);
 
         for (; isIt != endIsIt; ++isIt) {
+            const auto& intersection = *isIt;
             // if the current intersection has a neighbor, add a
             // degree of freedom and an internal face, else add a
             // boundary face
-            if (isIt->neighbor()) {
-                elements_.push_back(isIt->outside());
-                subControlVolumes_.push_back(SubControlVolume(isIt->outside()));
-                interiorFaces_.push_back(SubControlVolumeFace(*isIt, subControlVolumes_.size() - 1));
+            if (intersection.neighbor()) {
+                elements_.push_back(intersection.outside());
+                subControlVolumes_.push_back(SubControlVolume(intersection.outside()));
+                interiorFaces_.push_back(SubControlVolumeFace(intersection, subControlVolumes_.size() - 1));
             }
             else {
-                boundaryFaces_.push_back(SubControlVolumeFace(*isIt, - 10000));
+                boundaryFaces_.push_back(SubControlVolumeFace(intersection, - 10000));
             }
         }
     }
@@ -295,7 +296,7 @@ public:
      * \brief Returns the number of degrees of freedom which the
      *        current element interacts with.
      */
-    int numDof() const
+    unsigned numDof() const
     { return subControlVolumes_.size(); }
 
     /*!
@@ -307,14 +308,14 @@ public:
      *
      * For element centered finite elements, this is only the central DOF.
      */
-    int numPrimaryDof() const
+    unsigned numPrimaryDof() const
     { return 1; }
 
     /*!
      * \brief Return the global space index given the index of a degree of
      *        freedom.
      */
-    int globalSpaceIndex(int dofIdx) const
+    unsigned globalSpaceIndex(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
@@ -328,7 +329,7 @@ public:
     /*!
      * \brief Return partition type of a given degree of freedom
      */
-    Dune::PartitionType partitionType(int dofIdx) const
+    Dune::PartitionType partitionType(unsigned dofIdx) const
     { return elements_[dofIdx]->partitionType(); }
 
     /*!
@@ -362,33 +363,33 @@ public:
      * \brief Returns the sub-control volume object belonging to a
      *        given degree of freedom.
      */
-    const SubControlVolume &subControlVolume(int dofIdx) const
+    const SubControlVolume &subControlVolume(unsigned dofIdx) const
     { return subControlVolumes_[dofIdx]; }
 
     /*!
      * \brief Returns the number of interior faces of the stencil.
      */
-    int numInteriorFaces() const
+    unsigned numInteriorFaces() const
     { return interiorFaces_.size(); }
 
     /*!
      * \brief Returns the face object belonging to a given face index
      *        in the interior of the domain.
      */
-    const SubControlVolumeFace &interiorFace(int bfIdx) const
+    const SubControlVolumeFace &interiorFace(unsigned bfIdx) const
     { return interiorFaces_[bfIdx]; }
 
     /*!
      * \brief Returns the number of boundary faces of the stencil.
      */
-    int numBoundaryFaces() const
+    unsigned numBoundaryFaces() const
     { return boundaryFaces_.size(); }
 
     /*!
      * \brief Returns the boundary face object belonging to a given
      *        boundary face index.
      */
-    const SubControlVolumeFace &boundaryFace(int bfIdx) const
+    const SubControlVolumeFace &boundaryFace(unsigned bfIdx) const
     { return boundaryFaces_[bfIdx]; }
 
 private:

@@ -29,6 +29,8 @@ endif()
 if (opm-common_FOUND)
    include(OpmInit)
 else()
+   unset(opm-common_FOUND)
+
    if (NOT OPM_COMMON_ROOT AND SIBLING_SEARCH)
       set(OPM_COMMON_ROOT ${PROJECT_SOURCE_DIR}/../opm-common)
    endif()
@@ -130,6 +132,16 @@ EwomsAddApplication(ebos
                     EXE_NAME ebos
                     CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
 
+# the ART to DGF file format conversion utility
+EwomsAddApplication(art2dgf
+                    SOURCES applications/art2dgf.cc
+                    EXE_NAME art2dgf)
+
+opm_add_test(art2dgf
+  NO_COMPILE
+  DRIVER_ARGS --plain
+  TEST_ARGS "data/fracture.art")
+
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
 # them as long for parallel test runs
@@ -181,7 +193,6 @@ foreach(tapp co2injection_flash_ni_vcfv
              co2injection_pvs_ni_ecfv
              powerinjection_forchheimer
              powerinjection_darcy
-             reservoir_blackoil
              cuvette_pvs
              infiltration_pvs
              lens_richards_vcfv
@@ -196,6 +207,11 @@ foreach(tapp co2injection_flash_ni_vcfv
              groundwater_immiscible)
   opm_add_test(${tapp})
 endforeach()
+
+opm_add_test(reservoir_blackoil_vcfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
 
 opm_add_test(fracture_discretefracture
              CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
@@ -215,8 +231,7 @@ opm_add_test(co2injection_ncp_ni_ecfv_parallel
              NO_COMPILE
              PROCESSORS 4
              CONDITION MPI_FOUND
-             DRIVER_ARGS --parallel-simulation=4
-             TEST_ARGS --end-time=10 --initial-time-step-size=1)
+             DRIVER_ARGS --parallel-simulation=4)
 
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)

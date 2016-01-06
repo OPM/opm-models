@@ -28,6 +28,8 @@
 
 #include "blackoilproperties.hh"
 
+#include <ewoms/common/signum.hh>
+
 namespace Ewoms {
 
 /*!
@@ -65,6 +67,12 @@ public:
                              " limited");
     }
 
+    /*!
+     * \brief Returns the number of degrees of freedom for which the
+     *        interpretation has changed for the most recent iteration.
+     */
+    int numPriVarsSwitched() const
+    { return numPriVarsSwitched_; }
 
     // HACK which is necessary because GCC 4.4 does not support
     // being a friend of typedefs
@@ -75,13 +83,36 @@ protected:
 */
 
     /*!
+     * \copydoc FvBaseNewtonMethod::beginIteration_
+     */
+    void beginIteration_()
+    {
+        numPriVarsSwitched_ = 0;
+        ParentType::beginIteration_();
+    }
+
+    /*!
      * \copydoc FvBaseNewtonMethod::endIteration_
      */
     void endIteration_(SolutionVector &uCurrentIter,
                        const SolutionVector &uLastIter)
     {
+#if HAVE_MPI
+        // in the MPI enabled case we need to add up the number of DOF
+        // for which the interpretation changed over all processes.
+        int localSwitched = numPriVarsSwitched_;
+        MPI_Allreduce(&localSwitched,
+                      &numPriVarsSwitched_,
+                      /*num=*/1,
+                      MPI_INT,
+                      MPI_SUM,
+                      MPI_COMM_WORLD);
+#endif // HAVE_MPI
+
+        this->simulator_.model().newtonMethod().endIterMsg()
+            << ", num switched=" << numPriVarsSwitched_;
+
         ParentType::endIteration_(uCurrentIter, uLastIter);
-        this->problem().model().switchPrimaryVars_();
     }
 
     /*!
@@ -100,20 +131,17 @@ protected:
             // reached
             Scalar delta = update[eqIdx];
             if (this->numIterations_ < numChoppedIterations_) {
-                // limit changes in pressure to 20% of the pressure value at the
-                // beginning of the current iteration
-                if (eqIdx == Indices::gasPressureIdx
+                if (eqIdx == Indices::pressureSwitchIdx
                     && std::abs(delta/currentValue[eqIdx]) > 0.2)
                 {
-                    delta /= std::abs(delta/(0.2*currentValue[eqIdx]));
+                    delta = Ewoms::signum(delta)*0.2*currentValue[eqIdx];
                 }
-                // limit changes in saturation to 20%
+                // limit changes in saturation or mole fraction to 20%
                 else if ((eqIdx == Indices::waterSaturationIdx ||
-                          (eqIdx == Indices::switchIdx
-                           && currentValue.switchingVarMeaning() == PrimaryVariables::GasSaturation))
+                          (eqIdx == Indices::compositionSwitchIdx))
                          && std::abs(delta) > 0.2)
                 {
-                    delta /= std::abs(delta/0.2);
+                    delta = Ewoms::signum(delta)*0.2;
                 }
 
             }
@@ -121,10 +149,16 @@ protected:
             // do the actual update
             nextValue[eqIdx] = currentValue[eqIdx] - delta;
         }
+
+        // switch the new primary variables to something which is
+        // physically meaningful
+        if (nextValue.adaptPrimaryVariables())
+            ++ numPriVarsSwitched_;
     }
 
 private:
     int numChoppedIterations_;
+    int numPriVarsSwitched_;
 };
 } // namespace Ewoms
 

@@ -46,8 +46,8 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-#include <opm/material/common/ErrorMacros.hpp>
-#include <opm/material/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/unused.hh>
@@ -118,7 +118,7 @@ SET_SCALAR_PROP(NcpModel, NcpPressureBaseWeight, 1.0);
 //! The weight for the saturation primary variables
 SET_SCALAR_PROP(NcpModel, NcpSaturationsBaseWeight, 1.0);
 //! The unmodified weight for the fugacity primary variables
-SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0);
+SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0e-6);
 
 } // namespace Properties
 
@@ -270,7 +270,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
         std::string s;
         if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
@@ -292,7 +292,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
         std::string s;
         if (!(s = EnergyModule::eqName(eqIdx)).empty())
@@ -333,12 +333,12 @@ public:
      */
     void updatePVWeights(const ElementContext &elemCtx) const
     {
-        for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-            int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
+            unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
 
                     minActivityCoeff_[globalIdx][compIdx] =
@@ -348,7 +348,7 @@ public:
                     Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 }
                 if (minActivityCoeff_[globalIdx][compIdx] <= 0)
-                    OPM_THROW(Opm::NumericalIssue,
+                    OPM_THROW(Opm::NumericalProblem,
                               "The minumum activity coefficient for component " << compIdx
                               << " on DOF " << globalIdx << " is negative or zero!");
             }
@@ -358,7 +358,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned globalDofIdx, unsigned pvIdx) const
     {
         Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
         Scalar result;
@@ -367,7 +367,7 @@ public:
             result = tmp;
         else if (fugacity0Idx <= pvIdx && pvIdx < fugacity0Idx + numComponents) {
             // component fugacity
-            int compIdx = pvIdx - fugacity0Idx;
+            unsigned compIdx = pvIdx - fugacity0Idx;
             assert(0 <= compIdx && compIdx <= numComponents);
 
             Valgrind::CheckDefined(minActivityCoeff_[globalDofIdx][compIdx]);
@@ -381,7 +381,7 @@ public:
         }
         else {
 #ifndef NDEBUG
-            int phaseIdx = pvIdx - saturation0Idx;
+            unsigned phaseIdx = pvIdx - saturation0Idx;
             assert(0 <= phaseIdx && phaseIdx < numPhases - 1);
 #endif
 
@@ -400,18 +400,18 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalDofIdx, int eqIdx) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx) const
     {
         Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
-            // energy related equation
+            // an energy related equation
             return tmp;
         // an NCP
         else if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases)
             return 1.0;
 
-        // mass conservation equation
-        int compIdx = eqIdx - Indices::conti0EqIdx;
+        // a mass conservation equation
+        unsigned compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numComponents);
 
         // make all kg equal
@@ -425,7 +425,7 @@ public:
      * \param globalDofIdx The global index of the vertex (i.e. finite volume) of interest.
      * \param compIdx The index of the component of interest.
      */
-    Scalar minActivityCoeff(int globalDofIdx, int compIdx) const
+    Scalar minActivityCoeff(unsigned globalDofIdx, unsigned compIdx) const
     { return minActivityCoeff_[globalDofIdx][compIdx]; }
 
     /*!
