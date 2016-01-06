@@ -1662,8 +1662,7 @@ public:
 protected:
     void resizeAndResetIntensiveQuantitiesCache_()
     {
-        /*
-        if (storeIntensiveQuantities_()) {
+        if (storeIntensiveQuantities()) {
             const int nDofs = asImp_().numGridDof();
             for( int timeIdx=0; timeIdx<historySize; ++timeIdx )
             {
@@ -1673,7 +1672,6 @@ protected:
                          intensiveQuantityCacheUpToDate_[timeIdx].end(), false );
             }
         }
-        */
     }
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
