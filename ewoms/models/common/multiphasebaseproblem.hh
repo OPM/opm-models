@@ -298,7 +298,7 @@ public:
      *
      * \return The number of elements marked for refinement or coarsening.
      */
-    int markGridForAdaptation()
+    int markForGridAdaptation()
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -317,7 +317,8 @@ public:
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 Scalar minSat = 1e100 ;
                 Scalar maxSat = -1e100;
-                for (int dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx)
+                const int nDofs = elemCtx.numDof(/*timeIdx=*/0);
+                for (int dofIdx = 0; dofIdx < nDofs; ++dofIdx)
                 {
                     const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, /*timeIdx=*/0 );
                     minSat = std::min(minSat,
@@ -327,7 +328,7 @@ public:
                 }
 
                 const Scalar indicator = (maxSat - minSat)/(0.5*std::max(0.01, maxSat+minSat));
-                if( indicator > 0.10 && element.level() < 3 ) {
+                if( indicator > 0.2 && element.level() < 2 ) {
                     grid.mark( 1, element );
                     ++ numMarked;
                 }
@@ -335,12 +336,17 @@ public:
                     grid.mark( -1, element );
                     ++ numMarked;
                 }
+                else
+                {
+                    grid.mark( 0, element );
+                }
             }
         }
 
-        // TODO: This should be 1 or communicated, otherwise we get different results on
-        // different cores
-        return 1; //numMarked;
+        // get global sum so that every proc is on the same page
+        numMarked = this->simulator().gridManager().grid().comm().sum( numMarked );
+
+        return numMarked;
     }
 
     // \}

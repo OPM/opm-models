@@ -435,7 +435,7 @@ public:
     void finishInit()
     {
         // initialize the volume of the finite volumes to zero
-        unsigned nDofs = asImp_().numGridDof();
+        unsigned int nDofs = asImp_().numGridDof();
         dofTotalVolume_.resize(nDofs);
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
@@ -491,6 +491,7 @@ public:
         for (int threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
             localLinearizer_[threadId].init(simulator_);
 
+        resizeAndResetIntensiveQuantitiesCache_();
         if (storeIntensiveQuantities()) {
             // invalidate all cached intensive quantities
             for (unsigned timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
@@ -1246,7 +1247,6 @@ public:
         intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
 
         solution(/*timeIdx=*/0) = solution(/*timeIdx=*/1);
-        // linearizer_->relinearizeAll();
     }
 
     /*!
