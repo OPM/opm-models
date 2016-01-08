@@ -1,7 +1,9 @@
 #ifndef EWOMS_COPYRESTRICTPROLONG_HH
 #define EWOMS_COPYRESTRICTPROLONG_HH
 
+#if HAVE_DUNE_FEM
 #include <dune/fem/space/common/restrictprolonginterface.hh>
+#endif
 
 namespace Ewoms
 {
@@ -16,8 +18,10 @@ namespace Ewoms
     };
 
     template< class Grid, class Container >
-    class CopyRestrictProlong :
-      public Dune::Fem::RestrictProlongInterfaceDefault< CopyRestrictProlongTraits< Grid, Container > >
+    class CopyRestrictProlong
+#if HAVE_DUNE_FEM
+    : public Dune::Fem::RestrictProlongInterfaceDefault< CopyRestrictProlongTraits< Grid, Container > >
+#endif
     {
       typedef CopyRestrictProlong< Grid, Container > ThisType;
 
