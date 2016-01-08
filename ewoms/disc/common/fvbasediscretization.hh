@@ -384,13 +384,6 @@ public:
                 storageCache_[timeIdx].resize(nDofs);
         }
 
-#if HAVE_DUNE_FEM
-        // create adaptation objects
-        restrictProlong_.reset(
-            new RestrictProlong( DiscreteFunctionRestrictProlong(*(solution_[/*timeIdx=*/ 0] )),
-                                 simulator.problem().restrictProlongOperator() ) );
-        adaptationManager_.reset( new AdaptationManager( simulator.gridManager().grid(), *restrictProlong_ ) );
-#endif
         resizeAndResetIntensiveQuantitiesCache_();
         asImp_().registerOutputModules_();
     }
@@ -1212,7 +1205,7 @@ public:
             if( simulator_.problem().markForGridAdaptation() )
             {
                 // adapt the grid and load balance if necessary
-                adaptationManager_->adapt();
+                adaptationManager().adapt();
 
                 // if the grid has potentially changed, we need to re-create the
                 // supporting data structures.
@@ -1658,6 +1651,22 @@ public:
      */
     static bool storeIntensiveQuantities()
     { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
+
+#if HAVE_DUNE_FEM
+    AdaptationManager& adaptationManager()
+    {
+        if( ! adaptationManager_ )
+        {
+            // create adaptation objects here, because when doing so in constructor
+            // problem is not yet intialized, aka seg fault
+            restrictProlong_.reset(
+                new RestrictProlong( DiscreteFunctionRestrictProlong(*(solution_[/*timeIdx=*/ 0] )),
+                                     simulator_.problem().restrictProlongOperator() ) );
+            adaptationManager_.reset( new AdaptationManager( simulator_.gridManager().grid(), *restrictProlong_ ) );
+        }
+        return *adaptationManager_;
+    }
+#endif
 
 protected:
     void resizeAndResetIntensiveQuantitiesCache_()
