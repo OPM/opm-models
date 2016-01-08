@@ -105,7 +105,19 @@ namespace Ewoms
 
     };
 
+
+    class EmptyRestrictProlong;
+
+    struct EmptyRestrictProlongTraits
+    {
+      typedef double                DomainFieldType;
+      typedef EmptyRestrictProlong  RestProlImp;
+    };
+
     class EmptyRestrictProlong
+#if HAVE_DUNE_FEM
+    : public Dune::Fem::RestrictProlongInterfaceDefault< EmptyRestrictProlongTraits >
+#endif
     {
       typedef EmptyRestrictProlong ThisType;
 
