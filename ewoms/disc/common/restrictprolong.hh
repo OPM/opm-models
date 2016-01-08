@@ -1,15 +1,30 @@
 #ifndef EWOMS_COPYRESTRICTPROLONG_HH
 #define EWOMS_COPYRESTRICTPROLONG_HH
 
+#include <dune/fem/space/common/restrictprolonginterface.hh>
+
 namespace Ewoms
 {
+    template < class Grid, class Container >
+    class CopyRestrictProlong;
+
+    template < class Grid, class Container >
+    struct CopyRestrictProlongTraits
+    {
+      typedef typename Grid::ctype DomainFieldType;
+      typedef CopyRestrictProlong< Grid, Container >  RestProlImp;
+    };
+
     template< class Grid, class Container >
-    class CopyRestrictProlong
+    class CopyRestrictProlong :
+      public Dune::Fem::RestrictProlongInterfaceDefault< CopyRestrictProlongTraits< Grid, Container > >
     {
       typedef CopyRestrictProlong< Grid, Container > ThisType;
 
       Container& container_;
     public:
+      typedef typename Grid::ctype DomainFieldType;
+
       explicit CopyRestrictProlong( Container& container )
         : container_( container )
       {}
@@ -33,7 +48,7 @@ namespace Ewoms
         assert( container_.codimension() == 0 );
         if( initialize )
         {
-          // copy values from son to father
+          // copy values from son to father (only once)
           container_[ father ] = container_[ son ];
         }
       }
@@ -53,11 +68,8 @@ namespace Ewoms
       {
         container_.resize();
         assert( container_.codimension() == 0 );
-        if( initialize )
-        {
-          // copy values from father to son
-          container_[ son ] = container_[ father ];
-        }
+        // copy values from father to son all sons
+        container_[ son ] = container_[ father ];
       }
 
       //! prolong data to children
