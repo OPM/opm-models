@@ -67,6 +67,8 @@ class EcfvStencil
     typedef Dune::FieldVector<Scalar, dimWorld> WorldVector;
 
 public:
+    typedef Element  Entity;
+
     typedef typename Element::Geometry LocalGeometry;
 
     /*!
@@ -337,7 +339,7 @@ public:
      * If no degree of freedom index is passed, the element which was
      * passed to the update() method is returned...
      */
-    const Element &element(unsigned dofIdx = 0) const
+    const Element &element(int dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
@@ -346,6 +348,15 @@ public:
 #else
         return *elements_[dofIdx];
 #endif
+    }
+
+    /*!
+     * \brief Return the entity given the index of a degree of
+     *        freedom.
+     */
+    const Entity &entity(int dofIdx) const
+    {
+        return element( dofIdx );
     }
 
     /*!

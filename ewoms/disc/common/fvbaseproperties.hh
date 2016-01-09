@@ -78,6 +78,9 @@ NEW_PROP_TAG(GridView);
 //! The class describing the stencil of the spatial discretization
 NEW_PROP_TAG(Stencil);
 
+//! The class describing the discrete function space when dune-fem is used, otherwise it points to the stencil class
+NEW_PROP_TAG(DiscreteFunctionSpace);
+
 //! The type of the problem
 NEW_PROP_TAG(Problem);
 //! The type of the base class for all problems which use this model
@@ -161,6 +164,14 @@ NEW_PROP_TAG(ThreadsPerProcess);
 
 //! Manages the simulation time
 NEW_PROP_TAG(Simulator);
+
+/*!
+ * \brief Switch to enable or disable grid adaptation
+ *
+ * Currently grid adaptation requires the presence of the dune-FEM module. If it is not
+ * available and grid adaptation is enabled, an exception is thrown.
+ */
+NEW_PROP_TAG(EnableGridAdaptation);
 
 /*!
  * \brief Global switch to enable or disable the writing of VTK output files

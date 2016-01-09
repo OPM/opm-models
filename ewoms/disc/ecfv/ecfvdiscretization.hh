@@ -36,6 +36,11 @@
 #include <ewoms/linear/elementborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/space/common/functionspace.hh>
+#include <dune/fem/space/finitevolume.hh>
+#endif
+
 namespace Ewoms {
 template <class TypeTag>
 class EcfvDiscretization;
@@ -68,6 +73,23 @@ SET_TYPE_PROP(EcfvDiscretization, DiscBaseOutputModule,
 //! The class to create grid communication handles
 SET_TYPE_PROP(EcfvDiscretization, GridCommHandleFactory,
               Ewoms::EcfvGridCommHandleFactory<TypeTag>);
+
+#if HAVE_DUNE_FEM
+//! Set the DiscreteFunctionSpace
+SET_PROP(EcfvDiscretization, DiscreteFunctionSpace)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar)   Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    typedef Dune::Fem::FunctionSpace<typename GridPart::GridType::ctype,
+                                     Scalar,
+                                     GridPart::GridType::dimensionworld,
+                                     numEq> FunctionSpace;
+public:
+    typedef Dune::Fem::FiniteVolumeSpace< FunctionSpace, GridPart, 0 > type;
+};
+#endif
 
 //! Set the border list creator for to the one of an element based
 //! method
@@ -148,7 +170,7 @@ public:
                                         DofMapper,
                                         /*commCodim=*/0> GhostSyncHandle;
 
-        auto ghostSync = GhostSyncHandle(this->solution_[/*timeIdx=*/0],
+        auto ghostSync = GhostSyncHandle(this->solution(/*timeIdx=*/0),
                                          asImp_().dofMapper());
         this->gridView().communicate(ghostSync,
                                      Dune::InteriorBorder_All_Interface,
@@ -177,7 +199,7 @@ public:
     void deserialize(Restarter &res)
     {
         res.template deserializeEntities</*codim=*/0>(asImp_(), this->gridView_);
-        this->solution_[/*timeIdx=*/1] = this->solution_[/*timeIdx=*/0];
+        this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 
 private:

@@ -61,12 +61,15 @@ class MultiPhaseBaseProblem
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
 
     enum { dimWorld = GridView::dimensionworld };
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 //! \endcond
@@ -289,6 +292,62 @@ public:
      */
     const DimVector &gravity() const
     { return gravity_; }
+
+    /*!
+     * \brief Mark grid cells for refinement or coarsening
+     *
+     * \return The number of elements marked for refinement or coarsening.
+     */
+    int markForGridAdaptation()
+    {
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+
+        int numMarked = 0;
+        ElementContext elemCtx( this->simulator() );
+        auto gridView = this->simulator().gridManager().gridView();
+        auto& grid = this->simulator().gridManager().grid();
+        auto elemIt = gridView.template begin</*codim=*/0, Dune::Interior_Partition>();
+        auto elemEndIt = gridView.template end</*codim=*/0, Dune::Interior_Partition>();
+        for (; elemIt != elemEndIt; ++elemIt)
+        {
+            const auto& element = *elemIt ;
+            elemCtx.updateAll( element );
+
+            // HACK: this should better be part of an AdaptionCriterion class
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                Scalar minSat = 1e100 ;
+                Scalar maxSat = -1e100;
+                const int nDofs = elemCtx.numDof(/*timeIdx=*/0);
+                for (int dofIdx = 0; dofIdx < nDofs; ++dofIdx)
+                {
+                    const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, /*timeIdx=*/0 );
+                    minSat = std::min(minSat,
+                                      Toolbox::value(intQuant.fluidState().saturation(phaseIdx)));
+                    maxSat = std::max(maxSat,
+                                      Toolbox::value(intQuant.fluidState().saturation(phaseIdx)));
+                }
+
+                const Scalar indicator = (maxSat - minSat)/(0.5*std::max(0.01, maxSat+minSat));
+                if( indicator > 0.2 && element.level() < 2 ) {
+                    grid.mark( 1, element );
+                    ++ numMarked;
+                }
+                else if ( indicator < 0.025 ) {
+                    grid.mark( -1, element );
+                    ++ numMarked;
+                }
+                else
+                {
+                    grid.mark( 0, element );
+                }
+            }
+        }
+
+        // get global sum so that every proc is on the same page
+        numMarked = this->simulator().gridManager().grid().comm().sum( numMarked );
+
+        return numMarked;
+    }
 
     // \}
 

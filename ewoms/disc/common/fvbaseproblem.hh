@@ -31,6 +31,8 @@
 
 #include <ewoms/io/vtkmultiwriter.hh>
 #include <ewoms/io/restart.hh>
+#include <ewoms/disc/common/restrictprolong.hh>
+
 #include <dune/common/fvector.hh>
 
 #include <iostream>
@@ -84,6 +86,11 @@ private:
     typedef typename GridView::Grid::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
+public:
+    // the default restriction and prolongation for adaptation is simply an empty one
+    typedef EmptyRestrictProlong  RestrictProlongOperator;
+
+private:
     // copying a problem is not a good idea
     FvBaseProblem(const FvBaseProblem &) = delete;
 
@@ -150,6 +157,18 @@ public:
         linearizeTime_ = 0.0;
         solveTime_ = 0.0;
         updateTime_ = 0.0;
+    }
+
+    /*!
+     * \brief Handle changes of the grid
+     */
+    void gridChanged()
+    {
+        elementMapper_.update();
+        vertexMapper_.update();
+
+        if (enableVtkOutput_())
+            defaultVtkWriter_->gridChanged();
     }
 
     /*!
@@ -534,6 +553,27 @@ public:
     const NewtonMethod &newtonMethod() const
     { return model().newtonMethod(); }
     // \}
+
+    /*!
+     * \brief return restriction and prolongation operator
+     * \note This method has to be overloaded by the implementation.
+     */
+    RestrictProlongOperator restrictProlongOperator()
+    {
+        return RestrictProlongOperator();
+    }
+
+    /*!
+     * \brief Mark grid cells for refinement or coarsening
+     * \note This method has to be overloaded in derived classes to proper implement
+     *       marking of grid entities.
+     *
+     * \return number of marked cells (default is 0)
+     */
+    int markForGridAdaptation()
+    {
+        return 0;
+    }
 
     /*!
      * \brief This method writes the complete state of the problem

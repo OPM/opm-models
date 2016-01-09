@@ -52,10 +52,18 @@
 #include <ewoms/aux/baseauxiliarymodule.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
+
+#if HAVE_DUNE_FEM
+#include <dune/fem/space/common/adaptmanager.hh>
+#include <dune/fem/space/common/restrictprolongtuple.hh>
+#include <dune/fem/function/blockvectorfunction.hh>
+#include <dune/fem/misc/capabilities.hh>
+#endif
 
 #include <limits>
 #include <list>
@@ -197,6 +205,9 @@ SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, 1e100);
 //! By default, accept any time step larger than zero
 SET_SCALAR_PROP(FvBaseDiscretization, MinTimeStepSize, 0.0);
 
+//! Disable grid adaptation by default
+SET_BOOL_PROP(FvBaseDiscretization, EnableGridAdaptation, false);
+
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 
@@ -242,7 +253,9 @@ template<class TypeTag>
 class FvBaseDiscretization
 {
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -285,6 +298,38 @@ class FvBaseDiscretization
     typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
 
+    class BlockVectorWrapper
+    {
+    protected:
+        SolutionVector blockVector_;
+    public:
+        BlockVectorWrapper( const std::string& name, const size_t size )
+            : blockVector_( size )
+        {}
+
+        SolutionVector& blockVector() { return blockVector_; }
+        const SolutionVector& blockVector() const { return blockVector_; }
+    };
+
+#if HAVE_DUNE_FEM
+    typedef typename GET_PROP_TYPE(TypeTag, DiscreteFunctionSpace)    DiscreteFunctionSpace;
+
+    // discrete function storing solution data
+    typedef Dune::Fem::ISTLBlockVectorDiscreteFunction<DiscreteFunctionSpace, PrimaryVariables> DiscreteFunction;
+
+    // problem restriction and prolongation operator for adaptation
+    typedef typename GET_PROP_TYPE(TypeTag, Problem)   Problem;
+    typedef typename Problem :: RestrictProlongOperator  ProblemRestrictProlongOperator;
+
+    // discrete function restriction and prolongation operator for adaptation
+    typedef Dune::Fem::RestrictProlongDefault< DiscreteFunction > DiscreteFunctionRestrictProlong;
+    typedef Dune::Fem::RestrictProlongTuple< DiscreteFunctionRestrictProlong,  ProblemRestrictProlongOperator > RestrictProlong;
+    // adaptation classes
+    typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
+#else
+    typedef BlockVectorWrapper  DiscreteFunction;
+#endif
+
     // copying a discretization object is not a good idea
     FvBaseDiscretization(const FvBaseDiscretization &);
 
@@ -298,14 +343,37 @@ public:
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
+#if HAVE_DUNE_FEM
+        , space_( simulator.gridManager().gridPart() )
+#else
+        , space_( asImp_().numGridDof() )
+#endif
+        , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
     {
+#if HAVE_DUNE_FEM
+        if( enableGridAdaptation_ && ! Dune::Fem::Capabilities::isLocallyAdaptive< Grid >::v )
+        {
+            std::cerr << "WARNING: adaptation enabled, but chosen Grid is not capable of adaptivity" << std::endl;
+            enableGridAdaptation_ = false ;
+        }
+#else
+        if (enableGridAdaptation_)
+            OPM_THROW(Opm::NotImplemented,
+                      "Grid adaptation currently requires the presence of the dune-fem module");
+#endif
+        bool isEcfv = std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value;
+        if (enableGridAdaptation_ && !isEcfv)
+            OPM_THROW(Opm::NotImplemented,
+                      "Grid adaptation currently only works for the element-centered finite "
+                      "volume discretization (is: " << Dune::className<Discretization>() << ")");
+
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
 
         asImp_().updateBoundary_();
 
-        unsigned nDofs = asImp_().numGridDof();
-        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].resize(nDofs);
+        const unsigned nDofs = asImp_().numGridDof();
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
 
             if (storeIntensiveQuantities()) {
                 intensiveQuantityCache_[timeIdx].resize(nDofs);
@@ -316,6 +384,7 @@ public:
                 storageCache_[timeIdx].resize(nDofs);
         }
 
+        resizeAndResetIntensiveQuantitiesCache_();
         asImp_().registerOutputModules_();
     }
 
@@ -346,6 +415,7 @@ public:
         // register runtime parameters of the output modules
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGridAdaptation, "Enable adaptive grid refinement/coarsening");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
@@ -358,7 +428,7 @@ public:
     void finishInit()
     {
         // initialize the volume of the finite volumes to zero
-        unsigned nDofs = asImp_().numGridDof();
+        unsigned int nDofs = asImp_().numGridDof();
         dofTotalVolume_.resize(nDofs);
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
@@ -414,6 +484,7 @@ public:
         for (int threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
             localLinearizer_[threadId].init(simulator_);
 
+        resizeAndResetIntensiveQuantitiesCache_();
         if (storeIntensiveQuantities()) {
             // invalidate all cached intensive quantities
             for (unsigned timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
@@ -423,6 +494,12 @@ public:
             }
         }
     }
+
+    /*!
+     * \brief Returns whether the grid ought to be adapted to the solution during the simulation.
+     */
+    bool enableGridAdaptation() const
+    { return enableGridAdaptation_; }
 
     /*!
      * \brief Applies the initial solution for all degrees of freedom to which the model
@@ -468,8 +545,8 @@ public:
 
         // also set the solution of the "previous" time steps to the
         // initial solution.
-        for (unsigned timeIdx = 1; timeIdx < historySize; ++timeIdx)
-            solution_[timeIdx] = solution_[/*timeIdx=*/0];
+        for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
+            solution(timeIdx) = solution(/*timeIdx=*/0);
 
         simulator_.problem().initialSolutionApplied();
     }
@@ -665,9 +742,9 @@ public:
                           const SolutionVector &u) const
     {
         SolutionVector tmp(asImp_().solution(/*timeIdx=*/0));
-        solution_[/*timeIdx=*/0] = u;
+        mutableSolution(/*timeIdx=*/0) = u;
         Scalar res = asImp_().globalResidual(dest);
-        solution_[/*timeIdx=*/0] = tmp;
+        mutableSolution(/*timeIdx=*/0) = tmp;
         return res;
     }
 
@@ -936,15 +1013,29 @@ public:
      *
      * \param timeIdx The index of the solution used by the time discretization.
      */
-    const SolutionVector &solution(unsigned timeIdx) const
-    { return solution_[timeIdx]; }
+    const SolutionVector &solution(int timeIdx) const
+    {
+        return solution_[timeIdx]->blockVector();
+    }
 
     /*!
      * \copydoc solution(int) const
      */
-    SolutionVector &solution(unsigned timeIdx)
-    { return solution_[timeIdx]; }
+    SolutionVector &solution(int timeIdx)
+    {
+        return solution_[timeIdx]->blockVector();
+    }
 
+  protected:
+    /*!
+     * \copydoc solution(int) const
+     */
+    SolutionVector &mutableSolution(int timeIdx) const
+    {
+        return solution_[timeIdx]->blockVector();
+    }
+
+  public:
     /*!
      * \brief Returns the operator linearizer for the global jacobian of
      *        the problem.
@@ -1095,11 +1186,45 @@ public:
 
     /*!
      * \brief Called by the update() method if it was
-     *        successful. This is primary a hook which the actual
-     *        model can overload.
+     *        successful.
      */
     void updateSuccessful()
     { }
+
+    /*!
+     * \brief Called by the update() method when the grid should be refined.
+     */
+    void adaptGrid()
+    {
+#if HAVE_DUNE_FEM
+        // adapt the grid if enabled and if all dependencies are available
+        // adaptation is only done if markForGridAdaptation returns true
+        if (enableGridAdaptation_)
+        {
+            // check if problem allows for adaptation and cells were marked
+            if( simulator_.problem().markForGridAdaptation() )
+            {
+                // adapt the grid and load balance if necessary
+                adaptationManager().adapt();
+
+                // if the grid has potentially changed, we need to re-create the
+                // supporting data structures.
+                resetLinearizer();
+                finishInit();
+                updateBoundary_();
+
+                // notify the problem that the grid has changed
+                simulator_.problem().gridChanged();
+
+                // notify the modules for visualization output
+                auto outIt = outputModules_.begin();
+                auto outEndIt = outputModules_.end();
+                for (; outIt != outEndIt; ++outIt)
+                    (*outIt)->allocBuffers();
+            }
+        }
+#endif
+    }
 
     /*!
      * \brief Called by the update() method if it was
@@ -1114,7 +1239,7 @@ public:
         intensiveQuantityCache_[/*timeIdx=*/0] = intensiveQuantityCache_[/*timeIdx=*/1];
         intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
 
-        solution_[/*timeIdx=*/0] = solution_[/*timeIdx=*/1];
+        solution(/*timeIdx=*/0) = solution(/*timeIdx=*/1);
     }
 
     /*!
@@ -1126,8 +1251,11 @@ public:
      */
     void advanceTimeLevel()
     {
+        // at this point we can adapt the grid
+        asImp_().adaptGrid();
+
         // make the current solution the previous one.
-        solution_[/*timeIdx=*/1] = solution_[/*timeIdx=*/0];
+        solution(/*timeIdx=*/1) = solution(/*timeIdx=*/0);
 
         // shift the intensive quantities cache by one position in the
         // history
@@ -1187,8 +1315,8 @@ public:
             OPM_THROW(std::runtime_error, "Could not serialize degree of freedom " << dofIdx);
         }
 
-        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            outstream << solution_[/*timeIdx=*/0][dofIdx][eqIdx] << " ";
+        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            outstream << solution(/*timeIdx=*/0)[dofIdx][eqIdx] << " ";
         }
     }
 
@@ -1214,7 +1342,7 @@ public:
             if (!instream.good())
                 OPM_THROW(std::runtime_error,
                           "Could not deserialize degree of freedom " << dofIdx);
-            instream >> solution_[/*timeIdx=*/0][dofIdx][eqIdx];
+            instream >> solution(/*timeIdx=*/0)[dofIdx][eqIdx];
         }
     }
 
@@ -1478,9 +1606,15 @@ public:
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
-        unsigned nDof = numTotalDof();
-        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].resize(nDof);
+        if( enableGridAdaptation_ &&  ! std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
+        {
+            OPM_THROW(Opm::NotImplemented,
+                      "Problems which require auxiliary modules cannot be used in conjunction "
+                      "with dune-fem");
+        }
+        const size_t nDofs = numTotalDof();
+        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution(timeIdx).resize(nDofs);
         }
 
         auxMod->applyInitial();
@@ -1518,7 +1652,36 @@ public:
     static bool storeIntensiveQuantities()
     { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
 
+#if HAVE_DUNE_FEM
+    AdaptationManager& adaptationManager()
+    {
+        if( ! adaptationManager_ )
+        {
+            // create adaptation objects here, because when doing so in constructor
+            // problem is not yet intialized, aka seg fault
+            restrictProlong_.reset(
+                new RestrictProlong( DiscreteFunctionRestrictProlong(*(solution_[/*timeIdx=*/ 0] )),
+                                     simulator_.problem().restrictProlongOperator() ) );
+            adaptationManager_.reset( new AdaptationManager( simulator_.gridManager().grid(), *restrictProlong_ ) );
+        }
+        return *adaptationManager_;
+    }
+#endif
+
 protected:
+    void resizeAndResetIntensiveQuantitiesCache_()
+    {
+        if (storeIntensiveQuantities()) {
+            const int nDofs = asImp_().numGridDof();
+            for( int timeIdx=0; timeIdx<historySize; ++timeIdx )
+            {
+              intensiveQuantityCache_[timeIdx].resize(nDofs);
+              intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs);
+              std::fill( intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                         intensiveQuantityCacheUpToDate_[timeIdx].end(), false );
+            }
+        }
+    }
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
                                     const Context &context, unsigned dofIdx, unsigned timeIdx)
@@ -1608,9 +1771,18 @@ protected:
 
     // cur is the current iterative solution, prev the converged
     // solution of the previous time step
-    mutable SolutionVector solution_[historySize];
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
+
+
+#if HAVE_DUNE_FEM
+    DiscreteFunctionSpace space_;
+    std::unique_ptr< RestrictProlong  > restrictProlong_;
+    std::unique_ptr< AdaptationManager> adaptationManager_;
+#else
+    const size_t space_;
+#endif
+    mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
@@ -1621,10 +1793,10 @@ protected:
     std::vector<Scalar> dofTotalVolume_;
     std::vector<bool> isLocalDof_;
 
+    bool enableGridAdaptation_;
     mutable GlobalEqVector storageCache_[historySize];
     bool enableStorageCache_;
 };
 } // namespace Ewoms
 
 #endif
-

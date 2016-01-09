@@ -30,6 +30,10 @@
 
 #include <dune/common/version.hh>
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/space/common/dofmanager.hh>
+#endif
+
 #include <type_traits>
 #include <memory>
 
@@ -38,6 +42,7 @@ namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridManager);
 NEW_PROP_TAG(GridView);
+NEW_PROP_TAG(GridPart);
 NEW_PROP_TAG(GridViewLevel);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
@@ -54,6 +59,10 @@ class BaseGridManager
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, GridManager) Implementation;
+
+#if HAVE_DUNE_FEM
+    typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
+#endif
 
 public:
     BaseGridManager(Simulator &simulator)
@@ -72,6 +81,37 @@ public:
     const GridView &gridView() const
     { return *gridView_; }
 
+#if HAVE_DUNE_FEM
+    /*!
+     * \brief Returns a reference to the grid part to be used.
+     */
+    const GridPart &gridPart() const
+    { return *gridPart_; }
+
+    /*!
+     * \brief Returns a reference to the grid part to be used.
+     */
+    GridPart &gridPart()
+    { return *gridPart_; }
+#endif
+
+    /*!
+     * \brief Returns the number of times the grid has been changed since its creation.
+     *
+     * This basically says how often the grid has been adapted in the current simulation
+     * run.
+     */
+    int gridSequenceNumber () const
+    {
+#if HAVE_DUNE_FEM
+        typedef Dune::Fem::DofManager< Grid > FemDofManager;
+        return FemDofManager::instance( gridPart().grid() ).sequence();
+#else
+        return 0; // return the same sequence number >= 0 means the grid never changes
+#endif
+    }
+
+
     /*!
      * \brief Distribute the grid (and attached data) over all
      *        processes.
@@ -83,10 +123,15 @@ protected:
     // this method should be called after the grid has been allocated
     void finalizeInit_()
     {
+#if HAVE_DUNE_FEM
+        gridPart_.reset(new GridPart(asImp_().grid()));
+        gridView_.reset(new GridView(static_cast<GridView> (*gridPart_)));
+#else
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
         gridView_.reset(new GridView(asImp_().grid().leafGridView()));
 #else
         gridView_.reset(new GridView(asImp_().grid().leafView()));
+#endif
 #endif
     }
 
@@ -99,6 +144,9 @@ private:
 
     Simulator &simulator_;
     std::unique_ptr<GridView> gridView_;
+#if HAVE_DUNE_FEM
+    std::unique_ptr<GridPart> gridPart_;
+#endif
 };
 
 } // namespace Ewoms

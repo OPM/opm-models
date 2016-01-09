@@ -328,7 +328,7 @@ public:
         }
 
         // write the primary variables
-        const auto& priVars = this->solution_[/*timeIdx=*/0][dofIdx];
+        const auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
             outstream << priVars[eqIdx] << " ";
 
@@ -356,7 +356,7 @@ public:
 #endif
 
         // read in the "real" primary variables of the DOF
-        auto& priVars = this->solution_[/*timeIdx=*/0][dofIdx];
+        auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
         for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
                 OPM_THROW(std::runtime_error,
@@ -402,12 +402,12 @@ public:
             elemCtx.updateStencil(*elemIt);
             for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timIdx=*/0); ++dofIdx) {
                 int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timIdx=*/0);
-                updatePvtRegionIndex_(this->solution_[/*timeIdx=*/0][globalDofIdx],
+                updatePvtRegionIndex_(this->solution(/*timeIdx=*/0)[globalDofIdx],
                                       elemCtx, dofIdx, /*timeIdx=*/0);
             }
         }
 
-        this->solution_[/*timeIdx=*/1] = this->solution_[/*timeIdx=*/0];
+        this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 
 

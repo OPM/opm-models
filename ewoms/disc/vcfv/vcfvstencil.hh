@@ -465,8 +465,15 @@ class VcfvStencil
     enum{maxNF = (dim < 3 ? 1 : 6)};
     enum{maxBF = (dim < 3 ? 8 : 24)};
     typedef typename GridView::ctype CoordScalar;
-    typedef typename GridView::Traits::template Codim<0>::Entity Element;
-    typedef typename GridView::Traits::template Codim<0>::EntityPointer ElementPointer;
+    typedef typename GridView::Traits::template Codim<0>::Entity            Element;
+public:
+    typedef typename GridView::Traits::template Codim<dim>::Entity          Entity;
+private:
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+    typedef typename GridView::Traits::template Codim<0>::EntityPointer     ElementPointer;
+    typedef typename GridView::Traits::template Codim<dim>::EntityPointer   EntityPointer;
+#endif
+
     typedef typename Element::Geometry Geometry;
     typedef Dune::FieldVector<Scalar,dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
@@ -1093,6 +1100,25 @@ public:
         return vertexMapper_.subIndex(element_, dofIdx, /*codim=*/dim);
 #else
         return vertexMapper_.map(*elementPtr_, dofIdx, /*codim=*/dim);
+#endif
+    }
+
+    /*!
+     * \brief Return the global space index given the index of a degree of
+     *        freedom.
+     */
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+    Entity
+#else
+    EntityPointer
+#endif
+    entity( const int dofIdx ) const
+    {
+        assert(0 <= dofIdx && dofIdx < numDof());
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        return element_.template subEntity< dim > ( dofIdx );
+#else
+        return (*elementPtr_).template subEntity< dim > ( dofIdx );
 #endif
     }
 
