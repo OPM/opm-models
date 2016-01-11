@@ -328,6 +328,7 @@ class FvBaseDiscretization
     typedef Dune::Fem::AdaptationManager<Grid, RestrictProlong  > AdaptationManager;
 #else
     typedef BlockVectorWrapper  DiscreteFunction;
+    typedef size_t              DiscreteFunctionSpace;
 #endif
 
     // copying a discretization object is not a good idea
@@ -353,8 +354,7 @@ public:
 #if HAVE_DUNE_FEM
         if( enableGridAdaptation_ && ! Dune::Fem::Capabilities::isLocallyAdaptive< Grid >::v )
         {
-            std::cerr << "WARNING: adaptation enabled, but chosen Grid is not capable of adaptivity" << std::endl;
-            enableGridAdaptation_ = false ;
+            OPM_THROW(Opm::NotImplemented,"WARNING: adaptation enabled, but chosen Grid is not capable of adaptivity");
         }
 #else
         if (enableGridAdaptation_)
@@ -1775,14 +1775,13 @@ protected:
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
 
 
-#if HAVE_DUNE_FEM
     DiscreteFunctionSpace space_;
+    mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
+
+#if HAVE_DUNE_FEM
     std::unique_ptr< RestrictProlong  > restrictProlong_;
     std::unique_ptr< AdaptationManager> adaptationManager_;
-#else
-    const size_t space_;
 #endif
-    mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
     // all the index of the BoundaryTypes object for a vertex
     std::vector<bool> onBoundary_;
