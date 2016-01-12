@@ -74,6 +74,11 @@ public:
     typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
     typedef Dune::VTKWriter<GridView> VtkWriter;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 3, 0)
+    typedef std::shared_ptr< Dune::VTKFunction< GridView > > FunctionPtr;
+#else
+    typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
+#endif
 
     VtkMultiWriter(const GridView &gridView,
                    const std::string &simName = "",
@@ -187,7 +192,6 @@ public:
     {
         sanitizeScalarBuffer_(buf);
 
-        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkScalarFunction<GridView, VertexMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
@@ -216,7 +220,6 @@ public:
     {
         sanitizeScalarBuffer_(buf);
 
-        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkScalarFunction<GridView, ElementMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
@@ -246,7 +249,6 @@ public:
     {
         sanitizeVectorBuffer_(buf);
 
-        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkVectorFunction<GridView, VertexMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
@@ -261,7 +263,6 @@ public:
      */
     void attachTensorVertexData(TensorBuffer &buf, std::string name)
     {
-        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkTensorFunction<GridView, VertexMapper> VtkFn;
 
         for (size_t colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
@@ -297,7 +298,6 @@ public:
     {
         sanitizeVectorBuffer_(buf);
 
-        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkVectorFunction<GridView, ElementMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
@@ -312,7 +312,6 @@ public:
      */
     void attachTensorElementData(TensorBuffer &buf, std::string name)
     {
-        typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
         typedef Ewoms::VtkTensorFunction<GridView, ElementMapper> VtkFn;
 
         for (size_t colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
