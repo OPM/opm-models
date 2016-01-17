@@ -181,11 +181,11 @@ public:
 
         // don't let mass flow out
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = std::min(0.0, (*this)[conti0EqIdx + compIdx]);
+            (*this)[conti0EqIdx + compIdx] = std::min<Scalar>(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow out
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            (*this)[momentum0EqIdx + axisIdx] = std::min(0.0, (*this)[momentum0EqIdx + axisIdx]);
+            (*this)[momentum0EqIdx + axisIdx] = std::min<Scalar>(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
     /*!
@@ -205,11 +205,11 @@ public:
 
         // don't let mass flow in
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = std::max(0.0, (*this)[conti0EqIdx + compIdx]);
+            (*this)[conti0EqIdx + compIdx] = std::max<Scalar>(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow in
         for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            (*this)[momentum0EqIdx + axisIdx] = std::max(0.0, (*this)[momentum0EqIdx + axisIdx]);
+            (*this)[momentum0EqIdx + axisIdx] = std::max<Scalar>(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
     /*!

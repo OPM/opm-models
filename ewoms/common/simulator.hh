@@ -97,7 +97,7 @@ public:
 
         episodeIdx_ = 0;
         episodeStartTime_ = 0;
-        episodeLength_ = 1e100;
+        episodeLength_ = std::numeric_limits<Scalar>::max();
 
         finished_ = false;
 
@@ -328,7 +328,9 @@ public:
     bool finished() const
     {
         assert(timeStepSize_ >= 0.0);
-        Scalar eps = std::max(std::abs(this->time()), timeStepSize())*1e-8;
+        Scalar eps =
+            std::max(std::abs(this->time()), timeStepSize())
+            *std::numeric_limits<Scalar>::epsilon()*1e3;
         return finished_ || (this->time() + eps >= endTime());
     }
 
@@ -338,9 +340,11 @@ public:
      */
     bool willBeFinished() const
     {
+        static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
+
         return
             finished_ ||
-            (this->time() + std::max(std::abs(this->time()), timeStepSize())*1e-8 + timeStepSize_
+            (this->time() + std::max(std::abs(this->time()), timeStepSize())*eps + timeStepSize_
              >= endTime());
     }
 
@@ -377,7 +381,7 @@ public:
      * \param len Length of the episode \f$\mathrm{[s]}\f$, infinite if not
      *            specified.
      */
-    void startNextEpisode(Scalar len = 1e100)
+    void startNextEpisode(Scalar len = std::numeric_limits<Scalar>::max())
     {
         ++episodeIdx_;
         episodeStartTime_ = startTime_ + time_;
@@ -419,7 +423,11 @@ public:
      *        current time.
      */
     bool episodeIsOver() const
-    { return startTime() + this->time() > episodeStartTime_ + episodeLength()*(1 - 1e-8); }
+    {
+        static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
+
+        return startTime() + this->time() > episodeStartTime_ + episodeLength()*(1 - eps);
+    }
 
     /*!
      * \brief Returns true if the current episode will be finished
@@ -427,8 +435,10 @@ public:
      */
     bool episodeWillBeOver() const
     {
+        static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
+
         return startTime() + this->time() + timeStepSize()
-            >=  episodeStartTime_ + episodeLength()*(1 - 1e-8);
+            >=  episodeStartTime_ + episodeLength()*(1 - eps);
     }
 
     /*!
@@ -464,7 +474,7 @@ public:
     void run()
     {
         Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
-        if (restartTime > -1e100) {
+        if (restartTime > -1e30) {
             // try to restart a previous simulation
             time_ = restartTime;
 

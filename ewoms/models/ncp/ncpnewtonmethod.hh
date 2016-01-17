@@ -121,8 +121,8 @@ private:
 
                 // do not allow mole fractions lager than 101% or
                 // smaller than -1%
-                val = std::max(-0.01 * minPhi, val);
-                val = std::min(1.01 * minPhi, val);
+                val = std::max<Scalar>(-0.01 * minPhi, val);
+                val = std::min<Scalar>(1.01 * minPhi, val);
             }
         }
     }

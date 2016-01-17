@@ -327,7 +327,8 @@ public:
                                       Toolbox::value(intQuant.fluidState().saturation(phaseIdx)));
                 }
 
-                const Scalar indicator = (maxSat - minSat)/(0.5*std::max(0.01, maxSat+minSat));
+                const Scalar indicator =
+                    (maxSat - minSat)/(std::max<Scalar>(0.01, maxSat+minSat)/2);
                 if( indicator > 0.2 && element.level() < 2 ) {
                     grid.mark( 1, element );
                     ++ numMarked;

@@ -40,6 +40,8 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
+#include <limits>
+
 namespace Ewoms {
 // forward declaration
 template<class TypeTag>
@@ -82,7 +84,9 @@ SET_TYPE_PROP(FiniteDifferenceLocalLinearizer, Evaluation,
 SET_INT_PROP(FiniteDifferenceLocalLinearizer, NumericDifferenceMethod, +1);
 
 //! The base epsilon value for finite difference calculations
-SET_SCALAR_PROP(FiniteDifferenceLocalLinearizer, BaseEpsilon, 0.9123e-10);
+SET_SCALAR_PROP(FiniteDifferenceLocalLinearizer,
+                BaseEpsilon,
+                std::max<Scalar>(0.9123e-10, std::numeric_limits<Scalar>::epsilon()*1.23e3));
 }
 
 /*!

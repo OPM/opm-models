@@ -91,7 +91,8 @@ public:
 
         // Make sure that the wetting saturation in the matrix fluid
         // state does not get larger than 1
-        Scalar SwMatrix = std::min(1.0, this->fluidState_.saturation(wettingPhaseIdx));
+        Scalar SwMatrix =
+            std::min<Scalar>(1.0, this->fluidState_.saturation(wettingPhaseIdx));
         this->fluidState_.setSaturation(wettingPhaseIdx, SwMatrix);
         this->fluidState_.setSaturation(nonWettingPhaseIdx, 1 - SwMatrix);
 
@@ -155,7 +156,8 @@ public:
 
         // Make sure that the wetting saturation in the fracture does
         // not get negative
-        Scalar SwFracture = std::max(0.0, fractureFluidState_.saturation(wettingPhaseIdx));
+        Scalar SwFracture =
+            std::max<Scalar>(0.0, fractureFluidState_.saturation(wettingPhaseIdx));
         fractureFluidState_.setSaturation(wettingPhaseIdx, SwFracture);
         fractureFluidState_.setSaturation(nonWettingPhaseIdx, 1 - SwFracture);
 

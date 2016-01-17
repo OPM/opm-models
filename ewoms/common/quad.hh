@@ -24,12 +24,12 @@
  * \brief This file provides the infrastructure to use quad-precision
  *        floating point values in the numerical models.
  */
+#if !defined EWOMS_QUAD_HH && HAVE_QUAD
+#define EWOMS_QUAD_HH
+
 #ifdef DUNE_CLASSNAME_HH
 #error "Due to some trickery required for the linker, this file must be included _before_ Dune's classname.hh!"
 #endif
-
-#if !defined EWOMS_QUAD_HH && HAVE_QUAD
-#define EWOMS_QUAD_HH
 
 #include <opm/material/common/ClassName.hpp>
 

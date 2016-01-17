@@ -113,9 +113,7 @@ NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(RestartTime);
 
 ///////////////////////////////////
-// Default values for properties:
-//
-// Scalar -> double
+// Values for the properties
 ///////////////////////////////////
 
 //! Set the default type of scalar values to double
@@ -172,13 +170,13 @@ SET_INT_PROP(NumericModel, PrintProperties, 2);
 SET_INT_PROP(NumericModel, PrintParameters, 2);
 
 //! The default value for the simulation's end time
-SET_SCALAR_PROP(NumericModel, EndTime, -1e100);
+SET_SCALAR_PROP(NumericModel, EndTime, -1e35);
 
 //! The default value for the simulation's initial time step size
-SET_SCALAR_PROP(NumericModel, InitialTimeStepSize, -1e100);
+SET_SCALAR_PROP(NumericModel, InitialTimeStepSize, -1e35);
 
 //! The default value for the simulation's restart time
-SET_SCALAR_PROP(NumericModel, RestartTime, -1e100);
+SET_SCALAR_PROP(NumericModel, RestartTime, -1e35);
 
 } // namespace Properties
 } // namespace Ewoms
