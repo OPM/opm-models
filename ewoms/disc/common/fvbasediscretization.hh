@@ -369,8 +369,6 @@ public:
 
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
 
-        asImp_().updateBoundary_();
-
         const unsigned nDofs = asImp_().numGridDof();
         for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
@@ -1181,8 +1179,7 @@ public:
      *        which the actual model can overload.
      */
     void updateBegin()
-    { updateBoundary_(); }
-
+    { }
 
     /*!
      * \brief Called by the update() method if it was
@@ -1211,7 +1208,6 @@ public:
                 // supporting data structures.
                 resetLinearizer();
                 finishInit();
-                updateBoundary_();
 
                 // notify the problem that the grid has changed
                 simulator_.problem().gridChanged();
@@ -1403,15 +1399,6 @@ public:
         linearizer_ = new Linearizer;
         linearizer_->init(simulator_);
     }
-
-    /*!
-     * \brief Return whether a degree of freedom is located on the
-     *        domain boundary.
-     *
-     * \param globalIdx The global space index of the degree of freedom of interest.
-     */
-    bool onBoundary(unsigned globalIdx) const
-    { return onBoundary_[globalIdx]; }
 
     /*!
      * \brief Returns a string of discretization's human-readable name
@@ -1714,33 +1701,6 @@ protected:
     { return localLinearizer_.localResidual(); }
 
     /*!
-     * \brief Find the degrees of freedoms adjacent to the grid boundary.
-     */
-    void updateBoundary_()
-    {
-        // resize the vectors and set everything to not being on the boundary
-        onBoundary_.resize(asImp_().numGridDof());
-        std::fill(onBoundary_.begin(), onBoundary_.end(), /*value=*/false);
-
-        // loop over all elements of the grid
-        Stencil stencil(gridView_);
-        ElementIterator elemIt = gridView_.template begin<0>();
-        const ElementIterator elemEndIt = gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            stencil.update(*elemIt);
-
-            // do nothing if the element does not have boundary intersections
-            if (stencil.numBoundaryFaces() == 0)
-                continue;
-
-            for (unsigned dofIdx = 0; dofIdx < stencil.numPrimaryDof(); ++dofIdx) {
-                unsigned globalIdx = stencil.globalSpaceIndex(dofIdx);
-                onBoundary_[globalIdx] = true;
-            }
-        }
-    }
-
-    /*!
      * \brief Returns whether messages should be printed
      */
     bool verbose_() const
@@ -1783,8 +1743,6 @@ protected:
     std::unique_ptr< AdaptationManager> adaptationManager_;
 #endif
 
-    // all the index of the BoundaryTypes object for a vertex
-    std::vector<bool> onBoundary_;
 
     std::list<BaseOutputModule<TypeTag>*> outputModules_;
 
