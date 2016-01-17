@@ -32,6 +32,9 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <opm/material/localad/Evaluation.hpp>
+#include <opm/material/localad/Math.hpp>
+
 namespace Ewoms {
 namespace Properties {
 // create new type tag for the VTK output of the quantities for molecular
@@ -71,8 +74,10 @@ class VtkDiffusionModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
@@ -134,14 +139,14 @@ public:
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (tortuosityOutput_())
-                    tortuosity_[phaseIdx][I] = intQuants.tortuosity(phaseIdx);
+                    tortuosity_[phaseIdx][I] = Toolbox::value(intQuants.tortuosity(phaseIdx));
                 for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     if (diffusionCoefficientOutput_())
                         diffusionCoefficient_[phaseIdx][compIdx][I] =
-                            intQuants.diffusionCoefficient(phaseIdx, compIdx);
+                            Toolbox::value(intQuants.diffusionCoefficient(phaseIdx, compIdx));
                     if (effectiveDiffusionCoefficientOutput_())
                         effectiveDiffusionCoefficient_[phaseIdx][compIdx][I] =
-                            intQuants.effectiveDiffusionCoefficient(phaseIdx, compIdx);
+                            Toolbox::value(intQuants.effectiveDiffusionCoefficient(phaseIdx, compIdx));
                 }
             }
         }

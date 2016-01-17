@@ -202,6 +202,7 @@ template <class TypeTag>
 class DiffusionIntensiveQuantities<TypeTag, /*enableDiffusion=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
@@ -215,21 +216,21 @@ public:
      * \brief Returns the molecular diffusion coefficient for a
      *        component in a phase.
      */
-    Scalar diffusionCoefficient(int phaseIdx, int compIdx) const
+    Evaluation diffusionCoefficient(int phaseIdx, int compIdx) const
     { return diffusionCoefficient_[phaseIdx][compIdx]; }
 
     /*!
      * \brief Returns the tortuousity of the sub-domain of a fluid
      *        phase in the porous medium.
      */
-    Scalar tortuosity(int phaseIdx) const
+    Evaluation tortuosity(int phaseIdx) const
     { return tortuosity_[phaseIdx]; }
 
     /*!
      * \brief Returns the effective molecular diffusion coefficient of
      *        the porous medium for a component in a phase.
      */
-    Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    Evaluation effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
     { return tortuosity_[phaseIdx] * diffusionCoefficient_[phaseIdx][compIdx]; }
 
 protected:
@@ -244,8 +245,9 @@ protected:
                  int dofIdx,
                  int timeIdx)
     {
-        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
 
+        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
@@ -253,12 +255,13 @@ protected:
             // TODO: let the problem do this (this is a constitutive
             // relation of which the model should be free of from the
             // abstraction POV!)
+            const Evaluation& base =
+                Toolbox::max(0.0001,
+                             intQuants.porosity()
+                             * intQuants.fluidState().saturation(phaseIdx));
             tortuosity_[phaseIdx] =
                 1.0 / (intQuants.porosity() * intQuants.porosity())
-                * std::pow(std::max(0.0001,
-                                    intQuants.porosity()
-                                    * intQuants.fluidState().saturation(phaseIdx)),
-                           7.0 / 3);
+                * Toolbox::pow(base, 7.0/3.0);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 diffusionCoefficient_[phaseIdx][compIdx] =
@@ -271,8 +274,8 @@ protected:
     }
 
 private:
-    Scalar tortuosity_[numPhases];
-    Scalar diffusionCoefficient_[numPhases][numComponents];
+    Evaluation tortuosity_[numPhases];
+    Evaluation diffusionCoefficient_[numPhases][numComponents];
 };
 
 /*!
@@ -291,6 +294,7 @@ template <class TypeTag>
 class DiffusionExtensiveQuantities<TypeTag, /*enableDiffusion=*/false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
 protected:
@@ -313,10 +317,11 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    Scalar moleFractionGradientNormal(int phaseIdx, int compIdx) const
+    const Evaluation& moleFractionGradientNormal(int phaseIdx, int compIdx) const
     {
-        OPM_THROW(std::logic_error, "Method moleFractionGradient() does not "
-                                    "make sense if diffusion is disabled.");
+        OPM_THROW(std::logic_error,
+                  "The method moleFractionGradient() does not "
+                  "make sense if diffusion is disabled.");
     }
 
     /*!
@@ -326,11 +331,11 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    const Evaluation& effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
     {
-        OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() "
-                                    "does not make sense if diffusion is "
-                                    "disabled.");
+        OPM_THROW(std::logic_error,
+                  "The method effectiveDiffusionCoefficient() "
+                  "does not make sense if diffusion is disabled.");
     }
 };
 
@@ -341,6 +346,7 @@ template <class TypeTag>
 class DiffusionExtensiveQuantities<TypeTag, /*enableDiffusion=*/true>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
@@ -349,6 +355,7 @@ class DiffusionExtensiveQuantities<TypeTag, /*enableDiffusion=*/true>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
 
 protected:
     /*!
@@ -360,13 +367,14 @@ protected:
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::MoleFractionCallback<TypeTag> moleFractionCallback(elemCtx);
 
-        DimVector temperatureGrad;
+        DimEvalVector temperatureGrad;
 
-        const auto &face = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
-        const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, timeIdx);
+        const auto& face = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
+        const auto& normal = face.normal();
+        const auto& extQuants = elemCtx.extensiveQuantities(faceIdx, timeIdx);
 
-        const auto &intQuantsInside = elemCtx.intensiveQuantities(extQuants.interiorIndex(), timeIdx);
-        const auto &intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
+        const auto& intQuantsInside = elemCtx.intensiveQuantities(extQuants.interiorIndex(), timeIdx);
+        const auto& intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
@@ -376,14 +384,16 @@ protected:
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 moleFractionCallback.setComponentIndex(compIdx);
 
-                DimVector moleFractionGradient(0.0);
+                DimEvalVector moleFractionGradient(0.0);
                 gradCalc.calculateGradient(moleFractionGradient,
                                            elemCtx,
                                            faceIdx,
                                            moleFractionCallback);
 
-                moleFractionGradientNormal_[phaseIdx][compIdx] =
-                    face.normal()*moleFractionGradient;
+                moleFractionGradientNormal_[phaseIdx][compIdx] = 0.0;
+                for (unsigned i = 0; i < normal.size(); ++i)
+                    moleFractionGradientNormal_[phaseIdx][compIdx] +=
+                        normal[i]*moleFractionGradient[i];
                 Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
 
                 // use the arithmetic average for the effective
@@ -428,8 +438,6 @@ protected:
                 continue;
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                DimVector moleFractionGradient(0.0);
-
                 // calculate mole fraction gradient using two-point
                 // gradients
                 moleFractionGradientNormal_[phaseIdx][compIdx] =
@@ -456,7 +464,7 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    Scalar moleFractionGradientNormal(int phaseIdx, int compIdx) const
+    const Evaluation& moleFractionGradientNormal(int phaseIdx, int compIdx) const
     { return moleFractionGradientNormal_[phaseIdx][compIdx]; }
 
     /*!
@@ -466,12 +474,12 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    const Evaluation& effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
     { return effectiveDiffusionCoefficient_[phaseIdx][compIdx]; }
 
 private:
-    Scalar moleFractionGradientNormal_[numPhases][numComponents];
-    Scalar effectiveDiffusionCoefficient_[numPhases][numComponents];
+    Evaluation moleFractionGradientNormal_[numPhases][numComponents];
+    Evaluation effectiveDiffusionCoefficient_[numPhases][numComponents];
 };
 
 } // namespace Ewoms
