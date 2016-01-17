@@ -26,6 +26,7 @@
 #define EWOMS_DGF_GRID_MANAGER_HH
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
+#include <dune/grid/common/mcmgmapper.hh>
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 
 #include <ewoms/io/basegridmanager.hh>

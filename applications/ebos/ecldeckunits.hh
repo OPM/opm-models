@@ -26,6 +26,7 @@
 #ifndef EWOMS_ECL_DECK_UNITS_HH
 #define EWOMS_ECL_DECK_UNITS_HH
 
+#include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/simulator.hh>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -34,6 +35,11 @@
 #include <vector>
 
 namespace Ewoms {
+namespace Properties {
+NEW_PROP_TAG(Simulator);
+NEW_PROP_TAG(Scalar);
+}
+
 /*!
  * \ingroup EclBlackOilSimulator
  *

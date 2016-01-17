@@ -21,9 +21,16 @@
 
 //#if HAVE_DUNE_CORNERPOINT
 #include <dune/grid/common/p2pcommunicator.hh>
+#include <dune/grid/utility/persistentcontainer.hh>
+#include <dune/grid/common/gridenums.hh>
 //#else
 //#error "This header needs the dune-cornerpoint module."
 //#endif
+
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
+#include <stdexcept>
 
 namespace Ewoms
 {
