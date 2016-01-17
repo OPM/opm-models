@@ -1112,7 +1112,7 @@ public:
 #else
     EntityPointer
 #endif
-    entity( const int dofIdx ) const
+    entity(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)

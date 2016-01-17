@@ -339,7 +339,7 @@ public:
      * If no degree of freedom index is passed, the element which was
      * passed to the update() method is returned...
      */
-    const Element &element(int dofIdx) const
+    const Element &element(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
