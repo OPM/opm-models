@@ -131,9 +131,6 @@ public:
             fractureVolume_ += (fractureWidth / 2) * (edgeLength / 2);
         }
 
-        if (fractureVolume_ <= 0.0)
-            return;
-
         //////////
         // set the fluid state for the fracture.
         //////////

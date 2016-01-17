@@ -179,23 +179,33 @@ public:
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto &fs = intQuants.fractureFluidState();
 
-            if (porosityOutput_())
+            if (porosityOutput_()) {
+                Valgrind::CheckDefined(intQuants.fracturePorosity());
                 fracturePorosity_[I] = intQuants.fracturePorosity();
+            }
             if (intrinsicPermeabilityOutput_()) {
                 const auto &K = intQuants.fractureIntrinsicPermeability();
                 fractureIntrinsicPermeability_[I] = K[0][0];
             }
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                if (saturationOutput_())
+                if (saturationOutput_()) {
+                    Valgrind::CheckDefined(fs.saturation(phaseIdx));
                     fractureSaturation_[phaseIdx][I] = fs.saturation(phaseIdx);
-                if (mobilityOutput_())
+                }
+                if (mobilityOutput_()) {
+                    Valgrind::CheckDefined(intQuants.fractureMobility(phaseIdx));
                     fractureMobility_[phaseIdx][I] = intQuants.fractureMobility(phaseIdx);
-                if (relativePermeabilityOutput_())
+                }
+                if (relativePermeabilityOutput_()) {
+                    Valgrind::CheckDefined(intQuants.fractureRelativePermeability(phaseIdx));
                     fractureRelativePermeability_[phaseIdx][I] =
                         intQuants.fractureRelativePermeability(phaseIdx);
-                if (volumeFractionOutput_())
+                }
+                if (volumeFractionOutput_()) {
+                    Valgrind::CheckDefined(intQuants.fractureVolume());
                     fractureVolumeFraction_[I] += intQuants.fractureVolume();
+                }
             }
         }
 
