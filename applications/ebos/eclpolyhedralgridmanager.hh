@@ -129,6 +129,15 @@ public:
     const CartesianIndexMapper& cartesianIndexMapper() const
     { return *cartesianIndexMapper_; }
 
+    /*!
+     * \brief Returns mapper from compressed to cartesian indices for the EQUIL grid
+     *
+     * Since PolyhedralGrid is not parallel, that's always the same as
+     * cartesianIndexMapper().
+     */
+    const CartesianIndexMapper& equilCartesianIndexMapper() const
+    { return *cartesianIndexMapper_; }
+
 protected:
     void createGrids_()
     {
