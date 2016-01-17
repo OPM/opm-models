@@ -47,6 +47,7 @@ NEW_PROP_TAG(VtkWriteMolarities);
 NEW_PROP_TAG(VtkWriteFugacities);
 NEW_PROP_TAG(VtkWriteFugacityCoeffs);
 NEW_PROP_TAG(VtkOutputFormat);
+NEW_PROP_TAG(EnableVtkOutput);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkComposition, VtkWriteMassFractions, false);
@@ -147,6 +148,9 @@ public:
     void processElement(const ElementContext &elemCtx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
+
+        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
+            return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);

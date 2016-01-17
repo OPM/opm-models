@@ -44,6 +44,7 @@ namespace Properties {
 NEW_TYPE_TAG(VtkBlackOil);
 
 // create the property tags needed for the multi phase module
+NEW_PROP_TAG(EnableVtkOutput);
 NEW_PROP_TAG(VtkOutputFormat);
 NEW_PROP_TAG(VtkWriteGasDissolutionFactor);
 NEW_PROP_TAG(VtkWriteOilVaporizationFactor);
@@ -200,6 +201,9 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
+            return;
+
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {

@@ -50,6 +50,7 @@ NEW_PROP_TAG(VtkWriteFractureIntrinsicPermeabilities);
 NEW_PROP_TAG(VtkWriteFractureFilterVelocities);
 NEW_PROP_TAG(VtkWriteFractureVolumeFraction);
 NEW_PROP_TAG(VtkOutputFormat);
+NEW_PROP_TAG(EnableVtkOutput);
 NEW_PROP_TAG(DiscBaseOutputModule);
 
 // set default values for what quantities to output
@@ -169,6 +170,9 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
+        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
+            return;
+
         const auto &fractureMapper = elemCtx.simulator().gridManager().fractureMapper();
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {

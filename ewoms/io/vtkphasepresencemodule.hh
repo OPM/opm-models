@@ -39,6 +39,7 @@ NEW_TYPE_TAG(VtkPhasePresence);
 // create the property tags needed for the primary variables module
 NEW_PROP_TAG(VtkWritePhasePresence);
 NEW_PROP_TAG(VtkOutputFormat);
+NEW_PROP_TAG(EnableVtkOutput);
 
 SET_BOOL_PROP(VtkPhasePresence, VtkWritePhasePresence, false);
 } // namespace Properties
@@ -96,14 +97,16 @@ public:
      */
     void processElement(const ElementContext &elemCtx)
     {
-        if (!phasePresenceOutput_())
+        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             // calculate the phase presence
             int phasePresence = elemCtx.primaryVars(i, /*timeIdx=*/0).phasePresence();
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            phasePresence_[I] = phasePresence;
+
+            if (phasePresenceOutput_())
+                phasePresence_[I] = phasePresence;
         }
     }
 

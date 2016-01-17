@@ -55,6 +55,7 @@ NEW_PROP_TAG(VtkWriteIntrinsicPermeabilities);
 NEW_PROP_TAG(VtkWritePotentialGradients);
 NEW_PROP_TAG(VtkWriteFilterVelocities);
 NEW_PROP_TAG(VtkOutputFormat);
+NEW_PROP_TAG(EnableVtkOutput);
 NEW_PROP_TAG(Evaluation);
 
 // set default values for what quantities to output
@@ -204,6 +205,9 @@ public:
     void processElement(const ElementContext &elemCtx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
+
+        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
+            return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);

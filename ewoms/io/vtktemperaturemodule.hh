@@ -44,6 +44,7 @@ NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
 NEW_PROP_TAG(VtkWriteInternalEnergies);
 NEW_PROP_TAG(VtkWriteEnthalpies);
 NEW_PROP_TAG(VtkOutputFormat);
+NEW_PROP_TAG(EnableVtkOutput);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
@@ -101,6 +102,9 @@ public:
     void processElement(const ElementContext &elemCtx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
+
+        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
+            return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
