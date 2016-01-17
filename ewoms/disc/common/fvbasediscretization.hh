@@ -610,6 +610,11 @@ public:
             !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
+        if (timeIdx > 0 && enableStorageCache_)
+            // with the storage cache enabled, only the intensive quantities for the most
+            // recent time step are cached!
+            return 0;
+
         return &intensiveQuantityCache_[timeIdx][globalIdx];
     }
 
@@ -663,11 +668,6 @@ public:
             return;
 
         if (enableStorageCache()) {
-            // invalidate the cache for the most recent time index
-            std::fill(intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].begin(),
-                      intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].end(),
-                      false);
-
             // if the storage term is cached, the intensive quantities of the previous
             // time steps do not need to be accessed, and we can thus spare ourselves to
             // copy the objects for the intensive quantities.
@@ -681,10 +681,9 @@ public:
             intensiveQuantityCacheUpToDate_[timeIdx + numSlots] = intensiveQuantityCacheUpToDate_[timeIdx];
         }
 
-        // invalidate the cache for the most recent time index
-        std::fill(intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].begin(),
-                  intensiveQuantityCacheUpToDate_[/*timeIdx=*/0].end(),
-                  false);
+        // the cache for the most recent time indices do not need to be invalidated
+        // because the solution for them did not change (TODO: that assumes that there is
+        // no post-processing of the solution after a time step! fix it?)
     }
 
     /*!
@@ -1232,10 +1231,10 @@ public:
         // Reset the current solution to the one of the
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
-        intensiveQuantityCache_[/*timeIdx=*/0] = intensiveQuantityCache_[/*timeIdx=*/1];
-        intensiveQuantityCacheUpToDate_[/*timeIdx=*/0] = intensiveQuantityCacheUpToDate_[/*timeIdx=*/1];
-
         solution(/*timeIdx=*/0) = solution(/*timeIdx=*/1);
+        std::fill(intensiveQuantityCacheUpToDate_[0].begin(),
+                  intensiveQuantityCacheUpToDate_[0].end(),
+                  false);
     }
 
     /*!
@@ -1662,10 +1661,11 @@ protected:
             const int nDofs = asImp_().numGridDof();
             for( int timeIdx=0; timeIdx<historySize; ++timeIdx )
             {
-              intensiveQuantityCache_[timeIdx].resize(nDofs);
-              intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs);
-              std::fill( intensiveQuantityCacheUpToDate_[timeIdx].begin(),
-                         intensiveQuantityCacheUpToDate_[timeIdx].end(), false );
+                intensiveQuantityCache_[timeIdx].resize(nDofs);
+                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs);
+                std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                          intensiveQuantityCacheUpToDate_[timeIdx].end(),
+                          false );
             }
         }
     }
