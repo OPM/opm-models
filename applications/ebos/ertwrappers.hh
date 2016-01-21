@@ -51,6 +51,8 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include "eclwellmanager.hh"
 
 namespace Ewoms {
