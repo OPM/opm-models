@@ -267,14 +267,27 @@ public:
         if (globalDofIdx >= (int) this->numGridDof())
             return 1.0;
 
-        // the pressures usually are in the range of 100 to 500 bars for typical oil
-        // reservoirs.
-        if (Indices::pressureSwitchIdx == pvIdx)
+        // saturations are always in the range [0, 1]!
+        if (Indices::waterSaturationIdx == pvIdx)
+            return 1.0;
+
+        // pressures usually are in the range of 100 to 500 bars for typical oil
+        // reservoirs (which is the only relevant application for the black-oil model).
+        else if (Indices::pressureSwitchIdx == pvIdx)
             return 1.0/300e5;
 
-        // if the primary variable is not a pressure, it is either a mole fraction or a
-        // saturation. both are in the range [0, 1]
-        return 1.0;
+        // if the primary variable is either the gas saturation, Rs or Rv
+        assert(Indices::compositionSwitchIdx == pvIdx);
+
+        auto pvMeaning = this->solution(0)[globalDofIdx].primaryVarsMeaning();
+        if (pvMeaning == PrimaryVariables::Sw_po_Sg)
+            return 1.0; // gas saturation
+        else if (pvMeaning == PrimaryVariables::Sw_po_Rs)
+            return 1.0/250.; // gas dissolution factor
+        else {
+            assert(pvMeaning == PrimaryVariables::Sw_pg_Rv);
+            return 1.0/0.025; // oil vaporization factor
+        }
     }
 
     /*!

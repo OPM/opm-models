@@ -131,14 +131,14 @@ protected:
             // reached
             Scalar delta = update[eqIdx];
             if (this->numIterations_ < numChoppedIterations_) {
+                // limit changes in pressure to 20% of the current value
                 if (eqIdx == Indices::pressureSwitchIdx
                     && std::abs(delta/currentValue[eqIdx]) > 0.2)
                 {
                     delta = Ewoms::signum(delta)*0.2*currentValue[eqIdx];
                 }
-                // limit changes in saturation or mole fraction to 20%
-                else if ((eqIdx == Indices::waterSaturationIdx ||
-                          (eqIdx == Indices::compositionSwitchIdx))
+                // limit changes in water saturation to 20%
+                else if (eqIdx == Indices::waterSaturationIdx
                          && std::abs(delta) > 0.2)
                 {
                     delta = Ewoms::signum(delta)*0.2;

@@ -27,6 +27,7 @@
 #define EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
 
 #include "blackoilproperties.hh"
+#include "blackoilfluidstate.hh"
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <dune/common/fmatrix.hh>
@@ -69,9 +70,15 @@ class BlackOilIntensiveQuantities
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Opm::CompositionalFluidState<Evaluation, FluidSystem, /*enthalpy=*/false> FluidState;
+    typedef Ewoms::BlackOilFluidState<TypeTag> FluidState;
 
 public:
+    BlackOilIntensiveQuantities()
+    {
+        fluidState_.setRs(0.0);
+        fluidState_.setRv(0.0);
+    }
+
     /*!
      * \copydoc IntensiveQuantities::update
      */
@@ -79,12 +86,13 @@ public:
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
+        //fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
 
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
-        pvtRegionIdx_ = priVars.pvtRegionIndex();
+        unsigned short pvtRegionIdx = priVars.pvtRegionIndex();
+        fluidState_.setPvtRegionIndex(pvtRegionIdx);
 
         // extract the water and the gas saturations for convenience
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
@@ -93,11 +101,11 @@ public:
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
             // -> threephase case
             Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_xgO)
+        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
             // -> gas-water case
             Sg = 1 - Sw;
         else {
-            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_xoG);
+            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs);
             // -> oil-water case
             Sg = 0.0;
         }
@@ -113,7 +121,7 @@ public:
         Evaluation pC[numPhases];
         const auto &materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_xgO) {
+        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
             // -> gas-water case. gas is the reference phase for pressure here
             const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
@@ -126,99 +134,95 @@ public:
                 fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
         }
 
-        // update phase compositions. first, set everything to 0...
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
-                fluidState_.setMoleFraction(phaseIdx, compIdx, 0.0);
-
-        // ... then set the default composition of all phases (default = assume immscibility)
-        fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0);
-        fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
-        fluidState_.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
-
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
             // in the threephase case, gas and oil phases are potentially present, i.e.,
             // we use the compositions of the gas-saturated oil and oil-saturated gas.
-            Evaluation xoG = 0.0;
             if (FluidSystem::enableDissolvedGas()) {
                 const Evaluation& RsSat =
-                    FluidSystem::saturatedDissolutionFactor(fluidState_, oilPhaseIdx, pvtRegionIdx_);
-                const Evaluation& XoGSat = FluidSystem::convertRsToXoG(RsSat, pvtRegionIdx_);
-                xoG = FluidSystem::convertXoGToxoG(XoGSat, pvtRegionIdx_);
+                    FluidSystem::saturatedDissolutionFactor(fluidState_, oilPhaseIdx, pvtRegionIdx);
+                fluidState_.setRs(RsSat);
             }
-            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
-            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0 - xoG);
 
             Evaluation xgO = 0.0;
             if (FluidSystem::enableVaporizedOil()) {
                 const Evaluation& RvSat =
-                    FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx_);
-                const Evaluation& XgOSat = FluidSystem::convertRvToXgO(RvSat, pvtRegionIdx_);
-                xgO = FluidSystem::convertXgOToxgO(XgOSat, pvtRegionIdx_);
+                    FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx);
+                fluidState_.setRv(RvSat);
             }
-            fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0 - xgO);
-            fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
         }
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_xoG) {
+        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs) {
             // if the switching variable is the mole fraction of the gas component in the
             // oil phase, we can directly set the composition of the oil phase
-            const auto& xoG = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-
-            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoG);
-            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0 - xoG);
+            const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
+            fluidState_.setRs(Rs);
 
             // the gas phase is not present, but we need to compute its "composition"
             // for the gravity correction anyway
             const auto& RvSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                                         gasPhaseIdx,
-                                                                        pvtRegionIdx_);
-            const auto& XgOSat = FluidSystem::convertRvToXgO(RvSat, pvtRegionIdx_);
-            const auto& xgOSat = FluidSystem::convertXgOToxgO(XgOSat, pvtRegionIdx_);
-            fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1 - xgOSat);
-            fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgOSat);
+                                                                        pvtRegionIdx);
+            fluidState_.setRv(RvSat);
+
         }
         else {
-            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_xgO);
+            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv);
 
-            // if the switching variable is the mole fraction of the oil component in the
-            // gas phase, we can directly set the composition of the gas phase
-            const auto& xgO = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-
-            fluidState_.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0 - xgO);
-            fluidState_.setMoleFraction(gasPhaseIdx, oilCompIdx, xgO);
+            const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
+            fluidState_.setRv(Rv);
 
             // the oil phase is not present, but we need to compute its "composition" for
             // the gravity correction anyway
             const auto& RsSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                                         oilPhaseIdx,
-                                                                        pvtRegionIdx_);
-            const auto& XoGSat = FluidSystem::convertRsToXoG(RsSat, pvtRegionIdx_);
-            const auto& xoGSat = FluidSystem::convertXoGToxoG(XoGSat, pvtRegionIdx_);
-            fluidState_.setMoleFraction(oilPhaseIdx, gasCompIdx, xoGSat);
-            fluidState_.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0 - xoGSat);
+                                                                        pvtRegionIdx);
+            fluidState_.setRs(RsSat);
         }
 
         // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
+        MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
+        Valgrind::CheckDefined(mobility_);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::ParameterCache paramCache;
-        paramCache.setRegionIndex(pvtRegionIdx_);
+        paramCache.setRegionIndex(pvtRegionIdx);
         paramCache.updateAll(fluidState_);
 
         // set the phase densities and viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            const auto& rho = FluidSystem::density(fluidState_, paramCache, phaseIdx);
-            fluidState_.setDensity(phaseIdx, rho);
+            const auto& b = 1.0/FluidSystem::formationVolumeFactor(fluidState_, phaseIdx, pvtRegionIdx);
+            fluidState_.setInvB(phaseIdx, b);
 
             const auto& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
-            fluidState_.setViscosity(phaseIdx, mu);
-
-            mobility_[phaseIdx] = relativePermeability_[phaseIdx] / mu;
+            mobility_[phaseIdx] /= mu;
         }
+
+        // calculate the phase densities
+        Evaluation rho;
+        rho = fluidState_.invB(waterPhaseIdx);
+        rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+        fluidState_.setDensity(waterPhaseIdx, rho);
+
+        rho = fluidState_.invB(gasPhaseIdx);
+        rho *= FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+        if (FluidSystem::enableVaporizedOil()) {
+            rho +=
+                fluidState_.invB(gasPhaseIdx) *
+                fluidState_.Rv() *
+                FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        }
+        fluidState_.setDensity(gasPhaseIdx, rho);
+
+        rho = fluidState_.invB(oilPhaseIdx);
+        rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        if (FluidSystem::enableDissolvedGas()) {
+            rho +=
+                fluidState_.invB(oilPhaseIdx) *
+                fluidState_.Rs() *
+                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+        }
+        fluidState_.setDensity(oilPhaseIdx, rho);
 
         // retrieve the porosity from the problem
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
@@ -232,9 +236,6 @@ public:
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
 
-        // now get the intrinsic permeability
-        intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
-
         // update the quantities which are required by the chosen
         // velocity model
         FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
@@ -246,13 +247,10 @@ public:
             assert(std::isfinite(Toolbox::value(fluidState_.saturation(phaseIdx))));
             assert(std::isfinite(Toolbox::value(fluidState_.temperature(phaseIdx))));
             assert(std::isfinite(Toolbox::value(fluidState_.pressure(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.viscosity(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(relativePermeability_[phaseIdx])));
-            for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
-                assert(std::isfinite(Toolbox::value(fluidState_.moleFraction(phaseIdx, compIdx))));
+            assert(std::isfinite(Toolbox::value(fluidState_.invB(phaseIdx))));
         }
-        assert(std::isfinite(intrinsicPerm_.frobenius_norm()));
-        assert(std::isfinite(Toolbox::value(porosity_)));
+        assert(std::isfinite(Toolbox::value(fluidState_.Rs())));
+        assert(std::isfinite(Toolbox::value(fluidState_.Rv())));
 #endif
     }
 
@@ -261,18 +259,6 @@ public:
      */
     const FluidState &fluidState() const
     { return fluidState_; }
-
-    /*!
-     * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
-     */
-    const DimMatrix &intrinsicPermeability() const
-    { return intrinsicPerm_; }
-
-    /*!
-     * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
-     */
-    const Evaluation& relativePermeability(int phaseIdx) const
-    { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
@@ -300,15 +286,21 @@ public:
      * specified, the PVT region index is 0.)
      */
     int pvtRegionIndex() const
-    { return pvtRegionIdx_; }
+    { return fluidState_.pvtRegionIndex(); }
+
+    /*!
+     * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
+     */
+    Evaluation relativePermeability(int phaseIdx) const
+    {
+        // warning: slow
+        return fluidState_.viscosity(phaseIdx)*mobility(phaseIdx);
+    }
 
 private:
     FluidState fluidState_;
     Evaluation porosity_;
-    DimMatrix intrinsicPerm_;
-    Evaluation relativePermeability_[numPhases];
     Evaluation mobility_[numPhases];
-    int pvtRegionIdx_;
 };
 
 } // namespace Ewoms
