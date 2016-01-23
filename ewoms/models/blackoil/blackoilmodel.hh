@@ -287,11 +287,8 @@ public:
         if (globalDofIdx >= (int) this->numGridDof())
             return 1.0;
 
-        int compIdx = eqIdx - Indices::conti0EqIdx;
-        assert(0 <= compIdx && compIdx <= numPhases);
-
-        // make all kg equal
-        return FluidSystem::molarMass(compIdx);
+        // it is said that all kilograms are equal!
+        return 1.0;
     }
 
     /*!

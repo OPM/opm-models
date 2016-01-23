@@ -77,7 +77,8 @@ public:
                 storage[conti0EqIdx + compIdx] +=
                     Toolbox::template toLhs<LhsEval>(intQuants.porosity())
                     * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(phaseIdx))
-                    * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().molarity(phaseIdx, compIdx));
+                    * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().massFraction(phaseIdx, compIdx))
+                    * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().density(phaseIdx));
                 assert(std::isfinite(LhsToolbox::value(storage[conti0EqIdx + compIdx])));
             }
         }
@@ -108,22 +109,22 @@ public:
             // linearize the system of equations, it does not matter.)
             if (upIdx == interiorIdx) {
                 Evaluation tmp =
-                    up.fluidState().molarDensity(phaseIdx)
+                    up.fluidState().density(phaseIdx)
                     * extQuants.volumeFlux(phaseIdx);
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     flux[conti0EqIdx + compIdx] +=
-                        tmp*up.fluidState().moleFraction(phaseIdx, compIdx);
+                        tmp*up.fluidState().massFraction(phaseIdx, compIdx);
                 }
             }
             else {
                 Evaluation tmp =
-                    Toolbox::value(up.fluidState().molarDensity(phaseIdx))
+                    Toolbox::value(up.fluidState().density(phaseIdx))
                     * extQuants.volumeFlux(phaseIdx);
 
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     flux[conti0EqIdx + compIdx] +=
-                        tmp*Toolbox::value(up.fluidState().moleFraction(phaseIdx, compIdx));
+                        tmp*Toolbox::value(up.fluidState().massFraction(phaseIdx, compIdx));
                 }
             }
         }
