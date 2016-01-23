@@ -209,6 +209,7 @@ public:
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
+        const auto& problem = elemCtx.problem();
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
@@ -216,7 +217,7 @@ public:
 
             if (porosityOutput_()) porosity_[I] = Toolbox::value(intQuants.porosity());
             if (intrinsicPermeabilityOutput_()) {
-                const auto& K = intQuants.intrinsicPermeability();
+                const auto& K = problem.intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
                 intrinsicPermeability_[I].resize(K.rows, K.cols);
                 for (int rowIdx = 0; rowIdx < K.rows; ++rowIdx)
                     for (int colIdx = 0; colIdx < K.cols; ++colIdx)
