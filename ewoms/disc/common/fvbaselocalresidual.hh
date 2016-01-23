@@ -519,8 +519,11 @@ protected:
                     !elemCtx.haveStashedIntensiveQuantities())
                 {
                     // if the storage term is cached and we're in the first iteration of
-                    // the time step, update the storage term cache (this assumes that
-                    // the initial solution is the same for each time index.)
+                    // the time step, update the cache of the storage term (this assumes
+                    // that the initial guess for the solution at the end of the time
+                    // step is the same as the solution at the beginning of the time
+                    // step. This is usually true, but some fancy preprocessing scheme
+                    // might invalidate that assumption.)
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                         tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
                     Valgrind::CheckDefined(tmp2);
