@@ -41,14 +41,24 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
+
+    enum { gasCompIdx = FluidSystem::gasCompIdx };
+    enum { oilCompIdx = FluidSystem::oilCompIdx };
+    enum { waterCompIdx = FluidSystem::waterCompIdx };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -62,26 +72,47 @@ public:
                         int dofIdx,
                         int timeIdx) const
     {
-#ifndef NDEBUG
-        typedef Opm::MathToolbox<LhsEval> LhsToolbox;
-#endif
-
         // retrieve the intensive quantities for the SCV at the specified point in time
         const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
-            storage[eqIdx] = 0.0;
+        LhsEval waterSurfaceVolume =
+            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(waterPhaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().invB(waterPhaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+        LhsEval oilSurfaceVolume =
+            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(oilPhaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().invB(oilPhaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+        LhsEval gasSurfaceVolume =
+            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(gasPhaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().invB(gasPhaseIdx))
+            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                storage[conti0EqIdx + compIdx] +=
-                    Toolbox::template toLhs<LhsEval>(intQuants.porosity())
-                    * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(phaseIdx))
-                    * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().massFraction(phaseIdx, compIdx))
-                    * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().density(phaseIdx));
-                assert(std::isfinite(LhsToolbox::value(storage[conti0EqIdx + compIdx])));
-            }
+        storage[conti0EqIdx + waterCompIdx] = waterSurfaceVolume;
+        storage[conti0EqIdx + oilCompIdx] = oilSurfaceVolume;
+        storage[conti0EqIdx + gasCompIdx] = gasSurfaceVolume;
+
+        // account for dissolved gas and vaporized oil
+        if (FluidSystem::enableDissolvedGas()) {
+            storage[conti0EqIdx + gasCompIdx] +=
+                Toolbox::template toLhs<LhsEval>(intQuants.fluidState().Rs())
+                * oilSurfaceVolume;
         }
+
+        if (FluidSystem::enableVaporizedOil()) {
+            storage[conti0EqIdx + oilCompIdx] +=
+                Toolbox::template toLhs<LhsEval>(intQuants.fluidState().Rv())
+                * gasSurfaceVolume;
+        }
+
+        // convert surface volumes to component masses
+        unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
+        storage[conti0EqIdx + waterCompIdx] *=
+            FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+        storage[conti0EqIdx + gasCompIdx] *=
+            FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+        storage[conti0EqIdx + oilCompIdx] *=
+            FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
     }
 
     /*!
@@ -99,33 +130,74 @@ public:
         for (int eqIdx=0; eqIdx < numEq; eqIdx++)
             flux[eqIdx] = 0;
 
-        int interiorIdx = extQuants.interiorIndex();
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            int upIdx = extQuants.upstreamIndex(phaseIdx);
-            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
+        Evaluation b[numPhases];
+        unsigned interiorIdx = extQuants.interiorIndex();
+
+        unsigned upIdx[numPhases];
+        const IntensiveQuantities* up[numPhases];
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx)  {
+            upIdx[phaseIdx] = extQuants.upstreamIndex(phaseIdx);
+            up[phaseIdx] = &elemCtx.intensiveQuantities(upIdx[phaseIdx], /*timeIdx=*/0);
 
             // this is a bit hacky because it is specific to the element-centered
             // finite volume scheme. (N.B. that if finite differences are used to
             // linearize the system of equations, it does not matter.)
-            if (upIdx == interiorIdx) {
-                Evaluation tmp =
-                    up.fluidState().density(phaseIdx)
-                    * extQuants.volumeFlux(phaseIdx);
+            if (upIdx[phaseIdx] == interiorIdx)
+                b[phaseIdx] = up[phaseIdx]->fluidState().invB(phaseIdx);
+            else
+                b[phaseIdx] = Toolbox::value(up[phaseIdx]->fluidState().invB(phaseIdx));
+        }
 
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    flux[conti0EqIdx + compIdx] +=
-                        tmp*up.fluidState().massFraction(phaseIdx, compIdx);
-                }
+        Scalar rhogRef = FluidSystem::referenceDensity(gasPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
+        Scalar rhooRef = FluidSystem::referenceDensity(oilPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
+        Scalar rhowRef = FluidSystem::referenceDensity(waterPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
+
+        // deal with the "main" components of each phase
+        flux[conti0EqIdx + waterCompIdx] = b[waterPhaseIdx];
+        flux[conti0EqIdx + waterCompIdx] *= extQuants.volumeFlux(waterPhaseIdx);
+        flux[conti0EqIdx + waterCompIdx] *= rhowRef;
+
+        flux[conti0EqIdx + gasCompIdx] = b[gasPhaseIdx];
+        flux[conti0EqIdx + gasCompIdx] *= extQuants.volumeFlux(gasPhaseIdx);
+        flux[conti0EqIdx + gasCompIdx] *= rhogRef;
+
+        flux[conti0EqIdx + oilCompIdx] = b[oilPhaseIdx];
+        flux[conti0EqIdx + oilCompIdx] *= extQuants.volumeFlux(oilPhaseIdx);
+        flux[conti0EqIdx + oilCompIdx] *= rhooRef;
+
+        // dissolved gas (in the oil phase).
+        if (FluidSystem::enableDissolvedGas()) {
+            if (upIdx[oilPhaseIdx] == interiorIdx) {
+                flux[conti0EqIdx + gasCompIdx] +=
+                    up[oilPhaseIdx]->fluidState().Rs()
+                    * up[oilPhaseIdx]->fluidState().invB(oilPhaseIdx)
+                    * extQuants.volumeFlux(oilPhaseIdx)
+                    * rhogRef;
             }
-            else {
-                Evaluation tmp =
-                    Toolbox::value(up.fluidState().density(phaseIdx))
-                    * extQuants.volumeFlux(phaseIdx);
+            else  {
+                flux[conti0EqIdx + gasCompIdx] +=
+                    Toolbox::value(up[oilPhaseIdx]->fluidState().Rs())
+                    * Toolbox::value(up[oilPhaseIdx]->fluidState().invB(oilPhaseIdx))
+                    * extQuants.volumeFlux(oilPhaseIdx)
+                    * rhogRef;
+            }
+        }
 
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                    flux[conti0EqIdx + compIdx] +=
-                        tmp*Toolbox::value(up.fluidState().massFraction(phaseIdx, compIdx));
-                }
+        // vaporized oil (in the gas phase).
+        if (FluidSystem::enableVaporizedOil()) {
+            if (upIdx[gasPhaseIdx] == interiorIdx) {
+                flux[conti0EqIdx + oilCompIdx] +=
+                    up[gasPhaseIdx]->fluidState().Rv()
+                    * up[gasPhaseIdx]->fluidState().invB(gasPhaseIdx)
+                    * extQuants.volumeFlux(gasPhaseIdx)
+                    * rhooRef;
+            }
+            else  {
+                flux[conti0EqIdx + gasCompIdx] +=
+                    Toolbox::value(up[gasPhaseIdx]->fluidState().Rv())
+                    * Toolbox::value(up[gasPhaseIdx]->fluidState().invB(gasPhaseIdx))
+                    * extQuants.volumeFlux(gasPhaseIdx)
+                    * rhooRef;
             }
         }
     }
