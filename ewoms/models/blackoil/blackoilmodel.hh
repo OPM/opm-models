@@ -76,17 +76,6 @@ SET_TYPE_PROP(BlackOilModel, Model, Ewoms::BlackOilModel<TypeTag>);
 //! The Problem property
 SET_TYPE_PROP(BlackOilModel, BaseProblem, Ewoms::BlackOilProblem<TypeTag>);
 
-//! The BlackOilFluidState property
-SET_PROP(BlackOilModel, BlackOilFluidState)
-{ private:
-    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-public:
-    typedef Opm::CompositionalFluidState<Evaluation,
-                                         FluidSystem,
-                                         /*enableEnthalpy=*/false> type;
-};
-
 //! the RateVector property
 SET_TYPE_PROP(BlackOilModel, RateVector, Ewoms::BlackOilRateVector<TypeTag>);
 

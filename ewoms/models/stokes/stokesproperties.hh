@@ -35,7 +35,6 @@ namespace Properties {
 NEW_PROP_TAG(Indices);
 NEW_PROP_TAG(Fluid);
 NEW_PROP_TAG(FluidSystem);
-NEW_PROP_TAG(FluidState);
 NEW_PROP_TAG(HeatConductionLaw);
 NEW_PROP_TAG(HeatConductionLawParams);
 //! The index of the considered fluid phase

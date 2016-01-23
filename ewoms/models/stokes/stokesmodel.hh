@@ -140,16 +140,6 @@ public:
 
 SET_TYPE_PROP(StokesModel, Indices, Ewoms::StokesIndices<TypeTag, /*PVOffset=*/0>);
 
-//! Choose the type of the employed fluid state.
-SET_PROP(StokesModel, FluidState)
-{
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-public:
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> type;
-};
-
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(StokesModel,
               HeatConductionLaw,

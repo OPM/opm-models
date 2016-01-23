@@ -34,8 +34,6 @@ namespace Properties {
 //! Specifies if the simulation should write output files that are
 //! compatible with those produced by the commercial Eclipse simulator
 NEW_PROP_TAG(EnableEclipseOutput);
-//! The fluid state used by the model
-NEW_PROP_TAG(BlackOilFluidState);
 //! The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLaw);
 //! The parameters of the material law for heat conduction

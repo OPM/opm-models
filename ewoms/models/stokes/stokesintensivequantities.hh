@@ -30,7 +30,9 @@
 #include "stokesproperties.hh"
 
 #include <ewoms/models/common/energymodule.hh>
-#include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+
+#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/common/fvector.hh>
@@ -52,10 +54,10 @@ class StokesIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { numComponents = FluidSystem::numComponents };
@@ -70,6 +72,7 @@ class StokesIntensiveQuantities
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
+    typedef Opm::CompositionalFluidState<Evaluation, FluidSystem, enableEnergy> FluidState;
 
 public:
     /*!
