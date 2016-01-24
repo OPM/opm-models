@@ -153,10 +153,19 @@ public:
 
     }
 
+    Evaluation molarVolume(unsigned phaseIdx) const
+    { return 1.0/molarDensity(phaseIdx); }
+
     Evaluation viscosity(unsigned phaseIdx) const
     { return FluidSystem::viscosity(*this, phaseIdx, pvtRegionIdx_); }
 
     Evaluation enthalpy(unsigned phaseIdx) const
+    {
+        OPM_THROW(Opm::NotImplemented,
+                  "The black-oil model does not support energy conservation yet.");
+    }
+
+    Evaluation internalEnergy(unsigned phaseIdx) const
     {
         OPM_THROW(Opm::NotImplemented,
                   "The black-oil model does not support energy conservation yet.");
