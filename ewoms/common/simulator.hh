@@ -426,7 +426,7 @@ public:
     {
         static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
 
-        return startTime() + this->time() > episodeStartTime_ + episodeLength()*(1 - eps);
+        return startTime() + this->time() >= (episodeStartTime_ + episodeLength())*(1 - eps);
     }
 
     /*!
