@@ -312,12 +312,14 @@ int start(int argc, char **argv)
             std::cout << e.what() << ". Abort!\n" << std::flush;
         return 1;
     }
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON,3,0)
     catch (Dune::Exception &e)
     {
         if (myRank == 0)
             std::cout << "Dune reported an error: " << e.what() << std::endl  << std::flush;
         return 2;
     }
+#endif
     catch (...)
     {
         if (myRank == 0)
