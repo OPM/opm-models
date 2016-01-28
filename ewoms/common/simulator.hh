@@ -331,7 +331,7 @@ public:
         Scalar eps =
             std::max(std::abs(this->time()), timeStepSize())
             *std::numeric_limits<Scalar>::epsilon()*1e3;
-        return finished_ || (this->time() + eps >= endTime());
+        return finished_ || (this->time()*(1.0 + eps) >= endTime());
     }
 
     /*!
@@ -342,10 +342,7 @@ public:
     {
         static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
 
-        return
-            finished_ ||
-            (this->time() + std::max(std::abs(this->time()), timeStepSize())*eps + timeStepSize_
-             >= endTime());
+        return finished_ || (this->time() + timeStepSize_)*(1.0 + eps) >= endTime();
     }
 
     /*!
@@ -438,7 +435,7 @@ public:
         static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
 
         return startTime() + this->time() + timeStepSize()
-            >=  episodeStartTime_ + episodeLength()*(1 - eps);
+            >=  (episodeStartTime_ + episodeLength())*(1 - eps);
     }
 
     /*!
