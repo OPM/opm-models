@@ -105,9 +105,6 @@ public:
     typedef Opm::FluidSystems::BlackOil<Scalar> type;
 };
 
-//! Set the number of Newton-Raphson iterations for which the update should be chopped to
-//! 4 by default
-SET_INT_PROP(BlackOilModel, BlackoilNumChoppedIterations, 4);
 } // namespace Properties
 
 /*!

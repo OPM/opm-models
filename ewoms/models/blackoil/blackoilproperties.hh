@@ -38,8 +38,6 @@ NEW_PROP_TAG(EnableEclipseOutput);
 NEW_PROP_TAG(HeatConductionLaw);
 //! The parameters of the material law for heat conduction
 NEW_PROP_TAG(HeatConductionLawParams);
-//! Number of Newton-Raphson iterations for which the update should be chopped
-NEW_PROP_TAG(BlackoilNumChoppedIterations);
 }} // namespace Properties, Ewoms
 
 #endif

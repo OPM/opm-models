@@ -53,7 +53,7 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 
 public:
     BlackOilNewtonMethod(Simulator &simulator) : ParentType(simulator)
-    { numChoppedIterations_ = EWOMS_GET_PARAM(TypeTag, int, BlackoilNumChoppedIterations); }
+    { }
 
     /*!
      * \brief Register all run-time parameters for the immiscible model.
@@ -61,10 +61,6 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-
-        EWOMS_REGISTER_PARAM(TypeTag, int, BlackoilNumChoppedIterations,
-                             "Number of Newton-Raphson iterations for which the update gets"
-                             " limited");
     }
 
     /*!
@@ -130,20 +126,23 @@ protected:
             // we not clamp anything after the specified number of iterations was
             // reached
             Scalar delta = update[eqIdx];
-            if (this->numIterations_ < numChoppedIterations_) {
-                // limit changes in pressure to 20% of the current value
-                if (eqIdx == Indices::pressureSwitchIdx
-                    && std::abs(delta/currentValue[eqIdx]) > 0.2)
-                {
-                    delta = Ewoms::signum(delta)*0.2*currentValue[eqIdx];
-                }
-                // limit changes in water saturation to 20%
-                else if (eqIdx == Indices::waterSaturationIdx
-                         && std::abs(delta) > 0.2)
+
+            // limit changes in water saturation to 20%
+            if (eqIdx == Indices::waterSaturationIdx
+                && std::abs(delta) > 0.2)
+            {
+                delta = Ewoms::signum(delta)*0.2;
+            }
+            else if (eqIdx == Indices::compositionSwitchIdx) {
+                // the switching primary variable for composition is tricky because the
+                // "reasonable" value ranges it exhibits vary widely depending on its
+                // interpretation (it can represent Sg, Rs or Rv).  so far, we only limit
+                // changes in gas saturation to 20%
+                if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg
+                    && std::abs(delta) > 0.2)
                 {
                     delta = Ewoms::signum(delta)*0.2;
                 }
-
             }
 
             // do the actual update
@@ -157,7 +156,6 @@ protected:
     }
 
 private:
-    int numChoppedIterations_;
     int numPriVarsSwitched_;
 };
 } // namespace Ewoms
