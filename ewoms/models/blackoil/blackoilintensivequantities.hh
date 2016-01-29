@@ -191,7 +191,7 @@ public:
 
         // set the phase densities and viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            const auto& b = 1.0/FluidSystem::formationVolumeFactor(fluidState_, phaseIdx, pvtRegionIdx);
+            const auto& b = FluidSystem::inverseFormationVolumeFactor(fluidState_, phaseIdx, pvtRegionIdx);
             fluidState_.setInvB(phaseIdx, b);
 
             const auto& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);

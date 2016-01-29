@@ -235,7 +235,7 @@ public:
             (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-            const auto& Rs = getRs_(fluidState);
+            const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
 
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
@@ -244,7 +244,7 @@ public:
         else {
             assert(primaryVarsMeaning() == Sw_pg_Rv);
 
-            const auto& Rv = getRv_(fluidState);
+            const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
             (*this)[compositionSwitchIdx] = Rv;
@@ -414,40 +414,6 @@ private:
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
-
-    template <class FluidState>
-    Scalar getRs_(const FluidState& fluidState) const
-    {
-        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
-
-        Scalar XoG = FsToolbox::value(fluidState.massFraction(oilPhaseIdx, gasCompIdx));
-        return convertXoGToRs_(XoG);
-    }
-
-    template <class FluidState>
-    Scalar getRv_(const FluidState& fluidState) const
-    {
-        typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
-
-        Scalar XgO = FsToolbox::value(fluidState.massFraction(gasPhaseIdx, oilCompIdx));
-        return convertXgOToRv_(XgO);
-    }
-
-    Scalar convertXoGToRs_(Scalar XoG) const
-    {
-        Scalar rho_oRef = FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx_);
-        Scalar rho_gRef = FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx_);
-
-        return XoG/(1.0 - XoG)*(rho_oRef/rho_gRef);
-    }
-
-    Scalar convertXgOToRv_(Scalar XgO) const
-    {
-        Scalar rho_oRef = FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx_);
-        Scalar rho_gRef = FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx_);
-
-        return XgO/(1.0 - XgO)*(rho_gRef/rho_oRef);
-    }
 
     // the standard blackoil model is isothermal
     Scalar temperature_() const
