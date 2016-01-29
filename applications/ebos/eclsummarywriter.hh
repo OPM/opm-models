@@ -36,6 +36,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #if HAVE_ERT
 #include <ert/ecl/ecl_sum.h>
