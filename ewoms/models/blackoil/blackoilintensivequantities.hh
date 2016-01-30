@@ -32,6 +32,8 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <dune/common/fmatrix.hh>
 
+#include <cstring>
+
 namespace Ewoms {
 /*!
  * \ingroup BlackOilModel
@@ -78,6 +80,12 @@ public:
         fluidState_.setRs(0.0);
         fluidState_.setRv(0.0);
     }
+
+    BlackOilIntensiveQuantities(const BlackOilIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    BlackOilIntensiveQuantities& operator=(const BlackOilIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
 
     /*!
      * \copydoc IntensiveQuantities::update
