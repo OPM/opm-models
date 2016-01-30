@@ -650,7 +650,7 @@ protected:
         asImp_().writeConvergence_(currentSolution, solutionUpdate);
 
         // make sure not to swallow non-finite values at this point
-        if (!std::isfinite(solutionUpdate.two_norm2()))
+        if (!std::isfinite(solutionUpdate.one_norm()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
         const auto& numGridDof = model().numGridDof();
