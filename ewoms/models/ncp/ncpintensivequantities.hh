@@ -89,6 +89,12 @@ public:
     NcpIntensiveQuantities()
     {}
 
+    NcpIntensiveQuantities(const NcpIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    NcpIntensiveQuantities& operator=(const NcpIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \brief IntensiveQuantities::update
      */

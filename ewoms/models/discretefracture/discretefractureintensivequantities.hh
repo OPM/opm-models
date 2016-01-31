@@ -66,6 +66,15 @@ class DiscreteFractureIntensiveQuantities : public ImmiscibleIntensiveQuantities
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
+    DiscreteFractureIntensiveQuantities()
+    { }
+
+    DiscreteFractureIntensiveQuantities(const DiscreteFractureIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    DiscreteFractureIntensiveQuantities& operator=(const DiscreteFractureIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \copydoc IntensiveQuantities::update
      */

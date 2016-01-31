@@ -85,6 +85,15 @@ public:
     //! The type of the object returned by the fluidState() method
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem, enableEnergy> FluidState;
 
+    FlashIntensiveQuantities()
+    { }
+
+    FlashIntensiveQuantities(const FlashIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    FlashIntensiveQuantities& operator=(const FlashIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \copydoc IntensiveQuantities::update
      */

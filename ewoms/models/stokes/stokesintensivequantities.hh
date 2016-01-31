@@ -75,6 +75,15 @@ class StokesIntensiveQuantities
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem, enableEnergy> FluidState;
 
 public:
+    StokesIntensiveQuantities()
+    {}
+
+    StokesIntensiveQuantities(const StokesIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    StokesIntensiveQuantities& operator=(const StokesIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \copydoc IntensiveQuantities::update
      */

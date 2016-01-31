@@ -92,6 +92,15 @@ public:
     //! The type of the object returned by the fluidState() method
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem> FluidState;
 
+    PvsIntensiveQuantities()
+    { }
+
+    PvsIntensiveQuantities(const PvsIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    PvsIntensiveQuantities& operator=(const PvsIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::update
      */

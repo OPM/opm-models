@@ -76,6 +76,15 @@ class ImmiscibleIntensiveQuantities
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
 
 public:
+    ImmiscibleIntensiveQuantities()
+    { }
+
+    ImmiscibleIntensiveQuantities(const ImmiscibleIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    ImmiscibleIntensiveQuantities& operator=(const ImmiscibleIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \copydoc IntensiveQuantities::update
      */

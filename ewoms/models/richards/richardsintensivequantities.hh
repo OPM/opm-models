@@ -72,6 +72,15 @@ public:
     //! The type returned by the fluidState() method
     typedef Opm::ImmiscibleFluidState<Evaluation, FluidSystem> FluidState;
 
+    RichardsIntensiveQuantities()
+    {}
+
+    RichardsIntensiveQuantities(const RichardsIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); }
+
+    RichardsIntensiveQuantities& operator=(const RichardsIntensiveQuantities& other)
+    { std::memcpy(this, &other, sizeof(other)); return *this; }
+
     /*!
      * \copydoc IntensiveQuantities::update
      */
