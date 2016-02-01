@@ -241,13 +241,13 @@ public:
                 oilVaporizationFactor_[globalDofIdx] = Rv;
             if (oilFormationVolumeFactorOutput_())
                 oilFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
+                    1.0/FluidSystem::template inverseFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
             if (gasFormationVolumeFactorOutput_())
                 gasFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
+                    1.0/FluidSystem::template inverseFormationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
             if (waterFormationVolumeFactorOutput_())
                 waterFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template formationVolumeFactor<FluidState, Scalar>(fs, waterPhaseIdx, pvtRegionIdx);
+                    1.0/FluidSystem::template inverseFormationVolumeFactor<FluidState, Scalar>(fs, waterPhaseIdx, pvtRegionIdx);
             if (oilSaturationPressureOutput_())
                 oilSaturationPressure_[globalDofIdx] =
                     FluidSystem::template saturationPressure<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
@@ -271,10 +271,10 @@ public:
             }
             if (saturatedOilFormationVolumeFactorOutput_())
                 saturatedOilFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template saturatedFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
+                    1.0/FluidSystem::template saturatedInverseFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
             if (saturatedGasFormationVolumeFactorOutput_())
                 saturatedGasFormationVolumeFactor_[globalDofIdx] =
-                    FluidSystem::template saturatedFormationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
+                    1.0/FluidSystem::template saturatedInverseFormationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
 
             if (primaryVarsMeaningOutput_())
                 primaryVarsMeaning_[globalDofIdx] =
