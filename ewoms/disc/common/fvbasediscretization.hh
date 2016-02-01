@@ -1657,6 +1657,15 @@ public:
 protected:
     void resizeAndResetIntensiveQuantitiesCache_()
     {
+        // allocate the storage cache
+        if (enableStorageCache()) {
+            const unsigned nDofs = asImp_().numGridDof();
+            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+                storageCache_[timeIdx].resize(nDofs);
+            }
+        }
+
+        // allocate the intensive quantities cache
         if (storeIntensiveQuantities()) {
             const int nDofs = asImp_().numGridDof();
             for( int timeIdx=0; timeIdx<historySize; ++timeIdx )
