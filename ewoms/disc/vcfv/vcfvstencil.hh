@@ -851,6 +851,14 @@ public:
         numBoundarySegments_ = 0; // TODO: really required here(?)
     }
 
+    void updatePrimaryTopology(const Element &element)
+    {
+        // since all degrees of freedom in a stencil are "primary" DOFs for the
+        // vertex-centered finite volume method, there's no difference to
+        // updateTopology()
+        updateTopology(element);
+    }
+
     void update(const Element& e)
     {
         updateTopology(e);

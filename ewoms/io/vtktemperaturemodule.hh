@@ -40,9 +40,6 @@ NEW_TYPE_TAG(VtkTemperature);
 
 // create the property tags needed for the temperature module
 NEW_PROP_TAG(VtkWriteTemperature);
-NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
-NEW_PROP_TAG(VtkWriteInternalEnergies);
-NEW_PROP_TAG(VtkWriteEnthalpies);
 NEW_PROP_TAG(VtkOutputFormat);
 NEW_PROP_TAG(EnableVtkOutput);
 

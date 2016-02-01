@@ -364,6 +364,19 @@ public:
         }
     }
 
+    /*!
+     * \brief Returns true iff the module needs to access the extensive quantities of a
+     * context to do its job.
+     *
+     * For example, this happens if velocities or gradients should be written. Always
+     * returning true here does not do any harm from the correctness perspective, but it
+     * slows down writing the output fields.
+     */
+    virtual bool needExtensiveQuantities() const final
+    {
+        return velocityOutput_() || potentialGradientOutput_();
+    }
+
 private:
     static bool pressureOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePressures); }

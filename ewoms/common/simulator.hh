@@ -409,6 +409,14 @@ public:
     { return episodeStartTime_; }
 
     /*!
+     * \brief Sets the length in seconds of the current episode.
+     *
+     * Use this method with care!
+     */
+    void setEpisodeLength(Scalar dt)
+    { episodeLength_ = dt; }
+
+    /*!
      * \brief Returns the length of the current episode in
      *        simulated time \f$\mathrm{[s]}\f$.
      */

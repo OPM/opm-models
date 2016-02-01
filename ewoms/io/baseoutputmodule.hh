@@ -130,6 +130,19 @@ public:
      */
     virtual void commitBuffers(BaseOutputWriter &writer) = 0;
 
+    /*!
+     * \brief Returns true iff the module needs to access the extensive quantities of a
+     * context to do its job.
+     *
+     * For example, this happens if velocities or gradients should be written.
+     *
+     * Always returning true here does not do any harm from the correctness perspective,
+     * but it slows down writing the output fields. Since most output modules only write
+     * intensive quantities, this method returns 'false' by default.
+     */
+    virtual bool needExtensiveQuantities() const
+    { return false; }
+
 protected:
     enum BufferType {
         //! Buffer contains data associated with the degrees of freedom

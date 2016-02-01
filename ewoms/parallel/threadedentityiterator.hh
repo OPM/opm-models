@@ -43,7 +43,7 @@ class ThreadedEntityIterator
 public:
     ThreadedEntityIterator(const GridView& gridView)
         : gridView_(gridView)
-        , sequentialIt_(gridView.template begin<codim>())
+        , sequentialIt_(gridView_.template begin<codim>())
         , sequentialEnd_(gridView.template end<codim>())
     { }
 
@@ -55,7 +55,7 @@ public:
         mutex_.lock();
         threadPrivateIt = sequentialIt_;
         if (sequentialIt_ != sequentialEnd_)
-            ++sequentialIt_;
+            ++sequentialIt_; // make the next thread look at the next element
         mutex_.unlock();
     }
 

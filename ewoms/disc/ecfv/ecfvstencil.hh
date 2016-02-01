@@ -82,6 +82,11 @@ public:
     class SubControlVolume
     {
     public:
+        // default construct an uninitialized object.
+        // this is only here because std::vector needs it...
+        SubControlVolume()
+        {}
+
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         SubControlVolume(const Element &element)
             : element_(element)
@@ -267,6 +272,25 @@ public:
                 boundaryFaces_.push_back(SubControlVolumeFace(intersection, - 10000));
             }
         }
+    }
+
+    void updatePrimaryTopology(const Element &element)
+    {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+        // add the "center" element of the stencil
+        subControlVolumes_.resize(0);
+        subControlVolumes_.emplace_back(SubControlVolume(element));
+        elements_.resize(0, element);
+        elements_.emplace_back(element);
+#else
+        auto ePtr = ElementPointer(element);
+        auto scv = SubControlVolume(ePtr);
+        // add the "center" element of the stencil
+        subControlVolumes_.resize(0, scv);
+        subControlVolumes_.push_back(scv);
+        elements_.resize(0, ePtr);
+        elements_.push_back(ePtr);
+#endif
     }
 
     void update(const Element &element)

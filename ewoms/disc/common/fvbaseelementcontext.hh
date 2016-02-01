@@ -133,6 +133,23 @@ public:
     }
 
     /*!
+     * \brief Update the primary topological part of the stencil, but nothing else.
+     *
+     * \param elem The grid element for which the finite volume geometry ought to be
+     *             computed.
+     */
+    void updatePrimaryStencil(const Element &elem)
+    {
+        // remember the current element
+        elemPtr_ = &elem;
+
+        // update the finite element geometry
+        stencil_.updatePrimaryTopology(elem);
+
+        dofVars_.resize(stencil_.numPrimaryDof());
+    }
+
+    /*!
      * \brief Update the topological part of the stencil, but nothing else.
      *
      * \param elem The grid element for which the finite volume geometry ought to be
@@ -507,13 +524,13 @@ protected:
         for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
             unsigned globalIdx = globalSpaceIndex(dofIdx, timeIdx);
             const PrimaryVariables& dofSol = globalSol[globalIdx];
+            dofVars_[dofIdx].priVars[timeIdx] = dofSol;
 
             dofVars_[dofIdx].thermodynamicHint[timeIdx] =
                 model().thermodynamicHint(globalIdx, timeIdx);
 
             const auto *cachedIntQuants = model().cachedIntensiveQuantities(globalIdx, timeIdx);
             if (cachedIntQuants) {
-                dofVars_[dofIdx].priVars[timeIdx] = dofSol;
                 dofVars_[dofIdx].intensiveQuantities[timeIdx] = *cachedIntQuants;
             }
             else {

@@ -756,7 +756,7 @@ public:
         dest = 0;
 
         OmpMutex mutex;
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -1471,7 +1471,6 @@ public:
         ScalarBuffer* priVars[numEq];
         ScalarBuffer* priVarWeight[numEq];
         ScalarBuffer* relError = writer.allocateManagedScalarBuffer(numGridDof);
-        ScalarBuffer* dofColor = writer.allocateManagedScalarBuffer(numGridDof);
         for (unsigned pvIdx = 0; pvIdx < numEq; ++pvIdx) {
             priVars[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
             priVarWeight[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
@@ -1519,8 +1518,6 @@ public:
                                                        oss.str());
         }
 
-        DiscBaseOutputModule::attachScalarDofData_(writer, *dofColor, "color");
-
         asImp_().prepareOutputFields();
         asImp_().appendOutputFields(writer);
     }
@@ -1531,29 +1528,37 @@ public:
      */
     void prepareOutputFields() const
     {
+        bool needFullContextUpdate = false;
         auto modIt = outputModules_.begin();
         const auto &modEndIt = outputModules_.end();
         for (; modIt != modEndIt; ++modIt) {
             (*modIt)->allocBuffers();
+            needFullContextUpdate = needFullContextUpdate || (*modIt)->needExtensiveQuantities();
         }
 
         // iterate over grid
-        ElementContext elemCtx(simulator_);
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        {
+            ElementContext elemCtx(simulator_);
+            ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
+            for (threadedElemIt.beginParallel(elemIt);
+                 !threadedElemIt.isFinished(elemIt);
+                 threadedElemIt.increment(elemIt))
+            {
+                if (needFullContextUpdate)
+                    elemCtx.updateAll(*elemIt);
+                else {
+                    elemCtx.updatePrimaryStencil(*elemIt);
+                    elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+                }
 
-        ElementIterator elemIt = this->gridView().template begin<0>();
-        ElementIterator elemEndIt = this->gridView().template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            const Element& elem = *elemIt;
-            if (elem.partitionType() != Dune::InteriorEntity)
-                continue;
-
-            elemCtx.updateStencil(elem);
-            elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
-            elemCtx.updateExtensiveQuantities(/*timeIdx=*/0);
-
-            modIt = outputModules_.begin();
-            for (; modIt != modEndIt; ++modIt)
-                (*modIt)->processElement(elemCtx);
+                modIt = outputModules_.begin();
+                for (; modIt != modEndIt; ++modIt)
+                    (*modIt)->processElement(elemCtx);
+            }
         }
     }
 
