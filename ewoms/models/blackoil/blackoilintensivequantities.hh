@@ -153,7 +153,6 @@ public:
                 fluidState_.setRs(RsSat);
             }
 
-            Evaluation xgO = 0.0;
             if (FluidSystem::enableVaporizedOil()) {
                 const Evaluation& RvSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx);
