@@ -166,7 +166,7 @@ namespace Ewoms
         enum { ioRank = 0 };
 
         CollectDataToIORank( const GridManager& gridManager )
-            : toIORankComm_( gridManager.grid().comm() ),
+            : toIORankComm_( ),
               isIORank_( gridManager.grid().comm().rank() == ioRank )
         {
             const CollectiveCommunication& comm = gridManager.grid().comm();
