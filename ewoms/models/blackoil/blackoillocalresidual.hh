@@ -148,22 +148,18 @@ public:
                 b[phaseIdx] = Toolbox::value(up[phaseIdx]->fluidState().invB(phaseIdx));
         }
 
-        Scalar rhogRef = FluidSystem::referenceDensity(gasPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
-        Scalar rhooRef = FluidSystem::referenceDensity(oilPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
-        Scalar rhowRef = FluidSystem::referenceDensity(waterPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
-
         // deal with the "main" components of each phase
         flux[conti0EqIdx + waterCompIdx] = b[waterPhaseIdx];
         flux[conti0EqIdx + waterCompIdx] *= extQuants.volumeFlux(waterPhaseIdx);
-        flux[conti0EqIdx + waterCompIdx] *= rhowRef;
+        flux[conti0EqIdx + waterCompIdx] *= FluidSystem::referenceDensity(waterPhaseIdx, up[waterPhaseIdx]->pvtRegionIndex());
 
         flux[conti0EqIdx + gasCompIdx] = b[gasPhaseIdx];
         flux[conti0EqIdx + gasCompIdx] *= extQuants.volumeFlux(gasPhaseIdx);
-        flux[conti0EqIdx + gasCompIdx] *= rhogRef;
+        flux[conti0EqIdx + gasCompIdx] *= FluidSystem::referenceDensity(gasPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
 
         flux[conti0EqIdx + oilCompIdx] = b[oilPhaseIdx];
         flux[conti0EqIdx + oilCompIdx] *= extQuants.volumeFlux(oilPhaseIdx);
-        flux[conti0EqIdx + oilCompIdx] *= rhooRef;
+        flux[conti0EqIdx + oilCompIdx] *= FluidSystem::referenceDensity(oilPhaseIdx, up[oilPhaseIdx]->pvtRegionIndex());
 
         // dissolved gas (in the oil phase).
         if (FluidSystem::enableDissolvedGas()) {
@@ -172,14 +168,14 @@ public:
                     up[oilPhaseIdx]->fluidState().Rs()
                     * up[oilPhaseIdx]->fluidState().invB(oilPhaseIdx)
                     * extQuants.volumeFlux(oilPhaseIdx)
-                    * rhogRef;
+                    * FluidSystem::referenceDensity(gasPhaseIdx, up[oilPhaseIdx]->pvtRegionIndex());
             }
             else  {
                 flux[conti0EqIdx + gasCompIdx] +=
                     Toolbox::value(up[oilPhaseIdx]->fluidState().Rs())
                     * Toolbox::value(up[oilPhaseIdx]->fluidState().invB(oilPhaseIdx))
                     * extQuants.volumeFlux(oilPhaseIdx)
-                    * rhogRef;
+                    * FluidSystem::referenceDensity(gasPhaseIdx, up[oilPhaseIdx]->pvtRegionIndex());
             }
         }
 
@@ -190,14 +186,14 @@ public:
                     up[gasPhaseIdx]->fluidState().Rv()
                     * up[gasPhaseIdx]->fluidState().invB(gasPhaseIdx)
                     * extQuants.volumeFlux(gasPhaseIdx)
-                    * rhooRef;
+                    * FluidSystem::referenceDensity(oilPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
             }
             else  {
                 flux[conti0EqIdx + gasCompIdx] +=
                     Toolbox::value(up[gasPhaseIdx]->fluidState().Rv())
                     * Toolbox::value(up[gasPhaseIdx]->fluidState().invB(gasPhaseIdx))
                     * extQuants.volumeFlux(gasPhaseIdx)
-                    * rhooRef;
+                    * FluidSystem::referenceDensity(oilPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
             }
         }
     }
