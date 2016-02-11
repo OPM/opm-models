@@ -655,6 +655,20 @@ public:
     }
 
     /*!
+     * \brief Invalidate the whole intensive quantity cache for time index.
+     *
+     * \param timeIdx The index used by the time discretization.
+     */
+    void invalidateIntensiveQuantitiesCache(int timeIdx) const
+    {
+        if (storeIntensiveQuantities()) {
+            std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                      intensiveQuantityCacheUpToDate_[timeIdx].end(),
+                      /*value=*/false);
+        }
+    }
+
+    /*!
      * \brief Move the intensive quantities for a given time index to the back.
      *
      * This method should only be called by the time discretization.
