@@ -189,7 +189,7 @@ public:
                     * FluidSystem::referenceDensity(oilPhaseIdx, up[gasPhaseIdx]->pvtRegionIndex());
             }
             else  {
-                flux[conti0EqIdx + gasCompIdx] +=
+                flux[conti0EqIdx + oilCompIdx] +=
                     Toolbox::value(up[gasPhaseIdx]->fluidState().Rv())
                     * Toolbox::value(up[gasPhaseIdx]->fluidState().invB(gasPhaseIdx))
                     * extQuants.volumeFlux(gasPhaseIdx)
