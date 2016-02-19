@@ -68,7 +68,7 @@ public:
 #ifndef NDEBUG
         Valgrind::CheckDefined(pvtRegionIdx_);
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ numPhases) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             Valgrind::CheckDefined(saturation_[phaseIdx]);
             Valgrind::CheckDefined(pressure_[phaseIdx]);
             Valgrind::CheckDefined(invB_[phaseIdx]);
