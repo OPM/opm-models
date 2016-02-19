@@ -176,15 +176,15 @@ namespace Ewoms
                 if( isIORank() )
                 {
                     // the I/O rank needs a picture of the global grid
-                    const auto& eclGrid = *(gridManager.eclGrid());
-                    const size_t cartesianSize = eclGrid.getCartesianSize();
+                    Opm::EclipseGridConstPtr eclGrid = gridManager.eclGrid();
+                    const size_t cartesianSize = eclGrid->getCartesianSize();
                     // reserve memory
                     globalCartesianIndex_.reserve( cartesianSize );
                     globalCartesianIndex_.clear();
                     // get a global cartesian index for each active cell in the eclipse grid
                     for( size_t cartIndex=0; cartIndex<cartesianSize; ++cartIndex )
                     {
-                      if( eclGrid.cellActive( cartIndex ) )
+                      if( eclGrid->cellActive( cartIndex ) )
                       {
                         globalCartesianIndex_.push_back( cartIndex );
                       }

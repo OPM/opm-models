@@ -101,7 +101,7 @@ public:
         , ertSummary_(simulator)
 #endif
     {
-        const auto deck = simulator.gridManager().deck();
+        Opm::DeckConstPtr deck = simulator.gridManager().deck();
 
         // populate the set of quantities to write
         if (deck->hasKeyword("ALL"))
@@ -109,7 +109,7 @@ public:
         else
             addPresentSummaryKeywords_(deck);
 
-        addVariables_(*simulator.gridManager().eclState());
+        addVariables_(simulator.gridManager().eclState());
     }
 
     ~EclSummaryWriter()
@@ -130,7 +130,7 @@ public:
         ErtSummaryTimeStep<TypeTag> ertSumTimeStep(ertSummary_, t, reportIdx);
 
         typedef EclDeckUnits<TypeTag> DeckUnits;
-        const auto& deckUnits = simulator_.problem().deckUnits();
+        const DeckUnits& deckUnits = simulator_.problem().deckUnits();
 
         // add the well quantities
         for (unsigned wellIdx = 0; wellIdx < wellsManager.numWells(); ++wellIdx) {
@@ -332,9 +332,9 @@ private:
     bool writeWopt_() const
     { return summaryKeywords_.count("WOPT") > 0; }
 
-    void addVariables_(const Opm::EclipseState& eclState)
+    void addVariables_(Opm::EclipseStateConstPtr eclState)
     {
-        const auto& wellsVector = eclState.getSchedule()->getWells();
+        const auto& wellsVector = eclState->getSchedule()->getWells();
         for (size_t wellIdx = 0; wellIdx < wellsVector.size(); ++ wellIdx) {
             const auto& eclWell = wellsVector[wellIdx];
             auto& wellInfo = ertWellInfo_[eclWell->name()];
@@ -517,13 +517,13 @@ private:
     // add all quantities which are present in the summary section of the deck
     void addPresentSummaryKeywords_(Opm::DeckConstPtr deck)
     {
-        Opm::Section summarySection(deck, "SUMMARY");
+        Opm::Section summarySection(*deck, "SUMMARY");
         auto kwIt = summarySection.begin();
         auto kwEndIt = summarySection.end();
         // skip the first keyword as this is "SUMMARY". bug in opm-parser?
         ++kwIt;
         for (; kwIt != kwEndIt; ++kwIt)
-            summaryKeywords_.insert((*kwIt)->name());
+            summaryKeywords_.insert((*kwIt).name());
     }
 
     const Simulator& simulator_;

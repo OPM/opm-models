@@ -57,19 +57,6 @@
 
 namespace Ewoms {
 
-/// \cond SKIP_THIS
-
-// force the grid manager to exhibit caseName() and eclGrid() methods
-template <class GridManager>
-std::string getErtCaseName__(const GridManager& gridManager)
-{ return gridManager.caseName(); }
-
-template <class GridManager>
-const Opm::EclipseGridConstPtr getEclGrid__(const GridManager &gridManager)
-{ return gridManager.eclGrid(); }
-
-/// \endcond
-
 class ErtBaseKeyword
 {
 public:
@@ -296,7 +283,7 @@ public:
     template <class Simulator>
     ErtRestartFile(const Simulator &simulator, unsigned reportStepIdx)
     {
-        std::string caseName = getErtCaseName__(simulator.gridManager());
+        std::string caseName = simulator.gridManager().caseName();
 
         restartFileName_ = ecl_util_alloc_filename("./",
                                                    caseName.c_str(),
@@ -326,8 +313,8 @@ public:
     template <class Simulator>
     void writeHeader(const Simulator &simulator, unsigned reportStepIdx)
     {
-        const auto eclGrid = getEclGrid__(simulator.gridManager());
-        const auto eclState = simulator.gridManager().eclState();
+        Opm::EclipseGridConstPtr eclGrid = simulator.gridManager().eclGrid();
+        Opm::EclipseStateConstPtr eclState = simulator.gridManager().eclState();
         const auto eclSchedule = eclState->getSchedule();
 
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
@@ -548,13 +535,13 @@ public:
     ErtSummary(const Simulator& simulator)
     {
         const auto& gridManager = simulator.gridManager();
-        const auto& eclGrid = gridManager.eclGrid();
-        auto timeMap = gridManager.schedule()->getTimeMap();
+        Opm::EclipseGridConstPtr eclGrid = gridManager.eclGrid();
+        Opm::TimeMapConstPtr timeMap = gridManager.schedule()->getTimeMap();
 
-        std::string caseName = getErtCaseName__(gridManager);
+        std::string caseName = gridManager.caseName();
 
         // the correct start time has not yet been set in the
-        // simulator, so we extract it from the ECL deck...
+        // simulator, so we extract it from the ECL deck->..
         tm curTime = boost::posix_time::to_tm(timeMap->getStartTime(/*timeStepIdx=*/0));
         double startTime = std::mktime(&curTime);
 
