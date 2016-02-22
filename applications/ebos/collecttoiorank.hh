@@ -27,6 +27,9 @@
 //#error "This header needs the dune-cornerpoint module."
 //#endif
 
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 

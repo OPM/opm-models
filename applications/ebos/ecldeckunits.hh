@@ -29,6 +29,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/simulator.hh>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
