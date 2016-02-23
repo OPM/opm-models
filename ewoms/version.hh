@@ -8,35 +8,31 @@
 #define EWOMS_VERSION_CODENAME "Yolanda"
 
 #include <string>
+#include <iostream>
+#include <iomanip>
 
 namespace Ewoms {
 
 inline std::string versionString()
 {
-    std::string tmp;
-    tmp =
-        std::to_string(static_cast<long long>(EWOMS_VERSION_MAJOR)) + "."
-        + std::to_string(static_cast<long long>(EWOMS_VERSION_MINOR));
+    std::ostringstream oss;
+    oss << EWOMS_VERSION_MAJOR << "."
+        << std::setfill('0') << std::setw(2)  << EWOMS_VERSION_MINOR;
 
-    if (EWOMS_VERSION_REVISION >= 0) {
-        tmp += ".";
-        tmp +=  std::to_string(static_cast<long long>(EWOMS_VERSION_REVISION));
-    }
+    if (EWOMS_VERSION_REVISION >= 0)
+        oss << "." << EWOMS_VERSION_REVISION;
 
     // append the version suffix to the version string
 #ifdef EWOMS_VERSION_SUFFIX
-    tmp += "-";
-    tmp += EWOMS_VERSION_SUFFIX;
+    oss << "-" << EWOMS_VERSION_SUFFIX;
 #endif
 
     // append the code name to the version string
 #ifdef EWOMS_VERSION_CODENAME
-    tmp += " (\"";
-    tmp += EWOMS_VERSION_CODENAME;
-    tmp += "\")";
+    oss << " (\"" << EWOMS_VERSION_CODENAME "\")";
 #endif
 
-    return tmp;
+    return oss.str();
 }
 
 } // namespace Ewoms
