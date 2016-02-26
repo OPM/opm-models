@@ -360,7 +360,7 @@ public:
 
                 if (!converged) {
                     if (asImp_().verbose_())
-                        std::cout << "Newton: Newton solver did not converge\n" << std::flush;
+                        std::cout << "Newton: Linear solver did not converge\n" << std::flush;
                     solveTimer_.stop();
 
                     prePostProcessTimer.start();
