@@ -83,6 +83,8 @@ class EclWriterHelper
         std::free(egridRawFileName);
 
         ErtGrid ertGrid(writer.simulator_.gridManager().eclGrid(),
+                        writer.simulator_.gridManager().grid(),
+                        writer.simulator_.gridManager().cartesianIndexMapper(),
                         writer.simulator_.problem().deckUnits());
         ertGrid.write(egridFileName, writer.reportStepIdx_);
 #endif
@@ -254,13 +256,13 @@ public:
         OPM_THROW(std::runtime_error,
                   "The ERT libraries must be available to write ECL output!");
 #else
+
         // collect all data to I/O rank and store in attachedBuffers_
         // this also reorders the data such that it fits the underlying eclGrid
-        const bool isIORank = collectToIORank_.collect( attachedBuffers_ );
+        collectToIORank_.collect( attachedBuffers_ );
 
         // write output on I/O rank
-        if( isIORank )
-        {
+        if (collectToIORank_.isIORank()) {
             ErtRestartFile restartFile(simulator_, reportStepIdx_);
             restartFile.writeHeader(simulator_, reportStepIdx_);
 

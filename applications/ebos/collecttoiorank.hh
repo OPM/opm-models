@@ -172,14 +172,38 @@ namespace Ewoms
             : toIORankComm_( ),
               isIORank_( gridManager.grid().comm().rank() == ioRank )
         {
+            typedef typename GridManager::GridView GridView;
+            typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout>
+                ElementMapper;
+
             const CollectiveCommunication& comm = gridManager.grid().comm();
             {
                 std::set< int > send, recv;
                 // the I/O rank receives from all other ranks
                 if( isIORank() )
                 {
-                    // the I/O rank needs a picture of the global grid
                     Opm::EclipseGridConstPtr eclGrid = gridManager.eclGrid();
+
+                    // create the ACTNUM array based on the "real" grid which is used for
+                    // simulation. Note that this is still an approximation because the simulation
+                    // grid may also modify the geometry of cells (e.g. because of the PINCH
+                    // keyword), but at least the number of cells is correct, so all values are
+                    // hopefully displayed at approximately the correct location.
+                    std::vector<int> actnumData(eclGrid->getCartesianSize(), 0);
+                    ElementMapper elemMapper(gridManager.gridView());
+                    auto elemIt = gridManager.gridView().template begin<0>();
+                    const auto& elemEndIt = gridManager.gridView().template end<0>();
+                    for (; elemIt != elemEndIt; ++elemIt) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+                        int elemIdx = elemMapper.index(*elemIt );
+#else
+                        int elemIdx = elemMapper.map(*elemIt );
+#endif
+                        int cartElemIdx = gridManager.cartesianIndex(elemIdx);
+                        actnumData[cartElemIdx] = 1;
+                    }
+
+                    // the I/O rank needs a picture of the global grid
                     const size_t cartesianSize = eclGrid->getCartesianSize();
                     // reserve memory
                     globalCartesianIndex_.reserve( cartesianSize );
@@ -187,7 +211,7 @@ namespace Ewoms
                     // get a global cartesian index for each active cell in the eclipse grid
                     for( size_t cartIndex=0; cartIndex<cartesianSize; ++cartIndex )
                     {
-                      if( eclGrid->cellActive( cartIndex ) )
+                      if( actnumData[cartIndex] > 0 )
                       {
                         globalCartesianIndex_.push_back( cartIndex );
                       }
@@ -361,11 +385,14 @@ namespace Ewoms
 
         // gather solution to rank 0 for EclipseWriter
         template <class BufferList>
-        bool collect( BufferList& bufferList ) const
+        void collect( BufferList& bufferList ) const
         {
             PackUnPackOutputBuffers< BufferList >
                 packUnpack( bufferList,
-                            localIndexMap_, indexMaps_, numCells(), isIORank() );
+                            localIndexMap_,
+                            indexMaps_,
+                            numCells(),
+                            isIORank() );
 
             //toIORankComm_.exchangeCached( packUnpack );
             toIORankComm_.exchange( packUnpack );
@@ -373,7 +400,6 @@ namespace Ewoms
             // mkae sure every process is on the same page
             toIORankComm_.barrier();
 #endif
-            return isIORank();
         }
 
         bool isIORank() const

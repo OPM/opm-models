@@ -51,6 +51,9 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
+#include <dune/common/version.hh>
+#include <dune/grid/common/mcmgmapper.hh>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "eclwellmanager.hh"
@@ -201,21 +204,52 @@ public:
     ErtGrid(const ErtGrid& ) = delete;
 
     /*!
-     * \brief Create an ERT grid based an Opm::EclipseGrid.
+     * \brief Create an ERT grid based an Opm::EclipseGrid and the grid which is used for
+     *        the actual simulation.
      */
-    template <class DeckUnits>
-    ErtGrid(Opm::EclipseGridConstPtr eclGrid, const DeckUnits& deckUnits)
+    template <class Grid, class CartesianIndexMapper, class DeckUnits>
+    ErtGrid(Opm::EclipseGridConstPtr eclGrid,
+            const Grid& grid,
+            const CartesianIndexMapper& cartesianMapper,
+            const DeckUnits& deckUnits)
     {
 #if HAVE_ERT
+        typedef typename Grid::LeafGridView GridView;
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout>
+            ElementMapper;
+
         std::vector<double> mapaxesData;
         std::vector<double> coordData;
         std::vector<double> zcornData;
         std::vector<int> actnumData;
 
+        int nx = eclGrid->getNX();
+        int ny = eclGrid->getNY();
+        int nz = eclGrid->getNZ();
+
         eclGrid->exportMAPAXES(mapaxesData);
         eclGrid->exportCOORD(coordData);
         eclGrid->exportZCORN(zcornData);
-        eclGrid->exportACTNUM(actnumData);
+
+        // create the ACTNUM array based on the "real" grid which is used for
+        // simulation. Note that this is still an approximation because the simulation
+        // grid may also modify the geometry of cells (e.g. because of the PINCH
+        // keyword), but at least the number of cells is correct, so all values are
+        // hopefully displayed at approximately the correct location.
+        actnumData.resize(nx*ny*nz, 0);
+        ElementMapper elemMapper(grid.leafGridView());
+        auto elemIt = grid.leafGridView().template begin<0>();
+        const auto& elemEndIt = grid.leafGridView().template end<0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+            int elemIdx = elemMapper.index(*elemIt );
+#else
+            int elemIdx = elemMapper.map(*elemIt );
+#endif
+
+            int cartElemIdx = cartesianMapper.cartesianIndex(elemIdx);
+            actnumData[cartElemIdx] = 1;
+        }
 
         // conversion to deck units
         deckUnits.siToDeck(mapaxesData, DeckUnits::length);
@@ -227,9 +261,7 @@ public:
         ErtKeyword<float> zcornKeyword("ZCORN", zcornData);
         ErtKeyword<int> actnumKeyword("ACTNUM", actnumData);
 
-        ertHandle_ = ecl_grid_alloc_GRDECL_kw(eclGrid->getNX(),
-                                              eclGrid->getNY(),
-                                              eclGrid->getNZ(),
+        ertHandle_ = ecl_grid_alloc_GRDECL_kw(nx, ny, nz,
                                               zcornKeyword.ertHandle(),
                                               coordKeyword.ertHandle(),
                                               actnumKeyword.ertHandle(),

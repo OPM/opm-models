@@ -59,10 +59,9 @@ class EclPolyhedralGridManager : public EclBaseGridManager<TypeTag>
 public:
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, EquilGrid) EquilGrid;
-
-private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
+private:
     typedef Grid* GridPointer;
     typedef EquilGrid* EquilGridPointer;
     typedef Dune::CartesianIndexMapper<Grid> CartesianIndexMapper;
