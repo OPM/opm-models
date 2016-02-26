@@ -1631,7 +1631,11 @@ public:
      * Note that this method implies recreateMatrix()
      */
     void clearAuxiliaryModules()
-    { auxEqModules_.clear(); }
+    {
+        auxEqModules_.clear();
+        linearizer_->eraseMatrix();
+        newtonMethod_.eraseMatrix();
+    }
 
     /*!
      * \brief Returns the number of modules for auxiliary equations
@@ -1761,7 +1765,6 @@ protected:
     // solution of the previous time step
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
-
 
     DiscreteFunctionSpace space_;
     mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;

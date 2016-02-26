@@ -72,6 +72,15 @@ public:
                              "The verbosity level of the linear solver");
     }
 
+    /*!
+     * \brief Causes the solve() method to discared the structure of the linear system of
+     *        equations the next time it is called.
+     *
+     * Since the SuperLU backend does not create any internal matrices, this is a no-op.
+     */
+    void eraseMatrix()
+    { }
+
     template <class Matrix, class Vector>
     bool solve(const Matrix &A, Vector &x, const Vector &b)
     { return SuperLUSolve_<Scalar, TypeTag, Problem, Matrix, Vector>::solve_(problem_, A, x, b); }

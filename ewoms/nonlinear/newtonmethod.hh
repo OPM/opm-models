@@ -519,6 +519,13 @@ public:
     std::ostringstream &endIterMsg()
     { return endIterMsgStream_; }
 
+    /*!
+     * \brief Causes the solve() method to discared the structure of the linear system of
+     *        equations the next time it is called.
+     */
+    void eraseMatrix()
+    { linearSolver_.eraseMatrix(); }
+
 protected:
     /*!
      * \brief Returns true if the Newton method ought to be chatty.

@@ -141,9 +141,13 @@ public:
     }
 
     /*!
-     * \brief Causes the Jacobian matrix to be recreated in the next iteration.
+     * \brief Causes the Jacobian matrix to be recreated from scratch before the next
+     *        iteration.
+     *
+     * This method is usally called if the sparsity pattern has changed for some
+     * reason. (e.g. by modifications of the grid or changes of the auxiliary equations.)
      */
-    void recreateMatrix()
+    void eraseMatrix()
     {
         delete matrix_; // <- note that this even works for nullpointers!
         matrix_ = 0;
@@ -234,10 +238,10 @@ private:
 
     void initFirstIteration_()
     {
-        // initialize the BCRS matrix for the Jacobian
+        // initialize the BCRS matrix for the Jacobian of the residual function
         createMatrix_();
 
-        // initialize the jacobian matrix and the right hand side vector
+        // initialize the Jacobian matrix and the vector for the residual function
         *matrix_ = 0;
         residual_.resize(model_().numTotalDof());
         residual_ = 0;
@@ -248,7 +252,7 @@ private:
             elementCtx_[threadId] = new ElementContext(simulator_());
     }
 
-    // Construct the BCRS matrix for the global jacobian
+    // Construct the BCRS matrix for the Jacobian of the residual function
     void createMatrix_()
     {
         unsigned numAllDof =  model_().numTotalDof();
