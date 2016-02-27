@@ -9,7 +9,7 @@ Description: The eWoms simulation framework for flow  and transport in porous me
 Url: http://opm-project.org/ewoms
 MaintainerName: Andreas Lauser
 Maintainer: and@poware.org
-Depends: dune-grid (>= 2.2) dune-localfunctions  (>= 2.2) dune-istl  (>= 2.2) opm-common opm-material
+Depends: dune-grid (>= 2.3) dune-localfunctions  (>= 2.3) dune-istl  (>= 2.3) opm-common opm-material
 
 # actually, we also suggest opm-parser, but this dependency only makes
 # any sense if dune-cornerpoint is available and opm-parser is a

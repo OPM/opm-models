@@ -63,13 +63,8 @@
 #include <dune/istl/istlexception.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/scalarproducts.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,3)
 #include <dune/istl/preconditioner.hh>
 #include <dune/istl/solver.hh>
-#else
-#include <dune/istl/preconditioners.hh>
-#include <dune/istl/solvers.hh>
-#endif
 #include <dune/common/array.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/ftraits.hh>

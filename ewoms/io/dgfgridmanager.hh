@@ -145,11 +145,7 @@ protected:
         if( dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
         {
             typedef typename  Grid::LevelGridView GridView;
-#if DUNE_VERSION_NEWER(DUNE_GRID,2,3)
             GridView gridView = dgfPointer->levelGridView( 0 );
-#else
-            GridView gridView = dgfPointer->levelView( 0 );
-#endif
 
             // first create a map of the dune to ART vertex indices
             typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
@@ -162,13 +158,8 @@ protected:
             for( auto eIt = gridView.template begin< 0 >(); eIt != endIt; ++eIt )
             {
                 const auto& element = *eIt;
-#if DUNE_VERSION_NEWER(DUNE_GRID,2,3)
                 const auto& refElem =
                       Dune::ReferenceElements< Scalar, Grid::dimension >::general( element.type() );
-#else
-                const auto& refElem =
-                      Dune::GenericReferenceElements< Scalar, Grid::dimension >::general( element.type() );
-#endif
 
                 const int edges = refElem.size( edgeCodim );
                 for( int edge = 0; edge < edges; ++edge )

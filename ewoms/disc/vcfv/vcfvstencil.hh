@@ -866,14 +866,8 @@ public:
         const Geometry& geometry = e.geometry();
         geometryType_ = geometry.type();
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
         const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
             referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
-#else
-        const typename Dune::GenericReferenceElementContainer<CoordScalar,dim>::value_type&
-            referenceElement = Dune::GenericReferenceElements<CoordScalar,
-                                                              dim>::general(geometryType_);
-#endif
 
         elementVolume = geometry.volume();
         elementLocal = referenceElement.position(0,0);

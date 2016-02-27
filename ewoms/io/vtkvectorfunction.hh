@@ -98,13 +98,8 @@ public:
             int n = e.template count<dim>();
 #endif
             for (int i = 0; i < n; ++i) {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
                 Dune::FieldVector<ctype, dim> local =
                     Dune::ReferenceElements<ctype, dim>::general(gt).position(i, dim);
-#else
-                Dune::FieldVector<ctype, dim> local =
-                    Dune::GenericReferenceElements<ctype, dim>::general(gt).position(i, dim);
-#endif
 
                 local -= xi;
                 if (local.infinity_norm() < min) {

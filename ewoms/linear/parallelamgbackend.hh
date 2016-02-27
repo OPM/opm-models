@@ -46,11 +46,7 @@
 
 #include <dune/common/parallel/indexset.hh>
 #include <dune/common/version.hh>
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 3)
 #include <dune/common/parallel/mpicollectivecommunication.hh>
-#else
-#include <dune/common/mpicollectivecommunication.hh>
-#endif
 
 #include <iostream>
 
