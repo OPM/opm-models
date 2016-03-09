@@ -132,7 +132,7 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 EwomsAddApplication(ebos
                     SOURCES applications/ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION HAVE_DUNE_CORNERPOINT AND HAVE_ERT)
+                    CONDITION HAVE_OPM_GRID AND HAVE_ERT)
 
 # the ART to DGF file format conversion utility
 EwomsAddApplication(art2dgf

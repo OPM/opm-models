@@ -23,12 +23,12 @@
 #ifndef EWOMS_PARALLELSERIALOUTPUT_HH
 #define EWOMS_PARALLELSERIALOUTPUT_HH
 
-//#if HAVE_DUNE_CORNERPOINT
+//#if HAVE_OPM_GRID
 #include <dune/grid/common/p2pcommunicator.hh>
 #include <dune/grid/utility/persistentcontainer.hh>
 #include <dune/grid/common/gridenums.hh>
 //#else
-//#error "This header needs the dune-cornerpoint module."
+//#error "This header needs the opm-grid module."
 //#endif
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>

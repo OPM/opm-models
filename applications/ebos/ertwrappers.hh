@@ -266,7 +266,7 @@ public:
                                               coordKeyword.ertHandle(),
                                               actnumKeyword.ertHandle(),
                                               mapaxesData.size()?mapaxesKeyword.ertHandle():NULL);
-#endif // HAVE_ERT && HAVE_DUNE_CORNERPOINT
+#endif // HAVE_ERT
     }
 
     ~ErtGrid()
