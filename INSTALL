@@ -24,7 +24,7 @@ the following modules:
 
   - opm-parser         from [3]
   - opm-core           from [3]
-  - dune-cornerpoint   from [3]
+  - dune-grid          from [3]
 
 For eWoms, the latest release or development branch version of the
 prerequisite software usually works fine.

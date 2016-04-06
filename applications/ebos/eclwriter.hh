@@ -103,7 +103,7 @@ class EclWriterHelper
  *   ERT libraries with development headers installed and the ERT
  *   build system test must pass sucessfully.
  * - The only DUNE grid which is currently supported is Dune::CpGrid
- *   from the OPM module "dune-cornerpoint". Using another grid won't
+ *   from the OPM module "opm-core". Using another grid won't
  *   fail at compile time but you will provoke a fatal exception as
  *   soon as you try to write an ECL output file.
  * - This class requires to use the black oil model with the element
