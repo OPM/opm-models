@@ -121,7 +121,7 @@ public:
             // use the same fluid state as the one of the hint, but
             // make sure that we don't overwrite the temperature
             // specified by the primary variables
-            const Evaluation& T = fluidState_.temperature(/*phaseIdx=*/0);
+            Evaluation T = fluidState_.temperature(/*phaseIdx=*/0);
             fluidState_.assign(hint->fluidState());
             fluidState_.setTemperature(T);
         }

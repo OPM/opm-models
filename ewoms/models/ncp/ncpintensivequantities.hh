@@ -150,8 +150,6 @@ public:
                 for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                     // use the hint for the initial mole fraction!
                     const Evaluation& moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
-
-                    // set initial guess of the component's mole fraction
                     fluidState_.setMoleFraction(phaseIdx, compIdx, moleFracIJ);
                 }
             }
