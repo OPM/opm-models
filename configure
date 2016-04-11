@@ -20,6 +20,8 @@ Optional Features:
   --enable-debug          build a non-optimized version of the library
                           [default=no]
   --disable-runpath       do not use RUNPATH in installed library [default=yes]
+  --disable-quad          do not enable quadruple precision floating point scalars even if
+                          the compiler supports it [default=no]
   --enable-lto            use whole program optimization [default=no]
   --enable-strip-debug    separate the executable code and the debugging symbols [default=no]
   --disable-tests         do not compile and enable unit tests [default=yes]
@@ -120,6 +122,7 @@ pch_use=
 #use_openmp=" -DUSE_OPENMP=OFF"
 use_openmp=
 use_mpi=
+use_quadmath=
 #silent_rules=" -DCMAKE_VERBOSE_MAKEFILE=OFF"
 silent_rules=
 #debug_loc=" -DSYSTEM_DEBUG=OFF"
@@ -336,6 +339,10 @@ for OPT in "$@"; do
               use_mpi=" -DUSE_MPI=OFF"
               pkgname=""
               ;;
+            quad)
+              use_quadmath=" -DUSE_QUADMATH=OFF"
+              pkgname=""
+              ;;
             tests)
               use_tests=" -DBUILD_TESTING=OFF"
               pkgname=""
@@ -393,6 +400,10 @@ for OPT in "$@"; do
               use_mpi=" -DUSE_MPI=ON"
               # special flag; don't set shared/static
               shared=""
+              ;;
+            quad)
+              use_quadmath=" -DUSE_QUADMATH=ON"
+              pkgname=""
               ;;
             debug)
               buildtype=" -DCMAKE_BUILD_TYPE=Debug"
@@ -555,7 +566,7 @@ elif test "$c_compiler$c_opts$cxx_compiler$cxx_opts$fort_compiler$fort_opts" != 
 fi
 
 # pass everything on to CMake
-CMDLINE="${ENVVARS}${CMAKE_COMMAND} \"${srcdir}\" ${use_ninja}\"-DCMAKE_INSTALL_PREFIX=$prefix\" -DSIBLING_SEARCH=OFF${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto}${strip_debug}${use_runpath}${use_tests}${use_samples}${use_underscoring}${c_compiler}${c_opts}${cxx_compiler}${cxx_opts}${fort_compiler}${fort_opts}${boost_opts}${buildname}${site} ${FEATURES}"
+CMDLINE="${ENVVARS}${CMAKE_COMMAND} \"${srcdir}\" ${use_ninja}\"-DCMAKE_INSTALL_PREFIX=$prefix\" -DSIBLING_SEARCH=OFF${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_quadmath}${use_lto}${strip_debug}${use_runpath}${use_tests}${use_samples}${use_underscoring}${c_compiler}${c_opts}${cxx_compiler}${cxx_opts}${fort_compiler}${fort_opts}${boost_opts}${buildname}${site} ${FEATURES}"
 echo --- calling CMake ---
 echo "${CMDLINE}"
 eval exec "${CMDLINE}"
