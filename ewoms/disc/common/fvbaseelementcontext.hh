@@ -94,7 +94,7 @@ public:
         // remember the simulator object
         simulatorPtr_ = &simulator;
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
-        haveStashedIntensiveQuantities_ = false;
+        stashedDofIdx_ = -1;
     }
 
     /*!
@@ -172,7 +172,7 @@ public:
      */
     void updateAllIntensiveQuantities()
     {
-        haveStashedIntensiveQuantities_ = false;
+        stashedDofIdx_ = -1;
 
         if (!enableStorageCache_) {
             // if the storage cache is disabled, we need to calculate the storage term
@@ -450,7 +450,16 @@ public:
      * calculated via finite difference methods.
      */
     bool haveStashedIntensiveQuantities() const
-    { return haveStashedIntensiveQuantities_; }
+    { return stashedDofIdx_ != -1; }
+
+    /*!
+     * \brief Return the (local) index of the DOF for which the primary variables were
+     *        stashed
+     *
+     * If none, then this returns -1.
+     */
+    int stashedDofIdx() const
+    { return stashedDofIdx_; }
 
     /*!
      * \brief Stash the intensive quantities for a degree of freedom on internal memory.
@@ -463,7 +472,7 @@ public:
 
         intensiveQuantitiesStashed_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
         priVarsStashed_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
-        haveStashedIntensiveQuantities_ = true;
+        stashedDofIdx_ = dofIdx;
     }
 
     /*!
@@ -475,7 +484,7 @@ public:
     {
         dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsStashed_;
         dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesStashed_;
-        haveStashedIntensiveQuantities_ = false;
+        stashedDofIdx_ = -1;
     }
 
     /*!
@@ -570,7 +579,7 @@ protected:
     PrimaryVariables priVarsStashed_;
 
     bool enableStorageCache_;
-    bool haveStashedIntensiveQuantities_;
+    int stashedDofIdx_;
 
     GradientCalculator gradientCalculator_;
 
