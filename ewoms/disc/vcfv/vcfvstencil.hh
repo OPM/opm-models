@@ -850,6 +850,16 @@ public:
 #endif
 
         numBoundarySegments_ = 0; // TODO: really required here(?)
+
+        // compute the local and global coordinates of the element
+        const Geometry& geometry = e.geometry();
+        geometryType_ = geometry.type();
+        const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
+            referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
+        for (unsigned vertexIdx = 0; vertexIdx < numVertices; vertexIdx++) {
+            subContVol[vertexIdx].local = referenceElement.position(vertexIdx, dim);
+            subContVol[vertexIdx].global = geometry.corner(vertexIdx);
+        }
     }
 
     void updatePrimaryTopology(const Element &element)

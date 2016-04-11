@@ -101,9 +101,7 @@ public:
      */
     void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           dofIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx);
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
