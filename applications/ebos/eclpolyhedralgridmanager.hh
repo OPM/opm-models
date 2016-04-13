@@ -144,7 +144,9 @@ public:
 protected:
     void createGrids_()
     {
-        const std::vector<double>& porv = this->eclState()->getDoubleGridProperty("PORV")->getData();
+        const auto& gridProps = this->eclState()->get3DProperties();
+        const std::vector<double> &porv = gridProps.getDoubleGridProperty("PORV").getData();
+
         grid_ = new Grid(this->deck(), porv);
         cartesianIndexMapper_ = new CartesianIndexMapper(*grid_);
     }
