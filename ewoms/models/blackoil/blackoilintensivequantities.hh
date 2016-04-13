@@ -194,7 +194,7 @@ public:
         Valgrind::CheckDefined(mobility_);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.setRegionIndex(pvtRegionIdx);
         paramCache.updateAll(fluidState_);
 

@@ -114,7 +114,7 @@ public:
         fluidState_.setMoleFraction(phaseIdx, 0, 1 - sumx);
 
         // create NullParameterCache and do dummy update
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updateAll(fluidState_);
 
         fluidState_.setDensity(phaseIdx, FluidSystem::density(fluidState_, paramCache, phaseIdx));

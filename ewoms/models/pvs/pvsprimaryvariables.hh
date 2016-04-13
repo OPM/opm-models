@@ -129,7 +129,7 @@ public:
 
         // use a flash calculation to calculate a fluid state in
         // thermodynamic equilibrium
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Scalar> paramCache;
         Opm::CompositionalFluidState<Scalar, FluidSystem> fsFlash;
 
         // use the externally given fluid state as initial value for
@@ -139,10 +139,9 @@ public:
         // calculate the phase densities
         paramCache.updateAll(fsFlash);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            fsFlash.setDensity(phaseIdx, FluidSystem::density(fsFlash, paramCache,
-                                                              phaseIdx));
+            Scalar rho = FluidSystem::density(fsFlash, paramCache, phaseIdx);
+            fsFlash.setDensity(phaseIdx, rho);
         }
-
         // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -153,9 +152,7 @@ public:
         }
 
         // run the flash calculation
-        // NcpFlash::guessInitial(fsFlash, paramCache, globalMolarities);
-        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams,
-                                              globalMolarities);
+        NcpFlash::template solve<MaterialLaw>(fsFlash, matParams, paramCache, globalMolarities);
 
         // use the result to assign the primary variables
         assignNaive(fsFlash);

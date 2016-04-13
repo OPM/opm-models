@@ -285,7 +285,7 @@ protected:
                                      int boundaryFaceIdx,
                                      int timeIdx,
                                      const FluidState& fluidState,
-                                     const typename FluidSystem::ParameterCache& paramCache)
+                                     const typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         DarcyExtQuants::calculateBoundaryGradients_(elemCtx,
                                                     boundaryFaceIdx,

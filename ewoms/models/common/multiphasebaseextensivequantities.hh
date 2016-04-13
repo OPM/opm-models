@@ -116,18 +116,18 @@ public:
                         int bfIdx,
                         int timeIdx,
                         const FluidState &fluidState,
-                        typename FluidSystem::ParameterCache &paramCache)
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
 
         FluxExtensiveQuantities::calculateBoundaryGradients_(context.elementContext(),
-                                                                 bfIdx,
-                                                                 timeIdx,
-                                                                 fluidState,
-                                                                 paramCache);
+                                                             bfIdx,
+                                                             timeIdx,
+                                                             fluidState,
+                                                             paramCache);
         FluxExtensiveQuantities::calculateBoundaryFluxes_(context.elementContext(),
-                                                                  bfIdx,
-                                                                  timeIdx);
+                                                          bfIdx,
+                                                          timeIdx);
     }
 
     /*!

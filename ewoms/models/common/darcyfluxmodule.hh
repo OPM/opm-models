@@ -138,6 +138,7 @@ class DarcyExtensiveQuantities
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
+    typedef typename FluidSystem::template ParameterCache<Evaluation> ParameterCache;
     typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -323,7 +324,7 @@ protected:
                                      int boundaryFaceIdx,
                                      int timeIdx,
                                      const FluidState& fluidState,
-                                     const typename FluidSystem::ParameterCache &paramCache)
+                                     const typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::BoundaryPressureCallback<TypeTag, FluidState> pressureCallback(elemCtx, fluidState);

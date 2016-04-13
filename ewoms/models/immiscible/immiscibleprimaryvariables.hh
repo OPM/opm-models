@@ -124,22 +124,49 @@ public:
                                 const MaterialLawParams &matParams,
                                 bool isInEquilibrium = false)
     {
+        #ifndef NDEBUG
+        // make sure the temperature is the same in all fluid phases
+        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+            assert(std::abs(fluidState.temperature(0) - fluidState.temperature(phaseIdx)) < 1e-30);
+        }
+#endif // NDEBUG
+
+        // for the equilibrium case, we don't need complicated
+        // computations.
+        if (isInEquilibrium) {
+            assignNaive(fluidState);
+            return;
+        }
+
+        // use a flash calculation to calculate a fluid state in
+        // thermodynamic equilibrium
+        typename FluidSystem::template ParameterCache<Scalar> paramCache;
+        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
+
+        // use the externally given fluid state as initial value for
+        // the flash calculation
+        fsFlash.assign(fluidState);
+
+        // calculate the phase densities
+        paramCache.updateAll(fsFlash);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            Scalar rho = FluidSystem::density(fsFlash, paramCache, phaseIdx);
+            fsFlash.setDensity(phaseIdx, rho);
+        }
+
+        // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
-                    fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
+                    fsFlash.saturation(phaseIdx) * fsFlash.molarity(phaseIdx, compIdx);
             }
         }
 
-        Opm::ImmiscibleFluidState<Scalar, FluidSystem> fsFlash;
-        fsFlash.assign(fluidState);
-        typename FluidSystem::ParameterCache paramCache;
-        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash,
-                                                     paramCache,
-                                                     matParams,
-                                                     globalMolarities);
+        // run the flash calculation
+        ImmiscibleFlash::template solve<MaterialLaw>(fsFlash, matParams, paramCache, globalMolarities);
 
+        // use the result to assign the primary variables
         assignNaive(fsFlash);
     }
 

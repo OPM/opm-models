@@ -51,6 +51,7 @@ class StokesBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numComponents = FluidSystem::numComponents };
@@ -131,7 +132,7 @@ public:
         for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             volumeFlux += velocity[dimIdx]*normal[dimIdx];
 
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updatePhase(fluidState, phaseIdx);
         Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);

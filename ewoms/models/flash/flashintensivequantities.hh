@@ -113,7 +113,6 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx)
             cTotal[compIdx] = priVars.makeEvaluation(cTot0Idx + compIdx, timeIdx);
 
-        typename FluidSystem::ParameterCache paramCache;
         const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
         if (hint) {
             // use the same fluid state as the one of the hint, but
@@ -124,14 +123,15 @@ public:
             fluidState_.setTemperature(T);
         }
         else
-            FlashSolver::guessInitial(fluidState_, paramCache, cTotal);
+            FlashSolver::guessInitial(fluidState_, cTotal);
 
         // compute the phase compositions, densities and pressures
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         const MaterialLawParams &materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         FlashSolver::template solve<MaterialLaw>(fluidState_,
-                                                 paramCache,
                                                  materialParams,
+                                                 paramCache,
                                                  cTotal,
                                                  flashTolerance);
 
@@ -142,6 +142,8 @@ public:
 
         // set the phase viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            paramCache.updatePhase(fluidState_, phaseIdx);
+
             const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
 
