@@ -583,17 +583,18 @@ public:
             Scalar oldDt = timeStepSize();
             problem_->advanceTimeLevel();
 
-            // advance the simulated time by the current time step size
-            time_ += oldDt;
-            ++timeStepIdx_;
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() << " done. "
                           << "CPU time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
-                          << ", end time: " << this->time() << " seconds" << humanReadableTime(this->time())
+                          << ", end time: " << this->time() + oldDt << " seconds" << humanReadableTime(this->time() + oldDt)
                           << ", step size: " << oldDt << " seconds" << humanReadableTime(oldDt)
                           << "\n" << std::flush;
             }
+
+            // advance the simulated time by the current time step size
+            time_ += oldDt;
+            ++timeStepIdx_;
 
             prePostProcessTimer.start();
             // notify the problem if an episode is finished
