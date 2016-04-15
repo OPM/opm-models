@@ -57,7 +57,6 @@ function build_ewoms {
   test $? -eq 0 || exit 1
 
   # Build ewoms
-  git checkout $EWOMS_REVISION
   pushd .
   mkdir serial/build-ewoms
   cd serial/build-ewoms
