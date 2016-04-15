@@ -268,7 +268,9 @@ public:
                 unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                     unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
-                    storage[dofIdx] = elemCtx.model().cachedStorage(globalDofIdx, timeIdx);
+                    const auto& cachedStorage = elemCtx.model().cachedStorage(globalDofIdx, timeIdx);
+                    for (unsigned eqIdx=0; eqIdx < numEq; eqIdx++)
+                        storage[dofIdx][eqIdx] = cachedStorage[eqIdx];
                 }
             }
             else {
@@ -337,8 +339,10 @@ public:
             // Since the mass flux as calculated by computeFlux() goes out of sub-control
             // volume i and into sub-control volume j, we need to add the flux to finite
             // volume i and subtract it from finite volume j
-            residual[i] += flux;
-            residual[j] -= flux;
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                residual[i][eqIdx] += flux[eqIdx];
+                residual[j][eqIdx] -= flux[eqIdx];
+            }
         }
 
 #if !defined NDEBUG
@@ -550,21 +554,24 @@ protected:
                 Valgrind::CheckDefined(tmp2);
             }
 
-            tmp -= tmp2;
-            for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++)
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                tmp[eqIdx] -= tmp2[eqIdx];
+
                 tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
 
-            storage[dofIdx] += tmp;
-            residual[dofIdx] += tmp;
+                storage[dofIdx][eqIdx] += tmp[eqIdx];
+                residual[dofIdx][eqIdx] += tmp[eqIdx];
+            }
 
             Valgrind::CheckDefined(storage[dofIdx]);
             Valgrind::CheckDefined(residual[dofIdx]);
 
             // deal with the source term
             asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 sourceRate[eqIdx] *= scvVolume;
-            residual[dofIdx] -= sourceRate;
+                residual[dofIdx][eqIdx] -= sourceRate[eqIdx];
+            }
 
             Valgrind::CheckDefined(residual[dofIdx]);
         }

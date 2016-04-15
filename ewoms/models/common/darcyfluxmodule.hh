@@ -265,7 +265,8 @@ protected:
                 f *= (pStatEx - pStatIn)/absDistTotalSquared;
 
                 // calculate the final potential gradient
-                potentialGrad_[phaseIdx] += f;
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    potentialGrad_[phaseIdx][dimIdx] += f[dimIdx];
 
                 for (unsigned i = 0; i < potentialGrad_[phaseIdx].size(); ++i) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][i]))) {
@@ -386,7 +387,8 @@ protected:
                 f *= - pStatIn/absDist;
 
                 // calculate the final potential gradient
-                potentialGrad_[phaseIdx] += f;
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    potentialGrad_[phaseIdx][dimIdx] += f[dimIdx];
 
                 Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 for (unsigned i = 0; i < potentialGrad_[phaseIdx].size(); ++i) {
