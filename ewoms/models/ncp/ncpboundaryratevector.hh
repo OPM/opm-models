@@ -87,7 +87,7 @@ public:
     void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
                      const FluidState &fluidState)
     {
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> paramCache;
         paramCache.updateAll(fluidState);
 
         ExtensiveQuantities extQuants;

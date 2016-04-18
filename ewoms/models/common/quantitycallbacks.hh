@@ -170,7 +170,7 @@ public:
     IQScalar boundaryValue() const
     {
         Valgrind::CheckDefined(phaseIdx_);
-        return Toolbox::passThroughOrCreateConstant(boundaryFs_.pressure(phaseIdx_));
+        return boundaryFs_.pressure(phaseIdx_);
     }
 
 private:

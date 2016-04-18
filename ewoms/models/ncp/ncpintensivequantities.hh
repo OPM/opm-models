@@ -104,12 +104,10 @@ public:
                 int dofIdx,
                 int timeIdx)
     {
-        ParentType::update(elemCtx,
-                           dofIdx,
-                           timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx);
         ParentType::checkDefined();
 
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         // set the phase saturations
@@ -154,14 +152,11 @@ public:
                 }
             }
             else // !hint
-                CompositionFromFugacitiesSolver::guessInitial(fluidState_,
-                                                              paramCache,
-                                                              phaseIdx, fug);
+                CompositionFromFugacitiesSolver::guessInitial(fluidState_, phaseIdx, fug);
 
             // calculate the phase composition from the component
             // fugacities
-            CompositionFromFugacitiesSolver::solve(fluidState_, paramCache,
-                                                   phaseIdx, fug);
+            CompositionFromFugacitiesSolver::solve(fluidState_, paramCache, phaseIdx, fug);
         }
 
         // porosity
@@ -169,8 +164,7 @@ public:
         Valgrind::CheckDefined(porosity_);
 
         // relative permeabilities
-        MaterialLaw::relativePermeabilities(relativePermeability_,
-                                            materialParams, fluidState_);
+        MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
 
         // dynamic viscosities
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

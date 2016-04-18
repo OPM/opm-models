@@ -44,7 +44,6 @@
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/common/version.hh>
-#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/parallel/mpihelper.hh>
 

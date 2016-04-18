@@ -138,6 +138,7 @@ class DarcyExtensiveQuantities
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
+    typedef typename FluidSystem::template ParameterCache<Evaluation> ParameterCache;
     typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -264,7 +265,8 @@ protected:
                 f *= (pStatEx - pStatIn)/absDistTotalSquared;
 
                 // calculate the final potential gradient
-                potentialGrad_[phaseIdx] += f;
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    potentialGrad_[phaseIdx][dimIdx] += f[dimIdx];
 
                 for (unsigned i = 0; i < potentialGrad_[phaseIdx].size(); ++i) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][i]))) {
@@ -323,7 +325,7 @@ protected:
                                      int boundaryFaceIdx,
                                      int timeIdx,
                                      const FluidState& fluidState,
-                                     const typename FluidSystem::ParameterCache &paramCache)
+                                     const typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::BoundaryPressureCallback<TypeTag, FluidState> pressureCallback(elemCtx, fluidState);
@@ -385,7 +387,8 @@ protected:
                 f *= - pStatIn/absDist;
 
                 // calculate the final potential gradient
-                potentialGrad_[phaseIdx] += f;
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    potentialGrad_[phaseIdx][dimIdx] += f[dimIdx];
 
                 Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 for (unsigned i = 0; i < potentialGrad_[phaseIdx].size(); ++i) {

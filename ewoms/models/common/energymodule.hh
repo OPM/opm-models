@@ -68,7 +68,6 @@ class EnergyModule<TypeTag, /*enableEnergy=*/false>
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
-    typedef typename FluidSystem::ParameterCache ParameterCache;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
@@ -242,7 +241,6 @@ class EnergyModule<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
-    typedef typename FluidSystem::ParameterCache ParameterCache;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = FluidSystem::numPhases };
@@ -540,7 +538,6 @@ class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/false>
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename FluidSystem::ParameterCache ParameterCache;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -586,7 +583,7 @@ protected:
      */
     template <class FluidState>
     void update_(FluidState &fs,
-                 ParameterCache &paramCache,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
                  const ElementContext &elemCtx,
                  int dofIdx,
                  int timeIdx)
@@ -605,7 +602,6 @@ class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename FluidSystem::ParameterCache ParameterCache;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { energyEqIdx = Indices::energyEqIdx };
@@ -638,7 +634,7 @@ protected:
      */
     template <class FluidState>
     void update_(FluidState &fs,
-                 ParameterCache &paramCache,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
                  const ElementContext &elemCtx,
                  int dofIdx,
                  int timeIdx)

@@ -124,7 +124,7 @@ public:
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updateAll(fluidState_);
 
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

@@ -944,7 +944,8 @@ public:
                         values[i] *= bfArea;
 
                     totalBoundaryArea += bfArea;
-                    totalRate += values;
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                        totalRate[eqIdx] += values[eqIdx];
                 }
             }
 

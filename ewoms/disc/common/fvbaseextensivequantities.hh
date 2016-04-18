@@ -90,7 +90,7 @@ public:
                         int bfIdx,
                         int timeIdx,
                         const FluidState &fluidState,
-                        typename FluidSystem::ParameterCache &paramCache)
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
     {
         int dofIdx = context.interiorScvIndex(bfIdx, timeIdx);
         interiorScvIdx_ = dofIdx;

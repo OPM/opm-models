@@ -56,7 +56,6 @@ class DiffusionModule<TypeTag, /*enableDiffusion=*/false>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
-    typedef typename FluidSystem::ParameterCache ParameterCache;
 
 public:
     /*!
@@ -149,8 +148,6 @@ class DiffusionIntensiveQuantities<TypeTag, /*enableDiffusion=*/false>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
-    typedef typename FluidSystem::ParameterCache ParameterCache;
-
 public:
     /*!
      * \brief Returns the tortuousity of the sub-domain of a fluid
@@ -190,7 +187,7 @@ protected:
      */
     template <class FluidState>
     void update_(FluidState &fs,
-                 ParameterCache &paramCache,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
                  const ElementContext &elemCtx,
                  int dofIdx,
                  int timeIdx)
@@ -207,8 +204,6 @@ class DiffusionIntensiveQuantities<TypeTag, /*enableDiffusion=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-
-    typedef typename FluidSystem::ParameterCache ParameterCache;
 
     enum { numPhases = FluidSystem::numPhases };
     enum { numComponents = FluidSystem::numComponents };
@@ -242,7 +237,7 @@ protected:
      */
     template <class FluidState>
     void update_(FluidState &fluidState,
-                 ParameterCache &paramCache,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
                  const ElementContext &elemCtx,
                  int dofIdx,
                  int timeIdx)

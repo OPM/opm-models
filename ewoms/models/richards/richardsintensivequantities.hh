@@ -129,7 +129,7 @@ public:
         fluidState_.setSaturation(liquidPhaseIdx, sat[liquidPhaseIdx]);
         fluidState_.setSaturation(gasPhaseIdx, sat[gasPhaseIdx]);
 
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updateAll(fluidState_);
 
         // compute and set the wetting phase viscosity

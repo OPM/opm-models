@@ -54,8 +54,6 @@ NEW_PROP_TAG(NumPhases);
 NEW_PROP_TAG(NumComponents);
 }
 
-struct BhpEvalTag;
-
 template <class TypeTag>
 class EcfvDiscretization;
 
@@ -417,14 +415,16 @@ public:
             computeVolumetricDofRates_(resvRates, actualBottomHolePressure_ + eps, dofVariables_[gridDofIdx]);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 modelRate.setVolumetricRate(fluidState, phaseIdx, resvRates[phaseIdx]);
-                q += modelRate;
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
+                    q[compIdx] += modelRate[compIdx];
             }
 
             // then, we subtract the source rates for a undisturbed well.
             computeVolumetricDofRates_(resvRates, actualBottomHolePressure_, dofVariables_[gridDofIdx]);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 modelRate.setVolumetricRate(fluidState, phaseIdx, resvRates[phaseIdx]);
-                q -= modelRate;
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
+                    q[compIdx] -= modelRate[compIdx];
             }
 
             // and finally, we divide by the epsilon to get the derivative
@@ -1107,7 +1107,8 @@ public:
         const auto &intQuants = context.intensiveQuantities(dofIdx, timeIdx);
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             modelRate.setVolumetricRate(intQuants.fluidState(), phaseIdx, volumetricRates[phaseIdx]);
-            q += modelRate;
+            for (unsigned eqIdx = 0; eqIdx < q.size(); ++eqIdx)
+                q[eqIdx] += modelRate[eqIdx];
         }
 
         Valgrind::CheckDefined(q);
@@ -1391,7 +1392,7 @@ protected:
         bool onBail = false;
 
         // Newton-Raphson method
-        typedef Opm::LocalAd::Evaluation<Scalar, BhpEvalTag, 1> BhpEval;
+        typedef Opm::LocalAd::Evaluation<Scalar, 1> BhpEval;
 
         BhpEval bhpEval(bhpScalar);
         bhpEval.derivatives[0] = 1.0;

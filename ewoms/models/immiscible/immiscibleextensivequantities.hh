@@ -53,9 +53,11 @@ class ImmiscibleExtensiveQuantities
     typedef MultiPhaseBaseExtensiveQuantities<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef typename FluidSystem::template ParameterCache<Evaluation> ParameterCache;
     typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
@@ -82,7 +84,7 @@ public:
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
-                        typename FluidSystem::ParameterCache &paramCache)
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
         EnergyExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);

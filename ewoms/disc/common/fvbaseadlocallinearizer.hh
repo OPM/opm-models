@@ -71,10 +71,9 @@ private:
     static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
 
 public:
-    typedef Opm::LocalAd::Evaluation<Scalar, Discretization, numEq> type;
+    typedef Opm::LocalAd::Evaluation<Scalar, numEq> type;
 };
 
 } // namespace Properties

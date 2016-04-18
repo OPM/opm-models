@@ -145,7 +145,7 @@ public:
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
-                        typename FluidSystem::ParameterCache &paramCache)
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
     {
         update(context, bfIdx, timeIdx, fluidState, paramCache,
                /*isOnBoundary=*/true);

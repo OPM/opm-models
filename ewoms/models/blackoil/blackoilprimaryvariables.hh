@@ -155,7 +155,7 @@ public:
 
         // If your compiler bails out here, you're probably not using a suitable black
         // oil fluid system.
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Scalar> paramCache;
         paramCache.setRegionIndex(pvtRegionIdx_);
 
         // create a mutable fluid state with well defined densities based on the input
@@ -170,6 +170,7 @@ public:
                 fsFlash.setMoleFraction(phaseIdx, compIdx, FsToolbox::value(fluidState.moleFraction(phaseIdx, compIdx)));
         }
 
+        paramCache.updateAll(fsFlash);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar rho = FluidSystem::template density<FlashFluidState, Scalar>(fsFlash, paramCache, phaseIdx);
             fsFlash.setDensity(phaseIdx, rho);
@@ -188,7 +189,7 @@ public:
         // thermodynamic equilibrium
 
         // run the flash calculation
-        NcpFlash::template solve<MaterialLaw>(fsFlash, paramCache, matParams, globalMolarities);
+        NcpFlash::template solve<MaterialLaw>(fsFlash, matParams, paramCache, globalMolarities);
 
         // use the result to assign the primary variables
         assignNaive(fsFlash);

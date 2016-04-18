@@ -146,7 +146,7 @@ public:
         // calculate the phase compositions
         /////////////
 
-        typename FluidSystem::ParameterCache paramCache;
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         int lowestPresentPhaseIdx = priVars.lowestPresentPhaseIdx();
         int numNonPresentPhases = 0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

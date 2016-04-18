@@ -82,12 +82,10 @@ public:
     template <class Context, class FluidState>
     void updateBoundary(const Context &context, int bfIdx, int timeIdx,
                         const FluidState &fluidState,
-                        typename FluidSystem::ParameterCache &paramCache)
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
     {
-        ParentType::updateBoundary(context, bfIdx, timeIdx,
-                                   fluidState, paramCache);
-        DiffusionExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx,
-                                                fluidState);
+        ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        DiffusionExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);
         EnergyExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);
     }
 };
