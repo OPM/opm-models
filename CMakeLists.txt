@@ -134,6 +134,10 @@ EwomsAddApplication(ebos
                     EXE_NAME ebos
                     CONDITION HAVE_OPM_GRID AND HAVE_ERT)
 
+if(HAVE_OPM_GRID AND HAVE_ERT)
+  install(TARGETS ebos DESTINATION bin)
+endif()
+
 # the ART to DGF file format conversion utility
 EwomsAddApplication(art2dgf
                     SOURCES applications/art2dgf.cc
