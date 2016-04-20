@@ -21,11 +21,11 @@
   copyright holders.
 */
 #define EWOMS_VERSION_MAJOR 2016
-#define EWOMS_VERSION_MINOR 04
-#define EWOMS_VERSION_REVISION 0 // -1 means that this is a version from the development branch...
+#define EWOMS_VERSION_MINOR 10
+#define EWOMS_VERSION_REVISION -1 // -1 means that this is a version from the development branch...
 
 #define EWOMS_VERSION_SUFFIX "pre"
-#define EWOMS_VERSION_CODENAME "Yolanda"
+#define EWOMS_VERSION_CODENAME "Butch"
 
 #include <string>
 #include <sstream>
