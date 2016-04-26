@@ -24,7 +24,7 @@
 #define EWOMS_VERSION_MINOR 04
 #define EWOMS_VERSION_REVISION 0 // -1 means that this is a version from the development branch...
 
-#define EWOMS_VERSION_SUFFIX "pre"
+#define EWOMS_VERSION_SUFFIX ""
 #define EWOMS_VERSION_CODENAME "Yolanda"
 
 #include <string>
