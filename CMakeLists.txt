@@ -132,7 +132,7 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 EwomsAddApplication(ebos
                     SOURCES applications/ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION HAVE_OPM_GRID AND HAVE_ERT)
+                    CONDITION ${HAVE_OPM_GRID} AND ${HAVE_ERT})
 
 if(HAVE_OPM_GRID AND HAVE_ERT)
   install(TARGETS ebos DESTINATION bin)
@@ -164,25 +164,25 @@ opm_add_test(lens_immiscible_ecfv
              TEST_ARGS --end-time=3000)
 
 opm_add_test(finger_immiscible_ecfv
-             CONDITION DUNE_ALUGRID_FOUND)
+             CONDITION ${DUNE_ALUGRID_FOUND})
 
 opm_add_test(finger_immiscible_vcfv
-             CONDITION DUNE_ALUGRID_FOUND)
+             CONDITION ${DUNE_ALUGRID_FOUND})
 
 opm_add_test(finger_immiscible_ecfv_adaptive
              EXE_NAME finger_immiscible_ecfv
-             CONDITION DUNE_ALUGRID_FOUND AND DUNE_FEM_FOUND
+             CONDITION ${DUNE_ALUGRID_FOUND} AND ${DUNE_FEM_FOUND}
              NO_COMPILE
              DRIVER_ARGS --enable-grid-adaptation=true)
 
 opm_add_test(test_navierstokes
-             CONDITION DUNE_ALUGRID_FOUND AND SUPERLU_FOUND)
+             CONDITION ${DUNE_ALUGRID_FOUND} AND ${SUPERLU_FOUND})
 
 opm_add_test(test_stokes2c
-             CONDITION SUPERLU_FOUND)
+             CONDITION ${SUPERLU_FOUND})
 
 opm_add_test(test_stokesni
-             CONDITION SUPERLU_FOUND)
+             CONDITION ${SUPERLU_FOUND})
 
 foreach(tapp co2injection_flash_ni_vcfv
              co2injection_flash_ni_ecfv
@@ -223,7 +223,7 @@ opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
 opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
 
 opm_add_test(fracture_discretefracture
-             CONDITION DUNE_ALUGRID_FOUND
+             CONDITION ${DUNE_ALUGRID_FOUND}
              TEST_ARGS --end-time=400)
 
 opm_add_test(test_propertysystem
@@ -239,7 +239,7 @@ opm_add_test(co2injection_ncp_ni_ecfv_parallel
              EXE_NAME co2injection_ncp_ni_ecfv
              NO_COMPILE
              PROCESSORS 4
-             CONDITION MPI_FOUND
+             CONDITION ${MPI_FOUND}
              DRIVER_ARGS --parallel-simulation=4)
 
 # test for the parallelization of the vertex centered finite volume
@@ -248,7 +248,7 @@ opm_add_test(obstacle_immiscible_parallel
              EXE_NAME obstacle_immiscible
              NO_COMPILE
              PROCESSORS 4
-             CONDITION MPI_FOUND
+             CONDITION ${MPI_FOUND}
              DRIVER_ARGS --parallel-simulation=4
              TEST_ARGS --end-time=1 --initial-time-step-size=1)
 
@@ -258,7 +258,7 @@ opm_add_test(lens_immiscible_vcfv_parallel
              EXE_NAME lens_immiscible_vcfv
              NO_COMPILE
              PROCESSORS 4
-             CONDITION MPI_FOUND
+             CONDITION ${MPI_FOUND}
              DRIVER_ARGS --parallel-simulation=4
              TEST_ARGS --end-time=250 --initial-time-step-size=250)
 
@@ -266,7 +266,7 @@ opm_add_test(lens_immiscible_ecfv_parallel
              EXE_NAME lens_immiscible_ecfv
              NO_COMPILE
              PROCESSORS 4
-             CONDITION MPI_FOUND
+             CONDITION ${MPI_FOUND}
              DRIVER_ARGS --parallel-simulation=4
              TEST_ARGS --end-time=250 --initial-time-step-size=250)
 
@@ -287,7 +287,7 @@ opm_add_test(obstacle_pvs_restart
 # the test for the plain stokes model is completes quite
 # quickly. thus, we put it to the end of the list...
 opm_add_test(test_stokes
-             CONDITION SUPERLU_FOUND)
+             CONDITION ${SUPERLU_FOUND})
 
 opm_add_test(tutorial1
              SOURCES tutorial/tutorial1.cc)
