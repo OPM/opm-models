@@ -164,10 +164,10 @@ opm_add_test(lens_immiscible_ecfv
              TEST_ARGS --end-time=3000)
 
 opm_add_test(finger_immiscible_ecfv
-             CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
+             CONDITION DUNE_ALUGRID_FOUND)
 
 opm_add_test(finger_immiscible_vcfv
-             CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND)
+             CONDITION DUNE_ALUGRID_FOUND)
 
 opm_add_test(finger_immiscible_ecfv_adaptive
              EXE_NAME finger_immiscible_ecfv
@@ -176,7 +176,7 @@ opm_add_test(finger_immiscible_ecfv_adaptive
              DRIVER_ARGS --enable-grid-adaptation=true)
 
 opm_add_test(test_navierstokes
-             CONDITION (DUNE_ALUGRID_FOUND OR ALUGRID_FOUND) AND SUPERLU_FOUND)
+             CONDITION DUNE_ALUGRID_FOUND AND SUPERLU_FOUND)
 
 opm_add_test(test_stokes2c
              CONDITION SUPERLU_FOUND)
@@ -223,7 +223,7 @@ opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
 opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
 
 opm_add_test(fracture_discretefracture
-             CONDITION DUNE_ALUGRID_FOUND OR ALUGRID_FOUND
+             CONDITION DUNE_ALUGRID_FOUND
              TEST_ARGS --end-time=400)
 
 opm_add_test(test_propertysystem
