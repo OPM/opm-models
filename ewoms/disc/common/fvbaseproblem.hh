@@ -345,24 +345,24 @@ public:
                       << "Simulation of problem '" << asImp_().name() << "' finished.\n"
                       << "\n"
                       << "------------------------ Timing receipt ------------------------\n"
-                      << "Setup time: "<< Simulator::humanReadableTime(setupTime, /*isAmendment=*/false)
+                      << "Setup time: " << setupTime << " seconds" << Simulator::humanReadableTime(setupTime)
                       << ", " << setupTime/(simulationTime + setupTime)*100 << "%\n"
-                      << "Simulation time: "<< Simulator::humanReadableTime(simulationTime, /*isAmendment=*/false)
+                      << "Simulation time: " << simulationTime << " seconds" << Simulator::humanReadableTime(simulationTime)
                       << ", " << simulationTime/(simulationTime + setupTime)*100 << "%\n"
-                      << "    Linearization time: "<< Simulator::humanReadableTime(linearizeTime_, /*isAmendment=*/false)
+                      << "    Linearization time: " << linearizeTime_ << " seconds" << Simulator::humanReadableTime(linearizeTime_)
                       << ", " << linearizeTime_/simulationTime*100 << "%\n"
-                      << "    Linear solve time: " << Simulator::humanReadableTime(solveTime_, /*isAmendment=*/false)
+                      << "    Linear solve time: "  << solveTime_ << " seconds" << Simulator::humanReadableTime(solveTime_)
                       << ", " << solveTime_/simulationTime*100 << "%\n"
-                      << "    Newton update time: " << Simulator::humanReadableTime(updateTime_, /*isAmendment=*/false)
+                      << "    Newton update time: "  << updateTime_ << " seconds" << Simulator::humanReadableTime(updateTime_)
                       << ", " << updateTime_/simulationTime*100 << "%\n"
-                      << "    Pre/postprocess time: " << Simulator::humanReadableTime(prePostProcessTime, /*isAmendment=*/false)
+                      << "    Pre/postprocess time: "  << prePostProcessTime << " seconds" << Simulator::humanReadableTime(prePostProcessTime)
                       << ", " << prePostProcessTime/simulationTime*100 << "%\n"
-                      << "    Output write time: " << Simulator::humanReadableTime(totalWriteTime, /*isAmendment=*/false)
+                      << "    Output write time: "  << totalWriteTime << " seconds" << Simulator::humanReadableTime(totalWriteTime)
                       << ", " << totalWriteTime/simulationTime*100 << "%\n"
-                      << "First process' simulation CPU time: " <<  Simulator::humanReadableTime(localCpuTime, /*isAmendment=*/false) << "\n"
+                      << "First process' simulation CPU time: "  << localCpuTime << " seconds" <<  Simulator::humanReadableTime(localCpuTime) << "\n"
                       << "Number of processes: " << numProcesses << "\n"
                       << "Threads per processes: " << threadsPerProcess << "\n"
-                      << "Total CPU time: " << Simulator::humanReadableTime(globalCpuTime, /*isAmendment=*/false) << "\n"
+                      << "Total CPU time: " << globalCpuTime << " seconds" << Simulator::humanReadableTime(globalCpuTime) << "\n"
                       << "\n"
                       << "Note 1: If not stated otherwise, all times are wall clock times\n"
                       << "Note 2: Taxes and administrative overhead are "

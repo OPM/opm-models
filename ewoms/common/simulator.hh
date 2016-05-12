@@ -643,24 +643,55 @@ public:
         if (timeInSeconds >= 365.25*24*60*60) {
             int years = timeInSeconds/(365.25*24*60*60);
             int days = (timeInSeconds - years*(365.25*24*60*60))/(24*60*60);
-            double hours = (timeInSeconds - years*(365.25*24*60*60) - days*(24*60*60))/(60*60);
+
+            double accuracy = 1e-2;
+            double hours =
+                std::round(1.0/accuracy*
+                           (timeInSeconds
+                            - years*(365.25*24*60*60)
+                            - days*(24*60*60))/(60*60))
+                *accuracy;
+
             oss << years << " years, " << days << " days, "  << hours << " hours";
         }
         else if (timeInSeconds >= 24.0*60*60) {
             int days = timeInSeconds/(24*60*60);
             int hours = (timeInSeconds - days*(24*60*60))/(60*60);
-            double minutes = (timeInSeconds - days*(24*60*60) - hours*(60*60))/60;
+
+            double accuracy = 1e-2;
+            double minutes =
+                std::round(1.0/accuracy*
+                           (timeInSeconds
+                            - days*(24*60*60)
+                            - hours*(60*60))/60)
+                *accuracy;
+
             oss << days << " days, " << hours << " hours, " << minutes << " minutes";
         }
         else if (timeInSeconds >= 60.0*60) {
             int hours = timeInSeconds/(60*60);
             int minutes = (timeInSeconds - hours*(60*60))/60;
-            double seconds = (timeInSeconds - hours*(60*60) - minutes*60);
+
+            double accuracy = 1e-3;
+            double seconds =
+                std::round(1.0/accuracy*
+                           (timeInSeconds
+                            - hours*(60*60)
+                            - minutes*60))
+                *accuracy;
+
             oss << hours << " hours, " << minutes << " minutes, "  << seconds << " seconds";
         }
         else if (timeInSeconds >= 60.0) {
             int minutes = timeInSeconds/60;
-            double seconds = (timeInSeconds - minutes*60);
+
+            double accuracy = 1e-5;
+            double seconds =
+                std::round(1.0/accuracy*
+                           (timeInSeconds
+                            - minutes*60))
+                *accuracy;
+
             oss << minutes << " minutes, "  << seconds << " seconds";
         }
         else if (!isAmendment)
