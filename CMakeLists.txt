@@ -15,11 +15,6 @@
 ###########################################################################
 cmake_minimum_required (VERSION 2.8)
 
-# work around a quirk of the build system: make sure that the
-# HAVE_OPM_GRID and HAVE_ERT variables are defined
-set(HAVE_OPM_GRID "0")
-set(HAVE_ERT "0")
-
 # add the current projects cmake module directory to the search
 # path. This is not required anymore once support for federated builds
 # is merged.
@@ -137,9 +132,9 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 EwomsAddApplication(ebos
                     SOURCES applications/ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION ${HAVE_OPM_GRID} AND ${HAVE_ERT})
+                    CONDITION ${OPM_GRID_FOUND} AND ${ERT_FOUND})
 
-if(HAVE_OPM_GRID AND HAVE_ERT)
+if(OPM_GRID_FOUND AND ERT_FOUND)
   install(TARGETS ebos DESTINATION bin)
 endif()
 
