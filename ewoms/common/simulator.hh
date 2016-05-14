@@ -672,7 +672,7 @@ public:
             int hours = timeInSeconds/(60*60);
             int minutes = (timeInSeconds - hours*(60*60))/60;
 
-            double accuracy = 1e-3;
+            double accuracy = 1e-2;
             double seconds =
                 std::round(1.0/accuracy*
                            (timeInSeconds
@@ -685,7 +685,7 @@ public:
         else if (timeInSeconds >= 60.0) {
             int minutes = timeInSeconds/60;
 
-            double accuracy = 1e-5;
+            double accuracy = 1e-3;
             double seconds =
                 std::round(1.0/accuracy*
                            (timeInSeconds
