@@ -300,6 +300,9 @@ inline quad atan(quad val)
 inline quad atan2(quad a, quad b)
 { return atan2q(a, b); }
 
+inline quad round(quad val)
+{ return roundq(val); }
+
 inline bool isfinite(quad val)
 { return !isnanq(val) && !isinfq(val); }
 
