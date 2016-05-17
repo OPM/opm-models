@@ -15,6 +15,11 @@
 ###########################################################################
 cmake_minimum_required (VERSION 2.8)
 
+# work around some build system quirk: the *_FOUND variables must
+# always be present even if a given library was not found. (the build
+# system sometimes does not seem to define them in that case.)
+set(ERT_FOUND "0")
+
 # add the current projects cmake module directory to the search
 # path. This is not required anymore once support for federated builds
 # is merged.
