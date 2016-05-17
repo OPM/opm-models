@@ -10,8 +10,4 @@ Url: http://opm-project.org/ewoms
 MaintainerName: Andreas Lauser
 Maintainer: and@poware.org
 Depends: dune-grid (>= 2.3) dune-localfunctions  (>= 2.3) dune-istl  (>= 2.3) opm-common opm-material
-
-# actually, we also suggest opm-parser, but this dependency only makes
-# any sense if opm-grid is available and opm-parser is a
-# required dependency of opm-grid...
-Suggests: dune-fem dune-alugrid opm-grid
+Suggests: dune-fem dune-alugrid opm-parser opm-grid
