@@ -78,17 +78,17 @@ public:
         const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         LhsEval waterSurfaceVolume =
-            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(waterPhaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().invB(waterPhaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+            Toolbox::template decay<LhsEval>(intQuants.fluidState().saturation(waterPhaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.fluidState().invB(waterPhaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.porosity());
         LhsEval oilSurfaceVolume =
-            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(oilPhaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().invB(oilPhaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+            Toolbox::template decay<LhsEval>(intQuants.fluidState().saturation(oilPhaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.fluidState().invB(oilPhaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.porosity());
         LhsEval gasSurfaceVolume =
-            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(gasPhaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().invB(gasPhaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+            Toolbox::template decay<LhsEval>(intQuants.fluidState().saturation(gasPhaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.fluidState().invB(gasPhaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.porosity());
 
         storage[conti0EqIdx + waterCompIdx] = waterSurfaceVolume;
         storage[conti0EqIdx + oilCompIdx] = oilSurfaceVolume;
@@ -97,13 +97,13 @@ public:
         // account for dissolved gas and vaporized oil
         if (FluidSystem::enableDissolvedGas()) {
             storage[conti0EqIdx + gasCompIdx] +=
-                Toolbox::template toLhs<LhsEval>(intQuants.fluidState().Rs())
+                Toolbox::template decay<LhsEval>(intQuants.fluidState().Rs())
                 * oilSurfaceVolume;
         }
 
         if (FluidSystem::enableVaporizedOil()) {
             storage[conti0EqIdx + oilCompIdx] +=
-                Toolbox::template toLhs<LhsEval>(intQuants.fluidState().Rv())
+                Toolbox::template decay<LhsEval>(intQuants.fluidState().Rv())
                 * gasSurfaceVolume;
         }
 

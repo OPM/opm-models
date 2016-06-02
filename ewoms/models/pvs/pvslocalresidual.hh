@@ -82,9 +82,9 @@ public:
         for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
             int eqIdx = conti0EqIdx + compIdx;
             storage[eqIdx] +=
-                Toolbox::template toLhs<LhsEval>(fs.molarity(phaseIdx, compIdx))
-                * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
-                * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+                Toolbox::template decay<LhsEval>(fs.molarity(phaseIdx, compIdx))
+                * Toolbox::template decay<LhsEval>(fs.saturation(phaseIdx))
+                * Toolbox::template decay<LhsEval>(intQuants.porosity());
         }
 
         EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);

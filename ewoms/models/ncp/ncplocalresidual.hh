@@ -86,9 +86,9 @@ public:
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             unsigned eqIdx = conti0EqIdx + compIdx;
             storage[eqIdx] +=
-                Toolbox::template toLhs<LhsEval>(fluidState.molarity(phaseIdx, compIdx))
-                * Toolbox::template toLhs<LhsEval>(fluidState.saturation(phaseIdx))
-                * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+                Toolbox::template decay<LhsEval>(fluidState.molarity(phaseIdx, compIdx))
+                * Toolbox::template decay<LhsEval>(fluidState.saturation(phaseIdx))
+                * Toolbox::template decay<LhsEval>(intQuants.porosity());
         }
 
         EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
@@ -228,7 +228,7 @@ private:
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 
-        return FsToolbox::template toLhs<LhsEval>(fluidState.saturation(phaseIdx));
+        return FsToolbox::template decay<LhsEval>(fluidState.saturation(phaseIdx));
     }
 
     /*!
@@ -243,7 +243,7 @@ private:
         // difference of sum of mole fractions in the phase from 100%
         LhsEval a = 1.0;
         for (unsigned i = 0; i < numComponents; ++i)
-            a -= FsToolbox::template toLhs<LhsEval>(fluidState.moleFraction(phaseIdx, i));
+            a -= FsToolbox::template decay<LhsEval>(fluidState.moleFraction(phaseIdx, i));
         return a;
     }
 };
