@@ -27,7 +27,7 @@
 #ifndef EWOMS_VTK_BLACK_OIL_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_MODULE_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "vtkmultiwriter.hh"
 #include "baseoutputmodule.hh"

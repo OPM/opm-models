@@ -34,8 +34,8 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/material/localad/Evaluation.hpp>
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Evaluation.hpp>
+#include <opm/material/densead/Math.hpp>
 
 namespace Ewoms {
 namespace Properties {

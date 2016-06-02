@@ -28,7 +28,7 @@
 #ifndef EWOMS_NCP_MODEL_HH
 #define EWOMS_NCP_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "ncpproperties.hh"
 #include "ncplocalresidual.hh"

@@ -28,7 +28,7 @@
 #ifndef EWOMS_ECL_WRITER_HH
 #define EWOMS_ECL_WRITER_HH
 
-#include <opm/material/localad/Evaluation.hpp>
+#include <opm/material/densead/Evaluation.hpp>
 
 #include "ertwrappers.hh"
 #include "collecttoiorank.hh"

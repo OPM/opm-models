@@ -28,7 +28,7 @@
 #ifndef EWOMS_DISCRETE_FRACTURE_MODEL_HH
 #define EWOMS_DISCRETE_FRACTURE_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "discretefractureproperties.hh"
 #include "discretefractureprimaryvariables.hh"
