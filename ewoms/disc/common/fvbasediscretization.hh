@@ -190,6 +190,7 @@ SET_TYPE_PROP(FvBaseDiscretization, ConstraintsContext, Ewoms::FvBaseConstraints
  */
 SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Ewoms::ThreadManager<TypeTag>);
 SET_INT_PROP(FvBaseDiscretization, ThreadsPerProcess, 1);
+SET_BOOL_PROP(FvBaseDiscretization, UseLinearizationLock, true);
 
 /*!
  * \brief Linearizer for the global system of equations.

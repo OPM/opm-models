@@ -358,7 +358,9 @@ private:
         localLinearizer.linearize(*elementCtx);
 
         // update the right hand side and the Jacobian matrix
-        ScopedLock addLock(globalMatrixMutex_);
+        if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))
+            globalMatrixMutex_.lock();
+
         unsigned numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
         for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
             int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
@@ -386,7 +388,9 @@ private:
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
             }
         }
-        addLock.unlock();
+
+        if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))
+            globalMatrixMutex_.unlock();
     }
 
     void linearizeAuxiliaryEquations_()

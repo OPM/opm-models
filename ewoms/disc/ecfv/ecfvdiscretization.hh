@@ -108,6 +108,10 @@ public:
 //! process' grid partition
 SET_BOOL_PROP(EcfvDiscretization, LinearizeNonLocalElements, true);
 
+//! locking is not required for the element centered finite volume method because race
+//! conditions cannot occur since each matrix/vector entry is written exactly once
+SET_BOOL_PROP(EcfvDiscretization, UseLinearizationLock, false);
+
 } // namespace Properties
 } // namespace Ewoms
 

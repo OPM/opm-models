@@ -162,6 +162,12 @@ NEW_PROP_TAG(GridCommHandleFactory);
 NEW_PROP_TAG(ThreadManager);
 NEW_PROP_TAG(ThreadsPerProcess);
 
+//! use locking to prevent race conditions when linearizing the global system of
+//! equations in multi-threaded mode. (setting this property to true is always save, but
+//! it may slightly deter performance in multi-threaded simlations and some
+//! discretizations do not need this.)
+NEW_PROP_TAG(UseLinearizationLock);
+
 // high-level simulation control
 
 //! Manages the simulation time
