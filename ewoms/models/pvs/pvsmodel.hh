@@ -28,7 +28,7 @@
 #ifndef EWOMS_PVS_MODEL_HH
 #define EWOMS_PVS_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "pvsproperties.hh"
 #include "pvslocalresidual.hh"

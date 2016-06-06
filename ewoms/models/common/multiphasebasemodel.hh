@@ -28,7 +28,7 @@
 #ifndef EWOMS_MULTI_PHASE_BASE_MODEL_HH
 #define EWOMS_MULTI_PHASE_BASE_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 #include "multiphasebaseproperties.hh"
 #include "multiphasebaseproblem.hh"
 #include "multiphasebaseextensivequantities.hh"

@@ -28,7 +28,7 @@
 #ifndef EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
 #define EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "fvbaseproperties.hh"
 
@@ -73,7 +73,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    typedef Opm::LocalAd::Evaluation<Scalar, numEq> type;
+    typedef Opm::DenseAd::Evaluation<Scalar, numEq> type;
 };
 
 } // namespace Properties

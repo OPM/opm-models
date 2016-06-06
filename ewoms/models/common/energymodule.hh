@@ -368,10 +368,10 @@ public:
     {
         const auto &fs = intQuants.fluidState();
         storage[energyEqIdx] +=
-            Toolbox::template toLhs<LhsEval>(fs.density(phaseIdx))
-            * Toolbox::template toLhs<LhsEval>(fs.internalEnergy(phaseIdx))
-            * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+            Toolbox::template decay<LhsEval>(fs.density(phaseIdx))
+            * Toolbox::template decay<LhsEval>(fs.internalEnergy(phaseIdx))
+            * Toolbox::template decay<LhsEval>(fs.saturation(phaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.porosity());
     }
 
     /*!
@@ -385,11 +385,11 @@ public:
     {
         const auto &fs = intQuants.fractureFluidState();
         storage[energyEqIdx] +=
-            Toolbox::template toLhs<LhsEval>(fs.density(phaseIdx))
-            * Toolbox::template toLhs<LhsEval>(fs.internalEnergy(phaseIdx))
-            * Toolbox::template toLhs<LhsEval>(fs.saturation(phaseIdx))
-            * Toolbox::template toLhs<LhsEval>(intQuants.fracturePorosity())
-            * Toolbox::template toLhs<LhsEval>(intQuants.fractureVolume())/scv.volume();
+            Toolbox::template decay<LhsEval>(fs.density(phaseIdx))
+            * Toolbox::template decay<LhsEval>(fs.internalEnergy(phaseIdx))
+            * Toolbox::template decay<LhsEval>(fs.saturation(phaseIdx))
+            * Toolbox::template decay<LhsEval>(intQuants.fracturePorosity())
+            * Toolbox::template decay<LhsEval>(intQuants.fractureVolume())/scv.volume();
     }
 
     /*!
@@ -401,8 +401,8 @@ public:
                                     const IntensiveQuantities &intQuants)
     {
         storage[energyEqIdx] +=
-            Toolbox::template toLhs<LhsEval>(intQuants.heatCapacitySolid())
-            * Toolbox::template toLhs<LhsEval>(intQuants.fluidState().temperature(/*phaseIdx=*/0));
+            Toolbox::template decay<LhsEval>(intQuants.heatCapacitySolid())
+            * Toolbox::template decay<LhsEval>(intQuants.fluidState().temperature(/*phaseIdx=*/0));
     }
 
     /*!

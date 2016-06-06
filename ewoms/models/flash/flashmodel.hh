@@ -28,7 +28,7 @@
 #ifndef EWOMS_FLASH_MODEL_HH
 #define EWOMS_FLASH_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "flashproperties.hh"
 #include "flashprimaryvariables.hh"

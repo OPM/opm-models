@@ -28,7 +28,7 @@
 #ifndef EWOMS_BLACK_OIL_MODEL_HH
 #define EWOMS_BLACK_OIL_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "blackoilproblem.hh"
 #include "blackoilindices.hh"

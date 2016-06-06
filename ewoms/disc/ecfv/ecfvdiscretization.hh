@@ -28,7 +28,7 @@
 #ifndef EWOMS_ECFV_DISCRETIZATION_HH
 #define EWOMS_ECFV_DISCRETIZATION_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include "ecfvproperties.hh"
 #include "ecfvstencil.hh"

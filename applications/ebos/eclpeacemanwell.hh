@@ -32,8 +32,8 @@
 #include <ewoms/common/propertysystem.hh>
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/localad/Evaluation.hpp>
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Evaluation.hpp>
+#include <opm/material/densead/Math.hpp>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
@@ -1171,14 +1171,14 @@ protected:
             // well model due to Peaceman; see Chen et al., p. 449
 
             // phase pressure in grid cell
-            const DofEval& p = DofVarsToolbox::template toLhs<DofEval>(dofVars.pressure[phaseIdx]);
+            const DofEval& p = DofVarsToolbox::template decay<DofEval>(dofVars.pressure[phaseIdx]);
 
             // density and mobility of fluid phase
-            const DofEval& rho = DofVarsToolbox::template toLhs<DofEval>(dofVars.density[phaseIdx]);
+            const DofEval& rho = DofVarsToolbox::template decay<DofEval>(dofVars.density[phaseIdx]);
             DofEval lambda;
             if (wellType_ == Producer) {
                 //assert(p < pbh);
-                lambda = DofVarsToolbox::template toLhs<DofEval>(dofVars.mobility[phaseIdx]);
+                lambda = DofVarsToolbox::template decay<DofEval>(dofVars.mobility[phaseIdx]);
             }
             else if (wellType_ == Injector) {
                 //assert(p > pbh);
@@ -1191,7 +1191,7 @@ protected:
                 // 1/viscosity...
                 lambda = 0.0;
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                    lambda += DofVarsToolbox::template toLhs<DofEval>(dofVars.mobility[phaseIdx]);
+                    lambda += DofVarsToolbox::template decay<DofEval>(dofVars.mobility[phaseIdx]);
             }
             else
                 OPM_THROW(std::logic_error,
@@ -1392,7 +1392,7 @@ protected:
         bool onBail = false;
 
         // Newton-Raphson method
-        typedef Opm::LocalAd::Evaluation<Scalar, 1> BhpEval;
+        typedef Opm::DenseAd::Evaluation<Scalar, 1> BhpEval;
 
         BhpEval bhpEval(bhpScalar);
         bhpEval.derivatives[0] = 1.0;

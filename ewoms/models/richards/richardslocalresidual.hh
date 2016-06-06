@@ -67,9 +67,9 @@ public:
 
         // partial time derivative of the wetting phase mass
         storage[contiEqIdx] =
-            Toolbox::template toLhs<LhsEval>(intQuants.fluidState().density(liquidPhaseIdx))
-            *Toolbox::template toLhs<LhsEval>(intQuants.fluidState().saturation(liquidPhaseIdx))
-            *Toolbox::template toLhs<LhsEval>(intQuants.porosity());
+            Toolbox::template decay<LhsEval>(intQuants.fluidState().density(liquidPhaseIdx))
+            *Toolbox::template decay<LhsEval>(intQuants.fluidState().saturation(liquidPhaseIdx))
+            *Toolbox::template decay<LhsEval>(intQuants.porosity());
     }
 
     /*!

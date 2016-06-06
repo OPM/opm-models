@@ -28,7 +28,7 @@
 #ifndef EWOMS_IMMISCIBLE_MODEL_HH
 #define EWOMS_IMMISCIBLE_MODEL_HH
 
-#include <opm/material/localad/Math.hpp>
+#include <opm/material/densead/Math.hpp>
 #include "immiscibleproperties.hh"
 #include "immiscibleindices.hh"
 #include "immiscibleextensivequantities.hh"

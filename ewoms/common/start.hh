@@ -30,7 +30,7 @@
 #include <ewoms/common/propertysystem.hh>
 // the following header is not required here, but it must be included before
 // dune/common/densematrix.hh because of some c++ ideosyncrasies
-#include <opm/material/localad/Evaluation.hpp>
+#include <opm/material/densead/Evaluation.hpp>
 
 #include "parametersystem.hh"
 
