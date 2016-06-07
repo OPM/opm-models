@@ -285,6 +285,14 @@ public:
     { timeStepSize_ = timeStepSize; }
 
     /*!
+     * \brief Set the current time step index to a given value.
+     *
+     * \param timeStepIndex The new value for the time step index
+     */
+    void setTimeStepIndex(int timeStepIndex)
+    { timeStepIdx_ = timeStepIndex; }
+
+    /*!
      * \brief Returns the time step length \f$\mathrm{[s]}\f$ so that we
      *        don't miss the beginning of the next episode or cross
      *        the end of the simlation.
