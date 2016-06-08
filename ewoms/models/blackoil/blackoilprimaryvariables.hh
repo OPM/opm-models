@@ -87,7 +87,7 @@ public:
     enum PrimaryVarsMeaning {
         Sw_po_Sg, // threephase case
         Sw_po_Rs, // water + oil case
-        Sw_pg_Rv, // water + gas case
+        Sw_po_Rv, // water + gas case
     };
 
     BlackOilPrimaryVariables()
@@ -117,6 +117,21 @@ public:
 
     unsigned pvtRegionIndex() const
     { return pvtRegionIdx_; }
+
+    void setOilPressure( const Scalar& po )
+    {
+        (*this)[ pressureSwitchIdx ] = po;
+    }
+
+    void setWaterSaturation( const Scalar& sw )
+    {
+        (*this)[ waterSaturationIdx ] = sw;
+    }
+
+    void setSwitchingVariable( const Scalar& x )
+    {
+        (*this)[ compositionSwitchIdx ] = x;
+    }
 
     PrimaryVarsMeaning primaryVarsMeaning() const
     { return primaryVarsMeaning_; }
@@ -226,7 +241,7 @@ public:
             // only gas: if vaporized oil is enabled, we need to consider the gas phase
             // composition, if it is disabled, the oil component must stick to its phase
             if (FluidSystem::enableVaporizedOil())
-                primaryVarsMeaning_ = Sw_pg_Rv;
+                primaryVarsMeaning_ = Sw_po_Rv;
             else
                 primaryVarsMeaning_ = Sw_po_Sg;
         }
@@ -245,7 +260,7 @@ public:
             (*this)[compositionSwitchIdx] = Rs;
         }
         else {
-            assert(primaryVarsMeaning() == Sw_pg_Rv);
+            assert(primaryVarsMeaning() == Sw_po_Rv);
 
             const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
@@ -308,7 +323,7 @@ public:
                 Scalar T = asImp_().temperature_();
                 Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, T, pg);
 
-                setPrimaryVarsMeaning(Sw_pg_Rv);
+                setPrimaryVarsMeaning(Sw_po_Rv);
                 (*this)[Indices::pressureSwitchIdx] = pg;
                 (*this)[Indices::compositionSwitchIdx] = RvSat;
 
@@ -353,7 +368,7 @@ public:
             return false;
         }
         else {
-            assert(primaryVarsMeaning() == Sw_pg_Rv);
+            assert(primaryVarsMeaning() == Sw_po_Rv);
 
             // only the gas and the water phases are present. the oil phase appears as
             // soon as more of the oil component is present in the gas phase than what

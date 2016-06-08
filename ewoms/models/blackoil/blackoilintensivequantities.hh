@@ -111,7 +111,7 @@ public:
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
             // -> threephase case
             Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
+        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv)
             // -> gas-water case
             Sg = 1 - Sw;
         else {
@@ -131,7 +131,7 @@ public:
         Evaluation pC[numPhases];
         const auto &materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
+        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv) {
             // -> gas-water case. gas is the reference phase for pressure here
             const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
             for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
@@ -176,7 +176,7 @@ public:
 
         }
         else {
-            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv);
+            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv);
 
             const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
             fluidState_.setRv(Rv);
