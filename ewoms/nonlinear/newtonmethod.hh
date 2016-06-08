@@ -263,6 +263,16 @@ public:
     { return numIterations_; }
 
     /*!
+     * \brief Set the index of current iteration.
+     *
+     * Normally this does not need to be called, but if the non-linear solver is
+     * implemented externally, it needs to be set in order for the model to do the Right
+     * Thing (TM) while linearizing.
+     */
+    void setIterationIndex(int value)
+    { numIterations_ = value; }
+
+    /*!
      * \brief Return the current tolerance at which the Newton method considers itself to
      *        be converged.
      */
