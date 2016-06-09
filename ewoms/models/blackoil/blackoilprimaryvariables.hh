@@ -112,30 +112,64 @@ public:
      */
     BlackOilPrimaryVariables(const BlackOilPrimaryVariables &value) = default;
 
+    /*!
+     * \brief Set the index of the region which should be used for PVT properties.
+     *
+     * The concept of PVT regions is a hack to work around the fact that the
+     * pseudo-components used by the black oil model (i.e., oil, gas and water) change
+     * their composition within the spatial domain. We implement them because, the ECL
+     * file format mandates them.
+     */
     void setPvtRegionIndex(int value)
     { pvtRegionIdx_ = value; }
 
+    /*!
+     * \brief Return the index of the region which should be used for PVT properties.
+     */
     unsigned pvtRegionIndex() const
     { return pvtRegionIdx_; }
 
-    void setOilPressure( const Scalar& po )
-    {
-        (*this)[ pressureSwitchIdx ] = po;
-    }
+    /*!
+     * \brief Set the "oil pressure" primary variable.
+     *
+     * This method is just a slightly more convenient alias for
+     * ´priVars[Indices::oilPressureIdx] = value;`
+     */
+    void setOilPressure(Scalar& po)
+    { (*this)[pressureSwitchIdx] = po; }
 
-    void setWaterSaturation( const Scalar& sw )
-    {
-        (*this)[ waterSaturationIdx ] = sw;
-    }
+    /*!
+     * \brief Set the "water saturation" primary variable.
+     *
+     * This method is just a slightly more convenient alias for
+     * ´priVars[Indices::waterPressureIdx] = value;`
+     */
+    void setWaterSaturation(Scalar& Sw)
+    { (*this)[waterSaturationIdx] = Sw; }
 
-    void setSwitchingVariable( const Scalar& x )
-    {
-        (*this)[ compositionSwitchIdx ] = x;
-    }
+    /*!
+     * \brief Set the "composition" primary variable.
+     *
+     * The actual interpretation of this variable is either "gas saturation", "gas
+     * dissolution factor" or "oil vaporization factor". Which of these three
+     * alternatives actually apply is determined by the value returned by
+     * `primaryVarsMeaning()` method. This method is just a slightly more convenient
+     * alias for ´priVars[Indices::compositionSwitchIdx] = value;`
+     */
+    void setSwitchingVariable(Scalar& X)
+    { (*this)[compositionSwitchIdx] = X; }
 
+    /*!
+     * \brief Return the interpretation which should be applied to the switching primary
+     *        variables.
+     */
     PrimaryVarsMeaning primaryVarsMeaning() const
     { return primaryVarsMeaning_; }
 
+    /*!
+     * \brief Set the interpretation which should be applied to the switching primary
+     *        variables.
+     */
     void setPrimaryVarsMeaning(PrimaryVarsMeaning newMeaning)
     { primaryVarsMeaning_ = newMeaning; }
 
@@ -272,6 +306,11 @@ public:
     /*!
      * \brief Adapt the interpretation of the switching variables to be physically
      *        meaningful.
+     *
+     * If the meaning of the primary variables changes, their values are also adapted in a
+     * meaningful manner. (e.g. if the gas phase appears and the composition switching
+     * variable changes its meaning from the gas dissolution factor Rs to the gas
+     * saturation Sg, the value for this variable is set to zero.)
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
