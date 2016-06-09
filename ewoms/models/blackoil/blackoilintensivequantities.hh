@@ -131,18 +131,11 @@ public:
         Evaluation pC[numPhases];
         const auto &materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv) {
-            // -> gas-water case. gas is the reference phase for pressure here
-            const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
-        }
-        else {
-            // -> oil-water or threephase case. oil is the reference phase for pressure here
-            const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
-        }
+
+        //oil is the reference phase for pressure
+        const Evaluation& po = priVars.makeEvaluation(Indices::oilPressureIdx, timeIdx);
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
