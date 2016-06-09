@@ -135,7 +135,7 @@ public:
      * This method is just a slightly more convenient alias for
      * ´priVars[Indices::oilPressureIdx] = value;`
      */
-    void setOilPressure(Scalar& po)
+    void setOilPressure(Scalar po)
     { (*this)[oilPressureIdx] = po; }
 
     /*!
@@ -144,7 +144,7 @@ public:
      * This method is just a slightly more convenient alias for
      * ´priVars[Indices::waterPressureIdx] = value;`
      */
-    void setWaterSaturation(Scalar& Sw)
+    void setWaterSaturation(Scalar Sw)
     { (*this)[waterSaturationIdx] = Sw; }
 
     /*!
@@ -156,7 +156,7 @@ public:
      * `primaryVarsMeaning()` method. This method is just a slightly more convenient
      * alias for ´priVars[Indices::compositionSwitchIdx] = value;`
      */
-    void setSwitchingVariable(Scalar& X)
+    void setSwitchingVariable(Scalar X)
     { (*this)[compositionSwitchIdx] = X; }
 
     /*!
