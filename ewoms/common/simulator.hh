@@ -281,16 +281,16 @@ public:
      *
      * \param timeStepSize The new value for the time step size \f$\mathrm{[s]}\f$
      */
-    void setTimeStepSize(Scalar timeStepSize)
-    { timeStepSize_ = timeStepSize; }
+    void setTimeStepSize(Scalar value)
+    { timeStepSize_ = value; }
 
     /*!
      * \brief Set the current time step index to a given value.
      *
      * \param timeStepIndex The new value for the time step index
      */
-    void setTimeStepIndex(int timeStepIndex)
-    { timeStepIdx_ = timeStepIndex; }
+    void setTimeStepIndex(int value)
+    { timeStepIdx_ = value; }
 
     /*!
      * \brief Returns the time step length \f$\mathrm{[s]}\f$ so that we
