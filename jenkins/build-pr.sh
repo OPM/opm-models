@@ -4,12 +4,14 @@ source `dirname $0`/build-ewoms.sh
 
 declare -a upstreams
 upstreams=(opm-parser
+           opm-output
            opm-material
            opm-core
            opm-grid)
 
 declare -A upstreamRev
 upstreamRev[opm-parser]=master
+upstreamRev[opm-output]=master
 upstreamRev[opm-material]=master
 upstreamRev[opm-core]=master
 upstreamRev[opm-grid]=master
@@ -35,7 +37,7 @@ do
   fi
 done
 
-echo "Building with ert=$ERT_REVISION opm-common=$OPM_COMMON_REVISION opm-parser=${upstreamRev[opm-parser]} opm-material=${upstreamRev[opm-material]} opm-core=${upstreamRev[opm-core]} opm-grid=${upstreamRev[opm-grid]} ewoms=$sha1"
+echo "Building with ert=$ERT_REVISION opm-common=$OPM_COMMON_REVISION opm-parser=${upstreamRev[opm-parser]} opm-output=${upstreamRev[opm-output]} opm-material=${upstreamRev[opm-material]} opm-core=${upstreamRev[opm-core]} opm-grid=${upstreamRev[opm-grid]} ewoms=$sha1"
 
 build_ewoms
 
