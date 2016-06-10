@@ -4,12 +4,14 @@ source `dirname $0`/build-ewoms.sh
 
 declare -a upstreams
 upstreams=(opm-parser
+           opm-output
            opm-material
            opm-core
            opm-grid)
 
 declare -A upstreamRev
 upstreamRev[opm-parser]=master
+upstreamRev[opm-output]=master
 upstreamRev[opm-material]=master
 upstreamRev[opm-core]=master
 upstreamRev[opm-grid]=master
