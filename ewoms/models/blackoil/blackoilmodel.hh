@@ -232,9 +232,9 @@ public:
         if (pvIdx == Indices::waterSaturationIdx)
             oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
         else if (pvIdx == Indices::oilPressureIdx)
-            oss << "switching,pressure";
+            oss << "pressure_oil";
         else if (pvIdx == Indices::compositionSwitchIdx)
-            oss << "switching,composition";
+            oss << "switching";
         else
             assert(false);
 
