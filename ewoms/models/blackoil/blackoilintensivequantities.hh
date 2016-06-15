@@ -147,12 +147,16 @@ public:
                     FluidSystem::saturatedDissolutionFactor(fluidState_, oilPhaseIdx, pvtRegionIdx);
                 fluidState_.setRs(RsSat);
             }
+            else
+                fluidState_.setRs(0.0);
 
             if (FluidSystem::enableVaporizedOil()) {
                 const Evaluation& RvSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx);
                 fluidState_.setRv(RvSat);
             }
+            else
+                fluidState_.setRv(0.0);
         }
         else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs) {
             // if the switching variable is the mole fraction of the gas component in the
@@ -160,13 +164,16 @@ public:
             const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
             fluidState_.setRs(Rs);
 
-            // the gas phase is not present, but we need to compute its "composition"
-            // for the gravity correction anyway
-            const auto& RvSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
-                                                                        gasPhaseIdx,
-                                                                        pvtRegionIdx);
-            fluidState_.setRv(RvSat);
-
+            if (FluidSystem::enableVaporizedOil()) {
+                // the gas phase is not present, but we need to compute its "composition"
+                // for the gravity correction anyway
+                const auto& RvSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                                            gasPhaseIdx,
+                                                                            pvtRegionIdx);
+                fluidState_.setRv(RvSat);
+            }
+            else
+                fluidState_.setRv(0.0);
         }
         else {
             assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv);
@@ -174,12 +181,16 @@ public:
             const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
             fluidState_.setRv(Rv);
 
-            // the oil phase is not present, but we need to compute its "composition" for
-            // the gravity correction anyway
-            const auto& RsSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
-                                                                        oilPhaseIdx,
-                                                                        pvtRegionIdx);
-            fluidState_.setRs(RsSat);
+            if (FluidSystem::enableDissolvedGas()) {
+                // the oil phase is not present, but we need to compute its "composition" for
+                // the gravity correction anyway
+                const auto& RsSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                                            oilPhaseIdx,
+                                                                            pvtRegionIdx);
+                fluidState_.setRs(RsSat);
+            }
+            else
+                fluidState_.setRs(0.0);
         }
 
         // calculate relative permeabilities
