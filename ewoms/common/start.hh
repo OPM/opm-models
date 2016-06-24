@@ -89,7 +89,7 @@ namespace Ewoms {
  * \param argv Array with the command line argument strings
  */
 template <class TypeTag>
-int setupParameters_(int argc, char **argv)
+static inline int setupParameters_(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
@@ -161,7 +161,7 @@ int setupParameters_(int argc, char **argv)
  * \brief Resets the current TTY to a usable state if the program was interrupted by
  *        SIGABRT or SIGINT.
  */
-static void resetTerminal_(int signum)
+static inline void resetTerminal_(int signum)
 {
     // first thing to do when a nuke hits: restore the default signal handler
     signal(signum, SIG_DFL);
@@ -193,7 +193,7 @@ static void resetTerminal_(int signum)
  * \param argv The array of the command line arguments
  */
 template <class TypeTag>
-int start(int argc, char **argv)
+static inline int start(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
