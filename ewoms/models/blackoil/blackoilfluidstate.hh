@@ -114,6 +114,14 @@ public:
     void setRv(const Evaluation& newRv)
     { Rv_ = newRv; }
 
+    void setPhasePresence(int phaseIdx, bool value)
+    {
+        if (value)
+            phasePresence_ |= (1 << phaseIdx);
+        else
+            phasePresence_ &= ~(1 << phaseIdx);
+    }
+
     void setInvB(unsigned phaseIdx, const Evaluation& newb)
     { invB_[phaseIdx] = newb; }
 
@@ -137,6 +145,9 @@ public:
 
     unsigned short pvtRegionIndex() const
     { return pvtRegionIdx_; };
+
+    bool phaseIsPresent(int phaseIdx) const
+    { return phasePresence_&(1 << phaseIdx); }
 
     //////
     // slow methods
@@ -280,6 +291,7 @@ private:
     Evaluation Rs_;
     Evaluation Rv_;
     unsigned short pvtRegionIdx_;
+    unsigned char phasePresence_;
 };
 
 template <class TypeTag>
