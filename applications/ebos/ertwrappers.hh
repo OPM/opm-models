@@ -395,7 +395,7 @@ public:
 
 private:
     void appendIwelData_(std::vector<int>& iwelData,
-                         Opm::WellConstPtr eclWell,
+                         const Opm::Well* eclWell,
                          size_t reportStepIdx) const
     {
         int offset = iwelData.size();
@@ -414,7 +414,7 @@ private:
     }
 
     void appendZwelData_(std::vector<const char*>& zwelData,
-                         Opm::WellConstPtr eclWell,
+                         const Opm::Well* eclWell,
                          size_t /*reportStepIdx*/) const
     {
         zwelData.push_back(eclWell->name().c_str());
@@ -425,7 +425,7 @@ private:
     }
 
     void appendIconData_(std::vector<int>& iconData,
-                         Opm::WellConstPtr eclWell,
+                         const Opm::Well* eclWell,
                          size_t reportStepIdx,
                          int maxNumConnections) const
     {
@@ -467,7 +467,7 @@ private:
         assert(iconData.size() % numIconItemsPerConnection == 0);
     }
 
-    int ertWellType_(Opm::WellConstPtr eclWell, size_t reportStepIdx) const
+    int ertWellType_(const Opm::Well* eclWell, size_t reportStepIdx) const
     {
         int ertWellType = IWEL_UNDOCUMENTED_ZERO;
 
@@ -496,7 +496,7 @@ private:
         return ertWellType;
     }
 
-    int ertWellStatus_(Opm::WellConstPtr eclWell, size_t reportStepIdx) const
+    int ertWellStatus_(const Opm::Well* eclWell, size_t reportStepIdx) const
     {
         int ertWellStatus;
 
