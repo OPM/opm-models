@@ -53,6 +53,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -206,6 +207,7 @@ public:
         // oil fluid system.
         typename FluidSystem::template ParameterCache<Scalar> paramCache;
         paramCache.setRegionIndex(pvtRegionIdx_);
+        paramCache.setMaxOilSat(FsToolbox::value(fluidState.saturation(oilPhaseIdx)));
 
         // create a mutable fluid state with well defined densities based on the input
         typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
@@ -314,7 +316,7 @@ public:
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
-    bool adaptPrimaryVariables()
+    bool adaptPrimaryVariables(const Model& model, int globalDofIdx)
     {
         // this function accesses some low level functions directly for better
         // performance (instead of going the canonical way through the
@@ -339,7 +341,9 @@ public:
                 // objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::oilPressureIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po);
+                Scalar So = 1.0;
+                Scalar SoMax = 1.0;
+                Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
 
                 setPrimaryVarsMeaning(Sw_po_Rs);
                 (*this)[Indices::oilPressureIdx] = po;
@@ -360,7 +364,9 @@ public:
                 // i.e., that gas phase pressure equals the oil phase pressure.
                 Scalar po = (*this)[Indices::oilPressureIdx]; // TODO: capillary pressure
                 Scalar T = asImp_().temperature_();
-                Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, T, po);
+                Scalar So = 0.0;
+                Scalar SoMax = 1.0;
+                Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, T, po, So, SoMax);
 
                 setPrimaryVarsMeaning(Sw_po_Rv);
                 (*this)[Indices::oilPressureIdx] = po;
@@ -391,7 +397,8 @@ public:
                 return true;
             }
 
-            Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po);
+            Scalar SoMax = model.maxOilSaturation(globalDofIdx);
+            Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
 
             Scalar Rs = (*this)[Indices::compositionSwitchIdx];
             if (Rs > RsSat) {
@@ -427,7 +434,13 @@ public:
                 return true;
             }
 
-            Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, T, po);
+            Scalar SoMax = model.maxOilSaturation(globalDofIdx);
+            Scalar RvSat =
+                FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
+                                                                     T,
+                                                                     po,
+                                                                     /*So=*/0.0,
+                                                                     SoMax);
 
             Scalar Rv = (*this)[Indices::compositionSwitchIdx];
             if (Rv > RvSat) {

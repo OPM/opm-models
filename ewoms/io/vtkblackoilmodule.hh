@@ -216,6 +216,7 @@ public:
             const auto& primaryVars = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0);
 
             int pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
+            Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
             Scalar x_oG = Toolbox::value(fs.moleFraction(oilPhaseIdx, gasCompIdx));
             Scalar x_gO = Toolbox::value(fs.moleFraction(gasPhaseIdx, oilCompIdx));
             Scalar X_oG = Toolbox::value(fs.massFraction(oilPhaseIdx, gasCompIdx));
@@ -226,14 +227,16 @@ public:
             Scalar RsSat =
                 FluidSystem::template saturatedDissolutionFactor<FluidState, Scalar>(fs,
                                                                                      oilPhaseIdx,
-                                                                                     pvtRegionIdx);
+                                                                                     pvtRegionIdx,
+                                                                                     SoMax);
             Scalar X_oG_sat = FluidSystem::convertRsToXoG(RsSat, pvtRegionIdx);
             Scalar x_oG_sat = FluidSystem::convertXoGToxoG(X_oG_sat, pvtRegionIdx);
 
             Scalar RvSat =
                 FluidSystem::template saturatedDissolutionFactor<FluidState, Scalar>(fs,
                                                                                      gasPhaseIdx,
-                                                                                     pvtRegionIdx);
+                                                                                     pvtRegionIdx,
+                                                                                     SoMax);
             Scalar X_gO_sat = FluidSystem::convertRvToXgO(RvSat, pvtRegionIdx);
             Scalar x_gO_sat = FluidSystem::convertXgOToxgO(X_gO_sat, pvtRegionIdx);
 

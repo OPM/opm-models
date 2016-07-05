@@ -101,6 +101,7 @@ public:
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
         unsigned short pvtRegionIdx = priVars.pvtRegionIndex();
         fluidState_.setPvtRegionIndex(pvtRegionIdx);
 
@@ -134,9 +135,10 @@ public:
         Valgrind::CheckDefined(Sg);
         Valgrind::CheckDefined(Sw);
 
+        Evaluation So = 1.0 - Sw - Sg;
         fluidState_.setSaturation(waterPhaseIdx, Sw);
         fluidState_.setSaturation(gasPhaseIdx, Sg);
-        fluidState_.setSaturation(oilPhaseIdx, 1 - Sw - Sg);
+        fluidState_.setSaturation(oilPhaseIdx, So);
 
         // now we compute all phase pressures
         Evaluation pC[numPhases];
@@ -148,6 +150,9 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
 
+        const Evaluation& SoMax =
+            Toolbox::max(So, elemCtx.model().maxOilSaturation(globalSpaceIdx));
+
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
@@ -155,7 +160,10 @@ public:
             // we use the compositions of the gas-saturated oil and oil-saturated gas.
             if (FluidSystem::enableDissolvedGas()) {
                 const Evaluation& RsSat =
-                    FluidSystem::saturatedDissolutionFactor(fluidState_, oilPhaseIdx, pvtRegionIdx);
+                    FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                            oilPhaseIdx,
+                                                            pvtRegionIdx,
+                                                            SoMax);
                 fluidState_.setRs(RsSat);
             }
             else
@@ -163,7 +171,10 @@ public:
 
             if (FluidSystem::enableVaporizedOil()) {
                 const Evaluation& RvSat =
-                    FluidSystem::saturatedDissolutionFactor(fluidState_, gasPhaseIdx, pvtRegionIdx);
+                    FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                            gasPhaseIdx,
+                                                            pvtRegionIdx,
+                                                            SoMax);
                 fluidState_.setRv(RvSat);
             }
             else
@@ -178,9 +189,12 @@ public:
             if (FluidSystem::enableVaporizedOil()) {
                 // the gas phase is not present, but we need to compute its "composition"
                 // for the gravity correction anyway
-                const auto& RvSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
-                                                                            gasPhaseIdx,
-                                                                            pvtRegionIdx);
+                const auto& RvSat =
+                    FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                            gasPhaseIdx,
+                                                            pvtRegionIdx,
+                                                            SoMax);
+
                 fluidState_.setRv(RvSat);
             }
             else
@@ -195,9 +209,12 @@ public:
             if (FluidSystem::enableDissolvedGas()) {
                 // the oil phase is not present, but we need to compute its "composition" for
                 // the gravity correction anyway
-                const auto& RsSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
-                                                                            oilPhaseIdx,
-                                                                            pvtRegionIdx);
+                const auto& RsSat =
+                    FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                            oilPhaseIdx,
+                                                            pvtRegionIdx,
+                                                            SoMax);
+
                 fluidState_.setRs(RsSat);
             }
             else
@@ -211,6 +228,7 @@ public:
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.setRegionIndex(pvtRegionIdx);
+        paramCache.setMaxOilSat(SoMax);
         paramCache.updateAll(fluidState_);
 
         // set the phase densities and viscosities

@@ -151,9 +151,8 @@ protected:
             nextValue[eqIdx] = currentValue[eqIdx] - delta;
         }
 
-        // switch the new primary variables to something which is
-        // physically meaningful
-        if (nextValue.adaptPrimaryVariables())
+        // switch the new primary variables to something which is physically meaningful
+        if (nextValue.adaptPrimaryVariables(this->model(), globalDofIdx))
             ++ numPriVarsSwitched_;
     }
 

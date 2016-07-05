@@ -211,6 +211,7 @@ public:
      */
     void finishInit()
     {
+        maxOilSaturation_.resize(this->numGridDof(), 0.0);
         ParentType::finishInit();
 
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
@@ -333,6 +334,9 @@ public:
         // write the pseudo primary variables
         outstream << priVars.primaryVarsMeaning() << " ";
         outstream << priVars.pvtRegionIndex() << " ";
+
+        if (maxOilSaturation_.size() > 0)
+            outstream << maxOilSaturation_[dofIdx] << " ";
     }
 
     /*!
@@ -368,6 +372,9 @@ public:
 
         int pvtRegionIdx;
         instream >> pvtRegionIdx;
+
+        if (maxOilSaturation_.size() > 0)
+            instream >> maxOilSaturation_[dofIdx];
 
         if (!instream.good())
             OPM_THROW(std::runtime_error,
@@ -408,6 +415,48 @@ public:
         this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 
+    /*!
+     * \brief Returns an elements maximum oil phase saturation observed during the
+     *        simulation.
+     *
+     * This is a bit of a hack from the conceptional point of view, but it is required to
+     * match the results of the 'flow' and ECLIPSE 100 simulators.
+     */
+    Scalar maxOilSaturation(unsigned globalDofIdx) const
+    { return maxOilSaturation_[globalDofIdx]; }
+
+    /*!
+     * \brief Update the maximum oil saturation observed during the simulation for all
+     *        elements.
+     *
+     * This method must be called manually by the problem because depending on the exact
+     * simulation it sometimes needs to be called after a time step or before an episode
+     * starts.
+     */
+    void updateMaxOilSaturations()
+    {
+        if (maxOilSaturation_.size() > 0) {
+            unsigned nGridDofs = this->numGridDof();
+            assert(maxOilSaturation_.size() == nGridDofs);
+            for (unsigned dofIdx = 0; dofIdx < nGridDofs; ++dofIdx) {
+                const PrimaryVariables& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
+                Scalar So = 0.0;
+                switch (priVars.primaryVarsMeaning()) {
+                case PrimaryVariables::Sw_po_Sg:
+                    So = 1.0 - priVars[Indices::waterSaturationIdx] - priVars[Indices::compositionSwitchIdx];
+                    break;
+                case PrimaryVariables::Sw_po_Rv:
+                    So = 0.0;
+                    break;
+                case PrimaryVariables::Sw_po_Rs:
+                    So = 1.0 - priVars[Indices::waterSaturationIdx];
+                    break;
+                }
+
+                maxOilSaturation_[dofIdx] = std::max(maxOilSaturation_[dofIdx], So);
+            }
+        }
+    }
 
 // HACK: this should be made private and the BaseModel should be
 // declared to be a friend. Since C++-2003 (and more relevantly GCC
@@ -421,7 +470,9 @@ public:
     template <class Context>
     void supplementInitialSolution_(PrimaryVariables &priVars,
                                     const Context &context, int dofIdx, int timeIdx)
-    { updatePvtRegionIndex_(priVars, context, dofIdx, timeIdx); }
+    {
+        updatePvtRegionIndex_(priVars, context, dofIdx, timeIdx);
+    }
 
     void registerOutputModules_()
     {
@@ -444,6 +495,8 @@ private:
         int regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
         priVars.setPvtRegionIndex(regionIdx);
     }
+
+    std::vector<Scalar> maxOilSaturation_;
 };
 } // namespace Ewoms
 

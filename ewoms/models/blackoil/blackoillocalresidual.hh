@@ -130,8 +130,8 @@ public:
 
         const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         unsigned interiorIdx = extQuants.interiorIndex();
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            int upIdx = extQuants.upstreamIndex(phaseIdx);
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            unsigned upIdx = extQuants.upstreamIndex(phaseIdx);
             const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
             if (upIdx == interiorIdx)
                 evalPhaseFluxes_<Evaluation>(flux, phaseIdx, extQuants, up);
