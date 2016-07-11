@@ -109,27 +109,16 @@ public:
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
 
         Evaluation Sg;
-        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
+        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
             // -> threephase case
             Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-            fluidState_.setPhasePresence(oilPhaseIdx, true);
-            fluidState_.setPhasePresence(gasPhaseIdx, true);
-            fluidState_.setPhasePresence(waterPhaseIdx, true);
-        }
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv) {
+        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv)
             // -> gas-water case
             Sg = 1 - Sw;
-            fluidState_.setPhasePresence(oilPhaseIdx, false);
-            fluidState_.setPhasePresence(gasPhaseIdx, true);
-            fluidState_.setPhasePresence(waterPhaseIdx, true);
-        }
         else {
             assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs);
             // -> oil-water case
             Sg = 0.0;
-            fluidState_.setPhasePresence(oilPhaseIdx, true);
-            fluidState_.setPhasePresence(gasPhaseIdx, false);
-            fluidState_.setPhasePresence(waterPhaseIdx, true);
         }
 
         Valgrind::CheckDefined(Sg);
