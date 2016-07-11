@@ -112,7 +112,7 @@ public:
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
             // -> threephase case
             Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv)
+        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
             // -> gas-water case
             Sg = 1 - Sw;
         else {
@@ -135,9 +135,17 @@ public:
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
         //oil is the reference phase for pressure
-        const Evaluation& po = priVars.makeEvaluation(Indices::oilPressureIdx, timeIdx);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-            fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
+        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
+            const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+                fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
+        }
+
+        else {
+            const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
+            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+                fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
+        }
 
         const Evaluation& SoMax =
             Toolbox::max(So, elemCtx.model().maxOilSaturation(globalSpaceIdx));
@@ -190,7 +198,7 @@ public:
                 fluidState_.setRv(0.0);
         }
         else {
-            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rv);
+            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv);
 
             const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
             fluidState_.setRv(Rv);

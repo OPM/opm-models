@@ -36,6 +36,7 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 
 namespace Ewoms {
@@ -53,7 +54,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
@@ -63,7 +64,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
     // primary variable indices
     enum { waterSaturationIdx = Indices::waterSaturationIdx };
-    enum { oilPressureIdx = Indices::oilPressureIdx };
+    enum { pressureSwitchIdx = Indices::pressureSwitchIdx };
     enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
 
     // phase indices from the fluid system
@@ -88,7 +89,7 @@ public:
     enum PrimaryVarsMeaning {
         Sw_po_Sg, // threephase case
         Sw_po_Rs, // water + oil case
-        Sw_po_Rv, // water + gas case
+        Sw_pg_Rv, // water + gas case
     };
 
     BlackOilPrimaryVariables()
@@ -134,10 +135,10 @@ public:
      * \brief Set the "oil pressure" primary variable.
      *
      * This method is just a slightly more convenient alias for
-     * ´priVars[Indices::oilPressureIdx] = value;`
+     * ´priVars[Indices::pressureSwitchIdx] = value;`
      */
     void setOilPressure(Scalar po)
-    { (*this)[oilPressureIdx] = po; }
+    { (*this)[pressureSwitchIdx] = po; }
 
     /*!
      * \brief Set the "water saturation" primary variable.
@@ -277,7 +278,7 @@ public:
             // only gas: if vaporized oil is enabled, we need to consider the gas phase
             // composition, if it is disabled, the oil component must stick to its phase
             if (FluidSystem::enableVaporizedOil())
-                primaryVarsMeaning_ = Sw_po_Rv;
+                primaryVarsMeaning_ = Sw_pg_Rv;
             else
                 primaryVarsMeaning_ = Sw_po_Sg;
         }
@@ -285,22 +286,22 @@ public:
         // assign the actual primary variables
         if (primaryVarsMeaning() == Sw_po_Sg) {
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
-            (*this)[oilPressureIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
+            (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
             (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
             const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
 
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
-            (*this)[oilPressureIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
+            (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
             (*this)[compositionSwitchIdx] = Rs;
         }
         else {
-            assert(primaryVarsMeaning() == Sw_po_Rv);
+            assert(primaryVarsMeaning() == Sw_pg_Rv);
 
             const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
-            (*this)[oilPressureIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
+            (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
             (*this)[compositionSwitchIdx] = Rv;
         }
     }
@@ -316,7 +317,7 @@ public:
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
-    bool adaptPrimaryVariables(const Model& model, int globalDofIdx)
+    bool adaptPrimaryVariables(const Problem& problem, int globalDofIdx)
     {
         // this function accesses some low level functions directly for better
         // performance (instead of going the canonical way through the
@@ -339,14 +340,14 @@ public:
                 // represents the oil phase pressure, so we do not need to change
                 // this. For the gas mole fraction, we use the low level blackoil PVT
                 // objects to calculate the mole fraction of gas saturated oil.
-                Scalar po = (*this)[Indices::oilPressureIdx];
+                Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
                 Scalar So = 1.0;
                 Scalar SoMax = 1.0;
                 Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
 
                 setPrimaryVarsMeaning(Sw_po_Rs);
-                (*this)[Indices::oilPressureIdx] = po;
+                (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = RsSat;
 
                 return true;
@@ -356,20 +357,20 @@ public:
             if (So < 0.0 && Sg2 > 0.0 && FluidSystem::enableVaporizedOil()) {
                 // the oil phase disappeared, i.e., switch the primary variables to { Sw,
                 // pg, xgO }.
-                //
-                // here we're less lucky than above because we only have the oil phas
-                // pressure but need the gas phase pressure. Since the required
-                // quantities for calculating the capillary pressures are not easily
-                // available here, we just assume that the capillary pressures are 0,
-                // i.e., that gas phase pressure equals the oil phase pressure.
-                Scalar po = (*this)[Indices::oilPressureIdx]; // TODO: capillary pressure
+                Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
                 Scalar So = 0.0;
                 Scalar SoMax = 1.0;
-                Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, T, po, So, SoMax);
 
-                setPrimaryVarsMeaning(Sw_po_Rv);
-                (*this)[Indices::oilPressureIdx] = po;
+                Scalar pC[numPhases];
+                const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
+                computeCapillaryPressures_(pC, /*So=*/0.0, Sg2, Sw, matParams);
+                Scalar pg = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
+
+                Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_, T, pg, So, SoMax);
+
+                setPrimaryVarsMeaning(Sw_pg_Rv);
+                (*this)[Indices::pressureSwitchIdx] = pg;
                 (*this)[Indices::compositionSwitchIdx] = RvSat;
 
                 return true;
@@ -383,7 +384,7 @@ public:
             // the saturated phase contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
-            Scalar po = (*this)[Indices::oilPressureIdx];
+            Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1 - Sw;
 
             if (So <= 0.0) {
@@ -391,13 +392,13 @@ public:
                 // the water-only case)
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
-                (*this)[Indices::oilPressureIdx] = po;
+                (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
 
                 return true;
             }
 
-            Scalar SoMax = model.maxOilSaturation(globalDofIdx);
+            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
             Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
 
             Scalar Rs = (*this)[Indices::compositionSwitchIdx];
@@ -405,7 +406,7 @@ public:
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::oilPressureIdx] = po; // TODO (?): capillary pressure
+                (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
 
                 return true;
@@ -414,31 +415,37 @@ public:
             return false;
         }
         else {
-            assert(primaryVarsMeaning() == Sw_po_Rv);
+            assert(primaryVarsMeaning() == Sw_pg_Rv);
 
             // only the gas and the water phases are present. the oil phase appears as
             // soon as more of the oil component is present in the gas phase than what
             // the saturated phase contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
-            Scalar po = (*this)[Indices::oilPressureIdx];
+            Scalar pg = (*this)[Indices::pressureSwitchIdx];
             Scalar Sg = 1 - Sw;
 
             if (Sg <= 0.0) {
                 // switch back to phase equilibrium mode if the gas phase also vanishes
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
-                (*this)[Indices::oilPressureIdx] = po;
+
+                Scalar pC[numPhases];
+                const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
+                computeCapillaryPressures_(pC, /*So=*/0.0, /*Sg=*/0.0, Sw, matParams);
+                Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
+
+                (*this)[Indices::waterSaturationIdx] = 1.0;
+                (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
 
                 return true;
             }
 
-            Scalar SoMax = model.maxOilSaturation(globalDofIdx);
+            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,
-                                                                     po,
+                                                                     pg,
                                                                      /*So=*/0.0,
                                                                      SoMax);
 
@@ -446,14 +453,16 @@ public:
             if (Rv > RvSat) {
                 // the oil phase appears, i.e., switch the primary variables to { Sw,
                 // po, Sg }.
-                //
-                // For this, we should calculate the oil phase pressure, but since this
-                // it not easily possible at this point, let's just assume a capillary
-                // pressure of 0 here. (like above, but for the switch into the opposite
-                // direction.)
+
+                Scalar Sg = 1.0 - Sw;
+                Scalar pC[numPhases];
+                const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
+                computeCapillaryPressures_(pC, /*So=*/0.0, Sg, Sw, matParams);
+                Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
+
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::oilPressureIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = 1.0 - Sw; // gas saturation, i.e., So = 0
+                (*this)[Indices::pressureSwitchIdx] = po;
+                (*this)[Indices::compositionSwitchIdx] = Sg; // gas saturation, i.e., So = 0
 
                 return true;
             }
@@ -480,6 +489,33 @@ private:
 
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
+
+    template <class Container>
+    void computeCapillaryPressures_(Container& result,
+                                    Scalar So,
+                                    Scalar Sg,
+                                    Scalar Sw,
+                                    const MaterialLawParams &matParams) const
+    {
+        typedef Opm::SimpleModularFluidState<Scalar,
+                                             numPhases,
+                                             numComponents,
+                                             FluidSystem,
+                                             /*storePressure=*/false,
+                                             /*storeTemperature=*/false,
+                                             /*storeComposition=*/false,
+                                             /*storeFugacity=*/false,
+                                             /*storeSaturation=*/true,
+                                             /*storeDensity=*/false,
+                                             /*storeViscosity=*/false,
+                                             /*storeEnthalpy=*/false> SatOnlyFluidState;
+        SatOnlyFluidState fluidState;
+        fluidState.setSaturation(waterPhaseIdx, Sw);
+        fluidState.setSaturation(oilPhaseIdx, So);
+        fluidState.setSaturation(gasPhaseIdx, Sg);
+
+        MaterialLaw::capillaryPressures(result, matParams, fluidState);
+    }
 
     // the standard blackoil model is isothermal
     Scalar temperature_() const

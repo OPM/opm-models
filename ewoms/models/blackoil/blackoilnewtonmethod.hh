@@ -152,7 +152,7 @@ protected:
         }
 
         // switch the new primary variables to something which is physically meaningful
-        if (nextValue.adaptPrimaryVariables(this->model(), globalDofIdx))
+        if (nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx))
             ++ numPriVarsSwitched_;
     }
 

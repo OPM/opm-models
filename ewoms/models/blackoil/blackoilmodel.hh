@@ -232,10 +232,10 @@ public:
 
         if (pvIdx == Indices::waterSaturationIdx)
             oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
-        else if (pvIdx == Indices::oilPressureIdx)
-            oss << "pressure_oil";
+        else if (pvIdx == Indices::pressureSwitchIdx)
+            oss << "pressure_switching";
         else if (pvIdx == Indices::compositionSwitchIdx)
-            oss << "switching";
+            oss << "composition_switching";
         else
             assert(false);
 
@@ -273,7 +273,7 @@ public:
 
         // oil pressures usually are in the range of 100 to 500 bars for typical oil
         // reservoirs (which is the only relevant application for the black-oil model).
-        else if (Indices::oilPressureIdx == pvIdx)
+        else if (Indices::pressureSwitchIdx == pvIdx)
             return 1.0/300e5;
 
         // if the primary variable is either the gas saturation, Rs or Rv
@@ -285,7 +285,7 @@ public:
         else if (pvMeaning == PrimaryVariables::Sw_po_Rs)
             return 1.0/250.; // gas dissolution factor
         else {
-            assert(pvMeaning == PrimaryVariables::Sw_po_Rv);
+            assert(pvMeaning == PrimaryVariables::Sw_pg_Rv);
             return 1.0/0.025; // oil vaporization factor
         }
     }
@@ -445,7 +445,7 @@ public:
                 case PrimaryVariables::Sw_po_Sg:
                     So = 1.0 - priVars[Indices::waterSaturationIdx] - priVars[Indices::compositionSwitchIdx];
                     break;
-                case PrimaryVariables::Sw_po_Rv:
+                case PrimaryVariables::Sw_pg_Rv:
                     So = 0.0;
                     break;
                 case PrimaryVariables::Sw_po_Rs:

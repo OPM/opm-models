@@ -46,7 +46,7 @@ struct BlackOilIndices
     /*!
      * \brief Index of the oil pressure in a vector of primary variables
      */
-    static const int oilPressureIdx  = PVOffset + 1;
+    static const int pressureSwitchIdx  = PVOffset + 1;
 
     /*!
      * \brief Index of the switching variable which determines the composition of the
