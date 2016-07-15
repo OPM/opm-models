@@ -226,8 +226,6 @@ public:
 
         GlobalPosition integrationPos_;
         WorldVector normal_;
-        std::vector<Scalar> shapeValue_;
-        std::vector<WorldVector> shapeGradient_;
     };
 
     EcfvStencil(const GridView &gridView)
