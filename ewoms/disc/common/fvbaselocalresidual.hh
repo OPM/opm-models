@@ -112,28 +112,11 @@ public:
     { return internalResidual_[dofIdx]; }
 
     /*!
-     * \brief Return the storage term calculated using the last call
-     *        to eval() using internal storage.
-     */
-    const LocalBlockVector &storageTerm() const
-    { return internalStorageTerm_; }
-
-    /*!
-     * \brief Return the storage term calculated using the last call
-     *        to eval() using internal storage.
-     *
-     * \copydetails Doxygen::ecfvScvIdxParam
-     */
-    const VectorBlock &storageTerm(unsigned dofIdx) const
-    { return internalStorageTerm_[dofIdx]; }
-
-    /*!
      * \brief Compute the local residual, i.e. the deviation of the
      *        conservation equations from zero and store the results
      *        internally.
      *
-     * The results can be requested afterwards using the residual()
-     * and storageTerm() methods.
+     * The results can be requested afterwards using the residual() method.
      *
      * \copydetails Doxygen::problemParam
      * \copydetails Doxygen::elementParam
@@ -150,18 +133,15 @@ public:
      *        conservation equations from zero and store the results
      *        internally.
      *
-     * The results can be requested afterwards using the residual()
-     * and storageTerm() methods.
+     * The results can be requested afterwards using the residual() method.
      *
      * \copydetails Doxygen::ecfvElemCtxParam
      */
     void eval(const ElementContext &elemCtx)
     {
         unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
-        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         internalResidual_.resize(numDof);
-        internalStorageTerm_.resize(numPrimaryDof);
-        asImp_().eval(internalResidual_, internalStorageTerm_, elemCtx);
+        asImp_().eval(internalResidual_, elemCtx);
     }
 
     /*!
@@ -169,24 +149,20 @@ public:
      *        conservation equations from zero.
      *
      * \copydetails Doxygen::residualParam
-     * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::ecfvElemCtxParam
      */
     void eval(LocalBlockVector &residual,
-              LocalBlockVector &storage,
               const ElementContext &elemCtx) const
     {
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
-        assert(storage.size() == elemCtx.numPrimaryDof(/*timeIdx=*/0));
 
         residual = 0.0;
-        storage = 0.0;
 
         // evaluate the flux terms
         asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
 
         // evaluate the storage and the source terms
-        asImp_().evalVolumeTerms_(residual, storage, elemCtx);
+        asImp_().evalVolumeTerms_(residual, elemCtx);
 
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
@@ -206,25 +182,6 @@ public:
                     residual[dofIdx][eqIdx] /= dofVolume;
             }
         }
-    }
-
-    /*!
-     * \brief Calculate the amount of all conservation quantities stored in all element's
-     *        primary sub-control volumes for a given history index.
-     *
-     * This is used to figure out how much of each conservation
-     * quantity is inside the element.
-     *
-     * \copydetails Doxygen::ecfvElemCtxParam
-     * \copydetails Doxygen::timeIdxParam
-     */
-    void evalStorage(const ElementContext &elemCtx, unsigned timeIdx)
-    {
-        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        internalStorageTerm_.resize(numPrimaryDof);
-        evalStorage(internalStorageTerm_,
-                    elemCtx,
-                    timeIdx);
     }
 
     /*!
@@ -487,7 +444,6 @@ protected:
      *        current element.
      */
     void evalVolumeTerms_(LocalBlockVector &residual,
-                          LocalBlockVector &storage,
                           const ElementContext &elemCtx) const
     {
         EvalEqVector tmp;
@@ -556,14 +512,11 @@ protected:
 
             for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 tmp[eqIdx] -= tmp2[eqIdx];
-
                 tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
 
-                storage[dofIdx][eqIdx] += tmp[eqIdx];
                 residual[dofIdx][eqIdx] += tmp[eqIdx];
             }
 
-            Valgrind::CheckDefined(storage[dofIdx]);
             Valgrind::CheckDefined(residual[dofIdx]);
 
             // deal with the source term
@@ -577,19 +530,12 @@ protected:
         }
 
 #if !defined NDEBUG
-        // in debug mode, ensure that the residual and the storage terms are well-defined
+        // in debug mode, ensure that the residual is well-defined
         unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
                 Valgrind::CheckDefined(residual[i][j]);
-            }
-        }
-
-        for (unsigned i=0; i < numPrimaryDof; i++) {
-            for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(storage[i][j])));
-                Valgrind::CheckDefined(storage[i][j]);
             }
         }
 #endif
@@ -604,7 +550,6 @@ private:
     { return *static_cast<const Implementation*>(this); }
 
     LocalBlockVector internalResidual_;
-    LocalBlockVector internalStorageTerm_;
 };
 
 } // namespace Ewoms

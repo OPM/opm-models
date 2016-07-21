@@ -795,7 +795,7 @@ public:
                 elemCtx.updateAll(elem);
                 residual.resize(elemCtx.numDof(/*timeIdx=*/0));
                 storageTerm.resize(elemCtx.numPrimaryDof(/*timeIdx=*/0));
-                asImp_().localResidual(threadId).eval(residual, storageTerm, elemCtx);
+                asImp_().localResidual(threadId).eval(residual, elemCtx);
 
                 unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
                 ScopedLock addLock(mutex);

@@ -258,28 +258,12 @@ public:
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
 
     /*!
-     * \brief Returns the local Jacobian matrix the storage term of a sub-control volume.
-     *
-     * \param dofIdx The local index of sub control volume
-     */
-    const MatrixBlock &jacobianStorage(int dofIdx) const
-    { return jacobianStorage_[dofIdx]; }
-
-    /*!
      * \brief Returns the local residual of a sub-control volume.
      *
      * \param dofIdx The local index of the sub control volume
      */
     const VectorBlock &residual(int dofIdx) const
     { return residual_[dofIdx]; }
-
-    /*!
-     * \brief Returns the local storage term of a sub-control volume.
-     *
-     * \param dofIdx The local index of the sub control volume
-     */
-    const VectorBlock &residualStorage(int dofIdx) const
-    { return residualStorage_[dofIdx]; }
 
 protected:
     Implementation &asImp_()
@@ -309,11 +293,8 @@ protected:
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
 
-        jacobian_.setSize(numDof, numPrimaryDof);
-        jacobianStorage_.resize(numPrimaryDof);
-
         residual_.resize(numDof);
-        residualStorage_.resize(numPrimaryDof);
+        jacobian_.setSize(numDof, numPrimaryDof);
     }
 
     /*!
@@ -322,16 +303,6 @@ protected:
     void reset_(const ElementContext &elemCtx)
     {
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
-            residualStorage_[primaryDofIdx] = 0.0;
-
-            jacobianStorage_[primaryDofIdx] = 0.0;
-            for (int dof2Idx = 0; dof2Idx < numDof; ++ dof2Idx) {
-                jacobian_[dof2Idx][primaryDofIdx] = 0.0;
-            }
-        }
-
         for (int primaryDofIdx = 0; primaryDofIdx < numDof; ++ primaryDofIdx)
             residual_[primaryDofIdx] = 0.0;
     }
@@ -343,17 +314,10 @@ protected:
     void updateLocalLinearization_(const ElementContext &elemCtx,
                                    int primaryDofIdx)
     {
-        const auto& residStorage = localResidual_.storageTerm();
         const auto& resid = localResidual_.residual();
 
-        for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
+        for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
             residual_[primaryDofIdx][eqIdx] = resid[primaryDofIdx][eqIdx].value;
-            residualStorage_[primaryDofIdx][eqIdx] = residStorage[primaryDofIdx][eqIdx].value;
-
-            // store the derivative of the storage term
-            for (int pvIdx = 0; pvIdx < numEq; pvIdx++)
-                jacobianStorage_[primaryDofIdx][eqIdx][pvIdx] = residStorage[primaryDofIdx][eqIdx].derivatives[pvIdx];
-        }
 
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
@@ -375,13 +339,10 @@ protected:
 
     ElementContext *internalElemContext_;
 
-    LocalBlockVector residual_;
-    LocalBlockVector residualStorage_;
-
-    LocalBlockMatrix jacobian_;
-    LocalStorageMatrix jacobianStorage_;
-
     LocalResidual localResidual_;
+
+    LocalBlockVector residual_;
+    LocalBlockMatrix jacobian_;
 };
 
 } // namespace Ewoms

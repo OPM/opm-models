@@ -146,7 +146,6 @@ private:
 
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
     typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
-    typedef Dune::BlockVector<MatrixBlock> LocalStorageMatrix;
 
 #if __GNUC__ == 4 && __GNUC_MINOR__ <= 6
 public:
@@ -235,7 +234,7 @@ public:
         reset_(elemCtx);
 
         // calculate the local residual
-        localResidual_.eval(residual_, residualStorage_, elemCtx);
+        localResidual_.eval(residual_, elemCtx);
 
         // calculate the local jacobian matrix
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
@@ -303,28 +302,12 @@ public:
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
 
     /*!
-     * \brief Returns the local Jacobian matrix the storage term of a sub-control volume.
-     *
-     * \param dofIdx The local index of sub control volume
-     */
-    const MatrixBlock &jacobianStorage(int dofIdx) const
-    { return jacobianStorage_[dofIdx]; }
-
-    /*!
      * \brief Returns the local residual of a sub-control volume.
      *
      * \param dofIdx The local index of the sub control volume
      */
     const VectorBlock &residual(int dofIdx) const
     { return residual_[dofIdx]; }
-
-    /*!
-     * \brief Returns the local storage term of a sub-control volume.
-     *
-     * \param dofIdx The local index of the sub control volume
-     */
-    const VectorBlock &residualStorage(int dofIdx) const
-    { return residualStorage_[dofIdx]; }
 
 protected:
     Implementation &asImp_()
@@ -354,14 +337,10 @@ protected:
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
 
-        jacobian_.setSize(numDof, numPrimaryDof);
-        jacobianStorage_.resize(numPrimaryDof);
-
         residual_.resize(numDof);
-        residualStorage_.resize(numPrimaryDof);
+        jacobian_.setSize(numDof, numPrimaryDof);
 
         derivResidual_.resize(numDof);
-        derivStorage_.resize(numPrimaryDof);
     }
 
     /*!
@@ -371,14 +350,9 @@ protected:
     {
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
-            residualStorage_[primaryDofIdx] = 0.0;
-
-            jacobianStorage_[primaryDofIdx] = 0.0;
-            for (int dof2Idx = 0; dof2Idx < numDof; ++ dof2Idx) {
+        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx)
+            for (int dof2Idx = 0; dof2Idx < numDof; ++ dof2Idx)
                 jacobian_[dof2Idx][primaryDofIdx] = 0.0;
-            }
-        }
 
         for (int primaryDofIdx = 0; primaryDofIdx < numDof; ++ primaryDofIdx)
             residual_[primaryDofIdx] = 0.0;
@@ -449,14 +423,13 @@ protected:
             // calculate the residual
             elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
             elemCtx.updateAllExtensiveQuantities();
-            localResidual_.eval(derivResidual_, derivStorage_, elemCtx);
+            localResidual_.eval(derivResidual_, elemCtx);
         }
         else {
             // we are using backward differences, i.e. we don't need
             // to calculate f(x + \epsilon) and we can recycle the
             // (already calculated) residual f(x)
             derivResidual_ = residual_;
-            derivStorage_ = residualStorage_;
         }
 
         if (numericDifferenceMethod_() <= 0) {
@@ -474,14 +447,12 @@ protected:
             localResidual_.eval(elemCtx);
 
             derivResidual_ -= localResidual_.residual();
-            derivStorage_ -= localResidual_.storageTerm();
         }
         else {
             // we are using forward differences, i.e. we don't need to
             // calculate f(x - \epsilon) and we can recycle the
             // (already calculated) residual f(x)
             derivResidual_ -= residual_;
-            derivStorage_ -= residualStorage_;
         }
 
         assert(delta > 0);
@@ -489,7 +460,6 @@ protected:
         // divide difference in residuals by the magnitude of the
         // deflections between the two function evaluation
         derivResidual_ /= delta;
-        derivStorage_ /= delta;
 
         // restore the original state of the element's volume
         // variables
@@ -510,10 +480,6 @@ protected:
                               int primaryDofIdx,
                               int pvIdx)
     {
-        // store the derivative of the storage term
-        for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
-            jacobianStorage_[primaryDofIdx][eqIdx][pvIdx] = derivStorage_[primaryDofIdx][eqIdx];
-
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (int dofIdx = 0; dofIdx < numDof; dofIdx++)
         {
@@ -533,14 +499,9 @@ protected:
 
     ElementContext *internalElemContext_;
 
-    LocalBlockMatrix jacobian_;
-    LocalStorageMatrix jacobianStorage_;
-
     LocalBlockVector residual_;
-    LocalBlockVector residualStorage_;
-
     LocalBlockVector derivResidual_;
-    LocalBlockVector derivStorage_;
+    LocalBlockMatrix jacobian_;
 
     LocalResidual localResidual_;
 };
