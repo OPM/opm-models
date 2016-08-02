@@ -147,8 +147,7 @@ public:
                 fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
         }
 
-        const Evaluation& SoMax =
-            Toolbox::max(So, elemCtx.model().maxOilSaturation(globalSpaceIdx));
+        Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
