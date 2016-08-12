@@ -132,36 +132,6 @@ public:
     { return pvtRegionIdx_; }
 
     /*!
-     * \brief Set the "oil pressure" primary variable.
-     *
-     * This method is just a slightly more convenient alias for
-     * ´priVars[Indices::pressureSwitchIdx] = value;`
-     */
-    void setOilPressure(Scalar po)
-    { (*this)[pressureSwitchIdx] = po; }
-
-    /*!
-     * \brief Set the "water saturation" primary variable.
-     *
-     * This method is just a slightly more convenient alias for
-     * ´priVars[Indices::waterPressureIdx] = value;`
-     */
-    void setWaterSaturation(Scalar Sw)
-    { (*this)[waterSaturationIdx] = Sw; }
-
-    /*!
-     * \brief Set the "composition" primary variable.
-     *
-     * The actual interpretation of this variable is either "gas saturation", "gas
-     * dissolution factor" or "oil vaporization factor". Which of these three
-     * alternatives actually apply is determined by the value returned by
-     * `primaryVarsMeaning()` method. This method is just a slightly more convenient
-     * alias for ´priVars[Indices::compositionSwitchIdx] = value;`
-     */
-    void setSwitchingVariable(Scalar X)
-    { (*this)[compositionSwitchIdx] = X; }
-
-    /*!
      * \brief Return the interpretation which should be applied to the switching primary
      *        variables.
      */
