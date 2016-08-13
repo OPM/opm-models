@@ -551,7 +551,7 @@ public:
             episodeBegins = false;
 
             if (verbose_) {
-                std::cout << "Begin time step " << timeStepIndex() << ". "
+                std::cout << "Begin time step " << timeStepIndex() + 1 << ". "
                           << "Start time: " << this->time() << " seconds" << humanReadableTime(this->time())
                           << ", step size: " << timeStepSize() << " seconds" << humanReadableTime(timeStepSize())
                           << "\n";
@@ -593,7 +593,7 @@ public:
 
 
             if (verbose_) {
-                std::cout << "Time step " << timeStepIndex() << " done. "
+                std::cout << "Time step " << timeStepIndex() + 1 << " done. "
                           << "CPU time: " << executionTimer_.realTimeElapsed() << " seconds" << humanReadableTime(executionTimer_.realTimeElapsed())
                           << ", end time: " << this->time() + oldDt << " seconds" << humanReadableTime(this->time() + oldDt)
                           << ", step size: " << oldDt << " seconds" << humanReadableTime(oldDt)

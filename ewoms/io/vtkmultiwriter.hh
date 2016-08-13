@@ -137,11 +137,11 @@ public:
             startMultiFile_(multiFileName_);
         }
 
-        curWriter_ = new VtkWriter(gridView_, Dune::VTK::conforming);
-        ++curWriterNum_;
-
         curTime_ = t;
         curOutFileName_ = fileName_();
+
+        curWriter_ = new VtkWriter(gridView_, Dune::VTK::conforming);
+        ++curWriterNum_;
     }
 
     /*!
