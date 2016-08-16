@@ -22,7 +22,7 @@ before_script:
     - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
     - cd ..
     - git clone https://github.com/OPM/opm-common.git
-    - opm-common/travis/clone-opm.sh opm-material
+    - opm-common/travis/clone-opm.sh ewoms
     - opm-common/travis/build-prereqs.sh
     
 
