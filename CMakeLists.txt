@@ -148,6 +148,8 @@ EwomsAddApplication(art2dgf
                     SOURCES applications/art2dgf.cc
                     EXE_NAME art2dgf)
 
+add_dependencies(test-suite art2dgf)
+
 opm_add_test(art2dgf
   NO_COMPILE
   DRIVER_ARGS --plain
