@@ -195,19 +195,25 @@ public:
     /*!
      * \brief Return constant reference to global Jacobian matrix.
      */
-    const Matrix &matrix() const
+    const Matrix& matrix() const
+    { return *matrix_; }
+
+    Matrix& matrix()
     { return *matrix_; }
 
     /*!
      * \brief Return constant reference to global residual vector.
      */
-    const GlobalEqVector &residual() const
+    const GlobalEqVector& residual() const
+    { return residual_; }
+
+    GlobalEqVector& residual()
     { return residual_; }
 
     /*!
      * \brief Returns the map of constraint degrees of freedom.
      *
-     * (This object is only non-empty if the EnableConstraints property is true.)
+     * (This object can only be non-empty if the EnableConstraints property is true.)
      */
     const std::map<int, Constraints>& constraintsMap() const
     { return constraintsMap_; }
