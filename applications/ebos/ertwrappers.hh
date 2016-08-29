@@ -436,11 +436,11 @@ private:
         for (size_t i = 0; i < completionsSet->size(); ++i) {
             Opm::CompletionConstPtr completion = completionsSet->get(i);
 
-            iconData[offset + ICON_IC_ITEM] = 1;
-            iconData[offset + ICON_I_ITEM] = completion->getI() + 1;
-            iconData[offset + ICON_J_ITEM] = completion->getJ() + 1;
-            iconData[offset + ICON_K_ITEM] = completion->getK() + 1;
-            iconData[offset + ICON_STATUS_ITEM] = (completion->getState() == Opm::WellCompletion::OPEN)?1:0;
+            iconData[offset + ICON_IC_INDEX] = 1;
+            iconData[offset + ICON_I_INDEX] = completion->getI() + 1;
+            iconData[offset + ICON_J_INDEX] = completion->getJ() + 1;
+            iconData[offset + ICON_K_INDEX] = completion->getK() + 1;
+            iconData[offset + ICON_STATUS_INDEX] = (completion->getState() == Opm::WellCompletion::OPEN)?1:0;
 
             int eclDirection;
             switch (completion->getDirection()) {
@@ -459,7 +459,7 @@ private:
             default:
                 OPM_THROW(std::logic_error, "Encountered unimplemented completion direction.");
             }
-            iconData[offset + ICON_STATUS_ITEM] = eclDirection;
+            iconData[offset + ICON_STATUS_INDEX] = eclDirection;
 
             offset += numIconItemsPerConnection;
         }
