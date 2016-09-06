@@ -169,7 +169,7 @@ public:
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);;
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned dofIdx=0; dofIdx < numDof; ++dofIdx) {
             if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
                 // interior DOF
@@ -201,7 +201,7 @@ public:
     {
         if (timeIdx == 0) {
             // for the most current solution, the storage term depends on the current
-            // primary variables.
+            // primary variables
 
             // calculate the amount of conservation each quantity inside
             // all primary sub control volumes
@@ -210,7 +210,7 @@ public:
                 storage[dofIdx] = 0.0;
                 asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
 
-                // multiply the with the volume of the associated DOF
+                // the volume of the associated DOF
                 Scalar alpha =
                     elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
                     * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
@@ -462,12 +462,11 @@ protected:
                elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
             Valgrind::CheckDefined(scvVolume);
 
-            // mass balance within the element. this is the
-            // \f$\frac{m}{\partial t}\f$ term if using implicit
-            // euler as time discretization.
+            // mass balance within the element. this is the \f$\frac{m}{\partial t}\f$
+            // term if using implicit euler as time discretization.
             //
-            // TODO (?): we might need a more explicit way for
-            // doing the time discretization...
+            // TODO (?): we might need a more explicit way for doing the time
+            // discretization...
             asImp_().computeStorage(tmp,
                                     elemCtx,
                                     dofIdx,

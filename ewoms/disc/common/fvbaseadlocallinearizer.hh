@@ -202,36 +202,7 @@ public:
             // ones used by the linear solver.
             updateLocalLinearization_(elemCtx, dofIdx);
         }
-    }
 
-    /*!
-     * \brief Returns the unweighted epsilon value used to calculate
-     *        the local derivatives
-     */
-    static Scalar baseEpsilon()
-    { return GET_PROP_VALUE(TypeTag, BaseEpsilon); }
-
-    /*!
-     * \brief Returns the epsilon value which is added and removed
-     *        from the current solution.
-     *
-     * \param elemCtx The element execution context for which the
-     *                local residual and its gradient should be
-     *                calculated.
-     * \param dofIdx     The local index of the element's vertex for
-     *                   which the local derivative ought to be calculated.
-     * \param pvIdx      The index of the primary variable which gets varied
-     */
-    Scalar numericEpsilon(const ElementContext &elemCtx,
-                          int dofIdx,
-                          int pvIdx) const
-    {
-        int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-        Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
-        assert(pvWeight > 0 && std::isfinite(pvWeight));
-        Valgrind::CheckDefined(pvWeight);
-
-        return baseEpsilon()/pvWeight;
     }
 
     /*!
@@ -249,10 +220,10 @@ public:
     /*!
      * \brief Returns the local Jacobian matrix of the residual of a sub-control volume.
      *
-     * \param domainScvIdx The local index of the sub control volume
-     *                     which contains the independents
-     * \param rangeScvIdx The local index of the sub control volume
-     *                    which contains the local residual
+     * \param domainScvIdx The local index of the sub control volume to which the primary
+     *                     variables are associated with
+     * \param rangeScvIdx The local index of the sub control volume which contains the
+     *                    local residual
      */
     const MatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
@@ -302,9 +273,8 @@ protected:
      */
     void reset_(const ElementContext &elemCtx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int primaryDofIdx = 0; primaryDofIdx < numDof; ++ primaryDofIdx)
-            residual_[primaryDofIdx] = 0.0;
+        residual_ = 0.0;
+        jacobian_ = 0.0;
     }
 
     /*!

@@ -176,18 +176,16 @@ private:
  * \ingroup FluxModules
  * \brief Provides the Forchheimer flux module
  *
- * The commonly used Darcy relation looses its validity for Reynolds
- * numbers \f$ Re > 1\f$.  If one encounters flow velocities in porous
- * media above this threshold, the Forchheimer relation can be
- * used. Like the Darcy relation, it relates the gradient in potential
- * to velocity.  However, this relation is not linear (as in the Darcy
- * case) any more.
+ * The commonly used Darcy relation looses its validity for Reynolds numbers \f$ Re <
+ * 1\f$.  If one encounters flow velocities in porous media above this threshold, the
+ * Forchheimer approach can be used. Like the Darcy approach, it is a relation of with
+ * the fluid velocity in terms of the gradient of pressure potential.  However, this
+ * relation is not linear (as in the Darcy case) any more.
  *
- * Therefore, the Newton scheme is used to solve the non-linear
- * relation. This velocity is then used like the Darcy velocity
- * e.g. by the local residual.
+ * Therefore, the Newton scheme is used to solve the Forchheimer equation. This velocity
+ * is then used like the Darcy velocity e.g. by the local residual.
  *
- * For Reynolds numbers above \f$\approx 500\f$ the standard Forchheimer
+ * Note that for Reynolds numbers above \f$\approx 500\f$ the standard Forchheimer
  * relation also looses it's validity.
  *
  * The Forchheimer equation is given by the following relation:
@@ -199,12 +197,11 @@ private:
   \left| \vec{v}_\alpha \right| \vec{v}_\alpha
  \f]
  *
- * Where \f$C_E\f$ is the modified Ergun parameter and
- * \f$\eta_{r,\alpha}\f$ is the passability which is given by a
- * closure relation (usually it is assumed to be identical to the
- * relative permeability). To avoid numerical problems, the relation
- * implemented by this class multiplies both sides with
- * \f$\frac{k_{r_alpha}}{mu} K\f$, so we get
+ * Where \f$C_E\f$ is the modified Ergun parameter and \f$\eta_{r,\alpha}\f$ is the
+ * passability which is given by a closure relation (usually it is assumed to be
+ * identical to the relative permeability). To avoid numerical problems, the relation
+ * implemented by this class multiplies both sides with \f$\frac{k_{r_alpha}}{mu} K\f$,
+ * so we get
  *
  * \f[
   \frac{k_{r_alpha}}{mu} K \left( \nabla p_\alpha - \rho_\alpha \vec{g}\right) =

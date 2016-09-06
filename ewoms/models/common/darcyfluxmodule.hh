@@ -96,32 +96,17 @@ protected:
  * \ingroup FluxModules
  * \brief Provides the Darcy flux module
  *
- * The commonly used Darcy relation looses its validity for Reynolds
- * numbers \f$ Re > 1\f$.  If one encounters flow velocities in porous
- * media above this threshold, the Darcy relation can be
- * used. Like the Darcy relation, it relates the gradient in potential
- * to velocity.  However, this relation is not linear (as in the Darcy
- * case) any more.
- *
- * Therefore, the Newton scheme is used to solve the non-linear
- * relation. This velocity is then used like the Darcy velocity
- * e.g. by the local residual.
- *
- * For Reynolds numbers above \f$\approx 500\f$ the standard Darcy
- * relation also looses it's validity.
+ * The commonly used Darcy relation looses its validity for Reynolds numbers \f$ Re <
+ * 1\f$.  If one encounters flow velocities in porous media above this threshold, the
+ * Forchheimer approach can be used.
  *
  * The Darcy equation is given by the following relation:
  *
  * \f[
-  \nabla p_\alpha - \rho_\alpha \vec{g} =
-  - \frac{\mu_\alpha}{k_{r,\alpha} K}\vec{v}_\alpha
-  - \frac{\rho_\alpha C_E}{\eta_{r,\alpha} \sqrt{K}}
-  \left| \vec{v}_\alpha \right| \vec{v}_\alpha
+  \vec{v}_\alpha =
+  \left( \nabla p_\alpha - \rho_\alpha \vec{g}\right)
+  \frac{\mu_\alpha}{k_{r,\alpha} K}
  \f]
- *
- * Where \f$C_E\f$ is the modified Ergun parameter and
- * \f$\eta_{r,\alpha}\f$ is the passability which is given by a
- * closure relation.
  */
 template <class TypeTag>
 class DarcyExtensiveQuantities
@@ -289,7 +274,7 @@ protected:
             }
 
             // determine the upstream and downstream DOFs
-            Evaluation tmp = Toolbox::createConstant(0.0);
+            Evaluation tmp = 0.0;
             for (unsigned i = 0; i < faceNormal.size(); ++i)
                 tmp += potentialGrad_[phaseIdx][i]*faceNormal[i];
 
@@ -414,7 +399,7 @@ protected:
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            Evaluation tmp = Toolbox::createConstant(0.0);
+            Evaluation tmp = 0.0;
             for (unsigned i = 0; i < faceNormal.size(); ++i)
                 tmp += potentialGrad_[phaseIdx][i]*faceNormal[i];
 
@@ -450,15 +435,15 @@ protected:
         Valgrind::CheckDefined(normal);
 
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
-            filterVelocity_[phaseIdx] = Toolbox::createConstant(0.0);
-            volumeFlux_[phaseIdx] = Toolbox::createConstant(0.0);
+            filterVelocity_[phaseIdx] = 0.0;
+            volumeFlux_[phaseIdx] = 0.0;
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 continue;
             }
 
             asImp_().calculateFilterVelocity_(phaseIdx);
             Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
-            volumeFlux_[phaseIdx] = Toolbox::createConstant(0.0);
+            volumeFlux_[phaseIdx] = 0.0;
             for (unsigned i = 0; i < normal.size(); ++i)
                 volumeFlux_[phaseIdx] += (filterVelocity_[phaseIdx][i] * normal[i]);
         }
@@ -480,14 +465,14 @@ protected:
 
         for (int phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                filterVelocity_[phaseIdx] = Toolbox::createConstant(0);
-                volumeFlux_[phaseIdx] = Toolbox::createConstant(0);
+                filterVelocity_[phaseIdx] = 0.0;
+                volumeFlux_[phaseIdx] = 0.0;
                 continue;
             }
 
             asImp_().calculateFilterVelocity_(phaseIdx);
             Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
-            volumeFlux_[phaseIdx] = Toolbox::createConstant(0.0);
+            volumeFlux_[phaseIdx] = 0.0;
             for (unsigned i = 0; i < normal.size(); ++i)
                 volumeFlux_[phaseIdx] += (filterVelocity_[phaseIdx][i] * normal[i]);
         }

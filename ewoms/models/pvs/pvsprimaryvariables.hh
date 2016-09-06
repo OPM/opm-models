@@ -255,7 +255,7 @@ public:
     {
         if (!phaseIsPresent(phaseIdx) || phaseIdx == lowestPresentPhaseIdx())
             // non-present phases have saturation 0
-            return Toolbox::createConstant(0.0);
+            return 0.0;
 
         int varIdx = switch0Idx + phaseIdx - 1;
         if (timeIdx != 0)
@@ -321,8 +321,7 @@ public:
 
         // set the mole fractions in of the remaining components in
         // the phase with the lowest index
-        for (int compIdx = numPhases - 1; compIdx < numComponents - 1;
-             ++compIdx) {
+        for (int compIdx = numPhases - 1; compIdx < numComponents - 1; ++compIdx) {
             (*this)[switch0Idx + compIdx] =
                 FsToolbox::value(fluidState.moleFraction(lowestPhaseIdx, compIdx + 1));
             Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);

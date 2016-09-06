@@ -243,7 +243,7 @@ public:
                 asImp_().evalPartialDerivative_(elemCtx, dofIdx, pvIdx);
 
                 // incorporate the partial derivatives into the local Jacobian matrix
-                updateLocalLinearizer_(elemCtx, dofIdx, pvIdx);
+                updateLocalJacobian_(elemCtx, dofIdx, pvIdx);
             }
         }
     }
@@ -410,7 +410,7 @@ protected:
 
         PrimaryVariables priVars(elemCtx.primaryVars(dofIdx, /*timeIdx=*/0));
         Scalar eps = asImp_().numericEpsilon(elemCtx, dofIdx, pvIdx);
-        Scalar delta = 0;
+        Scalar delta = 0.0;
 
         if (numericDifferenceMethod_() >= 0) {
             // we are not using backward differences, i.e. we need to
@@ -476,7 +476,7 @@ protected:
      *        partial derivatives of all equations in regard to the
      *        primary variable 'pvIdx' at vertex 'dofIdx' .
      */
-    void updateLocalLinearizer_(const ElementContext &elemCtx,
+    void updateLocalJacobian_(const ElementContext &elemCtx,
                               int primaryDofIdx,
                               int pvIdx)
     {

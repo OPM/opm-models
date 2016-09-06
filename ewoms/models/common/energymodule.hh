@@ -149,12 +149,8 @@ public:
     /*!
      * \brief Add the rate of the conductive heat flux to a rate vector.
      */
-    static Evaluation heatConductionRate(const ExtensiveQuantities &extQuants)
-    {
-        typedef Opm::MathToolbox<Evaluation> Toolbox;
-
-        return Toolbox::createConstant(0.0);
-    }
+    static Scalar heatConductionRate(const ExtensiveQuantities &extQuants)
+    { return 0.0; }
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation

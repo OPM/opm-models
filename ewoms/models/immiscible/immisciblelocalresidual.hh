@@ -98,9 +98,7 @@ public:
                         int dofIdx,
                         int timeIdx) const
     {
-        typedef Opm::MathToolbox<LhsEval> LhsToolbox;
-
-        storage = LhsToolbox::createConstant(0.0);
+        storage = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
@@ -113,7 +111,7 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      int scvfIdx, int timeIdx) const
     {
-        flux = Toolbox::createConstant(0.0);
+        flux = 0.0;
         asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         asImp_().addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }

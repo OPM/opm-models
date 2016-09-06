@@ -116,7 +116,7 @@ public:
     void computeFlux(RateVector &flux, const ElementContext &elemCtx,
                      unsigned scvfIdx, unsigned timeIdx) const
     {
-        flux = Toolbox::createConstant(0.0);
+        flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         Valgrind::CheckDefined(flux);
 

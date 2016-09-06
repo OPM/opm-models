@@ -92,7 +92,7 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        (*this) = Toolbox::createConstant(0.0);
+        (*this) = Evaluation(0.0);
 
         int phaseIdx = liquidPhaseIdx;
         Evaluation density;
@@ -149,7 +149,7 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */
     void setNoFlow()
-    { (*this) = Toolbox::createConstant(0.0); }
+    { (*this) = Evaluation(0.0); }
 };
 
 } // namespace Ewoms

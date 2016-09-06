@@ -97,7 +97,7 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        (*this) = Toolbox::createConstant(0.0);
+        (*this) = Evaluation(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Evaluation meanMBoundary = 0;
             for (int compIdx = 0; compIdx < numComponents; ++compIdx)
@@ -180,7 +180,7 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */
     void setNoFlow()
-    { (*this) = Toolbox::createConstant(0.0); }
+    { (*this) = Evaluation(0.0); }
 };
 
 } // namespace Ewoms

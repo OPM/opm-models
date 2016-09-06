@@ -213,7 +213,7 @@ public:
     /*!
      * \brief Returns the map of constraint degrees of freedom.
      *
-     * (This object can only be non-empty if the EnableConstraints property is true.)
+     * (This object is only non-empty if the EnableConstraints property is true.)
      */
     const std::map<int, Constraints>& constraintsMap() const
     { return constraintsMap_; }

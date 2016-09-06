@@ -103,7 +103,7 @@ public:
         const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         Valgrind::CheckDefined(priVars);
 
-        Evaluation sumSat = Toolbox::createConstant(0.0);
+        Evaluation sumSat = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
             const Evaluation& Salpha = priVars.makeEvaluation(saturation0Idx + phaseIdx, timeIdx);
             fluidState_.setSaturation(phaseIdx, Salpha);

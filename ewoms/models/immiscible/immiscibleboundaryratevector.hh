@@ -107,7 +107,7 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        (*this) = Toolbox::createConstant(0.0);
+        (*this) = Evaluation(0.0);
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Evaluation density;
             if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
@@ -194,7 +194,7 @@ public:
      * \brief Specify a no-flow boundary for all conserved quantities.
      */
     void setNoFlow()
-    { (*this) = Toolbox::createConstant(0.0); }
+    { (*this) = Evaluation(0.0); }
 };
 
 } // namespace Ewoms

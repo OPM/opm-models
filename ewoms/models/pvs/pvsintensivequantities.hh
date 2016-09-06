@@ -117,7 +117,7 @@ public:
         /////////////
         // set the saturations
         /////////////
-        Evaluation sumSat = Toolbox::createConstant(0.0);
+        Evaluation sumSat = 0.0;
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx, timeIdx));
             Valgrind::CheckDefined(fluidState_.saturation(phaseIdx));
@@ -158,7 +158,7 @@ public:
         if (numNonPresentPhases == numPhases - 1) {
             // only one phase is present, i.e. the primary variables
             // contain the complete composition of the phase
-            Evaluation sumx = Toolbox::createConstant(0.0);
+            Evaluation sumx = 0.0;
             for (int compIdx = 1; compIdx < numComponents; ++compIdx) {
                 const Evaluation& x = priVars.makeEvaluation(switch0Idx + compIdx - 1, timeIdx);
                 fluidState_.setMoleFraction(lowestPresentPhaseIdx, compIdx, x);

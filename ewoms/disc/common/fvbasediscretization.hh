@@ -891,7 +891,7 @@ public:
 #ifndef NDEBUG
         Scalar totalBoundaryArea(0.0);
         Scalar totalVolume(0.0);
-        EvalEqVector totalRate(Toolbox::createConstant(0.0));
+        EvalEqVector totalRate(0.0);
 
         // take the newton tolerance times the total volume of the grid if we're not
         // given an explicit tolerance...
