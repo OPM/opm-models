@@ -9,5 +9,5 @@ Description: The eWoms simulation framework for flow  and transport in porous me
 Url: http://opm-project.org/ewoms
 MaintainerName: Andreas Lauser
 Maintainer: and@poware.org
-Depends: dune-grid (>= 2.3) dune-localfunctions  (>= 2.3) dune-istl  (>= 2.3) opm-common opm-material
-Suggests: dune-fem dune-alugrid opm-parser opm-grid
+Depends: dune-grid (>= 2.3) dune-istl  (>= 2.3) opm-common opm-material
+Suggests: dune-localfunctions (>= 2.3) dune-fem dune-alugrid opm-parser opm-grid

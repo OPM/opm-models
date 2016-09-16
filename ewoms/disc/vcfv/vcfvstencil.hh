@@ -36,7 +36,11 @@
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/referenceelements.hh>
+
+#if HAVE_DUNE_LOCALFUNCTIONS
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
+#endif
+
 #include <dune/common/version.hh>
 
 #include <vector>
@@ -483,10 +487,15 @@ private:
 
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     typedef Dune::PQkLocalFiniteElementCache<CoordScalar, Scalar, dim, 1> LocalFiniteElementCache;
     typedef typename LocalFiniteElementCache::FiniteElementType LocalFiniteElement;
     typedef typename LocalFiniteElement::Traits::LocalBasisType::Traits LocalBasisTraits;
     typedef typename LocalBasisTraits::JacobianType ShapeJacobian;
+#else
+    typedef int LocalFiniteElementCache;
+    typedef int LocalFiniteElement;
+#endif
 
     Scalar quadrilateralArea(const GlobalPosition& p0,
                              const GlobalPosition& p1,
@@ -1049,6 +1058,7 @@ public:
 
     void updateCenterGradients()
     {
+#if HAVE_DUNE_LOCALFUNCTIONS
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         const auto &localFiniteElement = feCache_.get(element_.type());
         const auto &geom = element_.geometry();
@@ -1068,6 +1078,9 @@ public:
                 jacInvT.mv(localJac[vert][0], subContVol[scvIdx].gradCenter[vert]);
             }
         }
+#else // HAVE_DUNE_LOCALFUNCTIONS
+        OPM_THROW(std::runtime_error,"VcfvStencil needs the dune-localfunctions package which was not found!");
+#endif
     }
 
     unsigned numDof() const

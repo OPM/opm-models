@@ -36,8 +36,11 @@
 #include <dune/common/version.hh>
 
 #include <dune/geometry/type.hh>
-#include <dune/localfunctions/lagrange/pqkfactory.hh>
 #include <dune/common/fvector.hh>
+
+#if HAVE_DUNE_LOCALFUNCTIONS
+#include <dune/localfunctions/lagrange/pqkfactory.hh>
+#endif
 
 #include <vector>
 
@@ -68,10 +71,16 @@ class VcfvGradientCalculator : public FvBaseGradientCalculator<TypeTag>
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     typedef Dune::PQkLocalFiniteElementCache<CoordScalar, Scalar, dim, 1> LocalFiniteElementCache;
     typedef typename LocalFiniteElementCache::FiniteElementType LocalFiniteElement;
     typedef typename LocalFiniteElement::Traits::LocalBasisType::Traits LocalBasisTraits;
     typedef typename LocalBasisTraits::JacobianType ShapeJacobian;
+#else
+    typedef int LocalFiniteElementCache;
+    typedef int LocalFiniteElement;
+#endif
+
 
 public:
     /*!
@@ -90,6 +99,7 @@ public:
 
         const auto &stencil = elemCtx.stencil(timeIdx);
 
+#if HAVE_DUNE_LOCALFUNCTIONS
         const LocalFiniteElement& localFE = feCache_.get(elemCtx.element().type());
         localFiniteElement_ = &localFE;
 
@@ -121,6 +131,9 @@ public:
                 }
             }
         }
+#else
+        OPM_THROW(std::runtime_error,"VcfvGradientCalculator needs the dune-localfunctions package which has not been found!");
+#endif
     }
 
 
@@ -269,9 +282,10 @@ public:
     { return feCache_; }
 
 private:
-    static LocalFiniteElementCache feCache_;
 
+    static LocalFiniteElementCache feCache_;
     const LocalFiniteElement* localFiniteElement_;
+
     std::vector<Dune::FieldVector<Scalar, 1>> p1Value_[maxFap];
     DimVector p1Gradient_[maxFap][maxDof];
 };
@@ -279,6 +293,7 @@ private:
 template<class TypeTag>
 typename VcfvGradientCalculator<TypeTag>::LocalFiniteElementCache
 VcfvGradientCalculator<TypeTag>::feCache_;
+
 } // namespace Ewoms
 
 #endif
