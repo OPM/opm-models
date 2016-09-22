@@ -185,11 +185,12 @@ opm_add_test(finger_immiscible_ecfv_adaptive
 opm_add_test(test_stokes
              CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
+
 opm_add_test(test_stokes2c
-             CONDITION ${SUPERLU_FOUND})
+             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
 opm_add_test(test_stokesni
-             CONDITION ${SUPERLU_FOUND})
+             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
 foreach(tapp co2injection_flash_ni_vcfv
              co2injection_flash_ni_ecfv
@@ -290,11 +291,6 @@ opm_add_test(obstacle_pvs_restart
              DRIVER_ARGS --restart
              TEST_ARGS --pvs-verbosity=2 --end-time=15000)
 
-
-# the test for the plain stokes model is completes quite
-# quickly. thus, we put it to the end of the list...
-opm_add_test(test_stokes
-             CONDITION ${SUPERLU_FOUND})
 
 opm_add_test(tutorial1
              SOURCES tutorial/tutorial1.cc)

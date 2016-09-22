@@ -32,7 +32,7 @@
 
 #include "vcfvproperties.hh"
 #include "vcfvstencil.hh"
-#include "vcfvgradientcalculator.hh"
+#include "p1fegradientcalculator.hh"
 #include "vcfvgridcommhandlefactory.hh"
 #include "vcfvbaseoutputmodule.hh"
 
@@ -73,15 +73,14 @@ SET_TYPE_PROP(VcfvDiscretization, DiscBaseOutputModule,
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(VcfvDiscretization, GradientCalculator,
-              Ewoms::VcfvGradientCalculator<TypeTag>);
+              Ewoms::P1FeGradientCalculator<TypeTag>);
 
 //! The class to create grid communication handles
 SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory,
               Ewoms::VcfvGridCommHandleFactory<TypeTag>);
 
-//! Use P1-finite element gradients by default for the vertex centered
-//! finite volume scheme.
-SET_BOOL_PROP(VcfvDiscretization, UseTwoPointGradients, false);
+//! Use two-point gradients by default for the vertex centered finite volume scheme.
+SET_BOOL_PROP(VcfvDiscretization, UseP1FiniteElementGradients, false);
 
 #if HAVE_DUNE_FEM
 //! Set the DiscreteFunctionSpace

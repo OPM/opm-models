@@ -38,9 +38,9 @@ namespace Properties {
 //! The type tag for models based on the VCFV-scheme
 NEW_TYPE_TAG(VcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
 
-//! Use the two-point gradient approximation scheme instead of first
-//! order finite element ones
-NEW_PROP_TAG(UseTwoPointGradients);
+//! Use P1 finite-elements gradients instead of two-point gradients. Note that setting
+//! this property to true requires the dune-localfunctions module to be available.
+NEW_PROP_TAG(UseP1FiniteElementGradients);
 }} // namespace Properties, Ewoms
 
 #endif

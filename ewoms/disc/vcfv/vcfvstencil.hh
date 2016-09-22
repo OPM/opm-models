@@ -36,7 +36,11 @@
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/geometry/referenceelements.hh>
+
+#if HAVE_DUNE_LOCALFUNCTIONS
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
+#endif // HAVE_DUNE_LOCALFUNCTIONS
+
 #include <dune/common/version.hh>
 
 #include <vector>
@@ -483,10 +487,12 @@ private:
 
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     typedef Dune::PQkLocalFiniteElementCache<CoordScalar, Scalar, dim, 1> LocalFiniteElementCache;
     typedef typename LocalFiniteElementCache::FiniteElementType LocalFiniteElement;
     typedef typename LocalFiniteElement::Traits::LocalBasisType::Traits LocalBasisTraits;
     typedef typename LocalBasisTraits::JacobianType ShapeJacobian;
+#endif // HAVE_DUNE_LOCALFUNCTIONS
 
     Scalar quadrilateralArea(const GlobalPosition& p0,
                              const GlobalPosition& p1,
@@ -1047,6 +1053,7 @@ public:
                       "Not implemented: SCV geometries for non hexahedron elements");
     }
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     void updateCenterGradients()
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
@@ -1056,6 +1063,7 @@ public:
         const auto &localFiniteElement = feCache_.get(elementPtr_->type());
         const auto &geom = elementPtr_->geometry();
 #endif
+
         std::vector<ShapeJacobian> localJac;
 
         for (unsigned scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
@@ -1069,6 +1077,7 @@ public:
             }
         }
     }
+#endif
 
     unsigned numDof() const
     { return numVertices; }
@@ -1358,7 +1367,9 @@ private:
     ElementPointer elementPtr_;
 #endif
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     static LocalFiniteElementCache feCache_;
+#endif // HAVE_DUNE_LOCALFUNCTIONS
 
     //! local coordinate of element center
     LocalPosition elementLocal;
@@ -1386,9 +1397,11 @@ private:
     Dune::GeometryType geometryType_;
 };
 
+#if HAVE_DUNE_LOCALFUNCTIONS
 template<class Scalar, class GridView>
 typename VcfvStencil<Scalar, GridView>::LocalFiniteElementCache
 VcfvStencil<Scalar, GridView>::feCache_;
+#endif // HAVE_DUNE_LOCALFUNCTIONS
 
 } // namespace Ewoms
 

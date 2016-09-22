@@ -126,8 +126,14 @@ public:
         // and most models don't need them, so that we only do this if the model needs
         // them
         stencil_.update(elem);
-        if (requireScvCenterGradients)
+        if (requireScvCenterGradients) {
+#if HAVE_DUNE_LOCALFUNCTIONS
             stencil_.updateCenterGradients();
+#else
+            // center gradients require dune-localfunctions
+            assert(false);
+#endif
+        }
 
         // resize the arrays containing the flux and the volume variables
         dofVars_.resize(stencil_.numDof());

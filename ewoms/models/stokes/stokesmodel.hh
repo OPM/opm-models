@@ -28,6 +28,10 @@
 #ifndef EWOMS_STOKES_MODEL_HH
 #define EWOMS_STOKES_MODEL_HH
 
+#if !HAVE_DUNE_LOCALFUNCTIONS
+#error "The Stokes model requires the dune-localfunctions module"
+#endif
+
 #include "stokesproperties.hh"
 #include "stokeslocalresidual.hh"
 #include "stokesproblem.hh"
@@ -106,6 +110,10 @@ SET_TAG_PROP(StokesModel, LinearSolverSplice, SuperLULinearSolver);
 #warning "No SuperLU installed. SuperLU is the recommended linear " \
          "solver for the Stokes models."
 #endif
+
+//! the Stokes model requires center gradients, and those are only available when using
+//! P1-finite-element gradients.
+SET_BOOL_PROP(StokesModel, UseP1FiniteElementGradients, true);
 
 //! the Model property
 SET_TYPE_PROP(StokesModel, Model, Ewoms::StokesModel<TypeTag>);
