@@ -316,15 +316,71 @@ private:
     // reset the global linear system of equations.
     void resetSystem_()
     {
-        constraintsMap_.clear();
         residual_ = 0.0;
         (*matrix_) = 0;
+    }
+
+    // query the problem for all constraint degrees of freedom. note that this method is
+    // quite involved and is thus relatively slow.
+    void updateConstraintsMap_()
+    {
+        if (!enableConstraints_())
+            // constraints are not explictly enabled, so we don't need to consider them!
+            return;
+
+        int threadId = ThreadManager::threadId();
+        constraintsMap_.clear();
+
+        // loop over all elements...
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+        {
+            ElementIterator elemIt = gridView_().template begin</*codim=*/0>();
+            for (threadedElemIt.beginParallel(elemIt);
+                 !threadedElemIt.isFinished(elemIt);
+                 threadedElemIt.increment(elemIt))
+            {
+                // create an element context (the solution-based quantities are not
+                // available here!)
+                const Element &elem = *elemIt;
+                ElementContext &elemCtx = *elementCtx_[threadId];
+                elemCtx.updateStencil(elem);
+
+                // check if the problem wants to constrain any degree of the current
+                // element's freedom. if yes, add the constraint to the map.
+                for (unsigned primaryDofIdx = 0;
+                     primaryDofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0);
+                     ++ primaryDofIdx)
+                {
+                    Constraints constraints;
+                    elemCtx.problem().constraints(constraints,
+                                                  elemCtx,
+                                                  primaryDofIdx,
+                                                  /*timeIdx=*/0);
+                    if (constraints.isActive()) {
+                        unsigned globI = elemCtx.globalSpaceIndex(primaryDofIdx, /*timeIdx=*/0);
+                        constraintsMap_[globI] = constraints;
+                        continue;
+                    }
+                }
+            }
+        }
     }
 
     // linearize the whole system
     void linearize_()
     {
         resetSystem_();
+
+        // before the first iteration of each time step, we need to update the
+        // constraints. (i.e., we assume that constraints can be time dependent, but they
+        // can't depend on the solution.)
+        if (model_().newtonMethod().numIterations() == 0)
+            updateConstraintsMap_();
+
+        applyConstraintsToSolution_();
 
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
@@ -346,9 +402,9 @@ private:
             }
         }
 
-        linearizeAuxiliaryEquations_();
+        applyConstraintsToLinearization_();
 
-        linearizeConstraints_();
+        linearizeAuxiliaryEquations_();
     }
 
     // linearize an element in the interior of the process' grid partition
@@ -370,19 +426,6 @@ private:
         unsigned numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
         for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
             int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
-
-            // deal with constraint degrees of freedom
-            if (enableConstraints_()) {
-                Constraints constraints;
-                elementCtx->problem().constraints(constraints,
-                                                  *elementCtx,
-                                                  primaryDofIdx,
-                                                  /*timeIdx=*/0);
-                if (constraints.isActive()) {
-                    constraintsMap_[globI] = constraints;
-                    continue;
-                }
-            }
 
             // update the right hand side
             residual_[globI] += localLinearizer.residual(primaryDofIdx);
@@ -406,9 +449,28 @@ private:
             model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
     }
 
-    // apply the constraints to the linearized system of equations. (i.e., the
-    // Jacobian matrix becomes trivial and the right hand side zero)
-    void linearizeConstraints_()
+    // apply the constraints to the solution. (i.e., the solution of constraint degrees
+    // of freedom is set to the value of the constraint.)
+    void applyConstraintsToSolution_()
+    {
+        if (!enableConstraints_())
+            return;
+
+        // TODO: assuming a history size of 2 only works for Euler time discretizations!
+        auto& sol = model_().solution(/*timeIdx=*/0);
+        auto& oldSol = model_().solution(/*timeIdx=*/1);
+
+        auto it = constraintsMap_.begin();
+        const auto& endIt = constraintsMap_.end();
+        for (; it != endIt; ++it) {
+            sol[it->first] = it->second;
+            oldSol[it->first] = it->second;
+        }
+    }
+
+    // apply the constraints to the linearization. (i.e., for constrain degrees of
+    // freedom the Jacobian matrix maps to identity and the residual is zero)
+    void applyConstraintsToLinearization_()
     {
         if (!enableConstraints_())
             return;
