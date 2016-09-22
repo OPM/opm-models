@@ -23,10 +23,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvGradientCalculator
+ * \copydoc Ewoms::P1FeGradientCalculator
  */
-#ifndef EWOMS_VCFV_GRADIENT_CALCULATOR_HH
-#define EWOMS_VCFV_GRADIENT_CALCULATOR_HH
+#ifndef EWOMS_P1FE_GRADIENT_CALCULATOR_HH
+#define EWOMS_P1FE_GRADIENT_CALCULATOR_HH
 
 #include "vcfvproperties.hh"
 
@@ -36,21 +36,27 @@
 #include <dune/common/version.hh>
 
 #include <dune/geometry/type.hh>
+
+#if HAVE_DUNE_LOCALFUNCTIONS
 #include <dune/localfunctions/lagrange/pqkfactory.hh>
+#endif // HAVE_DUNE_LOCALFUNCTIONS
+
 #include <dune/common/fvector.hh>
 
 #include <vector>
 
 namespace Ewoms {
 /*!
- * \ingroup VcfvDiscretization
+ * \ingroup FiniteElementDiscretizations
  *
- * \brief This class calculates gradients of arbitrary quantities at
- *        flux integration points for the vertex centered finite
- *        volume (VCFV) discretization
+ * \brief This class calculates gradients of arbitrary quantities at flux integration
+ *        points using first order finite elemens ansatz functions.
+ *
+ * This approach can also be used for the vertex-centered finite volume (VCFV)
+ * discretization.
  */
 template<class TypeTag>
-class VcfvGradientCalculator : public FvBaseGradientCalculator<TypeTag>
+class P1FeGradientCalculator : public FvBaseGradientCalculator<TypeTag>
 {
     typedef FvBaseGradientCalculator<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -68,10 +74,12 @@ class VcfvGradientCalculator : public FvBaseGradientCalculator<TypeTag>
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     typedef Dune::PQkLocalFiniteElementCache<CoordScalar, Scalar, dim, 1> LocalFiniteElementCache;
     typedef typename LocalFiniteElementCache::FiniteElementType LocalFiniteElement;
     typedef typename LocalFiniteElement::Traits::LocalBasisType::Traits LocalBasisTraits;
     typedef typename LocalBasisTraits::JacobianType ShapeJacobian;
+#endif // HAVE_DUNE_LOCALFUNCTIONS
 
 public:
     /*!
@@ -80,13 +88,18 @@ public:
      *
      * \param elemCtx The current execution context
      */
-    template <bool prepareValues = true, bool prepareGradients = true>
-    void prepare(const ElementContext &elemCtx, unsigned timeIdx)
+    template <bool prepareValues = true, bool prepareGradients = true, class Dummy = unsigned>
+    void prepare(const ElementContext &elemCtx,
+                 typename std::enable_if<GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
+                                         Dummy>::type timeIdx)
     {
-        if (GET_PROP_VALUE(TypeTag, UseTwoPointGradients)) {
-            ParentType::template prepare<prepareValues, prepareGradients>(elemCtx, timeIdx);
-            return;
-        }
+#if !HAVE_DUNE_LOCALFUNCTIONS
+        // The dune-localfunctions module is required for P1 finite element gradients
+        assert(false);
+#else
+        static_assert(std::is_same<Dummy, unsigned>::value,
+                      "The 'Dummy' template parameter must _not_ be specified explicitly."
+                      "It is only required to conditionally disable this method!");
 
         const auto &stencil = elemCtx.stencil(timeIdx);
 
@@ -121,8 +134,20 @@ public:
                 }
             }
         }
+#endif
     }
 
+    template <bool prepareValues = true, bool prepareGradients = true, class Dummy = unsigned>
+    void prepare(const ElementContext &elemCtx,
+                 typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
+                                         Dummy>::type timeIdx)
+    {
+        static_assert(std::is_same<Dummy, unsigned>::value,
+                      "The 'Dummy' template parameter must _not_ be specified explicitly."
+                      "It is only required to conditionally disable this method!");
+
+        ParentType::template prepare<prepareValues, prepareGradients>(elemCtx, timeIdx);
+    }
 
     /*!
      * \brief Calculates the value of an arbitrary quantity at any
@@ -137,12 +162,17 @@ public:
      */
     template <class QuantityCallback, class Dummy=int>
     auto calculateValue(const ElementContext &elemCtx,
-                        typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                        typename std::enable_if<GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                                 Dummy>::type fapIdx,
                         const QuantityCallback& quantityCallback) const
         ->  typename std::remove_reference<typename QuantityCallback::ResultType>::type
     {
-        static_assert(std::is_integral<Dummy>::value,
+#if !HAVE_DUNE_LOCALFUNCTIONS
+        // The dune-localfunctions module is required for P1 finite element gradients
+        assert(false);
+        return 0.0;
+#else
+        static_assert(std::is_same<Dummy, int>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -159,16 +189,17 @@ public:
             value += tmp;
         }
         return value;
+#endif
     }
 
     template <class QuantityCallback, class Dummy = int>
     auto calculateValue(const ElementContext &elemCtx,
-                        typename std::enable_if<GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                        typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                                 Dummy>::type fapIdx,
                         const QuantityCallback& quantityCallback) const
         ->  decltype(ParentType::calculateValue(elemCtx, fapIdx, quantityCallback))
     {
-        static_assert(std::is_integral<Dummy>::value,
+        static_assert(std::is_same<Dummy, int>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -189,11 +220,16 @@ public:
     template <class QuantityCallback, class EvalDimVector, class Dummy = int>
     void calculateGradient(EvalDimVector &quantityGrad,
                            const ElementContext &elemCtx,
-                           typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                           typename std::enable_if<GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                                    Dummy>::type fapIdx,
                            const QuantityCallback& quantityCallback) const
     {
-        static_assert(std::is_integral<Dummy>::value,
+#if !HAVE_DUNE_LOCALFUNCTIONS
+        // The dune-localfunctions module is required for P1 finite element gradients
+        assert(false);
+        quantityGrad = 0.0;
+#else
+        static_assert(std::is_same<Dummy, int>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -207,16 +243,17 @@ public:
             tmp *= dofVal;
             quantityGrad += tmp;
         }
+#endif
     }
 
     template <class QuantityCallback, class EvalDimVector, class Dummy=int>
     void calculateGradient(EvalDimVector &quantityGrad,
                            const ElementContext &elemCtx,
-                           typename std::enable_if<GET_PROP_VALUE(TypeTag, UseTwoPointGradients),
+                           typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                                    Dummy>::type fapIdx,
                            const QuantityCallback& quantityCallback) const
     {
-        static_assert(std::is_integral<Dummy>::value,
+        static_assert(std::is_same<Dummy, int>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -265,20 +302,26 @@ public:
                                    const QuantityCallback &quantityCallback) const
     { ParentType::calculateBoundaryGradient(quantityGrad, elemCtx, fapIdx, quantityCallback); }
 
+#if HAVE_DUNE_LOCALFUNCTIONS
     static LocalFiniteElementCache& localFiniteElementCache()
     { return feCache_; }
+#endif
 
 private:
+#if HAVE_DUNE_LOCALFUNCTIONS
     static LocalFiniteElementCache feCache_;
 
     const LocalFiniteElement* localFiniteElement_;
     std::vector<Dune::FieldVector<Scalar, 1>> p1Value_[maxFap];
     DimVector p1Gradient_[maxFap][maxDof];
+#endif // HAVE_DUNE_LOCALFUNCTIONS
 };
 
+#if HAVE_DUNE_LOCALFUNCTIONS
 template<class TypeTag>
-typename VcfvGradientCalculator<TypeTag>::LocalFiniteElementCache
-VcfvGradientCalculator<TypeTag>::feCache_;
+typename P1FeGradientCalculator<TypeTag>::LocalFiniteElementCache
+P1FeGradientCalculator<TypeTag>::feCache_;
+#endif
 } // namespace Ewoms
 
 #endif

@@ -53,9 +53,6 @@ NEW_PROP_TAG(NcpFugacitiesBaseWeight);
 //! The themodynamic constraint solver which calculates the
 //! composition of any phase given all component fugacities.
 NEW_PROP_TAG(NcpCompositionFromFugacitiesSolver);
-
-//! Number of Newton iterations per time step where the update gets chopped?
-NEW_PROP_TAG(NcpNewtonNumChoppedIterations);
 } // namespace Properties
 } // namespace Ewoms
 

@@ -63,20 +63,7 @@ public:
      */
     NcpNewtonMethod(Simulator &simulator) : ParentType(simulator)
     {
-        choppedIterations_ = EWOMS_GET_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations);
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
-    }
-
-    /*!
-     * \copydoc NewtonMethod::registerParameters
-     */
-    static void registerParameters()
-    {
-        ParentType::registerParameters();
-
-        EWOMS_REGISTER_PARAM(TypeTag, int, NcpNewtonNumChoppedIterations,
-                             "The number of Newton iterations for which the "
-                             "update gets limited");
     }
 
     // HACK: this is necessary since GCC 4.4 does not support
@@ -99,32 +86,49 @@ private:
         nextValue = currentValue;
         nextValue -= update;
 
-        // put crash barriers along the update path at the
-        // beginning...
-        if (this->numIterations_ < choppedIterations_) {
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-                saturationChop_(nextValue[saturation0Idx + phaseIdx],
-                                currentValue[saturation0Idx + phaseIdx]);
-            pressureChop_(nextValue[pressure0Idx],
-                          currentValue[pressure0Idx]);
+        // put crash barriers along the update path at the update
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
+            saturationChop_(nextValue[saturation0Idx + phaseIdx],
+                            currentValue[saturation0Idx + phaseIdx]);
+        pressureChop_(nextValue[pressure0Idx],
+                      currentValue[pressure0Idx]);
 
+        // fugacities
+        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            Scalar &val = nextValue[fugacity0Idx + compIdx];
+            Scalar oldVal = currentValue[fugacity0Idx + compIdx];
+
+            // allow the mole fraction of the component to change
+            // at most 70% (assuming composition independent
+            // fugacity coefficients)
+            Scalar minPhi = this->problem().model().minActivityCoeff(globalDofIdx, compIdx);
+            Scalar maxDelta = 0.7 * minPhi;
+
+            clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
+        }
+
+        // do not become grossly unphysical in a single iteration for the first few
+        // iterations of a time step
+        if (this->numIterations_ < 3) {
             // fugacities
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar &val = nextValue[fugacity0Idx + compIdx];
                 Scalar oldVal = currentValue[fugacity0Idx + compIdx];
-
-                // allow the mole fraction of the component to change
-                // at most 70% (assuming composition independent
-                // fugacity coefficients)
                 Scalar minPhi = this->problem().model().minActivityCoeff(globalDofIdx, compIdx);
-                Scalar maxDelta = 0.7 * minPhi;
+                if (oldVal < 1.0*minPhi && val > 1.0*minPhi)
+                    val = 1.0*minPhi;
+                else if (oldVal > 0.0 && val < 0.0)
+                    val = 0.0;
+            }
 
-                clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-
-                // do not allow mole fractions lager than 101% or
-                // smaller than -1%
-                val = std::max<Scalar>(-0.01 * minPhi, val);
-                val = std::min<Scalar>(1.01 * minPhi, val);
+            // saturations
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+                Scalar &val = nextValue[saturation0Idx + phaseIdx];
+                Scalar oldVal = currentValue[saturation0Idx + phaseIdx];
+                if (oldVal < 1.0 && val > 1.0)
+                    val = 1.0;
+                else if (oldVal > 0.0 && val < 0.0)
+                    val = 0.0;
             }
         }
     }
@@ -145,8 +149,6 @@ private:
         const Scalar maxDelta = 0.20;
         clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
     }
-
-    int choppedIterations_;
 };
 } // namespace Ewoms
 
