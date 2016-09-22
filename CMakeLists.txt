@@ -182,8 +182,8 @@ opm_add_test(finger_immiscible_ecfv_adaptive
              NO_COMPILE
              DRIVER_ARGS --enable-grid-adaptation=true)
 
-opm_add_test(test_navierstokes
-             CONDITION ${DUNE_ALUGRID_FOUND} AND ${SUPERLU_FOUND})
+opm_add_test(test_stokes
+             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
 opm_add_test(test_stokes2c
              CONDITION ${SUPERLU_FOUND})
