@@ -108,9 +108,6 @@ SET_TYPE_PROP(NcpModel, IntensiveQuantities, Ewoms::NcpIntensiveQuantities<TypeT
 //! the ExtensiveQuantities property
 SET_TYPE_PROP(NcpModel, ExtensiveQuantities, Ewoms::NcpExtensiveQuantities<TypeTag>);
 
-//! truncate the newton update for the first 3 iterations of a time step
-SET_INT_PROP(NcpModel, NcpNewtonNumChoppedIterations, 3);
-
 //! The indices required by the compositional NCP model
 SET_TYPE_PROP(NcpModel, Indices, Ewoms::NcpIndices<TypeTag, 0>);
 
