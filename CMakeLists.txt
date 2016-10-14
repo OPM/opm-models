@@ -289,7 +289,7 @@ opm_add_test(obstacle_pvs_restart
              NO_COMPILE
              DEPENDS obstacle_pvs
              DRIVER_ARGS --restart
-             TEST_ARGS --pvs-verbosity=2 --end-time=15000)
+             TEST_ARGS --pvs-verbosity=2 --end-time=30000)
 
 
 opm_add_test(tutorial1
