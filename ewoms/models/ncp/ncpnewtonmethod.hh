@@ -49,6 +49,8 @@ class NcpNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -56,6 +58,7 @@ class NcpNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     enum { fugacity0Idx = Indices::fugacity0Idx };
     enum { saturation0Idx = Indices::saturation0Idx };
     enum { pressure0Idx = Indices::pressure0Idx };
+    enum { ncp0EqIdx = Indices::ncp0EqIdx };
 
 public:
     /*!
@@ -73,6 +76,48 @@ private:
     friend class NewtonMethod<TypeTag>;
     friend class ParentType;
 */
+    void preSolve_(const SolutionVector &currentSolution,
+                   const GlobalEqVector &currentResidual)
+    {
+        const auto& constraintsMap = this->model().linearizer().constraintsMap();
+        this->lastError_ = this->error_;
+
+        // calculate the error as the maximum weighted tolerance of
+        // the solution's residual
+        this->error_ = 0;
+        for (unsigned dofIdx = 0; dofIdx < currentResidual.size(); ++dofIdx) {
+            // do not consider auxiliary DOFs for the error
+            if (dofIdx >= this->model().numGridDof() || this->model().dofTotalVolume(dofIdx) <= 0.0)
+                continue;
+
+            // also do not consider DOFs which are constraint
+            if (this->enableConstraints_()) {
+                if (constraintsMap.count(dofIdx) > 0)
+                    continue;
+            }
+
+            const auto &r = currentResidual[dofIdx];
+            for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx) {
+                if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases)
+                    continue;
+                this->error_ =
+                    std::max(std::abs(r[eqIdx]*this->model().eqWeight(dofIdx, eqIdx)),
+                             this->error_);
+            }
+        }
+
+        // take the other processes into account
+        this->error_ = this->comm_.max(this->error_);
+
+        // make sure that the error never grows beyond the maximum
+        // allowed one
+        if (this->error_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError))
+            OPM_THROW(Opm::NumericalProblem,
+                      "Newton: Error " << this->error_
+                      << " is larger than maximum allowed error of "
+                      << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError));
+    }
+
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
