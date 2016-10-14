@@ -185,9 +185,11 @@ class NewtonMethod
 
 public:
     NewtonMethod(Simulator &simulator)
-        : simulator_(simulator), endIterMsgStream_(std::ostringstream::out),
-          linearSolver_(simulator), comm_(Dune::MPIHelper::getCommunicator()),
-          convergenceWriter_(asImp_())
+        : simulator_(simulator)
+        , endIterMsgStream_(std::ostringstream::out)
+        , linearSolver_(simulator)
+        , comm_(Dune::MPIHelper::getCommunicator())
+        , convergenceWriter_(asImp_())
     {
         lastError_ = 1e100;
         error_ = 1e100;
@@ -331,7 +333,6 @@ public:
                 prePostProcessTimer.stop();
                 simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
 
-
                 // make the current solution to the old one
                 currentSolution = nextSolution;
 
@@ -341,26 +342,39 @@ public:
                               << std::flush;
                 }
 
+                // do the actual linearization
                 linearizeTimer_.start();
                 asImp_().linearize_();
                 linearizeTimer_.stop();
                 linearizeTime_ += linearizeTimer_.realTimeElapsed();
                 linearizeTimer_.halt();
 
+                // notify the implementation of the successful linearization on order to
+                // give it the chance to update the error and thus to terminate the
+                // Newton method without the need of solving the last linearization.
+                updateTimer_.start();
+                const auto& M = linearizer.matrix();
+                auto& b = linearizer.residual();
+                linearSolver_.prepareRhs(M, b);
+                asImp_().preSolve_(currentSolution,  b);
+                updateTimer_.stop();
+                updateTime_ += updateTimer_.realTimeElapsed();;
+                updateTimer_.halt();
+
+                if (!asImp_().proceed_())
+                    break;
+
+                // solve the resulting linear equation system
                 if (asImp_().verbose_()) {
                     std::cout << "Solve: M deltax^k = r"
                               << clearRemainingLine
                               << std::flush;
                 }
 
-                // solve the resulting linear equation system
                 solveTimer_.start();
-
-                // set the delta vector to zero before solving the linear system!
                 solutionUpdate = 0;
-                // ask the implementation to solve the linearized system
-                auto b = linearizer.residual();
-                bool converged = asImp_().solveLinear_(linearizer.matrix(), solutionUpdate, b);
+                linearSolver_.prepareMatrix(M);
+                bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
                 solveTime_ += solveTimer_.realTimeElapsed();;
                 solveTimer_.halt();
@@ -388,10 +402,10 @@ public:
                 // update the current solution (i.e. uOld) with the delta
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
-                asImp_().updateError_(nextSolution,
-                                      currentSolution,
-                                      b,
-                                      solutionUpdate);
+                asImp_().postSolve_(nextSolution,
+                                    currentSolution,
+                                    b,
+                                    solutionUpdate);
                 asImp_().update_(nextSolution, currentSolution, solutionUpdate, b);
                 updateTimer_.stop();
                 updateTime_ += updateTimer_.realTimeElapsed();
@@ -571,38 +585,8 @@ protected:
     void linearize_()
     { model().linearizer().linearize(); }
 
-    /*!
-     * \brief Solve the linear system of equations \f$\mathbf{A}x - b = 0\f$.
-     *
-     * Throws Opm::NumericalProblem if the linear solver didn't
-     * converge.
-     *
-     * \param A The matrix of the linear system of equations
-     * \param x The vector which solves the linear system
-     * \param b The right hand side of the linear system
-     */
-    bool solveLinear_(const JacobianMatrix &A,
-                      GlobalEqVector &x,
-                      GlobalEqVector &b)
-    { return linearSolver_.solve(A, x, b); }
-
-    /*!
-     * \brief Update the error of the solution given the previous
-     *        iteration.
-     *
-     * For our purposes, the error of a solution is defined as the
-     * maximum of the weighted residual of a given solution.
-     *
-     * \param nextSolution The solution after the current iteration
-     * \param currentSolution The solution at the beginning the current iteration
-     * \param currentResidual The residual (i.e., right-hand-side) of the current
-     *                        iteration's solution.
-     * \param solutionUpdate The difference between the current and the next solution
-     */
-    void updateError_(const SolutionVector &nextSolution,
-                      const SolutionVector &currentSolution,
-                      const GlobalEqVector &currentResidual,
-                      const GlobalEqVector &solutionUpdate)
+    void preSolve_(const SolutionVector &currentSolution,
+                   const GlobalEqVector &currentResidual)
     {
         const auto& constraintsMap = model().linearizer().constraintsMap();
         lastError_ = error_;
@@ -612,7 +596,7 @@ protected:
         error_ = 0;
         for (unsigned dofIdx = 0; dofIdx < currentResidual.size(); ++dofIdx) {
             // do not consider auxiliary DOFs for the error
-            if (dofIdx >= model().numGridDof() || model().dofTotalVolume(dofIdx) <= 0)
+            if (dofIdx >= model().numGridDof() || model().dofTotalVolume(dofIdx) <= 0.0)
                 continue;
 
             // also do not consider DOFs which are constraint
@@ -637,6 +621,25 @@ protected:
                       << " is larger than maximum allowed error of "
                       << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError));
     }
+
+    /*!
+     * \brief Update the error of the solution given the previous
+     *        iteration.
+     *
+     * For our purposes, the error of a solution is defined as the
+     * maximum of the weighted residual of a given solution.
+     *
+     * \param nextSolution The solution after the current iteration
+     * \param currentSolution The solution at the beginning the current iteration
+     * \param currentResidual The residual (i.e., right-hand-side) of the current
+     *                        iteration's solution.
+     * \param solutionUpdate The difference between the current and the next solution
+     */
+    void postSolve_(const SolutionVector &nextSolution,
+                      const SolutionVector &currentSolution,
+                      const GlobalEqVector &currentResidual,
+                      const GlobalEqVector &solutionUpdate)
+    { }
 
     /*!
      * \brief Update the current solution with a delta vector.
@@ -763,7 +766,7 @@ protected:
     bool proceed_() const
     {
         if (asImp_().numIterations() < 1)
-            return true; // we always do at least one iteration
+            return true; // we always do at least one full iteration
         else if (asImp_().converged()) {
             // we are below the specified tolerance, so we don't have to
             // do more iterations

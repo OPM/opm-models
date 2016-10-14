@@ -119,13 +119,15 @@ public:
      */
     void updateStencil(const Element &elem)
     {
+
         // remember the current element
         elemPtr_ = &elem;
 
-        // update the stencil. the center gradients are kind of expensive to calculate
-        // and most models don't need them, so that we only do this if the model needs
-        // them
+        // update the stencil. the center gradients are quite expensive to calculate and
+        // most models don't need them, so that we only do this if the model explicitly
+        // enables them
         stencil_.update(elem);
+
         if (requireScvCenterGradients) {
 #if HAVE_DUNE_LOCALFUNCTIONS
             stencil_.updateCenterGradients();

@@ -38,7 +38,6 @@
 namespace Ewoms {
 namespace Properties {
 // forward declaration of the required property tags
-NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
 NEW_PROP_TAG(LinearSolverVerbosity);
@@ -50,7 +49,7 @@ NEW_TYPE_TAG(SuperLULinearSolver);
 
 namespace Ewoms {
 namespace Linear {
-template <class Scalar, class TypeTag, class Problem, class Matrix, class Vector>
+template <class Scalar, class TypeTag, class Matrix, class Vector>
 class SuperLUSolve_;
 
 /*!
@@ -61,10 +60,12 @@ template <class TypeTag>
 class SuperLUBackend
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+    typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
 
 public:
-    SuperLUBackend(const Problem &problem) : problem_(problem)
+    SuperLUBackend(Simulator& simulator)
     {}
 
     static void registerParameters()
@@ -82,19 +83,29 @@ public:
     void eraseMatrix()
     { }
 
-    template <class Matrix, class Vector>
-    bool solve(const Matrix &A, Vector &x, const Vector &b)
-    { return SuperLUSolve_<Scalar, TypeTag, Problem, Matrix, Vector>::solve_(problem_, A, x, b); }
+    void prepareMatrix(const Matrix& M)
+    {
+        M_ = &M;
+    }
+
+    void prepareRhs(const Matrix& M, Vector &b)
+    {
+        b_ = &b;
+    }
+
+    bool solve(Vector &x)
+    { return SuperLUSolve_<Scalar, TypeTag, Matrix, Vector>::solve_(*M_, x, *b_); }
 
 private:
-    const Problem &problem_;
+    const Matrix* M_;
+    Vector* b_;
 };
 
-template <class Scalar, class TypeTag, class Problem, class Matrix, class Vector>
+template <class Scalar, class TypeTag, class Matrix, class Vector>
 class SuperLUSolve_
 {
 public:
-    static bool solve_(const Problem &problem, const Matrix &A, Vector &x, const Vector &b)
+    static bool solve_(const Matrix &A, Vector &x, const Vector &b)
     {
         Vector bTmp(b);
 
@@ -123,12 +134,11 @@ public:
 // handle is double precision (i.e., the linear systems of equations are always solved
 // with at most double precision if chosing SuperLU as the linear solver...)
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4) && HAVE_QUAD
-template <class TypeTag, class Problem, class Matrix, class Vector>
-class SuperLUSolve_<__float128, TypeTag, Problem, Matrix, Vector>
+template <class TypeTag, class Matrix, class Vector>
+class SuperLUSolve_<__float128, TypeTag, Matrix, Vector>
 {
 public:
-    static bool solve_(const Problem &problem,
-                       const Matrix &A,
+    static bool solve_(const Matrix &A,
                        Vector &x,
                        const Vector &b)
     {
@@ -144,10 +154,9 @@ public:
         DoubleMatrix ADouble(A);
 
         bool res =
-            SuperLUSolve_<double, TypeTag, Problem, Matrix, Vector>::solve_(problem,
-                                                                            ADouble,
-                                                                            xDouble,
-                                                                            bDouble);
+            SuperLUSolve_<double, TypeTag, Matrix, Vector>::solve_(ADouble,
+                                                                   xDouble,
+                                                                   bDouble);
 
         // copy the result back into the quadruple precision vector.
         x = xDouble;

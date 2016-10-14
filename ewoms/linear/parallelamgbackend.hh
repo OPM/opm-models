@@ -156,21 +156,8 @@ public:
     void eraseMatrix()
     { cleanup_(); }
 
-    /*!
-     * \brief Actually solve the linear system of equations.
-     *
-     * \return true if the residual reduction could be achieved, else false.
-     */
-    bool solve(const Matrix &M, Vector &x, Vector &b)
+    void prepareMatrix(const Matrix& M)
     {
-        int verbosity = 0;
-        if (simulator_.gridManager().gridView().comm().rank() == 0)
-            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
-
-        /////////////
-        // set-up the overlapping matrix and vector
-        /////////////
-
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
             // have been created
@@ -181,6 +168,16 @@ public:
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignAdd(M);
+    }
+
+    void prepareRhs(const Matrix& M, Vector &b)
+    {
+        if (!overlappingMatrix_) {
+            // make sure that the overlapping matrix and block vectors
+            // have been created
+            prepare_(M);
+        }
+
         overlappingb_->assignAddBorder(b);
 
         // copy the result back to the non-overlapping vector. This is
@@ -188,6 +185,18 @@ public:
         // residual vector for the border entities and we need the
         // "globalized" residual in b...
         overlappingb_->assignTo(b);
+    }
+
+    /*!
+     * \brief Actually solve the linear system of equations.
+     *
+     * \return true if the residual reduction could be achieved, else false.
+     */
+    bool solve(Vector &x)
+    {
+        int verbosity = 0;
+        if (simulator_.gridManager().gridView().comm().rank() == 0)
+            verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
         (*overlappingx_) = 0.0;
 
