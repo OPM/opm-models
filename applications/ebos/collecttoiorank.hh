@@ -186,7 +186,7 @@ namespace Ewoms
                 // the I/O rank receives from all other ranks
                 if( isIORank() )
                 {
-                    Opm::EclipseGridConstPtr eclGrid = gridManager.eclGrid();
+                    const auto& eclGrid = gridManager.eclGrid();
 
                     // create the ACTNUM array based on the "real" grid which is used for
                     // simulation. Note that this is still an approximation because the simulation

@@ -84,28 +84,28 @@ public:
 
     EclDeckUnits(const Simulator& simulator)
     {
-        Opm::DeckConstPtr eclDeck = simulator.gridManager().deck();
+        const auto& eclDeck = simulator.gridManager().deck();
         const Opm::UnitSystem& deckUnitSystem = eclDeck->getActiveUnitSystem();
 
         deckToSiFactor_.resize(numDimensions);
         deckToSiOffset_.resize(numDimensions, 0.0);
 
-        deckToSiFactor_[temperature] = deckUnitSystem.getDimension("Temperature")->getSIScaling();
-        deckToSiOffset_[temperature] = deckUnitSystem.getDimension("Temperature")->getSIOffset();
+        deckToSiFactor_[temperature] = deckUnitSystem.getDimension("Temperature").getSIScaling();
+        deckToSiOffset_[temperature] = deckUnitSystem.getDimension("Temperature").getSIOffset();
 
-        deckToSiFactor_[pressure] = deckUnitSystem.getDimension("Pressure")->getSIScaling();;
+        deckToSiFactor_[pressure] = deckUnitSystem.getDimension("Pressure").getSIScaling();;
         deckToSiFactor_[saturation] = 1.0;
-        deckToSiFactor_[length] = deckUnitSystem.getDimension("Length")->getSIScaling();;
-        deckToSiFactor_[time] = deckUnitSystem.getDimension("Time")->getSIScaling();;
-        deckToSiFactor_[permeability] = deckUnitSystem.getDimension("Permeability")->getSIScaling();;
-        deckToSiFactor_[transmissibility] = deckUnitSystem.getDimension("Transmissibility")->getSIScaling();;
-        deckToSiFactor_[gasDissolutionFactor] = deckUnitSystem.getDimension("GasDissolutionFactor")->getSIScaling();;
-        deckToSiFactor_[oilDissolutionFactor] = deckUnitSystem.getDimension("OilDissolutionFactor")->getSIScaling();;
-        deckToSiFactor_[liquidSurfaceVolume] = deckUnitSystem.getDimension("LiquidSurfaceVolume")->getSIScaling();;
-        deckToSiFactor_[gasSurfaceVolume] = deckUnitSystem.getDimension("GasSurfaceVolume")->getSIScaling();;
-        deckToSiFactor_[reservoirVolume] = deckUnitSystem.getDimension("ReservoirVolume")->getSIScaling();;
-        deckToSiFactor_[density] = deckUnitSystem.getDimension("Density")->getSIScaling();;
-        deckToSiFactor_[viscosity] = deckUnitSystem.getDimension("Viscosity")->getSIScaling();;
+        deckToSiFactor_[length] = deckUnitSystem.getDimension("Length").getSIScaling();;
+        deckToSiFactor_[time] = deckUnitSystem.getDimension("Time").getSIScaling();;
+        deckToSiFactor_[permeability] = deckUnitSystem.getDimension("Permeability").getSIScaling();;
+        deckToSiFactor_[transmissibility] = deckUnitSystem.getDimension("Transmissibility").getSIScaling();;
+        deckToSiFactor_[gasDissolutionFactor] = deckUnitSystem.getDimension("GasDissolutionFactor").getSIScaling();;
+        deckToSiFactor_[oilDissolutionFactor] = deckUnitSystem.getDimension("OilDissolutionFactor").getSIScaling();;
+        deckToSiFactor_[liquidSurfaceVolume] = deckUnitSystem.getDimension("LiquidSurfaceVolume").getSIScaling();;
+        deckToSiFactor_[gasSurfaceVolume] = deckUnitSystem.getDimension("GasSurfaceVolume").getSIScaling();;
+        deckToSiFactor_[reservoirVolume] = deckUnitSystem.getDimension("ReservoirVolume").getSIScaling();;
+        deckToSiFactor_[density] = deckUnitSystem.getDimension("Density").getSIScaling();;
+        deckToSiFactor_[viscosity] = deckUnitSystem.getDimension("Viscosity").getSIScaling();;
 
         deckToSiFactor_[liquidRate] = deckToSiFactor_[liquidSurfaceVolume] / deckToSiFactor_[time];
         deckToSiFactor_[gasRate] = deckToSiFactor_[gasSurfaceVolume] / deckToSiFactor_[time];
