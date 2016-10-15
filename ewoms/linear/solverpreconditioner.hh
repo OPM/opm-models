@@ -27,7 +27,7 @@
 #ifndef EWOMS_SOLVER_PRECONDITIONER_HH
 #define EWOMS_SOLVER_PRECONDITIONER_HH
 
-#include <ewoms/istl/solvers.hh>
+#include <ewoms/linear/solvers.hh>
 #include <dune/istl/preconditioners.hh>
 
 namespace Ewoms {

@@ -31,7 +31,7 @@
 
 #include <ewoms/common/parametersystem.hh>
 
-#include <ewoms/istl/solvers.hh>
+#include <ewoms/linear/solvers.hh>
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
 

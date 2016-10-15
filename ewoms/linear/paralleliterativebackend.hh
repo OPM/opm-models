@@ -37,7 +37,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <ewoms/istl/solvers.hh>
+#include <ewoms/linear/solvers.hh>
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
