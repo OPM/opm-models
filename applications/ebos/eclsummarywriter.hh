@@ -103,7 +103,7 @@ public:
         , ertSummary_(simulator)
 #endif
     {
-        Opm::DeckConstPtr deck = simulator.gridManager().deck();
+        const auto& deck = simulator.gridManager().deck();
 
         // populate the set of quantities to write
         if (deck->hasKeyword("ALL"))
@@ -334,9 +334,9 @@ private:
     bool writeWopt_() const
     { return summaryKeywords_.count("WOPT") > 0; }
 
-    void addVariables_(Opm::EclipseStateConstPtr eclState)
+    void addVariables_(std::shared_ptr< const Opm::EclipseState > eclState)
     {
-        const auto& wellsVector = eclState->getSchedule()->getWells();
+        const auto& wellsVector = eclState->getSchedule().getWells();
         for (size_t wellIdx = 0; wellIdx < wellsVector.size(); ++ wellIdx) {
             const auto& eclWell = wellsVector[wellIdx];
             auto& wellInfo = ertWellInfo_[eclWell->name()];
@@ -517,7 +517,7 @@ private:
     }
 
     // add all quantities which are present in the summary section of the deck
-    void addPresentSummaryKeywords_(Opm::DeckConstPtr deck)
+    void addPresentSummaryKeywords_(std::shared_ptr< const Opm::Deck > deck)
     {
         Opm::Section summarySection(*deck, "SUMMARY");
         auto kwIt = summarySection.begin();

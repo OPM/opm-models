@@ -208,7 +208,7 @@ public:
      *        the actual simulation.
      */
     template <class Grid, class CartesianIndexMapper, class DeckUnits>
-    ErtGrid(Opm::EclipseGridConstPtr eclGrid,
+    ErtGrid(const Opm::EclipseGrid& eclGrid,
             const Grid& grid,
             const CartesianIndexMapper& cartesianMapper,
             const DeckUnits& deckUnits)
@@ -223,13 +223,13 @@ public:
         std::vector<double> zcornData;
         std::vector<int> actnumData;
 
-        int nx = eclGrid->getNX();
-        int ny = eclGrid->getNY();
-        int nz = eclGrid->getNZ();
+        int nx = eclGrid.getNX();
+        int ny = eclGrid.getNY();
+        int nz = eclGrid.getNZ();
 
-        eclGrid->exportMAPAXES(mapaxesData);
-        eclGrid->exportCOORD(coordData);
-        eclGrid->exportZCORN(zcornData);
+        eclGrid.exportMAPAXES(mapaxesData);
+        eclGrid.exportCOORD(coordData);
+        eclGrid.exportZCORN(zcornData);
 
         // create the ACTNUM array based on the "real" grid which is used for
         // simulation. Note that this is still an approximation because the simulation
@@ -345,9 +345,9 @@ public:
     template <class Simulator>
     void writeHeader(const Simulator &simulator, unsigned reportStepIdx)
     {
-        Opm::EclipseGridConstPtr eclGrid = simulator.gridManager().eclGrid();
-        Opm::EclipseStateConstPtr eclState = simulator.gridManager().eclState();
-        const auto eclSchedule = eclState->getSchedule();
+        const auto& eclGrid = simulator.gridManager().eclGrid();
+        const auto& eclState = simulator.gridManager().eclState();
+        const auto& eclSchedule = eclState->getSchedule();
 
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
@@ -358,12 +358,12 @@ public:
         rstHeader.nx = eclGrid->getNX();
         rstHeader.ny = eclGrid->getNY();
         rstHeader.nz = eclGrid->getNZ();
-        rstHeader.nwells = eclSchedule->numWells(reportStepIdx);
+        rstHeader.nwells = eclSchedule.numWells(reportStepIdx);
         rstHeader.niwelz = numIwellItemsPerWell;
         rstHeader.nzwelz = numZwelStringsPerWell;
         rstHeader.niconz = numIconItemsPerConnection;
         rstHeader.phase_sum = ECL_OIL_PHASE | ECL_WATER_PHASE | ECL_GAS_PHASE;
-        rstHeader.ncwmax = eclSchedule->getMaxNumCompletionsForWells(reportStepIdx);
+        rstHeader.ncwmax = eclSchedule.getMaxNumCompletionsForWells(reportStepIdx);
         rstHeader.sim_days = daysElapsed;
         ecl_rst_file_fwrite_header(restartFileHandle_, reportStepIdx, &rstHeader);
 
@@ -372,7 +372,7 @@ public:
         std::vector<int> iwelData;
         std::vector<const char*> zwelData;
 
-        const auto& eclWells = eclSchedule->getWells(reportStepIdx);
+        const auto& eclWells = eclSchedule.getWells(reportStepIdx);
         auto eclWellIt = eclWells.begin();
         const auto& eclWellEndIt = eclWells.end();
         for (; eclWellIt != eclWellEndIt; ++eclWellIt) {
@@ -402,10 +402,10 @@ private:
 
         iwelData.resize(iwelData.size() + numIwellItemsPerWell, 0);
 
-        Opm::CompletionSetConstPtr completionSet = eclWell->getCompletions(reportStepIdx);
+        const auto& completionSet = eclWell->getCompletions(reportStepIdx);
         iwelData[offset + IWEL_HEADI_ITEM] = eclWell->getHeadI() + 1;
         iwelData[offset + IWEL_HEADJ_ITEM] = eclWell->getHeadJ() + 1;
-        iwelData[offset + IWEL_CONNECTIONS_ITEM] = completionSet->size();
+        iwelData[offset + IWEL_CONNECTIONS_ITEM] = completionSet.size();
         iwelData[offset + IWEL_GROUP_ITEM] = 1; // currently we implement only a single group
         iwelData[offset + IWEL_TYPE_ITEM] = ertWellType_(eclWell, reportStepIdx);
         iwelData[offset + IWEL_STATUS_ITEM] = ertWellStatus_(eclWell, reportStepIdx);
@@ -432,18 +432,18 @@ private:
         int offset = iconData.size();
 
         iconData.resize(iconData.size() + maxNumConnections*numIconItemsPerConnection, 0);
-        Opm::CompletionSetConstPtr completionsSet = eclWell->getCompletions(reportStepIdx);
-        for (size_t i = 0; i < completionsSet->size(); ++i) {
-            Opm::CompletionConstPtr completion = completionsSet->get(i);
+        const auto& completionsSet = eclWell->getCompletions(reportStepIdx);
+        for (size_t i = 0; i < completionsSet.size(); ++i) {
+            const auto& completion = completionsSet.get(i);
 
             iconData[offset + ICON_IC_INDEX] = 1;
-            iconData[offset + ICON_I_INDEX] = completion->getI() + 1;
-            iconData[offset + ICON_J_INDEX] = completion->getJ() + 1;
-            iconData[offset + ICON_K_INDEX] = completion->getK() + 1;
-            iconData[offset + ICON_STATUS_INDEX] = (completion->getState() == Opm::WellCompletion::OPEN)?1:0;
+            iconData[offset + ICON_I_INDEX] = completion.getI() + 1;
+            iconData[offset + ICON_J_INDEX] = completion.getJ() + 1;
+            iconData[offset + ICON_K_INDEX] = completion.getK() + 1;
+            iconData[offset + ICON_STATUS_INDEX] = (completion.getState() == Opm::WellCompletion::OPEN)?1:0;
 
             int eclDirection;
-            switch (completion->getDirection()) {
+            switch (completion.getDirection()) {
             case Opm::WellCompletion::X:
                 eclDirection = 1;
                 break;
@@ -567,14 +567,14 @@ public:
     ErtSummary(const Simulator& simulator)
     {
         const auto& gridManager = simulator.gridManager();
-        Opm::EclipseGridConstPtr eclGrid = gridManager.eclGrid();
-        Opm::TimeMapConstPtr timeMap = gridManager.schedule()->getTimeMap();
+        const auto& eclGrid = gridManager.eclGrid();
+        const auto& timeMap = gridManager.schedule()->getTimeMap();
 
         std::string caseName = gridManager.caseName();
 
         // the correct start time has not yet been set in the
         // simulator, so we extract it from the ECL deck->..
-        tm curTime = boost::posix_time::to_tm(timeMap->getStartTime(/*timeStepIdx=*/0));
+        tm curTime = boost::posix_time::to_tm(timeMap.getStartTime(/*timeStepIdx=*/0));
         double startTime = std::mktime(&curTime);
 
         ertHandle_ = ecl_sum_alloc_writer(caseName.c_str(),
