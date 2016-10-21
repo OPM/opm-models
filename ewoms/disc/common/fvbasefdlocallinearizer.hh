@@ -141,11 +141,13 @@ private:
     typedef typename GridView::template Codim<0>::Entity Element;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
-    typedef Dune::Matrix<MatrixBlock> LocalBlockMatrix;
+    typedef Dune::FieldMatrix<Scalar, numEq, numEq> ScalarMatrixBlock;
+    typedef Dune::FieldVector<Scalar, numEq> ScalarVectorBlock;
 
-    typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
-    typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
+    typedef Dune::BlockVector<ScalarVectorBlock> ScalarLocalBlockVector;
+    typedef Dune::Matrix<ScalarMatrixBlock> ScalarLocalBlockMatrix;
+
+    typedef typename LocalResidual::LocalEvalBlockVector LocalEvalBlockVector;
 
 #if __GNUC__ == 4 && __GNUC_MINOR__ <= 6
 public:
@@ -298,7 +300,7 @@ public:
      * \param rangeScvIdx The local index of the sub control volume
      *                    which contains the local residual
      */
-    const MatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
+    const ScalarMatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
 
     /*!
@@ -306,7 +308,7 @@ public:
      *
      * \param dofIdx The local index of the sub control volume
      */
-    const VectorBlock &residual(int dofIdx) const
+    const ScalarVectorBlock &residual(int dofIdx) const
     { return residual_[dofIdx]; }
 
 protected:
@@ -499,9 +501,9 @@ protected:
 
     ElementContext *internalElemContext_;
 
-    LocalBlockVector residual_;
-    LocalBlockVector derivResidual_;
-    LocalBlockMatrix jacobian_;
+    LocalEvalBlockVector residual_;
+    LocalEvalBlockVector derivResidual_;
+    ScalarLocalBlockMatrix jacobian_;
 
     LocalResidual localResidual_;
 };

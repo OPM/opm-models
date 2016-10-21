@@ -66,6 +66,8 @@
 #include <dune/fem/misc/capabilities.hh>
 #endif
 
+#include <boost/align/aligned_allocator.hpp>
+
 #include <limits>
 #include <list>
 #include <sstream>
@@ -290,7 +292,7 @@ class FvBaseDiscretization
         historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
     };
 
-    typedef std::vector<IntensiveQuantities> IntensiveQuantitiesVector;
+    typedef std::vector<IntensiveQuantities, boost::alignment::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > IntensiveQuantitiesVector;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
@@ -298,7 +300,8 @@ class FvBaseDiscretization
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Evaluation, numEq> VectorBlock;
     typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
-    typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
+
+    typedef typename LocalResidual::LocalEvalBlockVector LocalEvalBlockVector;
 
     class BlockVectorWrapper
     {
@@ -782,7 +785,7 @@ public:
             int threadId = ThreadManager::threadId();
             ElementContext elemCtx(simulator_);
             ElementIterator elemIt = gridView().template begin</*codim=*/0>();
-            LocalBlockVector residual, storageTerm;
+            LocalEvalBlockVector residual, storageTerm;
 
             for (threadedElemIt.beginParallel(elemIt);
                  !threadedElemIt.isFinished(elemIt);
@@ -846,7 +849,7 @@ public:
             int threadId = ThreadManager::threadId();
             ElementContext elemCtx(simulator_);
             ElementIterator elemIt = gridView().template begin</*codim=*/0>();
-            LocalBlockVector elemStorage;
+            LocalEvalBlockVector elemStorage;
 
             // in this method, we need to disable the storage cache because we want to
             // evaluate the storage term for other time indices than the most recent one

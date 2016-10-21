@@ -32,6 +32,8 @@
 
 #include <dune/common/fvector.hh>
 
+#include <boost/align/aligned_allocator.hpp>
+
 #include <vector>
 
 namespace Ewoms {
@@ -95,6 +97,14 @@ public:
         simulatorPtr_ = &simulator;
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
         stashedDofIdx_ = -1;
+    }
+
+    static void *operator new(size_t size) {
+        return boost::alignment::aligned_alloc(alignof(FvBaseElementContext), size);
+    }
+
+    static void operator delete(void *ptr) {
+        boost::alignment::aligned_free(ptr);
     }
 
     /*!
@@ -580,8 +590,6 @@ protected:
         dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
     }
 
-    DofVarsVector dofVars_;
-
     IntensiveQuantities intensiveQuantitiesStashed_;
     PrimaryVariables priVarsStashed_;
 
@@ -590,7 +598,8 @@ protected:
 
     GradientCalculator gradientCalculator_;
 
-    ExtensiveQuantitiesVector extensiveQuantities_;
+    std::vector<DofStore_, boost::alignment::aligned_allocator<DofStore_, alignof(DofStore_)> > dofVars_;
+    std::vector<ExtensiveQuantities, boost::alignment::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > extensiveQuantities_;
 
     const Simulator *simulatorPtr_;
     const Element *elemPtr_;

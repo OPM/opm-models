@@ -28,6 +28,8 @@
 #ifndef EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 #define EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 
+#include "fvbaseproperties.hh"
+
 #include <ewoms/common/parametersystem.hh>
 
 #include <opm/material/common/Valgrind.hpp>
@@ -39,7 +41,7 @@
 
 #include <opm/material/common/ClassName.hpp>
 
-#include "fvbaseproperties.hh"
+#include <boost/align/aligned_allocator.hpp>
 
 #include <cmath>
 
@@ -74,15 +76,15 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryContext) BoundaryContext;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
-    typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
-    typedef Dune::FieldVector<Evaluation, numEq> VectorBlock;
-    typedef Dune::BlockVector<VectorBlock> LocalBlockVector;
+    typedef Dune::FieldVector<Evaluation, numEq> EvalVector;
 
     // copying the local residual class is not a good idea
     FvBaseLocalResidual(const FvBaseLocalResidual &)
     {}
 
 public:
+    typedef Dune::BlockVector<EvalVector, boost::alignment::aligned_allocator<EvalVector, alignof(EvalVector)> > LocalEvalBlockVector;
+
     FvBaseLocalResidual()
     { }
 
@@ -99,7 +101,7 @@ public:
      * \brief Return the result of the eval() call using internal
      *        storage.
      */
-    const LocalBlockVector &residual() const
+    const LocalEvalBlockVector &residual() const
     { return internalResidual_; }
 
     /*!
@@ -108,7 +110,7 @@ public:
      *
      * \copydetails Doxygen::ecfvScvIdxParam
      */
-    const VectorBlock &residual(unsigned dofIdx) const
+    const EvalVector &residual(unsigned dofIdx) const
     { return internalResidual_[dofIdx]; }
 
     /*!
@@ -151,7 +153,7 @@ public:
      * \copydetails Doxygen::residualParam
      * \copydetails Doxygen::ecfvElemCtxParam
      */
-    void eval(LocalBlockVector &residual,
+    void eval(LocalEvalBlockVector &residual,
               const ElementContext &elemCtx) const
     {
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
@@ -195,7 +197,7 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalStorage(LocalBlockVector &storage,
+    void evalStorage(LocalEvalBlockVector &storage,
                      const ElementContext &elemCtx,
                      unsigned timeIdx) const
     {
@@ -259,7 +261,7 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalFluxes(LocalBlockVector &residual,
+    void evalFluxes(LocalEvalBlockVector &residual,
                     const ElementContext &elemCtx,
                     unsigned timeIdx) const
     {
@@ -374,7 +376,7 @@ protected:
     /*!
      * \brief Evaluate the boundary conditions of an element.
      */
-    void evalBoundary_(LocalBlockVector &residual,
+    void evalBoundary_(LocalEvalBlockVector &residual,
                        const ElementContext &elemCtx,
                        unsigned timeIdx) const
     {
@@ -411,7 +413,7 @@ protected:
      * \brief Evaluate all boundary conditions for a single
      *        sub-control volume face to the local residual.
      */
-    void evalBoundarySegment_(LocalBlockVector &residual,
+    void evalBoundarySegment_(LocalEvalBlockVector &residual,
                               const BoundaryContext &boundaryCtx,
                               unsigned boundaryFaceIdx,
                               unsigned timeIdx) const
@@ -443,10 +445,10 @@ protected:
      *        to the local residual of all sub-control volumes of the
      *        current element.
      */
-    void evalVolumeTerms_(LocalBlockVector &residual,
+    void evalVolumeTerms_(LocalEvalBlockVector &residual,
                           const ElementContext &elemCtx) const
     {
-        EvalEqVector tmp;
+        EvalVector tmp;
         EqVector tmp2;
         RateVector sourceRate;
 
@@ -548,7 +550,7 @@ private:
     const Implementation &asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    LocalBlockVector internalResidual_;
+    LocalEvalBlockVector internalResidual_;
 };
 
 } // namespace Ewoms
