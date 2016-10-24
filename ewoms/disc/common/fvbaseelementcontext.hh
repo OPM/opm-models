@@ -119,7 +119,6 @@ public:
      */
     void updateStencil(const Element &elem)
     {
-
         // remember the current element
         elemPtr_ = &elem;
 

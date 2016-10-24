@@ -241,17 +241,17 @@ public:
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         auto scv = SubControlVolume(element);
         // add the "center" element of the stencil
-        subControlVolumes_.resize(0, scv);
+        subControlVolumes_.clear();
         subControlVolumes_.push_back(scv);
-        elements_.resize(0, element);
+        elements_.clear();
         elements_.push_back(element);
 #else
         auto ePtr = ElementPointer(element);
         auto scv = SubControlVolume(ePtr);
         // add the "center" element of the stencil
-        subControlVolumes_.resize(0, scv);
+        subControlVolumes_.clear();
         subControlVolumes_.push_back(scv);
-        elements_.resize(0, ePtr);
+        elements_.clear();
         elements_.push_back(ePtr);
 #endif
 
