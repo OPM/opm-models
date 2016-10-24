@@ -239,24 +239,21 @@ public:
         const auto &endIsIt = gridView_.iend(element);
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        auto scv = SubControlVolume(element);
         // add the "center" element of the stencil
         subControlVolumes_.clear();
-        subControlVolumes_.push_back(scv);
+        subControlVolumes_.emplace_back(SubControlVolume(element));
         elements_.clear();
-        elements_.push_back(element);
+        elements_.emplace_back(element);
 #else
-        auto ePtr = ElementPointer(element);
-        auto scv = SubControlVolume(ePtr);
         // add the "center" element of the stencil
         subControlVolumes_.clear();
-        subControlVolumes_.push_back(scv);
+        subControlVolumes_.emplace_back(SubControlVolume(ePtr));
         elements_.clear();
-        elements_.push_back(ePtr);
+        elements_.emplace_back(ElementPointer(element));
 #endif
 
-        interiorFaces_.resize(0);
-        boundaryFaces_.resize(0);
+        interiorFaces_.clear();
+        boundaryFaces_.clear();
 
         for (; isIt != endIsIt; ++isIt) {
             const auto& intersection = *isIt;
@@ -264,12 +261,12 @@ public:
             // degree of freedom and an internal face, else add a
             // boundary face
             if (intersection.neighbor()) {
-                elements_.push_back(intersection.outside());
-                subControlVolumes_.push_back(SubControlVolume(intersection.outside()));
-                interiorFaces_.push_back(SubControlVolumeFace(intersection, subControlVolumes_.size() - 1));
+                elements_.emplace_back(intersection.outside());
+                subControlVolumes_.emplace_back(SubControlVolume(intersection.outside()));
+                interiorFaces_.emplace_back(SubControlVolumeFace(intersection, subControlVolumes_.size() - 1));
             }
             else {
-                boundaryFaces_.push_back(SubControlVolumeFace(intersection, - 10000));
+                boundaryFaces_.emplace_back(SubControlVolumeFace(intersection, - 10000));
             }
         }
     }
@@ -278,18 +275,16 @@ public:
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
-        subControlVolumes_.resize(0);
+        subControlVolumes_.clear();
         subControlVolumes_.emplace_back(SubControlVolume(element));
-        elements_.resize(0, element);
+        elements_.clear();
         elements_.emplace_back(element);
 #else
-        auto ePtr = ElementPointer(element);
-        auto scv = SubControlVolume(ePtr);
         // add the "center" element of the stencil
-        subControlVolumes_.resize(0, scv);
-        subControlVolumes_.push_back(scv);
-        elements_.resize(0, ePtr);
-        elements_.push_back(ePtr);
+        subControlVolumes_.clear();
+        subControlVolumes_.emplace_back(SubControlVolume(ePtr));
+        elements_.clear();
+        elements_.emplace_back(ElementPointer(element));
 #endif
     }
 

@@ -370,7 +370,7 @@ private:
         this->endindices();
 
         // free the memory occupied by the array of the matrix entries
-        entries_.resize(0);
+        entries_.clear();
     }
 
     // send the overlap indices to a peer
