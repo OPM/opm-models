@@ -246,10 +246,11 @@ public:
         elements_.emplace_back(element);
 #else
         // add the "center" element of the stencil
+        ElementPointer ePtr(element);
         subControlVolumes_.clear();
         subControlVolumes_.emplace_back(SubControlVolume(ePtr));
         elements_.clear();
-        elements_.emplace_back(ElementPointer(element));
+        elements_.emplace_back(ePtr);
 #endif
 
         interiorFaces_.clear();
@@ -281,10 +282,11 @@ public:
         elements_.emplace_back(element);
 #else
         // add the "center" element of the stencil
+        ElementPointer ePtr(element);
         subControlVolumes_.clear();
         subControlVolumes_.emplace_back(SubControlVolume(ePtr));
         elements_.clear();
-        elements_.emplace_back(ElementPointer(element));
+        elements_.emplace_back(ePtr);
 #endif
     }
 
