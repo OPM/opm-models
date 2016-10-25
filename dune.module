@@ -3,7 +3,7 @@
 # and by the CMake build scripts.
 ################################
 Module: ewoms
-Version: 2016.10-pre
+Version: 2016.10.0-rc1
 Codename: Butch
 Description: The eWoms simulation framework for flow  and transport in porous media
 Url: http://opm-project.org/ewoms
