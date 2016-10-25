@@ -262,8 +262,8 @@ public:
             // degree of freedom and an internal face, else add a
             // boundary face
             if (intersection.neighbor()) {
-                elements_.emplace_back(/*SubControlVolume(*/intersection.outside()/*)*/);
-                subControlVolumes_.emplace_back(/*SubControlVolume(*/intersection.outside()/*)*/);
+                elements_.emplace_back( intersection.outside() );
+                subControlVolumes_.emplace_back(/*SubControlVolume(*/ elements_.back() /*)*/);
                 interiorFaces_.emplace_back(/*SubControlVolumeFace(*/intersection, subControlVolumes_.size() - 1/*)*/);
             }
             else {
@@ -304,7 +304,7 @@ public:
      * \brief Return the element to which the stencil refers.
      */
     const Element &element() const
-    { return *elements_[0]; }
+    { return element( 0 ); }
 
     /*!
      * \brief Return the grid view of the element to which the stencil
