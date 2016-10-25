@@ -20,12 +20,12 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
-#define EWOMS_VERSION_MAJOR 2016
-#define EWOMS_VERSION_MINOR 10
+#define EWOMS_VERSION_MAJOR 2017
+#define EWOMS_VERSION_MINOR 04
 #define EWOMS_VERSION_REVISION -1 // -1 means that this is a version from the development branch...
 
 #define EWOMS_VERSION_SUFFIX "pre"
-#define EWOMS_VERSION_CODENAME "Butch"
+#define EWOMS_VERSION_CODENAME "Fabienne"
 
 #include <string>
 #include <sstream>
