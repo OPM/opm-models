@@ -241,14 +241,14 @@ public:
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
         subControlVolumes_.clear();
-        subControlVolumes_.emplace_back(SubControlVolume(element));
+        subControlVolumes_.emplace_back(/*SubControlVolume(*/element/*)*/);
         elements_.clear();
         elements_.emplace_back(element);
 #else
         // add the "center" element of the stencil
         ElementPointer ePtr(element);
         subControlVolumes_.clear();
-        subControlVolumes_.emplace_back(SubControlVolume(ePtr));
+        subControlVolumes_.emplace_back(/*SubControlVolume(*/ePtr/*)*/);
         elements_.clear();
         elements_.emplace_back(ePtr);
 #endif
@@ -262,12 +262,12 @@ public:
             // degree of freedom and an internal face, else add a
             // boundary face
             if (intersection.neighbor()) {
-                elements_.emplace_back(intersection.outside());
-                subControlVolumes_.emplace_back(SubControlVolume(intersection.outside()));
-                interiorFaces_.emplace_back(SubControlVolumeFace(intersection, subControlVolumes_.size() - 1));
+                elements_.emplace_back(/*SubControlVolume(*/intersection.outside()/*)*/);
+                subControlVolumes_.emplace_back(/*SubControlVolume(*/intersection.outside()/*)*/);
+                interiorFaces_.emplace_back(/*SubControlVolumeFace(*/intersection, subControlVolumes_.size() - 1/*)*/);
             }
             else {
-                boundaryFaces_.emplace_back(SubControlVolumeFace(intersection, - 10000));
+                boundaryFaces_.emplace_back(/*SubControlVolumeFace(*/intersection, - 10000/*)*/);
             }
         }
     }
@@ -277,14 +277,14 @@ public:
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
         subControlVolumes_.clear();
-        subControlVolumes_.emplace_back(SubControlVolume(element));
+        subControlVolumes_.emplace_back(/*SubControlVolume(*/element/*)*/);
         elements_.clear();
         elements_.emplace_back(element);
 #else
         // add the "center" element of the stencil
         ElementPointer ePtr(element);
         subControlVolumes_.clear();
-        subControlVolumes_.emplace_back(SubControlVolume(ePtr));
+        subControlVolumes_.emplace_back(/*SubControlVolume(*/ePtr/*)*/);
         elements_.clear();
         elements_.emplace_back(ePtr);
 #endif
