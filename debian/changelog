@@ -1,3 +1,9 @@
+ewoms (2016.10-rc1-1~xenial) xenial; urgency=medium
+
+  * Release new version
+
+ -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Wed, 26 Oct 2016 12:52:19 +0200
+
 ewoms (2015.04-1~precise) precise; urgency=medium
 
   * Release new version
