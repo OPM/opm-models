@@ -156,7 +156,7 @@ public:
         void* p = aligned_alloc(MaxAlign::value,
                                 sizeof(T) * size);
         if (!p && size > 0) {
-            boost::throw_exception(std::bad_alloc());
+            throw std::bad_alloc();
         }
         return static_cast<T*>(p);
     }
@@ -165,32 +165,16 @@ public:
         aligned_free(ptr);
     }
 
-    BOOST_CONSTEXPR size_type max_size() const
+    constexpr size_type max_size() const
         noexcept {
         return detail::max_count_of<T>::value;
     }
 
-#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template<class U, class... Args>
     void construct(U* ptr, Args&&... args) {
         void* p = ptr;
         ::new(p) U(std::forward<Args>(args)...);
     }
-#else
-    template<class U, class V>
-    void construct(U* ptr, V&& value) {
-        void* p = ptr;
-        ::new(p) U(std::forward<V>(value));
-    }
-#endif
-#else
-    template<class U, class V>
-    void construct(U* ptr, const V& value) {
-        void* p = ptr;
-        ::new(p) U(value);
-    }
-#endif
 
     template<class U>
     void construct(U* ptr) {
