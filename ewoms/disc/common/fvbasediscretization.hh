@@ -51,6 +51,7 @@
 #include <ewoms/linear/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/aux/baseauxiliarymodule.hh>
+#include <ewoms/common/alignedallocator.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/common/Exceptions.hpp>
@@ -65,8 +66,6 @@
 #include <dune/fem/function/blockvectorfunction.hh>
 #include <dune/fem/misc/capabilities.hh>
 #endif
-
-#include <boost/align/aligned_allocator.hpp>
 
 #include <limits>
 #include <list>
@@ -292,7 +291,7 @@ class FvBaseDiscretization
         historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
     };
 
-    typedef std::vector<IntensiveQuantities, boost::alignment::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > IntensiveQuantitiesVector;
+    typedef std::vector<IntensiveQuantities, Ewoms::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > IntensiveQuantitiesVector;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;

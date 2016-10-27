@@ -31,6 +31,7 @@
 #include "fvbaseproperties.hh"
 
 #include <ewoms/common/parametersystem.hh>
+#include <ewoms/common/alignedallocator.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 
@@ -40,8 +41,6 @@
 #include <dune/common/fvector.hh>
 
 #include <opm/material/common/ClassName.hpp>
-
-#include <boost/align/aligned_allocator.hpp>
 
 #include <cmath>
 
@@ -83,7 +82,7 @@ private:
     {}
 
 public:
-    typedef Dune::BlockVector<EvalVector, boost::alignment::aligned_allocator<EvalVector, alignof(EvalVector)> > LocalEvalBlockVector;
+    typedef Dune::BlockVector<EvalVector, Ewoms::aligned_allocator<EvalVector, alignof(EvalVector)> > LocalEvalBlockVector;
 
     FvBaseLocalResidual()
     { }

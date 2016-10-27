@@ -30,9 +30,9 @@
 
 #include "fvbaseproperties.hh"
 
-#include <dune/common/fvector.hh>
+#include <ewoms/common/alignedallocator.hh>
 
-#include <boost/align/aligned_allocator.hpp>
+#include <dune/common/fvector.hh>
 
 #include <vector>
 
@@ -100,11 +100,11 @@ public:
     }
 
     static void *operator new(size_t size) {
-        return boost::alignment::aligned_alloc(alignof(FvBaseElementContext), size);
+        return Ewoms::aligned_alloc(alignof(FvBaseElementContext), size);
     }
 
     static void operator delete(void *ptr) {
-        boost::alignment::aligned_free(ptr);
+        Ewoms::aligned_free(ptr);
     }
 
     /*!
@@ -598,8 +598,8 @@ protected:
 
     GradientCalculator gradientCalculator_;
 
-    std::vector<DofStore_, boost::alignment::aligned_allocator<DofStore_, alignof(DofStore_)> > dofVars_;
-    std::vector<ExtensiveQuantities, boost::alignment::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > extensiveQuantities_;
+    std::vector<DofStore_, Ewoms::aligned_allocator<DofStore_, alignof(DofStore_)> > dofVars_;
+    std::vector<ExtensiveQuantities, Ewoms::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > extensiveQuantities_;
 
     const Simulator *simulatorPtr_;
     const Element *elemPtr_;
