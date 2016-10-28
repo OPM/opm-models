@@ -1,3 +1,52 @@
+Changes in eWoms 2016.04
+========================
+
+- Support for Dune 2.2 has been removed: Dune 2.3 has been released in
+  February 2014, so it should be old enough to be available everywhere
+  where the latest eWoms release is supposed to be used.
+- Support for the legacy ALUGrid Dune grid provided by old versions of
+  the dune-grid module has been removed. the stand-alone dune-alugrid
+  module can be used as a drop-in replacement.
+- The Navier-Stokes test has been removed: It did not work properly
+  and earlier releases of eWoms just hid the issues.
+- The dune-localfunctions module is now an optional instead of a
+  required dependency. If it is not available, the vertex-centered
+  finite volume method (VCFV) cannot be used with P1 finite element
+  gradients, i.e., it only supports two-point gradients in that case.
+- An explicitly as an optional dependency has been added on opm-parser
+  module. So far, the opm-parser dependency was implicitly inherited
+  from the optional opm-grid module.
+- Many improvements of ebos (the Ecl Black-Oil Simulator):
+ - Treatment of wells can be completely disabled at compile time. This
+   is useful if eWoms is used as a simulation framework and an
+   external well model shall be used ECL simulations.
+ - Consistent determination of the upstream direction: So far, it was
+   possible that the upstream direction differed depending on which
+   side an intersection was used if the pressure gradient over the
+   intersection was zero.
+ - The calculated transmissibilities and threshold pressures are now
+   the same as those calculated by the `flow` simulator from
+   opm-autodiff.
+ - Proper support for specifying the pore volume directly (using the
+   ECL "PORV" keyword), minimum pore volume ("MINPV") and the most
+   common pore volume modifier keywords ("NGT", "MULTPV" and
+   "MULTREGP")
+ - Support for simple geology changes during the simulation, e.g., the
+   "MULTFLT" keyword can now occur in the "SCHEDULE" section.
+- Support for lockless multithreaded linearization. This code only
+  works for spatial discretizations that guarantee that the
+  linearization for a degree of freedom is only written to by a single
+  thread. Most prominently, this property holds for the element
+  centered finite volume discretization (ECFV).
+- Improvements to the update procedure of the Newton-Raphson method:
+  In particular, a linearized system of of equations does not need to
+  be solved anymore if the solution is deemed to be converged.
+- The residual of the "phase presence" equations is not considered for
+  convergence by the NCP model anymore. This should make the behavior
+  of the NCP model identical to that exhibited by the PVS model.
+- Many minor bugfixes and improvements.
+
+
 Notable Differences Between eWoms 2015.04 and eWoms 2015.10
 ===========================================================
 
