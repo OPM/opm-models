@@ -44,16 +44,17 @@ namespace Ewoms {
  * requires significantly more memory than a plain array. PffVector stands for "PreFetch
  * Friendly Grid Vector".
  */
-template <class GridView, class Stencil, class Data>
+template <class GridView, class Stencil, class Data, class DofMapper>
 class PffGridVector
 {
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
 
 public:
-    PffGridVector(const GridView& gridView)
+    PffGridVector(const GridView& gridView, const DofMapper& dofMapper)
         : gridView_(gridView)
         , elementMapper_(gridView_)
+        , dofMapper_(dofMapper)
     { }
 
     template <class DistFn>
@@ -68,7 +69,7 @@ public:
         // update the pointers for the element data: for this, we need to loop over the
         // whole grid and update a stencil for each element
         Data *curElemDataPtr = &data_[0];
-        Stencil stencil(gridView_);
+        Stencil stencil(gridView_, dofMapper_);
         auto elemIt = gridView_.template begin</*codim=*/0>();
         const auto& elemEndIt = gridView_.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -122,7 +123,7 @@ private:
         unsigned result = 0;
 
         // loop over the whole grid and sum up the number of local DOFs of all Stencils
-        Stencil stencil(gridView_);
+        Stencil stencil(gridView_, dofMapper_);
         auto elemIt = gridView_.template begin</*codim=*/0>();
         const auto& elemEndIt = gridView_.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -135,6 +136,7 @@ private:
 
     GridView gridView_;
     ElementMapper elementMapper_;
+    const DofMapper& dofMapper_;
     std::vector<Data> data_;
     std::vector<Data*> elemData_;
 };
