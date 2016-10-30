@@ -205,13 +205,10 @@ public:
             // moved in front of the #pragma!
             int threadId = ThreadManager::threadId();
             ElementContext elemCtx(this->simulator_);
-            ElementIterator elemIt = this->gridView().template begin</*codim=*/0>();
+            ElementIterator elemIt = threadedElemIt.beginParallel();
             EqVector tmp;
 
-            for (threadedElemIt.beginParallel(elemIt);
-                 !threadedElemIt.isFinished(elemIt);
-                 threadedElemIt.increment(elemIt))
-            {
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 const Element& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
