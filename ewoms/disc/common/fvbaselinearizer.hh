@@ -389,14 +389,25 @@ private:
 #endif
         {
             ElementIterator elemIt = gridView_().template begin</*codim=*/0>();
-            for (threadedElemIt.beginParallel(elemIt);
-                 !threadedElemIt.isFinished(elemIt);
-                 threadedElemIt.increment(elemIt))
+            threadedElemIt.beginParallel(elemIt);
+            ElementIterator nextElemIt = elemIt;
+            threadedElemIt.increment(nextElemIt);
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt, threadedElemIt.increment(nextElemIt))
             {
                 const Element &elem = *elemIt;
 
                 if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                     continue;
+
+                if (!threadedElemIt.isFinished(nextElemIt)) {
+                    const auto& nextElem = *nextElemIt;
+                    if (linearizeNonLocalElements
+                        || nextElem.partitionType() == Dune::InteriorEntity)
+                    {
+                        // TODO
+                        // prefetch_(nextElem);
+                    }
+                }
 
                 linearizeElement_(elem);
             }
