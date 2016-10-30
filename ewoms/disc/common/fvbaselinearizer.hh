@@ -337,11 +337,8 @@ private:
 #pragma omp parallel
 #endif
         {
-            ElementIterator elemIt = gridView_().template begin</*codim=*/0>();
-            for (threadedElemIt.beginParallel(elemIt);
-                 !threadedElemIt.isFinished(elemIt);
-                 threadedElemIt.increment(elemIt))
-            {
+            ElementIterator elemIt = threadedElemIt.beginParallel();
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 // create an element context (the solution-based quantities are not
                 // available here!)
                 const Element &elem = *elemIt;
@@ -388,26 +385,25 @@ private:
 #pragma omp parallel
 #endif
         {
-            ElementIterator elemIt = gridView_().template begin</*codim=*/0>();
-            threadedElemIt.beginParallel(elemIt);
+            ElementIterator elemIt = threadedElemIt.beginParallel();
             ElementIterator nextElemIt = elemIt;
-            threadedElemIt.increment(nextElemIt);
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt, threadedElemIt.increment(nextElemIt))
-            {
-                const Element &elem = *elemIt;
-
-                if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
-                    continue;
-
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
+                // give the model and the problem a chance to prefetch the data required
+                // to linearize the next element, but only if we need to consider it
                 if (!threadedElemIt.isFinished(nextElemIt)) {
+                    nextElemIt = threadedElemIt.increment();
                     const auto& nextElem = *nextElemIt;
                     if (linearizeNonLocalElements
                         || nextElem.partitionType() == Dune::InteriorEntity)
                     {
-                        // TODO
-                        // prefetch_(nextElem);
+                        model_().prefetch(nextElem);
+                        problem_().prefetch(nextElem);
                     }
                 }
+
+                const Element &elem = *elemIt;
+                if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
+                    continue;
 
                 linearizeElement_(elem);
             }

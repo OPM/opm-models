@@ -27,6 +27,8 @@
 #ifndef EWOMS_PFF_GRID_VECTOR_HH
 #define EWOMS_PFF_GRID_VECTOR_HH
 
+#include <ewoms/common/prefetch.hh>
+
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/common/version.hh>
 
@@ -88,6 +90,19 @@ public:
             // data for DOFs of the next element
             curElemDataPtr += numDof;
         }
+    }
+
+    void prefetch(const Element& elem) const
+    {
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+        unsigned elemIdx = elementMapper_.index(elem);
+#else
+        unsigned elemIdx = elementMapper_.map(elem);
+#endif
+
+        // we use 0 as the temporal locality, because it is reasonable to assume that an
+        // entry will only be accessed once.
+        Ewoms::prefetch</*temporalLocality=*/0>(elemData_[elemIdx]);
     }
 
     const Data& get(const Element& elem, unsigned localDofIdx) const

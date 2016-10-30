@@ -161,6 +161,15 @@ public:
     }
 
     /*!
+     * \brief Allows to improve the performance by prefetching all data which is
+     *        associated with a given element.
+     */
+    void prefetch(const Element& elem) const
+    {
+        // do nothing by default
+    }
+
+    /*!
      * \brief Handle changes of the grid
      */
     void gridChanged()

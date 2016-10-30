@@ -554,6 +554,15 @@ public:
     }
 
     /*!
+     * \brief Allows to improve the performance by prefetching all data which is
+     *        associated with a given element.
+     */
+    void prefetch(const Element& elem) const
+    {
+        // do nothing by default
+    }
+
+    /*!
      * \brief Returns the newton method object
      */
     NewtonMethod &newtonMethod()
@@ -783,13 +792,10 @@ public:
             // moved in front of the #pragma!
             int threadId = ThreadManager::threadId();
             ElementContext elemCtx(simulator_);
-            ElementIterator elemIt = gridView().template begin</*codim=*/0>();
+            ElementIterator elemIt = threadedElemIt.beginParallel();
             LocalEvalBlockVector residual, storageTerm;
 
-            for (threadedElemIt.beginParallel(elemIt);
-                 !threadedElemIt.isFinished(elemIt);
-                 threadedElemIt.increment(elemIt))
-            {
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 const Element& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     continue;
@@ -1562,11 +1568,8 @@ public:
 #endif
         {
             ElementContext elemCtx(simulator_);
-            ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
-            for (threadedElemIt.beginParallel(elemIt);
-                 !threadedElemIt.isFinished(elemIt);
-                 threadedElemIt.increment(elemIt))
-            {
+            ElementIterator elemIt = threadedElemIt.beginParallel();
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 if (needFullContextUpdate)
                     elemCtx.updateAll(*elemIt);
                 else {

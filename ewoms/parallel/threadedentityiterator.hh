@@ -52,28 +52,32 @@ public:
     ThreadedEntityIterator(const ThreadedEntityIterator &other) = default;
 
     // begin iterating over the grid in parallel
-    void beginParallel(EntityIterator& threadPrivateIt)
+    EntityIterator beginParallel()
     {
         mutex_.lock();
-        threadPrivateIt = sequentialIt_;
+        auto tmp = sequentialIt_;
         if (sequentialIt_ != sequentialEnd_)
             ++sequentialIt_; // make the next thread look at the next element
         mutex_.unlock();
+
+        return tmp;
     }
 
     // returns true if the last element was reached
-    bool isFinished(const EntityIterator& threadPrivateIt) const
-    { return threadPrivateIt == sequentialEnd_; }
+    bool isFinished(const EntityIterator& it) const
+    { return it == sequentialEnd_; }
 
     // prefix increment: goes to the next element which is not yet worked on by any
     // thread
-    void increment(EntityIterator& threadPrivateIt)
+    EntityIterator increment()
     {
         mutex_.lock();
-        threadPrivateIt = sequentialIt_;
+        auto tmp = sequentialIt_;
         if (sequentialIt_ != sequentialEnd_)
             ++sequentialIt_;
         mutex_.unlock();
+
+        return tmp;
     }
 
 private:
