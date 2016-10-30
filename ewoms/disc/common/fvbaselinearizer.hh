@@ -267,7 +267,7 @@ private:
         // allocate raw matrix
         matrix_ = new Matrix(numAllDof, numAllDof, Matrix::random);
 
-        Stencil stencil(gridView_());
+        Stencil stencil(gridView_(), model_().dofMapper() );
 
         // for the main model, find out the global indices of the neighboring degrees of
         // freedom of each primary degree of freedom

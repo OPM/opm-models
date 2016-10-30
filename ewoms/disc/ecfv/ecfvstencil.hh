@@ -69,7 +69,8 @@ class EcfvStencil
     typedef Dune::FieldVector<Scalar, dimWorld> WorldVector;
 
 public:
-    typedef Element  Entity;
+    typedef Element        Entity;
+    typedef ElementMapper  Mapper;
 
     typedef typename Element::Geometry LocalGeometry;
 
@@ -228,9 +229,9 @@ public:
         WorldVector normal_;
     };
 
-    EcfvStencil(const GridView &gridView)
+    EcfvStencil(const GridView &gridView, const Mapper& mapper)
         : gridView_(gridView)
-        , elementMapper_(gridView)
+        , elementMapper_(mapper)
     { }
 
     void updateTopology(const Element &element)
@@ -413,9 +414,9 @@ public:
     const SubControlVolumeFace &boundaryFace(unsigned bfIdx) const
     { return boundaryFaces_[bfIdx]; }
 
-private:
-    GridView gridView_;
-    ElementMapper elementMapper_;
+protected:
+    const GridView&       gridView_;
+    const ElementMapper&  elementMapper_;
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
     std::vector<Element> elements_;
@@ -423,9 +424,9 @@ private:
     std::vector<ElementPointer> elements_;
 #endif
 
-    std::vector<SubControlVolume> subControlVolumes_;
-    std::vector<SubControlVolumeFace> interiorFaces_;
-    std::vector<SubControlVolumeFace> boundaryFaces_;
+    std::vector<SubControlVolume>      subControlVolumes_;
+    std::vector<SubControlVolumeFace>  interiorFaces_;
+    std::vector<SubControlVolumeFace>  boundaryFaces_;
 };
 
 } // namespace Ewoms
