@@ -728,6 +728,8 @@ private:
 public:
     typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
                                                       Dune::MCMGVertexLayout > VertexMapper;
+    //! exported Mapper type
+    typedef VertexMapper  Mapper;
 
     class ScvGeometry
     {
@@ -813,9 +815,9 @@ public:
     //! compatibility typedef
     typedef SubControlVolumeFace BoundaryFace;
 
-    VcfvStencil(const GridView &gridView)
+    VcfvStencil(const GridView &gridView, const VertexMapper& vertexMapper)
         : gridView_(gridView)
-        , vertexMapper_(gridView)
+        , vertexMapper_( vertexMapper )
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         , element_(*gridView.template begin</*codim=*/0>())
 #else
@@ -1358,8 +1360,8 @@ private:
             OPM_THROW(std::logic_error, "Not implemented:VcfvStencil for dim = " << dim);
     }
 
-    GridView gridView_;
-    VertexMapper vertexMapper_;
+    const GridView&     gridView_;
+    const VertexMapper& vertexMapper_;
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
     Element element_;

@@ -91,7 +91,7 @@ public:
      */
     explicit FvBaseElementContext(const Simulator &simulator)
         : gridView_(simulator.gridView())
-        , stencil_(gridView_)
+        , stencil_(gridView_, simulator.model().dofMapper() )
     {
         // remember the simulator object
         simulatorPtr_ = &simulator;
