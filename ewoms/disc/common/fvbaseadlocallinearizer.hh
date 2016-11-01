@@ -287,7 +287,7 @@ protected:
         const auto& resid = localResidual_.residual();
 
         for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
-            residual_[primaryDofIdx][eqIdx] = resid[primaryDofIdx][eqIdx].value;
+            residual_[primaryDofIdx][eqIdx] = resid[primaryDofIdx][eqIdx].value();
 
         int numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
@@ -297,7 +297,8 @@ protected:
                     // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
                     // regard to the primary variable 'pvIdx' of the degree of freedom
                     // 'primaryDofIdx'
-                    jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] = resid[dofIdx][eqIdx].derivatives[pvIdx];
+                    jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] =
+                        resid[dofIdx][eqIdx].derivative(pvIdx);
                     Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
                 }
             }
