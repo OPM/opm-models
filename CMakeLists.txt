@@ -180,7 +180,7 @@ opm_add_test(finger_immiscible_ecfv_adaptive
              EXE_NAME finger_immiscible_ecfv
              CONDITION ${DUNE_ALUGRID_FOUND} AND ${DUNE_FEM_FOUND}
              NO_COMPILE
-             DRIVER_ARGS --enable-grid-adaptation=true)
+             TEST_ARGS --enable-grid-adaptation=true --end-time=25e3)
 
 opm_add_test(test_stokes
              CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})

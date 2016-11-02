@@ -230,11 +230,9 @@ public:
 
     void prepareMatrix(const Matrix& M)
     {
-        if (!overlappingMatrix_) {
-            // make sure that the overlapping matrix and block vectors
-            // have been created
-            prepare_(M);
-        }
+        // make sure that the overlapping matrix and block vectors
+        // have been created
+        prepare_(M);
 
         // copy the values of the non-overlapping linear system of
         // equations to the overlapping one. On ther border, we add up
@@ -244,11 +242,9 @@ public:
 
     void prepareRhs(const Matrix& M, Vector &b)
     {
-        if (!overlappingMatrix_) {
-            // make sure that the overlapping matrix and block vectors
-            // have been created
-            prepare_(M);
-        }
+        // make sure that the overlapping matrix and block vectors
+        // have been created
+        prepare_(M);
 
         overlappingb_->assignAddBorder(b);
 
@@ -379,12 +375,14 @@ private:
     void prepare_(const Matrix &M)
     {
         // if grid has changed the sequence number has changed too
-        const int currentSequence = simulator_.gridManager().gridSequenceNumber();
-        if( gridSequenceNumber_ != currentSequence )
-        {
-          cleanup_();
-          gridSequenceNumber_ = currentSequence;
-        }
+        int curSeqNum = simulator_.gridManager().gridSequenceNumber();
+        if( gridSequenceNumber_ == curSeqNum && overlappingMatrix_)
+            // the grid has not changed since the overlappingMatrix_has been created, so
+            // there's noting to do
+            return;
+
+        cleanup_();
+        gridSequenceNumber_ = curSeqNum;
 
         BorderListCreator borderListCreator(simulator_.gridView(),
                                             simulator_.model().dofMapper());
