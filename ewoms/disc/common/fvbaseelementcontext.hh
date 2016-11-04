@@ -599,7 +599,7 @@ protected:
     GradientCalculator gradientCalculator_;
 
     std::vector<DofStore_, Ewoms::aligned_allocator<DofStore_, alignof(DofStore_)> > dofVars_;
-    std::vector<ExtensiveQuantities, Ewoms::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > extensiveQuantities_;
+    std::vector<ExtensiveQuantities, Ewoms::aligned_allocator<ExtensiveQuantities, alignof(ExtensiveQuantities)> > extensiveQuantities_;
 
     const Simulator *simulatorPtr_;
     const Element *elemPtr_;
