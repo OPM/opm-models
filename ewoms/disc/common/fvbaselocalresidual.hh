@@ -34,6 +34,9 @@
 #include <ewoms/common/alignedallocator.hh>
 
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/geometry.hh>
@@ -78,7 +81,7 @@ private:
     typedef Dune::FieldVector<Evaluation, numEq> EvalVector;
 
     // copying the local residual class is not a good idea
-    FvBaseLocalResidual(const FvBaseLocalResidual &)
+    FvBaseLocalResidual(const FvBaseLocalResidual& )
     {}
 
 public:
@@ -100,7 +103,7 @@ public:
      * \brief Return the result of the eval() call using internal
      *        storage.
      */
-    const LocalEvalBlockVector &residual() const
+    const LocalEvalBlockVector& residual() const
     { return internalResidual_; }
 
     /*!
@@ -109,7 +112,7 @@ public:
      *
      * \copydetails Doxygen::ecfvScvIdxParam
      */
-    const EvalVector &residual(unsigned dofIdx) const
+    const EvalVector& residual(unsigned dofIdx) const
     { return internalResidual_[dofIdx]; }
 
     /*!
@@ -122,7 +125,7 @@ public:
      * \copydetails Doxygen::problemParam
      * \copydetails Doxygen::elementParam
      */
-    void eval(const Problem &problem, const Element &element)
+    void eval(const Problem& problem, const Element& element)
     {
         ElementContext elemCtx(problem);
         elemCtx.updateAll(element);
@@ -138,9 +141,9 @@ public:
      *
      * \copydetails Doxygen::ecfvElemCtxParam
      */
-    void eval(const ElementContext &elemCtx)
+    void eval(const ElementContext& elemCtx)
     {
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         internalResidual_.resize(numDof);
         asImp_().eval(internalResidual_, elemCtx);
     }
@@ -152,8 +155,8 @@ public:
      * \copydetails Doxygen::residualParam
      * \copydetails Doxygen::ecfvElemCtxParam
      */
-    void eval(LocalEvalBlockVector &residual,
-              const ElementContext &elemCtx) const
+    void eval(LocalEvalBlockVector& residual,
+              const ElementContext& elemCtx) const
     {
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
 
@@ -170,7 +173,7 @@ public:
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned dofIdx=0; dofIdx < numDof; ++dofIdx) {
             if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
                 // interior DOF
@@ -196,8 +199,8 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalStorage(LocalEvalBlockVector &storage,
-                     const ElementContext &elemCtx,
+    void evalStorage(LocalEvalBlockVector& storage,
+                     const ElementContext& elemCtx,
                      unsigned timeIdx) const
     {
         if (timeIdx == 0) {
@@ -206,7 +209,7 @@ public:
 
             // calculate the amount of conservation each quantity inside
             // all primary sub control volumes
-            unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+            size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
             for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                 storage[dofIdx] = 0.0;
                 asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
@@ -223,7 +226,7 @@ public:
             // for all previous solutions, the storage term does _not_ depend on the
             // current primary variables, so we use scalars to store it.
             if (elemCtx.enableStorageCache()) {
-                unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
+                size_t numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                     unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
                     const auto& cachedStorage = elemCtx.model().cachedStorage(globalDofIdx, timeIdx);
@@ -235,7 +238,7 @@ public:
                 // calculate the amount of conservation each quantity inside
                 // all primary sub control volumes
                 Dune::FieldVector<Scalar, numEq> tmp;
-                unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+                size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
                 for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                     tmp = 0.0;
                     asImp_().computeStorage(tmp,
@@ -260,17 +263,17 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      * \copydetails Doxygen::timeIdxParam
      */
-    void evalFluxes(LocalEvalBlockVector &residual,
-                    const ElementContext &elemCtx,
+    void evalFluxes(LocalEvalBlockVector& residual,
+                    const ElementContext& elemCtx,
                     unsigned timeIdx) const
     {
         RateVector flux;
 
-        const auto &stencil = elemCtx.stencil(timeIdx);
+        const auto& stencil = elemCtx.stencil(timeIdx);
         // calculate the mass flux over the sub-control volume faces
-        unsigned numInteriorFaces = elemCtx.numInteriorFaces(timeIdx);
+        size_t numInteriorFaces = elemCtx.numInteriorFaces(timeIdx);
         for (unsigned scvfIdx = 0; scvfIdx < numInteriorFaces; scvfIdx++) {
-            const auto &face = stencil.interiorFace(scvfIdx);
+            const auto& face = stencil.interiorFace(scvfIdx);
             unsigned i = face.interiorIndex();
             unsigned j = face.exteriorIndex();
 
@@ -305,7 +308,7 @@ public:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual is well-defined
-        unsigned numDof = elemCtx.numDof(timeIdx);
+        size_t numDof = elemCtx.numDof(timeIdx);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
@@ -328,10 +331,10 @@ public:
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::ecfvScvCtxParams
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        unsigned dofIdx,
-                        unsigned timeIdx) const
+    void computeStorage(EqVector& OPM_UNUSED storage,
+                        const ElementContext& OPM_UNUSED elemCtx,
+                        unsigned OPM_UNUSED dofIdx,
+                        unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: The local residual " << Opm::className<Implementation>()
@@ -345,10 +348,10 @@ public:
      * \copydetails Doxygen::areaFluxParam
      * \copydetails Doxygen::ecfvScvfCtxParams
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     unsigned scvfIdx,
-                     unsigned timeIdx) const
+    void computeFlux(RateVector& OPM_UNUSED flux,
+                     const ElementContext& OPM_UNUSED elemCtx,
+                     unsigned OPM_UNUSED scvfIdx,
+                     unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: The local residual " << Opm::className<Implementation>()
@@ -361,10 +364,10 @@ public:
      * \copydoc Doxygen::sourceParam
      * \copydoc Doxygen::ecfvScvCtxParams
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       unsigned dofIdx,
-                       unsigned timeIdx) const
+    void computeSource(RateVector& OPM_UNUSED source,
+                       const ElementContext& OPM_UNUSED elemCtx,
+                       unsigned OPM_UNUSED dofIdx,
+                       unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: The local residual " << Opm::className<Implementation>()
@@ -375,8 +378,8 @@ protected:
     /*!
      * \brief Evaluate the boundary conditions of an element.
      */
-    void evalBoundary_(LocalEvalBlockVector &residual,
-                       const ElementContext &elemCtx,
+    void evalBoundary_(LocalEvalBlockVector& residual,
+                       const ElementContext& elemCtx,
                        unsigned timeIdx) const
     {
         if (!elemCtx.onBoundary())
@@ -385,7 +388,7 @@ protected:
         BoundaryContext boundaryCtx(elemCtx);
 
         // evaluate the boundary for all boundary faces of the current context
-        unsigned numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
+        size_t numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
         for (unsigned faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx) {
             // add the residual of all vertices of the boundary
             // segment
@@ -397,7 +400,7 @@ protected:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual and the storage terms are well-defined
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
@@ -412,8 +415,8 @@ protected:
      * \brief Evaluate all boundary conditions for a single
      *        sub-control volume face to the local residual.
      */
-    void evalBoundarySegment_(LocalEvalBlockVector &residual,
-                              const BoundaryContext &boundaryCtx,
+    void evalBoundarySegment_(LocalEvalBlockVector& residual,
+                              const BoundaryContext& boundaryCtx,
                               unsigned boundaryFaceIdx,
                               unsigned timeIdx) const
     {
@@ -426,9 +429,9 @@ protected:
                                        timeIdx);
         Valgrind::CheckDefined(values);
 
-        const auto &stencil = boundaryCtx.stencil(timeIdx);
+        const auto& stencil = boundaryCtx.stencil(timeIdx);
         unsigned dofIdx = stencil.boundaryFace(boundaryFaceIdx).interiorIndex();
-        const auto &insideIntQuants = boundaryCtx.elementContext().intensiveQuantities(dofIdx, timeIdx);
+        const auto& insideIntQuants = boundaryCtx.elementContext().intensiveQuantities(dofIdx, timeIdx);
         for (unsigned eqIdx = 0; eqIdx < values.size(); ++eqIdx)
             values[eqIdx] *=
                 stencil.boundaryFace(boundaryFaceIdx).area()
@@ -444,8 +447,8 @@ protected:
      *        to the local residual of all sub-control volumes of the
      *        current element.
      */
-    void evalVolumeTerms_(LocalEvalBlockVector &residual,
-                          const ElementContext &elemCtx) const
+    void evalVolumeTerms_(LocalEvalBlockVector& residual,
+                          const ElementContext& elemCtx) const
     {
         EvalVector tmp;
         EqVector tmp2;
@@ -455,7 +458,7 @@ protected:
         tmp2 = 0.0;
 
         // evaluate the volumetric terms (storage + source terms)
-        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
         for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
             Scalar extrusionFactor =
                 elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
@@ -531,7 +534,7 @@ protected:
 
 #if !defined NDEBUG
         // in debug mode, ensure that the residual is well-defined
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
@@ -543,10 +546,10 @@ protected:
 
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
     LocalEvalBlockVector internalResidual_;

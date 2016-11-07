@@ -136,7 +136,7 @@ class EcfvDiscretization : public FvBaseDiscretization<TypeTag>
 
 
 public:
-    EcfvDiscretization(Simulator &simulator)
+    EcfvDiscretization(Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -150,13 +150,13 @@ public:
      * \brief Returns the number of global degrees of freedom (DOFs) due to the grid
      */
     size_t numGridDof() const
-    { return this->gridView_.size(/*codim=*/0); }
+    { return static_cast<size_t>(this->gridView_.size(/*codim=*/0)); }
 
     /*!
      * \brief Mapper to convert the Dune entities of the
      *        discretization's degrees of freedoms are to indices.
      */
-    const DofMapper &dofMapper() const
+    const DofMapper& dofMapper() const
     { return this->simulator_.problem().elementMapper(); }
 
     /*!
@@ -191,7 +191,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void serialize(Restarter &res)
+    void serialize(Restarter& res)
     { res.template serializeEntities</*codim=*/0>(asImp_(), this->gridView_); }
 
     /*!
@@ -202,16 +202,16 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter& res)
     {
         res.template deserializeEntities</*codim=*/0>(asImp_(), this->gridView_);
         this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
 } // namespace Ewoms

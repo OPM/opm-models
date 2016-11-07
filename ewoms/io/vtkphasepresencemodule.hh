@@ -70,7 +70,7 @@ class VtkPhasePresenceModule : public BaseOutputModule<TypeTag>
 
 
 public:
-    VtkPhasePresenceModule(const Simulator &simulator)
+    VtkPhasePresenceModule(const Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -97,7 +97,7 @@ public:
      * \brief Modify the internal buffers according to the intensive quanties relevant
      *        for an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
@@ -105,7 +105,7 @@ public:
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             // calculate the phase presence
             int phasePresence = elemCtx.primaryVars(i, /*timeIdx=*/0).phasePresence();
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
             if (phasePresenceOutput_())
                 phasePresence_[I] = phasePresence;
@@ -115,7 +115,7 @@ public:
     /*!
      * \brief Add all buffers to the output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {

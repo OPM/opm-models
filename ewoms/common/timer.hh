@@ -106,8 +106,8 @@ public:
         if (!isStopped_)
             measure_(stopTime);
 
-        const auto &t1 = startTime_.realtimeData;
-        const auto &t2 = stopTime.realtimeData;
+        const auto& t1 = startTime_.realtimeData;
+        const auto& t2 = stopTime.realtimeData;
 
 #if defined(CLOCK_MONOTONIC) && defined(CLOCK_PROCESS_CPUTIME_ID)
         return
@@ -133,8 +133,8 @@ public:
         if (!isStopped_)
             measure_(stopTime);
 
-        const auto &t1 = startTime_.cputimeData;
-        const auto &t2 = stopTime.cputimeData;
+        const auto& t1 = startTime_.cputimeData;
+        const auto& t2 = stopTime.cputimeData;
 
 #if defined(CLOCK_MONOTONIC) && defined(CLOCK_PROCESS_CPUTIME_ID)
         return

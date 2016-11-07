@@ -31,7 +31,11 @@
 #include "blackoilproperties.hh"
 #include "blackoilfluidstate.hh"
 
+#include <ewoms/common/declval.hh>
+
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
+
 #include <dune/common/fmatrix.hh>
 
 #include <cstring>
@@ -92,7 +96,7 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
@@ -102,7 +106,7 @@ public:
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
-        unsigned short pvtRegionIdx = priVars.pvtRegionIndex();
+        unsigned pvtRegionIdx = priVars.pvtRegionIndex();
         fluidState_.setPvtRegionIndex(pvtRegionIdx);
 
         // extract the water and the gas saturations for convenience
@@ -131,19 +135,19 @@ public:
 
         // now we compute all phase pressures
         Evaluation pC[numPhases];
-        const auto &materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
+        const auto& materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
 
         //oil is the reference phase for pressure
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
             const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                 fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
         }
 
         else {
             const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                 fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
         }
 
@@ -228,7 +232,7 @@ public:
         paramCache.updateAll(fluidState_);
 
         // set the phase densities and viscosities
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             const auto& b = FluidSystem::inverseFormationVolumeFactor(fluidState_, phaseIdx, pvtRegionIdx);
             fluidState_.setInvB(phaseIdx, b);
 
@@ -280,7 +284,7 @@ public:
 
 #ifndef NDEBUG
         // some safety checks in debug mode
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             assert(std::isfinite(Toolbox::value(fluidState_.density(phaseIdx))));
             assert(std::isfinite(Toolbox::value(fluidState_.saturation(phaseIdx))));
             assert(std::isfinite(Toolbox::value(fluidState_.temperature(phaseIdx))));
@@ -295,13 +299,13 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
-    const FluidState &fluidState() const
+    const FluidState& fluidState() const
     { return fluidState_; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    const Evaluation& mobility(int phaseIdx) const
+    const Evaluation& mobility(unsigned phaseIdx) const
     { return mobility_[phaseIdx]; }
 
     /*!
@@ -323,13 +327,14 @@ public:
      * support it as well in our black-oil model. (Note that, if it is not explicitly
      * specified, the PVT region index is 0.)
      */
-    int pvtRegionIndex() const
+    auto pvtRegionIndex() const
+        -> decltype(declval<FluidState>().pvtRegionIndex())
     { return fluidState_.pvtRegionIndex(); }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    Evaluation relativePermeability(int phaseIdx) const
+    Evaluation relativePermeability(unsigned phaseIdx) const
     {
         // warning: slow
         return fluidState_.viscosity(phaseIdx)*mobility(phaseIdx);

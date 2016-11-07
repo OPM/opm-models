@@ -95,7 +95,7 @@ class VtkCompositionModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
 
 public:
-    VtkCompositionModule(const Simulator &simulator)
+    VtkCompositionModule(const Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -147,7 +147,7 @@ public:
      * \brief Modify the internal buffers according to the intensive quantities relevant
      *        for an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -155,12 +155,12 @@ public:
             return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
-            const auto &fs = intQuants.fluidState();
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto& fs = intQuants.fluidState();
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     if (moleFracOutput_())
                         moleFrac_[phaseIdx][compIdx][I] = Toolbox::value(fs.moleFraction(phaseIdx, compIdx));
                     if (massFracOutput_())
@@ -174,11 +174,11 @@ public:
                 }
             }
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 if (totalMassFracOutput_()) {
                     Scalar compMass = 0;
                     Scalar totalMass = 0;
-                    for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                         totalMass += Toolbox::value(fs.density(phaseIdx)) * Toolbox::value(fs.saturation(phaseIdx));
                         compMass +=
                             Toolbox::value(fs.density(phaseIdx))
@@ -190,7 +190,7 @@ public:
                 if (totalMoleFracOutput_()) {
                     Scalar compMoles = 0;
                     Scalar totalMoles = 0;
-                    for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                    for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                         totalMoles +=
                             Toolbox::value(fs.molarDensity(phaseIdx))
                             *Toolbox::value(fs.saturation(phaseIdx));
@@ -210,7 +210,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {

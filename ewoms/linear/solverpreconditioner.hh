@@ -28,6 +28,9 @@
 #define EWOMS_SOLVER_PRECONDITIONER_HH
 
 #include <ewoms/linear/solvers.hh>
+
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/istl/preconditioners.hh>
 
 namespace Ewoms {
@@ -53,7 +56,7 @@ public:
 
     enum { category = Dune::SolverCategory::overlapping };
 
-    SolverPreconditioner(const Matrix &matrix, int order, Scalar relaxationFactor)
+    SolverPreconditioner(const Matrix& matrix, int OPM_UNUSED order, Scalar OPM_UNUSED relaxationFactor)
     {
         innerOperator_ = new InnerOperator(matrix);
         innerScalarProduct_ = new InnerScalarProduct;
@@ -78,10 +81,10 @@ public:
         delete innerPreCond_;
     }
 
-    void pre(domain_type &x, range_type &y)
+    void pre(domain_type& OPM_UNUSED x, range_type& OPM_UNUSED y)
     {}
 
-    void apply(domain_type &x, const range_type &d)
+    void apply(domain_type& x, const range_type& d)
     {
         domain_type x0(x);
         range_type dd(d);
@@ -103,7 +106,7 @@ public:
         }
     }
 
-    void post(domain_type &x)
+    void post(domain_type& OPM_UNUSED x)
     {}
 
 private:

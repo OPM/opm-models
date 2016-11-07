@@ -71,9 +71,8 @@ public:
      *
      * \param value The primary variables that will be duplicated.
      */
-    DiscreteFracturePrimaryVariables(const DiscreteFracturePrimaryVariables &value)
-        : ParentType(value)
-    {}
+    DiscreteFracturePrimaryVariables(const DiscreteFracturePrimaryVariables& value) = default;
+    DiscreteFracturePrimaryVariables& operator=(const DiscreteFracturePrimaryVariables& value) = default;
 
     /*!
      * \brief Directly retrieve the primary variables from an
@@ -88,8 +87,8 @@ public:
      *                  which apply for the fracture.
      */
     template <class FluidState>
-    void assignNaiveFromFracture(const FluidState &fractureFluidState,
-                                 const MaterialLawParams &matParams)
+    void assignNaiveFromFracture(const FluidState& fractureFluidState,
+                                 const MaterialLawParams& matParams)
     {
         FluidState matrixFluidState;
         fractureToMatrixFluidState_(matrixFluidState, fractureFluidState,
@@ -100,9 +99,9 @@ public:
 
 private:
     template <class FluidState>
-    void fractureToMatrixFluidState_(FluidState &matrixFluidState,
-                                     const FluidState &fractureFluidState,
-                                     const MaterialLawParams &matParams) const
+    void fractureToMatrixFluidState_(FluidState& matrixFluidState,
+                                     const FluidState& fractureFluidState,
+                                     const MaterialLawParams& matParams) const
     {
         // start with the same fluid state as in the fracture
         matrixFluidState.assign(fractureFluidState);
@@ -115,7 +114,7 @@ private:
         Scalar saturations[numPhases];
         MaterialLaw::saturations(saturations, matParams, matrixFluidState);
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             matrixFluidState.setSaturation(phaseIdx, saturations[phaseIdx]);
     }
 };

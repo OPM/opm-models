@@ -34,6 +34,8 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
+#include <opm/material/common/Unused.hpp>
+
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
@@ -58,10 +60,10 @@ class VtkScalarFunction : public Dune::VTKFunction<GridView>
 
 public:
     VtkScalarFunction(std::string name,
-                      const GridView &gridView,
-                      const Mapper &mapper,
-                      const ScalarBuffer &buf,
-                      int codim)
+                      const GridView& gridView,
+                      const Mapper& mapper,
+                      const ScalarBuffer& buf,
+                      unsigned codim)
         : name_(name)
         , gridView_(gridView)
         , mapper_(mapper)
@@ -75,17 +77,17 @@ public:
     virtual int ncomps() const
     { return 1; }
 
-    virtual double evaluate(int mycomp,
-                            const Element &e,
-                            const Dune::FieldVector<ctype, dim> &xi) const
+    virtual double evaluate(int OPM_UNUSED mycomp,
+                            const Element& e,
+                            const Dune::FieldVector<ctype, dim>& xi) const
     {
-        int idx;
+        unsigned idx;
         if (codim_ == 0) {
             // cells. map element to the index
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            idx = mapper_.index(e);
+            idx = static_cast<unsigned>(mapper_.index(e));
 #else
-            idx = mapper_.map(e);
+            idx = static_cast<unsigned>(mapper_.map(e));
 #endif
         }
         else if (codim_ == dim) {
@@ -95,7 +97,7 @@ public:
             int imin = -1;
             Dune::GeometryType gt = e.type();
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int n = e.subEntities(dim);
+            int n = static_cast<int>(e.subEntities(dim));
 #else
             int n = e.template count<dim>();
 #endif
@@ -106,34 +108,30 @@ public:
                 local -= xi;
                 if (local.infinity_norm() < min) {
                     min = local.infinity_norm();
-                    imin = i;
+                    imin = static_cast<int>(i);
                 }
             }
 
             // map vertex to an index
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            idx = mapper_.subIndex(e, imin, codim_);
+            idx = static_cast<unsigned>(mapper_.subIndex(e, imin, codim_));
 #else
-            idx = mapper_.map(e, imin, codim_);
+            idx = static_cast<unsigned>(mapper_.map(e, imin, codim_));
 #endif
         }
         else
             OPM_THROW(std::logic_error, "Only element and vertex based vector "
                                         " fields are supported so far.");
 
-        double val = buf_[idx];
-        if (std::abs(val) < std::numeric_limits<float>::min())
-            val = 0;
-
-        return val;
+        return static_cast<double>(static_cast<float>(buf_[idx]));
     }
 
 private:
     const std::string name_;
     const GridView gridView_;
-    const Mapper &mapper_;
-    const ScalarBuffer &buf_;
-    int codim_;
+    const Mapper& mapper_;
+    const ScalarBuffer& buf_;
+    unsigned codim_;
 };
 
 } // namespace Ewoms

@@ -34,6 +34,7 @@
 #include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -82,10 +83,10 @@ public:
      * \param isBoundaryFace Specifies whether the sub-control-volume face is on the
      *                       domain boundary or not.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx, bool isBoundaryFace=false)
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx, bool isBoundaryFace=false)
     {
-        const auto &stencil = elemCtx.stencil(timeIdx);
-        const auto &scvf =
+        const auto& stencil = elemCtx.stencil(timeIdx);
+        const auto& scvf =
             isBoundaryFace?
             stencil.boundaryFace(scvfIdx):
             stencil.interiorFace(scvfIdx);
@@ -113,7 +114,7 @@ public:
         viscosity_ = gradCalc.calculateValue(elemCtx, scvfIdx, viscosityCallback);
         velocity_ = gradCalc.calculateValue(elemCtx, scvfIdx, velocityCallback);
 
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             velocityComponentCallback.setDimIndex(dimIdx);
             gradCalc.calculateGradient(velocityGrad_[dimIdx],
                                        elemCtx,
@@ -143,9 +144,11 @@ public:
      * \copydoc MultiPhaseBaseExtensiveQuantities::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, int bfIdx, int timeIdx,
-                        const FluidState &fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
+    void updateBoundary(const Context& context,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& fluidState,
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         update(context, bfIdx, timeIdx, fluidState, paramCache,
                /*isOnBoundary=*/true);
@@ -183,20 +186,20 @@ public:
     /*!
      * \brief Return the pressure gradient at the integration point.
      */
-    const DimVector &pressureGrad() const
+    const DimVector& pressureGrad() const
     { return pressureGrad_; }
 
     /*!
      * \brief Return the velocity vector at the integration point.
      */
-    const DimVector &velocity() const
+    const DimVector& velocity() const
     { return velocity_; }
 
     /*!
      * \brief Return the velocity gradient at the integration
      *        point of a face.
      */
-    const DimVector &velocityGrad(int axisIdx) const
+    const DimVector& velocityGrad(unsigned axisIdx) const
     { return velocityGrad_[axisIdx]; }
 
     /*!
@@ -214,45 +217,45 @@ public:
     /*!
      * \brief Return the volume flux of mass
      */
-    Scalar volumeFlux(int phaseIdx) const
+    Scalar volumeFlux(unsigned OPM_UNUSED phaseIdx) const
     { return volumeFlux_; }
 
     /*!
      * \brief Return the weight of the upstream index
      */
-    Scalar upstreamWeight(int phaseIdx) const
+    Scalar upstreamWeight(unsigned OPM_UNUSED phaseIdx) const
     { return 1.0; }
 
     /*!
      * \brief Return the weight of the downstream index
      */
-    Scalar downstreamWeight(int phaseIdx) const
+    Scalar downstreamWeight(unsigned OPM_UNUSED phaseIdx) const
     { return 0.0; }
 
     /*!
      * \brief Return the local index of the upstream sub-control volume.
      */
-    int upstreamIndex(int phaseIdx) const
+    unsigned upstreamIndex(unsigned OPM_UNUSED phaseIdx) const
     { return upstreamIdx_; }
 
     /*!
      * \brief Return the local index of the downstream sub-control volume.
      */
-    int downstreamIndex(int phaseIdx) const
+    unsigned downstreamIndex(unsigned OPM_UNUSED phaseIdx) const
     { return downstreamIdx_; }
 
     /*!
      * \brief Return the local index of the sub-control volume which is located
      * in negative normal direction.
      */
-    int interiorIndex() const
+    unsigned interiorIndex() const
     { return insideIdx_; }
 
     /*!
      * \brief Return the local index of the sub-control volume which is located
      * in negative normal direction.
      */
-    int exteriorIndex() const
+    unsigned exteriorIndex() const
     { return outsideIdx_; }
 
     /*!
@@ -271,7 +274,7 @@ public:
     /*!
      * \brief Returns normal vector of the face of the extensive quantities.
      */
-    const DimVector &normal() const
+    const DimVector& normal() const
     { return normal_; }
 
 private:
@@ -291,12 +294,12 @@ private:
     DimVector velocityGrad_[dimWorld];
 
     // local index of the upstream dof
-    int upstreamIdx_;
+    unsigned upstreamIdx_;
     // local index of the downstream dof
-    int downstreamIdx_;
+    unsigned downstreamIdx_;
 
-    int insideIdx_;
-    int outsideIdx_;
+    unsigned insideIdx_;
+    unsigned outsideIdx_;
 };
 
 } // namespace Ewoms

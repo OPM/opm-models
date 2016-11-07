@@ -72,7 +72,7 @@ public:
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
-     * ImmiscibleRateVector &)
+     * ImmiscibleRateVector& )
      */
     FlashRateVector(const FlashRateVector& value) : ParentType(value)
     {}
@@ -84,7 +84,7 @@ public:
     {
         // convert to molar rates
         ParentType molarRate(value);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
 
         setMolarRate(molarRate);
@@ -93,7 +93,7 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::setMolarRate
      */
-    void setMolarRate(const ParentType &value)
+    void setMolarRate(const ParentType& value)
     { ParentType::operator=(value); }
 
     /*!
@@ -106,9 +106,9 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState, class RhsEval>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
+    void setVolumetricRate(const FluidState& fluidState, unsigned phaseIdx, const RhsEval& volume)
     {
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] =
                 fluidState.density(phaseIdx, compIdx)
                 * fluidState.moleFraction(phaseIdx, compIdx)

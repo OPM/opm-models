@@ -46,22 +46,18 @@ class PvsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
 
 public:
-    PvsNewtonMethod(Simulator &simulator) : ParentType(simulator)
+    PvsNewtonMethod(Simulator& simulator) : ParentType(simulator)
     {}
 
-    // HACK which is necessary because GCC 4.4 does not support
-    // being a friend of typedefs
-/*
 protected:
-    friend class NewtonMethod<TypeTag>;
-    friend class ParentType;
-*/
+    friend NewtonMethod<TypeTag>;
+    friend ParentType;
 
     /*!
      * \copydoc NewtonMethod::endIteration_
      */
-    void endIteration_(SolutionVector &uCurrentIter,
-                       const SolutionVector &uLastIter)
+    void endIteration_(SolutionVector& uCurrentIter,
+                       const SolutionVector& uLastIter)
     {
         ParentType::endIteration_(uCurrentIter, uLastIter);
         this->problem().model().switchPrimaryVars_();

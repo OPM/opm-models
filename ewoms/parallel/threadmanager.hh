@@ -33,8 +33,10 @@
 
 #include <ewoms/parallel/locks.hh>
 #include <ewoms/common/parametersystem.hh>
-
 #include <ewoms/common/propertysystem.hh>
+
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/version.hh>
 
@@ -116,16 +118,16 @@ public:
     /*!
      * \brief Return the maximum number of threads of the current process.
      */
-    static int maxThreads()
-    { return numThreads_; }
+    static unsigned maxThreads()
+    { return static_cast<unsigned>(numThreads_); }
 
     /*!
      * \brief Return the index of the current OpenMP thread
      */
-    static int threadId()
+    static unsigned threadId()
     {
 #ifdef _OPENMP
-        return omp_get_thread_num();
+        return static_cast<unsigned>(omp_get_thread_num());
 #else
         return 0;
 #endif

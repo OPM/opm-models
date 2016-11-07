@@ -67,33 +67,33 @@ class BaseGridManager
 #endif
 
 public:
-    BaseGridManager(Simulator &simulator)
+    BaseGridManager(Simulator& simulator)
         : simulator_(simulator)
     {}
 
     /*!
      * \brief Returns a reference to the grid view to be used.
      */
-    GridView &gridView()
+    GridView& gridView()
     { return *gridView_; }
 
     /*!
      * \brief Returns a reference to the grid view to be used.
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return *gridView_; }
 
 #if HAVE_DUNE_FEM
     /*!
      * \brief Returns a reference to the grid part to be used.
      */
-    const GridPart &gridPart() const
+    const GridPart& gridPart() const
     { return *gridPart_; }
 
     /*!
      * \brief Returns a reference to the grid part to be used.
      */
-    GridPart &gridPart()
+    GridPart& gridPart()
     { return *gridPart_; }
 #endif
 
@@ -134,13 +134,13 @@ protected:
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    Simulator &simulator_;
+    Simulator& simulator_;
     std::unique_ptr<GridView> gridView_;
 #if HAVE_DUNE_FEM
     std::unique_ptr<GridPart> gridPart_;

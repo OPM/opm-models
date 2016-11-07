@@ -69,20 +69,20 @@ public:
      * \copydoc FvBaseLocalResidual::computeStorage
      */
     template <class LhsEval>
-    void computeStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                        const ElementContext &elemCtx,
-                        int dofIdx,
-                        int timeIdx) const
+    void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                        const ElementContext& elemCtx,
+                        unsigned dofIdx,
+                        unsigned timeIdx) const
     {
         // retrieve the intensive quantities for the SCV at the specified point in time
-        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
-        const auto &fs = intQuants.fluidState();
+        const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto& fs = intQuants.fluidState();
 
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             storage[conti0EqIdx + compIdx] = 0.0;
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            int compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
             LhsEval surfaceVolume =
                 Toolbox::template decay<LhsEval>(fs.saturation(phaseIdx))
                 * Toolbox::template decay<LhsEval>(fs.invB(phaseIdx))
@@ -118,20 +118,20 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux,
-                     const ElementContext &elemCtx,
-                     int scvfIdx,
-                     int timeIdx) const
+    void computeFlux(RateVector& flux,
+                     const ElementContext& elemCtx,
+                     unsigned scvfIdx,
+                     unsigned timeIdx) const
     {
         assert(timeIdx == 0);
 
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx)
             flux[conti0EqIdx + compIdx] = 0.0;
 
-        const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         unsigned interiorIdx = extQuants.interiorIndex();
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            unsigned upIdx = extQuants.upstreamIndex(phaseIdx);
+            unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
             const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
             if (upIdx == interiorIdx)
                 evalPhaseFluxes_<Evaluation>(flux, phaseIdx, extQuants, up);
@@ -143,10 +143,10 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeSource
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int dofIdx,
-                       int timeIdx) const
+    void computeSource(RateVector& source,
+                       const ElementContext& elemCtx,
+                       unsigned dofIdx,
+                       unsigned timeIdx) const
     {
         // retrieve the source term intrinsic to the problem
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
@@ -155,12 +155,12 @@ public:
 protected:
     template <class UpEval>
     void evalPhaseFluxes_(RateVector& flux,
-                          int phaseIdx,
+                          unsigned phaseIdx,
                           const ExtensiveQuantities& extQuants,
                           const IntensiveQuantities& up) const
     {
-        int compIdx = FluidSystem::solventComponentIndex(phaseIdx);
-        int pvtRegionIdx = up.pvtRegionIndex();
+        unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+        unsigned pvtRegionIdx = up.pvtRegionIndex();
         const auto& fs = up.fluidState();
 
         Evaluation surfaceVolumeFlux =

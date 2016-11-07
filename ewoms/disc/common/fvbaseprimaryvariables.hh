@@ -28,9 +28,14 @@
 #ifndef EWOMS_FV_BASE_PRIMARY_VARIABLES_HH
 #define EWOMS_FV_BASE_PRIMARY_VARIABLES_HH
 
-#include <dune/common/fvector.hh>
-
 #include "fvbaseproperties.hh"
+
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
+#include <dune/common/fvector.hh>
 
 namespace Ewoms {
 
@@ -67,9 +72,12 @@ public:
     /*!
      * \brief Assignment from another primary variables object
      */
-    FvBasePrimaryVariables(const FvBasePrimaryVariables &value)
-        : ParentType(value)
-    { }
+    FvBasePrimaryVariables(const FvBasePrimaryVariables& value) = default;
+
+    /*!
+     * \brief Assignment from another primary variables object
+     */
+    FvBasePrimaryVariables& operator=(const FvBasePrimaryVariables& value) = default;
 
     /*!
      * \brief Return a primary variable intensive evaluation.
@@ -78,7 +86,7 @@ public:
      * it represents the a constant f = x_i. (the difference is that in the first case,
      * the derivative w.r.t. x_i is 1, while it is 0 in the second case.
      */
-    Evaluation makeEvaluation(int varIdx, int timeIdx) const
+    Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx) const
     {
         if (timeIdx == 0)
             return Toolbox::createVariable((*this)[varIdx], varIdx);
@@ -97,7 +105,7 @@ public:
      * from the primary variables.)
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState)
+    void assignNaive(const FluidState& OPM_UNUSED fluidState)
     {
         OPM_THROW(std::runtime_error,
                   "The PrimaryVariables class does not define a assignNaive() method");

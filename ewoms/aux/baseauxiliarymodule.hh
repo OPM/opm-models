@@ -64,9 +64,12 @@ class BaseAuxiliaryModule
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
 
 protected:
-    typedef std::set<int> NeighborSet;
+    typedef std::set<unsigned> NeighborSet;
 
 public:
+    virtual ~BaseAuxiliaryModule()
+    {}
+
     /*!
      * \brief Returns the number of additional degrees of freedom required for the
      *        auxiliary module.

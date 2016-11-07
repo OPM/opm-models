@@ -61,19 +61,19 @@ public:
     /*!
      * \copydoc MultiPhaseBaseExtensiveQuantities::update()
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
 
-        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
-        const auto &stencil = elemCtx.stencil(timeIdx);
-        const auto &scvf = stencil.interiorFace(scvfIdx);
-        int insideScvIdx = scvf.interiorIndex();
-        int outsideScvIdx = scvf.exteriorIndex();
+        const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const auto& stencil = elemCtx.stencil(timeIdx);
+        const auto& scvf = stencil.interiorFace(scvfIdx);
+        unsigned insideScvIdx = scvf.interiorIndex();
+        unsigned outsideScvIdx = scvf.exteriorIndex();
 
-        int globalI = elemCtx.globalSpaceIndex(insideScvIdx, timeIdx);
-        int globalJ = elemCtx.globalSpaceIndex(outsideScvIdx, timeIdx);
-        const auto &fractureMapper = elemCtx.problem().fractureMapper();
+        unsigned globalI = elemCtx.globalSpaceIndex(insideScvIdx, timeIdx);
+        unsigned globalJ = elemCtx.globalSpaceIndex(outsideScvIdx, timeIdx);
+        const auto& fractureMapper = elemCtx.problem().fractureMapper();
         if (!fractureMapper.isFractureEdge(globalI, globalJ))
             // do nothing if no fracture goes though the current edge
             return;
@@ -86,16 +86,16 @@ public:
         distDirection -= elemCtx.pos(insideScvIdx, timeIdx);
         distDirection /= distDirection.two_norm();
 
-        const auto &problem = elemCtx.problem();
+        const auto& problem = elemCtx.problem();
         fractureWidth_ = problem.fractureWidth(elemCtx, insideScvIdx,
                                                outsideScvIdx, timeIdx);
         assert(fractureWidth_ < scvf.area());
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            const auto &pGrad = extQuants.potentialGrad(phaseIdx);
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            const auto& pGrad = extQuants.potentialGrad(phaseIdx);
 
-            int upstreamIdx = extQuants.upstreamIndex(phaseIdx);
-            const auto &up = elemCtx.intensiveQuantities(upstreamIdx, timeIdx);
+            unsigned upstreamIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
+            const auto& up = elemCtx.intensiveQuantities(upstreamIdx, timeIdx);
 
             // multiply with the fracture mobility of the upstream vertex
             fractureIntrinsicPermeability_.mv(pGrad,
@@ -106,7 +106,7 @@ public:
             // a fracture is always shared by two sub-control-volume
             // faces.
             fractureVolumeFlux_[phaseIdx] = 0;
-            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
                 fractureVolumeFlux_[phaseIdx] +=
                     (fractureFilterVelocity_[phaseIdx][dimIdx] * distDirection[dimIdx])
                     * (fractureWidth_ / 2.0) / scvf.area();
@@ -114,16 +114,16 @@ public:
     }
 
 public:
-    const DimMatrix &fractureIntrinsicPermeability() const
+    const DimMatrix& fractureIntrinsicPermeability() const
     { return fractureIntrinsicPermeability_; }
 
-    Scalar fractureVolumeFlux(int phaseIdx) const
+    Scalar fractureVolumeFlux(unsigned phaseIdx) const
     { return fractureVolumeFlux_[phaseIdx]; }
 
     Scalar fractureWidth() const
     { return fractureWidth_; }
 
-    const DimVector &fractureFilterVelocity(int phaseIdx) const
+    const DimVector& fractureFilterVelocity(unsigned phaseIdx) const
     { return fractureFilterVelocity_[phaseIdx]; }
 
 private:

@@ -191,7 +191,7 @@ class ParallelIterativeSolverBackend
     enum { dimWorld = GridView::dimensionworld };
 
 public:
-    ParallelIterativeSolverBackend(const Simulator &simulator)
+    ParallelIterativeSolverBackend(const Simulator& simulator)
         : simulator_(simulator)
         , gridSequenceNumber_( -1 )
     {
@@ -240,7 +240,7 @@ public:
         overlappingMatrix_->assignAdd(M);
     }
 
-    void prepareRhs(const Matrix& M, Vector &b)
+    void prepareRhs(const Matrix& M, Vector& b)
     {
         // make sure that the overlapping matrix and block vectors
         // have been created
@@ -260,7 +260,7 @@ public:
      *
      * \return true if the residual reduction could be achieved, else false.
      */
-    bool solve(Vector &x)
+    bool solve(Vector& x)
     {
         Scalar oldSingularLimit = Dune::FMatrixPrecision<Scalar>::singular_limit();
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-50);
@@ -272,7 +272,7 @@ public:
             // update sequential preconditioner
             precWrapper_.prepare(*overlappingMatrix_);
         }
-        catch (const Dune::Exception &e) {
+        catch (const Dune::Exception& e) {
             std::cout << "Preconditioner threw exception \"" << e.what()
                       << " on rank " << overlappingMatrix_->overlap().myRank()
                       << "\n"  << std::flush;
@@ -296,7 +296,7 @@ public:
         ParallelOperator parOperator(*overlappingMatrix_);
 
         // retrieve the linear solver
-        auto &solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
+        auto& solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
 
         /////
         // create a residual reduction convergence criterion
@@ -304,12 +304,12 @@ public:
         // set the weighting of the residuals
         OverlappingVector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
-        const auto &overlap = overlappingMatrix_->overlap();
-        for (unsigned localIdx = 0; localIdx < unsigned(overlap.numLocal()); ++localIdx) {
-            int nativeIdx = overlap.domesticToNative(localIdx);
-            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
+        const auto& overlap = overlappingMatrix_->overlap();
+        for (unsigned localIdx = 0; localIdx < overlap.numLocal(); ++localIdx) {
+            Index nativeIdx = overlap.domesticToNative(static_cast<Index>(localIdx));
+            for (unsigned eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
                 residWeightVec[localIdx][eqIdx] =
-                    this->simulator_.model().eqWeight(nativeIdx, eqIdx);
+                    this->simulator_.model().eqWeight(static_cast<unsigned>(nativeIdx), eqIdx);
             }
         }
 
@@ -339,7 +339,7 @@ public:
             solver.apply(*overlappingx_, *overlappingb_, result);
             solverSucceeded = simulator_.gridView().comm().min(solverSucceeded);
         }
-        catch (const Dune::Exception &) {
+        catch (const Dune::Exception& ) {
             solverSucceeded = 0;
             solverSucceeded = simulator_.gridView().comm().min(solverSucceeded);
         }
@@ -366,13 +366,13 @@ public:
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
 
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    void prepare_(const Matrix &M)
+    void prepare_(const Matrix& M)
     {
         // if grid has changed the sequence number has changed too
         int curSeqNum = simulator_.gridManager().gridSequenceNumber();
@@ -388,7 +388,7 @@ private:
                                             simulator_.model().dofMapper());
 
         // create the overlapping Jacobian matrix
-        int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
+        unsigned overlapSize = static_cast<unsigned>(EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize));
         overlappingMatrix_ = new OverlappingMatrix(M,
                                                    borderListCreator.borderList(),
                                                    borderListCreator.blackList(),
@@ -428,8 +428,8 @@ private:
             assert(rankField.two_norm() == 0.0);
             assert(isInOverlap.two_norm() == 0.0);
             auto vIt = simulator_.gridView().template begin</*codim=*/dimWorld>();
-            const auto &vEndIt = simulator_.gridView().template end</*codim=*/dimWorld>();
-            const auto &overlap = overlappingMatrix_->overlap();
+            const auto& vEndIt = simulator_.gridView().template end</*codim=*/dimWorld>();
+            const auto& overlap = overlappingMatrix_->overlap();
             for (; vIt != vEndIt; ++vIt) {
                 int nativeIdx = simulator_.model().vertexMapper().map(*vIt);
                 int localIdx = overlap.foreignOverlap().nativeToLocal(nativeIdx);
@@ -451,7 +451,7 @@ private:
         }
     }
 
-    const Simulator &simulator_;
+    const Simulator& simulator_;
     int gridSequenceNumber_;
 
     OverlappingMatrix *overlappingMatrix_;
@@ -485,9 +485,9 @@ private:
         {}                                                                         \
                                                                                    \
         template <class LinearOperator, class ScalarProduct, class Preconditioner> \
-        ParallelSolver &get(LinearOperator &parOperator,                           \
-                            ScalarProduct &parScalarProduct,                       \
-                            Preconditioner &parPreCond)                            \
+        ParallelSolver& get(LinearOperator& parOperator,                           \
+                            ScalarProduct& parScalarProduct,                       \
+                            Preconditioner& parPreCond)                            \
         {                                                                          \
             Scalar tolerance = EWOMS_GET_PARAM(TypeTag, Scalar,                    \
                                                LinearSolverTolerance);             \
@@ -544,7 +544,7 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
                                  "preconditioner");                             \
         }                                                                       \
                                                                                 \
-        void prepare(JacobianMatrix &matrix)                                    \
+        void prepare(JacobianMatrix& matrix)                                    \
         {                                                                       \
             int order = EWOMS_GET_PARAM(TypeTag, int, PreconditionerOrder);     \
             Scalar relaxationFactor = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);   \
@@ -552,7 +552,7 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
                                                        relaxationFactor);       \
         }                                                                       \
                                                                                 \
-        SequentialPreconditioner &get()                                         \
+        SequentialPreconditioner& get()                                         \
         { return *seqPreCond_; }                                                \
                                                                                 \
         void cleanup()                                                          \
@@ -586,14 +586,14 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
                                  "preconditioner");                             \
         }                                                                       \
                                                                                 \
-        void prepare(JacobianMatrix &matrix)                                    \
+        void prepare(JacobianMatrix& matrix)                                    \
         {                                                                       \
             Scalar relaxationFactor= EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);\
             seqPreCond_ = new SequentialPreconditioner(matrix,                  \
                                                        relaxationFactor);       \
         }                                                                       \
                                                                                 \
-        SequentialPreconditioner &get()                                         \
+        SequentialPreconditioner& get()                                         \
         { return *seqPreCond_; }                                                \
                                                                                 \
         void cleanup()                                                          \
@@ -663,8 +663,8 @@ SET_TYPE_PROP(ParallelIterativeLinearSolver, LinearSolverWrapper,
 SET_TYPE_PROP(ParallelIterativeLinearSolver, PreconditionerWrapper,
               Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
 
-//! set the default overlap size to 3
-SET_SCALAR_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
+//! set the default overlap size to 2
+SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
 
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 250);

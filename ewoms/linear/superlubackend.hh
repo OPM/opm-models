@@ -30,8 +30,10 @@
 #if HAVE_SUPERLU
 
 #include <ewoms/common/parametersystem.hh>
-
 #include <ewoms/linear/solvers.hh>
+
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
 
@@ -40,9 +42,11 @@ namespace Properties {
 // forward declaration of the required property tags
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
+NEW_PROP_TAG(Simulator);
+NEW_PROP_TAG(JacobianMatrix);
+NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(LinearSolverVerbosity);
 NEW_PROP_TAG(LinearSolverBackend);
-
 NEW_TYPE_TAG(SuperLULinearSolver);
 } // namespace Properties
 } // namespace Ewoms
@@ -65,7 +69,7 @@ class SuperLUBackend
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
 
 public:
-    SuperLUBackend(Simulator& simulator)
+    SuperLUBackend(Simulator& OPM_UNUSED simulator)
     {}
 
     static void registerParameters()
@@ -88,12 +92,12 @@ public:
         M_ = &M;
     }
 
-    void prepareRhs(const Matrix& M, Vector &b)
+    void prepareRhs(const Matrix& OPM_UNUSED M, Vector& b)
     {
         b_ = &b;
     }
 
-    bool solve(Vector &x)
+    bool solve(Vector& x)
     { return SuperLUSolve_<Scalar, TypeTag, Matrix, Vector>::solve_(*M_, x, *b_); }
 
 private:
@@ -105,7 +109,7 @@ template <class Scalar, class TypeTag, class Matrix, class Vector>
 class SuperLUSolve_
 {
 public:
-    static bool solve_(const Matrix &A, Vector &x, const Vector &b)
+    static bool solve_(const Matrix& A, Vector& x, const Vector& b)
     {
         Vector bTmp(b);
 
@@ -118,8 +122,8 @@ public:
             // make sure that the result only contains finite values.
             Scalar tmp = 0;
             for (unsigned i = 0; i < x.size(); ++i) {
-                const auto &xi = x[i];
-                for (int j = 0; j < Vector::block_type::dimension; ++j)
+                const auto& xi = x[i];
+                for (unsigned j = 0; j < Vector::block_type::dimension; ++j)
                     tmp += xi[j];
             }
             result.converged = std::isfinite(tmp);
@@ -138,9 +142,9 @@ template <class TypeTag, class Matrix, class Vector>
 class SuperLUSolve_<__float128, TypeTag, Matrix, Vector>
 {
 public:
-    static bool solve_(const Matrix &A,
-                       Vector &x,
-                       const Vector &b)
+    static bool solve_(const Matrix& A,
+                       Vector& x,
+                       const Vector& b)
     {
         static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
         typedef Dune::FieldVector<double, numEq> DoubleEqVector;

@@ -33,6 +33,7 @@
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <type_traits>
 
@@ -64,7 +65,7 @@ public:
      * In this context, we assume that thermal equilibrium applies,
      * i.e. that the temperature of all phases is equal.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().temperature(/*phaseIdx=*/0); }
 
 private:
@@ -91,23 +92,23 @@ public:
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
 
-    PressureCallback(const ElementContext& elemCtx, short phaseIdx)
+    PressureCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
-        , phaseIdx_(phaseIdx)
+        , phaseIdx_(static_cast<unsigned short>(phaseIdx))
     {}
 
     /*!
      * \brief Set the index of the fluid phase for which the pressure
      *        should be returned.
      */
-    void setPhaseIndex(short phaseIdx)
-    { phaseIdx_ = phaseIdx; }
+    void setPhaseIndex(unsigned phaseIdx)
+    { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
      * \brief Return the pressure of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
@@ -115,7 +116,7 @@ public:
 
 private:
     const ElementContext& elemCtx_;
-    short phaseIdx_;
+    unsigned short phaseIdx_;
 };
 
 /*!
@@ -144,24 +145,24 @@ public:
 
     BoundaryPressureCallback(const ElementContext& elemCtx,
                              const FluidState& boundaryFs,
-                             short phaseIdx)
+                             unsigned phaseIdx)
         : elemCtx_(elemCtx)
         , boundaryFs_(boundaryFs)
-        , phaseIdx_(phaseIdx)
+        , phaseIdx_(static_cast<unsigned short>(phaseIdx))
     {}
 
     /*!
      * \brief Set the index of the fluid phase for which the pressure
      *        should be returned.
      */
-    void setPhaseIndex(short phaseIdx)
-    { phaseIdx_ = phaseIdx; }
+    void setPhaseIndex(unsigned phaseIdx)
+    { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
      * \brief Return the pressure of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
@@ -176,7 +177,7 @@ public:
 private:
     const ElementContext& elemCtx_;
     const FluidState& boundaryFs_;
-    short phaseIdx_;
+    unsigned short phaseIdx_;
 };
 
 /*!
@@ -199,23 +200,23 @@ public:
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
 
-    DensityCallback(const ElementContext& elemCtx, short phaseIdx)
+    DensityCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
-        , phaseIdx_(phaseIdx)
+        , phaseIdx_(static_cast<unsigned short>(phaseIdx))
     {}
 
     /*!
      * \brief Set the index of the fluid phase for which the density
      *        should be returned.
      */
-    void setPhaseIndex(short phaseIdx)
-    { phaseIdx_ = phaseIdx; }
+    void setPhaseIndex(unsigned phaseIdx)
+    { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
      * \brief Return the density of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_);
@@ -223,7 +224,7 @@ public:
 
 private:
     const ElementContext& elemCtx_;
-    short phaseIdx_;
+    unsigned short phaseIdx_;
 };
 
 /*!
@@ -246,23 +247,23 @@ public:
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
 
-    MolarDensityCallback(const ElementContext& elemCtx, short phaseIdx)
+    MolarDensityCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
-        , phaseIdx_(phaseIdx)
+        , phaseIdx_(static_cast<unsigned short>(phaseIdx))
     {}
 
     /*!
      * \brief Set the index of the fluid phase for which the molar
      *        density should be returned.
      */
-    void setPhaseIndex(short phaseIdx)
-    { phaseIdx_ = phaseIdx; }
+    void setPhaseIndex(unsigned phaseIdx)
+    { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
      * \brief Return the molar density of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_);
@@ -270,7 +271,7 @@ public:
 
 private:
     const ElementContext& elemCtx_;
-    short phaseIdx_;
+    unsigned short phaseIdx_;
 };
 
 /*!
@@ -293,23 +294,23 @@ public:
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(phaseIdx_); }
 
-    ViscosityCallback(const ElementContext& elemCtx, short phaseIdx)
+    ViscosityCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
-        , phaseIdx_(phaseIdx)
+        , phaseIdx_(static_cast<unsigned short>(phaseIdx))
     {}
 
     /*!
      * \brief Set the index of the fluid phase for which the viscosity
      *        should be returned.
      */
-    void setPhaseIndex(short phaseIdx)
-    { phaseIdx_ = phaseIdx; }
+    void setPhaseIndex(unsigned phaseIdx)
+    { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
      * \brief Return the viscosity of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_);
@@ -317,7 +318,7 @@ public:
 
 private:
     const ElementContext& elemCtx_;
-    short phaseIdx_;
+    unsigned short phaseIdx_;
 };
 
 /*!
@@ -343,7 +344,7 @@ public:
      * \brief Return the velocity of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter(); }
 
 private:
@@ -368,7 +369,7 @@ public:
         : elemCtx_(elemCtx)
     { Valgrind::SetUndefined(dimIdx_); }
 
-    VelocityComponentCallback(const ElementContext& elemCtx, short dimIdx)
+    VelocityComponentCallback(const ElementContext& elemCtx, unsigned dimIdx)
         : elemCtx_(elemCtx)
         , dimIdx_(dimIdx)
     {}
@@ -377,14 +378,14 @@ public:
      * \brief Set the index of the component of the velocity
      *        which should be returned.
      */
-    void setDimIndex(short dimIdx)
+    void setDimIndex(unsigned dimIdx)
     { dimIdx_ = dimIdx; }
 
     /*!
      * \brief Return the velocity of a phase given the index of a
      *        degree of freedom within an element context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(dimIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_];
@@ -392,7 +393,7 @@ public:
 
 private:
     const ElementContext& elemCtx_;
-    short dimIdx_;
+    unsigned dimIdx_;
 };
 
 /*!
@@ -418,32 +419,32 @@ public:
         Valgrind::SetUndefined(compIdx_);
     }
 
-    MoleFractionCallback(const ElementContext& elemCtx, short phaseIdx, short compIdx)
+    MoleFractionCallback(const ElementContext& elemCtx, unsigned phaseIdx, unsigned compIdx)
         : elemCtx_(elemCtx)
-        , phaseIdx_(phaseIdx)
-        , compIdx_(compIdx)
+        , phaseIdx_(static_cast<unsigned short>(phaseIdx))
+        , compIdx_(static_cast<unsigned short>(compIdx))
     {}
 
     /*!
      * \brief Set the index of the fluid phase for which a mole
      *        fraction should be returned.
      */
-    void setPhaseIndex(short phaseIdx)
-    { phaseIdx_ = phaseIdx; }
+    void setPhaseIndex(unsigned phaseIdx)
+    { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
      * \brief Set the index of the component for which the mole
      *        fraction should be returned.
      */
-    void setComponentIndex(short compIdx)
-    { compIdx_ = compIdx; }
+    void setComponentIndex(unsigned compIdx)
+    { compIdx_ = static_cast<unsigned short>(compIdx); }
 
     /*!
      * \brief Return the mole fraction of a component in a phase given
      *        the index of a degree of freedom within an element
      *        context.
      */
-    ResultType operator()(int dofIdx) const
+    ResultType operator()(unsigned dofIdx) const
     {
         Valgrind::CheckDefined(phaseIdx_);
         Valgrind::CheckDefined(compIdx_);
@@ -452,8 +453,8 @@ public:
 
 private:
     const ElementContext& elemCtx_;
-    short phaseIdx_;
-    short compIdx_;
+    unsigned short phaseIdx_;
+    unsigned short compIdx_;
 };
 
 } // namespace Ewoms

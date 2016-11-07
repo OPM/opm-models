@@ -30,6 +30,11 @@
 
 #include "blackoilproperties.hh"
 
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 namespace Ewoms {
 /*!
  * \ingroup BlackOilModel
@@ -88,24 +93,24 @@ public:
      *        state.
      */
     template <class FluidState>
-    void assign(const FluidState& fs)
+    void assign(const FluidState& OPM_UNUSED fs)
     {
         assert(false); // not yet implemented
     }
 
-    void setPvtRegionIndex(unsigned short newPvtRegionIdx)
-    { pvtRegionIdx_ = newPvtRegionIdx; }
+    void setPvtRegionIndex(unsigned newPvtRegionIdx)
+    { pvtRegionIdx_ = static_cast<unsigned short>(newPvtRegionIdx); }
 
-    void setPressure(int phaseIdx, const Evaluation& p)
+    void setPressure(unsigned phaseIdx, const Evaluation& p)
     { pressure_[phaseIdx] = p; }
 
-    void setSaturation(int phaseIdx, const Evaluation& S)
+    void setSaturation(unsigned phaseIdx, const Evaluation& S)
     { saturation_[phaseIdx] = S; }
 
-    void setInvB(int phaseIdx, const Evaluation& b)
+    void setInvB(unsigned phaseIdx, const Evaluation& b)
     { invB_[phaseIdx] = b; }
 
-    void setDensity(int phaseIdx, const Evaluation& rho)
+    void setDensity(unsigned phaseIdx, const Evaluation& rho)
     { density_[phaseIdx] = rho; }
 
     void setRs(const Evaluation& newRs)
@@ -114,16 +119,13 @@ public:
     void setRv(const Evaluation& newRv)
     { Rv_ = newRv; }
 
-    void setInvB(unsigned phaseIdx, const Evaluation& newb)
-    { invB_[phaseIdx] = newb; }
-
     const Evaluation& pressure(unsigned phaseIdx) const
     { return pressure_[phaseIdx]; }
 
     const Evaluation& saturation(unsigned phaseIdx) const
     { return saturation_[phaseIdx]; }
 
-    const Evaluation& temperature(unsigned phaseIdx) const
+    const Evaluation& temperature(unsigned OPM_UNUSED phaseIdx) const
     { return temperature_; }
 
     const Evaluation& invB(unsigned phaseIdx) const
@@ -136,9 +138,9 @@ public:
     { return Rv_; }
 
     unsigned short pvtRegionIndex() const
-    { return pvtRegionIdx_; };
+    { return pvtRegionIdx_; }
 
-    bool phaseIsPresent(int phaseIdx) const
+    bool phaseIsPresent(unsigned phaseIdx) const
     { return saturation_[phaseIdx] > 0.0; }
 
     //////
@@ -166,13 +168,13 @@ public:
     Evaluation viscosity(unsigned phaseIdx) const
     { return FluidSystem::viscosity(*this, phaseIdx, pvtRegionIdx_); }
 
-    Evaluation enthalpy(unsigned phaseIdx) const
+    Evaluation enthalpy(unsigned OPM_UNUSED phaseIdx) const
     {
         OPM_THROW(Opm::NotImplemented,
                   "The black-oil model does not support energy conservation yet.");
     }
 
-    Evaluation internalEnergy(unsigned phaseIdx) const
+    Evaluation internalEnergy(unsigned OPM_UNUSED phaseIdx) const
     {
         OPM_THROW(Opm::NotImplemented,
                   "The black-oil model does not support energy conservation yet.");
@@ -258,7 +260,7 @@ public:
     Evaluation averageMolarMass(unsigned phaseIdx) const
     {
         Evaluation result(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx)
             result += FluidSystem::molarMass(compIdx, pvtRegionIdx_)*moleFraction(phaseIdx, compIdx);
         return result;
     }

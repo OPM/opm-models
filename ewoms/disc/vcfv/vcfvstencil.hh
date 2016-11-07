@@ -30,6 +30,8 @@
 
 #include <ewoms/common/quadraturegeometries.hh>
 
+#include <opm/material/common/Unused.hpp>
+
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
@@ -50,7 +52,7 @@ namespace Ewoms {
 /*!
  * \cond SKIP_THIS
  */
-template <class Scalar, unsigned dim, int basicGeomType>
+template <class Scalar, unsigned dim, unsigned basicGeomType>
 class VcfvScvGeometries;
 
 ////////////////////
@@ -84,7 +86,7 @@ public:
             scvGeoms_[scvIdx].setCorners(scvCorners[scvIdx], ScvLocalGeometry::numCorners);
     }
 
-    static const ScvLocalGeometry &get(unsigned scvIdx)
+    static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
 private:
@@ -106,10 +108,11 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(unsigned scvIdx)
-    { OPM_THROW(std::logic_error,
-                "Not implemented: "
-                "VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>"); }
+    static const ScvLocalGeometry& get(unsigned OPM_UNUSED scvIdx)
+    {
+        OPM_THROW(std::logic_error,
+                "Not implemented: VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>");
+    }
 };
 
 ////////////////////
@@ -125,7 +128,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(unsigned scvIdx)
+    static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
     static void init()
@@ -178,7 +181,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(unsigned scvIdx)
+    static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
     static void init()
@@ -240,7 +243,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(unsigned scvIdx)
+    static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
     static void init()
@@ -320,7 +323,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry &get(unsigned scvIdx)
+    static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
 
     static void init()
@@ -474,7 +477,7 @@ class VcfvStencil
 public:
     typedef typename GridView::Traits::template Codim<dim>::Entity          Entity;
 private:
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     typedef typename GridView::Traits::template Codim<0>::EntityPointer     ElementPointer;
     typedef typename GridView::Traits::template Codim<dim>::EntityPointer   EntityPointer;
 #endif
@@ -570,7 +573,7 @@ private:
             + prismVolume(p0,p2,p3,p4,p6,p7);
     }
 
-    void normalOfQuadrilateral3D(DimVector &normal,
+    void normalOfQuadrilateral3D(DimVector& normal,
                                  const GlobalPosition& p0,
                                  const GlobalPosition& p1,
                                  const GlobalPosition& p2,
@@ -702,20 +705,20 @@ private:
 
         switch (numElemVertices) {
         case 4:
-            leftEdge = faceAndVertexToLeftEdgeTet[face][vert];
-            rightEdge = faceAndVertexToRightEdgeTet[face][vert];
+            leftEdge = static_cast<unsigned>(faceAndVertexToLeftEdgeTet[face][vert]);
+            rightEdge = static_cast<unsigned>(faceAndVertexToRightEdgeTet[face][vert]);
             break;
         case 5:
-            leftEdge = faceAndVertexToLeftEdgePyramid[face][vert];
-            rightEdge = faceAndVertexToRightEdgePyramid[face][vert];
+            leftEdge = static_cast<unsigned>(faceAndVertexToLeftEdgePyramid[face][vert]);
+            rightEdge = static_cast<unsigned>(faceAndVertexToRightEdgePyramid[face][vert]);
             break;
         case 6:
-            leftEdge = faceAndVertexToLeftEdgePrism[face][vert];
-            rightEdge = faceAndVertexToRightEdgePrism[face][vert];
+            leftEdge = static_cast<unsigned>(faceAndVertexToLeftEdgePrism[face][vert]);
+            rightEdge = static_cast<unsigned>(faceAndVertexToRightEdgePrism[face][vert]);
             break;
         case 8:
-            leftEdge = faceAndVertexToLeftEdgeHex[face][vert];
-            rightEdge = faceAndVertexToRightEdgeHex[face][vert];
+            leftEdge = static_cast<unsigned>(faceAndVertexToLeftEdgeHex[face][vert]);
+            rightEdge = static_cast<unsigned>(faceAndVertexToRightEdgeHex[face][vert]);
             break;
         default:
             OPM_THROW(std::logic_error,
@@ -740,10 +743,10 @@ public:
         const GlobalPosition corner(unsigned cornerIdx) const
         { return global(localGeometry_->corner(cornerIdx)); }
 
-        const GlobalPosition global(const LocalPosition &localPos) const
+        const GlobalPosition global(const LocalPosition& localPos) const
         { return element_->geometry().global(localPos); }
 
-        const ScvLocalGeometry &localGeometry() const
+        const ScvLocalGeometry& localGeometry() const
         { return *localGeometry_; }
 
         const ScvLocalGeometry *localGeometry_;
@@ -752,7 +755,7 @@ public:
 
     struct SubControlVolume //! finite volume intersected with element
     {
-        const GlobalPosition &globalPos() const
+        const GlobalPosition& globalPos() const
         { return global; }
 
         const GlobalPosition center() const
@@ -761,10 +764,10 @@ public:
         Scalar volume() const
         { return volume_; }
 
-        const ScvLocalGeometry &localGeometry() const
+        const ScvLocalGeometry& localGeometry() const
         { return geometry_.localGeometry(); }
 
-        const ScvGeometry &geometry() const
+        const ScvGeometry& geometry() const
         { return geometry_; }
 
         //! local vertex position
@@ -782,26 +785,26 @@ public:
 
     struct SubControlVolumeFace //! interior face of a sub control volume
     {
-        const DimVector &normal() const
+        const DimVector& normal() const
         { return normal_; }
 
-        unsigned interiorIndex() const
+        unsigned short interiorIndex() const
         { return i; }
 
-        unsigned exteriorIndex() const
+        unsigned short exteriorIndex() const
         { return j; }
 
         Scalar area() const
         { return area_; }
 
-        const LocalPosition &localPos() const
+        const LocalPosition& localPos() const
         { return ipLocal_; }
 
-        const GlobalPosition &integrationPos() const
+        const GlobalPosition& integrationPos() const
         { return ipGlobal_; }
 
         //! scvf seperates corner i and j of elem
-        unsigned i,j;
+        unsigned short i,j;
         //! integration point in local coords
         LocalPosition ipLocal_;
         //! integration point in global coords
@@ -815,10 +818,10 @@ public:
     //! compatibility typedef
     typedef SubControlVolumeFace BoundaryFace;
 
-    VcfvStencil(const GridView &gridView, const VertexMapper& vertexMapper)
+    VcfvStencil(const GridView& gridView, const VertexMapper& vertexMapper)
         : gridView_(gridView)
         , vertexMapper_( vertexMapper )
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         , element_(*gridView.template begin</*codim=*/0>())
 #else
         , elementPtr_(gridView.template begin</*codim=*/0>())
@@ -843,7 +846,7 @@ public:
      */
     void updateTopology(const Element& e)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         element_ = e;
 
         numVertices = e.subEntities(/*codim=*/dim);
@@ -865,12 +868,12 @@ public:
         const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
             referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
         for (unsigned vertexIdx = 0; vertexIdx < numVertices; vertexIdx++) {
-            subContVol[vertexIdx].local = referenceElement.position(vertexIdx, dim);
-            subContVol[vertexIdx].global = geometry.corner(vertexIdx);
+            subContVol[vertexIdx].local = referenceElement.position(static_cast<int>(vertexIdx), dim);
+            subContVol[vertexIdx].global = geometry.corner(static_cast<int>(vertexIdx));
         }
     }
 
-    void updatePrimaryTopology(const Element &element)
+    void updatePrimaryTopology(const Element& element)
     {
         // since all degrees of freedom in a stencil are "primary" DOFs for the
         // vertex-centered finite volume method, there's no difference to
@@ -894,18 +897,18 @@ public:
 
         // corners:
         for (unsigned vert = 0; vert < numVertices; vert++) {
-            subContVol[vert].local = referenceElement.position(vert, dim);
+            subContVol[vert].local = referenceElement.position(static_cast<int>(vert), dim);
             subContVol[vert].global = geometry.global(subContVol[vert].local);
         }
 
         // edges:
         for (unsigned edge = 0; edge < numEdges; edge++) {
-            edgeCoord[edge] = geometry.global(referenceElement.position(edge, dim-1));
+            edgeCoord[edge] = geometry.global(referenceElement.position(static_cast<int>(edge), dim-1));
         }
 
         // faces:
         for (unsigned face = 0; face < numFaces; face++) {
-            faceCoord[face] = geometry.global(referenceElement.position(face, 1));
+            faceCoord[face] = geometry.global(referenceElement.position(static_cast<int>(face), 1));
         }
 
         // fill sub control volume data use specialization for this
@@ -917,8 +920,8 @@ public:
 
         // fill sub control volume face data:
         for (unsigned k = 0; k < numEdges; k++) { // begin loop over edges / sub control volume faces
-            unsigned i = referenceElement.subEntity(k, dim-1, 0, dim);
-            unsigned j = referenceElement.subEntity(k, dim-1, 1, dim);
+            unsigned short i = static_cast<unsigned short>(referenceElement.subEntity(static_cast<int>(k), dim-1, 0, dim));
+            unsigned short j = static_cast<unsigned short>(referenceElement.subEntity(static_cast<int>(k), dim-1, 1, dim));
             if (numEdges == 4 && (i == 2 || j == 2))
                 std::swap(i, j);
             subContVolFace[k].i = i;
@@ -938,7 +941,7 @@ public:
                 ipLocal_ = subContVolFace[k].ipLocal_;
             }
             else if (dim==2) {
-                ipLocal_ = referenceElement.position(k, dim-1) + elementLocal;
+                ipLocal_ = referenceElement.position(static_cast<int>(k), dim-1) + elementLocal;
                 ipLocal_ *= 0.5;
                 subContVolFace[k].ipLocal_ = ipLocal_;
                 for (unsigned m = 0; m < dimWorld; ++m)
@@ -959,9 +962,9 @@ public:
                 unsigned leftFace;
                 unsigned rightFace;
                 getFaceIndices(numVertices, k, leftFace, rightFace);
-                ipLocal_ = referenceElement.position(k, dim-1) + elementLocal
-                    + referenceElement.position(leftFace, 1)
-                    + referenceElement.position(rightFace, 1);
+                ipLocal_ = referenceElement.position(static_cast<int>(k), dim-1) + elementLocal
+                    + referenceElement.position(static_cast<int>(leftFace), 1)
+                    + referenceElement.position(static_cast<int>(rightFace), 1);
                 ipLocal_ *= 0.25;
                 subContVolFace[k].ipLocal_ = ipLocal_;
                 normalOfQuadrilateral3D(subContVolFace[k].normal_,
@@ -983,21 +986,21 @@ public:
             if ( ! intersection.boundary())
                 continue;
 
-            unsigned face = intersection.indexInInside();
-            unsigned numVerticesOfFace = referenceElement.size(face, 1, dim);
+            unsigned face = static_cast<unsigned>(intersection.indexInInside());
+            unsigned numVerticesOfFace = static_cast<unsigned>(referenceElement.size(static_cast<int>(face), 1, dim));
             for (unsigned vertInFace = 0; vertInFace < numVerticesOfFace; vertInFace++)
             {
-                unsigned vertInElement = referenceElement.subEntity(face, 1, vertInFace, dim);
+                unsigned short vertInElement = static_cast<unsigned short>(referenceElement.subEntity(static_cast<int>(face), 1, static_cast<int>(vertInFace), dim));
                 unsigned bfIdx = numBoundarySegments_;
                 ++numBoundarySegments_;
 
                 if (dim == 1) {
-                    boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(vertInElement, dim);
+                    boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(static_cast<int>(vertInElement), dim);
                     boundaryFace_[bfIdx].area_ = 1.0;
                 }
                 else if (dim == 2) {
-                    boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(vertInElement, dim)
-                        + referenceElement.position(face, 1);
+                    boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(static_cast<int>(vertInElement), dim)
+                        + referenceElement.position(static_cast<int>(face), 1);
                     boundaryFace_[bfIdx].ipLocal_ *= 0.5;
                     boundaryFace_[bfIdx].area_ = 0.5 * intersection.geometry().volume();
                 }
@@ -1005,10 +1008,10 @@ public:
                     unsigned leftEdge;
                     unsigned rightEdge;
                     getEdgeIndices(numVertices, face, vertInElement, leftEdge, rightEdge);
-                    boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(vertInElement, dim)
-                        + referenceElement.position(face, 1)
-                        + referenceElement.position(leftEdge, dim-1)
-                        + referenceElement.position(rightEdge, dim-1);
+                    boundaryFace_[bfIdx].ipLocal_ = referenceElement.position(static_cast<int>(vertInElement), dim)
+                        + referenceElement.position(static_cast<int>(face), 1)
+                        + referenceElement.position(static_cast<int>(leftEdge), dim-1)
+                        + referenceElement.position(static_cast<int>(rightEdge), dim-1);
                     boundaryFace_[bfIdx].ipLocal_ *= 0.25;
                     boundaryFace_[bfIdx].area_ =
                         quadrilateralArea3D(subContVol[vertInElement].global,
@@ -1031,7 +1034,7 @@ public:
         updateScvGeometry(e);
     }
 
-    void updateScvGeometry(const Element &element)
+    void updateScvGeometry(const Element& element)
     {
         auto geomType = element.geometry().type();
 
@@ -1058,20 +1061,20 @@ public:
 #if HAVE_DUNE_LOCALFUNCTIONS
     void updateCenterGradients()
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        const auto &localFiniteElement = feCache_.get(element_.type());
-        const auto &geom = element_.geometry();
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+        const auto& localFiniteElement = feCache_.get(element_.type());
+        const auto& geom = element_.geometry();
 #else
-        const auto &localFiniteElement = feCache_.get(elementPtr_->type());
-        const auto &geom = elementPtr_->geometry();
+        const auto& localFiniteElement = feCache_.get(elementPtr_->type());
+        const auto& geom = elementPtr_->geometry();
 #endif
 
         std::vector<ShapeJacobian> localJac;
 
         for (unsigned scvIdx = 0; scvIdx < numVertices; ++ scvIdx) {
-            const auto &localCenter = subContVol[scvIdx].localGeometry().center();
+            const auto& localCenter = subContVol[scvIdx].localGeometry().center();
             localFiniteElement.localBasis().evaluateJacobian(localCenter, localJac);
-            const auto &globalPos = subContVol[scvIdx].geometry().center();
+            const auto& globalPos = subContVol[scvIdx].geometry().center();
 
             const auto jacInvT = geom.jacobianInverseTransposed(globalPos);
             for (unsigned vert = 0; vert < numVertices; vert++) {
@@ -1088,13 +1091,13 @@ public:
     { return numDof(); }
 
     Dune::PartitionType partitionType(unsigned scvIdx) const
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     { return element_.template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
 #else
     { return elementPtr_->template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
 #endif
 
-    const SubControlVolume &subControlVolume(unsigned scvIdx) const
+    const SubControlVolume& subControlVolume(unsigned scvIdx) const
     {
         assert(0 <= scvIdx && scvIdx < numDof());
         return subContVol[scvIdx];
@@ -1106,10 +1109,10 @@ public:
     unsigned numBoundaryFaces() const
     { return numBoundarySegments_; }
 
-    const SubControlVolumeFace &interiorFace(unsigned faceIdx) const
+    const SubControlVolumeFace& interiorFace(unsigned faceIdx) const
     { return subContVolFace[faceIdx]; }
 
-    const BoundaryFace &boundaryFace(unsigned bfIdx) const
+    const BoundaryFace& boundaryFace(unsigned bfIdx) const
     { return boundaryFace_[bfIdx]; }
 
     /*!
@@ -1120,10 +1123,10 @@ public:
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        return vertexMapper_.subIndex(element_, dofIdx, /*codim=*/dim);
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+        return static_cast<unsigned>(vertexMapper_.subIndex(element_, static_cast<int>(dofIdx), /*codim=*/dim));
 #else
-        return vertexMapper_.map(*elementPtr_, dofIdx, /*codim=*/dim);
+        return static_cast<unsigned>(vertexMapper_.map(*elementPtr_, static_cast<int>(dofIdx), /*codim=*/dim));
 #endif
     }
 
@@ -1131,7 +1134,7 @@ public:
      * \brief Return the global space index given the index of a degree of
      *        freedom.
      */
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     Entity
 #else
     EntityPointer
@@ -1139,14 +1142,19 @@ public:
     entity(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        return element_.template subEntity< dim > ( dofIdx );
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+        return element_.template subEntity<dim>(static_cast<int>(dofIdx));
 #else
-        return (*elementPtr_).template subEntity< dim > ( dofIdx );
+        return elementPtr_->template subEntity<dim>(static_cast<int>(dofIdx));
 #endif
     }
 
 private:
+#if __GNUC__ || __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
     void fillSubContVolData_()
     {
         if (dim == 1) {
@@ -1196,38 +1204,42 @@ private:
                     subContVol[k].volume_ = elementVolume / 4.0;
                 break;
             case 5: // 3D, pyramid
-                subContVol[0].volume_ = hexahedronVolume(subContVol[0].global,
-                                                        edgeCoord[2],
-                                                        faceCoord[0],
-                                                        edgeCoord[0],
-                                                        edgeCoord[4],
-                                                        faceCoord[3],
-                                                        elementGlobal,
-                                                        faceCoord[1]);
-                subContVol[1].volume_ = hexahedronVolume(subContVol[1].global,
-                                                        edgeCoord[1],
-                                                        faceCoord[0],
-                                                        edgeCoord[2],
-                                                        edgeCoord[5],
-                                                        faceCoord[2],
-                                                        elementGlobal,
-                                                        faceCoord[3]);
-                subContVol[2].volume_ = hexahedronVolume(subContVol[2].global,
-                                                        edgeCoord[0],
-                                                        faceCoord[0],
-                                                        edgeCoord[3],
-                                                        edgeCoord[6],
-                                                        faceCoord[1],
-                                                        elementGlobal,
-                                                        faceCoord[4]);
-                subContVol[3].volume_ = hexahedronVolume(subContVol[3].global,
-                                                        edgeCoord[3],
-                                                        faceCoord[0],
-                                                        edgeCoord[1],
-                                                        edgeCoord[7],
-                                                        faceCoord[4],
-                                                        elementGlobal,
-                                                        faceCoord[2]);
+                subContVol[0].volume_ =
+                    hexahedronVolume(subContVol[0].global,
+                                     edgeCoord[2],
+                                     faceCoord[0],
+                                     edgeCoord[0],
+                                     edgeCoord[4],
+                                     faceCoord[3],
+                                     elementGlobal,
+                                     faceCoord[1]);
+                subContVol[1].volume_ =
+                    hexahedronVolume(subContVol[1].global,
+                                     edgeCoord[1],
+                                     faceCoord[0],
+                                     edgeCoord[2],
+                                     edgeCoord[5],
+                                     faceCoord[2],
+                                     elementGlobal,
+                                     faceCoord[3]);
+                subContVol[2].volume_ =
+                    hexahedronVolume(subContVol[2].global,
+                                     edgeCoord[0],
+                                     faceCoord[0],
+                                     edgeCoord[3],
+                                     edgeCoord[6],
+                                     faceCoord[1],
+                                     elementGlobal,
+                                     faceCoord[4]);
+                subContVol[3].volume_ =
+                    hexahedronVolume(subContVol[3].global,
+                                     edgeCoord[3],
+                                     faceCoord[0],
+                                     edgeCoord[1],
+                                     edgeCoord[7],
+                                     faceCoord[4],
+                                     elementGlobal,
+                                     faceCoord[2]);
                 subContVol[4].volume_ = elementVolume -
                     subContVol[0].volume_ -
                     subContVol[1].volume_ -
@@ -1235,120 +1247,134 @@ private:
                     subContVol[3].volume_;
                 break;
             case 6: // 3D, prism
-                subContVol[0].volume_ = hexahedronVolume(subContVol[0].global,
-                                                        edgeCoord[3],
-                                                        faceCoord[3],
-                                                        edgeCoord[4],
-                                                        edgeCoord[0],
-                                                        faceCoord[0],
-                                                        elementGlobal,
-                                                        faceCoord[1]);
-                subContVol[1].volume_ = hexahedronVolume(subContVol[1].global,
-                                                        edgeCoord[5],
-                                                        faceCoord[3],
-                                                        edgeCoord[3],
-                                                        edgeCoord[1],
-                                                        faceCoord[2],
-                                                        elementGlobal,
-                                                        faceCoord[0]);
-                subContVol[2].volume_ = hexahedronVolume(subContVol[2].global,
-                                                        edgeCoord[4],
-                                                        faceCoord[3],
-                                                        edgeCoord[5],
-                                                        edgeCoord[2],
-                                                        faceCoord[1],
-                                                        elementGlobal,
-                                                        faceCoord[2]);
-                subContVol[3].volume_ = hexahedronVolume(edgeCoord[0],
-                                                        faceCoord[0],
-                                                        elementGlobal,
-                                                        faceCoord[1],
-                                                        subContVol[3].global,
-                                                        edgeCoord[6],
-                                                        faceCoord[4],
-                                                        edgeCoord[7]);
-                subContVol[4].volume_ = hexahedronVolume(edgeCoord[1],
-                                                        faceCoord[2],
-                                                        elementGlobal,
-                                                        faceCoord[0],
-                                                        subContVol[4].global,
-                                                        edgeCoord[8],
-                                                        faceCoord[4],
-                                                        edgeCoord[6]);
-                subContVol[5].volume_ = hexahedronVolume(edgeCoord[2],
-                                                        faceCoord[1],
-                                                        elementGlobal,
-                                                        faceCoord[2],
-                                                        subContVol[5].global,
-                                                        edgeCoord[7],
-                                                        faceCoord[4],
-                                                        edgeCoord[8]);
+                subContVol[0].volume_ =
+                    hexahedronVolume(subContVol[0].global,
+                                     edgeCoord[3],
+                                     faceCoord[3],
+                                     edgeCoord[4],
+                                     edgeCoord[0],
+                                     faceCoord[0],
+                                     elementGlobal,
+                                     faceCoord[1]);
+                subContVol[1].volume_ =
+                    hexahedronVolume(subContVol[1].global,
+                                     edgeCoord[5],
+                                     faceCoord[3],
+                                     edgeCoord[3],
+                                     edgeCoord[1],
+                                     faceCoord[2],
+                                     elementGlobal,
+                                     faceCoord[0]);
+                subContVol[2].volume_ =
+                    hexahedronVolume(subContVol[2].global,
+                                     edgeCoord[4],
+                                     faceCoord[3],
+                                     edgeCoord[5],
+                                     edgeCoord[2],
+                                     faceCoord[1],
+                                     elementGlobal,
+                                     faceCoord[2]);
+                subContVol[3].volume_ =
+                    hexahedronVolume(edgeCoord[0],
+                                     faceCoord[0],
+                                     elementGlobal,
+                                     faceCoord[1],
+                                     subContVol[3].global,
+                                     edgeCoord[6],
+                                     faceCoord[4],
+                                     edgeCoord[7]);
+                subContVol[4].volume_ =
+                    hexahedronVolume(edgeCoord[1],
+                                     faceCoord[2],
+                                     elementGlobal,
+                                     faceCoord[0],
+                                     subContVol[4].global,
+                                     edgeCoord[8],
+                                     faceCoord[4],
+                                     edgeCoord[6]);
+                subContVol[5].volume_ =
+                    hexahedronVolume(edgeCoord[2],
+                                     faceCoord[1],
+                                     elementGlobal,
+                                     faceCoord[2],
+                                     subContVol[5].global,
+                                     edgeCoord[7],
+                                     faceCoord[4],
+                                     edgeCoord[8]);
                 break;
             case 8: // 3D, hexahedron
-                subContVol[0].volume_ = hexahedronVolume(subContVol[0].global,
-                                                        edgeCoord[6],
-                                                        faceCoord[4],
-                                                        edgeCoord[4],
-                                                        edgeCoord[0],
-                                                        faceCoord[2],
-                                                        elementGlobal,
-                                                        faceCoord[0]);
-                subContVol[1].volume_ = hexahedronVolume(subContVol[1].global,
-                                                        edgeCoord[5],
-                                                        faceCoord[4],
-                                                        edgeCoord[6],
-                                                        edgeCoord[1],
-                                                        faceCoord[1],
-                                                        elementGlobal,
-                                                        faceCoord[2]);
-                subContVol[2].volume_ = hexahedronVolume(subContVol[2].global,
-                                                        edgeCoord[4],
-                                                        faceCoord[4],
-                                                        edgeCoord[7],
-                                                        edgeCoord[2],
-                                                        faceCoord[0],
-                                                        elementGlobal,
-                                                        faceCoord[3]);
-                subContVol[3].volume_ = hexahedronVolume(subContVol[3].global,
-                                                        edgeCoord[7],
-                                                        faceCoord[4],
-                                                        edgeCoord[5],
-                                                        edgeCoord[3],
-                                                        faceCoord[3],
-                                                        elementGlobal,
-                                                        faceCoord[1]);
-                subContVol[4].volume_ = hexahedronVolume(edgeCoord[0],
-                                                        faceCoord[2],
-                                                        elementGlobal,
-                                                        faceCoord[0],
-                                                        subContVol[4].global,
-                                                        edgeCoord[10],
-                                                        faceCoord[5],
-                                                        edgeCoord[8]);
-                subContVol[5].volume_ = hexahedronVolume(edgeCoord[1],
-                                                        faceCoord[1],
-                                                        elementGlobal,
-                                                        faceCoord[2],
-                                                        subContVol[5].global,
-                                                        edgeCoord[9],
-                                                        faceCoord[5],
-                                                        edgeCoord[10]);
-                subContVol[6].volume_ = hexahedronVolume(edgeCoord[2],
-                                                        faceCoord[0],
-                                                        elementGlobal,
-                                                        faceCoord[3],
-                                                        subContVol[6].global,
-                                                        edgeCoord[8],
-                                                        faceCoord[5],
-                                                        edgeCoord[11]);
-                subContVol[7].volume_ = hexahedronVolume(edgeCoord[3],
-                                                        faceCoord[3],
-                                                        elementGlobal,
-                                                        faceCoord[1],
-                                                        subContVol[7].global,
-                                                        edgeCoord[11],
-                                                        faceCoord[5],
-                                                        edgeCoord[9]);
+                subContVol[0].volume_ =
+                    hexahedronVolume(subContVol[0].global,
+                                     edgeCoord[6],
+                                     faceCoord[4],
+                                     edgeCoord[4],
+                                     edgeCoord[0],
+                                     faceCoord[2],
+                                     elementGlobal,
+                                     faceCoord[0]);
+                subContVol[1].volume_ =
+                    hexahedronVolume(subContVol[1].global,
+                                     edgeCoord[5],
+                                     faceCoord[4],
+                                     edgeCoord[6],
+                                     edgeCoord[1],
+                                     faceCoord[1],
+                                     elementGlobal,
+                                     faceCoord[2]);
+                subContVol[2].volume_ =
+                    hexahedronVolume(subContVol[2].global,
+                                     edgeCoord[4],
+                                     faceCoord[4],
+                                     edgeCoord[7],
+                                     edgeCoord[2],
+                                     faceCoord[0],
+                                     elementGlobal,
+                                     faceCoord[3]);
+                subContVol[3].volume_ =
+                    hexahedronVolume(subContVol[3].global,
+                                     edgeCoord[7],
+                                     faceCoord[4],
+                                     edgeCoord[5],
+                                     edgeCoord[3],
+                                     faceCoord[3],
+                                     elementGlobal,
+                                     faceCoord[1]);
+                subContVol[4].volume_ =
+                    hexahedronVolume(edgeCoord[0],
+                                     faceCoord[2],
+                                     elementGlobal,
+                                     faceCoord[0],
+                                     subContVol[4].global,
+                                     edgeCoord[10],
+                                     faceCoord[5],
+                                     edgeCoord[8]);
+                subContVol[5].volume_ =
+                    hexahedronVolume(edgeCoord[1],
+                                     faceCoord[1],
+                                     elementGlobal,
+                                     faceCoord[2],
+                                     subContVol[5].global,
+                                     edgeCoord[9],
+                                     faceCoord[5],
+                                     edgeCoord[10]);
+                subContVol[6].volume_ =
+                    hexahedronVolume(edgeCoord[2],
+                                     faceCoord[0],
+                                     elementGlobal,
+                                     faceCoord[3],
+                                     subContVol[6].global,
+                                     edgeCoord[8],
+                                     faceCoord[5],
+                                     edgeCoord[11]);
+                subContVol[7].volume_ =
+                    hexahedronVolume(edgeCoord[3],
+                                     faceCoord[3],
+                                     elementGlobal,
+                                     faceCoord[1],
+                                     subContVol[7].global,
+                                     edgeCoord[11],
+                                     faceCoord[5],
+                                     edgeCoord[9]);
                 break;
             default:
                 OPM_THROW(std::logic_error,
@@ -1359,11 +1385,14 @@ private:
         else
             OPM_THROW(std::logic_error, "Not implemented:VcfvStencil for dim = " << dim);
     }
+#if __GNUC__ || __clang__
+#pragma GCC diagnostic pop
+#endif
 
     const GridView&     gridView_;
     const VertexMapper& vertexMapper_;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     Element element_;
 #else
     ElementPointer elementPtr_;

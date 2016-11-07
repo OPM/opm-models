@@ -188,7 +188,7 @@ public:
      *
      * \param simulator The simulator object of the simulation.
      */
-    void init(Simulator &simulator)
+    void init(Simulator& simulator)
     {
         simulatorPtr_ = &simulator;
         delete internalElemContext_;
@@ -206,7 +206,7 @@ public:
      * \param element The grid element for which the local residual and its local
      *                Jacobian should be calculated.
      */
-    void linearize(const Element &element)
+    void linearize(const Element& element)
     {
         internalElemContext_->updateAll(element);
 
@@ -227,7 +227,7 @@ public:
      * \param elemCtx The element execution context for which the local residual and its
      *                local Jacobian should be calculated.
      */
-    void linearize(ElementContext &elemCtx)
+    void linearize(ElementContext& elemCtx)
     {
         // update the weights of the primary variables for the context
         model_().updatePVWeights(elemCtx);
@@ -239,9 +239,9 @@ public:
         localResidual_.eval(residual_, elemCtx);
 
         // calculate the local jacobian matrix
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
-            for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
+            for (unsigned pvIdx = 0; pvIdx < numEq; pvIdx++) {
                 asImp_().evalPartialDerivative_(elemCtx, dofIdx, pvIdx);
 
                 // incorporate the partial derivatives into the local Jacobian matrix
@@ -268,11 +268,11 @@ public:
      *                   which the local derivative ought to be calculated.
      * \param pvIdx      The index of the primary variable which gets varied
      */
-    Scalar numericEpsilon(const ElementContext &elemCtx,
-                          int dofIdx,
-                          int pvIdx) const
+    Scalar numericEpsilon(const ElementContext& elemCtx,
+                          unsigned dofIdx,
+                          unsigned pvIdx) const
     {
-        int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+        unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
         assert(pvWeight > 0 && std::isfinite(pvWeight));
         Valgrind::CheckDefined(pvWeight);
@@ -283,13 +283,13 @@ public:
     /*!
      * \brief Return reference to the local residual.
      */
-    LocalResidual &localResidual()
+    LocalResidual& localResidual()
     { return localResidual_; }
 
     /*!
      * \brief Return reference to the local residual.
      */
-    const LocalResidual &localResidual() const
+    const LocalResidual& localResidual() const
     { return localResidual_; }
 
     /*!
@@ -300,7 +300,7 @@ public:
      * \param rangeScvIdx The local index of the sub control volume
      *                    which contains the local residual
      */
-    const ScalarMatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
+    const ScalarMatrixBlock& jacobian(unsigned domainScvIdx, unsigned rangeScvIdx) const
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
 
     /*!
@@ -308,20 +308,20 @@ public:
      *
      * \param dofIdx The local index of the sub control volume
      */
-    const ScalarVectorBlock &residual(int dofIdx) const
+    const ScalarVectorBlock& residual(unsigned dofIdx) const
     { return residual_[dofIdx]; }
 
 protected:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    const Simulator &simulator_() const
+    const Simulator& simulator_() const
     { return *simulatorPtr_; }
-    const Problem &problem_() const
+    const Problem& problem_() const
     { return simulatorPtr_->problem(); }
-    const Model &model_() const
+    const Model& model_() const
     { return simulatorPtr_->model(); }
 
     /*!
@@ -334,10 +334,10 @@ protected:
      * \brief Resize all internal attributes to the size of the
      *        element.
      */
-    void resize_(const ElementContext &elemCtx)
+    void resize_(const ElementContext& elemCtx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
 
         residual_.resize(numDof);
         jacobian_.setSize(numDof, numPrimaryDof);
@@ -348,15 +348,15 @@ protected:
     /*!
      * \brief Reset the all relevant internal attributes to 0
      */
-    void reset_(const ElementContext &elemCtx)
+    void reset_(const ElementContext& elemCtx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx)
-            for (int dof2Idx = 0; dof2Idx < numDof; ++ dof2Idx)
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx)
+            for (unsigned dof2Idx = 0; dof2Idx < numDof; ++ dof2Idx)
                 jacobian_[dof2Idx][primaryDofIdx] = 0.0;
 
-        for (int primaryDofIdx = 0; primaryDofIdx < numDof; ++ primaryDofIdx)
+        for (unsigned primaryDofIdx = 0; primaryDofIdx < numDof; ++ primaryDofIdx)
             residual_[primaryDofIdx] = 0.0;
     }
 
@@ -402,9 +402,9 @@ protected:
      *              for which the partial derivative ought to be
      *              calculated
      */
-    void evalPartialDerivative_(ElementContext &elemCtx,
-                                int dofIdx,
-                                int pvIdx)
+    void evalPartialDerivative_(ElementContext& elemCtx,
+                                unsigned dofIdx,
+                                unsigned pvIdx)
     {
         // save all quantities which depend on the specified primary
         // variable at the given sub control volume
@@ -478,14 +478,14 @@ protected:
      *        partial derivatives of all equations in regard to the
      *        primary variable 'pvIdx' at vertex 'dofIdx' .
      */
-    void updateLocalJacobian_(const ElementContext &elemCtx,
-                              int primaryDofIdx,
-                              int pvIdx)
+    void updateLocalJacobian_(const ElementContext& elemCtx,
+                              unsigned primaryDofIdx,
+                              unsigned pvIdx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numDof; dofIdx++)
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++)
         {
-            for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
+            for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++) {
                 // A[dofIdx][primaryDofIdx][eqIdx][pvIdx] is the partial derivative of
                 // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
                 // regard to the primary variable 'pvIdx' of the degree of freedom

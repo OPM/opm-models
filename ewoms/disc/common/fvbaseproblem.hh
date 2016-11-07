@@ -34,6 +34,10 @@
 #include <ewoms/io/restart.hh>
 #include <ewoms/disc/common/restrictprolong.hh>
 
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <dune/common/fvector.hh>
 
 #include <iostream>
@@ -93,7 +97,7 @@ public:
 
 private:
     // copying a problem is not a good idea
-    FvBaseProblem(const FvBaseProblem &) = delete;
+    FvBaseProblem(const FvBaseProblem& ) = delete;
 
 public:
     /*!
@@ -103,7 +107,7 @@ public:
      * \param gridView The view on the DUNE grid which ought to be
      *                 used (normally the leaf grid view)
      */
-    FvBaseProblem(Simulator &simulator)
+    FvBaseProblem(Simulator& simulator)
         : gridView_(simulator.gridView())
         , elementMapper_(gridView_)
         , vertexMapper_(gridView_)
@@ -116,14 +120,14 @@ public:
         VertexIterator vIt = gridView_.template begin<dim>();
         const VertexIterator vEndIt = gridView_.template end<dim>();
         for (; vIt!=vEndIt; ++vIt) {
-            for (int i=0; i<dim; i++) {
+            for (unsigned i=0; i<dim; i++) {
                 boundingBoxMin_[i] = std::min(boundingBoxMin_[i], vIt->geometry().corner(0)[i]);
                 boundingBoxMax_[i] = std::max(boundingBoxMax_[i], vIt->geometry().corner(0)[i]);
             }
         }
 
         // communicate to get the bounding box of the whole domain
-        for (int i = 0; i < dim; ++i) {
+        for (unsigned i = 0; i < dim; ++i) {
             boundingBoxMin_[i] = gridView_.comm().min(boundingBoxMin_[i]);
             boundingBoxMax_[i] = gridView_.comm().max(boundingBoxMax_[i]);
         }
@@ -164,7 +168,7 @@ public:
      * \brief Allows to improve the performance by prefetching all data which is
      *        associated with a given element.
      */
-    void prefetch(const Element& elem) const
+    void prefetch(const Element& OPM_UNUSED elem) const
     {
         // do nothing by default
     }
@@ -205,9 +209,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void boundary(BoundaryRateVector &values,
-                  const Context &context,
-                  int spaceIdx, int timeIdx) const
+    void boundary(BoundaryRateVector& OPM_UNUSED values,
+                  const Context& OPM_UNUSED context,
+                  unsigned OPM_UNUSED spaceIdx,
+                  unsigned OPM_UNUSED timeIdx) const
     { OPM_THROW(std::logic_error, "Problem does not provide a boundary() method"); }
 
     /*!
@@ -221,9 +226,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void constraints(Constraints &constraints,
-                     const Context &context,
-                     int spaceIdx, int timeIdx) const
+    void constraints(Constraints& OPM_UNUSED constraints,
+                     const Context& OPM_UNUSED context,
+                     unsigned OPM_UNUSED spaceIdx,
+                     unsigned OPM_UNUSED timeIdx) const
     { OPM_THROW(std::logic_error, "Problem does not provide a constraints() method"); }
 
     /*!
@@ -239,9 +245,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void source(RateVector &rate,
-                const Context &context,
-                int spaceIdx, int timeIdx) const
+    void source(RateVector& OPM_UNUSED rate,
+                const Context& OPM_UNUSED context,
+                unsigned OPM_UNUSED spaceIdx,
+                unsigned OPM_UNUSED timeIdx) const
     { OPM_THROW(std::logic_error, "Problem does not provide a source() method"); }
 
     /*!
@@ -255,9 +262,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void initial(PrimaryVariables &values,
-                 const Context &context,
-                 int spaceIdx, int timeIdx) const
+    void initial(PrimaryVariables& OPM_UNUSED values,
+                 const Context& OPM_UNUSED context,
+                 unsigned OPM_UNUSED spaceIdx,
+                 unsigned OPM_UNUSED timeIdx) const
     { OPM_THROW(std::logic_error, "Problem does not provide a initial() method"); }
 
     /*!
@@ -276,8 +284,9 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    Scalar extrusionFactor(const Context &context,
-                           int spaceIdx, int timeIdx) const
+    Scalar extrusionFactor(const Context& OPM_UNUSED context,
+                           unsigned OPM_UNUSED spaceIdx,
+                           unsigned OPM_UNUSED timeIdx) const
     { return asImp_().extrusionFactor(); }
 
     Scalar extrusionFactor() const
@@ -347,8 +356,8 @@ public:
         Scalar localCpuTime = timer.cpuTimeElapsed();
         Scalar globalCpuTime = timer.globalCpuTimeElapsed();
         Scalar totalWriteTime = simulator().totalWriteTime();
-        int numProcesses = this->gridView().comm().size();
-        int threadsPerProcess = ThreadManager::maxThreads();
+        unsigned numProcesses = static_cast<unsigned>(this->gridView().comm().size());
+        unsigned threadsPerProcess = ThreadManager::maxThreads();
         if (gridView().comm().rank() == 0) {
             std::cout << std::setprecision(3)
                       << "Simulation of problem '" << asImp_().name() << "' finished.\n"
@@ -391,7 +400,7 @@ public:
      */
     void timeIntegration()
     {
-        int maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
+        unsigned maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
         Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
 
         // if the time step size of the simulator is smaller than
@@ -404,7 +413,7 @@ public:
             simulator().setTimeStepSize(minTimeStepSize);
         }
 
-        for (int i = 0; i < maxFails; ++i) {
+        for (unsigned i = 0; i < maxFails; ++i) {
             bool converged = model().update(newtonMethod());
 
             linearizeTime_ += newtonMethod().linearizeTime();
@@ -498,69 +507,69 @@ public:
     /*!
      * \brief The GridView which used by the problem.
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return gridView_; }
 
     /*!
      * \brief The coordinate of the corner of the GridView's bounding
      *        box with the smallest values.
      */
-    const GlobalPosition &boundingBoxMin() const
+    const GlobalPosition& boundingBoxMin() const
     { return boundingBoxMin_; }
 
     /*!
      * \brief The coordinate of the corner of the GridView's bounding
      *        box with the largest values.
      */
-    const GlobalPosition &boundingBoxMax() const
+    const GlobalPosition& boundingBoxMax() const
     { return boundingBoxMax_; }
 
     /*!
      * \brief Returns the mapper for vertices to indices.
      */
-    const VertexMapper &vertexMapper() const
+    const VertexMapper& vertexMapper() const
     { return vertexMapper_; }
 
     /*!
      * \brief Returns the mapper for elements to indices.
      */
-    const ElementMapper &elementMapper() const
+    const ElementMapper& elementMapper() const
     { return elementMapper_; }
 
     /*!
      * \brief Returns Simulator object used by the simulation
      */
-    Simulator &simulator()
+    Simulator& simulator()
     { return simulator_; }
 
     /*!
      * \copydoc simulator()
      */
-    const Simulator &simulator() const
+    const Simulator& simulator() const
     { return simulator_; }
 
     /*!
      * \brief Returns numerical model used for the problem.
      */
-    Model &model()
+    Model& model()
     { return simulator_.model(); }
 
     /*!
      * \copydoc model()
      */
-    const Model &model() const
+    const Model& model() const
     { return simulator_.model(); }
 
     /*!
      * \brief Returns object which implements the Newton method.
      */
-    NewtonMethod &newtonMethod()
+    NewtonMethod& newtonMethod()
     { return model().newtonMethod(); }
 
     /*!
      * \brief Returns object which implements the Newton method.
      */
-    const NewtonMethod &newtonMethod() const
+    const NewtonMethod& newtonMethod() const
     { return model().newtonMethod(); }
     // \}
 
@@ -580,7 +589,7 @@ public:
      *
      * \return number of marked cells (default is 0)
      */
-    int markForGridAdaptation()
+    unsigned markForGridAdaptation()
     {
         return 0;
     }
@@ -599,7 +608,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void serialize(Restarter &res)
+    void serialize(Restarter& res)
     {
         if (enableVtkOutput_())
             defaultVtkWriter_->serialize(res);
@@ -616,7 +625,7 @@ public:
      * \param res The deserializer object
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter& res)
     {
         if (enableVtkOutput_())
             defaultVtkWriter_->deserialize(res);
@@ -652,7 +661,7 @@ public:
      * \brief Method to retrieve the VTK writer which should be used
      *        to write the default ouput after each time step to disk.
      */
-    VtkMultiWriter &defaultVtkWriter() const
+    VtkMultiWriter& defaultVtkWriter() const
     { return defaultVtkWriter_; }
 
 private:
@@ -660,11 +669,11 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput); }
 
     //! Returns the implementation of the problem (i.e. static polymorphism)
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
 
     //! \copydoc asImp_()
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
     // Grid management stuff
@@ -675,7 +684,7 @@ private:
     GlobalPosition boundingBoxMax_;
 
     // Attributes required for the actual simulation
-    Simulator &simulator_;
+    Simulator& simulator_;
     mutable VtkMultiWriter *defaultVtkWriter_;
 
     // CPU time keeping

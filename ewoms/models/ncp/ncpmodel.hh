@@ -47,11 +47,11 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
+#include <opm/material/common/Valgrind.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/unused.hh>
 
 #include <sstream>
 #include <string>
@@ -224,7 +224,7 @@ class NcpModel
     typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
 public:
-    NcpModel(Simulator &simulator)
+    NcpModel(Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -317,7 +317,7 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        for (size_t dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
+        for (unsigned dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
             if (this->isLocalDof(dofIdx)) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
@@ -329,7 +329,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::updatePVWeights
      */
-    void updatePVWeights(const ElementContext &elemCtx) const
+    void updatePVWeights(const ElementContext& elemCtx) const
     {
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
             unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
@@ -337,7 +337,7 @@ public:
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 minActivityCoeff_[globalIdx][compIdx] = 1e100;
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-                    const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
+                    const auto& fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
 
                     minActivityCoeff_[globalIdx][compIdx] =
                         std::min(minActivityCoeff_[globalIdx][compIdx],

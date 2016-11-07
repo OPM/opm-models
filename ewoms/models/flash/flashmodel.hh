@@ -191,7 +191,7 @@ class FlashModel
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    FlashModel(Simulator &simulator)
+    FlashModel(Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -225,9 +225,9 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
-        const std::string &tmp = EnergyModule::primaryVarName(pvIdx);
+        const std::string& tmp = EnergyModule::primaryVarName(pvIdx);
         if (tmp != "")
             return tmp;
 
@@ -245,16 +245,16 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
-        const std::string &tmp = EnergyModule::eqName(eqIdx);
+        const std::string& tmp = EnergyModule::eqName(eqIdx);
         if (tmp != "")
             return tmp;
 
         std::ostringstream oss;
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
                                                      + numComponents) {
-            int compIdx = eqIdx - Indices::conti0EqIdx;
+            unsigned compIdx = eqIdx - Indices::conti0EqIdx;
             oss << "continuity^" << FluidSystem::componentName(compIdx);
         }
         else
@@ -266,13 +266,13 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned globalDofIdx, unsigned pvIdx) const
     {
         Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
         if (tmp > 0)
             return tmp;
 
-        int compIdx = pvIdx - Indices::cTot0Idx;
+        unsigned compIdx = pvIdx - Indices::cTot0Idx;
 
         // make all kg equal. also, divide the weight of all total
         // compositions by 100 to make the relative errors more
@@ -285,13 +285,13 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalDofIdx, int eqIdx) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx) const
     {
         Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
             return tmp;
 
-        int compIdx = eqIdx - Indices::conti0EqIdx;
+        unsigned compIdx = eqIdx - Indices::conti0EqIdx;
 
         // make all kg equal
         return FluidSystem::molarMass(compIdx);

@@ -32,6 +32,8 @@
 
 #include <ewoms/models/common/energymodule.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+
 namespace Ewoms {
 /*!
  * \ingroup ImmiscibleModel
@@ -70,16 +72,16 @@ public:
      * \copydetails Doxygen::phaseIdxParam
      */
     template <class LhsEval>
-    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                         const ElementContext &elemCtx,
-                         int dofIdx,
-                         int timeIdx,
-                         int phaseIdx) const
+    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                         const ElementContext& elemCtx,
+                         unsigned dofIdx,
+                         unsigned timeIdx,
+                         unsigned phaseIdx) const
     {
         // retrieve the intensive quantities for the SCV at the specified
         // point in time
-        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
-        const auto &fs = intQuants.fluidState();
+        const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto& fs = intQuants.fluidState();
 
         storage[conti0EqIdx + phaseIdx] =
             Toolbox::template decay<LhsEval>(intQuants.porosity())
@@ -93,13 +95,13 @@ public:
      * \copydoc FvBaseLocalResidual::computeStorage
      */
     template <class LhsEval>
-    void computeStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                        const ElementContext &elemCtx,
-                        int dofIdx,
-                        int timeIdx) const
+    void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                        const ElementContext& elemCtx,
+                        unsigned dofIdx,
+                        unsigned timeIdx) const
     {
         storage = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
         EnergyModule::addSolidHeatStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
@@ -108,8 +110,10 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
-                     int scvfIdx, int timeIdx) const
+    void computeFlux(RateVector& flux,
+                     const ElementContext& elemCtx,
+                     unsigned scvfIdx,
+                     unsigned timeIdx) const
     {
         flux = 0.0;
         asImp_().addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -121,22 +125,22 @@ public:
      *
      * \copydetails computeFlux
      */
-    void addAdvectiveFlux(RateVector &flux,
-                          const ElementContext &elemCtx,
-                          int scvfIdx,
-                          int timeIdx) const
+    void addAdvectiveFlux(RateVector& flux,
+                          const ElementContext& elemCtx,
+                          unsigned scvfIdx,
+                          unsigned timeIdx) const
     {
-        const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
-        int interiorIdx = extQuants.interiorIndex();
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        unsigned interiorIdx = extQuants.interiorIndex();
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream DOF of the current phase.
-            int upIdx = extQuants.upstreamIndex(phaseIdx);
+            unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
 
-            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
+            const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
             // add advective flux of current component in current phase. This is slightly
             // hacky because it is specific to the element-centered finite volume method.
@@ -159,8 +163,10 @@ public:
      *
      * \copydetails computeFlux
      */
-    void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          int scvfIdx, int timeIdx) const
+    void addDiffusiveFlux(RateVector& flux,
+                          const ElementContext& elemCtx,
+                          unsigned scvfIdx,
+                          unsigned timeIdx) const
     {
         // no diffusive mass fluxes for the immiscible model
 
@@ -174,10 +180,10 @@ public:
      * By default, this method only asks the problem to specify a
      * source term.
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int dofIdx,
-                       int timeIdx) const
+    void computeSource(RateVector& source,
+                       const ElementContext& elemCtx,
+                       unsigned dofIdx,
+                       unsigned timeIdx) const
     {
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
@@ -185,7 +191,7 @@ public:
     }
 
 private:
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 };
 

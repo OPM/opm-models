@@ -79,9 +79,9 @@ public:
      *
      * \param value The boundary rate vector to be duplicated.
      */
-    ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &value)
-        : ParentType(value)
-    {}
+    ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector& value) = default;
+
+    ImmiscibleBoundaryRateVector& operator=(const ImmiscibleBoundaryRateVector& value) = default;
 
     /*!
      * \brief Specify a free-flow boundary
@@ -95,20 +95,20 @@ public:
      *                   boundary segment.
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, int bfIdx, int timeIdx, const FluidState &fluidState)
+    void setFreeFlow(const Context& context, unsigned bfIdx, unsigned timeIdx, const FluidState& fluidState)
     {
         typename FluidSystem::template ParameterCache<typename FluidState::Scalar> paramCache;
         paramCache.updateAll(fluidState);
 
         ExtensiveQuantities extQuants;
         extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
-        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
         (*this) = Evaluation(0.0);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Evaluation density;
             if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                 density = FluidSystem::density(fluidState, paramCache, phaseIdx);
@@ -140,7 +140,7 @@ public:
         EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(extQuants));
 
 #ifndef NDEBUG
-        for (int i = 0; i < numEq; ++i)
+        for (unsigned i = 0; i < numEq; ++i)
             Valgrind::CheckDefined((*this)[i]);
         Valgrind::CheckDefined(*this);
 #endif
@@ -156,13 +156,15 @@ public:
      * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context, int bfIdx, int timeIdx,
-                   const FluidState &fluidState)
+    void setInFlow(const Context& context,
+                   unsigned bfIdx,
+                   unsigned timeIdx,
+                   const FluidState& fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the direction opposite to the outer unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Evaluation& val = this->operator[](eqIdx);
             val = Toolbox::min(0.0, val);
         }
@@ -178,14 +180,16 @@ public:
      * \copydetails setFreeFlow
      */
     template <class Context, class FluidState>
-    void setOutFlow(const Context &context, int bfIdx, int timeIdx,
-                    const FluidState &fluidState)
+    void setOutFlow(const Context& context,
+                    unsigned bfIdx,
+                    unsigned timeIdx,
+                    const FluidState& fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the same direction as the outer unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Evaluation &val = this->operator[](eqIdx);
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            Evaluation& val = this->operator[](eqIdx);
             val = Toolbox::max(0.0, val);
         }
     }

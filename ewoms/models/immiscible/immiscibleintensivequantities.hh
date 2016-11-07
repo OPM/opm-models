@@ -31,7 +31,9 @@
 #include "immiscibleproperties.hh"
 
 #include <ewoms/models/common/energymodule.hh>
+
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -90,21 +92,21 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-        const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams =
+        const auto& problem = elemCtx.problem();
+        const typename MaterialLaw::Params& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
-        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         Valgrind::CheckDefined(priVars);
 
         Evaluation sumSat = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
             const Evaluation& Salpha = priVars.makeEvaluation(saturation0Idx + phaseIdx, timeIdx);
             fluidState_.setSaturation(phaseIdx, Salpha);
             sumSat += Salpha;
@@ -120,14 +122,14 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         const Evaluation& p0 = priVars.makeEvaluation(pressure0Idx, timeIdx);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updateAll(fluidState_);
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // compute and set the viscosity
             const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
@@ -161,7 +163,7 @@ public:
     /*!
      * \brief Returns the intrinsic permeability tensor a degree of freedom.
      */
-    const DimMatrix &intrinsicPermeability() const
+    const DimMatrix& intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
@@ -170,7 +172,7 @@ public:
      *
      * \copydetails Doxygen::phaseIdxParam
      */
-    const Evaluation& relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(unsigned phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
@@ -179,7 +181,7 @@ public:
      *
      * \copydetails Doxygen::phaseIdxParam
      */
-    const Evaluation& mobility(int phaseIdx) const
+    const Evaluation& mobility(unsigned phaseIdx) const
     { return mobility_[phaseIdx]; }
 
     /*!

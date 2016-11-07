@@ -38,6 +38,7 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 namespace Ewoms {
 /*!
@@ -110,9 +111,9 @@ public:
     }
 
     /*!
-     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &)
+     * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables& )
      */
-    BlackOilPrimaryVariables(const BlackOilPrimaryVariables &value) = default;
+    BlackOilPrimaryVariables(const BlackOilPrimaryVariables& value) = default;
 
     /*!
      * \brief Set the index of the region which should be used for PVT properties.
@@ -122,8 +123,8 @@ public:
      * their composition within the spatial domain. We implement them because, the ECL
      * file format mandates them.
      */
-    void setPvtRegionIndex(int value)
-    { pvtRegionIdx_ = value; }
+    void setPvtRegionIndex(unsigned value)
+    { pvtRegionIdx_ = static_cast<unsigned short>(value); }
 
     /*!
      * \brief Return the index of the region which should be used for PVT properties.
@@ -149,8 +150,8 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
-    void assignMassConservative(const FluidState &fluidState,
-                                const MaterialLawParams &matParams,
+    void assignMassConservative(const FluidState& fluidState,
+                                const MaterialLawParams& matParams,
                                 bool isInEquilibrium = false)
     {
         typedef typename std::remove_reference<typename FluidState::Scalar>::type ConstEvaluation;
@@ -159,7 +160,7 @@ public:
 
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
-        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
             Valgrind::CheckDefined(fluidState.temperature(0));
             Valgrind::CheckDefined(fluidState.temperature(phaseIdx));
 
@@ -185,23 +186,23 @@ public:
         typedef Opm::CompositionalFluidState<Scalar, FluidSystem> FlashFluidState;
         FlashFluidState fsFlash;
         fsFlash.setTemperature(FsToolbox::value(fluidState.temperature(/*phaseIdx=*/0)));
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fsFlash.setPressure(phaseIdx, FsToolbox::value(fluidState.pressure(phaseIdx)));
             fsFlash.setSaturation(phaseIdx, FsToolbox::value(fluidState.saturation(phaseIdx)));
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
                 fsFlash.setMoleFraction(phaseIdx, compIdx, FsToolbox::value(fluidState.moleFraction(phaseIdx, compIdx)));
         }
 
         paramCache.updateAll(fsFlash);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar rho = FluidSystem::template density<FlashFluidState, Scalar>(fsFlash, paramCache, phaseIdx);
             fsFlash.setDensity(phaseIdx, rho);
         }
 
         // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
                     fsFlash.saturation(phaseIdx) * fsFlash.molarity(phaseIdx, compIdx);
             }
@@ -287,7 +288,7 @@ public:
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
-    bool adaptPrimaryVariables(const Problem& problem, int globalDofIdx)
+    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx)
     {
         // this function accesses some low level functions directly for better
         // performance (instead of going the canonical way through the
@@ -312,7 +313,7 @@ public:
                 // objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar So = 1.0;
+                So = 1.0;
                 Scalar SoMax = 1.0;
                 Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
 
@@ -329,7 +330,7 @@ public:
                 // pg, xgO }.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar So = 0.0;
+                So = 0.0;
                 Scalar SoMax = 1.0;
 
                 Scalar pC[numPhases];
@@ -424,7 +425,7 @@ public:
                 // the oil phase appears, i.e., switch the primary variables to { Sw,
                 // po, Sg }.
 
-                Scalar Sg = 1.0 - Sw;
+                Sg = 1.0 - Sw;
                 Scalar pC[numPhases];
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
                 computeCapillaryPressures_(pC, /*So=*/0.0, Sg, Sw, matParams);
@@ -447,17 +448,17 @@ public:
     BlackOilPrimaryVariables& operator=(const BlackOilPrimaryVariables& other) = default;
     BlackOilPrimaryVariables& operator=(Scalar value)
     {
-        for (int i = 0; i < numEq; ++i)
+        for (unsigned i = 0; i < numEq; ++i)
             (*this)[i] = value;
 
         return *this;
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
     template <class Container>
@@ -465,7 +466,7 @@ private:
                                     Scalar So,
                                     Scalar Sg,
                                     Scalar Sw,
-                                    const MaterialLawParams &matParams) const
+                                    const MaterialLawParams& matParams) const
     {
         typedef Opm::SimpleModularFluidState<Scalar,
                                              numPhases,
@@ -492,7 +493,7 @@ private:
     { return FluidSystem::surfaceTemperature; }
 
     PrimaryVarsMeaning primaryVarsMeaning_;
-    unsigned char pvtRegionIdx_;
+    unsigned short pvtRegionIdx_;
 };
 
 

@@ -29,7 +29,12 @@
 #define EWOMS_STOKES_PROBLEM_HH
 
 #include "stokesproperties.hh"
+
 #include <ewoms/disc/common/fvbaseproblem.hh>
+
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -61,9 +66,9 @@ class StokesProblem : public Ewoms::FvBaseProblem<TypeTag>
 
 public:
     /*!
-     * \copydoc FvBaseProblem::FvBaseProblem(Simulator &, const GridView &)
+     * \copydoc FvBaseProblem::FvBaseProblem(Simulator& , const GridView& )
      */
-    StokesProblem(Simulator &simulator)
+    StokesProblem(Simulator& simulator)
         : ParentType(simulator)
         , gravity_(0)
     {
@@ -95,7 +100,9 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    Scalar temperature(const Context &context, int spaceIdx, int timeIdx) const
+    Scalar temperature(const Context& OPM_UNUSED context,
+                       unsigned OPM_UNUSED spaceIdx,
+                       unsigned OPM_UNUSED timeIdx) const
     { return asImp_().temperature(); }
 
     /*!
@@ -115,8 +122,9 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context &context, int spaceIdx,
-                             int timeIdx) const
+    Scalar heatCapacitySolid(const Context& OPM_UNUSED context,
+                             unsigned OPM_UNUSED spaceIdx,
+                             unsigned OPM_UNUSED timeIdx) const
     { return 0; }
 
     /*!
@@ -127,7 +135,9 @@ public:
      */
     template <class Context>
     const HeatConductionLawParams &
-    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
+    heatConductionParams(const Context& OPM_UNUSED context,
+                         unsigned OPM_UNUSED spaceIdx,
+                         unsigned OPM_UNUSED timeIdx) const
     {
         static const HeatConductionLawParams dummy;
         return dummy;
@@ -143,8 +153,9 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    const DimVector &gravity(const Context &context, int spaceIdx,
-                             int timeIdx) const
+    const DimVector& gravity(const Context& OPM_UNUSED context,
+                             unsigned OPM_UNUSED spaceIdx,
+                             unsigned OPM_UNUSED timeIdx) const
     { return asImp_().gravity(); }
 
     /*!
@@ -155,18 +166,18 @@ public:
      {g} = (
      *0,\dots, 0)^T \f$
      */
-    const DimVector &gravity() const
+    const DimVector& gravity() const
     { return gravity_; }
 
     // \}
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
 
     //! \copydoc asImp_()
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
     DimVector gravity_;

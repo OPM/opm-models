@@ -35,7 +35,7 @@ namespace Ewoms {
 /*!
  * \brief Quadrature geometry for quadrilaterals.
  */
-template <class Scalar, int dim>
+template <class Scalar, unsigned dim>
 class QuadrialteralQuadratureGeometry
 {
 public:
@@ -48,11 +48,11 @@ public:
     { return Dune::GeometryType(Dune::GeometryType::cube, dim); }
 
     template <class CornerContainer>
-    void setCorners(const CornerContainer &corners, unsigned numCorners)
+    void setCorners(const CornerContainer& corners, unsigned numCorners)
     {
         unsigned cornerIdx;
         for (cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx) {
-            for (int j = 0; j < dim; ++j)
+            for (unsigned j = 0; j < dim; ++j)
                 corners_[cornerIdx][j] = corners[cornerIdx][j];
         }
         assert(cornerIdx == numCorners);
@@ -66,17 +66,17 @@ public:
     /*!
      * \brief Returns the center of weight of the polyhedron.
      */
-    const GlobalPosition &center() const
+    const GlobalPosition& center() const
     { return center_; }
 
     /*!
      * \brief Convert a local coordinate into a global one.
      */
-    GlobalPosition global(const LocalPosition &localPos) const
+    GlobalPosition global(const LocalPosition& localPos) const
     {
         GlobalPosition globalPos(0.0);
 
-        for (int cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx)
+        for (unsigned cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx)
             globalPos.axpy(cornerWeight(localPos, cornerIdx),
                            corners_[cornerIdx]);
 
@@ -87,16 +87,16 @@ public:
      * \brief Returns the Jacobian matrix of the local to global
      *        mapping at a given local position.
      */
-    void jacobian(Dune::FieldMatrix<Scalar, dim, dim> &jac,
-                  const LocalPosition &localPos) const
+    void jacobian(Dune::FieldMatrix<Scalar, dim, dim>& jac,
+                  const LocalPosition& localPos) const
     {
         jac = 0.0;
-        for (int cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx) {
-            for (int k = 0; k < dim; ++k) {
-                Scalar dWeight_dk = (cornerIdx & (1 << k)) ? 1 : -1;
-                for (int j = 0; j < dim; ++j) {
+        for (unsigned cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx) {
+            for (unsigned k = 0; k < dim; ++k) {
+                Scalar dWeight_dk = (cornerIdx&  (1 << k)) ? 1 : -1;
+                for (unsigned j = 0; j < dim; ++j) {
                     if (k != j) {
-                        if (cornerIdx & (1 << j))
+                        if (cornerIdx&  (1 << j))
                             dWeight_dk *= localPos[j];
                         else
                             dWeight_dk *= 1 - localPos[j];
@@ -114,7 +114,7 @@ public:
      *        from local to global coordinates at a given local
      *        position.
      */
-    Scalar integrationElement(const LocalPosition &localPos) const
+    Scalar integrationElement(const LocalPosition& localPos) const
     {
         Dune::FieldMatrix<Scalar, dim, dim> jac;
         jacobian(jac, localPos);
@@ -124,22 +124,22 @@ public:
     /*!
      * \brief Return the position of the corner with a given index
      */
-    const GlobalPosition &corner(int cornerIdx) const
+    const GlobalPosition& corner(unsigned cornerIdx) const
     { return corners_[cornerIdx]; }
 
     /*!
      * \brief Return the weight of an individual corner for the local
      *        to global mapping.
      */
-    Scalar cornerWeight(const LocalPosition &localPos, int cornerIdx) const
+    Scalar cornerWeight(const LocalPosition& localPos, unsigned cornerIdx) const
     {
         GlobalPosition globalPos(0.0);
 
         // this code is based on the Q1 finite element code from
         // dune-localfunctions
         Scalar weight = 1.0;
-        for (int j = 0; j < dim; ++j)
-            weight *= (cornerIdx & (1 << j)) ? localPos[j] : (1 - localPos[j]);
+        for (unsigned j = 0; j < dim; ++j)
+            weight *= (cornerIdx&  (1 << j)) ? localPos[j] : (1 - localPos[j]);
 
         return weight;
     }

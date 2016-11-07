@@ -32,6 +32,10 @@
 
 #include <ewoms/common/alignedallocator.hh>
 
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <dune/common/fvector.hh>
 
 #include <vector>
@@ -73,23 +77,22 @@ class FvBaseElementContext
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    static const int dim = GridView::dimension;
-    static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
-    static const int requireScvCenterGradients =
+    static const unsigned dim = GridView::dimension;
+    static const unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    static const unsigned requireScvCenterGradients =
         GET_PROP_VALUE(TypeTag, RequireScvCenterGradients);
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
 
     // we don't allow copies of element contexts!
-    FvBaseElementContext(const FvBaseElementContext &context)
-    {}
+    FvBaseElementContext(const FvBaseElementContext& ) = delete;
 
 public:
     /*!
      * \brief The constructor.
      */
-    explicit FvBaseElementContext(const Simulator &simulator)
+    explicit FvBaseElementContext(const Simulator& simulator)
         : gridView_(simulator.gridView())
         , stencil_(gridView_, simulator.model().dofMapper() )
     {
@@ -114,7 +117,7 @@ public:
      * \param elem The DUNE Codim<0> entity for which the volume
      *             variables ought to be calculated
      */
-    void updateAll(const Element &elem)
+    void updateAll(const Element& elem)
     {
         updateStencil(elem);
         updateAllIntensiveQuantities();
@@ -127,7 +130,7 @@ public:
      * \param elem The grid element for which the finite volume geometry ought to be
      *             computed.
      */
-    void updateStencil(const Element &elem)
+    void updateStencil(const Element& elem)
     {
         // remember the current element
         elemPtr_ = &elem;
@@ -157,7 +160,7 @@ public:
      * \param elem The grid element for which the finite volume geometry ought to be
      *             computed.
      */
-    void updatePrimaryStencil(const Element &elem)
+    void updatePrimaryStencil(const Element& elem)
     {
         // remember the current element
         elemPtr_ = &elem;
@@ -174,7 +177,7 @@ public:
      * \param elem The grid element for which the finite volume geometry ought to be
      *             computed.
      */
-    void updateStencilTopology(const Element &elem)
+    void updateStencilTopology(const Element& elem)
     {
         // remember the current element
         elemPtr_ = &elem;
@@ -232,12 +235,12 @@ public:
      *               which should be updated.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    void updateIntensiveQuantities(const PrimaryVariables &priVars, unsigned dofIdx, unsigned timeIdx)
+    void updateIntensiveQuantities(const PrimaryVariables& priVars, unsigned dofIdx, unsigned timeIdx)
     {
         updateSingleIntQuants_(priVars, dofIdx, timeIdx);
 
         // update gradients inside a sub control volume
-        unsigned nDof = numDof(timeIdx);
+        size_t nDof = numDof(timeIdx);
         for (unsigned gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
             dofVars_[gradDofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
                                                                                  gradDofIdx,
@@ -275,57 +278,57 @@ public:
     /*!
      * \brief Return a reference to the simulator.
      */
-    const Simulator &simulator() const
+    const Simulator& simulator() const
     { return *simulatorPtr_; }
 
     /*!
      * \brief Return a reference to the problem.
      */
-    const Problem &problem() const
+    const Problem& problem() const
     { return simulatorPtr_->problem(); }
 
     /*!
      * \brief Return a reference to the model.
      */
-    const Model &model() const
+    const Model& model() const
     { return simulatorPtr_->model(); }
 
     /*!
      * \brief Return a reference to the grid view.
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return gridView_; }
 
     /*!
      * \brief Return the current element.
      */
-    const Element &element() const
+    const Element& element() const
     { return *elemPtr_; }
 
     /*!
      * \brief Return the number of sub-control volumes of the current element.
      */
-    unsigned numDof(unsigned timeIdx) const
+    size_t numDof(unsigned timeIdx) const
     { return stencil(timeIdx).numDof(); }
 
     /*!
      * \brief Return the number of primary degrees of freedom of the current element.
      */
-    unsigned numPrimaryDof(unsigned timeIdx) const
+    size_t numPrimaryDof(unsigned timeIdx) const
     { return stencil(timeIdx).numPrimaryDof(); }
 
     /*!
      * \brief Return the number of non-boundary faces which need to be
      *        considered for the flux apporixmation.
      */
-    unsigned numInteriorFaces(unsigned timeIdx) const
+    size_t numInteriorFaces(unsigned timeIdx) const
     { return stencil(timeIdx).numInteriorFaces(); }
 
     /*!
      * \brief Return the number of boundary faces which need to be
      *        considered for the flux apporixmation.
      */
-    unsigned numBoundaryFaces(unsigned timeIdx) const
+    size_t numBoundaryFaces(unsigned timeIdx) const
     { return stencil(timeIdx).numBoundaryFaces(); }
 
     /*!
@@ -334,7 +337,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const Stencil &stencil(unsigned timeIdx) const
+    const Stencil& stencil(unsigned OPM_UNUSED timeIdx) const
     { return stencil_; }
 
     /*!
@@ -345,7 +348,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const GlobalPosition &pos(unsigned dofIdx, unsigned timeIdx) const
+    const GlobalPosition& pos(unsigned dofIdx, unsigned OPM_UNUSED timeIdx) const
     { return stencil_.subControlVolume(dofIdx).globalPos(); }
 
     /*!
@@ -356,7 +359,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    int globalSpaceIndex(unsigned dofIdx, unsigned timeIdx) const
+    unsigned globalSpaceIndex(unsigned dofIdx, unsigned timeIdx) const
     { return stencil(timeIdx).globalSpaceIndex(dofIdx); }
 
 
@@ -402,7 +405,7 @@ public:
      * \param dofIdx The local index of the degree of freedom in the current element.
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    const IntensiveQuantities &intensiveQuantities(unsigned dofIdx, unsigned timeIdx) const
+    const IntensiveQuantities& intensiveQuantities(unsigned dofIdx, unsigned timeIdx) const
     {
 #ifndef NDEBUG
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
@@ -432,7 +435,7 @@ public:
     /*!
      * \copydoc intensiveQuantities()
      */
-    IntensiveQuantities &intensiveQuantities(unsigned dofIdx, unsigned timeIdx)
+    IntensiveQuantities& intensiveQuantities(unsigned dofIdx, unsigned timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].intensiveQuantities[timeIdx];
@@ -446,7 +449,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    PrimaryVariables &primaryVars(unsigned dofIdx, unsigned timeIdx)
+    PrimaryVariables& primaryVars(unsigned dofIdx, unsigned timeIdx)
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].priVars[timeIdx];
@@ -454,7 +457,7 @@ public:
     /*!
      * \copydoc primaryVars()
      */
-    const PrimaryVariables &primaryVars(unsigned dofIdx, unsigned timeIdx) const
+    const PrimaryVariables& primaryVars(unsigned dofIdx, unsigned timeIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
         return dofVars_[dofIdx].priVars[timeIdx];
@@ -489,7 +492,7 @@ public:
 
         intensiveQuantitiesStashed_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
         priVarsStashed_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
-        stashedDofIdx_ = dofIdx;
+        stashedDofIdx_ = static_cast<int>(dofIdx);
     }
 
     /*!
@@ -519,7 +522,7 @@ public:
      *               extensive quantities are requested
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    const ExtensiveQuantities &extensiveQuantities(unsigned fluxIdx, unsigned timeIdx) const
+    const ExtensiveQuantities& extensiveQuantities(unsigned fluxIdx, unsigned OPM_UNUSED timeIdx) const
     { return extensiveQuantities_[fluxIdx]; }
 
     /*!
@@ -543,10 +546,10 @@ protected:
      *
      * This method considers the intensive quantities cache.
      */
-    void updateIntensiveQuantities_(unsigned timeIdx, unsigned numDof)
+    void updateIntensiveQuantities_(unsigned timeIdx, size_t numDof)
     {
         // update the intensive quantities for the whole history
-        const SolutionVector &globalSol = model().solution(timeIdx);
+        const SolutionVector& globalSol = model().solution(timeIdx);
 
         // update the non-gradient quantities
         for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
@@ -577,7 +580,7 @@ protected:
         }
     }
 
-    void updateSingleIntQuants_(const PrimaryVariables &priVars, unsigned dofIdx, unsigned timeIdx)
+    void updateSingleIntQuants_(const PrimaryVariables& priVars, unsigned dofIdx, unsigned timeIdx)
     {
 #ifndef NDEBUG
         if (enableStorageCache_ && timeIdx != 0)

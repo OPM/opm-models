@@ -34,6 +34,8 @@
 
 #include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -85,11 +87,10 @@ public:
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
-     * ImmisciblePrimaryVariables &)
+     * ImmisciblePrimaryVariables& )
      */
-    RichardsPrimaryVariables(const RichardsPrimaryVariables &value)
-        : ParentType(value)
-    {}
+    RichardsPrimaryVariables(const RichardsPrimaryVariables& value) = default;
+    RichardsPrimaryVariables& operator=(const RichardsPrimaryVariables& value) = default;
 
     /*!
      * \brief Set the primary variables with the wetting phase
@@ -101,7 +102,7 @@ public:
      * \param matParams The capillary pressure law parameters
      */
     void assignImmiscibleFromWetting(Scalar T, Scalar pw, Scalar Sw,
-                                     const MaterialLawParams &matParams)
+                                     const MaterialLawParams& matParams)
     {
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
@@ -129,7 +130,7 @@ public:
      * \param matParams The capillary pressure law parameters
      */
     void assignImmiscibleFromNonWetting(Scalar T, Scalar pn, Scalar Sn,
-                                        const MaterialLawParams &matParams)
+                                        const MaterialLawParams& matParams)
     {
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;
 
@@ -151,13 +152,13 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
-    void assignMassConservative(const FluidState &fluidState,
-                                const MaterialLawParams &matParams,
-                                bool isInEquilibrium = false)
+    void assignMassConservative(const FluidState& fluidState,
+                                const MaterialLawParams& matParams,
+                                bool OPM_UNUSED isInEquilibrium = false)
     {
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
                     fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
             }
@@ -177,7 +178,7 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState)
+    void assignNaive(const FluidState& fluidState)
     {
         // assign the phase temperatures. this is out-sourced to
         // the energy module

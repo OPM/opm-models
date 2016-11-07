@@ -110,14 +110,14 @@ public:
      * \brief Return the criterion to be used to check for convergence of the
      * linear solver.
      */
-    virtual const Ewoms::ConvergenceCriterion<X> &convergenceCriterion() const
+    virtual const Ewoms::ConvergenceCriterion<X>& convergenceCriterion() const
     { return *convergenceCriterion_; }
 
     /*!
      * \brief Return the criterion to be used to check for convergence of the
      * linear solver.
      */
-    virtual Ewoms::ConvergenceCriterion<X> &convergenceCriterion()
+    virtual Ewoms::ConvergenceCriterion<X>& convergenceCriterion()
     { return *convergenceCriterion_; }
 
     /*!
@@ -325,9 +325,9 @@ public:
 
 private:
     Dune::SeqScalarProduct<X> ssp;
-    Dune::LinearOperator<X, X> &_op;
-    Dune::Preconditioner<X, X> &_prec;
-    Dune::ScalarProduct<X> &_sp;
+    Dune::LinearOperator<X, X>& _op;
+    Dune::Preconditioner<X, X>& _prec;
+    Dune::ScalarProduct<X>& _sp;
     std::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
     int _maxit;
     int _verbose;
@@ -458,9 +458,9 @@ public:
 
 private:
     Dune::SeqScalarProduct<X> ssp;
-    Dune::LinearOperator<X, X> &_op;
-    Dune::Preconditioner<X, X> &_prec;
-    Dune::ScalarProduct<X> &_sp;
+    Dune::LinearOperator<X, X>& _op;
+    Dune::Preconditioner<X, X>& _prec;
+    Dune::ScalarProduct<X>& _sp;
     std::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
     int _maxit;
     int _verbose;
@@ -603,9 +603,9 @@ public:
 
 private:
     Dune::SeqScalarProduct<X> ssp;
-    Dune::LinearOperator<X, X> &_op;
-    Dune::Preconditioner<X, X> &_prec;
-    Dune::ScalarProduct<X> &_sp;
+    Dune::LinearOperator<X, X>& _op;
+    Dune::Preconditioner<X, X>& _prec;
+    Dune::ScalarProduct<X>& _sp;
     std::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
     int _maxit;
     int _verbose;
@@ -838,9 +838,9 @@ public:
 
 private:
     Dune::SeqScalarProduct<X> ssp;
-    Dune::LinearOperator<X, X> &_op;
-    Dune::Preconditioner<X, X> &_prec;
-    Dune::ScalarProduct<X> &_sp;
+    Dune::LinearOperator<X, X>& _op;
+    Dune::Preconditioner<X, X>& _prec;
+    Dune::ScalarProduct<X>& _sp;
     std::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
     int _maxit;
     int _verbose;
@@ -1382,10 +1382,10 @@ private :
         dx = temp;
     }
 
-    Dune::LinearOperator<X, X> &_A;
-    Dune::Preconditioner<X, X> &_W;
+    Dune::LinearOperator<X, X>& _A;
+    Dune::Preconditioner<X, X>& _W;
     Dune::SeqScalarProduct<X> ssp;
-    Dune::ScalarProduct<X> &_sp;
+    Dune::ScalarProduct<X>& _sp;
     int _restart;
     int _maxit;
     int _verbose;
@@ -1584,9 +1584,9 @@ public:
 
 private:
     Dune::SeqScalarProduct<X> ssp;
-    Dune::LinearOperator<X, X> &_op;
-    Dune::Preconditioner<X, X> &_prec;
-    Dune::ScalarProduct<X> &_sp;
+    Dune::LinearOperator<X, X>& _op;
+    Dune::Preconditioner<X, X>& _prec;
+    Dune::ScalarProduct<X>& _sp;
     int _maxit;
     int _verbose;
     int _restart;

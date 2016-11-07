@@ -36,6 +36,7 @@
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/constraintsolvers/CompositionFromFugacities.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -100,19 +101,19 @@ public:
     /*!
      * \brief IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext& elemCtx,
+                unsigned dofIdx,
+                unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
         ParentType::checkDefined();
 
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
-        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         // set the phase saturations
         Evaluation sumSat = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
             const Evaluation& val = priVars.makeEvaluation(saturation0Idx + phaseIdx, timeIdx);
             fluidState_.setSaturation(phaseIdx, val);
             sumSat += val;
@@ -124,28 +125,28 @@ public:
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // retrieve capillary pressure parameters
-        const auto &problem = elemCtx.problem();
-        const MaterialLawParams &materialParams =
+        const auto& problem = elemCtx.problem();
+        const MaterialLawParams& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         // calculate capillary pressures
         Evaluation capPress[numPhases];
         MaterialLaw::capillaryPressures(capPress, materialParams, fluidState_);
         // add to the pressure of the first fluid phase
         const Evaluation& pressure0 = priVars.makeEvaluation(pressure0Idx, timeIdx);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fluidState_.setPressure(phaseIdx, pressure0 + (capPress[phaseIdx] - capPress[0]));
 
         ComponentVector fug;
         // retrieve component fugacities
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             fug[compIdx] = priVars.makeEvaluation(fugacity0Idx + compIdx, timeIdx);
 
         // calculate phase compositions
         const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // initial guess
             if (hint) {
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                     // use the hint for the initial mole fraction!
                     const Evaluation& moleFracIJ = hint->fluidState().moleFraction(phaseIdx, compIdx);
                     fluidState_.setMoleFraction(phaseIdx, compIdx, moleFracIJ);
@@ -167,7 +168,7 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
 
         // dynamic viscosities
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // viscosities
             const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             fluidState_.setViscosity(phaseIdx, mu);
@@ -193,25 +194,25 @@ public:
     /*!
      * \brief ImmiscibleIntensiveQuantities::fluidState
      */
-    const FluidState &fluidState() const
+    const FluidState& fluidState() const
     { return fluidState_; }
 
     /*!
      * \brief ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
-    const DimMatrix &intrinsicPermeability() const
+    const DimMatrix& intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
      * \brief ImmiscibleIntensiveQuantities::relativePermeability
      */
-    const Evaluation& relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(unsigned phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \brief ImmiscibleIntensiveQuantities::mobility
      */
-    const Evaluation& mobility(int phaseIdx) const
+    const Evaluation& mobility(unsigned phaseIdx) const
     { return mobility_[phaseIdx]; }
 
     /*!

@@ -88,24 +88,24 @@ public:
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
-     * ImmisciblePrimaryVariables &)
+     * ImmisciblePrimaryVariables& )
      */
-    NcpPrimaryVariables(const NcpPrimaryVariables &value) : ParentType(value)
-    {}
+    NcpPrimaryVariables(const NcpPrimaryVariables& value) = default;
+    NcpPrimaryVariables& operator=(const NcpPrimaryVariables& value) = default;
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
-    void assignMassConservative(const FluidState &fluidState,
-                                const MaterialLawParams &matParams,
+    void assignMassConservative(const FluidState& fluidState,
+                                const MaterialLawParams& matParams,
                                 bool isInEquilibrium = false)
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
-        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
             assert(fluidState.temperature(0) == fluidState.temperature(phaseIdx));
         }
 #endif // NDEBUG
@@ -128,15 +128,15 @@ public:
 
         // calculate the phase densities
         paramCache.updateAll(fsFlash);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar rho = FluidSystem::density(fsFlash, paramCache, phaseIdx);
             fsFlash.setDensity(phaseIdx, rho);
         }
 
         // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
                     FsToolbox::value(fsFlash.saturation(phaseIdx))
                     * FsToolbox::value(fsFlash.molarity(phaseIdx, compIdx));
@@ -154,7 +154,7 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState, unsigned refPhaseIdx = 0)
+    void assignNaive(const FluidState& fluidState, unsigned refPhaseIdx = 0)
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 
@@ -163,7 +163,7 @@ public:
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
         // assign fugacities.
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             Scalar fug = FsToolbox::value(fluidState.fugacity(refPhaseIdx, compIdx));
             (*this)[fugacity0Idx + compIdx] = fug;
         }
@@ -172,7 +172,7 @@ public:
         (*this)[pressure0Idx] = FsToolbox::value(fluidState.pressure(/*phaseIdx=*/0));
 
         // assign first M - 1 saturations
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = FsToolbox::value(fluidState.saturation(phaseIdx));
     }
 };

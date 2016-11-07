@@ -30,6 +30,8 @@
 
 #include "fvbaseproperties.hh"
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
@@ -84,14 +86,14 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <bool prepareValues = true, bool prepareGradients = true>
-    void prepare(const ElementContext &elemCtx, unsigned timeIdx)
+    void prepare(const ElementContext& elemCtx, unsigned timeIdx)
     {
-        const auto &stencil = elemCtx.stencil(timeIdx);
+        const auto& stencil = elemCtx.stencil(timeIdx);
         for (unsigned fapIdx = 0; fapIdx < stencil.numInteriorFaces(); ++ fapIdx) {
-            const auto &scvf = stencil.interiorFace(fapIdx);
-            const auto &normal = scvf.normal();
-            const auto &interiorPos = stencil.subControlVolume(scvf.interiorIndex()).globalPos();
-            const auto &exteriorPos = stencil.subControlVolume(scvf.exteriorIndex()).globalPos();
+            const auto& scvf = stencil.interiorFace(fapIdx);
+            const auto& normal = scvf.normal();
+            const auto& interiorPos = stencil.subControlVolume(scvf.interiorIndex()).globalPos();
+            const auto& exteriorPos = stencil.subControlVolume(scvf.exteriorIndex()).globalPos();
 
             interiorDistance_[fapIdx] = 0;
             exteriorDistance_[fapIdx] = 0;
@@ -123,12 +125,12 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    auto calculateValue(const ElementContext &elemCtx,
+    auto calculateValue(const ElementContext& elemCtx,
                         unsigned fapIdx,
-                        const QuantityCallback &quantityCallback) const
+                        const QuantityCallback& quantityCallback) const
         -> typename std::remove_reference<decltype(quantityCallback.operator()(0))>::type
     {
-        const auto &face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(fapIdx);
+        const auto& face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(fapIdx);
 
         // average weighted by distance to DOF coordinate...
         auto value(quantityCallback(face.interiorIndex()));
@@ -153,13 +155,13 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    void calculateGradient(EvalDimVector &quantityGrad,
-                           const ElementContext &elemCtx,
+    void calculateGradient(EvalDimVector& quantityGrad,
+                           const ElementContext& elemCtx,
                            unsigned fapIdx,
-                           const QuantityCallback &quantityCallback) const
+                           const QuantityCallback& quantityCallback) const
     {
-        const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
-        const auto &face = stencil.interiorFace(fapIdx);
+        const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
+        const auto& face = stencil.interiorFace(fapIdx);
 
         const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).center();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
@@ -208,9 +210,9 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    auto calculateBoundaryValue(const ElementContext &elemCtx,
-                                unsigned fapIdx,
-                                const QuantityCallback &quantityCallback)
+    auto calculateBoundaryValue(const ElementContext& OPM_UNUSED elemCtx,
+                                unsigned OPM_UNUSED fapIdx,
+                                const QuantityCallback& quantityCallback)
         -> decltype(quantityCallback.boundaryValue())
     { return quantityCallback.boundaryValue(); }
 
@@ -229,13 +231,13 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    void calculateBoundaryGradient(EvalDimVector &quantityGrad,
-                                   const ElementContext &elemCtx,
+    void calculateBoundaryGradient(EvalDimVector& quantityGrad,
+                                   const ElementContext& elemCtx,
                                    unsigned faceIdx,
-                                   const QuantityCallback &quantityCallback) const
+                                   const QuantityCallback& quantityCallback) const
     {
-        const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
-        const auto &face = stencil.boundaryFace(faceIdx);
+        const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
+        const auto& face = stencil.boundaryFace(faceIdx);
 
         auto deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
 

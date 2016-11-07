@@ -131,7 +131,7 @@ public:
     /*!
      * \brief Create the grid for the lens problem
      */
-    StructuredGridManager(Simulator &simulator)
+    StructuredGridManager(Simulator& simulator)
         : ParentType(simulator)
     {
         Dune::FieldVector<int, dim> cellRes;
@@ -167,7 +167,7 @@ public:
         gridPtr_.reset( Dune::GridPtr< Grid >( dgffile ).release() );
 
         unsigned numRefinements = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
-        gridPtr_->globalRefine(numRefinements);
+        gridPtr_->globalRefine(static_cast<int>(numRefinements));
 
         this->finalizeInit_();
     }

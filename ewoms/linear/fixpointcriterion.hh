@@ -29,6 +29,8 @@
 
 #include "convergencecriterion.hh"
 
+#include <opm/material/common/Unused.hpp>
+
 namespace Ewoms {
 /*! \addtogroup Linear
  * \{
@@ -57,11 +59,11 @@ class FixPointCriterion : public ConvergenceCriterion<Vector>
     typedef typename Vector::block_type BlockType;
 
 public:
-    FixPointCriterion(const CollectiveCommunication &comm) : comm_(comm)
+    FixPointCriterion(const CollectiveCommunication& comm) : comm_(comm)
     {}
 
-    FixPointCriterion(const CollectiveCommunication &comm,
-                      const Vector &weightVec, Scalar reduction)
+    FixPointCriterion(const CollectiveCommunication& comm,
+                      const Vector& weightVec, Scalar reduction)
         : comm_(comm), weightVec_(weightVec), tolerance_(reduction)
     {}
 
@@ -81,7 +83,7 @@ public:
      * \param weightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
      *                  with the relative weights of the degrees of freedom
      */
-    void setWeight(const Vector &weightVec)
+    void setWeight(const Vector& weightVec)
     { weightVec_ = weightVec; }
 
     /*!
@@ -118,18 +120,18 @@ public:
     { return tolerance_; }
 
     /*!
-     * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
+     * \copydoc ConvergenceCriterion::setInitial(const Vector& , const Vector& )
      */
-    void setInitial(const Vector &curSol, const Vector &curResid)
+    void setInitial(const Vector& curSol, const Vector& OPM_UNUSED curResid)
     {
         lastSol_ = curSol;
         delta_ = 1000 * tolerance_;
     }
 
     /*!
-     * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
+     * \copydoc ConvergenceCriterion::update(const Vector& , const Vector& )
      */
-    void update(const Vector &curSol, const Vector &curResid)
+    void update(const Vector& curSol, const Vector& OPM_UNUSED curResid)
     {
         assert(curSol.size() == lastSol_.size());
 
@@ -159,7 +161,7 @@ public:
     { return delta_; }
 
 private:
-    const CollectiveCommunication &comm_;
+    const CollectiveCommunication& comm_;
 
     Vector lastSol_;   // solution of the last iteration
     Vector weightVec_; // solution of the last iteration

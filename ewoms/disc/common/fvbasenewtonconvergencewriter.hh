@@ -64,7 +64,7 @@ class FvBaseNewtonConvergenceWriter
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
-    FvBaseNewtonConvergenceWriter(NewtonMethod &nm)
+    FvBaseNewtonConvergenceWriter(NewtonMethod& nm)
         : newtonMethod_(nm)
     {
         timeStepIdx_ = 0;
@@ -107,8 +107,8 @@ public:
      * \param deltaU The negative difference between the solution
      *        vectors of the previous and the current iteration.
      */
-    void writeFields(const SolutionVector &uLastIter,
-                     const GlobalEqVector &deltaU)
+    void writeFields(const SolutionVector& uLastIter,
+                     const GlobalEqVector& deltaU)
     {
         try {
             newtonMethod_.problem().model().addConvergenceVtkFields(*vtkMultiWriter_,
@@ -143,7 +143,7 @@ private:
     int timeStepIdx_;
     int iteration_;
     VtkMultiWriter *vtkMultiWriter_;
-    NewtonMethod &newtonMethod_;
+    NewtonMethod& newtonMethod_;
 };
 
 } // namespace Ewoms

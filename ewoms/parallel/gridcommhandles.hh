@@ -29,6 +29,8 @@
 #ifndef EWOMS_GRID_COMM_HANDLES_HH
 #define EWOMS_GRID_COMM_HANDLES_HH
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/common/version.hh>
 
@@ -45,18 +47,18 @@ class GridCommHandleSum
                                     FieldType>
 {
 public:
-    GridCommHandleSum(Container &container, const EntityMapper &mapper)
+    GridCommHandleSum(Container& container, const EntityMapper& mapper)
         : mapper_(mapper), container_(container)
     {}
 
-    bool contains(int dim, int codim) const
+    bool contains(int OPM_UNUSED dim, int codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(int dim, int codim) const
+    bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -64,30 +66,30 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType &e) const
+    size_t size(const EntityType& OPM_UNUSED e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
     template <class MessageBufferImp, class EntityType>
-    void gather(MessageBufferImp &buff, const EntityType &e) const
+    void gather(MessageBufferImp& buff, const EntityType& e) const
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
 
         FieldType tmp;
@@ -96,8 +98,8 @@ public:
     }
 
 private:
-    const EntityMapper &mapper_;
-    Container &container_;
+    const EntityMapper& mapper_;
+    Container& container_;
 };
 
 /*!
@@ -105,26 +107,26 @@ private:
  *        set the values values of ghost and overlap DOFs from their
  *        respective master processes.
  */
-template <class FieldType, class Container, class EntityMapper, int commCodim>
+template <class FieldType, class Container, class EntityMapper, unsigned commCodim>
 class GridCommHandleGhostSync
     : public Dune::CommDataHandleIF<GridCommHandleGhostSync<FieldType, Container,
                                                             EntityMapper, commCodim>,
                                     FieldType>
 {
 public:
-    GridCommHandleGhostSync(Container &container, const EntityMapper &mapper)
+    GridCommHandleGhostSync(Container& container, const EntityMapper& mapper)
         : mapper_(mapper), container_(container)
     {
     }
 
-    bool contains(int dim, int codim) const
+    bool contains(unsigned OPM_UNUSED dim, unsigned codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(int dim, int codim) const
+    bool fixedsize(unsigned OPM_UNUSED dim, unsigned OPM_UNUSED codim) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -132,62 +134,62 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType &e) const
+    size_t size(const EntityType& OPM_UNUSED e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
     template <class MessageBufferImp, class EntityType>
-    void gather(MessageBufferImp &buff, const EntityType &e) const
+    void gather(MessageBufferImp& buff, const EntityType& e) const
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         buff.read(container_[dofIdx]);
     }
 
 private:
-    const EntityMapper &mapper_;
-    Container &container_;
+    const EntityMapper& mapper_;
+    Container& container_;
 };
 
 /*!
  * \brief Data handle for parallel communication which takes the
  *        maximum of all values that are attached to DOFs
  */
-template <class FieldType, class Container, class EntityMapper, int commCodim>
+template <class FieldType, class Container, class EntityMapper, unsigned commCodim>
 class GridCommHandleMax
     : public Dune::CommDataHandleIF<GridCommHandleMax<FieldType, Container,
                                                       EntityMapper, commCodim>,
                                     FieldType>
 {
 public:
-    GridCommHandleMax(Container &container, const EntityMapper &mapper)
+    GridCommHandleMax(Container& container, const EntityMapper& mapper)
         : mapper_(mapper), container_(container)
     {}
 
-    bool contains(int dim, int codim) const
+    bool contains(unsigned OPM_UNUSED dim, unsigned codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(int dim, int codim) const
+    bool fixedsize(unsigned OPM_UNUSED dim, unsigned OPM_UNUSED codim) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -195,30 +197,30 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType &e) const
+    size_t size(const EntityType& OPM_UNUSED e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
     template <class MessageBufferImp, class EntityType>
-    void gather(MessageBufferImp &buff, const EntityType &e) const
+    void gather(MessageBufferImp& buff, const EntityType& e) const
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         FieldType tmp;
         buff.read(tmp);
@@ -226,33 +228,33 @@ public:
     }
 
 private:
-    const EntityMapper &mapper_;
-    Container &container_;
+    const EntityMapper& mapper_;
+    Container& container_;
 };
 
 /*!
  * \brief Provides data handle for parallel communication which takes
  *        the minimum of all values that are attached to DOFs
  */
-template <class FieldType, class Container, class EntityMapper, int commCodim>
+template <class FieldType, class Container, class EntityMapper, unsigned commCodim>
 class GridCommHandleMin
     : public Dune::CommDataHandleIF<GridCommHandleMin<FieldType, Container,
                                                       EntityMapper, commCodim>,
                                     FieldType>
 {
 public:
-    GridCommHandleMin(Container &container, const EntityMapper &mapper)
+    GridCommHandleMin(Container& container, const EntityMapper& mapper)
         : mapper_(mapper), container_(container)
     {}
 
-    bool contains(int dim, int codim) const
+    bool contains(unsigned OPM_UNUSED dim, unsigned codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(int dim, int codim) const
+    bool fixedsize(unsigned OPM_UNUSED dim, unsigned OPM_UNUSED codim) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -260,30 +262,30 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType &e) const
+    size_t size(const EntityType& OPM_UNUSED e) const
     {
         // communicate a field type per entity
         return 1;
     }
 
     template <class MessageBufferImp, class EntityType>
-    void gather(MessageBufferImp &buff, const EntityType &e) const
+    void gather(MessageBufferImp& buff, const EntityType& e) const
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = mapper_.index(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
 #else
-        int dofIdx = mapper_.map(e);
+        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
 #endif
         FieldType tmp;
         buff.read(tmp);
@@ -291,8 +293,8 @@ public:
     }
 
 private:
-    const EntityMapper &mapper_;
-    Container &container_;
+    const EntityMapper& mapper_;
+    Container& container_;
 };
 
 } // namespace Ewoms

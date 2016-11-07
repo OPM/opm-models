@@ -46,8 +46,7 @@
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
 #include <opm/material/fluidsystems/GasPhase.hpp>
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
-
-#include <dune/common/unused.hh>
+#include <opm/material/common/Unused.hpp>
 
 #include <sstream>
 #include <string>
@@ -241,14 +240,14 @@ class RichardsModel
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
-     static const int numPhases = FluidSystem::numPhases;
-     static const int numComponents = FluidSystem::numComponents;
+     static const unsigned numPhases = FluidSystem::numPhases;
+     static const unsigned numComponents = FluidSystem::numComponents;
 
-    static const int liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex);
-    static const int gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex);
+    static const unsigned liquidPhaseIdx = GET_PROP_VALUE(TypeTag, LiquidPhaseIndex);
+    static const unsigned gasPhaseIdx = GET_PROP_VALUE(TypeTag, GasPhaseIndex);
 
-    static const int liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex);
-    static const int gasCompIdx = GET_PROP_VALUE(TypeTag, GasComponentIndex);
+    static const unsigned liquidCompIdx = GET_PROP_VALUE(TypeTag, LiquidComponentIndex);
+    static const unsigned gasCompIdx = GET_PROP_VALUE(TypeTag, GasComponentIndex);
 
 
     // some consistency checks
@@ -262,7 +261,7 @@ class RichardsModel
                   "The liquid and the gas components must be different");
 
 public:
-    RichardsModel(Simulator &simulator)
+    RichardsModel(Simulator& simulator)
         : ParentType(simulator)
     {
         // the liquid phase must be liquid, the gas phase must be
@@ -288,7 +287,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
         std::ostringstream oss;
         if (pvIdx == Indices::pressureWIdx)
@@ -302,7 +301,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
         std::ostringstream oss;
         if (eqIdx == Indices::contiEqIdx)
@@ -316,7 +315,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned OPM_UNUSED globalDofIdx, unsigned pvIdx) const
     {
         if (Indices::pressureWIdx == pvIdx) {
             return 10 / referencePressure_;
@@ -328,9 +327,9 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalDofIdx, int eqIdx) const
+    Scalar eqWeight(unsigned OPM_UNUSED globalDofIdx, unsigned OPM_OPTIM_UNUSED eqIdx) const
     {
-        int DUNE_UNUSED compIdx = eqIdx - Indices::contiEqIdx;
+        unsigned OPM_OPTIM_UNUSED compIdx = eqIdx - Indices::contiEqIdx;
         assert(0 <= compIdx && compIdx <= FluidSystem::numPhases);
 
         // make all kg equal
@@ -347,7 +346,7 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        for (size_t dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
+        for (unsigned dofIdx = 0; dofIdx < this->numGridDof(); ++ dofIdx) {
             if (this->isLocalDof(dofIdx)) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressureWIdx];
@@ -359,7 +358,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::phaseIsConsidered
      */
-    bool phaseIsConsidered(int phaseIdx) const
+    bool phaseIsConsidered(unsigned phaseIdx) const
     { return phaseIdx == liquidPhaseIdx; }
 
     void registerOutputModules_()

@@ -91,28 +91,28 @@ public:
         {}
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        SubControlVolume(const Element &element)
+        SubControlVolume(const Element& element)
             : element_(element)
 #else
-        SubControlVolume(const ElementPointer &elementPtr)
+        SubControlVolume(const ElementPointer& elementPtr)
             : elementPtr_(elementPtr)
 #endif
         { update(); }
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        void update(const Element &element)
+        void update(const Element& element)
         { element_ = element; }
 #else
-        void update(const ElementPointer &elementPtr)
+        void update(const ElementPointer& elementPtr)
         { elementPtr_ = elementPtr; }
 #endif
 
         void update()
         {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            const auto &geometry = element_.geometry();
+            const auto& geometry = element_.geometry();
 #else
-            const auto &geometry = elementPtr_->geometry();
+            const auto& geometry = elementPtr_->geometry();
 #endif
             centerPos_ = geometry.center();
             volume_ = geometry.volume();
@@ -121,13 +121,13 @@ public:
         /*!
          * \brief The global position associated with the sub-control volume
          */
-        const GlobalPosition &globalPos() const
+        const GlobalPosition& globalPos() const
         { return centerPos_; }
 
         /*!
          * \brief The center of the sub-control volume
          */
-        const GlobalPosition &center() const
+        const GlobalPosition& center() const
         { return centerPos_; }
 
         /*!
@@ -167,13 +167,13 @@ public:
         SubControlVolumeFace()
         {}
 
-        SubControlVolumeFace(const Intersection &intersection, unsigned localNeighborIdx)
+        SubControlVolumeFace(const Intersection& intersection, unsigned localNeighborIdx)
         {
-            exteriorIdx_ = localNeighborIdx;
+            exteriorIdx_ = static_cast<unsigned short>(localNeighborIdx);
 
             normal_ = intersection.centerUnitOuterNormal();
 
-            const auto &geometry = intersection.geometry();
+            const auto& geometry = intersection.geometry();
             integrationPos_ = geometry.center();
             area_ = geometry.volume();
         }
@@ -182,7 +182,7 @@ public:
          * \brief Returns the local index of the degree of freedom to
          *        the face's interior.
          */
-        unsigned interiorIndex() const
+        unsigned short interiorIndex() const
         {
             // The local index of the control volume in the interior
             // of a face of the stencil in the element centered finite
@@ -196,21 +196,21 @@ public:
          * \brief Returns the local index of the degree of freedom to
          *        the face's outside.
          */
-        unsigned exteriorIndex() const
+        unsigned short exteriorIndex() const
         { return exteriorIdx_; }
 
         /*!
          * \brief Returns the global position of the face's
          *        integration point.
          */
-        const GlobalPosition &integrationPos() const
+        const GlobalPosition& integrationPos() const
         { return integrationPos_; }
 
         /*!
          * \brief Returns the outer unit normal at the face's
          *        integration point.
          */
-        const WorldVector &normal() const
+        const WorldVector& normal() const
         { return normal_; }
 
         /*!
@@ -220,24 +220,23 @@ public:
         { return area_; }
 
     private:
-        unsigned interiorIdx_;
-        unsigned exteriorIdx_;
+        GlobalPosition integrationPos_;
+        WorldVector normal_;
 
         Scalar area_;
 
-        GlobalPosition integrationPos_;
-        WorldVector normal_;
+        unsigned short exteriorIdx_;
     };
 
-    EcfvStencil(const GridView &gridView, const Mapper& mapper)
+    EcfvStencil(const GridView& gridView, const Mapper& mapper)
         : gridView_(gridView)
         , elementMapper_(mapper)
     { }
 
-    void updateTopology(const Element &element)
+    void updateTopology(const Element& element)
     {
         auto isIt = gridView_.ibegin(element);
-        const auto &endIsIt = gridView_.iend(element);
+        const auto& endIsIt = gridView_.iend(element);
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
@@ -264,7 +263,7 @@ public:
             // boundary face
             if (intersection.neighbor()) {
                 elements_.emplace_back( intersection.outside() );
-                subControlVolumes_.emplace_back(/*SubControlVolume(*/ elements_.back() /*)*/);
+                subControlVolumes_.emplace_back(/*SubControlVolume(*/elements_.back()/*)*/);
                 interiorFaces_.emplace_back(/*SubControlVolumeFace(*/intersection, subControlVolumes_.size() - 1/*)*/);
             }
             else {
@@ -273,7 +272,7 @@ public:
         }
     }
 
-    void updatePrimaryTopology(const Element &element)
+    void updatePrimaryTopology(const Element& element)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
@@ -291,7 +290,7 @@ public:
 #endif
     }
 
-    void update(const Element &element)
+    void update(const Element& element)
     {
         updateTopology(element);
     }
@@ -304,21 +303,21 @@ public:
     /*!
      * \brief Return the element to which the stencil refers.
      */
-    const Element &element() const
+    const Element& element() const
     { return element( 0 ); }
 
     /*!
      * \brief Return the grid view of the element to which the stencil
      *        refers.
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return *gridView_; }
 
     /*!
      * \brief Returns the number of degrees of freedom which the
      *        current element interacts with.
      */
-    unsigned numDof() const
+    size_t numDof() const
     { return subControlVolumes_.size(); }
 
     /*!
@@ -330,7 +329,7 @@ public:
      *
      * For element centered finite elements, this is only the central DOF.
      */
-    unsigned numPrimaryDof() const
+    size_t numPrimaryDof() const
     { return 1; }
 
     /*!
@@ -342,9 +341,9 @@ public:
         assert(0 <= dofIdx && dofIdx < numDof());
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        return elementMapper_.index(element(dofIdx));
+        return static_cast<unsigned>(elementMapper_.index(element(dofIdx)));
 #else
-        return elementMapper_.map(element(dofIdx));
+        return static_cast<unsigned>(elementMapper_.map(element(dofIdx)));
 #endif
     }
 
@@ -361,7 +360,7 @@ public:
      * If no degree of freedom index is passed, the element which was
      * passed to the update() method is returned...
      */
-    const Element &element(unsigned dofIdx) const
+    const Element& element(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
@@ -376,7 +375,7 @@ public:
      * \brief Return the entity given the index of a degree of
      *        freedom.
      */
-    const Entity &entity(int dofIdx) const
+    const Entity& entity(unsigned dofIdx) const
     {
         return element( dofIdx );
     }
@@ -385,33 +384,33 @@ public:
      * \brief Returns the sub-control volume object belonging to a
      *        given degree of freedom.
      */
-    const SubControlVolume &subControlVolume(unsigned dofIdx) const
+    const SubControlVolume& subControlVolume(unsigned dofIdx) const
     { return subControlVolumes_[dofIdx]; }
 
     /*!
      * \brief Returns the number of interior faces of the stencil.
      */
-    unsigned numInteriorFaces() const
+    size_t numInteriorFaces() const
     { return interiorFaces_.size(); }
 
     /*!
      * \brief Returns the face object belonging to a given face index
      *        in the interior of the domain.
      */
-    const SubControlVolumeFace &interiorFace(unsigned bfIdx) const
+    const SubControlVolumeFace& interiorFace(unsigned bfIdx) const
     { return interiorFaces_[bfIdx]; }
 
     /*!
      * \brief Returns the number of boundary faces of the stencil.
      */
-    unsigned numBoundaryFaces() const
+    size_t numBoundaryFaces() const
     { return boundaryFaces_.size(); }
 
     /*!
      * \brief Returns the boundary face object belonging to a given
      *        boundary face index.
      */
-    const SubControlVolumeFace &boundaryFace(unsigned bfIdx) const
+    const SubControlVolumeFace& boundaryFace(unsigned bfIdx) const
     { return boundaryFaces_[bfIdx]; }
 
 protected:

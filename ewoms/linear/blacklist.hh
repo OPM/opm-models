@@ -77,7 +77,7 @@ public:
     { peerBlackLists_[peerRank] = peerBlackList; }
 
     template <class DomesticOverlap>
-    void updateNativeToDomesticMap(const DomesticOverlap &domesticOverlap)
+    void updateNativeToDomesticMap(const DomesticOverlap& domesticOverlap)
     {
 #if HAVE_MPI
         auto peerListIt = peerBlackLists_.begin();
@@ -105,7 +105,7 @@ public:
     {
         std::cout << "my own blacklisted indices:\n";
         auto idxIt = nativeBlackListedIndices_.begin();
-        const auto &idxEndIt = nativeBlackListedIndices_.end();
+        const auto& idxEndIt = nativeBlackListedIndices_.end();
         for (; idxIt != idxEndIt; ++idxIt)
             std::cout << " (native index: " << *idxIt
                       << ", domestic index: " << nativeToDomestic(*idxIt) << ")\n";
@@ -113,13 +113,13 @@ public:
         auto peerListIt = peerBlackLists_.begin();
         const auto& peerListEndIt = peerBlackLists_.end();
         for (; peerListIt != peerListEndIt; ++peerListIt) {
-            int peerRank = peerListIt->first;
+            ProcessRank peerRank = peerListIt->first;
             std::cout << " peer " << peerRank << ":\n";
-            auto idxIt = peerListIt->second.begin();
-            const auto& idxEndIt = peerListIt->second.end();
-            for (; idxIt != idxEndIt; ++ idxIt)
-                std::cout << "   (native index: " << idxIt->myOwnNativeIndex
-                          << ", native peer index: " << idxIt->nativeIndexOfPeer << ")\n";
+            auto idx2It = peerListIt->second.begin();
+            const auto& idx2EndIt = peerListIt->second.end();
+            for (; idx2It != idx2EndIt; ++ idx2It)
+                std::cout << "   (native index: " << idx2It->myOwnNativeIndex
+                          << ", native peer index: " << idx2It->nativeIndexOfPeer << ")\n";
         }
     }
 
@@ -134,7 +134,7 @@ private:
         auto& idxBuff = globalIdxSendBuff_[peerRank];
 
         numIdxBuff.resize(1);
-        numIdxBuff[0] = peerIndices.size();
+        numIdxBuff[0] = static_cast<unsigned>(peerIndices.size());
         numIdxBuff.send(peerRank);
 
         idxBuff.resize(2*peerIndices.size());
@@ -154,13 +154,13 @@ private:
     void receiveGlobalIndices_(ProcessRank peerRank,
                                const DomesticOverlap& domesticOverlap)
     {
-        MpiBuffer<int> numGlobalIdxBuf(1);
+        MpiBuffer<unsigned> numGlobalIdxBuf(1);
         numGlobalIdxBuf.receive(peerRank);
-        int numIndices = numGlobalIdxBuf[0];
+        unsigned numIndices = numGlobalIdxBuf[0];
 
         MpiBuffer<Index> globalIdxBuf(2*numIndices);
         globalIdxBuf.receive(peerRank);
-        for (int i = 0; i < numIndices; ++i) {
+        for (unsigned i = 0; i < numIndices; ++i) {
             Index globalIdx = globalIdxBuf[2*i + 0];
             Index nativeIdx = globalIdxBuf[2*i + 1];
 
@@ -172,7 +172,7 @@ private:
     std::set<Index> nativeBlackListedIndices_;
     std::map<Index, Index> nativeToDomesticMap_;
 #if HAVE_MPI
-    std::map<ProcessRank, MpiBuffer<int>> numGlobalIdxSendBuff_;
+    std::map<ProcessRank, MpiBuffer<unsigned>> numGlobalIdxSendBuff_;
     std::map<ProcessRank, MpiBuffer<Index>> globalIdxSendBuff_;
 #endif // HAVE_MPI
 

@@ -43,7 +43,7 @@ namespace Ewoms {
  * 4.4 which do not feature std::declval in their standard library.
  */
 template <class T>
-T &declval();
+T& declval();
 } // namespace Ewoms
 
 #endif

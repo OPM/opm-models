@@ -35,6 +35,7 @@
 #include <ewoms/io/baseoutputwriter.hh>
 
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
@@ -81,8 +82,8 @@ public:
     typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
 #endif
 
-    VtkMultiWriter(const GridView &gridView,
-                   const std::string &simName = "",
+    VtkMultiWriter(const GridView& gridView,
+                   const std::string& simName = "",
                    std::string multiFileName = "")
         : gridView_(gridView)
         , elementMapper_(gridView)
@@ -150,7 +151,7 @@ public:
      * The buffer will be deleted automatically after the data has
      * been written by to disk.
      */
-    ScalarBuffer *allocateManagedScalarBuffer(int numEntities)
+    ScalarBuffer *allocateManagedScalarBuffer(size_t numEntities)
     {
         ScalarBuffer *buf = new ScalarBuffer(numEntities);
         managedScalarBuffers_.push_back(buf);
@@ -163,10 +164,10 @@ public:
      * The buffer will be deleted automatically after the data has
      * been written by to disk.
      */
-    VectorBuffer *allocateManagedVectorBuffer(int numOuter, int numInner)
+    VectorBuffer *allocateManagedVectorBuffer(size_t numOuter, size_t numInner)
     {
         VectorBuffer *buf = new VectorBuffer(numOuter);
-        for (int i = 0; i < numOuter; ++ i)
+        for (size_t i = 0; i < numOuter; ++ i)
             (*buf)[i].resize(numInner);
 
         managedVectorBuffers_.push_back(buf);
@@ -189,7 +190,7 @@ public:
      * In both cases, modifying the buffer between the call to this
      * method and endWrite() results in _undefined behavior_.
      */
-    void attachScalarVertexData(ScalarBuffer &buf, std::string name)
+    void attachScalarVertexData(ScalarBuffer& buf, std::string name)
     {
         sanitizeScalarBuffer_(buf);
 
@@ -217,7 +218,7 @@ public:
      * In both cases, modifying the buffer between the call to this
      * method and endWrite() results in _undefined behaviour_.
      */
-    void attachScalarElementData(ScalarBuffer &buf, std::string name)
+    void attachScalarElementData(ScalarBuffer& buf, std::string name)
     {
         sanitizeScalarBuffer_(buf);
 
@@ -246,7 +247,7 @@ public:
      * In both cases, modifying the buffer between the call to this
      * method and endWrite() results in _undefined behavior_.
      */
-    void attachVectorVertexData(VectorBuffer &buf, std::string name)
+    void attachVectorVertexData(VectorBuffer& buf, std::string name)
     {
         sanitizeVectorBuffer_(buf);
 
@@ -262,11 +263,11 @@ public:
     /*!
      * \brief Add a finished vertex-centered tensor field to the output.
      */
-    void attachTensorVertexData(TensorBuffer &buf, std::string name)
+    void attachTensorVertexData(TensorBuffer& buf, std::string name)
     {
         typedef Ewoms::VtkTensorFunction<GridView, VertexMapper> VtkFn;
 
-        for (size_t colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
+        for (unsigned colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
             std::ostringstream oss;
             oss << name <<  "[" << colIdx << "]";
 
@@ -295,7 +296,7 @@ public:
      * In both cases, modifying the buffer between the call to this
      * method and endWrite() results in _undefined behaviour_.
      */
-    void attachVectorElementData(VectorBuffer &buf, std::string name)
+    void attachVectorElementData(VectorBuffer& buf, std::string name)
     {
         sanitizeVectorBuffer_(buf);
 
@@ -311,11 +312,11 @@ public:
     /*!
      * \brief Add a finished element-centered tensor field to the output.
      */
-    void attachTensorElementData(TensorBuffer &buf, std::string name)
+    void attachTensorElementData(TensorBuffer& buf, std::string name)
     {
         typedef Ewoms::VtkTensorFunction<GridView, ElementMapper> VtkFn;
 
-        for (size_t colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
+        for (unsigned colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
             std::ostringstream oss;
             oss << name <<  "[" << colIdx << "]";
 
@@ -374,14 +375,14 @@ public:
      * \brief Write the multi-writer's state to a restart file.
      */
     template <class Restarter>
-    void serialize(Restarter &res)
+    void serialize(Restarter& res)
     {
         res.serializeSectionBegin("VTKMultiWriter");
         res.serializeStream() << curWriterNum_ << "\n";
 
         if (commRank_ == 0) {
-            size_t fileLen = 0;
-            size_t filePos = 0;
+            std::streamsize fileLen = 0;
+            std::streamoff filePos = 0;
             if (multiFile_.is_open()) {
                 // write the meta file into the restart file
                 filePos = multiFile_.tellp();
@@ -408,7 +409,7 @@ public:
      * \brief Read the multi-writer's state from a restart file.
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter& res)
     {
         res.deserializeSectionBegin("VTKMultiWriter");
         res.deserializeStream() >> curWriterNum_;
@@ -418,7 +419,8 @@ public:
             std::getline(res.deserializeStream(), dummy);
 
             // recreate the meta file from the restart file
-            size_t filePos, fileLen;
+            std::streamoff filePos;
+            std::streamsize fileLen;
             res.deserializeStream() >> fileLen >> filePos;
             std::getline(res.deserializeStream(), dummy);
             if (multiFile_.is_open())
@@ -455,7 +457,7 @@ private:
     std::string fileSuffix_()
     { return (GridView::dimension == 1) ? "vtp" : "vtu"; }
 
-    void startMultiFile_(const std::string &multiFileName)
+    void startMultiFile_(const std::string& multiFileName)
     {
         // only the first process writes to the multi-file
         if (commRank_ == 0) {
@@ -485,33 +487,14 @@ private:
 
     // make sure the field is well defined if running under valgrind
     // and make sure that all values can be displayed by paraview
-    void sanitizeScalarBuffer_(ScalarBuffer &b)
+    void sanitizeScalarBuffer_(ScalarBuffer& OPM_UNUSED b)
     {
-        for (unsigned j = 0; j < b.size(); ++j) {
-            Valgrind::CheckDefined(b[j]);
-
-            // set values which are too small to 0 to avoid
-            // problems with paraview
-            if (std::abs(b[j]) < std::numeric_limits<float>::min()) {
-                b[j] = 0.0;
-            }
-        }
+        // nothing to do: this is done by VtkScalarFunction
     }
 
-    void sanitizeVectorBuffer_(VectorBuffer &b)
+    void sanitizeVectorBuffer_(VectorBuffer& OPM_UNUSED b)
     {
-        size_t nComps = b[0].size();
-        for (size_t i = 0; i < b.size(); ++i) {
-            for (size_t j = 0; j < nComps; ++j) {
-                Valgrind::CheckDefined(b[i][j]);
-
-                // set values which are too small to 0 to avoid
-                // problems with paraview
-                if (std::abs(b[i][j]) < std::numeric_limits<float>::min()) {
-                    b[i][j] = 0.0;
-                }
-            }
-        }
+        // nothing to do: this is done by VtkVectorFunction
     }
 
     const GridView gridView_;

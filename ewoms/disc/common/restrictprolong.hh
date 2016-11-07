@@ -23,6 +23,8 @@
 #ifndef EWOMS_COPYRESTRICTPROLONG_HH
 #define EWOMS_COPYRESTRICTPROLONG_HH
 
+#include <opm/material/common/Unused.hpp>
+
 #if HAVE_DUNE_FEM
 #include <dune/fem/space/common/restrictprolonginterface.hh>
 #endif
@@ -62,13 +64,12 @@ namespace Ewoms
        *  \note If this ratio is set, it is assume to be constant.
        */
       template <class Field>
-      void setFatherChildWeight ( const Field &weight ) const
-      {
-      }
+      void setFatherChildWeight(const Field& OPM_UNUSED weight) const
+      {}
 
       //! restrict data to father
       template< class Entity >
-      void restrictLocal ( const Entity &father, const Entity &son, bool initialize ) const
+      void restrictLocal ( const Entity& father, const Entity& son, bool initialize ) const
       {
         container_.resize();
         assert( container_.codimension() == 0 );
@@ -81,16 +82,17 @@ namespace Ewoms
 
       //! restrict data to father
       template< class Entity, class LocalGeometry >
-      void restrictLocal ( const Entity &father, const Entity &son,
-                           const LocalGeometry &geometryInFather,
-                           bool initialize ) const
-      {
-        restrictLocal( father, son, initialize );
-      }
+      void restrictLocal(const Entity& father,
+                         const Entity& son,
+                         const LocalGeometry& OPM_UNUSED geometryInFather,
+                         bool initialize) const
+      { restrictLocal(father, son, initialize); }
 
       //! prolong data to children
       template< class Entity >
-      void prolongLocal ( const Entity &father, const Entity &son, bool initialize ) const
+      void prolongLocal(const Entity& father,
+                        const Entity& son,
+                        bool OPM_UNUSED initialize) const
       {
         container_.resize();
         assert( container_.codimension() == 0 );
@@ -100,18 +102,17 @@ namespace Ewoms
 
       //! prolong data to children
       template< class Entity, class LocalGeometry >
-      void prolongLocal ( const Entity &father, const Entity &son,
-                          const LocalGeometry &geometryInFather,
-                          bool initialize ) const
-      {
-        prolongLocal( father, son, initialize );
-      }
+      void prolongLocal(const Entity& father,
+                        const Entity& son,
+                        const LocalGeometry& OPM_UNUSED geometryInFather,
+                        bool initialize) const
+      { prolongLocal(father, son, initialize); }
 
       /** \brief add discrete function to communicator
        *  \param[in]  comm  Communicator to add the discrete functions to
        */
       template< class Communicator >
-      void addToList ( Communicator &comm )
+      void addToList(Communicator& OPM_UNUSED comm)
       {
         // TODO
       }
@@ -120,7 +121,7 @@ namespace Ewoms
        *  \param[in]  lb LoadBalancer to add the discrete functions to
        */
       template< class LoadBalancer >
-      void addToLoadBalancer ( LoadBalancer &lb )
+      void addToLoadBalancer(LoadBalancer& OPM_UNUSED lb)
       {
         // TODO
       }
@@ -151,53 +152,52 @@ namespace Ewoms
        *  \note If this ratio is set, it is assume to be constant.
        */
       template <class Field>
-      void setFatherChildWeight ( const Field &weight ) const
-      {
-      }
+      void setFatherChildWeight(const Field& OPM_UNUSED weight) const
+      { }
 
       //! restrict data to father
       template< class Entity >
-      void restrictLocal ( const Entity &father, const Entity &son, bool initialize ) const
-      {
-      }
+      void restrictLocal(const Entity& OPM_UNUSED father,
+                         const Entity& OPM_UNUSED son,
+                         bool OPM_UNUSED initialize) const
+      { }
 
       //! restrict data to father
       template< class Entity, class LocalGeometry >
-      void restrictLocal ( const Entity &father, const Entity &son,
-                           const LocalGeometry &geometryInFather,
-                           bool initialize ) const
-      {
-      }
+      void restrictLocal(const Entity& OPM_UNUSED father,
+                         const Entity& OPM_UNUSED son,
+                         const LocalGeometry& OPM_UNUSED geometryInFather,
+                         bool OPM_UNUSED initialize ) const
+      { }
 
       //! prolong data to children
       template< class Entity >
-      void prolongLocal ( const Entity &father, const Entity &son, bool initialize ) const
-      {
-      }
+      void prolongLocal(const Entity& OPM_UNUSED father,
+                        const Entity& OPM_UNUSED son,
+                        bool OPM_UNUSED initialize) const
+      { }
 
       //! prolong data to children
       template< class Entity, class LocalGeometry >
-      void prolongLocal ( const Entity &father, const Entity &son,
-                          const LocalGeometry &geometryInFather,
-                          bool initialize ) const
-      {
-      }
+      void prolongLocal(const Entity& OPM_UNUSED father,
+                        const Entity& OPM_UNUSED son,
+                        const LocalGeometry& OPM_UNUSED geometryInFather,
+                        bool OPM_UNUSED initialize) const
+      { }
 
       /** \brief add discrete function to communicator
        *  \param[in]  comm  Communicator to add the discrete functions to
        */
       template< class Communicator >
-      void addToList ( Communicator &comm )
-      {
-      }
+      void addToList(Communicator& OPM_UNUSED comm)
+      { }
 
       /** \brief add discrete function to load balancer
        *  \param[in]  lb LoadBalancer to add the discrete functions to
        */
       template< class LoadBalancer >
-      void addToLoadBalancer ( LoadBalancer &lb )
-      {
-      }
+      void addToLoadBalancer(LoadBalancer& OPM_UNUSED lb)
+      { }
     };
 
 } // namespace Ewoms

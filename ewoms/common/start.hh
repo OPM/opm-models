@@ -301,14 +301,14 @@ static inline int start(int argc, char **argv)
         }
         return 0;
     }
-    catch (std::exception &e)
+    catch (std::exception& e)
     {
         if (myRank == 0)
             std::cout << e.what() << ". Abort!\n" << std::flush;
         return 1;
     }
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON,3,0)
-    catch (Dune::Exception &e)
+    catch (Dune::Exception& e)
     {
         if (myRank == 0)
             std::cout << "Dune reported an error: " << e.what() << std::endl  << std::flush;

@@ -37,6 +37,8 @@
 #include <ewoms/io/baseoutputwriter.hh>
 
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -61,7 +63,7 @@ class EclWriterHelper
 {
     friend class EclWriter<TypeTag>;
 
-    static void writeHeaders_(EclWriter<TypeTag> &writer)
+    static void writeHeaders_(EclWriter<TypeTag>& writer)
     {
         typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
         if (!std::is_same<Discretization, Ewoms::EcfvDiscretization<TypeTag> >::value)
@@ -129,7 +131,7 @@ class EclWriter : public BaseOutputWriter
     friend class EclWriterHelper<TypeTag, GridManager>;
 
 public:
-    EclWriter(const Simulator &simulator)
+    EclWriter(const Simulator& simulator)
         : simulator_(simulator)
         , gridView_(simulator_.gridView())
         , elementMapper_(gridView_)
@@ -178,7 +180,7 @@ public:
      * For the EclWriter, this method is a no-op which throws a
      * std::logic_error exception
      */
-    void attachScalarVertexData(ScalarBuffer &buf, std::string name)
+    void attachScalarVertexData(ScalarBuffer& buf, std::string name)
     {
         OPM_THROW(std::logic_error,
                   "The EclWriter can only write element based quantities!");
@@ -190,7 +192,7 @@ public:
      * For the EclWriter, this method is a no-op which throws a
      * std::logic_error exception
      */
-    void attachVectorVertexData(VectorBuffer &buf, std::string name)
+    void attachVectorVertexData(VectorBuffer& buf, std::string name)
     {
         OPM_THROW(std::logic_error,
                   "The EclWriter can only write element based quantities!");
@@ -199,7 +201,7 @@ public:
     /*
      * \brief Add a vertex-centered tensor field to the output.
      */
-    void attachTensorVertexData(TensorBuffer &buf, std::string name)
+    void attachTensorVertexData(TensorBuffer& buf, std::string name)
     {
         OPM_THROW(std::logic_error,
                   "The EclWriter can only write element based quantities!");
@@ -212,7 +214,7 @@ public:
      * finishes. Modifying the buffer between the call to this method
      * and endWrite() results in _undefined behavior_.
      */
-    void attachScalarElementData(ScalarBuffer &buf, std::string name)
+    void attachScalarElementData(ScalarBuffer& buf, std::string name)
     {
         attachedBuffers_.push_back(std::pair<std::string, ScalarBuffer*>(name, &buf));
     }
@@ -223,7 +225,7 @@ public:
      * For the EclWriter, this method is a no-op which throws a
      * std::logic_error exception
      */
-    void attachVectorElementData(VectorBuffer &buf, std::string name)
+    void attachVectorElementData(VectorBuffer& buf, std::string name)
     {
         OPM_THROW(std::logic_error,
                   "Currently, the EclWriter can only write scalar quantities!");
@@ -232,7 +234,7 @@ public:
     /*
      * \brief Add a element-centered tensor field to the output.
      */
-    void attachTensorElementData(TensorBuffer &buf, std::string name)
+    void attachTensorElementData(TensorBuffer& buf, std::string name)
     {
         OPM_THROW(std::logic_error,
                   "Currently, the EclWriter can only write scalar quantities!");
@@ -270,10 +272,10 @@ public:
 
             ErtSolution solution(restartFile);
             auto bufIt = attachedBuffers_.begin();
-            const auto &bufEndIt = attachedBuffers_.end();
+            const auto& bufEndIt = attachedBuffers_.end();
             for (; bufIt != bufEndIt; ++ bufIt) {
-                const std::string &name = bufIt->first;
-                const ScalarBuffer &buffer = *bufIt->second;
+                const std::string& name = bufIt->first;
+                const ScalarBuffer& buffer = *bufIt->second;
 
                 std::shared_ptr<const ErtKeyword<float>>
                     bufKeyword(new ErtKeyword<float>(name, buffer));
@@ -293,7 +295,7 @@ public:
      * \brief Write the multi-writer's state to a restart file.
      */
     template <class Restarter>
-    void serialize(Restarter &res)
+    void serialize(Restarter& res)
     {
         res.serializeSectionBegin("EclWriter");
         res.serializeStream() << reportStepIdx_ << "\n";
@@ -304,7 +306,7 @@ public:
      * \brief Read the multi-writer's state from a restart file.
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter& res)
     {
         res.deserializeSectionBegin("EclWriter");
         res.deserializeStream() >> reportStepIdx_;
@@ -317,7 +319,7 @@ private:
 
     // make sure the field is well defined if running under valgrind
     // and make sure that all values can be displayed by paraview
-    void sanitizeBuffer_(std::vector<float> &b)
+    void sanitizeBuffer_(std::vector<float>& b)
     {
         static bool warningPrinted = false;
         for (size_t i = 0; i < b.size(); ++i) {

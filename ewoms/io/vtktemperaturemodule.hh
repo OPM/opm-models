@@ -72,7 +72,7 @@ class VtkTemperatureModule : public BaseOutputModule<TypeTag>
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
-    VtkTemperatureModule(const Simulator &simulator)
+    VtkTemperatureModule(const Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -98,7 +98,7 @@ public:
      * \brief Modify the internal buffers according to the intensive quantities relevant
      *        for an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -106,9 +106,9 @@ public:
             return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
-            const auto &fs = intQuants.fluidState();
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto& fs = intQuants.fluidState();
 
             if (temperatureOutput_())
                 temperature_[I] = Toolbox::value(fs.temperature(/*phaseIdx=*/0));
@@ -118,7 +118,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {

@@ -33,9 +33,9 @@
 #include <ewoms/models/common/energymodule.hh>
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/geometry/quadraturerules.hh>
-
 #include <dune/common/fvector.hh>
 
 #include <vector>
@@ -88,13 +88,13 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, unsigned dofIdx, unsigned timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
         Valgrind::CheckDefined(fluidState_.pressure(phaseIdx));
 
@@ -135,13 +135,13 @@ public:
     /*!
      * \copydoc IntensiveQuantities::updateScvGradients
      */
-    void updateScvGradients(const ElementContext &elemCtx, unsigned dofIdx, unsigned timeIdx)
+    void updateScvGradients(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         // calculate the pressure gradient at the SCV using finite
         // element gradients
         pressureGrad_ = 0.0;
         for (unsigned i = 0; i < elemCtx.numDof(/*timeIdx=*/0); ++i) {
-            const auto &feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
+            const auto& feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
             Valgrind::CheckDefined(feGrad);
             DimVector tmp(feGrad);
             tmp *= elemCtx.intensiveQuantities(i, timeIdx).fluidState().pressure(phaseIdx);
@@ -151,19 +151,19 @@ public:
         }
 
         // integrate the velocity over the sub-control volume
-        // const auto &elemGeom = elemCtx.element().geometry();
-        const auto &stencil = elemCtx.stencil(timeIdx);
-        const auto &scvLocalGeom = stencil.subControlVolume(dofIdx).localGeometry();
+        // const auto& elemGeom = elemCtx.element().geometry();
+        const auto& stencil = elemCtx.stencil(timeIdx);
+        const auto& scvLocalGeom = stencil.subControlVolume(dofIdx).localGeometry();
 
         Dune::GeometryType geomType = scvLocalGeom.type();
-        static const int quadratureOrder = 2;
-        const auto &rule = Dune::QuadratureRules<Scalar, dimWorld>::rule(geomType, quadratureOrder);
+        static const unsigned quadratureOrder = 2;
+        const auto& rule = Dune::QuadratureRules<Scalar, dimWorld>::rule(geomType, quadratureOrder);
 
         // integrate the veloc over the sub-control volume
         velocity_ = 0.0;
         for (auto it = rule.begin(); it != rule.end(); ++it) {
-            const auto &posScvLocal = it->position();
-            const auto &posElemLocal = scvLocalGeom.global(posScvLocal);
+            const auto& posScvLocal = it->position();
+            const auto& posElemLocal = scvLocalGeom.global(posScvLocal);
 
             DimVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
             Scalar weight = it->weight();
@@ -182,7 +182,7 @@ public:
      * \brief Returns the thermodynamic state of the fluid for the
      * control-volume.
      */
-    const FluidState &fluidState() const
+    const FluidState& fluidState() const
     { return fluidState_; }
 
     /*!
@@ -199,36 +199,36 @@ public:
     /*!
      * \brief Returns the average velocity in the sub-control volume.
      */
-    const DimVector &velocity() const
+    const DimVector& velocity() const
     { return velocity_; }
 
     /*!
      * \brief Returns the velocity at the center in the sub-control volume.
      */
-    const DimVector &velocityCenter() const
+    const DimVector& velocityCenter() const
     { return velocityCenter_; }
 
     /*!
      * \brief Returns the pressure gradient in the sub-control volume.
      */
-    const DimVector &pressureGradient() const
+    const DimVector& pressureGradient() const
     { return pressureGrad_; }
 
     /*!
      * \brief Returns the gravitational acceleration vector in the
      *        sub-control volume.
      */
-    const DimVector &gravity() const
+    const DimVector& gravity() const
     { return gravity_; }
 
 private:
-    DimVector velocityAtPos_(const ElementContext &elemCtx,
+    DimVector velocityAtPos_(const ElementContext& elemCtx,
                              unsigned timeIdx,
-                             const LocalPosition &localPos) const
+                             const LocalPosition& localPos) const
     {
-        auto &feCache =
+        auto& feCache =
             elemCtx.gradientCalculator().localFiniteElementCache();
-        const auto &localFiniteElement =
+        const auto& localFiniteElement =
             feCache.get(elemCtx.element().type());
 
         typedef Dune::FieldVector<Scalar, 1> ShapeValue;

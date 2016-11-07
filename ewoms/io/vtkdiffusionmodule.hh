@@ -91,7 +91,7 @@ class VtkDiffusionModule : public BaseOutputModule<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
 public:
-    VtkDiffusionModule(const Simulator &simulator)
+    VtkDiffusionModule(const Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -130,14 +130,14 @@ public:
      * \brief Modify the internal buffers according to the intensive quanties relevant
      *        for an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (tortuosityOutput_())
@@ -157,7 +157,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {

@@ -36,6 +36,8 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -87,19 +89,18 @@ public:
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
-     * ImmisciblePrimaryVariables &)
+     * ImmisciblePrimaryVariables& )
      */
-    FlashPrimaryVariables(const FlashPrimaryVariables &value)
-        : ParentType(value)
-    { Valgrind::SetDefined(*this); }
+    FlashPrimaryVariables(const FlashPrimaryVariables& value) = default;
+    FlashPrimaryVariables& operator=(const FlashPrimaryVariables& value) = default;
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
-    void assignMassConservative(const FluidState &fluidState,
-                                const MaterialLawParams &matParams,
-                                bool isInEquilibrium = false)
+    void assignMassConservative(const FluidState& fluidState,
+                                const MaterialLawParams& OPM_UNUSED matParams,
+                                bool OPM_UNUSED isInEquilibrium = false)
     {
         // there is no difference between naive and mass conservative
         // assignment in the flash model. (we only need the total
@@ -111,7 +112,7 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState)
+    void assignNaive(const FluidState& fluidState)
     {
         // reset everything
         (*this) = 0.0;
@@ -121,8 +122,8 @@ public:
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
         // determine the phase presence.
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 this->operator[](cTot0Idx + compIdx) +=
                     fluidState.molarity(phaseIdx, compIdx) * fluidState.saturation(phaseIdx);
             }
@@ -134,9 +135,9 @@ public:
      *
      * \param os The \c std::ostream which should be used for the output.
      */
-    void print(std::ostream &os = std::cout) const
+    void print(std::ostream& os = std::cout) const
     {
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             os << "(c_tot," << FluidSystem::componentName(compIdx) << " = "
                << this->operator[](cTot0Idx + compIdx);
         }

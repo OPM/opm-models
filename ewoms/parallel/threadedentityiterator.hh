@@ -49,7 +49,7 @@ public:
         , sequentialEnd_(gridView.template end<codim>())
     { }
 
-    ThreadedEntityIterator(const ThreadedEntityIterator &other) = default;
+    ThreadedEntityIterator(const ThreadedEntityIterator& other) = default;
 
     // begin iterating over the grid in parallel
     EntityIterator beginParallel()

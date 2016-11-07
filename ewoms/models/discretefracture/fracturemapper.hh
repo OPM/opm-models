@@ -43,19 +43,19 @@ class FractureMapper
 {
     struct FractureEdge
     {
-        FractureEdge(int edgeVertex1Idx, int edgeVertex2Idx)
+        FractureEdge(unsigned edgeVertex1Idx, unsigned edgeVertex2Idx)
             : i_(std::min(edgeVertex1Idx, edgeVertex2Idx)),
               j_(std::max(edgeVertex1Idx, edgeVertex2Idx))
         {}
 
-        bool operator<(const FractureEdge &e) const
+        bool operator<(const FractureEdge& e) const
         { return i_ < e.i_ || (i_ == e.i_ && j_ < e.j_); }
 
-        bool operator==(const FractureEdge &e) const
+        bool operator==(const FractureEdge& e) const
         { return i_ == e.i_ && j_ == e.j_; }
 
-        int i_;
-        int j_;
+        unsigned i_;
+        unsigned j_;
     };
 
 public:
@@ -71,7 +71,7 @@ public:
      * \param vertexIdx1 The index of the edge's first vertex.
      * \param vertexIdx2 The index of the edge's second vertex.
      */
-    void addFractureEdge(int vertexIdx1, int vertexIdx2)
+    void addFractureEdge(unsigned vertexIdx1, unsigned vertexIdx2)
     {
         fractureEdges_.insert(FractureEdge(vertexIdx1, vertexIdx2));
         fractureVertices_.insert(vertexIdx1);

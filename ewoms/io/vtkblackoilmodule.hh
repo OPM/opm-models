@@ -112,7 +112,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
 public:
-    VtkBlackOilModule(const Simulator &simulator)
+    VtkBlackOilModule(const Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -201,7 +201,7 @@ public:
      * \brief Modify the internal buffers according to the intensive quantities relevant for
      *        an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
@@ -209,13 +209,13 @@ public:
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
-            const auto &fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
+            const auto& fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
             typedef typename std::remove_const<typename std::remove_reference<decltype(fs)>::type>::type FluidState;
-            int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+            unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
             const auto& primaryVars = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0);
 
-            int pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
+            unsigned pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
             Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
             Scalar x_oG = Toolbox::value(fs.moleFraction(oilPhaseIdx, gasCompIdx));
             Scalar x_gO = Toolbox::value(fs.moleFraction(gasPhaseIdx, oilCompIdx));
@@ -290,7 +290,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter)

@@ -30,6 +30,10 @@
 
 #include "ncpproperties.hh"
 
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <algorithm>
 
 namespace Ewoms {
@@ -62,22 +66,19 @@ class NcpNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 
 public:
     /*!
-     * \copydoc FvBaseNewtonMethod::FvBaseNewtonMethod(Problem &)
+     * \copydoc FvBaseNewtonMethod::FvBaseNewtonMethod(Problem& )
      */
-    NcpNewtonMethod(Simulator &simulator) : ParentType(simulator)
+    NcpNewtonMethod(Simulator& simulator) : ParentType(simulator)
     {
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
     }
 
-    // HACK: this is necessary since GCC 4.4 does not support
-    // befriending typedefs...
-/*
-private:
-    friend class NewtonMethod<TypeTag>;
-    friend class ParentType;
-*/
-    void preSolve_(const SolutionVector &currentSolution,
-                   const GlobalEqVector &currentResidual)
+protected:
+    friend ParentType;
+    friend NewtonMethod<TypeTag>;
+
+    void preSolve_(const SolutionVector& OPM_UNUSED currentSolution,
+                   const GlobalEqVector& currentResidual)
     {
         const auto& constraintsMap = this->model().linearizer().constraintsMap();
         this->lastError_ = this->error_;
@@ -96,7 +97,7 @@ private:
                     continue;
             }
 
-            const auto &r = currentResidual[dofIdx];
+            const auto& r = currentResidual[dofIdx];
             for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx) {
                 if (ncp0EqIdx <= eqIdx && eqIdx < Indices::ncp0EqIdx + numPhases)
                     continue;
@@ -121,11 +122,11 @@ private:
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
-    void updatePrimaryVariables_(int globalDofIdx,
+    void updatePrimaryVariables_(unsigned globalDofIdx,
                                  PrimaryVariables& nextValue,
                                  const PrimaryVariables& currentValue,
                                  const EqVector& update,
-                                 const EqVector& currentResidual)
+                                 const EqVector& OPM_UNUSED currentResidual)
     {
         // normal Newton-Raphson update
         nextValue = currentValue;
@@ -139,8 +140,8 @@ private:
                       currentValue[pressure0Idx]);
 
         // fugacities
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            Scalar &val = nextValue[fugacity0Idx + compIdx];
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            Scalar& val = nextValue[fugacity0Idx + compIdx];
             Scalar oldVal = currentValue[fugacity0Idx + compIdx];
 
             // allow the mole fraction of the component to change
@@ -156,8 +157,8 @@ private:
         // iterations of a time step
         if (this->numIterations_ < 3) {
             // fugacities
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar &val = nextValue[fugacity0Idx + compIdx];
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+                Scalar& val = nextValue[fugacity0Idx + compIdx];
                 Scalar oldVal = currentValue[fugacity0Idx + compIdx];
                 Scalar minPhi = this->problem().model().minActivityCoeff(globalDofIdx, compIdx);
                 if (oldVal < 1.0*minPhi && val > 1.0*minPhi)
@@ -168,7 +169,7 @@ private:
 
             // saturations
             for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
-                Scalar &val = nextValue[saturation0Idx + phaseIdx];
+                Scalar& val = nextValue[saturation0Idx + phaseIdx];
                 Scalar oldVal = currentValue[saturation0Idx + phaseIdx];
                 if (oldVal < 1.0 && val > 1.0)
                     val = 1.0;
@@ -179,16 +180,16 @@ private:
     }
 
 private:
-    void clampValue_(Scalar &val, Scalar minVal, Scalar maxVal) const
+    void clampValue_(Scalar& val, Scalar minVal, Scalar maxVal) const
     { val = std::max(minVal, std::min(val, maxVal)); }
 
-    void pressureChop_(Scalar &val, Scalar oldVal) const
+    void pressureChop_(Scalar& val, Scalar oldVal) const
     {
         // limit pressure updates to 20% per iteration
         clampValue_(val, oldVal * 0.8, oldVal * 1.2);
     }
 
-    void saturationChop_(Scalar &val, Scalar oldVal) const
+    void saturationChop_(Scalar& val, Scalar oldVal) const
     {
         // limit saturation updates to 20% per iteration
         const Scalar maxDelta = 0.20;

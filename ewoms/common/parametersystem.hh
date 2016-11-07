@@ -116,7 +116,7 @@ struct ParamInfo
     std::string usageString;
     std::string compileTimeValue;
 
-    bool operator==(const ParamInfo &other) const
+    bool operator==(const ParamInfo& other) const
     {
         return other.paramName == paramName
                && other.paramTypeName == paramTypeName
@@ -129,7 +129,7 @@ struct ParamInfo
 
 // forward declaration
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType &get(const char *propTagName, const char *paramName,
+const ParamType& get(const char *propTagName, const char *paramName,
                      bool errorIfNotRegistered = true);
 
 class ParamRegFinalizerBase_
@@ -144,7 +144,7 @@ template <class TypeTag, class ParamType, class PropTag>
 class ParamRegFinalizer_ : public ParamRegFinalizerBase_
 {
 public:
-    ParamRegFinalizer_(const std::string &paramName) : paramName_(paramName)
+    ParamRegFinalizer_(const std::string& paramName) : paramName_(paramName)
     {}
 
     void retrieve()
@@ -177,20 +177,20 @@ SET_PROP(ParameterSystem, ParameterMetaData)
 {
     typedef Dune::ParameterTree type;
 
-    static Dune::ParameterTree &tree()
+    static Dune::ParameterTree& tree()
     { return storage_().tree; }
 
-    static std::map<std::string, ::Ewoms::Parameters::ParamInfo> &mutableRegistry()
+    static std::map<std::string, ::Ewoms::Parameters::ParamInfo>& mutableRegistry()
     { return storage_().registry; }
 
-    static const std::map<std::string, ::Ewoms::Parameters::ParamInfo> &registry()
+    static const std::map<std::string, ::Ewoms::Parameters::ParamInfo>& registry()
     { return storage_().registry; }
 
     static std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> &
     registrationFinalizers()
     { return storage_().finalizers; }
 
-    static bool &registrationOpen()
+    static bool& registrationOpen()
     { return storage_().registrationOpen; }
 
 private:
@@ -210,7 +210,7 @@ private:
     static Storage_& storage_() {
         static Storage_ obj;
         return obj;
-    };
+    }
 };
 
 SET_STRING_PROP(ParameterSystem, ParameterGroupPrefix, "");
@@ -220,13 +220,13 @@ SET_STRING_PROP(ParameterSystem, Description, "");
 
 namespace Parameters {
 // function prototype declarations
-void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo);
-void getFlattenedKeyList_(std::list<std::string> &dest,
-                          const Dune::ParameterTree &tree,
-                          const std::string &prefix = "");
+void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo);
+void getFlattenedKeyList_(std::list<std::string>& dest,
+                          const Dune::ParameterTree& tree,
+                          const std::string& prefix = "");
 
 
-void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
+void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
 {
     std::string paramMessage, paramType, paramDescription;
 
@@ -280,13 +280,13 @@ void printParamUsage_(std::ostream &os, const ParamInfo &paramInfo)
     os << paramMessage;
 }
 
-void getFlattenedKeyList_(std::list<std::string> &dest,
-                          const Dune::ParameterTree &tree,
-                          const std::string &prefix)
+void getFlattenedKeyList_(std::list<std::string>& dest,
+                          const Dune::ParameterTree& tree,
+                          const std::string& prefix)
 {
     // add the keys of the current sub-structure
     auto keyIt = tree.getValueKeys().begin();
-    const auto &keyEndIt = tree.getValueKeys().end();
+    const auto& keyEndIt = tree.getValueKeys().end();
     for (; keyIt != keyEndIt; ++keyIt) {
         std::string newKey(prefix);
         newKey += *keyIt;
@@ -295,7 +295,7 @@ void getFlattenedKeyList_(std::list<std::string> &dest,
 
     // recursively add all substructure keys
     auto subStructIt = tree.getSubKeys().begin();
-    const auto &subStructEndIt = tree.getSubKeys().end();
+    const auto& subStructEndIt = tree.getSubKeys().end();
     for (; subStructIt != subStructEndIt; ++subStructIt) {
         std::string newPrefix(prefix);
         newPrefix += *subStructIt;
@@ -307,14 +307,14 @@ void getFlattenedKeyList_(std::list<std::string> &dest,
 
 // print the values of a list of parameters
 template <class TypeTag>
-void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
+void printParamList_(std::ostream& os, const std::list<std::string>& keyList)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
-    const Dune::ParameterTree &tree = ParamsMeta::tree();
+    const Dune::ParameterTree& tree = ParamsMeta::tree();
 
     auto keyIt = keyList.begin();
-    const auto &keyEndIt = keyList.end();
+    const auto& keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
         std::string value = ParamsMeta::registry().at(*keyIt).compileTimeValue;
         if (tree.hasKey(*keyIt))
@@ -325,15 +325,15 @@ void printParamList_(std::ostream &os, const std::list<std::string> &keyList)
 
 // print the values of a list of parameters
 template <class TypeTag>
-void printCompileTimeParamList_(std::ostream &os,
-                                const std::list<std::string> &keyList)
+void printCompileTimeParamList_(std::ostream& os,
+                                const std::list<std::string>& keyList)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
     auto keyIt = keyList.begin();
-    const auto &keyEndIt = keyList.end();
+    const auto& keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        const auto &paramInfo = ParamsMeta::registry().at(*keyIt);
+        const auto& paramInfo = ParamsMeta::registry().at(*keyIt);
         os << *keyIt << "=\"" << paramInfo.compileTimeValue
            << "\" # property: " << paramInfo.propertyName << "\n";
     }
@@ -349,8 +349,8 @@ void printCompileTimeParamList_(std::ostream &os,
  * \param progName The name of the program
  */
 template <class TypeTag>
-void printUsage(const std::string &progName, const std::string &errorMsg = "",
-                bool handleHelp = true, std::ostream &os = std::cerr)
+void printUsage(const std::string& progName, const std::string& errorMsg = "",
+                bool handleHelp = true, std::ostream& os = std::cerr)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     std::string desc = GET_PROP_VALUE(TypeTag, Description);
@@ -374,7 +374,7 @@ void printUsage(const std::string &progName, const std::string &errorMsg = "",
     }
 
     auto paramIt = ParamsMeta::registry().begin();
-    const auto &paramEndIt = ParamsMeta::registry().end();
+    const auto& paramEndIt = ParamsMeta::registry().end();
     for (; paramIt != paramEndIt; ++paramIt) {
         printParamUsage_(os, paramIt->second);
     }
@@ -398,7 +398,7 @@ void printUsage(const std::string &progName, const std::string &errorMsg = "",
 template <class TypeTag>
 std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = true)
 {
-    Dune::ParameterTree &paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
+    Dune::ParameterTree& paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
 
     if (handleHelp) {
         for (int i = 1; i < argc; ++i) {
@@ -542,11 +542,11 @@ std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = tru
  * \param os The \c std::ostream on which the message should be printed
  */
 template <class TypeTag>
-void printValues(std::ostream &os = std::cout)
+void printValues(std::ostream& os = std::cout)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
-    const Dune::ParameterTree &tree = ParamsMeta::tree();
+    const Dune::ParameterTree& tree = ParamsMeta::tree();
 
     std::list<std::string> runTimeAllKeyList;
     std::list<std::string> runTimeKeyList;
@@ -554,7 +554,7 @@ void printValues(std::ostream &os = std::cout)
 
     getFlattenedKeyList_(runTimeAllKeyList, tree);
     auto keyIt = runTimeAllKeyList.begin();
-    const auto &keyEndIt = runTimeAllKeyList.end();
+    const auto& keyEndIt = runTimeAllKeyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
         if (ParamsMeta::registry().find(*keyIt) == ParamsMeta::registry().end()) {
             // key was not registered by the program!
@@ -569,10 +569,10 @@ void printValues(std::ostream &os = std::cout)
     // loop over all registered parameters
     std::list<std::string> compileTimeKeyList;
     auto paramInfoIt = ParamsMeta::registry().begin();
-    const auto &paramInfoEndIt = ParamsMeta::registry().end();
+    const auto& paramInfoEndIt = ParamsMeta::registry().end();
     for (; paramInfoIt != paramInfoEndIt; ++paramInfoIt) {
         // check whether the key was specified at run-time
-        const auto &keyName = paramInfoIt->first;
+        const auto& keyName = paramInfoIt->first;
         if (tree.hasKey(keyName))
             continue;
         else
@@ -594,7 +594,7 @@ void printValues(std::ostream &os = std::cout)
     if (unknownKeyList.size() > 0) {
         os << "# [unused run-time specified parameters]\n";
         auto unusedKeyIt = unknownKeyList.begin();
-        const auto &unusedKeyEndIt = unknownKeyList.end();
+        const auto& unusedKeyEndIt = unknownKeyList.end();
         for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
             os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n" << std::flush;
         }
@@ -610,17 +610,17 @@ void printValues(std::ostream &os = std::cout)
  * \return true if something was printed
  */
 template <class TypeTag>
-bool printUnused(std::ostream &os = std::cout)
+bool printUnused(std::ostream& os = std::cout)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
-    const Dune::ParameterTree &tree = ParamsMeta::tree();
+    const Dune::ParameterTree& tree = ParamsMeta::tree();
     std::list<std::string> runTimeAllKeyList;
     std::list<std::string> unknownKeyList;
 
     getFlattenedKeyList_(runTimeAllKeyList, tree);
     auto keyIt = runTimeAllKeyList.begin();
-    const auto &keyEndIt = runTimeAllKeyList.end();
+    const auto& keyEndIt = runTimeAllKeyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
         if (ParamsMeta::registry().find(*keyIt) == ParamsMeta::registry().end()) {
             // key was not registered by the program!
@@ -631,7 +631,7 @@ bool printUnused(std::ostream &os = std::cout)
     if (unknownKeyList.size() > 0) {
         os << "# [unused run-time specified parameters]\n";
         auto unusedKeyIt = unknownKeyList.begin();
-        const auto &unusedKeyEndIt = unknownKeyList.end();
+        const auto& unusedKeyEndIt = unknownKeyList.end();
         for (; unusedKeyIt != unusedKeyEndIt; ++unusedKeyIt) {
             os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n" << std::flush;
         }
@@ -648,10 +648,10 @@ class Param
 
 public:
     template <class ParamType, class PropTag>
-    static const ParamType &get(const char *propTagName, const char *paramName,
+    static const ParamType& get(const char *propTagName, const char *paramName,
                                 bool errorIfNotRegistered = true)
     {
-        static const ParamType &value =
+        static const ParamType& value =
             retrieve_<ParamType, PropTag>(propTagName,
                                           paramName,
                                           errorIfNotRegistered);
@@ -665,7 +665,7 @@ private:
         std::string paramTypeName;
         std::string groupName;
 
-        Blubb &operator=(const Blubb &b)
+        Blubb& operator=(const Blubb& b)
         {
             propertyName = b.propertyName;
             paramTypeName = b.paramTypeName;
@@ -674,8 +674,8 @@ private:
         }
     };
 
-    static void check_(const std::string &paramTypeName,
-                       const std::string &propertyName, const char *paramName)
+    static void check_(const std::string& paramTypeName,
+                       const std::string& propertyName, const char *paramName)
     {
         typedef std::unordered_map<std::string, Blubb> StaticData;
         static StaticData staticData;
@@ -708,7 +708,7 @@ private:
     }
 
     template <class ParamType, class PropTag>
-    static const ParamType &retrieve_(const char *propTagName,
+    static const ParamType& retrieve_(const char *propTagName,
                                       const char *paramName,
                                       bool errorIfNotRegistered = true)
     {
@@ -748,7 +748,8 @@ private:
         }
 
         // retrieve actual parameter from the parameter tree
-        const ParamType defaultValue = GET_PROP_VALUE_(TypeTag, PropTag);
+        const ParamType defaultValue =
+            GET_PROP_VALUE_(TypeTag, PropTag);
         static ParamType value =
             ParamsMeta::tree().template get<ParamType>(canonicalName, defaultValue);
 
@@ -757,7 +758,7 @@ private:
 };
 
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType &get(const char *propTagName, const char *paramName,
+const ParamType& get(const char *propTagName, const char *paramName,
                      bool errorIfNotRegistered)
 {
     return Param<TypeTag>::template get<ParamType, PropTag>(propTagName,
@@ -815,7 +816,7 @@ void endParamRegistration()
     // loop over all parameters and retrieve their values to make sure
     // that there is no syntax error
     auto pIt = ParamsMeta::registrationFinalizers().begin();
-    const auto &pEndIt = ParamsMeta::registrationFinalizers().end();
+    const auto& pEndIt = ParamsMeta::registrationFinalizers().end();
     for (; pIt != pEndIt; ++pIt) {
         (*pIt)->retrieve();
         delete *pIt;

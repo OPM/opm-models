@@ -29,6 +29,8 @@
 
 #include "convergencecriterion.hh"
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/istl/scalarproducts.hh>
 
 namespace Ewoms {
@@ -51,11 +53,11 @@ class ResidReductionCriterion : public ConvergenceCriterion<Vector>
     typedef typename Vector::field_type Scalar;
 
 public:
-    ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct)
+    ResidReductionCriterion(Dune::ScalarProduct<Vector>& scalarProduct)
         : scalarProduct_(scalarProduct)
     {}
 
-    ResidReductionCriterion(Dune::ScalarProduct<Vector> &scalarProduct,
+    ResidReductionCriterion(Dune::ScalarProduct<Vector>& scalarProduct,
                             Scalar reduction)
         : scalarProduct_(scalarProduct), defectReduction_(reduction)
     {}
@@ -76,9 +78,9 @@ public:
   }
 
     /*!
-     * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
+     * \copydoc ConvergenceCriterion::setInitial(const Vector& , const Vector& )
      */
-    void setInitial(const Vector &curSol, const Vector &curResid)
+    void setInitial(const Vector& OPM_UNUSED curSol, const Vector& curResid)
     {
         // make sure that we don't allow an initial error of 0 to avoid
         // divisions by zero
@@ -87,9 +89,9 @@ public:
     }
 
     /*!
-     * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
+     * \copydoc ConvergenceCriterion::update(const Vector& , const Vector& )
      */
-    void update(const Vector &curSol, const Vector &curResid)
+    void update(const Vector& OPM_UNUSED curSol, const Vector& curResid)
     { curDefect_ = scalarProduct_.norm(curResid); }
 
     /*!
@@ -107,7 +109,7 @@ public:
     /*!
      * \copydoc ConvergenceCriterion::printInitial()
      */
-    void printInitial(std::ostream &os=std::cout) const
+    void printInitial(std::ostream& os=std::cout) const
     {
         os << std::setw(20) << " Iter ";
         os << std::setw(20) << " Defect ";
@@ -123,7 +125,7 @@ public:
     /*!
      * \copydoc ConvergenceCriterion::print()
      */
-    void print(Scalar iter, std::ostream &os=std::cout) const
+    void print(Scalar iter, std::ostream& os=std::cout) const
     {
         os << std::setw(20) << iter << " ";
         os << std::setw(20) << curDefect_ << " ";
@@ -132,7 +134,7 @@ public:
     }
 
 private:
-    Dune::ScalarProduct<Vector> &scalarProduct_;
+    Dune::ScalarProduct<Vector>& scalarProduct_;
 
     Scalar initialDefect_;
     Scalar curDefect_;

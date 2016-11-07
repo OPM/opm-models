@@ -30,6 +30,8 @@
 #include "overlaptypes.hh"
 #include "blacklist.hh"
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/istl/bcrsmatrix.hh>
@@ -56,13 +58,13 @@ class ElementBorderListFromGrid
     typedef typename GridView::template Codim<0>::Entity Element;
 
     class BorderListHandle_
-        : public Dune::CommDataHandleIF<BorderListHandle_, int>
+        : public Dune::CommDataHandleIF<BorderListHandle_, ProcessRank>
     {
     public:
-        BorderListHandle_(const GridView &gridView,
-                          const ElementMapper &map,
-                          BlackList &blackList,
-                          BorderList &borderList)
+        BorderListHandle_(const GridView& gridView,
+                          const ElementMapper& map,
+                          BlackList& blackList,
+                          BorderList& borderList)
             : gridView_(gridView)
             , map_(map)
             , blackList_(blackList)
@@ -73,9 +75,9 @@ class ElementBorderListFromGrid
             for (; elemIt != elemEndIt; ++elemIt) {
                 if (elemIt->partitionType() != Dune::InteriorEntity) {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-                    int elemIdx = map_.index(*elemIt);
+                    Index elemIdx = static_cast<Index>(map_.index(*elemIt));
 #else
-                    int elemIdx = map_.map(*elemIt);
+                    Index elemIdx = static_cast<Index>(map_.map(*elemIt));
 #endif
                     blackList_.addIndex(elemIdx);
                 }
@@ -83,35 +85,37 @@ class ElementBorderListFromGrid
         }
 
         // data handle methods
-        bool contains(int dim, int codim) const
+        bool contains(int OPM_UNUSED dim, int codim) const
         { return codim == 0; }
 
-        bool fixedsize(int dim, int codim) const
+        bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
         { return true; }
 
         template <class EntityType>
-        size_t size(const EntityType &e) const
+        size_t size(const EntityType& OPM_UNUSED e) const
         { return 2; }
 
         template <class MessageBufferImp, class EntityType>
-        void gather(MessageBufferImp &buff, const EntityType &e) const
+        void gather(MessageBufferImp& buff, const EntityType& e) const
         {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int myIdx = map_.index(e);
+            unsigned myIdx = static_cast<unsigned>(map_.index(e));
 #else
-            int myIdx = map_.map(e);
+            unsigned myIdx = static_cast<unsigned>(map_.map(e));
 #endif
-            buff.write(static_cast<int>(gridView_.comm().rank()));
+            buff.write(static_cast<unsigned>(gridView_.comm().rank()));
             buff.write(myIdx);
         }
 
         template <class MessageBufferImp>
-        void scatter(MessageBufferImp &buff, const Element &e, size_t n)
+        void scatter(MessageBufferImp& buff,
+                     const Element& e,
+                     size_t OPM_UNUSED n)
         {
             // discard the index if it is not on the process boundary
             bool isInteriorNeighbor = false;
             auto isIt = gridView_.ibegin(e);
-            const auto &isEndIt = gridView_.iend(e);
+            const auto& isEndIt = gridView_.iend(e);
             for (; isIt != isEndIt; ++isIt) {
                 if (!isIt->neighbor())
                     continue;
@@ -130,20 +134,20 @@ class ElementBorderListFromGrid
             BorderIndex bIdx;
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            bIdx.localIdx = map_.index(e);
+            bIdx.localIdx = static_cast<Index>(map_.index(e));
 #else
-            bIdx.localIdx = map_.map(e);
+            bIdx.localIdx = static_cast<Index>(map_.map(e));
 #endif
             {
-                int tmp;
+                ProcessRank tmp;
                 buff.read(tmp);
                 bIdx.peerRank = tmp;
                 peerSet_.insert(tmp);
             }
             {
-                int tmp;
+                unsigned tmp;
                 buff.read(tmp);
-                bIdx.peerIdx = tmp;
+                bIdx.peerIdx = static_cast<Index>(tmp);
             }
             bIdx.borderDistance = 1;
 
@@ -154,7 +158,9 @@ class ElementBorderListFromGrid
         // entities (i.e., elements) but the dune grid uses some code which causes the
         // compiler to invoke the scatter method for every codim...
         template <class MessageBufferImp, class EntityType>
-        void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+        void scatter(MessageBufferImp& OPM_UNUSED buff,
+                     const EntityType& OPM_UNUSED e,
+                     size_t OPM_UNUSED n)
         { }
 
         const std::set<ProcessRank>& peerSet() const
@@ -162,18 +168,18 @@ class ElementBorderListFromGrid
 
     private:
         GridView gridView_;
-        const ElementMapper &map_;
+        const ElementMapper& map_;
         std::set<ProcessRank> peerSet_;
-        BlackList &blackList_;
-        BorderList &borderList_;
+        BlackList& blackList_;
+        BorderList& borderList_;
     };
 
     class PeerBlackListHandle_
         : public Dune::CommDataHandleIF<PeerBlackListHandle_, int>
     {
     public:
-        PeerBlackListHandle_(const GridView &gridView,
-                             const ElementMapper &map,
+        PeerBlackListHandle_(const GridView& gridView,
+                             const ElementMapper& map,
                              PeerBlackLists& peerBlackLists)
             : gridView_(gridView)
             , map_(map)
@@ -181,18 +187,18 @@ class ElementBorderListFromGrid
         {}
 
         // data handle methods
-        bool contains(int dim, int codim) const
+        bool contains(int OPM_UNUSED dim, int codim) const
         { return codim == 0; }
 
-        bool fixedsize(int dim, int codim) const
+        bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
         { return true; }
 
         template <class EntityType>
-        size_t size(const EntityType &e) const
+        size_t size(const EntityType& OPM_UNUSED e) const
         { return 2; }
 
         template <class MessageBufferImp, class EntityType>
-        void gather(MessageBufferImp &buff, const EntityType &e) const
+        void gather(MessageBufferImp& buff, const EntityType& e) const
         {
             buff.write(static_cast<int>(gridView_.comm().rank()));
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
@@ -203,25 +209,25 @@ class ElementBorderListFromGrid
         }
 
         template <class MessageBufferImp, class EntityType>
-        void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+        void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
         {
             int peerRank;
             int peerIdx;
-            int localIdx;
+            Index localIdx;
 
             buff.read(peerRank);
             buff.read(peerIdx);
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            localIdx = map_.index(e);
+            localIdx = static_cast<Index>(map_.index(e));
 #else
-            localIdx = map_.map(e);
+            localIdx = static_cast<Index>(map_.map(e));
 #endif
 
             PeerBlackListedEntry pIdx;
-            pIdx.nativeIndexOfPeer = peerIdx;
-            pIdx.myOwnNativeIndex = localIdx;
+            pIdx.nativeIndexOfPeer = static_cast<Index>(peerIdx);
+            pIdx.myOwnNativeIndex = static_cast<Index>(localIdx);
 
-            peerBlackLists_[peerRank].push_back(pIdx);
+            peerBlackLists_[static_cast<ProcessRank>(peerRank)].push_back(pIdx);
         }
 
         const PeerBlackList& peerBlackList(ProcessRank peerRank) const
@@ -229,12 +235,12 @@ class ElementBorderListFromGrid
 
     private:
         GridView gridView_;
-        const ElementMapper &map_;
+        const ElementMapper& map_;
         PeerBlackLists peerBlackLists_;
     };
 
 public:
-    ElementBorderListFromGrid(const GridView &gridView, const ElementMapper &map)
+    ElementBorderListFromGrid(const GridView& gridView, const ElementMapper& map)
         : gridView_(gridView)
         , map_(map)
     {
@@ -256,7 +262,7 @@ public:
     }
 
     // Access to the border list.
-    const BorderList &borderList() const
+    const BorderList& borderList() const
     { return borderList_; }
 
     // Access to the black-list indices.
@@ -265,7 +271,7 @@ public:
 
 private:
     const GridView gridView_;
-    const ElementMapper &map_;
+    const ElementMapper& map_;
 
     BorderList borderList_;
 

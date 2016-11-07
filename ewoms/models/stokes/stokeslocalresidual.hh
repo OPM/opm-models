@@ -84,22 +84,22 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector &storage,
-                        const ElementContext &elemCtx,
-                        int dofIdx,
-                        int timeIdx) const
+    void computeStorage(EqVector& storage,
+                        const ElementContext& elemCtx,
+                        unsigned dofIdx,
+                        unsigned timeIdx) const
     {
-        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
-        const auto &fs = intQuants.fluidState();
+        const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto& fs = intQuants.fluidState();
 
         // mass storage
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             storage[conti0EqIdx + compIdx] = fs.molarity(phaseIdx, compIdx);
         }
         Valgrind::CheckDefined(storage);
 
         // momentum balance
-        for (int axisIdx = 0; axisIdx < dimWorld; ++ axisIdx) {
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++ axisIdx) {
             storage[momentum0EqIdx + axisIdx] =
                 fs.density(phaseIdx) * intQuants.velocity()[axisIdx];
         }
@@ -112,8 +112,10 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
-                     int scvfIdx, int timeIdx) const
+    void computeFlux(RateVector& flux,
+                     const ElementContext& elemCtx,
+                     unsigned scvfIdx,
+                     unsigned timeIdx) const
     {
         flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -125,32 +127,34 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          int scvfIdx, int timeIdx) const
+    void addAdvectiveFlux(RateVector& flux,
+                          const ElementContext& elemCtx,
+                          unsigned scvfIdx,
+                          unsigned timeIdx) const
     {
-        const ExtensiveQuantities &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
         // data attached to upstream DOF
-        const IntensiveQuantities &up =
+        const IntensiveQuantities& up =
             elemCtx.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
 
         auto normal = extQuants.normal();
 
         // mass fluxes
         Scalar vTimesN = extQuants.velocity() * normal;
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             flux[conti0EqIdx + compIdx] = up.fluidState().molarity(phaseIdx, compIdx) * vTimesN;
 
         // momentum flux
         Scalar mu =
             up.fluidState().viscosity(phaseIdx)
             + extQuants.eddyViscosity();
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // deal with the surface forces, i.e. the $\div[ \mu
             // (\grad[v] + \grad[v^T])]$ term on the right hand side
             // of the equation
             DimVector tmp;
-            for (int j = 0; j < dimWorld; ++j) {
+            for (unsigned j = 0; j < dimWorld; ++j) {
                 tmp[j] = extQuants.velocityGrad(/*velocityComp=*/axisIdx)[j];
                 tmp[j] += extQuants.velocityGrad(/*velocityComp=*/j)[axisIdx];
             }
@@ -172,8 +176,10 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          int scvfIdx, int timeIdx) const
+    void addDiffusiveFlux(RateVector& flux,
+                          const ElementContext& elemCtx,
+                          unsigned scvfIdx,
+                          unsigned timeIdx) const
     {
         // heat conduction
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -182,21 +188,21 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeSource
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int dofIdx,
-                       int timeIdx) const
+    void computeSource(RateVector& source,
+                       const ElementContext& elemCtx,
+                       unsigned dofIdx,
+                       unsigned timeIdx) const
     {
         assert(timeIdx == 0);
-        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         // retrieve the source term intrinsic to the problem
         Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
         Valgrind::CheckDefined(source);
 
-        const auto &gravity = intQuants.gravity();
-        const auto &gradp = intQuants.pressureGradient();
+        const auto& gravity = intQuants.gravity();
+        const auto& gradp = intQuants.pressureGradient();
         Scalar density = intQuants.fluidState().density(phaseIdx);
 
         assert(std::isfinite(gradp.two_norm()));
@@ -208,7 +214,7 @@ public:
         Valgrind::CheckDefined(density);
 
         // deal with the pressure and volumetric terms
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
             source[momentum0EqIdx + axisIdx] +=
                 gradp[axisIdx] - density * gravity[axisIdx];
     }

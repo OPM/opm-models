@@ -127,7 +127,7 @@ class ParallelAmgBackend
 #endif
 
 public:
-    ParallelAmgBackend(const Simulator &simulator)
+    ParallelAmgBackend(const Simulator& simulator)
         : simulator_(simulator)
     {
         overlappingMatrix_ = nullptr;
@@ -170,7 +170,7 @@ public:
         overlappingMatrix_->assignAdd(M);
     }
 
-    void prepareRhs(const Matrix& M, Vector &b)
+    void prepareRhs(const Matrix& M, Vector& b)
     {
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
@@ -192,7 +192,7 @@ public:
      *
      * \return true if the residual reduction could be achieved, else false.
      */
-    bool solve(Vector &x)
+    bool solve(Vector& x)
     {
         int verbosity = 0;
         if (simulator_.gridManager().gridView().comm().rank() == 0)
@@ -240,12 +240,12 @@ public:
         // set the weighting of the residuals
         OverlappingVector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
-        const auto &overlap = overlappingMatrix_->overlap();
-        for (unsigned localIdx = 0; localIdx < unsigned(overlap.numLocal()); ++localIdx) {
-            int nativeIdx = overlap.domesticToNative(localIdx);
-            for (int eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
-                residWeightVec[localIdx][eqIdx] =
-                    this->simulator_.model().eqWeight(nativeIdx, eqIdx);
+        const auto& overlap = overlappingMatrix_->overlap();
+        for (Index localIdx = 0; localIdx < static_cast<Index>(overlap.numLocal()); ++localIdx) {
+            Index nativeIdx = overlap.domesticToNative(localIdx);
+            for (unsigned eqIdx = 0; eqIdx < Vector::block_type::dimension; ++eqIdx) {
+                residWeightVec[static_cast<unsigned>(localIdx)][eqIdx] =
+                    this->simulator_.model().eqWeight(static_cast<unsigned>(nativeIdx), eqIdx);
             }
         }
 
@@ -274,7 +274,7 @@ public:
             solver.apply(*overlappingx_, *overlappingb_, result);
             solverSucceeded = simulator_.gridManager().gridView().comm().min(solverSucceeded);
         }
-        catch (const Dune::Exception &)
+        catch (const Dune::Exception& )
         {
             solverSucceeded = 0;
             solverSucceeded = simulator_.gridManager().gridView().comm().min(solverSucceeded);
@@ -290,21 +290,21 @@ public:
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
 
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    void prepare_(const Matrix &M)
+    void prepare_(const Matrix& M)
     {
         BorderListCreator borderListCreator(simulator_.gridView(),
                                             simulator_.model().dofMapper());
 
-        auto &blackList = borderListCreator.blackList();
+        auto& blackList = borderListCreator.blackList();
 
         // create the overlapping Jacobian matrix
-        int overlapSize = EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize);
+        unsigned overlapSize = EWOMS_GET_PARAM(TypeTag, unsigned, LinearSolverOverlapSize);
         overlappingMatrix_ = new OverlappingMatrix(M,
                                                    borderListCreator.borderList(),
                                                    blackList,
@@ -342,33 +342,34 @@ private:
 
 #if HAVE_MPI
     template <class ParallelIndexSet>
-    void setupAmgIndexSet_(const Overlap &overlap, ParallelIndexSet &istlIndices)
+    void setupAmgIndexSet_(const Overlap& overlap, ParallelIndexSet& istlIndices)
     {
         typedef Dune::OwnerOverlapCopyAttributeSet GridAttributes;
         typedef Dune::OwnerOverlapCopyAttributeSet::AttributeSet GridAttributeSet;
 
         // create DUNE's ParallelIndexSet from a domestic overlap
         istlIndices.beginResize();
-        for (int curIdx = 0; curIdx < overlap.numDomestic(); ++curIdx) {
-            GridAttributeSet gridFlag = overlap.iAmMasterOf(curIdx)
-                                            ? GridAttributes::owner
-                                            : GridAttributes::copy;
+        for (Index curIdx = 0; static_cast<size_t>(curIdx) < overlap.numDomestic(); ++curIdx) {
+            GridAttributeSet gridFlag =
+                overlap.iAmMasterOf(curIdx)
+                ? GridAttributes::owner
+                : GridAttributes::copy;
 
             // an index is used by other processes if it is in the
             // domestic or in the foreign overlap.
             bool isShared = overlap.isInOverlap(curIdx);
 
-            assert(curIdx == int(overlap.globalToDomestic(
-                                 overlap.domesticToGlobal(curIdx))));
+            assert(curIdx == overlap.globalToDomestic(overlap.domesticToGlobal(curIdx)));
             istlIndices.add(/*globalIdx=*/overlap.domesticToGlobal(curIdx),
-                            Dune::ParallelLocalIndex<GridAttributeSet>(
-                                curIdx, gridFlag, isShared));
+                            Dune::ParallelLocalIndex<GridAttributeSet>(static_cast<size_t>(curIdx),
+                                                                       gridFlag,
+                                                                       isShared));
         }
         istlIndices.endResize();
     }
 #endif
 
-    void setupAmg_(FineOperator &fineOperator)
+    void setupAmg_(FineOperator& fineOperator)
     {
         if (amg_)
             return;
@@ -377,7 +378,7 @@ private:
         if (simulator_.gridManager().gridView().comm().rank() == 0)
             verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
-        int rank = simulator_.gridManager().gridView().comm().rank();
+        auto rank = simulator_.gridManager().gridView().comm().rank();
         if (verbosity > 1 && rank == 0)
             std::cout << "Setting up the AMG preconditioner\n";
 
@@ -419,7 +420,7 @@ private:
 #endif
     }
 
-    const Simulator &simulator_;
+    const Simulator& simulator_;
 
     AMG *amg_;
 

@@ -246,13 +246,13 @@ struct is_convertible<quad, OtherType>
     : public is_arithmetic<OtherType>
 { };
 
-inline std::ostream &operator<<(std::ostream &os, const quad &val)
+inline std::ostream& operator<<(std::ostream& os, const quad& val)
 { return (os << double(val)); }
 
-inline std::istream &operator>>(std::istream &is, quad &val)
+inline std::istream& operator>>(std::istream& is, quad& val)
 {
     double tmp;
-    std::istream &ret = (is >> tmp);
+    std::istream& ret = (is >> tmp);
     val = tmp;
     return ret;
 }
@@ -323,7 +323,7 @@ std::string className()
 { return Opm::className<T>(); }
 
 template <class T>
-std::string className(const T &)
+std::string className(const T& )
 { return Opm::className<T>(); }
 } // namespace Dune
 

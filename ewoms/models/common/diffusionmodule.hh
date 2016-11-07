@@ -31,6 +31,11 @@
 #include <ewoms/disc/common/fvbaseproperties.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
@@ -69,8 +74,10 @@ public:
      *        integration point.
       */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux, const Context &context,
-                                 int spaceIdx, int timeIdx)
+    static void addDiffusiveFlux(RateVector& OPM_UNUSED flux,
+                                 const Context& OPM_UNUSED context,
+                                 unsigned OPM_UNUSED spaceIdx,
+                                 unsigned OPM_UNUSED timeIdx)
     {}
 };
 
@@ -104,21 +111,21 @@ public:
      *        flux integration point.
      */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux, const Context &context,
-                                 int spaceIdx, int timeIdx)
+    static void addDiffusiveFlux(RateVector& flux, const Context& context,
+                                 unsigned spaceIdx, unsigned timeIdx)
     {
-        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
+        const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
-        const auto &fluidStateI = context.intensiveQuantities(extQuants.interiorIndex(), timeIdx).fluidState();
-        const auto &fluidStateJ = context.intensiveQuantities(extQuants.exteriorIndex(), timeIdx).fluidState();
+        const auto& fluidStateI = context.intensiveQuantities(extQuants.interiorIndex(), timeIdx).fluidState();
+        const auto& fluidStateJ = context.intensiveQuantities(extQuants.exteriorIndex(), timeIdx).fluidState();
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // arithmetic mean of the phase's molar density
             Evaluation rhoMolar = fluidStateI.molarDensity(phaseIdx);
             rhoMolar += Toolbox::value(fluidStateJ.molarDensity(phaseIdx));
             rhoMolar /= 2;
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
                 // mass flux due to molecular diffusion
                 flux[conti0EqIdx + compIdx] +=
                     -rhoMolar
@@ -153,7 +160,7 @@ public:
      * \brief Returns the tortuousity of the sub-domain of a fluid
      *        phase in the porous medium.
      */
-    Scalar tortuosity(int phaseIdx) const
+    Scalar tortuosity(unsigned OPM_UNUSED phaseIdx) const
     {
         OPM_THROW(std::logic_error, "Method tortuosity() does not make sense "
                                     "if diffusion is disabled");
@@ -163,7 +170,7 @@ public:
      * \brief Returns the molecular diffusion coefficient for a
      *        component in a phase.
      */
-    Scalar diffusionCoefficient(int phaseIdx, int compIdx) const
+    Scalar diffusionCoefficient(unsigned OPM_UNUSED phaseIdx, unsigned OPM_UNUSED compIdx) const
     {
         OPM_THROW(std::logic_error, "Method diffusionCoefficient() does not "
                                     "make sense if diffusion is disabled");
@@ -173,7 +180,7 @@ public:
      * \brief Returns the effective molecular diffusion coefficient of
      *        the porous medium for a component in a phase.
      */
-    Scalar effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    Scalar effectiveDiffusionCoefficient(unsigned OPM_UNUSED phaseIdx, unsigned OPM_UNUSED compIdx) const
     {
         OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() "
                                     "does not make sense if diffusion is "
@@ -186,11 +193,11 @@ protected:
      *        mass fluxes.
      */
     template <class FluidState>
-    void update_(FluidState &fs,
-                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
-                 const ElementContext &elemCtx,
-                 int dofIdx,
-                 int timeIdx)
+    void update_(FluidState& OPM_UNUSED fs,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& OPM_UNUSED paramCache,
+                 const ElementContext& OPM_UNUSED elemCtx,
+                 unsigned OPM_UNUSED dofIdx,
+                 unsigned OPM_UNUSED timeIdx)
     { }
 };
 
@@ -213,21 +220,21 @@ public:
      * \brief Returns the molecular diffusion coefficient for a
      *        component in a phase.
      */
-    Evaluation diffusionCoefficient(int phaseIdx, int compIdx) const
+    Evaluation diffusionCoefficient(unsigned phaseIdx, unsigned compIdx) const
     { return diffusionCoefficient_[phaseIdx][compIdx]; }
 
     /*!
      * \brief Returns the tortuousity of the sub-domain of a fluid
      *        phase in the porous medium.
      */
-    Evaluation tortuosity(int phaseIdx) const
+    Evaluation tortuosity(unsigned phaseIdx) const
     { return tortuosity_[phaseIdx]; }
 
     /*!
      * \brief Returns the effective molecular diffusion coefficient of
      *        the porous medium for a component in a phase.
      */
-    Evaluation effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    Evaluation effectiveDiffusionCoefficient(unsigned phaseIdx, unsigned compIdx) const
     { return tortuosity_[phaseIdx] * diffusionCoefficient_[phaseIdx][compIdx]; }
 
 protected:
@@ -236,16 +243,16 @@ protected:
      *        mass fluxes.
      */
     template <class FluidState>
-    void update_(FluidState &fluidState,
-                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
-                 const ElementContext &elemCtx,
-                 int dofIdx,
-                 int timeIdx)
+    void update_(FluidState& fluidState,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache,
+                 const ElementContext& elemCtx,
+                 unsigned dofIdx,
+                 unsigned timeIdx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
-        const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
@@ -260,7 +267,7 @@ protected:
                 1.0 / (intQuants.porosity() * intQuants.porosity())
                 * Toolbox::pow(base, 7.0/3.0);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 diffusionCoefficient_[phaseIdx][compIdx] =
                     FluidSystem::diffusionCoefficient(fluidState,
                                                       paramCache,
@@ -299,12 +306,16 @@ protected:
      * \brief Update the quantities required to calculate
      *        the diffusive mass fluxes.
      */
-    void update_(const ElementContext &elemCtx, int faceIdx, int timeIdx)
+    void update_(const ElementContext& OPM_UNUSED elemCtx,
+                 unsigned OPM_UNUSED faceIdx,
+                 unsigned OPM_UNUSED timeIdx)
     {}
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context, int bfIdx, int timeIdx,
-                         const FluidState &fluidState)
+    void updateBoundary_(const Context& OPM_UNUSED context,
+                         unsigned OPM_UNUSED bfIdx,
+                         unsigned OPM_UNUSED timeIdx,
+                         const FluidState& OPM_UNUSED fluidState)
     {}
 
 public:
@@ -314,7 +325,8 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    const Evaluation& moleFractionGradientNormal(int phaseIdx, int compIdx) const
+    const Evaluation& moleFractionGradientNormal(unsigned OPM_UNUSED phaseIdx,
+                                                 unsigned OPM_UNUSED compIdx) const
     {
         OPM_THROW(std::logic_error,
                   "The method moleFractionGradient() does not "
@@ -328,7 +340,8 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    const Evaluation& effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    const Evaluation& effectiveDiffusionCoefficient(unsigned OPM_UNUSED phaseIdx,
+                                                    unsigned OPM_UNUSED compIdx) const
     {
         OPM_THROW(std::logic_error,
                   "The method effectiveDiffusionCoefficient() "
@@ -359,7 +372,7 @@ protected:
      * \brief Update the quantities required to calculate
      *        the diffusive mass fluxes.
      */
-    void update_(const ElementContext &elemCtx, int faceIdx, int timeIdx)
+    void update_(const ElementContext& elemCtx, unsigned faceIdx, unsigned timeIdx)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::MoleFractionCallback<TypeTag> moleFractionCallback(elemCtx);
@@ -373,12 +386,12 @@ protected:
         const auto& intQuantsInside = elemCtx.intensiveQuantities(extQuants.interiorIndex(), timeIdx);
         const auto& intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
             moleFractionCallback.setPhaseIndex(phaseIdx);
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 moleFractionCallback.setComponentIndex(compIdx);
 
                 DimEvalVector moleFractionGradient(0.0);
@@ -407,18 +420,20 @@ protected:
     }
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context, int bfIdx, int timeIdx,
-                         const FluidState &fluidState)
+    void updateBoundary_(const Context& context,
+                         unsigned bfIdx,
+                         unsigned timeIdx,
+                         const FluidState& fluidState)
     {
-        const auto &stencil = context.stencil(timeIdx);
-        const auto &face = stencil.boundaryFace(bfIdx);
+        const auto& stencil = context.stencil(timeIdx);
+        const auto& face = stencil.boundaryFace(bfIdx);
 
-        const auto &elemCtx = context.elementContext();
-        int insideScvIdx = face.interiorIndex();
-        const auto &insideScv = stencil.subControlVolume(insideScvIdx);
+        const auto& elemCtx = context.elementContext();
+        unsigned insideScvIdx = face.interiorIndex();
+        const auto& insideScv = stencil.subControlVolume(insideScvIdx);
 
-        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
-        const auto &fluidStateInside = intQuantsInside.fluidState();
+        const auto& intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
+        const auto& fluidStateInside = intQuantsInside.fluidState();
 
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = face.integrationPos();
@@ -430,11 +445,11 @@ protected:
         // center of the interior SCV was not inside the element!
         assert(dist > 0);
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 // calculate mole fraction gradient using two-point
                 // gradients
                 moleFractionGradientNormal_[phaseIdx][compIdx] =
@@ -461,7 +476,7 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    const Evaluation& moleFractionGradientNormal(int phaseIdx, int compIdx) const
+    const Evaluation& moleFractionGradientNormal(unsigned phaseIdx, unsigned compIdx) const
     { return moleFractionGradientNormal_[phaseIdx][compIdx]; }
 
     /*!
@@ -471,7 +486,7 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    const Evaluation& effectiveDiffusionCoefficient(int phaseIdx, int compIdx) const
+    const Evaluation& effectiveDiffusionCoefficient(unsigned phaseIdx, unsigned compIdx) const
     { return effectiveDiffusionCoefficient_[phaseIdx][compIdx]; }
 
 private:

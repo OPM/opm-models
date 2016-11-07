@@ -58,12 +58,12 @@ public:
      * \copydoc ImmiscibleLocalResidual::computeStorage
      */
     template <class LhsEval>
-    void computeStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                        const ElementContext &elemCtx,
-                        int dofIdx,
-                        int timeIdx) const
+    void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                        const ElementContext& elemCtx,
+                        unsigned dofIdx,
+                        unsigned timeIdx) const
     {
-        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         // partial time derivative of the wetting phase mass
         storage[contiEqIdx] =
@@ -75,15 +75,17 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
-                     int scvfIdx, int timeIdx) const
+    void computeFlux(RateVector& flux,
+                     const ElementContext& elemCtx,
+                     unsigned scvfIdx,
+                     unsigned timeIdx) const
     {
-        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-        int interiorIdx = extQuants.interiorIndex();
-        int upIdx = extQuants.upstreamIndex(liquidPhaseIdx);
+        unsigned interiorIdx = extQuants.interiorIndex();
+        unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(liquidPhaseIdx));
 
-        const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+        const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
         // compute advective mass flux of the liquid phase. This is slightly hacky
         // because it is specific to the element-centered finite volume method.
@@ -97,10 +99,10 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeSource
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
-                       int dofIdx,
-                       int timeIdx) const
+    void computeSource(RateVector& source,
+                       const ElementContext& elemCtx,
+                       unsigned dofIdx,
+                       unsigned timeIdx) const
     { elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx); }
 };
 

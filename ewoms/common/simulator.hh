@@ -77,7 +77,7 @@ class Simulator
 
 public:
     // do not allow to copy simulators around
-    Simulator(const Simulator &) = delete;
+    Simulator(const Simulator& ) = delete;
 
     Simulator(bool verbose = true)
     {
@@ -145,51 +145,51 @@ public:
     /*!
      * \brief Return a reference to the grid manager of simulation
      */
-    GridManager &gridManager()
+    GridManager& gridManager()
     { return *gridManager_; }
 
     /*!
      * \brief Return a reference to the grid manager of simulation
      */
-    const GridManager &gridManager() const
+    const GridManager& gridManager() const
     { return *gridManager_; }
 
     /*!
      * \brief Return the grid view for which the simulation is done
      */
-    GridView &gridView()
+    GridView& gridView()
     { return gridManager_->gridView(); }
 
     /*!
      * \brief Return the grid view for which the simulation is done
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return gridManager_->gridView(); }
 
     /*!
      * \brief Return the physical model used in the simulation
      */
-    Model &model()
+    Model& model()
     { return *model_; }
 
     /*!
      * \brief Return the physical model used in the simulation
      */
-    const Model &model() const
+    const Model& model() const
     { return *model_; }
 
     /*!
      * \brief Return the object which specifies the pysical setup of
      *        the simulation
      */
-    Problem &problem()
+    Problem& problem()
     { return *problem_; }
 
     /*!
      * \brief Return the object which specifies the pysical setup of
      *        the simulation
      */
-    const Problem &problem() const
+    const Problem& problem() const
     { return *problem_; }
 
     /*!
@@ -221,7 +221,7 @@ public:
      * \param t The time \f$\mathrm{[s]}\f$ which should be jumped to
      * \param stepIdx The new time step index
      */
-    void setTime(Scalar t, int stepIdx)
+    void setTime(Scalar t, unsigned stepIdx)
     {
         time_ = t;
         timeStepIdx_ = stepIdx;
@@ -289,7 +289,7 @@ public:
      *
      * \param timeStepIndex The new value for the time step index
      */
-    void setTimeStepIndex(int value)
+    void setTimeStepIndex(unsigned value)
     { timeStepIdx_ = value; }
 
     /*!
@@ -649,8 +649,8 @@ public:
         if (isAmendment)
             oss << " (";
         if (timeInSeconds >= 365.25*24*60*60) {
-            int years = timeInSeconds/(365.25*24*60*60);
-            int days = (timeInSeconds - years*(365.25*24*60*60))/(24*60*60);
+            int years = static_cast<int>(timeInSeconds/(365.25*24*60*60));
+            int days = static_cast<int>((timeInSeconds - years*(365.25*24*60*60))/(24*60*60));
 
             double accuracy = 1e-2;
             double hours =
@@ -663,8 +663,8 @@ public:
             oss << years << " years, " << days << " days, "  << hours << " hours";
         }
         else if (timeInSeconds >= 24.0*60*60) {
-            int days = timeInSeconds/(24*60*60);
-            int hours = (timeInSeconds - days*(24*60*60))/(60*60);
+            int days = static_cast<int>(timeInSeconds/(24*60*60));
+            int hours = static_cast<int>((timeInSeconds - days*(24*60*60))/(60*60));
 
             double accuracy = 1e-2;
             double minutes =
@@ -677,8 +677,8 @@ public:
             oss << days << " days, " << hours << " hours, " << minutes << " minutes";
         }
         else if (timeInSeconds >= 60.0*60) {
-            int hours = timeInSeconds/(60*60);
-            int minutes = (timeInSeconds - hours*(60*60))/60;
+            int hours = static_cast<int>(timeInSeconds/(60*60));
+            int minutes = static_cast<int>((timeInSeconds - hours*(60*60))/60);
 
             double accuracy = 1e-2;
             double seconds =
@@ -691,7 +691,7 @@ public:
             oss << hours << " hours, " << minutes << " minutes, "  << seconds << " seconds";
         }
         else if (timeInSeconds >= 60.0) {
-            int minutes = timeInSeconds/60;
+            int minutes = static_cast<int>(timeInSeconds/60);
 
             double accuracy = 1e-3;
             double seconds =
@@ -750,7 +750,7 @@ public:
      * \param restarter The serializer object
      */
     template <class Restarter>
-    void serialize(Restarter &restarter)
+    void serialize(Restarter& restarter)
     {
         restarter.serializeSectionBegin("Simulator");
         restarter.serializeStream()
@@ -771,7 +771,7 @@ public:
      * \param restarter The deserializer object
      */
     template <class Restarter>
-    void deserialize(Restarter &restarter)
+    void deserialize(Restarter& restarter)
     {
         restarter.deserializeSectionBegin("Simulator");
         restarter.deserializeStream()

@@ -69,34 +69,34 @@ public:
     {}
 
     /*!
-     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector &)
+     * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const ImmiscibleBoundaryRateVector& )
      */
-    BlackOilBoundaryRateVector(const BlackOilBoundaryRateVector &value)
-        : ParentType(value)
-    {}
-
+    BlackOilBoundaryRateVector(const BlackOilBoundaryRateVector& value) = default;
+    BlackOilBoundaryRateVector& operator=(const BlackOilBoundaryRateVector& value) = default;
 
     /*!
      * \copydoc ImmiscibleBoundaryRateVector::setFreeFlow
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
-                     const FluidState &fluidState)
+    void setFreeFlow(const Context& context,
+                     unsigned bfIdx,
+                     unsigned timeIdx,
+                     const FluidState& fluidState)
     {
         typename FluidSystem::ParameterCache paramCache;
         paramCache.updateAll(fluidState);
 
         ExtensiveQuantities extQuants;
         extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
-        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
         (*this) = 0.0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar meanMBoundary = 0;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
                 meanMBoundary += fluidState.moleFraction(phaseIdx, compIdx)
                                  * FluidSystem::molarMass(compIdx);
 
@@ -106,7 +106,7 @@ public:
             else
                 density = insideIntQuants.fluidState().density(phaseIdx);
 
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Scalar molarity;
                 if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
                     molarity =
@@ -123,7 +123,7 @@ public:
         }
 
 #ifndef NDEBUG
-        for (int i = 0; i < numEq; ++i) {
+        for (unsigned i = 0; i < numEq; ++i) {
             Valgrind::CheckDefined((*this)[i]);
         }
         Valgrind::CheckDefined(*this);
@@ -134,15 +134,17 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setInFlow
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context, int bfIdx, int timeIdx,
-                   const FluidState &fluidState)
+    void setInFlow(const Context& context,
+                   unsigned bfIdx,
+                   unsigned timeIdx,
+                   const FluidState& fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the direction opposite to the outer
         // unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            Scalar& val = this->operator[](eqIdx);
             val = std::min<Scalar>(0.0, val);
         }
     }
@@ -151,15 +153,17 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setOutFlow
      */
     template <class Context, class FluidState>
-    void setOutFlow(const Context &context, int bfIdx, int timeIdx,
-                    const FluidState &fluidState)
+    void setOutFlow(const Context& context,
+                    unsigned bfIdx,
+                    unsigned timeIdx,
+                    const FluidState& fluidState)
     {
         this->setFreeFlow(context, bfIdx, timeIdx, fluidState);
 
         // we only allow fluxes in the same direction as the outer
         // unit normal
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-            Scalar &val = this->operator[](eqIdx);
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            Scalar& val = this->operator[](eqIdx);
             val = std::max<Scalar>(0.0, val);
         }
     }

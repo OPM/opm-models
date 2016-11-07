@@ -33,6 +33,9 @@
 #include <ewoms/models/common/multiphasebaseproblem.hh>
 
 #include <opm/material/common/Means.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -65,9 +68,9 @@ class DiscreteFractureProblem
 
 public:
     /*!
-     * \copydoc Problem::FvBaseProblem(Simulator &)
+     * \copydoc Problem::FvBaseProblem(Simulator& )
      */
-    DiscreteFractureProblem(Simulator &simulator)
+    DiscreteFractureProblem(Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -81,20 +84,21 @@ public:
      * problem (if a finite-volume discretization is used).
      */
     template <class Context>
-    void fractureFaceIntrinsicPermeability(DimMatrix &result,
-                                           const Context &context,
-                                           int localFaceIdx, int timeIdx) const
+    void fractureFaceIntrinsicPermeability(DimMatrix& result,
+                                           const Context& context,
+                                           unsigned localFaceIdx,
+                                           unsigned timeIdx) const
     {
-        const auto &scvf = context.stencil(timeIdx).interiorFace(localFaceIdx);
-        int interiorElemIdx = scvf.interiorIndex();
-        int exteriorElemIdx = scvf.exteriorIndex();
-        const DimMatrix &K1 = asImp_().fractureIntrinsicPermeability(context, interiorElemIdx, timeIdx);
-        const DimMatrix &K2 = asImp_().fractureIntrinsicPermeability(context, exteriorElemIdx, timeIdx);
+        const auto& scvf = context.stencil(timeIdx).interiorFace(localFaceIdx);
+        unsigned interiorElemIdx = scvf.interiorIndex();
+        unsigned exteriorElemIdx = scvf.exteriorIndex();
+        const DimMatrix& K1 = asImp_().fractureIntrinsicPermeability(context, interiorElemIdx, timeIdx);
+        const DimMatrix& K2 = asImp_().fractureIntrinsicPermeability(context, exteriorElemIdx, timeIdx);
 
         // entry-wise harmonic mean. this is almost certainly wrong if
         // you have off-main diagonal entries in your permeabilities!
-        for (int i = 0; i < dimWorld; ++i)
-            for (int j = 0; j < dimWorld; ++j)
+        for (unsigned i = 0; i < dimWorld; ++i)
+            for (unsigned j = 0; j < dimWorld; ++j)
                 result[i][j] = Opm::harmonicMean(K1[i][j], K2[i][j]);
     }
     /*!
@@ -106,8 +110,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimMatrix &fractureIntrinsicPermeability(const Context &context,
-                                                   int spaceIdx, int timeIdx) const
+    const DimMatrix& fractureIntrinsicPermeability(const Context& OPM_UNUSED context,
+                                                   unsigned OPM_UNUSED spaceIdx,
+                                                   unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::fractureIntrinsicPermeability()");
@@ -122,8 +127,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar fracturePorosity(const Context &context,
-                            int spaceIdx, int timeIdx) const
+    Scalar fracturePorosity(const Context& OPM_UNUSED context,
+                            unsigned OPM_UNUSED spaceIdx,
+                            unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::fracturePorosity()");
@@ -131,10 +137,10 @@ public:
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
     //! \copydoc asImp_()
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 };
 

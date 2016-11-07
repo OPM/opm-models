@@ -42,6 +42,7 @@
 #include "stokesextensivequantities.hh"
 #include "stokesboundaryratevector.hh"
 
+#include <ewoms/linear/superlubackend.hh>
 
 #include <opm/material/fluidsystems/GasPhase.hpp>
 #include <opm/material/fluidsystems/LiquidPhase.hpp>
@@ -49,8 +50,7 @@
 #include <opm/material/heatconduction/FluidConduction.hpp>
 #include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-
-#include <ewoms/linear/superlubackend.hh>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
@@ -81,8 +81,8 @@ SET_PROP(StokesModel, NumEq)
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
-    static const int value = GridView::dimensionworld
-                             + FluidSystem::numComponents;
+    static const unsigned value =
+        GridView::dimensionworld + FluidSystem::numComponents;
 };
 
 //! the number of phases
@@ -246,7 +246,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GridView::template Codim<0>::Entity   Element;
 
 public:
-    StokesModel(Simulator &simulator)
+    StokesModel(Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -255,13 +255,13 @@ public:
      *
      * \param phaseIdxQueried The index of the fluid phase in question
      */
-    bool phaseIsConsidered(int phaseIdxQueried) const
+    bool phaseIsConsidered(unsigned phaseIdxQueried) const
     { return phaseIdxQueried == phaseIdx; }
 
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
         std::ostringstream oss;
         if (pvIdx == Indices::pressureIdx)
@@ -280,7 +280,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
         std::ostringstream oss;
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
@@ -298,7 +298,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned OPM_UNUSED globalDofIdx, unsigned pvIdx) const
     {
         // for stokes flow the pressure gradients are often quite
         // small, so we need higher precision for pressure. TODO: find
@@ -319,7 +319,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::appendOutputFields
      */
-    void appendOutputFields(BaseOutputWriter &writer) const
+    void appendOutputFields(BaseOutputWriter& writer) const
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&writer);
         if (!vtkWriter)
@@ -329,15 +329,15 @@ public:
         typedef BaseOutputWriter::VectorBuffer VectorBuffer;
 
         // create the required scalar fields
-        unsigned numVertices = this->gridView_.size(/*codim=*/dimWorld);
-        ScalarBuffer &pressure = *vtkWriter->allocateManagedScalarBuffer(numVertices);
-        ScalarBuffer &density = *vtkWriter->allocateManagedScalarBuffer(numVertices);
-        ScalarBuffer &temperature = *vtkWriter->allocateManagedScalarBuffer(numVertices);
-        ScalarBuffer &viscosity = *vtkWriter->allocateManagedScalarBuffer(numVertices);
-        VectorBuffer &velocity = *vtkWriter->allocateManagedVectorBuffer(/*numOuter=*/numVertices,
+        size_t numVertices = static_cast<size_t>(this->gridView_.size(/*codim=*/dimWorld));
+        ScalarBuffer& pressure = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        ScalarBuffer& density = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        ScalarBuffer& temperature = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        ScalarBuffer& viscosity = *vtkWriter->allocateManagedScalarBuffer(numVertices);
+        VectorBuffer& velocity = *vtkWriter->allocateManagedVectorBuffer(/*numOuter=*/numVertices,
                                                                          /*numInner=*/dimWorld);
         ScalarBuffer *moleFraction[numComponents];
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             moleFraction[compIdx] = vtkWriter->allocateManagedScalarBuffer(numVertices);
 
         // iterate over grid
@@ -352,12 +352,12 @@ public:
 
             elemCtx.updateAll(elem);
 
-            int numScv = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-            for (int dofIdx = 0; dofIdx < numScv; ++dofIdx)
+            size_t numScv = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+            for (unsigned dofIdx = 0; dofIdx < numScv; ++dofIdx)
             {
-                int globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
-                const auto &intQuants = elemCtx.intensiveQuantities(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
-                const auto &fluidState = intQuants.fluidState();
+                unsigned globalIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+                const auto& intQuants = elemCtx.intensiveQuantities(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+                const auto& fluidState = intQuants.fluidState();
 
                 pressure[globalIdx] = fluidState.pressure(phaseIdx);
                 density[globalIdx] = fluidState.density(phaseIdx);
@@ -372,7 +372,7 @@ public:
                 velocity[globalIdx] = 0;
                 velocity[globalIdx] += intQuants.velocityCenter();
 
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
                     (*moleFraction[compIdx])[globalIdx] = fluidState.moleFraction(phaseIdx, compIdx);
             }
         }
@@ -387,7 +387,7 @@ public:
         tmp << "density_" << FluidSystem::phaseName(phaseIdx);
         vtkWriter->attachScalarVertexData(density, tmp.str());
 
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             tmp.str("");
             tmp << "moleFraction_" << FluidSystem::phaseName(phaseIdx) << "^"
                 << FluidSystem::componentName(compIdx);

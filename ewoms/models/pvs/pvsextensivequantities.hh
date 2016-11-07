@@ -67,7 +67,7 @@ public:
     /*!
      * \copydoc ParentType::update
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
         DiffusionExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
@@ -78,9 +78,11 @@ public:
      * \copydoc ParentType::updateBoundary
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, int bfIdx, int timeIdx,
-                        const FluidState &fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
+    void updateBoundary(const Context& context,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& fluidState,
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
         DiffusionExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);

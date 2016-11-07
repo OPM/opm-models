@@ -35,6 +35,7 @@
 
 #include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -95,9 +96,14 @@ public:
      *
      * \param value The primary variables that will be duplicated.
      */
-    ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables &value)
-        : ParentType(value)
-    {}
+    ImmisciblePrimaryVariables(const ImmisciblePrimaryVariables& value) = default;
+
+    /*!
+     * \brief Assignment operator
+     *
+     * \param value The primary variables that will be duplicated.
+     */
+    ImmisciblePrimaryVariables& operator=(const ImmisciblePrimaryVariables& value) = default;
 
     /*!
      * \brief Set the primary variables from an arbitrary fluid state
@@ -120,13 +126,13 @@ public:
      *                        fugacities are also defined.
      */
     template <class FluidState>
-    void assignMassConservative(const FluidState &fluidState,
-                                const MaterialLawParams &matParams,
+    void assignMassConservative(const FluidState& fluidState,
+                                const MaterialLawParams& matParams,
                                 bool isInEquilibrium = false)
     {
         #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
-        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
             assert(std::abs(fluidState.temperature(0) - fluidState.temperature(phaseIdx)) < 1e-30);
         }
 #endif // NDEBUG
@@ -149,15 +155,15 @@ public:
 
         // calculate the phase densities
         paramCache.updateAll(fsFlash);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar rho = FluidSystem::density(fsFlash, paramCache, phaseIdx);
             fsFlash.setDensity(phaseIdx, rho);
         }
 
         // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
                     fsFlash.saturation(phaseIdx) * fsFlash.molarity(phaseIdx, compIdx);
             }
@@ -187,19 +193,19 @@ public:
      *                   phases must be defined.
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState)
+    void assignNaive(const FluidState& fluidState)
     {
         // assign the phase temperatures. this is out-sourced to
         // the energy module
         EnergyModule::setPriVarTemperatures(asImp_(), fluidState);
 
         (*this)[pressure0Idx] = fluidState.pressure(/*phaseIdx=*/0);
-        for (int phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
             (*this)[saturation0Idx + phaseIdx] = fluidState.saturation(phaseIdx);
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
 };
 
