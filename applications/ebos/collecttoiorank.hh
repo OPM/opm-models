@@ -37,6 +37,8 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
+#include <dune/grid/common/mcmgmapper.hh>
+
 #include <stdexcept>
 
 namespace Ewoms

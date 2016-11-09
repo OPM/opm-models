@@ -34,6 +34,7 @@
 #include <ewoms/common/parametersystem.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -124,7 +125,7 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
     typedef std::array<VectorBuffer, numPhases> PhaseVectorBuffer;
 
 public:
-    VtkMultiPhaseModule(const Simulator &simulator)
+    VtkMultiPhaseModule(const Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -175,10 +176,10 @@ public:
         if (intrinsicPermeabilityOutput_()) this->resizeTensorBuffer_(intrinsicPermeability_);
 
         if (velocityOutput_()) {
-            Scalar nDof = this->simulator_.model().numGridDof();
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            size_t nDof = this->simulator_.model().numGridDof();
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 velocity_[phaseIdx].resize(nDof);
-                for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+                for (unsigned dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
                     velocity_[phaseIdx][dofIdx].resize(dimWorld);
                     velocity_[phaseIdx][dofIdx] = 0.0;
                 }
@@ -187,10 +188,10 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            Scalar nDof = this->simulator_.model().numGridDof();
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            size_t nDof = this->simulator_.model().numGridDof();
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
                 potentialGradient_[phaseIdx].resize(nDof);
-                for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+                for (unsigned dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
                     potentialGradient_[phaseIdx][dofIdx].resize(dimWorld);
                     potentialGradient_[phaseIdx][dofIdx] = 0.0;
                 }
@@ -204,7 +205,7 @@ public:
      * \brief Modify the internal buffers according to the intensive quantities seen on
      *        an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -213,20 +214,20 @@ public:
 
         const auto& problem = elemCtx.problem();
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
-            const auto &fs = intQuants.fluidState();
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto& fs = intQuants.fluidState();
 
             if (porosityOutput_()) porosity_[I] = Toolbox::value(intQuants.porosity());
             if (intrinsicPermeabilityOutput_()) {
                 const auto& K = problem.intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
                 intrinsicPermeability_[I].resize(K.rows, K.cols);
-                for (int rowIdx = 0; rowIdx < K.rows; ++rowIdx)
-                    for (int colIdx = 0; colIdx < K.cols; ++colIdx)
+                for (unsigned rowIdx = 0; rowIdx < K.rows; ++rowIdx)
+                    for (unsigned colIdx = 0; colIdx < K.cols; ++colIdx)
                         intrinsicPermeability_[I][rowIdx][colIdx] = K[rowIdx][colIdx];
             }
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (pressureOutput_())
                     pressure_[phaseIdx][I] = Toolbox::value(fs.pressure(phaseIdx));
                 if (densityOutput_())
@@ -247,19 +248,19 @@ public:
         if (potentialGradientOutput_()) {
             // calculate velocities if requested
             for (unsigned faceIdx = 0; faceIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ faceIdx) {
-                const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, /*timeIdx=*/0);
+                const auto& extQuants = elemCtx.extensiveQuantities(faceIdx, /*timeIdx=*/0);
 
-                int i = extQuants.interiorIndex();
-                int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+                unsigned i = extQuants.interiorIndex();
+                unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = extQuants.extrusionFactor();
 
                     potentialWeight_[phaseIdx][I] += weight;
 
-                    const auto &inputPGrad = extQuants.potentialGrad(phaseIdx);
+                    const auto& inputPGrad = extQuants.potentialGrad(phaseIdx);
                     DimVector pGrad;
-                    for (int j = 0; j < numPhases; ++j)
+                    for (unsigned j = 0; j < numPhases; ++j)
                         pGrad[j] = Toolbox::value(inputPGrad[j])*weight;
                     potentialGradient_[phaseIdx][I] += pGrad;
                 } // end for all phases
@@ -269,15 +270,15 @@ public:
         if (velocityOutput_()) {
             // calculate velocities if requested
             for (unsigned faceIdx = 0; faceIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ faceIdx) {
-                const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, /*timeIdx=*/0);
+                const auto& extQuants = elemCtx.extensiveQuantities(faceIdx, /*timeIdx=*/0);
 
-                int i = extQuants.interiorIndex();
-                int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+                unsigned i = extQuants.interiorIndex();
+                unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
 
-                int j = extQuants.exteriorIndex();
-                int J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
+                unsigned j = extQuants.exteriorIndex();
+                unsigned J = elemCtx.globalSpaceIndex(j, /*timeIdx=*/0);
 
-                for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+                for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = std::max<Scalar>(1e-16,
                                                      std::abs(Toolbox::value(extQuants.volumeFlux(phaseIdx))));
                     Valgrind::CheckDefined(extQuants.extrusionFactor());
@@ -286,7 +287,7 @@ public:
 
                     const auto& inputV = extQuants.filterVelocity(phaseIdx);
                     DimVector v;
-                    for (int k = 0; k < dimWorld; ++k)
+                    for (unsigned k = 0; k < dimWorld; ++k)
                         v[k] = Toolbox::value(inputV[k]);
                     if (v.two_norm() > 1e-20)
                         weight /= v.two_norm();
@@ -305,7 +306,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter)
@@ -332,12 +333,12 @@ public:
             this->commitTensorBuffer_(baseWriter, "intrinsicPerm", intrinsicPermeability_);
 
         if (velocityOutput_()) {
-            int nDof = this->simulator_.model().numGridDof();
+            size_t numDof = this->simulator_.model().numGridDof();
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
-                for (int i = 0; i < nDof; ++i)
+                for (unsigned i = 0; i < numDof; ++i)
                     velocity_[phaseIdx][i] /= velocityWeight_[phaseIdx][i];
                 // commit the phase velocity
                 char name[512];
@@ -348,12 +349,12 @@ public:
         }
 
         if (potentialGradientOutput_()) {
-            int nDof = this->simulator_.model().numGridDof();
+            size_t numDof = this->simulator_.model().numGridDof();
 
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the
                 // respective finite volume's surface area
-                for (int i = 0; i < nDof; ++i)
+                for (unsigned i = 0; i < numDof; ++i)
                     potentialGradient_[phaseIdx][i] /= potentialWeight_[phaseIdx][i];
                 // commit the phase velocity
                 char name[512];

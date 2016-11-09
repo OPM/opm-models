@@ -57,32 +57,32 @@ public:
     /*!
      * \brief The constructor.
      */
-    explicit FvBaseConstraintsContext(const ElementContext &elemCtx)
+    explicit FvBaseConstraintsContext(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     { }
 
     /*!
      * \copydoc Ewoms::ElementContext::problem()
      */
-    const Problem &problem() const
+    const Problem& problem() const
     { return elemCtx_.problem(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::model()
      */
-    const Model &model() const
+    const Model& model() const
     { return elemCtx_.model(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::gridView()
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return elemCtx_.gridView(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::element()
      */
-    const Element &element() const
+    const Element& element() const
     { return elemCtx_.element(); }
 
     /*!
@@ -110,7 +110,7 @@ public:
     { return elemCtx_.pos(dofIdx, timeIdx); }
 
 protected:
-    const ElementContext &elemCtx_;
+    const ElementContext& elemCtx_;
 };
 
 } // namespace Ewoms

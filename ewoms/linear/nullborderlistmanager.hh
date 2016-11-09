@@ -29,7 +29,9 @@
 
 #include "overlaptypes.hh"
 
+#include <opm/material/common/Unused.hpp>
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
@@ -51,8 +53,8 @@ template <class GridView, class DofMapper>
 class NullBorderListCreator
 {
 public:
-    NullBorderListCreator(const GridView &gridView,
-                          const DofMapper &map)
+    NullBorderListCreator(const GridView& gridView,
+                          const DofMapper& OPM_UNUSED map)
     {
         if (gridView.comm().size() > 1)
             OPM_THROW(std::runtime_error,
@@ -60,7 +62,7 @@ public:
     }
 
     // Access to the border list.
-    const BorderList &borderList() const
+    const BorderList& borderList() const
     { return borderList_; }
 
 private:

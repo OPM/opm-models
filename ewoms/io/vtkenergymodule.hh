@@ -90,7 +90,7 @@ class VtkEnergyModule : public BaseOutputModule<TypeTag>
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
-    VtkEnergyModule(const Simulator &simulator)
+    VtkEnergyModule(const Simulator& simulator)
         : ParentType(simulator)
     {
     }
@@ -135,15 +135,15 @@ public:
      * \brief Modify the internal buffers according to the intensive quanties relevant
      *        for an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
-            const auto &fs = intQuants.fluidState();
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto& fs = intQuants.fluidState();
 
             if (solidHeatCapacityOutput_())
                 solidHeatCapacity_[I] = Toolbox::value(intQuants.heatCapacitySolid());
@@ -162,7 +162,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {

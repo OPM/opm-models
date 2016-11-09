@@ -51,11 +51,11 @@ public:
 
     enum { category = Dune::SolverCategory::overlapping };
 
-    OverlappingPreconditioner(SeqPreCond &seqPreCond, const Overlap &overlap)
+    OverlappingPreconditioner(SeqPreCond& seqPreCond, const Overlap& overlap)
         : seqPreCond_(seqPreCond), overlap_(&overlap)
     {}
 
-    void pre(domain_type &x, range_type &y)
+    void pre(domain_type& x, range_type& y)
     {
 #if HAVE_MPI
         short success;
@@ -96,7 +96,7 @@ public:
         y.sync();
     }
 
-    void apply(domain_type &x, const range_type &d)
+    void apply(domain_type& x, const range_type& d)
     {
 #if HAVE_MPI
         if (overlap_->peerSet().size() > 0) {
@@ -139,7 +139,7 @@ public:
             seqPreCond_.apply(x, d);
     }
 
-    void post(domain_type &x)
+    void post(domain_type& x)
     {
 #if HAVE_MPI
         short success;
@@ -178,7 +178,7 @@ public:
     }
 
 private:
-    SeqPreCond &seqPreCond_;
+    SeqPreCond& seqPreCond_;
     const Overlap *overlap_;
 };
 

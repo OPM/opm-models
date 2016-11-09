@@ -45,6 +45,12 @@
 
 #include <vector>
 
+#ifdef HAVE_DUNE_LOCALFUNCTIONS
+#define EWOMS_NO_LOCALFUNCTIONS_UNUSED
+#else
+#define EWOMS_NO_LOCALFUNCTIONS_UNUSED OPM_UNUSED
+#endif
+
 namespace Ewoms {
 /*!
  * \ingroup FiniteElementDiscretizations
@@ -89,26 +95,27 @@ public:
      * \param elemCtx The current execution context
      */
     template <bool prepareValues = true, bool prepareGradients = true, class Dummy = unsigned>
-    void prepare(const ElementContext &elemCtx,
+    void prepare(const ElementContext& EWOMS_NO_LOCALFUNCTIONS_UNUSED elemCtx,
                  typename std::enable_if<GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
-                                         Dummy>::type timeIdx)
+                                         Dummy>::type EWOMS_NO_LOCALFUNCTIONS_UNUSED  timeIdx)
     {
 #if !HAVE_DUNE_LOCALFUNCTIONS
         // The dune-localfunctions module is required for P1 finite element gradients
-        assert(false);
+        OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
+                  " finite element gradients");
 #else
         static_assert(std::is_same<Dummy, unsigned>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
-        const auto &stencil = elemCtx.stencil(timeIdx);
+        const auto& stencil = elemCtx.stencil(timeIdx);
 
         const LocalFiniteElement& localFE = feCache_.get(elemCtx.element().type());
         localFiniteElement_ = &localFE;
 
         // loop over all face centeres
         for (unsigned faceIdx = 0; faceIdx < stencil.numInteriorFaces(); ++faceIdx) {
-            const auto &localFacePos = stencil.interiorFace(faceIdx).localPos();
+            const auto& localFacePos = stencil.interiorFace(faceIdx).localPos();
 
             // Evaluate the P1 shape functions and their gradients at all
             // flux approximation points.
@@ -123,11 +130,11 @@ public:
                 // convert to a gradient in global space by
                 // multiplying with the inverse transposed jacobian of
                 // the position
-                const auto &geom = elemCtx.element().geometry();
-                const auto &jacInvT =
+                const auto& geom = elemCtx.element().geometry();
+                const auto& jacInvT =
                     geom.jacobianInverseTransposed(localFacePos);
 
-                unsigned numVertices = elemCtx.numDof(timeIdx);
+                size_t numVertices = elemCtx.numDof(timeIdx);
                 for (unsigned vertIdx = 0; vertIdx < numVertices; vertIdx++) {
                     jacInvT.mv(/*xVector=*/localGradient[vertIdx][0],
                                /*destVector=*/p1Gradient_[faceIdx][vertIdx]);
@@ -138,7 +145,7 @@ public:
     }
 
     template <bool prepareValues = true, bool prepareGradients = true, class Dummy = unsigned>
-    void prepare(const ElementContext &elemCtx,
+    void prepare(const ElementContext& elemCtx,
                  typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                          Dummy>::type timeIdx)
     {
@@ -160,19 +167,19 @@ public:
      *               of the quantity at an index of a degree of
      *               freedom
      */
-    template <class QuantityCallback, class Dummy=int>
-    auto calculateValue(const ElementContext &elemCtx,
+    template <class QuantityCallback, class Dummy=unsigned>
+    auto calculateValue(const ElementContext& EWOMS_NO_LOCALFUNCTIONS_UNUSED elemCtx,
                         typename std::enable_if<GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
-                                                Dummy>::type fapIdx,
-                        const QuantityCallback& quantityCallback) const
+                                                Dummy>::type EWOMS_NO_LOCALFUNCTIONS_UNUSED fapIdx,
+                        const QuantityCallback& EWOMS_NO_LOCALFUNCTIONS_UNUSED quantityCallback) const
         ->  typename std::remove_reference<typename QuantityCallback::ResultType>::type
     {
 #if !HAVE_DUNE_LOCALFUNCTIONS
         // The dune-localfunctions module is required for P1 finite element gradients
-        assert(false);
-        return 0.0;
+        OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
+                  " finite element gradients");
 #else
-        static_assert(std::is_same<Dummy, int>::value,
+        static_assert(std::is_same<Dummy, unsigned>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -192,14 +199,14 @@ public:
 #endif
     }
 
-    template <class QuantityCallback, class Dummy = int>
-    auto calculateValue(const ElementContext &elemCtx,
+    template <class QuantityCallback, class Dummy = unsigned>
+    auto calculateValue(const ElementContext& elemCtx,
                         typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                                 Dummy>::type fapIdx,
                         const QuantityCallback& quantityCallback) const
         ->  decltype(ParentType::calculateValue(elemCtx, fapIdx, quantityCallback))
     {
-        static_assert(std::is_same<Dummy, int>::value,
+        static_assert(std::is_same<Dummy, unsigned>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -217,19 +224,19 @@ public:
      *               of the quantity at an index of a degree of
      *               freedom
      */
-    template <class QuantityCallback, class EvalDimVector, class Dummy = int>
-    void calculateGradient(EvalDimVector &quantityGrad,
-                           const ElementContext &elemCtx,
+    template <class QuantityCallback, class EvalDimVector, class Dummy = unsigned>
+    void calculateGradient(EvalDimVector& EWOMS_NO_LOCALFUNCTIONS_UNUSED quantityGrad,
+                           const ElementContext& EWOMS_NO_LOCALFUNCTIONS_UNUSED elemCtx,
                            typename std::enable_if<GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
-                                                   Dummy>::type fapIdx,
-                           const QuantityCallback& quantityCallback) const
+                                                   Dummy>::type EWOMS_NO_LOCALFUNCTIONS_UNUSED fapIdx,
+                           const QuantityCallback& EWOMS_NO_LOCALFUNCTIONS_UNUSED quantityCallback) const
     {
 #if !HAVE_DUNE_LOCALFUNCTIONS
         // The dune-localfunctions module is required for P1 finite element gradients
-        assert(false);
-        quantityGrad = 0.0;
+        OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
+                  " finite element gradients");
 #else
-        static_assert(std::is_same<Dummy, int>::value,
+        static_assert(std::is_same<Dummy, unsigned>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -246,14 +253,14 @@ public:
 #endif
     }
 
-    template <class QuantityCallback, class EvalDimVector, class Dummy=int>
-    void calculateGradient(EvalDimVector &quantityGrad,
-                           const ElementContext &elemCtx,
+    template <class QuantityCallback, class EvalDimVector, class Dummy=unsigned>
+    void calculateGradient(EvalDimVector& quantityGrad,
+                           const ElementContext& elemCtx,
                            typename std::enable_if<!GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients),
                                                    Dummy>::type fapIdx,
                            const QuantityCallback& quantityCallback) const
     {
-        static_assert(std::is_same<Dummy, int>::value,
+        static_assert(std::is_same<Dummy, unsigned>::value,
                       "The 'Dummy' template parameter must _not_ be specified explicitly."
                       "It is only required to conditionally disable this method!");
 
@@ -275,9 +282,9 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    auto calculateBoundaryValue(const ElementContext &elemCtx,
+    auto calculateBoundaryValue(const ElementContext& elemCtx,
                                 unsigned fapIdx,
-                                const QuantityCallback &quantityCallback)
+                                const QuantityCallback& quantityCallback)
         ->  decltype(ParentType::calculateBoundaryValue(elemCtx, fapIdx, quantityCallback))
     { return ParentType::calculateBoundaryValue(elemCtx, fapIdx, quantityCallback); }
 
@@ -296,10 +303,10 @@ public:
      *               freedom
      */
     template <class QuantityCallback, class EvalDimVector>
-    void calculateBoundaryGradient(EvalDimVector &quantityGrad,
-                                   const ElementContext &elemCtx,
+    void calculateBoundaryGradient(EvalDimVector& quantityGrad,
+                                   const ElementContext& elemCtx,
                                    unsigned fapIdx,
-                                   const QuantityCallback &quantityCallback) const
+                                   const QuantityCallback& quantityCallback) const
     { ParentType::calculateBoundaryGradient(quantityGrad, elemCtx, fapIdx, quantityCallback); }
 
 #if HAVE_DUNE_LOCALFUNCTIONS
@@ -323,5 +330,7 @@ typename P1FeGradientCalculator<TypeTag>::LocalFiniteElementCache
 P1FeGradientCalculator<TypeTag>::feCache_;
 #endif
 } // namespace Ewoms
+
+#undef EWOMS_NO_LOCALFUNCTIONS_UNUSED
 
 #endif

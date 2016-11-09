@@ -104,7 +104,7 @@ public:
     /*!
      * \brief Create the grid
      */
-    CubeGridManager(Simulator &simulator)
+    CubeGridManager(Simulator& simulator)
         : ParentType(simulator)
     {
         Dune::array<unsigned int, dimWorld> cellRes;
@@ -115,21 +115,19 @@ public:
             cellRes[i] = 0;
 
         upperRight[0] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeX);
-        cellRes[0] = EWOMS_GET_PARAM(TypeTag, int, CellsX);
+        cellRes[0] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX);
         if (dimWorld > 1) {
             upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
-            cellRes[1] = EWOMS_GET_PARAM(TypeTag, int, CellsY);
+            cellRes[1] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsY);
         }
         if (dimWorld > 2) {
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
-            cellRes[2] = EWOMS_GET_PARAM(TypeTag, int, CellsZ);
+            cellRes[2] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsZ);
         }
 
         unsigned numRefinements = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
-        cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft,
-                                                                      upperRight,
-                                                                      cellRes);
-        cubeGrid_->globalRefine(numRefinements);
+        cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
+        cubeGrid_->globalRefine(static_cast<int>(numRefinements));
 
         this->finalizeInit_();
     }

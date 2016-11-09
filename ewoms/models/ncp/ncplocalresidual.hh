@@ -33,6 +33,8 @@
 #include <ewoms/models/common/diffusionmodule.hh>
 #include <ewoms/models/common/energymodule.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+
 namespace Ewoms {
 /*!
  * \ingroup NcpModel
@@ -73,14 +75,14 @@ public:
      * \copydoc ImmiscibleLocalResidual::addPhaseStorage
      */
     template <class LhsEval>
-    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                         const ElementContext &elemCtx,
+    void addPhaseStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                         const ElementContext& elemCtx,
                          unsigned dofIdx,
                          unsigned timeIdx,
                          unsigned phaseIdx) const
     {
-        const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
-        const auto &fluidState = intQuants.fluidState();
+        const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
+        const auto& fluidState = intQuants.fluidState();
 
         // compute storage term of all components within all phases
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -99,7 +101,7 @@ public:
      */
     template <class LhsEval>
     void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
-                        const ElementContext &elemCtx,
+                        const ElementContext& elemCtx,
                         unsigned dofIdx,
                         unsigned timeIdx) const
     {
@@ -113,8 +115,10 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::computeFlux
      */
-    void computeFlux(RateVector &flux, const ElementContext &elemCtx,
-                     unsigned scvfIdx, unsigned timeIdx) const
+    void computeFlux(RateVector& flux,
+                     const ElementContext& elemCtx,
+                     unsigned scvfIdx,
+                     unsigned timeIdx) const
     {
         flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -127,17 +131,19 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addAdvectiveFlux
      */
-    void addAdvectiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          unsigned scvfIdx, unsigned timeIdx) const
+    void addAdvectiveFlux(RateVector& flux,
+                          const ElementContext& elemCtx,
+                          unsigned scvfIdx,
+                          unsigned timeIdx) const
     {
-        const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
+        const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
         unsigned interiorIdx = extQuants.interiorIndex();
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream DOFs
             // of the current phase
-            unsigned upIdx = extQuants.upstreamIndex(phaseIdx);
-            const IntensiveQuantities &up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+            unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
+            const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
             // this is a bit hacky because it is specific to the element-centered
             // finite volume scheme. (N.B. that if finite differences are used to
@@ -170,8 +176,10 @@ public:
     /*!
      * \copydoc ImmiscibleLocalResidual::addDiffusiveFlux
      */
-    void addDiffusiveFlux(RateVector &flux, const ElementContext &elemCtx,
-                          unsigned scvfIdx, unsigned timeIdx) const
+    void addDiffusiveFlux(RateVector& flux,
+                          const ElementContext& elemCtx,
+                          unsigned scvfIdx,
+                          unsigned timeIdx) const
     {
         DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
@@ -183,8 +191,8 @@ public:
      * By default, this method only asks the problem to specify a
      * source term.
      */
-    void computeSource(RateVector &source,
-                       const ElementContext &elemCtx,
+    void computeSource(RateVector& source,
+                       const ElementContext& elemCtx,
                        unsigned dofIdx,
                        unsigned timeIdx) const
     {
@@ -203,12 +211,12 @@ public:
      * \brief Returns the value of the NCP-function for a phase.
      */
     template <class LhsEval = Evaluation>
-    LhsEval phaseNcp(const ElementContext &elemCtx,
+    LhsEval phaseNcp(const ElementContext& elemCtx,
                      unsigned dofIdx,
                      unsigned timeIdx,
                      unsigned phaseIdx) const
     {
-        const auto &fluidState = elemCtx.intensiveQuantities(dofIdx, timeIdx).fluidState();
+        const auto& fluidState = elemCtx.intensiveQuantities(dofIdx, timeIdx).fluidState();
         typedef typename std::remove_const<typename std::remove_reference<decltype(fluidState)>::type>::type FluidState;
 
         typedef Opm::MathToolbox<LhsEval> LhsToolbox;
@@ -224,7 +232,7 @@ private:
      *        present.
      */
     template <class FluidState, class LhsEval>
-    LhsEval phasePresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
+    LhsEval phasePresentIneq_(const FluidState& fluidState, unsigned phaseIdx) const
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 
@@ -236,7 +244,7 @@ private:
      *        present.
      */
     template <class FluidState, class LhsEval>
-    LhsEval phaseNotPresentIneq_(const FluidState &fluidState, unsigned phaseIdx) const
+    LhsEval phaseNotPresentIneq_(const FluidState& fluidState, unsigned phaseIdx) const
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 

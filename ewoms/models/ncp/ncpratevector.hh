@@ -77,20 +77,20 @@ public:
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
-     * ImmiscibleRateVector &)
+     * ImmiscibleRateVector& )
      */
-    NcpRateVector(const NcpRateVector &value)
+    NcpRateVector(const NcpRateVector& value)
         : ParentType(value)
     {}
 
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
      */
-    void setMassRate(const ParentType &value)
+    void setMassRate(const ParentType& value)
     {
         // convert to molar rates
         ParentType molarRate(value);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             molarRate[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
 
         // set the molar rate
@@ -100,7 +100,7 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::setMolarRate
      */
-    void setMolarRate(const ParentType &value)
+    void setMolarRate(const ParentType& value)
     { ParentType::operator=(value); }
 
     /*!
@@ -114,10 +114,10 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState, class RhsEval>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
+    void setVolumetricRate(const FluidState& fluidState, unsigned phaseIdx, const RhsEval& volume)
     {
         *this = 0.0;
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] = fluidState.molarity(phaseIdx, compIdx) * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);

@@ -31,6 +31,7 @@
 #include "richardsproperties.hh"
 
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -64,24 +65,21 @@ class RichardsNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef Dune::FieldVector<Scalar, numPhases> PhaseVector;
 
 public:
-    RichardsNewtonMethod(Simulator &simulator) : ParentType(simulator)
+    RichardsNewtonMethod(Simulator& simulator) : ParentType(simulator)
     {}
 
-    // HACK necessary for GCC 4.4
-/*
 protected:
-    friend class NewtonMethod<TypeTag>;
+    friend NewtonMethod<TypeTag>;
     friend ParentType;
-*/
 
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
-    void updatePrimaryVariables_(int globalDofIdx,
+    void updatePrimaryVariables_(unsigned globalDofIdx,
                                  PrimaryVariables& nextValue,
                                  const PrimaryVariables& currentValue,
                                  const EqVector& update,
-                                 const EqVector& currentResidual)
+                                 const EqVector& OPM_UNUSED currentResidual)
     {
         // normal Newton-Raphson update
         nextValue = currentValue;
@@ -94,7 +92,7 @@ protected:
         const auto& problem = this->simulator_.problem();
 
         // calculate the old wetting phase saturation
-        const MaterialLawParams &matParams =
+        const MaterialLawParams& matParams =
             problem.materialLawParams(globalDofIdx, /*timeIdx=*/0);
 
         Opm::ImmiscibleFluidState<Scalar, FluidSystem> fs;

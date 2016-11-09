@@ -32,6 +32,8 @@
 
 #include <ewoms/models/immiscible/immiscibleintensivequantities.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+
 namespace Ewoms {
 
 /*!
@@ -80,12 +82,12 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, unsigned vertexIdx, unsigned timeIdx)
+    void update(const ElementContext& elemCtx, unsigned vertexIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, vertexIdx, timeIdx);
 
-        const auto &problem = elemCtx.problem();
-        const auto &fractureMapper = problem.fractureMapper();
+        const auto& problem = elemCtx.problem();
+        const auto& fractureMapper = problem.fractureMapper();
         unsigned globalVertexIdx = elemCtx.globalSpaceIndex(vertexIdx, timeIdx);
 
         Valgrind::SetUndefined(fractureFluidState_);
@@ -118,7 +120,7 @@ public:
         // volume. note, that we don't take overlaps of fractures into
         // account for this.
         fractureVolume_ = 0;
-        const auto &vertexPos = elemCtx.pos(vertexIdx, timeIdx);
+        const auto& vertexPos = elemCtx.pos(vertexIdx, timeIdx);
         for (unsigned vertex2Idx = 0; vertex2Idx < elemCtx.numDof(/*timeIdx=*/0); ++ vertex2Idx) {
             unsigned globalVertex2Idx = elemCtx.globalSpaceIndex(vertex2Idx, timeIdx);
 
@@ -154,7 +156,7 @@ public:
 
         // ask the problem for the material law parameters of the
         // fracture.
-        const auto &fractureMatParams =
+        const auto& fractureMatParams =
             problem.fractureMaterialLawParams(elemCtx, vertexIdx, timeIdx);
 
         // calculate the fracture saturations which would be required
@@ -214,7 +216,7 @@ public:
      * \brief Returns the average intrinsic permeability within the
      *        fracture.
      */
-    const DimMatrix &fractureIntrinsicPermeability() const
+    const DimMatrix& fractureIntrinsicPermeability() const
     { return fractureIntrinsicPermeability_; }
 
     /*!
@@ -228,7 +230,7 @@ public:
      * \brief Returns a fluid state object which represents the
      *        thermodynamic state of the fluids within the fracture.
      */
-    const FluidState &fractureFluidState() const
+    const FluidState& fractureFluidState() const
     { return fractureFluidState_; }
 
 protected:

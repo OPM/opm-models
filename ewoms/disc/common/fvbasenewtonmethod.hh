@@ -101,7 +101,7 @@ class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
 
 
 public:
-    FvBaseNewtonMethod(Simulator &simulator)
+    FvBaseNewtonMethod(Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -125,10 +125,10 @@ protected:
      *                       equations. This parameter also stores the updated solution.
      * \param currentResidual The residual (i.e., right-hand-side) of the current solution.
      */
-    void update_(SolutionVector &nextSolution,
-                 const SolutionVector &currentSolution,
-                 const GlobalEqVector &solutionUpdate,
-                 const GlobalEqVector &currentResidual)
+    void update_(SolutionVector& nextSolution,
+                 const SolutionVector& currentSolution,
+                 const GlobalEqVector& solutionUpdate,
+                 const GlobalEqVector& currentResidual)
     {
         ParentType::update_(nextSolution, currentSolution, solutionUpdate, currentResidual);
 
@@ -155,20 +155,20 @@ protected:
     /*!
      * \brief Returns a reference to the model.
      */
-    Model &model_()
+    Model& model_()
     { return ParentType::model(); }
 
     /*!
      * \brief Returns a reference to the model.
      */
-    const Model &model_() const
+    const Model& model_() const
     { return ParentType::model(); }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
 } // namespace Ewoms

@@ -32,6 +32,11 @@
 #include <ewoms/disc/common/fvbaseproperties.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <dune/common/fvector.hh>
 
 #include <string>
@@ -85,7 +90,7 @@ public:
      *        string if the specified primary variable index does not belong to
      *        the energy module.
      */
-    static std::string primaryVarName(int pvIdx)
+    static std::string primaryVarName(unsigned OPM_UNUSED pvIdx)
     { return ""; }
 
     /*!
@@ -93,32 +98,32 @@ public:
      *        string if the specified equation index does not belong to
      *        the energy module.
      */
-    static std::string eqName(int eqIdx)
+    static std::string eqName(unsigned OPM_UNUSED eqIdx)
     { return ""; }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.
      */
-    static Scalar primaryVarWeight(const Model &model,
-                                   int globalDofIdx,
-                                   int pvIdx)
+    static Scalar primaryVarWeight(const Model& OPM_UNUSED model,
+                                   unsigned OPM_UNUSED globalDofIdx,
+                                   unsigned OPM_UNUSED pvIdx)
     { return -1; }
 
     /*!
      * \brief Returns the relative weight of a equation of the residual.
      */
-    static Scalar eqWeight(const Model &model,
-                           int globalDofIdx,
-                           int eqIdx)
+    static Scalar eqWeight(const Model& OPM_UNUSED model,
+                           unsigned OPM_UNUSED globalDofIdx,
+                           unsigned OPM_UNUSED eqIdx)
     { return -1; }
 
     /*!
      * \brief Given a fluid state, set the temperature in the primary variables
      */
     template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars,
-                                      const FluidState &fs)
+    static void setPriVarTemperatures(PrimaryVariables& OPM_UNUSED priVars,
+                                      const FluidState& OPM_UNUSED fs)
     {}
 
     /*!
@@ -126,30 +131,30 @@ public:
      *        from a volumetric rate.
      */
     template <class FluidState>
-    static void setEnthalpyRate(RateVector &rateVec,
-                                const FluidState &fluidState,
-                                int phaseIdx,
-                                const Evaluation& volume)
+    static void setEnthalpyRate(RateVector& OPM_UNUSED rateVec,
+                                const FluidState& OPM_UNUSED fluidState,
+                                unsigned OPM_UNUSED phaseIdx,
+                                const Evaluation& OPM_UNUSED volume)
     {}
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void setEnthalpyRate(RateVector &rateVec,
-                                const Evaluation& rate)
+    static void setEnthalpyRate(RateVector& OPM_UNUSED rateVec,
+                                const Evaluation& OPM_UNUSED rate)
     {}
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void addToEnthalpyRate(RateVector &rateVec,
-                                  const Evaluation& rate)
+    static void addToEnthalpyRate(RateVector& OPM_UNUSED rateVec,
+                                  const Evaluation& OPM_UNUSED rate)
     {}
 
     /*!
      * \brief Add the rate of the conductive heat flux to a rate vector.
      */
-    static Scalar heatConductionRate(const ExtensiveQuantities &extQuants)
+    static Scalar heatConductionRate(const ExtensiveQuantities& OPM_UNUSED extQuants)
     { return 0.0; }
 
     /*!
@@ -157,9 +162,9 @@ public:
      * vector
      */
     template <class LhsEval>
-    static void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                                const IntensiveQuantities &intQuants,
-                                int phaseIdx)
+    static void addPhaseStorage(Dune::FieldVector<LhsEval, numEq>& OPM_UNUSED storage,
+                                const IntensiveQuantities& OPM_UNUSED intQuants,
+                                unsigned OPM_UNUSED phaseIdx)
     {}
 
     /*!
@@ -167,10 +172,10 @@ public:
      * vector
      */
     template <class LhsEval, class Scv>
-    static void addFracturePhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                                        const IntensiveQuantities& intQuants,
-                                        const Scv& scv,
-                                        int phaseIdx)
+    static void addFracturePhaseStorage(Dune::FieldVector<LhsEval, numEq>& OPM_UNUSED storage,
+                                        const IntensiveQuantities& OPM_UNUSED intQuants,
+                                        const Scv& OPM_UNUSED scv,
+                                        unsigned OPM_UNUSED phaseIdx)
     {}
 
     /*!
@@ -178,8 +183,8 @@ public:
      *        equation vector
      */
     template <class LhsEval>
-    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                                    const IntensiveQuantities& intQuants)
+    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq>& OPM_UNUSED storage,
+                                    const IntensiveQuantities& OPM_UNUSED intQuants)
     {}
 
     /*!
@@ -189,10 +194,10 @@ public:
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addAdvectiveFlux(RateVector &flux,
-                                 const Context &context,
-                                 int spaceIdx,
-                                 int timeIdx)
+    static void addAdvectiveFlux(RateVector& OPM_UNUSED flux,
+                                 const Context& OPM_UNUSED context,
+                                 unsigned OPM_UNUSED spaceIdx,
+                                 unsigned OPM_UNUSED timeIdx)
     {}
 
     /*!
@@ -201,10 +206,10 @@ public:
      *        volume and adds the result in the flux vector.
      */
     template <class Context>
-    static void handleFractureFlux(RateVector &flux,
-                                   const Context &context,
-                                   int spaceIdx,
-                                   int timeIdx)
+    static void handleFractureFlux(RateVector& OPM_UNUSED flux,
+                                   const Context& OPM_UNUSED context,
+                                   unsigned OPM_UNUSED spaceIdx,
+                                   unsigned OPM_UNUSED timeIdx)
     {}
 
     /*!
@@ -214,10 +219,10 @@ public:
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux,
-                                 const Context &context,
-                                 int spaceIdx,
-                                 int timeIdx)
+    static void addDiffusiveFlux(RateVector& OPM_UNUSED flux,
+                                 const Context& OPM_UNUSED context,
+                                 unsigned OPM_UNUSED spaceIdx,
+                                 unsigned OPM_UNUSED timeIdx)
     {}
 };
 
@@ -258,7 +263,7 @@ public:
      *        string if the specified primary variable index does not belong to
      *        the energy module.
      */
-    static std::string primaryVarName(int pvIdx)
+    static std::string primaryVarName(unsigned pvIdx)
     {
         if (pvIdx == temperatureIdx)
             return "temperature";
@@ -270,7 +275,7 @@ public:
      *        string if the specified equation index does not belong to
      *        the energy module.
      */
-    static std::string eqName(int eqIdx)
+    static std::string eqName(unsigned eqIdx)
     {
         if (eqIdx == energyEqIdx)
             return "energy";
@@ -281,7 +286,7 @@ public:
      * \brief Returns the relative weight of a primary variable for
      *        calculating relative errors.
      */
-    static Scalar primaryVarWeight(const Model &model, int globalDofIdx, int pvIdx)
+    static Scalar primaryVarWeight(const Model& model, unsigned globalDofIdx, unsigned pvIdx)
     {
         if (pvIdx != temperatureIdx)
             return -1;
@@ -293,9 +298,9 @@ public:
     /*!
      * \brief Returns the relative weight of a equation.
      */
-    static Scalar eqWeight(const Model &model,
-                           int globalDofIdx,
-                           int eqIdx)
+    static Scalar eqWeight(const Model& OPM_UNUSED model,
+                           unsigned OPM_UNUSED globalDofIdx,
+                           unsigned eqIdx)
     {
         if (eqIdx != energyEqIdx)
             return -1;
@@ -307,20 +312,20 @@ public:
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void setEnthalpyRate(RateVector &rateVec, const Evaluation& rate)
+    static void setEnthalpyRate(RateVector& rateVec, const Evaluation& rate)
     { rateVec[energyEqIdx] = rate; }
 
     /*!
      * \brief Add the rate of the enthalpy flux to a rate vector.
      */
-    static void addToEnthalpyRate(RateVector &rateVec, const Evaluation& rate)
+    static void addToEnthalpyRate(RateVector& rateVec, const Evaluation& rate)
     { rateVec[energyEqIdx] += rate; }
 
     /*!
      * \brief Returns the rate of the conductive heat flux for a given flux
      *        integration point.
      */
-    static Evaluation heatConductionRate(const ExtensiveQuantities &extQuants)
+    static Evaluation heatConductionRate(const ExtensiveQuantities& extQuants)
     { return -extQuants.temperatureGradNormal() * extQuants.heatConductivity(); }
 
     /*!
@@ -328,8 +333,9 @@ public:
      *        from a volumetric rate.
      */
     template <class FluidState>
-    static void setEnthalpyRate(RateVector &rateVec,
-                                const FluidState &fluidState, int phaseIdx,
+    static void setEnthalpyRate(RateVector& rateVec,
+                                const FluidState& fluidState,
+                                unsigned phaseIdx,
                                 Scalar volume)
     {
         rateVec[energyEqIdx] =
@@ -342,12 +348,12 @@ public:
      * \brief Given a fluid state, set the temperature in the primary variables
      */
     template <class FluidState>
-    static void setPriVarTemperatures(PrimaryVariables &priVars,
-                                      const FluidState &fs)
+    static void setPriVarTemperatures(PrimaryVariables& priVars,
+                                      const FluidState& fs)
     {
         priVars[temperatureIdx] = Toolbox::value(fs.temperature(/*phaseIdx=*/0));
 #ifndef NDEBUG
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             assert(std::abs(Toolbox::value(fs.temperature(/*phaseIdx=*/0))
                             - Toolbox::value(fs.temperature(phaseIdx))) < 1e-30);
         }
@@ -359,10 +365,11 @@ public:
      * vector
      */
     template <class LhsEval>
-    static void addPhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                                const IntensiveQuantities &intQuants, int phaseIdx)
+    static void addPhaseStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                                const IntensiveQuantities& intQuants,
+                                unsigned phaseIdx)
     {
-        const auto &fs = intQuants.fluidState();
+        const auto& fs = intQuants.fluidState();
         storage[energyEqIdx] +=
             Toolbox::template decay<LhsEval>(fs.density(phaseIdx))
             * Toolbox::template decay<LhsEval>(fs.internalEnergy(phaseIdx))
@@ -375,11 +382,12 @@ public:
      * vector
      */
     template <class Scv, class LhsEval>
-    static void addFracturePhaseStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                                        const IntensiveQuantities &intQuants,
-                                        const Scv &scv, int phaseIdx)
+    static void addFracturePhaseStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                                        const IntensiveQuantities& intQuants,
+                                        const Scv& scv,
+                                        unsigned phaseIdx)
     {
-        const auto &fs = intQuants.fractureFluidState();
+        const auto& fs = intQuants.fractureFluidState();
         storage[energyEqIdx] +=
             Toolbox::template decay<LhsEval>(fs.density(phaseIdx))
             * Toolbox::template decay<LhsEval>(fs.internalEnergy(phaseIdx))
@@ -393,8 +401,8 @@ public:
      * vector
      */
     template <class LhsEval>
-    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq> &storage,
-                                    const IntensiveQuantities &intQuants)
+    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+                                    const IntensiveQuantities& intQuants)
     {
         storage[energyEqIdx] +=
             Toolbox::template decay<LhsEval>(intQuants.heatCapacitySolid())
@@ -408,18 +416,21 @@ public:
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addAdvectiveFlux(RateVector &flux, const Context &context, int spaceIdx, int timeIdx)
+    static void addAdvectiveFlux(RateVector& flux,
+                                 const Context& context,
+                                 unsigned spaceIdx,
+                                 unsigned timeIdx)
     {
-        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
+        const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
         // advective heat flux in all phases
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!context.model().phaseIsConsidered(phaseIdx))
                 continue;
 
             // intensive quantities of the upstream and the downstream DOFs
-            const IntensiveQuantities &up =
-                context.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
+            unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
+            const IntensiveQuantities& up = context.intensiveQuantities(upIdx, timeIdx);
 
             flux[energyEqIdx] +=
                 extQuants.volumeFlux(phaseIdx)
@@ -434,11 +445,13 @@ public:
      *        vector.
      */
     template <class Context>
-    static void handleFractureFlux(RateVector &flux, const Context &context,
-                                   int spaceIdx, int timeIdx)
+    static void handleFractureFlux(RateVector& flux,
+                                   const Context& context,
+                                   unsigned spaceIdx,
+                                   unsigned timeIdx)
     {
-        const auto &scvf = context.stencil(timeIdx).interiorFace(spaceIdx);
-        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
+        const auto& scvf = context.stencil(timeIdx).interiorFace(spaceIdx);
+        const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
         // reduce the heat flux in the matrix by the half the width
         // occupied by the fracture
@@ -446,13 +459,13 @@ public:
             1 - extQuants.fractureWidth()/(2*scvf.area());
 
         // advective heat flux in all phases
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!context.model().phaseIsConsidered(phaseIdx))
                 continue;
 
             // intensive quantities of the upstream and the downstream DOFs
-            const IntensiveQuantities &up =
-                context.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
+            unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
+            const IntensiveQuantities& up = context.intensiveQuantities(upIdx, timeIdx);
 
             flux[energyEqIdx] +=
                 extQuants.fractureVolumeFlux(phaseIdx)
@@ -468,10 +481,12 @@ public:
      * This method is called by compute flux (base class)
      */
     template <class Context>
-    static void addDiffusiveFlux(RateVector &flux, const Context &context,
-                                 int spaceIdx, int timeIdx)
+    static void addDiffusiveFlux(RateVector& flux,
+                                 const Context& context,
+                                 unsigned spaceIdx,
+                                 unsigned timeIdx)
     {
-        const auto &extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
+        const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
         // diffusive heat flux
         flux[energyEqIdx] +=
@@ -486,13 +501,13 @@ public:
  *
  * \brief Provides the indices required for the energy equation.
  */
-template <int PVOffset, bool enableEnergy>
+template <unsigned PVOffset, bool enableEnergy>
 struct EnergyIndices;
 
 /*!
  * \copydoc Ewoms::EnergyIndices
  */
-template <int PVOffset>
+template <unsigned PVOffset>
 struct EnergyIndices<PVOffset, /*enableEnergy=*/false>
 {
 protected:
@@ -502,7 +517,7 @@ protected:
 /*!
  * \copydoc Ewoms::EnergyIndices
  */
-template <int PVOffset>
+template <unsigned PVOffset>
 struct EnergyIndices<PVOffset, /*enableEnergy=*/true>
 {
     //! The index of the primary variable representing temperature
@@ -565,9 +580,10 @@ protected:
      * \brief Update the temperatures of the fluids of a fluid state.
      */
     template <class FluidState, class Context>
-    static void updateTemperatures_(FluidState &fluidState,
-                                    const Context &context, int spaceIdx,
-                                    int timeIdx)
+    static void updateTemperatures_(FluidState& fluidState,
+                                    const Context& context,
+                                    unsigned spaceIdx,
+                                    unsigned timeIdx)
     {
         Scalar T = context.problem().temperature(context, spaceIdx, timeIdx);
         fluidState.setTemperature(Toolbox::createConstant(T));
@@ -578,11 +594,11 @@ protected:
      *        energy fluxes.
      */
     template <class FluidState>
-    void update_(FluidState &fs,
-                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
-                 const ElementContext &elemCtx,
-                 int dofIdx,
-                 int timeIdx)
+    void update_(FluidState& OPM_UNUSED fs,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& OPM_UNUSED paramCache,
+                 const ElementContext& OPM_UNUSED elemCtx,
+                 unsigned OPM_UNUSED dofIdx,
+                 unsigned OPM_UNUSED timeIdx)
     { }
 };
 
@@ -610,9 +626,10 @@ protected:
      * \brief Update the temperatures of the fluids of a fluid state.
      */
     template <class FluidState, class Context>
-    static void updateTemperatures_(FluidState &fluidState,
-                                    const Context &context, int spaceIdx,
-                                    int timeIdx)
+    static void updateTemperatures_(FluidState& fluidState,
+                                    const Context& context,
+                                    unsigned spaceIdx,
+                                    unsigned timeIdx)
     {
         const auto& priVars = context.primaryVars(spaceIdx, timeIdx);
         Evaluation val;
@@ -629,14 +646,14 @@ protected:
      *        energy fluxes.
      */
     template <class FluidState>
-    void update_(FluidState &fs,
-                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache,
-                 const ElementContext &elemCtx,
-                 int dofIdx,
-                 int timeIdx)
+    void update_(FluidState& fs,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache,
+                 const ElementContext& elemCtx,
+                 unsigned dofIdx,
+                 unsigned timeIdx)
     {
         // set the specific enthalpies of the fluids
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
@@ -645,8 +662,8 @@ protected:
         }
 
         // compute and set the heat capacity of the solid phase
-        const auto &problem = elemCtx.problem();
-        const auto &heatCondParams = problem.heatConductionParams(elemCtx, dofIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
+        const auto& heatCondParams = problem.heatConductionParams(elemCtx, dofIdx, timeIdx);
 
         heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, dofIdx, timeIdx);
         heatConductivity_ =
@@ -701,12 +718,16 @@ protected:
      * \brief Update the quantities required to calculate
      *        energy fluxes.
      */
-    void update_(const ElementContext &elemCtx, int faceIdx, int timeIdx)
+    void update_(const ElementContext& OPM_UNUSED elemCtx,
+                 unsigned OPM_UNUSED faceIdx,
+                 unsigned OPM_UNUSED timeIdx)
     {}
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context, int bfIdx, int timeIdx,
-                         const FluidState &fs)
+    void updateBoundary_(const Context& OPM_UNUSED context,
+                         unsigned OPM_UNUSED bfIdx,
+                         unsigned OPM_UNUSED timeIdx,
+                         const FluidState& OPM_UNUSED fs)
     {}
 
 public:
@@ -750,7 +771,7 @@ protected:
      * \brief Update the quantities required to calculate
      *        energy fluxes.
      */
-    void update_(const ElementContext &elemCtx, int faceIdx, int timeIdx)
+    void update_(const ElementContext& elemCtx, unsigned faceIdx, unsigned timeIdx)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::TemperatureCallback<TypeTag> temperatureCallback(elemCtx);
@@ -762,15 +783,15 @@ protected:
                                    temperatureCallback);
 
         // scalar product of temperature gradient and scvf normal
-        const auto &face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(faceIdx);
+        const auto& face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(faceIdx);
 
         temperatureGradNormal_ = 0;
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             temperatureGradNormal_ += (face.normal()[dimIdx]*temperatureGrad[dimIdx]);
 
-        const auto &extQuants = elemCtx.extensiveQuantities(faceIdx, timeIdx);
-        const auto &intQuantsInside = elemCtx.intensiveQuantities(extQuants.interiorIndex(), timeIdx);
-        const auto &intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
+        const auto& extQuants = elemCtx.extensiveQuantities(faceIdx, timeIdx);
+        const auto& intQuantsInside = elemCtx.intensiveQuantities(extQuants.interiorIndex(), timeIdx);
+        const auto& intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
 
         // arithmetic mean
         heatConductivity_ =
@@ -779,24 +800,24 @@ protected:
     }
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context &context, int bfIdx, int timeIdx, const FluidState &fs)
+    void updateBoundary_(const Context& context, unsigned bfIdx, unsigned timeIdx, const FluidState& fs)
     {
-        const auto &stencil = context.stencil(timeIdx);
-        const auto &face = stencil.boundaryFace(bfIdx);
+        const auto& stencil = context.stencil(timeIdx);
+        const auto& face = stencil.boundaryFace(bfIdx);
 
-        const auto &elemCtx = context.elementContext();
-        int insideScvIdx = face.interiorIndex();
-        const auto &insideScv = elemCtx.stencil(timeIdx).subControlVolume(insideScvIdx);
+        const auto& elemCtx = context.elementContext();
+        unsigned insideScvIdx = face.interiorIndex();
+        const auto& insideScv = elemCtx.stencil(timeIdx).subControlVolume(insideScvIdx);
 
-        const auto &intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
-        const auto &fsInside = intQuantsInside.fluidState();
+        const auto& intQuantsInside = elemCtx.intensiveQuantities(insideScvIdx, timeIdx);
+        const auto& fsInside = intQuantsInside.fluidState();
 
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = face.integrationPos();
         distVec -= insideScv.geometry().center();
 
         Scalar tmp = 0;
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             tmp += distVec[dimIdx] * face.normal()[dimIdx];
         Scalar dist = tmp;
 

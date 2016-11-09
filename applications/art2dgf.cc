@@ -21,6 +21,7 @@
   copyright holders.
 */
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
@@ -48,15 +49,15 @@ namespace Ewoms {
      */
     static void convert( const std::string& artFileName,
                          std::ostream& dgfFile,
-                         const int precision = 16 )
+                         const unsigned precision = 16 )
     {
         typedef double Scalar;
         typedef Dune::FieldVector< Scalar, 2 > GlobalPosition;
         enum ParseMode { Vertex, Edge, Element, Finished };
-        std::vector< std::pair<GlobalPosition, int > > vertexPos;
-        std::vector<std::pair<int, int> > edges;
-        std::vector<std::pair<int, int> > fractureEdges;
-        std::vector< std::vector< unsigned int > > elements;
+        std::vector< std::pair<GlobalPosition, unsigned> > vertexPos;
+        std::vector<std::pair<unsigned, unsigned> > edges;
+        std::vector<std::pair<unsigned, unsigned> > fractureEdges;
+        std::vector<std::vector<unsigned> > elements;
         std::ifstream inStream(artFileName);
         if (!inStream.is_open()) {
             OPM_THROW(std::runtime_error,
@@ -138,7 +139,7 @@ namespace Ewoms {
                 // an edge always has two indices!
                 assert(vertIndices.size() == 2);
 
-                std::pair<int, int> edge(vertIndices[0], vertIndices[1]);
+                std::pair<unsigned, unsigned> edge(vertIndices[0], vertIndices[1]);
                 edges.push_back(edge);
 
                 // add the edge to the fracture mapper if it is a fracture
@@ -158,9 +159,9 @@ namespace Ewoms {
                 assert(tmp == ":");
 
                 // read the edge indices of an element
-                std::vector<unsigned int> edgeIndices;
+                std::vector<unsigned> edgeIndices;
                 while (iss) {
-                    unsigned int tmp2;
+                    unsigned tmp2;
                     iss >> tmp2;
                     if (!iss)
                         break;
@@ -172,12 +173,12 @@ namespace Ewoms {
                 assert(edgeIndices.size() == 3);
 
                 // extract the vertex indices of the element
-                std::vector<unsigned int> vertIndices;
-                for (int i = 0; i < 3; ++i) {
+                std::vector<unsigned> vertIndices;
+                for (unsigned i = 0; i < 3; ++i) {
                     bool haveFirstVertex = false;
-                    for (int j = 0; j < int(vertIndices.size()); ++j) {
+                    for (unsigned j = 0; j < vertIndices.size(); ++j) {
                         assert(edgeIndices[i] < edges.size());
-                        if (int(vertIndices[j]) == edges[edgeIndices[i]].first) {
+                        if (vertIndices[j] == edges[edgeIndices[i]].first) {
                             haveFirstVertex = true;
                             break;
                         }
@@ -188,7 +189,7 @@ namespace Ewoms {
                     bool haveSecondVertex = false;
                     for (unsigned j = 0; j < vertIndices.size(); ++j) {
                         assert(edgeIndices[i] < edges.size());
-                        if (int(vertIndices[j]) == edges[edgeIndices[i]].second) {
+                        if (vertIndices[j] == edges[edgeIndices[i]].second) {
                             haveSecondVertex = true;
                             break;
                         }

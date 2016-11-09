@@ -47,8 +47,6 @@
 #include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 
-#include <dune/common/unused.hh>
-
 #include <sstream>
 #include <string>
 
@@ -214,7 +212,7 @@ class ImmiscibleModel
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    ImmiscibleModel(Simulator &simulator)
+    ImmiscibleModel(Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -238,7 +236,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
         std::string s;
         if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
@@ -251,7 +249,7 @@ public:
         }
         else if (Indices::saturation0Idx <= pvIdx
                  && pvIdx < Indices::saturation0Idx + numPhases - 1) {
-            int phaseIdx = pvIdx - Indices::saturation0Idx;
+            unsigned phaseIdx = pvIdx - Indices::saturation0Idx;
             oss << "saturation_" << FluidSystem::phaseName(phaseIdx);
         }
         else
@@ -263,7 +261,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
         std::string s;
         if (!(s = EnergyModule::eqName(eqIdx)).empty())
@@ -289,8 +287,8 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        int nDof = this->numTotalDof();
-        for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+        size_t nDof = this->numTotalDof();
+        for (unsigned dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
             if (this->isLocalDof(dofIdx)) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
@@ -302,7 +300,7 @@ public:
     /*!
      * \copydetails FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned globalDofIdx, unsigned pvIdx) const
     {
         assert(referencePressure_ > 0);
 
@@ -319,7 +317,7 @@ public:
     /*!
      * \copydetails FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalDofIdx, int eqIdx) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx) const
     {
         Scalar tmp = EnergyModule::eqWeight(asImp_(), globalDofIdx, eqIdx);
         if (tmp > 0)
@@ -327,7 +325,7 @@ public:
             return tmp;
 
 #ifndef NDEBUG
-        int compIdx = eqIdx - Indices::conti0EqIdx;
+        unsigned compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numPhases);
 #endif
 
@@ -344,7 +342,7 @@ public:
     }
 
 private:
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
     mutable Scalar referencePressure_;

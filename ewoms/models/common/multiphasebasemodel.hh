@@ -29,6 +29,7 @@
 #define EWOMS_MULTI_PHASE_BASE_MODEL_HH
 
 #include <opm/material/densead/Math.hpp>
+
 #include "multiphasebaseproperties.hh"
 #include "multiphasebaseproblem.hh"
 #include "multiphasebaseextensivequantities.hh"
@@ -39,8 +40,7 @@
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
-
-#include <dune/common/unused.hh>
+#include <opm/material/common/Unused.hpp>
 
 namespace Ewoms {
 template <class TypeTag>
@@ -137,7 +137,7 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     enum { numComponents = FluidSystem::numComponents };
 
 public:
-    MultiPhaseBaseModel(Simulator &simulator)
+    MultiPhaseBaseModel(Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -164,7 +164,7 @@ public:
         // large grids the tolerance needs to be reduced because the total mass lost
         // would be too large.)
         Scalar minDofVolume = 1e100;
-        for (size_t globalDofIdx = 0; globalDofIdx < this->numGridDof(); ++ globalDofIdx)
+        for (unsigned globalDofIdx = 0; globalDofIdx < this->numGridDof(); ++ globalDofIdx)
             if (this->isLocalDof(globalDofIdx))
                 minDofVolume = std::min(minDofVolume, this->dofTotalVolume(globalDofIdx));
         minDofVolume = this->gridView().comm().min(minDofVolume);
@@ -179,7 +179,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase in question
      */
-    bool phaseIsConsidered(unsigned phaseIdx) const
+    bool phaseIsConsidered(unsigned OPM_UNUSED phaseIdx) const
     { return true; }
 
     /*!
@@ -189,7 +189,7 @@ public:
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::phaseIdxParam
      */
-    void globalPhaseStorage(EqVector &storage, unsigned phaseIdx)
+    void globalPhaseStorage(EqVector& storage, unsigned phaseIdx)
     {
         assert(0 <= phaseIdx && phaseIdx < numPhases);
 
@@ -203,7 +203,7 @@ public:
         {
             // Attention: the variables below are thread specific and thus cannot be
             // moved in front of the #pragma!
-            int threadId = ThreadManager::threadId();
+            unsigned threadId = ThreadManager::threadId();
             ElementContext elemCtx(this->simulator_);
             ElementIterator elemIt = threadedElemIt.beginParallel();
             EqVector tmp;
@@ -216,11 +216,11 @@ public:
                 elemCtx.updateStencil(elem);
                 elemCtx.updateIntensiveQuantities(/*timeIdx=*/0);
 
-                const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
+                const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
 
                 for (unsigned dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); ++dofIdx) {
-                    const auto &scv = stencil.subControlVolume(dofIdx);
-                    const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                    const auto& scv = stencil.subControlVolume(dofIdx);
+                    const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                     tmp = 0;
                     this->localResidual(threadId).addPhaseStorage(tmp,
@@ -250,7 +250,7 @@ public:
     }
 
 private:
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 };
 } // namespace Ewoms

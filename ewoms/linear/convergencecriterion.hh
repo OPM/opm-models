@@ -27,6 +27,8 @@
 #ifndef EWOMS_ISTL_CONVERGENCE_CRITERION_HH
 #define EWOMS_ISTL_CONVERGENCE_CRITERION_HH
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 
@@ -84,7 +86,7 @@ public:
      * \param curResid The residual vector of the current iterative
      *                 solution of the linear system of equations
      */
-    virtual void setInitial(const Vector &curSol, const Vector &curResid) = 0;
+    virtual void setInitial(const Vector& curSol, const Vector& curResid) = 0;
 
     /*!
      * \brief Update the internal members of the convergence criterion
@@ -100,7 +102,7 @@ public:
      * \param curResid The residual vector of the current iterative
      *                 solution of the linear system of equations
      */
-    virtual void update(const Vector &curSol, const Vector &curResid) = 0;
+    virtual void update(const Vector& curSol, const Vector& curResid) = 0;
 
     /*!
      * \brief Returns true if and only if the convergence criterion is
@@ -125,7 +127,8 @@ public:
      *
      * \param os The output stream to which the message gets written.
      */
-    virtual void printInitial(std::ostream &os = std::cout) const {}
+    virtual void printInitial(std::ostream& OPM_UNUSED os = std::cout) const
+    {}
 
     /*!
      * \brief Prints the information about the convergence behaviour for
@@ -135,7 +138,8 @@ public:
      *             are chosen by the linear solver.
      * \param os The output stream to which the message gets written.
      */
-    virtual void print(Scalar iter, std::ostream &os = std::cout) const {}
+    virtual void print(Scalar OPM_UNUSED iter, std::ostream& OPM_UNUSED os = std::cout) const
+    {}
 };
 
 //! \} end documentation

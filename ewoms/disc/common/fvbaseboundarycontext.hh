@@ -30,6 +30,8 @@
 
 #include "fvbaseproperties.hh"
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
@@ -67,7 +69,7 @@ public:
     /*!
      * \brief The constructor.
      */
-    explicit FvBaseBoundaryContext(const ElementContext &elemCtx)
+    explicit FvBaseBoundaryContext(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
         , intersectionIt_(gridView().ibegin(element()))
     { }
@@ -75,67 +77,67 @@ public:
     /*!
      * \copydoc Ewoms::ElementContext::problem()
      */
-    const Problem &problem() const
+    const Problem& problem() const
     { return elemCtx_.problem(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::model()
      */
-    const Model &model() const
+    const Model& model() const
     { return elemCtx_.model(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::gridView()
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return elemCtx_.gridView(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::element()
      */
-    const Element &element() const
+    const Element& element() const
     { return elemCtx_.element(); }
 
     /*!
      * \brief Returns a reference to the element context object.
      */
-    const ElementContext &elementContext() const
+    const ElementContext& elementContext() const
     { return elemCtx_; }
 
     /*!
      * \brief Returns a reference to the current gradient calculator.
      */
-    const GradientCalculator &gradientCalculator() const
+    const GradientCalculator& gradientCalculator() const
     { return elemCtx_.gradientCalculator(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::numDof()
      */
-    unsigned numDof(unsigned timeIdx) const
+    size_t numDof(unsigned timeIdx) const
     { return elemCtx_.numDof(timeIdx); }
 
     /*!
      * \copydoc Ewoms::ElementContext::numPrimaryDof()
      */
-    unsigned numPrimaryDof(unsigned timeIdx) const
+    size_t numPrimaryDof(unsigned timeIdx) const
     { return elemCtx_.numPrimaryDof(timeIdx); }
 
     /*!
      * \copydoc Ewoms::ElementContext::numInteriorFaces()
      */
-    unsigned numInteriorFaces(unsigned timeIdx) const
+    size_t numInteriorFaces(unsigned timeIdx) const
     { return elemCtx_.numInteriorFaces(timeIdx); }
 
     /*!
      * \brief Return the number of boundary segments of the current element
      */
-    unsigned numBoundaryFaces(unsigned timeIdx) const
+    size_t numBoundaryFaces(unsigned timeIdx) const
     { return elemCtx_.stencil(timeIdx).numBoundaryFaces(); }
 
     /*!
      * \copydoc Ewoms::ElementContext::stencil()
      */
-    const Stencil &stencil(unsigned timeIdx) const
+    const Stencil& stencil(unsigned timeIdx) const
     { return elemCtx_.stencil(timeIdx); }
 
     /*!
@@ -163,7 +165,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const GlobalPosition &pos(unsigned boundaryFaceIdx, unsigned timeIdx) const
+    const GlobalPosition& pos(unsigned boundaryFaceIdx, unsigned timeIdx) const
     { return stencil(timeIdx).boundaryFace(boundaryFaceIdx).integrationPos(); }
 
     /*!
@@ -172,7 +174,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const GlobalPosition &cvCenter(unsigned boundaryFaceIdx, unsigned timeIdx) const
+    const GlobalPosition& cvCenter(unsigned boundaryFaceIdx, unsigned timeIdx) const
     {
         unsigned scvIdx = stencil(timeIdx).boundaryFace(boundaryFaceIdx).interiorIndex();
         return stencil(timeIdx).subControlVolume(scvIdx).globalPos();
@@ -207,7 +209,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const IntensiveQuantities &intensiveQuantities(unsigned boundaryFaceIdx, unsigned timeIdx) const
+    const IntensiveQuantities& intensiveQuantities(unsigned boundaryFaceIdx, unsigned timeIdx) const
     {
         unsigned interiorScvIdx = this->interiorScvIndex(boundaryFaceIdx, timeIdx);
         return elemCtx_.intensiveQuantities(interiorScvIdx, timeIdx);
@@ -219,7 +221,7 @@ public:
      * \param boundaryFaceIdx The local index of the boundary segment
      * \param timeIdx The index of the solution used by the time discretization
      */
-    const ExtensiveQuantities &extensiveQuantities(unsigned boundaryFaceIdx, unsigned timeIdx) const
+    const ExtensiveQuantities& extensiveQuantities(unsigned boundaryFaceIdx, unsigned timeIdx) const
     { return elemCtx_.boundaryExtensiveQuantities(boundaryFaceIdx, timeIdx); }
 
     /*!
@@ -231,7 +233,7 @@ public:
      *
      * \param boundaryFaceIdx The local index of the boundary segment
      */
-    const Intersection &intersection(unsigned boundaryFaceIdx) const
+    const Intersection& intersection(unsigned OPM_UNUSED boundaryFaceIdx) const
     { return *intersectionIt_; }
 
     /*!
@@ -242,11 +244,11 @@ public:
      * context classes should not store any indices. it is done this
      * way for performance reasons
      */
-    IntersectionIterator &intersectionIt()
+    IntersectionIterator& intersectionIt()
     { return intersectionIt_; }
 
 protected:
-    const ElementContext &elemCtx_;
+    const ElementContext& elemCtx_;
     IntersectionIterator intersectionIt_;
 };
 

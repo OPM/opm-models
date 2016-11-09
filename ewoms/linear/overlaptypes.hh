@@ -92,7 +92,7 @@ struct IndexDistanceNpeers
 {
     Index index;
     BorderDistance borderDistance;
-    int numPeers;
+    unsigned numPeers;
 };
 
 /*!
@@ -125,12 +125,12 @@ typedef std::list<BorderIndex> BorderList;
 class SeedList : public std::list<IndexRankDist>
 {
 public:
-    void update(const BorderList &borderList)
+    void update(const BorderList& borderList)
     {
         this->clear();
 
         auto it = borderList.begin();
-        const auto &endIt = borderList.end();
+        const auto& endIt = borderList.end();
         for (; it != endIt; ++it) {
             IndexRankDist ird;
             ird.index = it->localIdx;
@@ -148,12 +148,12 @@ public:
 class PeerSet : public std::set<ProcessRank>
 {
 public:
-    void update(const BorderList &borderList)
+    void update(const BorderList& borderList)
     {
         this->clear();
 
         auto it = borderList.begin();
-        const auto &endIt = borderList.end();
+        const auto& endIt = borderList.end();
         for (; it != endIt; ++it)
             this->insert(it->peerRank);
     }

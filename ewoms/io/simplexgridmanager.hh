@@ -99,7 +99,7 @@ public:
     /*!
      * \brief Create the Grid
      */
-    SimplexGridManager(Simulator &simulator)
+    SimplexGridManager(Simulator& simulator)
         : ParentType(simulator)
     {
         Dune::array<unsigned, dimWorld> cellRes;

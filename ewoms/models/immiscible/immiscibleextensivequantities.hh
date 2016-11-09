@@ -72,7 +72,7 @@ public:
     /*!
      * \copydoc MultiPhaseBaseExtensiveQuantities::update()
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
         EnergyExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
@@ -82,9 +82,11 @@ public:
      * \copydoc MultiPhaseBaseExtensiveQuantities::updateBoundary()
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context, int bfIdx, int timeIdx,
-                        const FluidState &fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
+    void updateBoundary(const Context& context,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& fluidState,
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
         EnergyExtensiveQuantities::updateBoundary_(context, bfIdx, timeIdx, fluidState);

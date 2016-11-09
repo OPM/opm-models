@@ -28,14 +28,17 @@
 #ifndef EWOMS_PVS_PRIMARY_VARIABLES_HH
 #define EWOMS_PVS_PRIMARY_VARIABLES_HH
 
+#include "pvsindices.hh"
+#include "pvsproperties.hh"
+
 #include <ewoms/disc/common/fvbaseprimaryvariables.hh>
 #include <ewoms/models/common/energymodule.hh>
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-
-#include "pvsindices.hh"
-#include "pvsproperties.hh"
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -96,9 +99,9 @@ public:
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(const
-     * ImmisciblePrimaryVariables &)
+     * ImmisciblePrimaryVariables& )
      */
-    PvsPrimaryVariables(const PvsPrimaryVariables &value) : ParentType(value)
+    PvsPrimaryVariables(const PvsPrimaryVariables& value) : ParentType(value)
     {
         Valgrind::SetDefined(*this);
 
@@ -109,13 +112,13 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignMassConservative
      */
     template <class FluidState>
-    void assignMassConservative(const FluidState &fluidState,
-                                const MaterialLawParams &matParams,
+    void assignMassConservative(const FluidState& fluidState,
+                                const MaterialLawParams& matParams,
                                 bool isInEquilibrium = false)
     {
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
-        for (int phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
             assert(std::abs(fluidState.temperature(0) - fluidState.temperature(phaseIdx)) < 1e-30);
         }
 #endif // NDEBUG
@@ -138,14 +141,14 @@ public:
 
         // calculate the phase densities
         paramCache.updateAll(fsFlash);
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             Scalar rho = FluidSystem::density(fsFlash, paramCache, phaseIdx);
             fsFlash.setDensity(phaseIdx, rho);
         }
         // calculate the "global molarities"
         ComponentVector globalMolarities(0.0);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 globalMolarities[compIdx] +=
                     fsFlash.saturation(phaseIdx) * fsFlash.molarity(phaseIdx, compIdx);
             }
@@ -181,19 +184,19 @@ public:
      * \param phaseIdx The index of the phase which's presence ought to be set or reset.
      * \param yesno If true, the presence of the phase is set, else it is reset
      */
-    void setPhasePresent(int phaseIdx, bool yesno = true)
+    void setPhasePresent(unsigned phaseIdx, bool yesno = true)
     {
         if (yesno)
             setPhasePresence(phasePresence_ | (1 << phaseIdx));
         else
-            setPhasePresence(phasePresence_ & ~(1 << phaseIdx));
+            setPhasePresence(phasePresence_&  ~(1 << phaseIdx));
     }
 
     /*!
      * \brief Returns the index of the phase with's its saturation is
      *        determined by the closure condition of saturation.
      */
-    unsigned char implicitSaturationIdx() const
+    unsigned implicitSaturationIdx() const
     { return lowestPresentPhaseIdx(); }
 
     /*!
@@ -204,8 +207,8 @@ public:
      *                 queried.
      * \param phasePresence The bit-map of present phases.
      */
-    static bool phaseIsPresent(int phaseIdx, short phasePresence)
-    { return phasePresence & (1 << phaseIdx); }
+    static bool phaseIsPresent(unsigned phaseIdx, short phasePresence)
+    { return phasePresence&  (1 << phaseIdx); }
 
     /*!
      * \brief Returns true iff a phase is present for the current
@@ -213,19 +216,19 @@ public:
      *
      * \copydoc Doxygen::phaseIdxParam
      */
-    bool phaseIsPresent(int phaseIdx) const
-    { return phasePresence_ & (1 << phaseIdx); }
+    bool phaseIsPresent(unsigned phaseIdx) const
+    { return phasePresence_&  (1 << phaseIdx); }
 
     /*!
      * \brief Returns the phase with the lowest index that is present.
      */
-    int lowestPresentPhaseIdx() const
-    { return ffs(phasePresence_) - 1; }
+    unsigned lowestPresentPhaseIdx() const
+    { return static_cast<unsigned>(ffs(phasePresence_) - 1); }
 
     /*!
      * \brief Assignment operator from an other primary variables object
      */
-    ThisType &operator=(const Implementation &value)
+    ThisType& operator=(const Implementation& value)
     {
         ParentType::operator=(value);
         phasePresence_ = value.phasePresence_;
@@ -236,7 +239,7 @@ public:
     /*!
      * \brief Assignment operator from a scalar value
      */
-    ThisType &operator=(Scalar value)
+    ThisType& operator=(Scalar value)
     {
         ParentType::operator=(value);
 
@@ -251,13 +254,13 @@ public:
      *
      * \copydoc Doxygen::phaseIdxParam
      */
-    Evaluation explicitSaturationValue(int phaseIdx, int timeIdx) const
+    Evaluation explicitSaturationValue(unsigned phaseIdx, unsigned timeIdx) const
     {
         if (!phaseIsPresent(phaseIdx) || phaseIdx == lowestPresentPhaseIdx())
             // non-present phases have saturation 0
             return 0.0;
 
-        int varIdx = switch0Idx + phaseIdx - 1;
+        unsigned varIdx = switch0Idx + phaseIdx - 1;
         if (timeIdx != 0)
             Toolbox::createConstant((*this)[varIdx]);
         return Toolbox::createVariable((*this)[varIdx], varIdx);
@@ -267,7 +270,7 @@ public:
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */
     template <class FluidState>
-    void assignNaive(const FluidState &fluidState)
+    void assignNaive(const FluidState& fluidState)
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 
@@ -281,11 +284,11 @@ public:
 
         // determine the phase presence.
         phasePresence_ = 0;
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // use a NCP condition to determine if the phase is
             // present or not
             Scalar a = 1;
-            for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 a -= FsToolbox::value(fluidState.moleFraction(phaseIdx, compIdx));
             }
             Scalar b = FsToolbox::value(fluidState.saturation(phaseIdx));
@@ -301,10 +304,10 @@ public:
 
         // set the primary variables which correspond to mole
         // fractions of the present phase which has the lowest index.
-        int lowestPhaseIdx = lowestPresentPhaseIdx();
-        for (int switchIdx = 0; switchIdx < numPhases - 1; ++switchIdx) {
-            int phaseIdx = switchIdx;
-            int compIdx = switchIdx + 1;
+        unsigned lowestPhaseIdx = lowestPresentPhaseIdx();
+        for (unsigned switchIdx = 0; switchIdx < numPhases - 1; ++switchIdx) {
+            unsigned phaseIdx = switchIdx;
+            unsigned compIdx = switchIdx + 1;
             if (switchIdx >= lowestPhaseIdx)
                 ++phaseIdx;
 
@@ -321,7 +324,7 @@ public:
 
         // set the mole fractions in of the remaining components in
         // the phase with the lowest index
-        for (int compIdx = numPhases - 1; compIdx < numComponents - 1; ++compIdx) {
+        for (unsigned compIdx = numPhases - 1; compIdx < numComponents - 1; ++compIdx) {
             (*this)[switch0Idx + compIdx] =
                 FsToolbox::value(fluidState.moleFraction(lowestPhaseIdx, compIdx + 1));
             Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);
@@ -331,14 +334,14 @@ public:
     /*!
      * \copydoc FlashPrimaryVariables::print
      */
-    void print(std::ostream &os = std::cout) const
+    void print(std::ostream& os = std::cout) const
     {
         os << "(p_" << FluidSystem::phaseName(0) << " = "
            << this->operator[](pressure0Idx);
-        int lowestPhaseIdx = lowestPresentPhaseIdx();
-        for (int switchIdx = 0; switchIdx < numPhases - 1; ++switchIdx) {
-            int phaseIdx = switchIdx;
-            int compIdx = switchIdx + 1;
+        unsigned lowestPhaseIdx = lowestPresentPhaseIdx();
+        for (unsigned switchIdx = 0; switchIdx < numPhases - 1; ++switchIdx) {
+            unsigned phaseIdx = switchIdx;
+            unsigned compIdx = switchIdx + 1;
             if (phaseIdx >= lowestPhaseIdx)
                 ++phaseIdx; // skip the saturation of the present
                             // phase with the lowest index
@@ -353,7 +356,7 @@ public:
                    << (*this)[switch0Idx + switchIdx];
             }
         }
-        for (int compIdx = numPhases - 1; compIdx < numComponents - 1;
+        for (unsigned compIdx = numPhases - 1; compIdx < numComponents - 1;
              ++compIdx) {
             os << ", x_" << FluidSystem::phaseName(lowestPhaseIdx) << "^"
                << FluidSystem::componentName(compIdx + 1) << " = "
@@ -364,7 +367,7 @@ public:
     }
 
 private:
-    unsigned char phasePresence_;
+    short phasePresence_;
 };
 
 } // namespace Ewoms

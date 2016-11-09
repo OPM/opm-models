@@ -552,11 +552,11 @@ public:
     PropertyRegistryKey()
     {}
 
-    PropertyRegistryKey(const std::string &effTypeTagName,
-                        const std::string &propertyKind,
-                        const std::string &propertyName,
-                        const std::string &propertyValue,
-                        const std::string &fileDefined,
+    PropertyRegistryKey(const std::string& effTypeTagName,
+                        const std::string& propertyKind,
+                        const std::string& propertyName,
+                        const std::string& propertyValue,
+                        const std::string& fileDefined,
                         int lineDefined)
         : effTypeTagName_(effTypeTagName)
         , propertyKind_(propertyKind)
@@ -564,28 +564,21 @@ public:
         , propertyValue_(propertyValue)
         , fileDefined_(fileDefined)
         , lineDefined_(lineDefined)
-    {
-    }
+    { }
 
     // copy constructor
-    PropertyRegistryKey(const PropertyRegistryKey &v)
-        : effTypeTagName_(v.effTypeTagName_)
-        , propertyKind_(v.propertyKind_)
-        , propertyName_(v.propertyName_)
-        , propertyValue_(v.propertyValue_)
-        , fileDefined_(v.fileDefined_)
-        , lineDefined_(v.lineDefined_)
-    {}
+    PropertyRegistryKey(const PropertyRegistryKey&) = default;
+    PropertyRegistryKey& operator=(const PropertyRegistryKey&) = default;
 
-    const std::string &effTypeTagName() const
+    const std::string& effTypeTagName() const
     { return effTypeTagName_; }
-    const std::string &propertyKind() const
+    const std::string& propertyKind() const
     { return propertyKind_; }
-    const std::string &propertyName() const
+    const std::string& propertyName() const
     { return propertyName_; }
-    const std::string &propertyValue() const
+    const std::string& propertyValue() const
     { return propertyValue_; }
-    const std::string &fileDefined() const
+    const std::string& fileDefined() const
     { return fileDefined_; }
     int lineDefined() const
     { return lineDefined_; }
@@ -607,7 +600,7 @@ class TypeTagRegistry
 {
 public:
     struct SpliceRegistryEntryBase {
-        virtual ~SpliceRegistryEntryBase() {};
+        virtual ~SpliceRegistryEntryBase() {}
         virtual std::string propertyName() const = 0;
     };
 
@@ -659,10 +652,10 @@ public:
         addSplices<TypeTag, RemainingSplices...>();
     }
 
-    static const SpliceList &splices(const std::string &typeTagName)
+    static const SpliceList& splices(const std::string& typeTagName)
     { return splices_[typeTagName]; }
 
-    static const ChildrenList &children(const std::string &typeTagName)
+    static const ChildrenList& children(const std::string& typeTagName)
     { return children_[typeTagName]; }
 
 private:
@@ -679,50 +672,50 @@ public:
     typedef std::map<std::string, PropertyRegistryKey> KeyList;
     typedef std::map<std::string, KeyList> KeyListMap;
 
-    static void addKey(const PropertyRegistryKey &key)
+    static void addKey(const PropertyRegistryKey& key)
     {
         keys_[key.effTypeTagName()][key.propertyName()] = key;
     }
 
-    static const std::string &getSpliceTypeTagName(const std::string &typeTagName,
-                                                   const std::string &propertyName)
+    static const std::string& getSpliceTypeTagName(const std::string& typeTagName,
+                                                   const std::string& propertyName)
     {
-        const auto &keyIt = keys_.find(typeTagName);
-        const auto &keyEndIt = keys_.end();
+        const auto& keyIt = keys_.find(typeTagName);
+        const auto& keyEndIt = keys_.end();
         if (keyIt == keyEndIt)
             OPM_THROW(std::runtime_error,
                       "Unknown type tag key '" << typeTagName << "'");
 
         // check whether the propery is directly defined for the type tag currently
         // checked, ...
-        const auto &propIt = keyIt->second.find(propertyName);
-        const auto &propEndIt = keyIt->second.end();
+        const auto& propIt = keyIt->second.find(propertyName);
+        const auto& propEndIt = keyIt->second.end();
         if (propIt != propEndIt)
             return propIt->second.propertyValue();
 
         // ..., if not, check all splices,  ...
         typedef TypeTagRegistry::SpliceList SpliceList;
-        const SpliceList &splices = TypeTagRegistry::splices(typeTagName);
+        const SpliceList& splices = TypeTagRegistry::splices(typeTagName);
         SpliceList::const_iterator spliceIt = splices.begin();
         for (; spliceIt != splices.end(); ++spliceIt) {
-            const auto &spliceTypeTagName =
+            const auto& spliceTypeTagName =
                 PropertyRegistry::getSpliceTypeTagName(typeTagName,
                                                        (*spliceIt)->propertyName());
 
             if (spliceTypeTagName == "")
                 continue;
 
-            const auto &tmp = getSpliceTypeTagName(spliceTypeTagName, propertyName);
+            const auto& tmp = getSpliceTypeTagName(spliceTypeTagName, propertyName);
             if (tmp != "")
                 return tmp;
         }
 
         // .. if still not, check all normal children.
         typedef TypeTagRegistry::ChildrenList ChildrenList;
-        const ChildrenList &children = TypeTagRegistry::children(typeTagName);
+        const ChildrenList& children = TypeTagRegistry::children(typeTagName);
         ChildrenList::const_iterator ttagIt = children.begin();
         for (; ttagIt != children.end(); ++ttagIt) {
-            const auto &tmp = getSpliceTypeTagName(*ttagIt, propertyName);
+            const auto& tmp = getSpliceTypeTagName(*ttagIt, propertyName);
             if (tmp != "")
                 return tmp;
         }
@@ -733,13 +726,13 @@ public:
         return tmp;
     }
 
-    static const PropertyRegistryKey &getKey(const std::string &effTypeTagName,
-                                             const std::string &propertyName)
+    static const PropertyRegistryKey& getKey(const std::string& effTypeTagName,
+                                             const std::string& propertyName)
     {
         return keys_[effTypeTagName][propertyName];
     }
 
-    static const KeyList &getKeys(const std::string &effTypeTagName)
+    static const KeyList& getKeys(const std::string& effTypeTagName)
     {
         return keys_[effTypeTagName];
     }
@@ -962,9 +955,12 @@ public:
 };
 
 #if !defined NO_PROPERTY_INTROSPECTION
-int myReplaceAll_(std::string &s,
-                   const std::string &pattern,
-                   const std::string &replacement)
+int myReplaceAll_(std::string& s,
+                  const std::string& pattern,
+                  const std::string& replacement);
+int myReplaceAll_(std::string& s,
+                  const std::string& pattern,
+                  const std::string& replacement)
 {
     size_t pos;
     int i = 0;
@@ -975,7 +971,8 @@ int myReplaceAll_(std::string &s,
     return i;
 }
 
-std::string canonicalTypeTagNameToName_(const std::string &canonicalName)
+std::string canonicalTypeTagNameToName_(const std::string& canonicalName);
+std::string canonicalTypeTagNameToName_(const std::string& canonicalName)
 {
     std::string result(canonicalName);
     myReplaceAll_(result, "Ewoms::Properties::TTag::", "TTAG(");
@@ -984,14 +981,14 @@ std::string canonicalTypeTagNameToName_(const std::string &canonicalName)
     return result;
 }
 
-inline bool getDiagnostic_(const std::string &typeTagName,
-                           const std::string &propTagName,
-                           std::string &result,
+inline bool getDiagnostic_(const std::string& typeTagName,
+                           const std::string& propTagName,
+                           std::string& result,
                            const std::string indent)
 {
     const PropertyRegistryKey *key = 0;
 
-    const PropertyRegistry::KeyList &keys =
+    const PropertyRegistry::KeyList& keys =
         PropertyRegistry::getKeys(typeTagName);
     PropertyRegistry::KeyList::const_iterator it = keys.begin();
     for (; it != keys.end(); ++it) {
@@ -1014,7 +1011,7 @@ inline bool getDiagnostic_(const std::string &typeTagName,
 
     // print properties defined on children
     typedef TypeTagRegistry::ChildrenList ChildrenList;
-    const ChildrenList &children = TypeTagRegistry::children(typeTagName);
+    const ChildrenList& children = TypeTagRegistry::children(typeTagName);
     ChildrenList::const_iterator ttagIt = children.begin();
     std::string newIndent = indent + "  ";
     for (; ttagIt != children.end(); ++ttagIt) {
@@ -1035,19 +1032,19 @@ const std::string getDiagnostic(std::string propTagName)
     std::string TypeTagName(Opm::className<TypeTag>());
 
     propTagName.replace(0, strlen("PTag("), "");
-    int n = propTagName.length();
+    auto n = propTagName.length();
     propTagName.replace(n - 1, 1, "");
     //TypeTagName.replace(0, strlen("Ewoms::Properties::TTag::"), "");
 
     return result;
 }
 
-inline void print_(const std::string &rootTypeTagName,
-                   const std::string &curTypeTagName,
-                   const std::string &splicePropName,
-                   std::ostream &os,
+inline void print_(const std::string& rootTypeTagName,
+                   const std::string& curTypeTagName,
+                   const std::string& splicePropName,
+                   std::ostream& os,
                    const std::string indent,
-                   std::set<std::string> &printedProperties)
+                   std::set<std::string>& printedProperties)
 {
     if (indent == "") {
         os << indent << "###########\n";
@@ -1059,12 +1056,12 @@ inline void print_(const std::string &rootTypeTagName,
         os << indent << "Inherited from splice " << splicePropName << " (set to " << canonicalTypeTagNameToName_(curTypeTagName) << "):";
     else
         os << indent << "Inherited from " << canonicalTypeTagNameToName_(curTypeTagName) << ":";
-    const PropertyRegistry::KeyList &keys =
+    const PropertyRegistry::KeyList& keys =
         PropertyRegistry::getKeys(curTypeTagName);
     PropertyRegistry::KeyList::const_iterator it = keys.begin();
     bool somethingPrinted = false;
     for (; it != keys.end(); ++it) {
-        const PropertyRegistryKey &key = it->second;
+        const PropertyRegistryKey& key = it->second;
         if (printedProperties.count(key.propertyName()) > 0)
             continue; // property already printed
         if (!somethingPrinted) {
@@ -1097,17 +1094,17 @@ inline void print_(const std::string &rootTypeTagName,
 
     // first, iterate over the splices, ...
     typedef TypeTagRegistry::SpliceList SpliceList;
-    const SpliceList &splices = TypeTagRegistry::splices(curTypeTagName);
+    const SpliceList& splices = TypeTagRegistry::splices(curTypeTagName);
     SpliceList::const_iterator spliceIt = splices.begin();
     for (; spliceIt != splices.end(); ++ spliceIt) {
-        const auto &spliceTypeTagName = PropertyRegistry::getSpliceTypeTagName(rootTypeTagName,
+        const auto& spliceTypeTagName = PropertyRegistry::getSpliceTypeTagName(rootTypeTagName,
                                                                                (*spliceIt)->propertyName());
         print_(rootTypeTagName, spliceTypeTagName, (*spliceIt)->propertyName(), os, newIndent, printedProperties);
     }
 
     // ... then, over the children
     typedef TypeTagRegistry::ChildrenList ChildrenList;
-    const ChildrenList &children = TypeTagRegistry::children(curTypeTagName);
+    const ChildrenList& children = TypeTagRegistry::children(curTypeTagName);
     ChildrenList::const_iterator ttagIt = children.begin();
     for (; ttagIt != children.end(); ++ttagIt) {
         print_(rootTypeTagName, *ttagIt, /*splicePropName=*/"", os, newIndent, printedProperties);
@@ -1115,14 +1112,14 @@ inline void print_(const std::string &rootTypeTagName,
 }
 
 template <class TypeTag>
-void printValues(std::ostream &os = std::cout)
+void printValues(std::ostream& os = std::cout)
 {
     std::set<std::string> printedProps;
     print_(Opm::className<TypeTag>(), Opm::className<TypeTag>(), /*splicePropertyName=*/"", os, /*indent=*/"", printedProps);
 }
 #else // !defined NO_PROPERTY_INTROSPECTION
 template <class TypeTag>
-void printValues(std::ostream &os = std::cout)
+void printValues(std::ostream& os = std::cout)
 {
     std::cout <<
         "The eWoms property system was compiled with the macro\n"

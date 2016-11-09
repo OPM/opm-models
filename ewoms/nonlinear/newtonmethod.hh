@@ -29,12 +29,14 @@
 
 #include "nullconvergencewriter.hh"
 
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/ErrorMacros.hpp>
 #include <ewoms/common/propertysystem.hh>
-#include <opm/material/common/ClassName.hpp>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/timer.hh>
+
+#include <opm/material/common/ClassName.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/Exceptions.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <dune/istl/istlexception.hh>
 #include <dune/common/version.hh>
@@ -184,7 +186,7 @@ class NewtonMethod
     typedef Dune::CollectiveCommunication<Communicator> CollectiveCommunication;
 
 public:
-    NewtonMethod(Simulator &simulator)
+    NewtonMethod(Simulator& simulator)
         : simulator_(simulator)
         , endIterMsgStream_(std::ostringstream::out)
         , linearSolver_(simulator)
@@ -236,25 +238,25 @@ public:
     /*!
      * \brief Returns a reference to the object describing the current physical problem.
      */
-    Problem &problem()
+    Problem& problem()
     { return simulator_.problem(); }
 
     /*!
      * \brief Returns a reference to the object describing the current physical problem.
      */
-    const Problem &problem() const
+    const Problem& problem() const
     { return simulator_.problem(); }
 
     /*!
      * \brief Returns a reference to the numeric model.
      */
-    Model &model()
+    Model& model()
     { return simulator_.model(); }
 
     /*!
      * \brief Returns a reference to the numeric model.
      */
-    const Model &model() const
+    const Model& model() const
     { return simulator_.model(); }
 
     /*!
@@ -305,11 +307,11 @@ public:
             clearRemainingLine = blubb;
         }
 
-        SolutionVector &nextSolution = model().solution(/*historyIdx=*/0);
+        SolutionVector& nextSolution = model().solution(/*historyIdx=*/0);
         SolutionVector currentSolution(nextSolution);
         GlobalEqVector solutionUpdate(nextSolution.size());
 
-        Linearizer &linearizer = model().linearizer();
+        Linearizer& linearizer = model().linearizer();
 
         // tell the implementation that we begin solving
         asImp_().begin_(nextSolution);
@@ -418,7 +420,7 @@ public:
                 simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
             }
         }
-        catch (const Dune::Exception &e)
+        catch (const Dune::Exception& e)
         {
             linearizeTime_ += linearizeTimer_.realTimeElapsed();
             solveTime_ += solveTimer_.realTimeElapsed();
@@ -432,7 +434,7 @@ public:
             asImp_().failed_();
             return false;
         }
-        catch (const Opm::NumericalProblem &e)
+        catch (const Opm::NumericalProblem& e)
         {
             linearizeTime_ += linearizeTimer_.realTimeElapsed();
             solveTime_ += solveTimer_.realTimeElapsed();
@@ -537,7 +539,7 @@ public:
      * \brief Message that should be printed for the user after the
      *        end of an iteration.
      */
-    std::ostringstream &endIterMsg()
+    std::ostringstream& endIterMsg()
     { return endIterMsgStream_; }
 
     /*!
@@ -562,7 +564,7 @@ protected:
      *
      * \param u The initial solution
      */
-    void begin_(const SolutionVector &u)
+    void begin_(const SolutionVector& u OPM_UNUSED)
     {
         numIterations_ = 0;
 
@@ -585,8 +587,8 @@ protected:
     void linearize_()
     { model().linearizer().linearize(); }
 
-    void preSolve_(const SolutionVector &currentSolution,
-                   const GlobalEqVector &currentResidual)
+    void preSolve_(const SolutionVector& currentSolution OPM_UNUSED,
+                   const GlobalEqVector& currentResidual)
     {
         const auto& constraintsMap = model().linearizer().constraintsMap();
         lastError_ = error_;
@@ -605,7 +607,7 @@ protected:
                     continue;
             }
 
-            const auto &r = currentResidual[dofIdx];
+            const auto& r = currentResidual[dofIdx];
             for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx)
                 error_ = std::max(std::abs(r[eqIdx] * model().eqWeight(dofIdx, eqIdx)), error_);
         }
@@ -635,10 +637,10 @@ protected:
      *                        iteration's solution.
      * \param solutionUpdate The difference between the current and the next solution
      */
-    void postSolve_(const SolutionVector &nextSolution,
-                      const SolutionVector &currentSolution,
-                      const GlobalEqVector &currentResidual,
-                      const GlobalEqVector &solutionUpdate)
+    void postSolve_(const SolutionVector& nextSolution OPM_UNUSED,
+                      const SolutionVector& currentSolution OPM_UNUSED,
+                      const GlobalEqVector& currentResidual OPM_UNUSED,
+                      const GlobalEqVector& solutionUpdate OPM_UNUSED)
     { }
 
     /*!
@@ -655,10 +657,10 @@ protected:
      *                       of equations
      * \param currentResidual The residual vector of the current Newton-Raphson iteraton
      */
-    void update_(SolutionVector &nextSolution,
-                 const SolutionVector &currentSolution,
-                 const GlobalEqVector &solutionUpdate,
-                 const GlobalEqVector &currentResidual)
+    void update_(SolutionVector& nextSolution,
+                 const SolutionVector& currentSolution,
+                 const GlobalEqVector& solutionUpdate,
+                 const GlobalEqVector& currentResidual)
     {
         const auto& constraintsMap = model().linearizer().constraintsMap();
 
@@ -670,7 +672,7 @@ protected:
         if (!std::isfinite(solutionUpdate.one_norm()))
             OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
 
-        const auto& numGridDof = model().numGridDof();
+        size_t numGridDof = model().numGridDof();
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
             if (enableConstraints_()) {
                 if (constraintsMap.count(dofIdx) > 0) {
@@ -695,8 +697,8 @@ protected:
         }
 
         // update the DOFs of the auxiliary equations
-        const auto& numDof = model().numTotalDof();
-        for (unsigned dofIdx = numGridDof; dofIdx < numDof; ++dofIdx) {
+        size_t numDof = model().numTotalDof();
+        for (size_t dofIdx = numGridDof; dofIdx < numDof; ++dofIdx) {
             nextSolution[dofIdx] = currentSolution[dofIdx];
             nextSolution[dofIdx] -= solutionUpdate[dofIdx];
         }
@@ -705,7 +707,7 @@ protected:
     /*!
      * \brief Update the primary variables for a degree of freedom which is constraint.
      */
-    void updateConstraintDof_(int globalDofIdx,
+    void updateConstraintDof_(unsigned globalDofIdx OPM_UNUSED,
                               PrimaryVariables& nextValue,
                               const Constraints& constraints)
     { nextValue = constraints; }
@@ -713,11 +715,11 @@ protected:
     /*!
      * \brief Update a single primary variables object.
      */
-    void updatePrimaryVariables_(int globalDofIdx,
+    void updatePrimaryVariables_(unsigned globalDofIdx OPM_UNUSED,
                                  PrimaryVariables& nextValue,
                                  const PrimaryVariables& currentValue,
                                  const EqVector& update,
-                                 const EqVector& currentResidual)
+                                 const EqVector& currentResidual OPM_UNUSED)
     {
         nextValue = currentValue;
         nextValue -= update;
@@ -729,8 +731,8 @@ protected:
      *
      * This method is called as part of the update proceedure.
      */
-    void writeConvergence_(const SolutionVector &currentSolution,
-                           const GlobalEqVector &solutionUpdate)
+    void writeConvergence_(const SolutionVector& currentSolution,
+                           const GlobalEqVector& solutionUpdate)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, NewtonWriteConvergence)) {
             convergenceWriter_.beginIteration();
@@ -745,8 +747,8 @@ protected:
      * \param nextSolution The solution after the current Newton iteration
      * \param currentSolution The solution at the beginning of the current Newton iteration
      */
-    void endIteration_(const SolutionVector &nextSolution,
-                       const SolutionVector &currentSolution)
+    void endIteration_(const SolutionVector& nextSolution OPM_UNUSED,
+                       const SolutionVector& currentSolution OPM_UNUSED)
     {
         ++numIterations_;
         problem().endIteration();
@@ -819,7 +821,7 @@ protected:
     static bool enableConstraints_()
     { return GET_PROP_VALUE(TypeTag, EnableConstraints); }
 
-    Simulator &simulator_;
+    Simulator& simulator_;
 
     Ewoms::Timer linearizeTimer_;
     Ewoms::Timer solveTimer_;
@@ -850,9 +852,9 @@ protected:
     ConvergenceWriter convergenceWriter_;
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 };
 

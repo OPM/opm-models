@@ -28,9 +28,11 @@
 #ifndef EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
 #define EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
 
-#include <opm/material/densead/Math.hpp>
-
 #include "fvbaseproperties.hh"
+
+#include <opm/material/densead/Math.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/istl/matrix.hh>
@@ -68,7 +70,7 @@ SET_TYPE_PROP(AutoDiffLocalLinearizer, LocalLinearizer,
 SET_PROP(AutoDiffLocalLinearizer, Evaluation)
 {
 private:
-    static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    static const unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
@@ -109,23 +111,14 @@ private:
     typedef Dune::BlockVector<ScalarVectorBlock> ScalarLocalBlockVector;
     typedef Dune::Matrix<ScalarMatrixBlock> ScalarLocalBlockMatrix;
 
-#if __GNUC__ == 4 && __GNUC_MINOR__ <= 6
-public:
-    // make older GCCs happy by providing a public copy constructor (this is necessary
-    // for their implementation of std::vector, although the method is never called...)
-    FvBaseAdLocalLinearizer(const FvBaseAdLocalLinearizer&)
-        : internalElemContext_(0)
-    {}
-
-#else
-    // copying local residual objects around is a very bad idea, so we explicitly prevent
-    // it...
-    FvBaseAdLocalLinearizer(const FvBaseAdLocalLinearizer&) = delete;
-#endif
 public:
     FvBaseAdLocalLinearizer()
         : internalElemContext_(0)
     { }
+
+    // copying local linearizer objects around is a very bad idea, so we explicitly
+    // prevent it...
+    FvBaseAdLocalLinearizer(const FvBaseAdLocalLinearizer&) = delete;
 
     ~FvBaseAdLocalLinearizer()
     { delete internalElemContext_; }
@@ -144,7 +137,7 @@ public:
      *
      * \param simulator The simulator object of the simulation.
      */
-    void init(Simulator &simulator)
+    void init(Simulator& simulator)
     {
         simulatorPtr_ = &simulator;
         delete internalElemContext_;
@@ -162,7 +155,7 @@ public:
      * \param element The grid element for which the local residual and its local
      *                Jacobian should be calculated.
      */
-    void linearize(const Element &element)
+    void linearize(const Element& element)
     {
         internalElemContext_->updateAll(element);
 
@@ -183,7 +176,7 @@ public:
      * \param elemCtx The element execution context for which the local residual and its
      *                local Jacobian should be calculated.
      */
-    void linearize(ElementContext &elemCtx)
+    void linearize(ElementContext& elemCtx)
     {
         // update the weights of the primary variables for the context
         model_().updatePVWeights(elemCtx);
@@ -195,8 +188,8 @@ public:
         localResidual_.eval(elemCtx);
 
         // calculate the local jacobian matrix
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
             // convert the local Jacobian matrix and the right hand side from the data
             // structures used by the automatic differentiation code to the conventional
             // ones used by the linear solver.
@@ -208,13 +201,13 @@ public:
     /*!
      * \brief Return reference to the local residual.
      */
-    LocalResidual &localResidual()
+    LocalResidual& localResidual()
     { return localResidual_; }
 
     /*!
      * \brief Return reference to the local residual.
      */
-    const LocalResidual &localResidual() const
+    const LocalResidual& localResidual() const
     { return localResidual_; }
 
     /*!
@@ -225,7 +218,7 @@ public:
      * \param rangeScvIdx The local index of the sub control volume which contains the
      *                    local residual
      */
-    const ScalarMatrixBlock &jacobian(int domainScvIdx, int rangeScvIdx) const
+    const ScalarMatrixBlock& jacobian(unsigned domainScvIdx, unsigned rangeScvIdx) const
     { return jacobian_[domainScvIdx][rangeScvIdx]; }
 
     /*!
@@ -233,36 +226,30 @@ public:
      *
      * \param dofIdx The local index of the sub control volume
      */
-    const ScalarVectorBlock &residual(int dofIdx) const
+    const ScalarVectorBlock& residual(unsigned dofIdx) const
     { return residual_[dofIdx]; }
 
 protected:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    const Simulator &simulator_() const
+    const Simulator& simulator_() const
     { return *simulatorPtr_; }
-    const Problem &problem_() const
+    const Problem& problem_() const
     { return simulatorPtr_->problem(); }
-    const Model &model_() const
+    const Model& model_() const
     { return simulatorPtr_->model(); }
-
-    /*!
-     * \brief Returns the numeric difference method which is applied.
-     */
-    static int numericDifferenceMethod_()
-    { return EWOMS_GET_PARAM(TypeTag, int, NumericDifferenceMethod); }
 
     /*!
      * \brief Resize all internal attributes to the size of the
      *        element.
      */
-    void resize_(const ElementContext &elemCtx)
+    void resize_(const ElementContext& elemCtx)
     {
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        int numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
 
         residual_.resize(numDof);
         jacobian_.setSize(numDof, numPrimaryDof);
@@ -271,7 +258,7 @@ protected:
     /*!
      * \brief Reset the all relevant internal attributes to 0
      */
-    void reset_(const ElementContext &elemCtx)
+    void reset_(const ElementContext& OPM_UNUSED elemCtx)
     {
         residual_ = 0.0;
         jacobian_ = 0.0;
@@ -281,18 +268,18 @@ protected:
      * \brief Updates the current local Jacobian matrix with the partial derivatives of
      *        all equations in regard to the primary variable 'pvIdx' at vertex 'dofIdx'.
      */
-    void updateLocalLinearization_(const ElementContext &elemCtx,
-                                   int primaryDofIdx)
+    void updateLocalLinearization_(const ElementContext& elemCtx,
+                                   unsigned primaryDofIdx)
     {
         const auto& resid = localResidual_.residual();
 
-        for (int eqIdx = 0; eqIdx < numEq; eqIdx++)
+        for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++)
             residual_[primaryDofIdx][eqIdx] = resid[primaryDofIdx][eqIdx].value();
 
-        int numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (int dofIdx = 0; dofIdx < numDof; dofIdx++) {
-            for (int eqIdx = 0; eqIdx < numEq; eqIdx++) {
-                for (int pvIdx = 0; pvIdx < numEq; pvIdx++) {
+        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+        for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
+            for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++) {
+                for (unsigned pvIdx = 0; pvIdx < numEq; pvIdx++) {
                     // A[dofIdx][primaryDofIdx][eqIdx][pvIdx] is the partial derivative of
                     // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
                     // regard to the primary variable 'pvIdx' of the degree of freedom

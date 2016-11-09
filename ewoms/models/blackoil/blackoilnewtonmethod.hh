@@ -32,6 +32,8 @@
 
 #include <ewoms/common/signum.hh>
 
+#include <opm/material/common/Unused.hpp>
+
 namespace Ewoms {
 
 /*!
@@ -51,10 +53,10 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
 
-    static const int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    static const unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
 
 public:
-    BlackOilNewtonMethod(Simulator &simulator) : ParentType(simulator)
+    BlackOilNewtonMethod(Simulator& simulator) : ParentType(simulator)
     { }
 
     /*!
@@ -69,16 +71,12 @@ public:
      * \brief Returns the number of degrees of freedom for which the
      *        interpretation has changed for the most recent iteration.
      */
-    int numPriVarsSwitched() const
+    unsigned numPriVarsSwitched() const
     { return numPriVarsSwitched_; }
 
-    // HACK which is necessary because GCC 4.4 does not support
-    // being a friend of typedefs
-/*
 protected:
-    friend class NewtonMethod<TypeTag>;
-    friend class ParentType;
-*/
+    friend NewtonMethod<TypeTag>;
+    friend ParentType;
 
     /*!
      * \copydoc FvBaseNewtonMethod::beginIteration_
@@ -92,8 +90,8 @@ protected:
     /*!
      * \copydoc FvBaseNewtonMethod::endIteration_
      */
-    void endIteration_(SolutionVector &uCurrentIter,
-                       const SolutionVector &uLastIter)
+    void endIteration_(SolutionVector& uCurrentIter,
+                       const SolutionVector& uLastIter)
     {
 #if HAVE_MPI
         // in the MPI enabled case we need to add up the number of DOF
@@ -116,13 +114,13 @@ protected:
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
-    void updatePrimaryVariables_(int globalDofIdx,
+    void updatePrimaryVariables_(unsigned globalDofIdx,
                                  PrimaryVariables& nextValue,
                                  const PrimaryVariables& currentValue,
                                  const EqVector& update,
-                                 const EqVector& currentResidual)
+                                 const EqVector& OPM_UNUSED currentResidual)
     {
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             // calculate the update of the current primary variable. For the
             // black-oil model we limit the pressure and saturation updates, but do
             // we not clamp anything after the specified number of iterations was

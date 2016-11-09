@@ -30,6 +30,7 @@
 #if HAVE_MPI
 #include <mpi.h>
 #endif
+
 #include <stddef.h>
 
 #include <type_traits>
@@ -53,7 +54,7 @@ public:
         updateMpiDataSize_();
     }
 
-    MpiBuffer(int size)
+    MpiBuffer(size_t size)
     {
         data_ = new DataType[size];
         dataSize_ = size;
@@ -61,6 +62,8 @@ public:
         setMpiDataType_();
         updateMpiDataSize_();
     }
+
+    MpiBuffer(const MpiBuffer&) = default;
 
     ~MpiBuffer()
     { delete[] data_; }
@@ -79,11 +82,16 @@ public:
     /*!
      * \brief Send the buffer asyncronously to a peer process.
      */
-    void send(int peerRank, bool setNoAccess = true)
+    void send(unsigned peerRank)
     {
 #if HAVE_MPI
-        MPI_Isend(data_, mpiDataSize_, mpiDataType_, peerRank, 0, // tag
-                  MPI_COMM_WORLD, &mpiRequest_);
+        MPI_Isend(data_,
+                  static_cast<int>(mpiDataSize_),
+                  mpiDataType_,
+                  static_cast<int>(peerRank),
+                  0, // tag
+                  MPI_COMM_WORLD,
+                  &mpiRequest_);
 #endif
     }
 
@@ -100,11 +108,16 @@ public:
     /*!
      * \brief Receive the buffer syncronously from a peer rank
      */
-    void receive(int peerRank)
+    void receive(unsigned peerRank)
     {
 #if HAVE_MPI
-        MPI_Recv(data_, mpiDataSize_, mpiDataType_, peerRank, 0, // tag
-                 MPI_COMM_WORLD, &mpiStatus_);
+        MPI_Recv(data_,
+                 static_cast<int>(mpiDataSize_),
+                 mpiDataType_,
+                 static_cast<int>(peerRank),
+                 0, // tag
+                 MPI_COMM_WORLD,
+                 &mpiStatus_);
         assert(!mpiStatus_.MPI_ERROR);
 #endif // HAVE_MPI
     }
@@ -115,14 +128,14 @@ public:
      *
      * This object is only well defined after the send() method.
      */
-    MPI_Request &request()
+    MPI_Request& request()
     { return mpiRequest_; }
     /*!
      * \brief Returns the current MPI_Request object.
      *
      * This object is only well defined after the send() method.
      */
-    const MPI_Request &request() const
+    const MPI_Request& request() const
     { return mpiRequest_; }
 
     /*!
@@ -130,14 +143,14 @@ public:
      *
      * This object is only well defined after the receive() and wait() methods.
      */
-    MPI_Status &status()
+    MPI_Status& status()
     { return mpiStatus_; }
     /*!
      * \brief Returns the current MPI_Status object.
      *
      * This object is only well defined after the receive() and wait() methods.
      */
-    const MPI_Status &status() const
+    const MPI_Status& status() const
     { return mpiStatus_; }
 #endif // HAVE_MPI
 
@@ -150,7 +163,7 @@ public:
     /*!
      * \brief Provide access to the buffer data.
      */
-    DataType &operator[](size_t i)
+    DataType& operator[](size_t i)
     {
         assert(0 <= i && i < dataSize_);
         return data_[i];
@@ -159,7 +172,7 @@ public:
     /*!
      * \brief Provide access to the buffer data.
      */
-    const DataType &operator[](size_t i) const
+    const DataType& operator[](size_t i) const
     {
         assert(0 <= i && i < dataSize_);
         return data_[i];

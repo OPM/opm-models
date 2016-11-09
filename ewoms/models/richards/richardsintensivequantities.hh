@@ -86,7 +86,7 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
@@ -95,10 +95,10 @@ public:
 
         // material law parameters
         typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-        const auto &problem = elemCtx.problem();
-        const typename MaterialLaw::Params &materialParams =
+        const auto& problem = elemCtx.problem();
+        const typename MaterialLaw::Params& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
-        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
         /////////
         // calculate the pressures
@@ -146,7 +146,7 @@ public:
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
 
         // mobilities
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             mobility_[phaseIdx] = relativePermeability_[phaseIdx]/fluidState_.viscosity(phaseIdx);
 
         // porosity
@@ -162,7 +162,7 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
-    const FluidState &fluidState() const
+    const FluidState& fluidState() const
     { return fluidState_; }
 
     /*!
@@ -174,19 +174,19 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
-    const DimMatrix &intrinsicPermeability() const
+    const DimMatrix& intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    const Evaluation& relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(unsigned phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    const Evaluation& mobility(int phaseIdx) const
+    const Evaluation& mobility(unsigned phaseIdx) const
     { return mobility_[phaseIdx]; }
 
 private:

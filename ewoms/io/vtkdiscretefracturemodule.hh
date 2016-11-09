@@ -33,6 +33,8 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+
 #include <dune/common/fvector.hh>
 
 #include <cstdio>
@@ -105,7 +107,7 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::PhaseVectorBuffer PhaseVectorBuffer;
 
 public:
-    VtkDiscreteFractureModule(const Simulator &simulator)
+    VtkDiscreteFractureModule(const Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -154,7 +156,7 @@ public:
             this->resizeScalarBuffer_(fractureVolumeFraction_);
 
         if (velocityOutput_()) {
-            unsigned nDof = this->simulator_.model().numGridDof();
+            size_t nDof = this->simulator_.model().numGridDof();
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 fractureVelocity_[phaseIdx].resize(nDof);
                 for (unsigned dofIdx = 0; dofIdx < nDof; ++dofIdx) {
@@ -170,27 +172,27 @@ public:
      * \brief Modify the internal buffers according to the intensive quantities relevant for
      *        an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
-        const auto &fractureMapper = elemCtx.simulator().gridManager().fractureMapper();
+        const auto& fractureMapper = elemCtx.simulator().gridManager().fractureMapper();
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
             if (!fractureMapper.isFractureVertex(I))
                 continue;
 
-            const auto &intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
-            const auto &fs = intQuants.fractureFluidState();
+            const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
+            const auto& fs = intQuants.fractureFluidState();
 
             if (porosityOutput_()) {
                 Valgrind::CheckDefined(intQuants.fracturePorosity());
                 fracturePorosity_[I] = intQuants.fracturePorosity();
             }
             if (intrinsicPermeabilityOutput_()) {
-                const auto &K = intQuants.fractureIntrinsicPermeability();
+                const auto& K = intQuants.fractureIntrinsicPermeability();
                 fractureIntrinsicPermeability_[I] = K[0][0];
             }
 
@@ -218,7 +220,7 @@ public:
         if (velocityOutput_()) {
             // calculate velocities if requested by the simulator
             for (unsigned scvfIdx = 0; scvfIdx < elemCtx.numInteriorFaces(/*timeIdx=*/0); ++ scvfIdx) {
-                const auto &extQuants = elemCtx.extensiveQuantities(scvfIdx, /*timeIdx=*/0);
+                const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, /*timeIdx=*/0);
 
                 unsigned i = extQuants.interiorIndex();
                 unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
@@ -254,7 +256,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {
@@ -280,7 +282,7 @@ public:
         }
 
         if (velocityOutput_()) {
-            unsigned nDof = this->simulator_.model().numGridDof();
+            size_t nDof = this->simulator_.model().numGridDof();
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 // first, divide the velocity field by the

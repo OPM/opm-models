@@ -97,7 +97,7 @@ class EclSummaryWriter
     static const unsigned oilPhaseIdx = FluidSystem::oilPhaseIdx;
 
 public:
-    EclSummaryWriter(const Simulator &simulator)
+    EclSummaryWriter(const Simulator& simulator)
         : simulator_(simulator)
 #if HAVE_ERT
         , ertSummary_(simulator)

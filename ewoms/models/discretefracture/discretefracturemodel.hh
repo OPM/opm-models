@@ -40,6 +40,9 @@
 #include <ewoms/models/immiscible/immisciblemodel.hh>
 #include <ewoms/io/vtkdiscretefracturemodule.hh>
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <string>
 
 namespace Ewoms {
@@ -113,7 +116,7 @@ class DiscreteFractureModel : public ImmiscibleModel<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
 public:
-    DiscreteFractureModel(Simulator &simulator)
+    DiscreteFractureModel(Simulator& simulator)
         : ParentType(simulator)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache)) {

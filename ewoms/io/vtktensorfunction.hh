@@ -56,11 +56,11 @@ class VtkTensorFunction : public Dune::VTKFunction<GridView>
 
 public:
     VtkTensorFunction(std::string name,
-                      const GridView &gridView,
-                      const Mapper &mapper,
-                      const TensorBuffer &buf,
-                      int codim,
-                      int matrixColumnIdx)
+                      const GridView& gridView,
+                      const Mapper& mapper,
+                      const TensorBuffer& buf,
+                      unsigned codim,
+                      unsigned matrixColumnIdx)
         : name_(name)
         , gridView_(gridView)
         , mapper_(mapper)
@@ -73,19 +73,19 @@ public:
     { return name_; }
 
     virtual int ncomps() const
-    { return buf_[0].M(); }
+    { return static_cast<int>(buf_[0].M()); }
 
     virtual double evaluate(int mycomp,
-                            const Element &e,
-                            const Dune::FieldVector<ctype, dim> &xi) const
+                            const Element& e,
+                            const Dune::FieldVector<ctype, dim>& xi) const
     {
-        int idx;
+        size_t idx;
         if (codim_ == 0) {
             // cells. map element to the index
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            idx = mapper_.index(e);
+            idx = static_cast<size_t>(mapper_.index(e));
 #else
-            idx = mapper_.map(e);
+            idx = static_cast<size_t>(mapper_.map(e));
 #endif
         }
         else if (codim_ == dim) {
@@ -95,9 +95,9 @@ public:
             int imin = -1;
             Dune::GeometryType gt = e.type();
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            int n = e.subEntities(dim);
+            int n = static_cast<int>(e.subEntities(dim));
 #else
-            int n = e.template count<dim>();
+            int n = static_cast<int>(e.template count<dim>());
 #endif
             for (int i = 0; i < n; ++i) {
                 Dune::FieldVector<ctype, dim> local =
@@ -112,31 +112,28 @@ public:
 
             // map vertex to an index
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-            idx = mapper_.subIndex(e, imin, codim_);
+            idx = static_cast<size_t>(mapper_.subIndex(e, imin, codim_));
 #else
-            idx = mapper_.map(e, imin, codim_);
+            idx = static_cast<size_t>(mapper_.map(e, imin, codim_));
 #endif
         }
         else
             OPM_THROW(std::logic_error,
                       "Only element and vertex based tensor fields are supported so far.");
 
-        int i = mycomp; // mycomp / buf_[0].M();
-        int j = matrixColumnIdx_; // mycomp % buf_[0].M();
-        double val = buf_[idx][i][j];
-        if (std::abs(val) < std::numeric_limits<float>::min())
-            val = 0;
+        unsigned i = static_cast<unsigned>(mycomp);
+        unsigned j = static_cast<unsigned>(matrixColumnIdx_);
 
-        return val;
+        return static_cast<double>(static_cast<float>(buf_[idx][i][j]));
     }
 
 private:
     const std::string name_;
     const GridView gridView_;
-    const Mapper &mapper_;
-    const TensorBuffer &buf_;
-    int codim_;
-    int matrixColumnIdx_;
+    const Mapper& mapper_;
+    const TensorBuffer& buf_;
+    unsigned codim_;
+    unsigned matrixColumnIdx_;
 };
 
 } // namespace Ewoms

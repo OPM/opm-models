@@ -35,6 +35,9 @@
 #include <ewoms/parallel/threadedentityiterator.hh>
 #include <ewoms/aux/baseauxiliarymodule.hh>
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
@@ -114,7 +117,7 @@ public:
     {
         delete matrix_;
         auto it = elementCtx_.begin();
-        const auto &endIt = elementCtx_.end();
+        const auto& endIt = elementCtx_.end();
         for (; it != endIt; ++it)
             delete *it;
     }
@@ -177,7 +180,7 @@ public:
             succeeded = 1;
             succeeded = gridView_().comm().min(succeeded);
         }
-        catch (Opm::NumericalProblem &e)
+        catch (Opm::NumericalProblem& e)
         {
             std::cout << "rank " << simulator_().gridView().comm().rank()
                       << " caught an exception while linearizing:" << e.what()
@@ -215,32 +218,32 @@ public:
      *
      * (This object is only non-empty if the EnableConstraints property is true.)
      */
-    const std::map<int, Constraints>& constraintsMap() const
+    const std::map<unsigned, Constraints>& constraintsMap() const
     { return constraintsMap_; }
 
 private:
-    Simulator &simulator_()
+    Simulator& simulator_()
     { return *simulatorPtr_; }
-    const Simulator &simulator_() const
+    const Simulator& simulator_() const
     { return *simulatorPtr_; }
 
-    Problem &problem_()
+    Problem& problem_()
     { return simulator_().problem(); }
-    const Problem &problem_() const
+    const Problem& problem_() const
     { return simulator_().problem(); }
 
-    Model &model_()
+    Model& model_()
     { return simulator_().model(); }
-    const Model &model_() const
+    const Model& model_() const
     { return simulator_().model(); }
 
-    const GridView &gridView_() const
+    const GridView& gridView_() const
     { return problem_().gridView(); }
 
-    const ElementMapper &elementMapper_() const
+    const ElementMapper& elementMapper_() const
     { return model_().elementMapper(); }
 
-    const DofMapper &dofMapper_() const
+    const DofMapper& dofMapper_() const
     { return model_().dofMapper(); }
 
     void initFirstIteration_()
@@ -255,14 +258,14 @@ private:
 
         // create the per-thread context objects
         elementCtx_.resize(ThreadManager::maxThreads());
-        for (int threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
+        for (unsigned threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
             elementCtx_[threadId] = new ElementContext(simulator_());
     }
 
     // Construct the BCRS matrix for the Jacobian of the residual function
     void createMatrix_()
     {
-        unsigned numAllDof =  model_().numTotalDof();
+        size_t numAllDof =  model_().numTotalDof();
 
         // allocate raw matrix
         matrix_ = new Matrix(numAllDof, numAllDof, Matrix::random);
@@ -271,12 +274,12 @@ private:
 
         // for the main model, find out the global indices of the neighboring degrees of
         // freedom of each primary degree of freedom
-        typedef std::set<int> NeighborSet;
+        typedef std::set<unsigned> NeighborSet;
         std::vector<NeighborSet> neighbors(numAllDof);
         ElementIterator elemIt = gridView_().template begin<0>();
         const ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-            const Element &elem = *elemIt;
+            const Element& elem = *elemIt;
             stencil.update(elem);
 
             for (unsigned primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof(); ++primaryDofIdx) {
@@ -292,7 +295,7 @@ private:
         // add the additional neighbors and degrees of freedom caused by the auxiliary
         // equations
         const auto& model = model_();
-        unsigned numAuxMod = model.numAuxiliaryModules();
+        size_t numAuxMod = model.numAuxiliaryModules();
         for (unsigned auxModIdx = 0; auxModIdx < numAuxMod; ++auxModIdx)
             model.auxiliaryModule(auxModIdx)->addNeighbors(neighbors);
 
@@ -328,7 +331,7 @@ private:
             // constraints are not explictly enabled, so we don't need to consider them!
             return;
 
-        int threadId = ThreadManager::threadId();
+        unsigned threadId = ThreadManager::threadId();
         constraintsMap_.clear();
 
         // loop over all elements...
@@ -341,8 +344,8 @@ private:
             for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 // create an element context (the solution-based quantities are not
                 // available here!)
-                const Element &elem = *elemIt;
-                ElementContext &elemCtx = *elementCtx_[threadId];
+                const Element& elem = *elemIt;
+                ElementContext& elemCtx = *elementCtx_[threadId];
                 elemCtx.updateStencil(elem);
 
                 // check if the problem wants to constrain any degree of the current
@@ -401,7 +404,7 @@ private:
                     }
                 }
 
-                const Element &elem = *elemIt;
+                const Element& elem = *elemIt;
                 if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                     continue;
 
@@ -415,12 +418,12 @@ private:
     }
 
     // linearize an element in the interior of the process' grid partition
-    void linearizeElement_(const Element &elem)
+    void linearizeElement_(const Element& elem)
     {
-        int threadId = ThreadManager::threadId();
+        unsigned threadId = ThreadManager::threadId();
 
         ElementContext *elementCtx = elementCtx_[threadId];
-        auto &localLinearizer = model_().localLinearizer(threadId);
+        auto& localLinearizer = model_().localLinearizer(threadId);
 
         // the actual work of linearization is done by the local linearizer class
         elementCtx->updateAll(elem);
@@ -430,16 +433,16 @@ private:
         if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))
             globalMatrixMutex_.lock();
 
-        unsigned numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
+        size_t numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
         for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
-            int globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
+            unsigned globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
 
             // update the right hand side
             residual_[globI] += localLinearizer.residual(primaryDofIdx);
 
             // update the global Jacobian matrix
             for (unsigned dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
-                int globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
+                unsigned globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
             }
@@ -483,13 +486,13 @@ private:
             return;
 
         MatrixBlock idBlock = 0.0;
-        for (int i = 0; i < numEq; ++i)
+        for (unsigned i = 0; i < numEq; ++i)
             idBlock[i][i] = 1.0;
 
         auto it = constraintsMap_.begin();
         const auto& endIt = constraintsMap_.end();
         for (; it != endIt; ++it) {
-            int constraintDofIdx = it->first;
+            unsigned constraintDofIdx = it->first;
 
             // reset the column of the Jacobian matrix
             auto colIt = (*matrix_)[constraintDofIdx].begin();
@@ -513,7 +516,7 @@ private:
 
     // The constraint equations (only non-empty if the
     // EnableConstraints property is true)
-    std::map<int, Constraints> constraintsMap_;
+    std::map<unsigned, Constraints> constraintsMap_;
 
     // the jacobian matrix
     Matrix *matrix_;

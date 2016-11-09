@@ -47,7 +47,7 @@ class Restart
      *        unlikely to load a restart file for an incorrectly.
      */
     template <class GridView>
-    static const std::string magicRestartCookie_(const GridView &gridView)
+    static const std::string magicRestartCookie_(const GridView& gridView)
     {
         static const std::string gridName = "blubb"; // gridView.grid().name();
         static const int dim = GridView::dimension;
@@ -73,8 +73,8 @@ class Restart
      * \brief Return the restart file name.
      */
     template <class GridView>
-    static const std::string restartFileName_(const GridView &gridView,
-                                              const std::string &simName,
+    static const std::string restartFileName_(const GridView& gridView,
+                                              const std::string& simName,
                                               double t)
     {
         int rank = gridView.comm().rank();
@@ -87,14 +87,14 @@ public:
     /*!
      * \brief Returns the name of the file which is (de-)serialized.
      */
-    const std::string &fileName() const
+    const std::string& fileName() const
     { return fileName_; }
 
     /*!
      * \brief Write the current state of the model to disk.
      */
     template <class Simulator>
-    void serializeBegin(Simulator &simulator)
+    void serializeBegin(Simulator& simulator)
     {
         const std::string magicCookie = magicRestartCookie_(simulator.gridView());
         fileName_ = restartFileName_(simulator.gridView(),
@@ -112,13 +112,13 @@ public:
     /*!
      * \brief The output stream to write the serialized data.
      */
-    std::ostream &serializeStream()
+    std::ostream& serializeStream()
     { return outStream_; }
 
     /*!
      * \brief Start a new section in the serialized output.
      */
-    void serializeSectionBegin(const std::string &cookie)
+    void serializeSectionBegin(const std::string& cookie)
     { outStream_ << cookie << "\n"; }
 
     /*!
@@ -133,7 +133,7 @@ public:
      * The actual work is done by Serializer::serialize(Entity)
      */
     template <int codim, class Serializer, class GridView>
-    void serializeEntities(Serializer &serializer, const GridView &gridView)
+    void serializeEntities(Serializer& serializer, const GridView& gridView)
     {
         std::ostringstream oss;
         oss << "Entities: Codim " << codim;
@@ -144,7 +144,7 @@ public:
         typedef typename GridView::template Codim<codim>::Iterator Iterator;
 
         Iterator it = gridView.template begin<codim>();
-        const Iterator &endIt = gridView.template end<codim>();
+        const Iterator& endIt = gridView.template end<codim>();
         for (; it != endIt; ++it) {
             serializer.serializeEntity(outStream_, *it);
             outStream_ << "\n";
@@ -164,7 +164,7 @@ public:
      *        time.
      */
     template <class Simulator>
-    void deserializeBegin(Simulator &simulator, double t)
+    void deserializeBegin(Simulator& simulator, double t)
     {
         fileName_ = restartFileName_(simulator.gridView(), simulator.problem().name(), t);
 
@@ -177,7 +177,7 @@ public:
 
         // make sure that we don't open an empty file
         inStream_.seekg(0, std::ios::end);
-        int pos = inStream_.tellg();
+        auto pos = inStream_.tellg();
         if (pos == 0) {
             OPM_THROW(std::runtime_error,
                       "Restart file '" << fileName_ << "' is empty");
@@ -194,13 +194,13 @@ public:
      * \brief The input stream to read the data which ought to be
      *        deserialized.
      */
-    std::istream &deserializeStream()
+    std::istream& deserializeStream()
     { return inStream_; }
 
     /*!
      * \brief Start reading a new section of the restart file.
      */
-    void deserializeSectionBegin(const std::string &cookie)
+    void deserializeSectionBegin(const std::string& cookie)
     {
         if (!inStream_.good())
             OPM_THROW(std::runtime_error,
@@ -233,7 +233,7 @@ public:
      * The actual work is done by Deserializer::deserialize(Entity)
      */
     template <int codim, class Deserializer, class GridView>
-    void deserializeEntities(Deserializer &deserializer, const GridView &gridView)
+    void deserializeEntities(Deserializer& deserializer, const GridView& gridView)
     {
         std::ostringstream oss;
         oss << "Entities: Codim " << codim;
@@ -245,7 +245,7 @@ public:
         // read entity data
         typedef typename GridView::template Codim<codim>::Iterator Iterator;
         Iterator it = gridView.template begin<codim>();
-        const Iterator &endIt = gridView.template end<codim>();
+        const Iterator& endIt = gridView.template end<codim>();
         for (; it != endIt; ++it) {
             if (!inStream_.good()) {
                 OPM_THROW(std::runtime_error, "Restart file is corrupted");

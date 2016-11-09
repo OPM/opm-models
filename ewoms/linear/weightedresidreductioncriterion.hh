@@ -59,12 +59,12 @@ class WeightedResidualReductionCriterion : public ConvergenceCriterion<Vector>
     typedef typename Vector::block_type BlockType;
 
 public:
-    WeightedResidualReductionCriterion(const CollectiveCommunication &comm)
+    WeightedResidualReductionCriterion(const CollectiveCommunication& comm)
         : comm_(comm)
     {}
 
-    WeightedResidualReductionCriterion(const CollectiveCommunication &comm,
-                                       const Vector &residWeights,
+    WeightedResidualReductionCriterion(const CollectiveCommunication& comm,
+                                       const Vector& residWeights,
                                        Scalar fixPointTolerance,
                                        Scalar residualReductionTolerance,
                                        Scalar absResidualTolerance = 0.0)
@@ -94,7 +94,7 @@ public:
      * \param residWeightVec A Dune::BlockVector<Dune::FieldVector<Scalar, n> >
      *                  with the relative weights of the linear equations
      */
-    void setResidualWeight(const Vector &residWeightVec)
+    void setResidualWeight(const Vector& residWeightVec)
     { residWeightVec_ = residWeightVec; }
 
     /*!
@@ -103,7 +103,7 @@ public:
      * \param outerIdx The index of the outer vector (i.e. Dune::BlockVector)
      * \param innerIdx The index of the inner vector (i.e. Dune::FieldVector)
      */
-    Scalar residualWeight(int outerIdx, int innerIdx) const
+    Scalar residualWeight(size_t outerIdx, unsigned innerIdx) const
     {
         return (residWeightVec_.size() == 0)
                    ? 1.0
@@ -163,9 +163,9 @@ public:
     { return fixPointError_; }
 
     /*!
-     * \copydoc ConvergenceCriterion::setInitial(const Vector &, const Vector &)
+     * \copydoc ConvergenceCriterion::setInitial(const Vector& , const Vector& )
      */
-    void setInitial(const Vector &curSol, const Vector &curResid)
+    void setInitial(const Vector& curSol, const Vector& curResid)
     {
         lastResidualError_ = 1e100;
 
@@ -181,9 +181,9 @@ public:
     }
 
     /*!
-     * \copydoc ConvergenceCriterion::update(const Vector &, const Vector &)
+     * \copydoc ConvergenceCriterion::update(const Vector& , const Vector& )
      */
-    void update(const Vector &curSol, const Vector &curResid)
+    void update(const Vector& curSol, const Vector& curResid)
     {
         lastResidualError_ = residualError_;
         updateErrors_(curSol, curResid);
@@ -213,7 +213,7 @@ public:
     /*!
      * \copydoc ConvergenceCriterion::printInitial()
      */
-    void printInitial(std::ostream &os = std::cout) const
+    void printInitial(std::ostream& os = std::cout) const
     {
         os << std::setw(20) << " Iter ";
         os << std::setw(20) << " Delta ";
@@ -233,7 +233,7 @@ public:
     /*!
      * \copydoc ConvergenceCriterion::print()
      */
-    void print(Scalar iter, std::ostream &os = std::cout) const
+    void print(Scalar iter, std::ostream& os = std::cout) const
     {
         os << std::setw(20) << iter << " ";
         os << std::setw(20) << fixPointAccuracy() << " ";
@@ -245,12 +245,12 @@ public:
 
 private:
     // update the weighted absolute residual
-    void updateErrors_(const Vector &curSol, const Vector &curResid)
+    void updateErrors_(const Vector& curSol, const Vector& curResid)
     {
         residualError_ = 0.0;
         fixPointError_ = 0.0;
         for (size_t i = 0; i < curResid.size(); ++i) {
-            for (size_t j = 0; j < BlockType::dimension; ++j) {
+            for (unsigned j = 0; j < BlockType::dimension; ++j) {
                 residualError_ =
                     std::max<Scalar>(residualError_,
                                      residualWeight(i, j)*std::abs(curResid[i][j]));
@@ -266,7 +266,7 @@ private:
         fixPointError_ = comm_.max(fixPointError_);
     }
 
-    const CollectiveCommunication &comm_;
+    const CollectiveCommunication& comm_;
 
     // the weights of the components of the residual
     Vector residWeightVec_;

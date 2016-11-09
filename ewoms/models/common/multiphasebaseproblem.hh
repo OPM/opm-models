@@ -35,6 +35,9 @@
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/common/Means.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -77,9 +80,9 @@ class MultiPhaseBaseProblem
 
 public:
     /*!
-     * \copydoc Problem::FvBaseProblem(Simulator &)
+     * \copydoc Problem::FvBaseProblem(Simulator& )
      */
-    MultiPhaseBaseProblem(Simulator &simulator)
+    MultiPhaseBaseProblem(Simulator& simulator)
         : ParentType(simulator)
     { init_(); }
 
@@ -104,19 +107,20 @@ public:
      * problem (if a finite-volume discretization is used).
      */
     template <class Context>
-    void intersectionIntrinsicPermeability(DimMatrix &result,
-                                           const Context &context,
-                                           int intersectionIdx, int timeIdx) const
+    void intersectionIntrinsicPermeability(DimMatrix& result,
+                                           const Context& context,
+                                           unsigned intersectionIdx,
+                                           unsigned timeIdx) const
     {
-        const auto &scvf = context.stencil(timeIdx).interiorFace(intersectionIdx);
+        const auto& scvf = context.stencil(timeIdx).interiorFace(intersectionIdx);
 
-        const DimMatrix &K1 = asImp_().intrinsicPermeability(context, scvf.interiorIndex(), timeIdx);
-        const DimMatrix &K2 = asImp_().intrinsicPermeability(context, scvf.exteriorIndex(), timeIdx);
+        const DimMatrix& K1 = asImp_().intrinsicPermeability(context, scvf.interiorIndex(), timeIdx);
+        const DimMatrix& K2 = asImp_().intrinsicPermeability(context, scvf.exteriorIndex(), timeIdx);
 
         // entry-wise harmonic mean. this is almost certainly wrong if
         // you have off-main diagonal entries in your permeabilities!
-        for (int i = 0; i < dimWorld; ++i)
-            for (int j = 0; j < dimWorld; ++j)
+        for (unsigned i = 0; i < dimWorld; ++i)
+            for (unsigned j = 0; j < dimWorld; ++j)
                 result[i][j] = Opm::harmonicMean(K1[i][j], K2[i][j]);
     }
 
@@ -134,8 +138,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimMatrix &intrinsicPermeability(const Context &context,
-                                           int spaceIdx, int timeIdx) const
+    const DimMatrix& intrinsicPermeability(const Context& OPM_UNUSED context,
+                                           unsigned OPM_UNUSED spaceIdx,
+                                           unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::intrinsicPermeability()");
@@ -151,8 +156,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar porosity(const Context &context,
-                    int spaceIdx, int timeIdx) const
+    Scalar porosity(const Context& OPM_UNUSED context,
+                    unsigned OPM_UNUSED spaceIdx,
+                    unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::porosity()");
@@ -168,11 +174,12 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context &context,
-                             int spaceIdx, int timeIdx) const
+    Scalar heatCapacitySolid(const Context& OPM_UNUSED context,
+                             unsigned OPM_UNUSED spaceIdx,
+                             unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::heatCapacitySolid()");
+                  "Not implemented: Problem::heatCapacitySolid()");
     }
 
     /*!
@@ -186,7 +193,9 @@ public:
      */
     template <class Context>
     const HeatConductionLawParams&
-    heatConductionParams(const Context &context, int spaceIdx, int timeIdx) const
+    heatConductionParams(const Context& OPM_UNUSED context,
+                         unsigned OPM_UNUSED spaceIdx,
+                         unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::heatConductionParams()");
@@ -201,10 +210,12 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar tortuosity(const Context &context, int spaceIdx, int timeIdx) const
+    Scalar tortuosity(const Context& OPM_UNUSED context,
+                      unsigned OPM_UNUSED spaceIdx,
+                      unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::tortuosity()");
+                  "Not implemented: Problem::tortuosity()");
     }
 
     /*!
@@ -216,8 +227,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar dispersivity(const Context &context,
-                        int spaceIdx, int timeIdx) const
+    Scalar dispersivity(const Context& OPM_UNUSED context,
+                        unsigned OPM_UNUSED spaceIdx,
+                        unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: Problem::dispersivity()");
@@ -238,7 +250,9 @@ public:
      */
     template <class Context>
     const MaterialLawParams &
-    materialLawParams(const Context &context, int spaceIdx, int timeIdx) const
+    materialLawParams(const Context& OPM_UNUSED context,
+                      unsigned OPM_UNUSED spaceIdx,
+                      unsigned OPM_UNUSED timeIdx) const
     {
         static MaterialLawParams dummy;
         return dummy;
@@ -253,8 +267,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar temperature(const Context &context,
-                       int spaceIdx, int timeIdx) const
+    Scalar temperature(const Context& OPM_UNUSED context,
+                       unsigned OPM_UNUSED spaceIdx,
+                       unsigned OPM_UNUSED timeIdx) const
     { return asImp_().temperature(); }
 
     /*!
@@ -278,8 +293,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimVector &gravity(const Context &context,
-                             int spaceIdx, int timeIdx) const
+    const DimVector& gravity(const Context& OPM_UNUSED context,
+                             unsigned OPM_UNUSED spaceIdx,
+                             unsigned OPM_UNUSED timeIdx) const
     { return asImp_().gravity(); }
 
     /*!
@@ -291,7 +307,7 @@ public:
      * property is true, \f$\boldsymbol{g} = ( 0,\dots,\ -9.81)^T \f$ holds,
      * else \f$\boldsymbol{g} = ( 0,\dots, 0)^T \f$.
      */
-    const DimVector &gravity() const
+    const DimVector& gravity() const
     { return gravity_; }
 
     /*!
@@ -299,11 +315,11 @@ public:
      *
      * \return The number of elements marked for refinement or coarsening.
      */
-    int markForGridAdaptation()
+    unsigned markForGridAdaptation()
     {
         typedef Opm::MathToolbox<Evaluation> Toolbox;
 
-        int numMarked = 0;
+        unsigned numMarked = 0;
         ElementContext elemCtx( this->simulator() );
         auto gridView = this->simulator().gridManager().gridView();
         auto& grid = this->simulator().gridManager().grid();
@@ -315,11 +331,11 @@ public:
             elemCtx.updateAll( element );
 
             // HACK: this should better be part of an AdaptionCriterion class
-            for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 Scalar minSat = 1e100 ;
                 Scalar maxSat = -1e100;
-                const int nDofs = elemCtx.numDof(/*timeIdx=*/0);
-                for (int dofIdx = 0; dofIdx < nDofs; ++dofIdx)
+                size_t nDofs = elemCtx.numDof(/*timeIdx=*/0);
+                for (unsigned dofIdx = 0; dofIdx < nDofs; ++dofIdx)
                 {
                     const auto& intQuant = elemCtx.intensiveQuantities( dofIdx, /*timeIdx=*/0 );
                     minSat = std::min(minSat,
@@ -367,7 +383,7 @@ protected:
     DimMatrix toDimMatrix_(Scalar val) const
     {
         DimMatrix ret(0.0);
-        for (int i = 0; i < DimMatrix::rows; ++i)
+        for (unsigned i = 0; i < DimMatrix::rows; ++i)
             ret[i][i] = val;
         return ret;
     }
@@ -376,10 +392,10 @@ protected:
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation *>(this); }
     //! \copydoc asImp_()
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
     void init_()

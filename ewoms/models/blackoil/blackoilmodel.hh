@@ -46,6 +46,9 @@
 #include <ewoms/io/vtkblackoilmodule.hh>
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <sstream>
 #include <string>
@@ -182,6 +185,7 @@ class BlackOilModel
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
 
@@ -190,7 +194,7 @@ class BlackOilModel
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    BlackOilModel(Simulator &simulator)
+    BlackOilModel(Simulator& simulator)
         : ParentType(simulator)
     {}
 
@@ -226,7 +230,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
         std::ostringstream oss;
 
@@ -245,7 +249,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
         std::ostringstream oss;
 
@@ -260,11 +264,11 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned globalDofIdx, unsigned pvIdx) const
     {
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
-        if (globalDofIdx >= (int) this->numGridDof())
+        if (globalDofIdx >= this->numGridDof())
             return 1.0;
 
         // saturations are always in the range [0, 1]!
@@ -293,11 +297,11 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalDofIdx, int eqIdx) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned OPM_UNUSED eqIdx) const
     {
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
-        if (globalDofIdx >= (int) this->numGridDof())
+        if (globalDofIdx >= this->numGridDof())
             return 1.0;
 
         // it is said that all kilograms are equal!
@@ -313,12 +317,12 @@ public:
      * \param dof The Dune entity which's data should be serialized
      */
     template <class DofEntity>
-    void serializeEntity(std::ostream &outstream, const DofEntity &dof)
+    void serializeEntity(std::ostream& outstream, const DofEntity& dof)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = asImp_().dofMapper().index(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
 #else
-        int dofIdx = asImp_().dofMapper().map(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().map(dof));
 #endif
 
         // write phase state
@@ -328,7 +332,7 @@ public:
 
         // write the primary variables
         const auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx)
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
             outstream << priVars[eqIdx] << " ";
 
         // write the pseudo primary variables
@@ -348,18 +352,18 @@ public:
      * \param dof The Dune entity which's data should be deserialized
      */
     template <class DofEntity>
-    void deserializeEntity(std::istream &instream,
-                           const DofEntity &dof)
+    void deserializeEntity(std::istream& instream,
+                           const DofEntity& dof)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = asImp_().dofMapper().index(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
 #else
-        int dofIdx = asImp_().dofMapper().map(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().map(dof));
 #endif
 
         // read in the "real" primary variables of the DOF
         auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
                 OPM_THROW(std::runtime_error,
                           "Could not deserialize degree of freedom " << dofIdx);
@@ -367,10 +371,10 @@ public:
         }
 
         // read the pseudo primary variables
-        int primaryVarsMeaning;
+        unsigned primaryVarsMeaning;
         instream >> primaryVarsMeaning;
 
-        int pvtRegionIdx;
+        unsigned pvtRegionIdx;
         instream >> pvtRegionIdx;
 
         if (maxOilSaturation_.size() > 0)
@@ -393,7 +397,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter& res)
     {
         ParentType::deserialize(res);
 
@@ -406,9 +410,11 @@ public:
         for (; elemIt != elemEndIt; ++ elemIt) {
             elemCtx.updateStencil(*elemIt);
             for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timIdx=*/0); ++dofIdx) {
-                int globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timIdx=*/0);
+                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timIdx=*/0);
                 updatePvtRegionIndex_(this->solution(/*timeIdx=*/0)[globalDofIdx],
-                                      elemCtx, dofIdx, /*timeIdx=*/0);
+                                      elemCtx,
+                                      dofIdx,
+                                      /*timeIdx=*/0);
             }
         }
 
@@ -458,21 +464,19 @@ public:
         }
     }
 
-// HACK: this should be made private and the BaseModel should be
-// declared to be a friend. Since C++-2003 (and more relevantly GCC
-// 4.4) don't support friend typedefs, we need to make this method
-// public until the oldest supported compiler supports friend
-// typedefs...
-
-//protected:
-//    friend typename GET_PROP_TYPE(TypeTag, Discretization);
+/*
+    // hack: this interferres with the static polymorphism trick
+protected:
+    friend ParentType;
+    friend Discretization;
+*/
 
     template <class Context>
-    void supplementInitialSolution_(PrimaryVariables &priVars,
-                                    const Context &context, int dofIdx, int timeIdx)
-    {
-        updatePvtRegionIndex_(priVars, context, dofIdx, timeIdx);
-    }
+    void supplementInitialSolution_(PrimaryVariables& priVars,
+                                    const Context& context,
+                                    unsigned dofIdx,
+                                    unsigned timeIdx)
+    { updatePvtRegionIndex_(priVars, context, dofIdx, timeIdx); }
 
     void registerOutputModules_()
     {
@@ -484,15 +488,18 @@ public:
     }
 
 private:
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
     template <class Context>
-    void updatePvtRegionIndex_(PrimaryVariables &priVars, const Context &context, int dofIdx, int timeIdx)
+    void updatePvtRegionIndex_(PrimaryVariables& priVars,
+                               const Context& context,
+                               unsigned dofIdx,
+                               unsigned timeIdx)
     {
-        int regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
+        unsigned regionIdx = context.problem().pvtRegionIndex(context, dofIdx, timeIdx);
         priVars.setPvtRegionIndex(regionIdx);
     }
 

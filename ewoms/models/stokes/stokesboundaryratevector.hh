@@ -78,11 +78,10 @@ public:
 
     /*!
      * \copydoc ImmiscibleBoundaryRateVector::ImmiscibleBoundaryRateVector(const
-     * ImmiscibleBoundaryRateVector &)
+     * ImmiscibleBoundaryRateVector& )
      */
-    StokesBoundaryRateVector(const StokesBoundaryRateVector &value)
-        : ParentType(value)
-    {}
+    StokesBoundaryRateVector(const StokesBoundaryRateVector& value) = default;
+    StokesBoundaryRateVector& operator=(const StokesBoundaryRateVector& value) = default;
 
     /*!
      * \param context The execution context for which the boundary rate should be specified.
@@ -94,31 +93,33 @@ public:
      *                   boundary segment.
      */
     template <class Context, class FluidState>
-    void setFreeFlow(const Context &context, int bfIdx, int timeIdx,
-                     const DimVector &velocity, const FluidState &fluidState)
+    void setFreeFlow(const Context& context,
+                     unsigned bfIdx,
+                     unsigned timeIdx,
+                     const DimVector& velocity, const FluidState& fluidState)
     {
-        const auto &stencil = context.stencil(timeIdx);
-        const auto &scvf = stencil.boundaryFace(bfIdx);
+        const auto& stencil = context.stencil(timeIdx);
+        const auto& scvf = stencil.boundaryFace(bfIdx);
 
-        int insideScvIdx = context.interiorScvIndex(bfIdx, timeIdx);
-        //const auto &insideScv = stencil.subControlVolume(insideScvIdx);
-        const auto &insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        unsigned insideScvIdx = context.interiorScvIndex(bfIdx, timeIdx);
+        //const auto& insideScv = stencil.subControlVolume(insideScvIdx);
+        const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         // the outer unit normal
-        const auto &normal = scvf.normal();
+        const auto& normal = scvf.normal();
 
         // distance between the center of the SCV and center of the boundary face
         DimVector distVec = stencil.subControlVolume(insideScvIdx).geometry().center();
-        const auto &scvPos = context.element().geometry().corner(insideScvIdx);
+        const auto& scvPos = context.element().geometry().corner(static_cast<int>(insideScvIdx));
         distVec.axpy(-1, scvPos);
 
         Scalar dist = 0.0;
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             dist += distVec[dimIdx] * normal[dimIdx];
         dist = std::abs(dist);
 
         DimVector gradv[dimWorld];
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // Approximation of the pressure gradient at the boundary
             // segment's integration point.
             gradv[axisIdx] = normal;
@@ -129,14 +130,14 @@ public:
 
         // specify the mass fluxes over the boundary
         Scalar volumeFlux = 0;
-        for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
             volumeFlux += velocity[dimIdx]*normal[dimIdx];
 
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updatePhase(fluidState, phaseIdx);
         Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
         Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             (*this)[conti0EqIdx + compIdx] =
                 volumeFlux
                 * molarDensity
@@ -144,16 +145,16 @@ public:
         }
 
         // calculate the momentum flux over the boundary
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // calculate a row of grad v + (grad v)^T
             DimVector tmp(0.0);
-            for (int j = 0; j < dimWorld; ++j) {
+            for (unsigned j = 0; j < dimWorld; ++j) {
                 tmp[j] = gradv[axisIdx][j] + gradv[j][axisIdx];
             }
 
             // the momentum flux due to viscous forces
             Scalar tmp2 = 0.0;
-            for (int dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
                 tmp2 += tmp[dimIdx]*normal[dimIdx];
 
             (*this)[momentum0EqIdx + axisIdx] = -insideIntQuants.fluidState().viscosity(phaseIdx) * tmp2;
@@ -175,19 +176,22 @@ public:
      *                   boundary segment.
      */
     template <class Context, class FluidState>
-    void setInFlow(const Context &context, int bfIdx, int timeIdx,
-                   const DimVector &velocity, const FluidState &fluidState)
+    void setInFlow(const Context& context,
+                   unsigned bfIdx,
+                   unsigned timeIdx,
+                   const DimVector& velocity,
+                   const FluidState& fluidState)
     {
-        const auto &intQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        const auto& intQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
         setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
 
         // don't let mass flow out
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] = std::min<Scalar>(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow out
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
             (*this)[momentum0EqIdx + axisIdx] = std::min<Scalar>(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
@@ -197,21 +201,21 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    void setOutFlow(const Context &context, int spaceIdx, int timeIdx)
+    void setOutFlow(const Context& context, unsigned spaceIdx, unsigned timeIdx)
     {
-        const auto &intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
+        const auto& intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
 
         DimVector velocity = intQuants.velocity();
-        const auto &fluidState = intQuants.fluidState();
+        const auto& fluidState = intQuants.fluidState();
 
         setFreeFlow(context, spaceIdx, timeIdx, velocity, fluidState);
 
         // don't let mass flow in
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] = std::max<Scalar>(0.0, (*this)[conti0EqIdx + compIdx]);
 
         // don't let momentum flow in
-        for (int axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
             (*this)[momentum0EqIdx + axisIdx] = std::max<Scalar>(0.0, (*this)[momentum0EqIdx + axisIdx]);
     }
 
@@ -221,12 +225,12 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    void setNoFlow(const Context &context, int spaceIdx, int timeIdx)
+    void setNoFlow(const Context& context, unsigned spaceIdx, unsigned timeIdx)
     {
         static DimVector v0(0.0);
 
-        const auto &intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
-        const auto &fluidState = intQuants.fluidState(); // don't care
+        const auto& intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
+        const auto& fluidState = intQuants.fluidState(); // don't care
 
         // no flow of mass and no slip for the momentum
         setFreeFlow(context, spaceIdx, timeIdx,

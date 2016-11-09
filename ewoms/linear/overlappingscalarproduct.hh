@@ -48,16 +48,16 @@ public:
 
     enum { category = Dune::SolverCategory::overlapping };
 
-    OverlappingScalarProduct(const Overlap &overlap) : overlap_(overlap)
+    OverlappingScalarProduct(const Overlap& overlap) : overlap_(overlap)
     {}
 
-    field_type dot(const OverlappingBlockVector &x,
-                   const OverlappingBlockVector &y)
+    field_type dot(const OverlappingBlockVector& x,
+                   const OverlappingBlockVector& y)
     {
         double sum = 0;
-        int numLocal = overlap_.numLocal();
-        for (int localIdx = 0; localIdx < numLocal; ++localIdx) {
-            if (overlap_.iAmMasterOf(localIdx))
+        size_t numLocal = overlap_.numLocal();
+        for (unsigned localIdx = 0; localIdx < numLocal; ++localIdx) {
+            if (overlap_.iAmMasterOf(static_cast<int>(localIdx)))
                 sum += x[localIdx] * y[localIdx];
         }
 
@@ -77,11 +77,11 @@ public:
         return sumGlobal;
     }
 
-    double norm(const OverlappingBlockVector &x)
+    double norm(const OverlappingBlockVector& x)
     { return std::sqrt(dot(x, x)); }
 
 private:
-    const Overlap &overlap_;
+    const Overlap& overlap_;
 };
 
 } // namespace Linear

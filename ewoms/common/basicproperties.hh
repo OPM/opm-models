@@ -125,7 +125,7 @@ SET_PROP(NumericModel, ParameterTree)
 {
     typedef Dune::ParameterTree type;
 
-    static Dune::ParameterTree &tree()
+    static Dune::ParameterTree& tree()
     {
         static Dune::ParameterTree obj_;
         return obj_;

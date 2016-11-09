@@ -31,6 +31,7 @@
 #include "fvbaseproperties.hh"
 
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 namespace Ewoms {
 /*!
@@ -61,9 +62,9 @@ public:
      *                extensive quantities should be calculated.
      * \param timeIdx The index used by the time discretization.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
     {
-        const auto &scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
+        const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         interiorScvIdx_ = scvf.interiorIndex();
         exteriorScvIdx_ = scvf.exteriorIndex();
 
@@ -86,15 +87,15 @@ public:
      * \param paramCache The FluidSystem's parameter cache.
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context,
-                        int bfIdx,
-                        int timeIdx,
-                        const FluidState &fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
+    void updateBoundary(const Context& context,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& OPM_UNUSED fluidState,
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& OPM_UNUSED paramCache)
     {
-        int dofIdx = context.interiorScvIndex(bfIdx, timeIdx);
-        interiorScvIdx_ = dofIdx;
-        exteriorScvIdx_ = dofIdx;
+        unsigned dofIdx = context.interiorScvIndex(bfIdx, timeIdx);
+        interiorScvIdx_ = static_cast<unsigned short>(dofIdx);
+        exteriorScvIdx_ = static_cast<unsigned short>(dofIdx);
 
         extrusionFactor_ = context.intensiveQuantities(bfIdx, timeIdx).extrusionFactor();
         Valgrind::CheckDefined(extrusionFactor_);
@@ -111,20 +112,20 @@ public:
      * \brief Return the local index of the control volume which is on the "interior" of
      *        the sub-control volume face.
      */
-    short interiorIndex() const
+    unsigned short interiorIndex() const
     { return interiorScvIdx_; }
 
     /*!
      * \brief Return the local index of the control volume which is on the "exterior" of
      *        the sub-control volume face.
      */
-    short exteriorIndex() const
+    unsigned short exteriorIndex() const
     { return exteriorScvIdx_; }
 
 private:
     // local indices of the interior and the exterior sub-control-volumes
-    short interiorScvIdx_;
-    short exteriorScvIdx_;
+    unsigned short interiorScvIdx_;
+    unsigned short exteriorScvIdx_;
 
     Scalar extrusionFactor_;
 };

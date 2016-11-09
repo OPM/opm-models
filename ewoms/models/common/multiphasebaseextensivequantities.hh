@@ -34,6 +34,9 @@
 #include <ewoms/disc/common/fvbaseextensivequantities.hh>
 #include <ewoms/common/parametersystem.hh>
 
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/common/fvector.hh>
 
 namespace Ewoms {
@@ -77,7 +80,7 @@ public:
      *                which the extensive quantities should be calculated.
      * \param timeIdx The index used by the time discretization.
      */
-    void update(const ElementContext &elemCtx, int scvfIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, scvfIdx, timeIdx);
 
@@ -86,7 +89,7 @@ public:
 
         // Check whether the pressure potential is in the same direction as the face
         // normal or in the opposite one
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
                 Valgrind::SetUndefined(upstreamScvIdx_[phaseIdx]);
                 Valgrind::SetUndefined(downstreamScvIdx_[phaseIdx]);
@@ -112,11 +115,11 @@ public:
      * \param paramCache The FluidSystem's parameter cache.
      */
     template <class Context, class FluidState>
-    void updateBoundary(const Context &context,
-                        int bfIdx,
-                        int timeIdx,
-                        const FluidState &fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> &paramCache)
+    void updateBoundary(const Context& context,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& fluidState,
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
     {
         ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
 
@@ -137,7 +140,7 @@ public:
      * \param phaseIdx The index of the fluid phase for which the upstream
      *                 direction is requested.
      */
-    short upstreamIndex(int phaseIdx) const
+    short upstreamIndex(unsigned phaseIdx) const
     { return upstreamScvIdx_[phaseIdx]; }
 
     /*!
@@ -147,7 +150,7 @@ public:
      * \param phaseIdx The index of the fluid phase for which the downstream
      *                 direction is requested.
      */
-    short downstreamIndex(int phaseIdx) const
+    short downstreamIndex(unsigned phaseIdx) const
     { return downstreamScvIdx_[phaseIdx]; }
 
     /*!
@@ -156,7 +159,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar upstreamWeight(int phaseIdx) const
+    Scalar upstreamWeight(unsigned OPM_UNUSED phaseIdx) const
     { return 1.0; }
 
     /*!
@@ -165,7 +168,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar downstreamWeight(int phaseIdx) const
+    Scalar downstreamWeight(unsigned phaseIdx) const
     { return 1.0 - upstreamWeight(phaseIdx); }
 
 private:

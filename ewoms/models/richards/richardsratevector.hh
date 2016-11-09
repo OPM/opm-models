@@ -75,22 +75,22 @@ public:
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(const
-     * ImmiscibleRateVector &)
+     * ImmiscibleRateVector& )
      */
-    RichardsRateVector(const RichardsRateVector &value)
+    RichardsRateVector(const RichardsRateVector& value)
         : ParentType(value)
     {}
 
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
      */
-    void setMassRate(const ParentType &value)
+    void setMassRate(const ParentType& value)
     { ParentType::operator=(value); }
 
     /*!
      * \copydoc ImmiscibleRateVector::setMolarRate
      */
-    void setMolarRate(const ParentType &value)
+    void setMolarRate(const ParentType& value)
     {
         // convert to mass rates
         ParentType::operator[](contiEqIdx) =
@@ -108,7 +108,7 @@ public:
      * \copydoc ImmiscibleRateVector::setVolumetricRate
      */
     template <class FluidState, class RhsEval>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
+    void setVolumetricRate(const FluidState& fluidState, unsigned phaseIdx, const RhsEval& volume)
     {
        (*this)[contiEqIdx] =
             fluidState.density(phaseIdx)

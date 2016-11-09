@@ -49,33 +49,33 @@ public:
     // redefine the category, that is the only difference
     enum { category = Dune::SolverCategory::overlapping };
 
-    OverlappingOperator(const OverlappingMatrix &A) : A_(A)
+    OverlappingOperator(const OverlappingMatrix& A) : A_(A)
     {}
 
     //! apply operator to x:  \f$ y = A(x) \f$
-    virtual void apply(const DomainVector &x, RangeVector &y) const
+    virtual void apply(const DomainVector& x, RangeVector& y) const
     {
         A_.mv(x, y);
         y.sync();
     }
 
     //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
-    virtual void applyscaleadd(field_type alpha, const DomainVector &x,
-                               RangeVector &y) const
+    virtual void applyscaleadd(field_type alpha, const DomainVector& x,
+                               RangeVector& y) const
     {
         A_.usmv(alpha, x, y);
         y.sync();
     }
 
     //! returns the matrix
-    virtual const OverlappingMatrix &getmat() const
+    virtual const OverlappingMatrix& getmat() const
     { return A_; }
 
-    const Overlap &overlap() const
+    const Overlap& overlap() const
     { return A_.overlap(); }
 
 private:
-    const OverlappingMatrix &A_;
+    const OverlappingMatrix& A_;
 };
 
 } // namespace Linear

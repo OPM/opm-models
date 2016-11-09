@@ -54,6 +54,9 @@
 #include <ewoms/common/alignedallocator.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
@@ -307,12 +310,14 @@ class FvBaseDiscretization
     protected:
         SolutionVector blockVector_;
     public:
-        BlockVectorWrapper( const std::string& name, const size_t size )
-            : blockVector_( size )
+        BlockVectorWrapper(const std::string& OPM_UNUSED name, const size_t size)
+            : blockVector_(size)
         {}
 
-        SolutionVector& blockVector() { return blockVector_; }
-        const SolutionVector& blockVector() const { return blockVector_; }
+        SolutionVector& blockVector()
+        { return blockVector_; }
+        const SolutionVector& blockVector() const
+        { return blockVector_; }
     };
 
 #if HAVE_DUNE_FEM
@@ -336,13 +341,13 @@ class FvBaseDiscretization
 #endif
 
     // copying a discretization object is not a good idea
-    FvBaseDiscretization(const FvBaseDiscretization &);
+    FvBaseDiscretization(const FvBaseDiscretization& );
 
 public:
     // this constructor required to be explicitly specified because
     // we've defined a constructor above which deletes all implicitly
     // generated constructors in C++.
-    FvBaseDiscretization(Simulator &simulator)
+    FvBaseDiscretization(Simulator& simulator)
         : simulator_(simulator)
         , gridView_(simulator.gridView())
         , newtonMethod_(simulator)
@@ -373,17 +378,17 @@ public:
 
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
 
-        const unsigned nDofs = asImp_().numGridDof();
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[ timeIdx ].reset( new DiscreteFunction( "solution", space_ ) );
+        size_t numDof = asImp_().numGridDof();
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            solution_[timeIdx].reset(new DiscreteFunction("solution", space_));
 
             if (storeIntensiveQuantities()) {
-                intensiveQuantityCache_[timeIdx].resize(nDofs);
-                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs, /*value=*/false);
+                intensiveQuantityCache_[timeIdx].resize(numDof);
+                intensiveQuantityCacheUpToDate_[timeIdx].resize(numDof, /*value=*/false);
             }
 
             if (enableStorageCache_)
-                storageCache_[timeIdx].resize(nDofs);
+                storageCache_[timeIdx].resize(numDof);
         }
 
         resizeAndResetIntensiveQuantitiesCache_();
@@ -394,7 +399,7 @@ public:
     {
         // delete all output modules
         auto modIt = outputModules_.begin();
-        const auto &modEndIt = outputModules_.end();
+        const auto& modEndIt = outputModules_.end();
         for (; modIt != modEndIt; ++modIt)
             delete *modIt;
 
@@ -430,8 +435,8 @@ public:
     void finishInit()
     {
         // initialize the volume of the finite volumes to zero
-        unsigned int nDofs = asImp_().numGridDof();
-        dofTotalVolume_.resize(nDofs);
+        size_t numDof = asImp_().numGridDof();
+        dofTotalVolume_.resize(numDof);
         std::fill(dofTotalVolume_.begin(), dofTotalVolume_.end(), 0.0);
 
         ElementContext elemCtx(simulator_);
@@ -439,7 +444,7 @@ public:
 
         // iterate through the grid and evaluate the initial condition
         ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
+        const ElementIterator& elemEndIt = gridView_.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             const Element& elem = *elemIt;
             const bool isInteriorElement = elem.partitionType() == Dune::InteriorEntity;
@@ -450,7 +455,7 @@ public:
 
             // deal with the current element
             elemCtx.updateStencil(elem);
-            const auto &stencil = elemCtx.stencil(/*timeIdx=*/0);
+            const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
 
             // loop over all element vertices, i.e. sub control volumes
             for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); dofIdx++) {
@@ -467,8 +472,8 @@ public:
         // determine which DOFs should be considered to lie fully in the interior of the
         // local process grid partition: those which do not have a non-zero volume
         // before taking the peer processes into account...
-        isLocalDof_.resize(nDofs);
-        for (unsigned dofIdx = 0; dofIdx < nDofs; ++dofIdx)
+        isLocalDof_.resize(numDof);
+        for (unsigned dofIdx = 0; dofIdx < numDof; ++dofIdx)
             isLocalDof_[dofIdx] = (dofTotalVolume_[dofIdx] != 0.0);
 
         // add the volumes of the DOFs on the process boundaries
@@ -483,7 +488,7 @@ public:
         gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
 
         linearizer_->init(simulator_);
-        for (int threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
+        for (unsigned threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
             localLinearizer_[threadId].init(simulator_);
 
         resizeAndResetIntensiveQuantitiesCache_();
@@ -510,14 +515,14 @@ public:
     void applyInitialSolution()
     {
         // first set the whole domain to zero
-        SolutionVector &uCur = asImp_().solution(/*timeIdx=*/0);
+        SolutionVector& uCur = asImp_().solution(/*timeIdx=*/0);
         uCur = Scalar(0.0);
 
         ElementContext elemCtx(simulator_);
 
         // iterate through the grid and evaluate the initial condition
         ElementIterator elemIt = gridView_.template begin</*codim=*/0>();
-        const ElementIterator &elemEndIt = gridView_.template end</*codim=*/0>();
+        const ElementIterator& elemEndIt = gridView_.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             const Element& elem = *elemIt;
             // ignore everything which is not in the interior if the
@@ -547,7 +552,7 @@ public:
 
         // also set the solution of the "previous" time steps to the
         // initial solution.
-        for (int timeIdx = 1; timeIdx < historySize; ++timeIdx)
+        for (unsigned timeIdx = 1; timeIdx < historySize; ++timeIdx)
             solution(timeIdx) = solution(/*timeIdx=*/0);
 
         simulator_.problem().initialSolutionApplied();
@@ -557,7 +562,7 @@ public:
      * \brief Allows to improve the performance by prefetching all data which is
      *        associated with a given element.
      */
-    void prefetch(const Element& elem) const
+    void prefetch(const Element& OPM_UNUSED elem) const
     {
         // do nothing by default
     }
@@ -565,13 +570,13 @@ public:
     /*!
      * \brief Returns the newton method object
      */
-    NewtonMethod &newtonMethod()
+    NewtonMethod& newtonMethod()
     { return newtonMethod_; }
 
     /*!
      * \copydoc newtonMethod()
      */
-    const NewtonMethod &newtonMethod() const
+    const NewtonMethod& newtonMethod() const
     { return newtonMethod_; }
 
     /*!
@@ -639,7 +644,7 @@ public:
      *                  hint is to be set.
      * \param timeIdx The index used by the time discretization.
      */
-    void updateCachedIntensiveQuantities(const IntensiveQuantities &intQuants,
+    void updateCachedIntensiveQuantities(const IntensiveQuantities& intQuants,
                                          unsigned globalIdx,
                                          unsigned timeIdx) const
     {
@@ -672,7 +677,7 @@ public:
      *
      * \param timeIdx The index used by the time discretization.
      */
-    void invalidateIntensiveQuantitiesCache(int timeIdx) const
+    void invalidateIntensiveQuantitiesCache(unsigned timeIdx) const
     {
         if (storeIntensiveQuantities()) {
             std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
@@ -732,7 +737,7 @@ public:
      * \param globalDofIdx The index of the relevant degree of freedom in a grid-global vector
      * \param timeIdx The relevant index for the time discretization
      */
-    const EqVector& cachedStorage(int globalIdx, int timeIdx) const
+    const EqVector& cachedStorage(unsigned globalIdx, unsigned timeIdx) const
     {
         assert(enableStorageCache_);
         return storageCache_[timeIdx][globalIdx];
@@ -749,7 +754,7 @@ public:
      * \param timeIdx The relevant index for the time discretization
      * \param value The new value of the cache for the storage term
      */
-    void updateCachedStorage(int globalIdx, int timeIdx, const EqVector& value) const
+    void updateCachedStorage(unsigned globalIdx, unsigned timeIdx, const EqVector& value) const
     {
         assert(enableStorageCache_);
         storageCache_[timeIdx][globalIdx] = value;
@@ -762,8 +767,8 @@ public:
      * \param dest Stores the result
      * \param u The solution for which the residual ought to be calculated
      */
-    Scalar globalResidual(GlobalEqVector &dest,
-                          const SolutionVector &u) const
+    Scalar globalResidual(GlobalEqVector& dest,
+                          const SolutionVector& u) const
     {
         SolutionVector tmp(asImp_().solution(/*timeIdx=*/0));
         mutableSolution(/*timeIdx=*/0) = u;
@@ -778,7 +783,7 @@ public:
      *
      * \param dest Stores the result
      */
-    Scalar globalResidual(GlobalEqVector &dest) const
+    Scalar globalResidual(GlobalEqVector& dest) const
     {
         dest = 0;
 
@@ -790,7 +795,7 @@ public:
         {
             // Attention: the variables below are thread specific and thus cannot be
             // moved in front of the #pragma!
-            int threadId = ThreadManager::threadId();
+            unsigned threadId = ThreadManager::threadId();
             ElementContext elemCtx(simulator_);
             ElementIterator elemIt = threadedElemIt.beginParallel();
             LocalEvalBlockVector residual, storageTerm;
@@ -805,10 +810,10 @@ public:
                 storageTerm.resize(elemCtx.numPrimaryDof(/*timeIdx=*/0));
                 asImp_().localResidual(threadId).eval(residual, elemCtx);
 
-                unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+                size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
                 ScopedLock addLock(mutex);
                 for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
-                    int globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                    unsigned globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                         dest[globalI][eqIdx] += Toolbox::value(residual[dofIdx][eqIdx]);
                 }
@@ -839,7 +844,7 @@ public:
      *
      * \copydetails Doxygen::storageParam
      */
-    void globalStorage(EqVector &storage, unsigned timeIdx = 0) const
+    void globalStorage(EqVector& storage, unsigned timeIdx = 0) const
     {
         storage = 0;
 
@@ -851,7 +856,7 @@ public:
         {
             // Attention: the variables below are thread specific and thus cannot be
             // moved in front of the #pragma!
-            int threadId = ThreadManager::threadId();
+            unsigned threadId = ThreadManager::threadId();
             ElementContext elemCtx(simulator_);
             ElementIterator elemIt = threadedElemIt.beginParallel();
             LocalEvalBlockVector elemStorage;
@@ -868,7 +873,7 @@ public:
                 elemCtx.updateStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(timeIdx);
 
-                unsigned numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
+                size_t numPrimaryDof = elemCtx.numPrimaryDof(timeIdx);
                 elemStorage.resize(numPrimaryDof);
 
                 localResidual(threadId).evalStorage(elemStorage, elemCtx, timeIdx);
@@ -920,7 +925,7 @@ public:
         ElementContext elemCtx(simulator_);
         elemCtx.setEnableStorageCache(false);
         auto eIt = simulator_.gridView().template begin</*codim=*/0>();
-        const auto &elemEndIt = simulator_.gridView().template end</*codim=*/0>();
+        const auto& elemEndIt = simulator_.gridView().template end</*codim=*/0>();
         for (; eIt != elemEndIt; ++eIt) {
             if (eIt->partitionType() != Dune::InteriorEntity)
                 continue; // ignore ghost and overlap elements
@@ -940,7 +945,7 @@ public:
                     Valgrind::CheckDefined(values);
 
                     unsigned dofIdx = boundaryCtx.interiorScvIndex(faceIdx, /*timeIdx=*/0);
-                    const auto &insideIntQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                    const auto& insideIntQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                     Scalar bfArea =
                         boundaryCtx.boundarySegmentArea(faceIdx, /*timeIdx=*/0)
@@ -964,7 +969,7 @@ public:
                                             /*timeIdx=*/0);
                 Valgrind::CheckDefined(values);
 
-                const auto &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
                 Scalar dofVolume =
                     elemCtx.dofVolume(dofIdx, /*timeIdx=*/0)
                     * intQuants.extrusionFactor();
@@ -975,7 +980,7 @@ public:
         }
 
         // summarize everything over all processes
-        const auto &comm = simulator_.gridView().comm();
+        const auto& comm = simulator_.gridView().comm();
         totalRate = comm.sum(totalRate);
         totalBoundaryArea = comm.sum(totalBoundaryArea);
         totalVolume = comm.sum(totalVolume);
@@ -1032,7 +1037,7 @@ public:
      *
      * \param timeIdx The index of the solution used by the time discretization.
      */
-    const SolutionVector &solution(int timeIdx) const
+    const SolutionVector& solution(unsigned timeIdx) const
     {
         return solution_[timeIdx]->blockVector();
     }
@@ -1040,7 +1045,7 @@ public:
     /*!
      * \copydoc solution(int) const
      */
-    SolutionVector &solution(int timeIdx)
+    SolutionVector& solution(unsigned timeIdx)
     {
         return solution_[timeIdx]->blockVector();
     }
@@ -1049,7 +1054,7 @@ public:
     /*!
      * \copydoc solution(int) const
      */
-    SolutionVector &mutableSolution(int timeIdx) const
+    SolutionVector& mutableSolution(unsigned timeIdx) const
     {
         return solution_[timeIdx]->blockVector();
     }
@@ -1059,14 +1064,14 @@ public:
      * \brief Returns the operator linearizer for the global jacobian of
      *        the problem.
      */
-    const Linearizer &linearizer() const
+    const Linearizer& linearizer() const
     { return *linearizer_; }
 
     /*!
      * \brief Returns the object which linearizes the global system of equations at the
      *        current solution.
      */
-    Linearizer &linearizer()
+    Linearizer& linearizer()
     { return *linearizer_; }
 
     /*!
@@ -1077,23 +1082,23 @@ public:
      * the jacobian linearizer to produce a global linerization of the
      * problem.
      */
-    const LocalLinearizer &localLinearizer(int openMpThreadId) const
+    const LocalLinearizer& localLinearizer(unsigned openMpThreadId) const
     { return localLinearizer_[openMpThreadId]; }
     /*!
      * \copydoc localLinearizer() const
      */
-    LocalLinearizer &localLinearizer(int openMpThreadId)
+    LocalLinearizer& localLinearizer(unsigned openMpThreadId)
     { return localLinearizer_[openMpThreadId]; }
 
     /*!
      * \brief Returns the object to calculate the local residual function.
      */
-    const LocalResidual &localResidual(int openMpThreadId) const
+    const LocalResidual& localResidual(unsigned openMpThreadId) const
     { return asImp_().localLinearizer(openMpThreadId).localResidual(); }
     /*!
      * \copydoc localResidual() const
      */
-    LocalResidual &localResidual(int openMpThreadId)
+    LocalResidual& localResidual(unsigned openMpThreadId)
     { return asImp_().localLinearizer(openMpThreadId).localResidual(); }
 
     /*!
@@ -1115,7 +1120,7 @@ public:
      * \param globalVertexIdx The global index of the vertex
      * \param eqIdx The index of the equation
      */
-    Scalar eqWeight(unsigned globalVertexIdx, unsigned eqIdx) const
+    Scalar eqWeight(unsigned OPM_UNUSED globalVertexIdx, unsigned OPM_UNUSED eqIdx) const
     { return 1.0; }
 
     /*!
@@ -1128,8 +1133,8 @@ public:
      * \param pv2 The second vector of primary variables
      */
     Scalar relativeDofError(unsigned vertexIdx,
-                            const PrimaryVariables &pv1,
-                            const PrimaryVariables &pv2) const
+                            const PrimaryVariables& pv1,
+                            const PrimaryVariables& pv2) const
     {
         Scalar result = 0.0;
         for (unsigned j = 0; j < numEq; ++j) {
@@ -1148,7 +1153,7 @@ public:
      *
      * \param solver The non-linear solver
      */
-    bool update(NewtonMethod &solver)
+    bool update(NewtonMethod& solver)
     {
 #if HAVE_VALGRIND
         for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i)
@@ -1287,7 +1292,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void serialize(Restarter &res)
+    void serialize(Restarter& OPM_UNUSED res)
     {
         OPM_THROW(std::runtime_error,
                   "Not implemented: The discretization chosen for this problem does not support"
@@ -1302,7 +1307,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void deserialize(Restarter &res)
+    void deserialize(Restarter& OPM_UNUSED res)
     {
         OPM_THROW(std::runtime_error,
                   "Not implemented: The discretization chosen for this problem does not support"
@@ -1318,13 +1323,13 @@ public:
      * \param dof The Dune entity which's data should be serialized
      */
     template <class DofEntity>
-    void serializeEntity(std::ostream &outstream,
-                         const DofEntity &dof)
+    void serializeEntity(std::ostream& outstream,
+                         const DofEntity& dof)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        unsigned dofIdx = asImp_().dofMapper().index(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
 #else
-        unsigned dofIdx = asImp_().dofMapper().map(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().map(dof));
 #endif
 
         // write phase state
@@ -1332,7 +1337,7 @@ public:
             OPM_THROW(std::runtime_error, "Could not serialize degree of freedom " << dofIdx);
         }
 
-        for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             outstream << solution(/*timeIdx=*/0)[dofIdx][eqIdx] << " ";
         }
     }
@@ -1346,13 +1351,13 @@ public:
      * \param dof The Dune entity which's data should be deserialized
      */
     template <class DofEntity>
-    void deserializeEntity(std::istream &instream,
-                           const DofEntity &dof)
+    void deserializeEntity(std::istream& instream,
+                           const DofEntity& dof)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        unsigned dofIdx = asImp_().dofMapper().index(dof);
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
 #else
-        unsigned dofIdx = asImp_().dofMapper().map(dof);
+        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().map(dof));
 #endif
 
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -1394,20 +1399,20 @@ public:
      * \brief Mapper to convert the Dune entities of the
      *        discretization's degrees of freedoms are to indices.
      */
-    const DofMapper &dofMapper() const
+    const DofMapper& dofMapper() const
     { OPM_THROW(std::logic_error,
                 "The discretization class must implement the dofMapper() method!"); }
 
     /*!
      * \brief Mapper for vertices to indices.
      */
-    const VertexMapper &vertexMapper() const
+    const VertexMapper& vertexMapper() const
     { return simulator_.problem().vertexMapper(); }
 
     /*!
      * \brief Mapper for elements to indices.
      */
-    const ElementMapper &elementMapper() const
+    const ElementMapper& elementMapper() const
     { return simulator_.problem().elementMapper(); }
 
     /*!
@@ -1457,7 +1462,7 @@ public:
      *
      * \copydetails Doxygen::ecfvElemCtxParam
      */
-    void updatePVWeights(const ElementContext &elemCtx) const
+    void updatePVWeights(const ElementContext& OPM_UNUSED elemCtx) const
     { }
 
     /*!
@@ -1475,9 +1480,9 @@ public:
      * \param deltaU The delta of the solution function before and after the Newton update
      */
     template <class VtkMultiWriter>
-    void addConvergenceVtkFields(VtkMultiWriter &writer,
-                                 const SolutionVector &u,
-                                 const GlobalEqVector &deltaU) const
+    void addConvergenceVtkFields(VtkMultiWriter& writer,
+                                 const SolutionVector& u,
+                                 const GlobalEqVector& deltaU) const
     {
         typedef std::vector<double> ScalarBuffer;
 
@@ -1485,7 +1490,7 @@ public:
         asImp_().globalResidual(globalResid, u);
 
         // create the required scalar fields
-        unsigned numGridDof = asImp_().numGridDof();
+        size_t numGridDof = asImp_().numGridDof();
 
         // global defect of the two auxiliary equations
         ScalarBuffer* def[numEq];
@@ -1552,7 +1557,7 @@ public:
     {
         bool needFullContextUpdate = false;
         auto modIt = outputModules_.begin();
-        const auto &modEndIt = outputModules_.end();
+        const auto& modEndIt = outputModules_.end();
         for (; modIt != modEndIt; ++modIt) {
             (*modIt)->allocBuffers();
             needFullContextUpdate = needFullContextUpdate || (*modIt)->needExtensiveQuantities();
@@ -1585,10 +1590,10 @@ public:
      * \brief Append the quantities relevant for the current solution
      *        to an output writer.
      */
-    void appendOutputFields(BaseOutputWriter &writer) const
+    void appendOutputFields(BaseOutputWriter& writer) const
     {
         auto modIt = outputModules_.begin();
-        const auto &modEndIt = outputModules_.end();
+        const auto& modEndIt = outputModules_.end();
         for (; modIt != modEndIt; ++modIt)
             (*modIt)->commitBuffers(writer);
     }
@@ -1596,7 +1601,7 @@ public:
     /*!
      * \brief Reference to the grid view of the spatial domain.
      */
-    const GridView &gridView() const
+    const GridView& gridView() const
     { return gridView_; }
 
     /*!
@@ -1616,16 +1621,17 @@ public:
         auxEqModules_.push_back(auxMod);
 
         // resize the solutions
-        if( enableGridAdaptation_ &&  ! std::is_same< DiscreteFunction, BlockVectorWrapper >:: value )
+        if (enableGridAdaptation_
+            && !std::is_same<DiscreteFunction, BlockVectorWrapper>::value)
         {
             OPM_THROW(Opm::NotImplemented,
                       "Problems which require auxiliary modules cannot be used in conjunction "
                       "with dune-fem");
         }
-        const size_t nDofs = numTotalDof();
-        for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution(timeIdx).resize(nDofs);
-        }
+
+        size_t numDof = numTotalDof();
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx)
+            solution(timeIdx).resize(numDof);
 
         auxMod->applyInitial();
     }
@@ -1687,19 +1693,18 @@ protected:
     {
         // allocate the storage cache
         if (enableStorageCache()) {
-            const unsigned nDofs = asImp_().numGridDof();
-            for (int timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-                storageCache_[timeIdx].resize(nDofs);
+            size_t numDof = asImp_().numGridDof();
+            for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+                storageCache_[timeIdx].resize(numDof);
             }
         }
 
         // allocate the intensive quantities cache
         if (storeIntensiveQuantities()) {
-            const int nDofs = asImp_().numGridDof();
-            for( int timeIdx=0; timeIdx<historySize; ++timeIdx )
-            {
-                intensiveQuantityCache_[timeIdx].resize(nDofs);
-                intensiveQuantityCacheUpToDate_[timeIdx].resize(nDofs);
+            size_t numDof = asImp_().numGridDof();
+            for(unsigned timeIdx=0; timeIdx<historySize; ++timeIdx) {
+                intensiveQuantityCache_[timeIdx].resize(numDof);
+                intensiveQuantityCacheUpToDate_[timeIdx].resize(numDof);
                 std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
                           intensiveQuantityCacheUpToDate_[timeIdx].end(),
                           false );
@@ -1707,8 +1712,10 @@ protected:
         }
     }
     template <class Context>
-    void supplementInitialSolution_(PrimaryVariables &priVars,
-                                    const Context &context, unsigned dofIdx, unsigned timeIdx)
+    void supplementInitialSolution_(PrimaryVariables& OPM_UNUSED priVars,
+                                    const Context& OPM_UNUSED context,
+                                    unsigned OPM_UNUSED dofIdx,
+                                    unsigned OPM_UNUSED timeIdx)
     { }
 
     static bool enableIntensiveQuantitiesCache_()
@@ -1734,7 +1741,7 @@ protected:
     /*!
      * \brief Reference to the local residal object
      */
-    LocalResidual &localResidual_()
+    LocalResidual& localResidual_()
     { return localLinearizer_.localResidual(); }
 
     /*!
@@ -1743,14 +1750,14 @@ protected:
     bool verbose_() const
     { return gridView_.comm().rank() == 0; }
 
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
     // the problem we want to solve. defines the constitutive
     // relations, matxerial laws, etc.
-    Simulator &simulator_;
+    Simulator& simulator_;
 
     // the representation of the spatial domain of the problem
     GridView gridView_;

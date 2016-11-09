@@ -48,8 +48,9 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/common/ErrorMacros.hpp>
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -83,7 +84,7 @@ public:
 #endif
 
     // don't allow copies for objects of this class
-    ErtKeyword(const ErtKeyword &) = delete;
+    ErtKeyword(const ErtKeyword& ) = delete;
 
     // Default constructor
     ErtKeyword()
@@ -157,7 +158,7 @@ public:
 #endif
     }
 
-    const std::string &name() const
+    const std::string& name() const
     { return name_; }
 
     ErtHandleType *ertHandle() const
@@ -310,10 +311,10 @@ class ErtRestartFile
     static const unsigned numIconItemsPerConnection = 15;
 
 public:
-    ErtRestartFile(const ErtRestartFile &) = delete;
+    ErtRestartFile(const ErtRestartFile& ) = delete;
 
     template <class Simulator>
-    ErtRestartFile(const Simulator &simulator, unsigned reportStepIdx)
+    ErtRestartFile(const Simulator& simulator, unsigned reportStepIdx)
     {
         std::string caseName = simulator.gridManager().caseName();
 
@@ -343,7 +344,7 @@ public:
      * pierced by them.
      */
     template <class Simulator>
-    void writeHeader(const Simulator &simulator, unsigned reportStepIdx)
+    void writeHeader(const Simulator& simulator, unsigned reportStepIdx)
     {
         const auto& eclGrid = simulator.gridManager().eclGrid();
         const auto& eclState = simulator.gridManager().eclState();
@@ -524,7 +525,7 @@ class ErtSolution
 public:
     ErtSolution(const ErtSolution&) = delete;
 
-    ErtSolution(ErtRestartFile &restartHandle)
+    ErtSolution(ErtRestartFile& restartHandle)
         : restartHandle_(&restartHandle)
     {  ecl_rst_file_start_solution(restartHandle_->ertHandle()); }
 

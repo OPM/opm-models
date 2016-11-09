@@ -79,7 +79,7 @@ public:
     /*!
      * \brief Load the grid from the file.
      */
-    DgfGridManager(Simulator &simulator)
+    DgfGridManager(Simulator& simulator)
         : ParentType(simulator)
     {
         const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);
@@ -97,7 +97,7 @@ public:
         }
 
         if (numRefinments > 0)
-            gridPtr_->globalRefine(numRefinments);
+            gridPtr_->globalRefine(static_cast<int>(numRefinments));
 
         this->finalizeInit_();
     }
@@ -129,7 +129,7 @@ public:
      *
      * The fracture mapper determines the topology of the fractures.
      */
-    FractureMapper &fractureMapper()
+    FractureMapper& fractureMapper()
     { return fractureMapper_; }
 
     /*!
@@ -137,68 +137,61 @@ public:
      *
      * The fracture mapper determines the topology of the fractures.
      */
-    const FractureMapper &fractureMapper() const
+    const FractureMapper& fractureMapper() const
     { return fractureMapper_; }
 
 protected:
-    void addFractures_( Dune::GridPtr< Grid >& dgfPointer )
+    void addFractures_(Dune::GridPtr<Grid>& dgfPointer)
     {
+        typedef typename Grid::LevelGridView GridView;
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> ElementMapper;
+
         // check if fractures are available (only 2d currently)
-        if( dgfPointer.nofParameters( int(Grid::dimension) ) > 0 )
-        {
-            typedef typename  Grid::LevelGridView GridView;
-            GridView gridView = dgfPointer->levelGridView( 0 );
+        if (dgfPointer.nofParameters(static_cast<int>(Grid::dimension)) == 0)
+            return;
 
-            // first create a map of the dune to ART vertex indices
-            typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                              Dune::MCMGVertexLayout>  ElementMapper;
+        GridView gridView = dgfPointer->levelGridView(/*level=*/0);
+        const unsigned edgeCodim = Grid::dimension - 1;
 
-            const int edgeCodim = Grid::dimension - 1;
+        // first create a map of the dune to ART vertex indices
+        ElementMapper elementMapper(gridView);
+        auto eIt = gridView.template begin</*codim=*/0>();
+        const auto eEndIt = gridView.template end</*codim=*/0>();
+        for (; eIt != eEndIt; ++eIt) {
+            const auto& element = *eIt;
+            const auto& refElem =
+                Dune::ReferenceElements<Scalar, Grid::dimension>::general(element.type());
 
-            ElementMapper elementMapper( gridView );
-            const auto endIt = gridView.template end< 0 > ();
-            for( auto eIt = gridView.template begin< 0 >(); eIt != endIt; ++eIt )
-            {
-                const auto& element = *eIt;
-                const auto& refElem =
-                      Dune::ReferenceElements< Scalar, Grid::dimension >::general( element.type() );
-
-                const int edges = refElem.size( edgeCodim );
-                for( int edge = 0; edge < edges; ++edge )
-                {
-                    const int vertices = refElem.size( edge, edgeCodim, Grid::dimension );
-                    std::vector< int > vertexIndices;
-                    vertexIndices.reserve( Grid::dimension );
-                    for( int vx = 0; vx<vertices; ++vx )
-                    {
-                        // get local vertex number from edge
-                        const int localVx = refElem.subEntity( edge, edgeCodim, vx, Grid::dimension );
+            const int edges = refElem.size( edgeCodim );
+            for (int edge = 0; edge < edges; ++edge) {
+                const int vertices = refElem.size(edge, edgeCodim, Grid::dimension);
+                std::vector<unsigned> vertexIndices;
+                vertexIndices.reserve(Grid::dimension);
+                for (int vx = 0; vx < vertices; ++vx) {
+                    // get local vertex number from edge
+                    const int localVx = refElem.subEntity(edge, edgeCodim, vx, Grid::dimension);
 
 #if DUNE_VERSION_NEWER(DUNE_GRID,2,4)
-                        // get vertex
-                        const auto vertex = element.template subEntity< Grid::dimension >( localVx );
+                    // get vertex
+                    const auto vertex = element.template subEntity<Grid::dimension>(localVx);
 #else
-                        // get vertex
-                        const auto vertexPtr = element.template subEntity< Grid::dimension >( localVx );
-                        const auto& vertex = *vertexPtr ;
+                    // get vertex
+                    const auto vertexPtr = element.template subEntity<Grid::dimension>(localVx);
+                    const auto& vertex = *vertexPtr ;
 #endif
 
-                        // if vertex has parameter 1 insert as a fracture vertex
-                        if( dgfPointer.parameters( vertex )[ 0 ] > 0 )
-                        {
+                    // if vertex has parameter 1 insert as a fracture vertex
+                    if (dgfPointer.parameters( vertex )[ 0 ] > 0) {
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,4)
-                            vertexIndices.push_back( elementMapper.subIndex( element, localVx, Grid::dimension ) );
+                        vertexIndices.push_back(static_cast<unsigned>(elementMapper.subIndex(element, static_cast<int>(localVx), Grid::dimension)));
 #else
-                            vertexIndices.push_back( elementMapper.map( element, localVx, Grid::dimension ) );
+                        vertexIndices.push_back(static_cast<unsigned>(elementMapper.map(element, static_cast<int>(localVx), Grid::dimension)));
 #endif
-                        }
-                    }
-                    // if 2 vertices have been found with flag 1 insert a fracture edge
-                    if( int(vertexIndices.size()) == Grid::dimension )
-                    {
-                        fractureMapper_.addFractureEdge(vertexIndices[ 0 ], vertexIndices[ 1 ] );
                     }
                 }
+                // if 2 vertices have been found with flag 1 insert a fracture edge
+                if (static_cast<int>(vertexIndices.size()) == Grid::dimension)
+                    fractureMapper_.addFractureEdge(vertexIndices[0], vertexIndices[1]);
             }
         }
     }

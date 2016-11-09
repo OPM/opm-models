@@ -46,8 +46,11 @@
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
+
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -154,8 +157,8 @@ SET_SCALAR_PROP(PvsModel, PvsMoleFractionsBaseWeight, 1.0);
  * 0 \stackrel{!}{=}
  *  f_\alpha = \left\{
  *  \begin{array}{cl}
- *    S_\alpha & \quad \text{if phase }\alpha\text{ is not present} \    \
- *    1 - \sum_\kappa x_\alpha^\kappa & \quad \text{else}
+ *    S_\alpha&  \quad \text{if phase }\alpha\text{ is not present} \    \
+ *    1 - \sum_\kappa x_\alpha^\kappa&  \quad \text{else}
  *  \end{array}
  *  \right.
  * \f]
@@ -238,7 +241,7 @@ class PvsModel
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
-    PvsModel(Simulator &simulator)
+    PvsModel(Simulator& simulator)
         : ParentType(simulator)
     {
         verbosity_ = EWOMS_GET_PARAM(TypeTag, int, PvsVerbosity);
@@ -276,7 +279,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(int pvIdx) const
+    std::string primaryVarName(unsigned pvIdx) const
     {
         std::string s;
         if (!(s = EnergyModule::primaryVarName(pvIdx)).empty())
@@ -300,7 +303,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(int eqIdx) const
+    std::string eqName(unsigned eqIdx) const
     {
         std::string s;
         if (!(s = EnergyModule::eqName(eqIdx)).empty())
@@ -309,7 +312,7 @@ public:
         std::ostringstream oss;
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx
                                                      + numComponents) {
-            int compIdx = eqIdx - Indices::conti0EqIdx;
+            unsigned compIdx = eqIdx - Indices::conti0EqIdx;
             oss << "continuity^" << FluidSystem::componentName(compIdx);
         }
         else
@@ -337,8 +340,8 @@ public:
         // find the a reference pressure. The first degree of freedom
         // might correspond to non-interior entities which would lead
         // to an undefined value, so we have to iterate...
-        int nDof = this->numTotalDof();
-        for (int dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
+        size_t nDof = this->numTotalDof();
+        for (unsigned dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
             if (this->dofTotalVolume(dofIdx) > 0) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
@@ -350,7 +353,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(int globalDofIdx, int pvIdx) const
+    Scalar primaryVarWeight(unsigned globalDofIdx, unsigned pvIdx) const
     {
         Scalar tmp = EnergyModule::primaryVarWeight(*this, globalDofIdx, pvIdx);
         if (tmp > 0)
@@ -363,7 +366,7 @@ public:
 
         if (Indices::switch0Idx <= pvIdx && pvIdx < Indices::switch0Idx
                                                     + numPhases - 1) {
-            int phaseIdx = pvIdx - Indices::switch0Idx;
+            unsigned phaseIdx = pvIdx - Indices::switch0Idx;
 
             if (!this->solution(/*timeIdx=*/0)[globalDofIdx].phaseIsPresent(phaseIdx))
                 // for saturations, the weight is always 1
@@ -382,14 +385,14 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(int globalDofIdx, int eqIdx) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx) const
     {
         Scalar tmp = EnergyModule::eqWeight(*this, globalDofIdx, eqIdx);
         if (tmp > 0)
             // energy related equation
             return tmp;
 
-        int compIdx = eqIdx - Indices::conti0EqIdx;
+        unsigned compIdx = eqIdx - Indices::conti0EqIdx;
         assert(0 <= compIdx && compIdx <= numComponents);
 
         // make all kg equal
@@ -416,15 +419,15 @@ public:
      * \copydoc FvBaseDiscretization::serializeEntity
      */
     template <class DofEntity>
-    void serializeEntity(std::ostream &outstream, const DofEntity &dofEntity)
+    void serializeEntity(std::ostream& outstream, const DofEntity& dofEntity)
     {
         // write primary variables
         ParentType::serializeEntity(outstream, dofEntity);
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = this->dofMapper().index(dofEntity);
+        unsigned dofIdx = static_cast<unsigned>(this->dofMapper().index(dofEntity));
 #else
-        int dofIdx = this->dofMapper().map(dofEntity);
+        unsigned dofIdx = static_cast<unsigned>(this->dofMapper().map(dofEntity));
 #endif
         if (!outstream.good())
             OPM_THROW(std::runtime_error, "Could not serialize DOF " << dofIdx);
@@ -436,22 +439,22 @@ public:
      * \copydoc FvBaseDiscretization::deserializeEntity
      */
     template <class DofEntity>
-    void deserializeEntity(std::istream &instream, const DofEntity &dofEntity)
+    void deserializeEntity(std::istream& instream, const DofEntity& dofEntity)
     {
         // read primary variables
         ParentType::deserializeEntity(instream, dofEntity);
 
         // read phase presence
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int dofIdx = this->dofMapper().index(dofEntity);
+        unsigned dofIdx = static_cast<unsigned>(this->dofMapper().index(dofEntity));
 #else
-        int dofIdx = this->dofMapper().map(dofEntity);
+        unsigned dofIdx = static_cast<unsigned>(this->dofMapper().map(dofEntity));
 #endif
         if (!instream.good())
             OPM_THROW(std::runtime_error,
                        "Could not deserialize DOF " << dofIdx);
 
-        int tmp;
+        short tmp;
         instream >> tmp;
         this->solution(/*timeIdx=*/0)[dofIdx].setPhasePresence(tmp);
         this->solution(/*timeIdx=*/1)[dofIdx].setPhasePresence(tmp);
@@ -479,18 +482,18 @@ public:
                 continue;
             elemCtx.updateStencil(elem);
 
-            int numLocalDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
-            for (int dofIdx = 0; dofIdx < numLocalDof; ++dofIdx) {
-                int globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+            size_t numLocalDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
+            for (unsigned dofIdx = 0; dofIdx < numLocalDof; ++dofIdx) {
+                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
                 if (visited[globalIdx])
                     continue;
                 visited[globalIdx] = true;
 
                 // compute the intensive quantities of the current degree of freedom
-                auto &priVars = this->solution(/*timeIdx=*/0)[globalIdx];
+                auto& priVars = this->solution(/*timeIdx=*/0)[globalIdx];
                 elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
-                const IntensiveQuantities &intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                 // evaluate primary variable switch
                 short oldPhasePresence = priVars.phasePresence();
@@ -522,21 +525,21 @@ public:
     }
 
     template <class FluidState>
-    void printSwitchedPhases_(const ElementContext &elemCtx,
-                              int dofIdx,
-                              const FluidState &fs,
-                              int oldPhasePresence,
-                              const PrimaryVariables &newPv) const
+    void printSwitchedPhases_(const ElementContext& elemCtx,
+                              unsigned dofIdx,
+                              const FluidState& fs,
+                              short oldPhasePresence,
+                              const PrimaryVariables& newPv) const
     {
         typedef Opm::MathToolbox<typename FluidState::Scalar> FsToolbox;
 
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            bool oldPhasePresent = (oldPhasePresence & (1 << phaseIdx)) > 0;
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            bool oldPhasePresent = (oldPhasePresence&  (1 << phaseIdx)) > 0;
             bool newPhasePresent = newPv.phaseIsPresent(phaseIdx);
             if (oldPhasePresent == newPhasePresent)
                 continue;
 
-            const auto &pos = elemCtx.pos(dofIdx, /*timeIdx=*/0);
+            const auto& pos = elemCtx.pos(dofIdx, /*timeIdx=*/0);
             if (oldPhasePresent && !newPhasePresent) {
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
                           << "' phase disappears at position " << pos
@@ -545,7 +548,7 @@ public:
             }
             else {
                 Scalar sumx = 0;
-                for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
                     sumx += FsToolbox::value(fs.moleFraction(phaseIdx, compIdx));
 
                 std::cout << "'" << FluidSystem::phaseName(phaseIdx)
@@ -576,7 +579,7 @@ public:
 
     // number of switches of the phase state in the last Newton
     // iteration
-    int numSwitched_;
+    unsigned numSwitched_;
 
     // verbosity of the model
     int verbosity_;

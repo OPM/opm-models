@@ -55,18 +55,18 @@ public:
      * \brief Add a buffer where the data is associated with the
      *        degrees of freedom to the current VTK output file.
      */
-    static void attachScalarDofData_(BaseOutputWriter &baseWriter,
-                                     ScalarBuffer &buffer,
-                                     const std::string &name)
+    static void attachScalarDofData_(BaseOutputWriter& baseWriter,
+                                     ScalarBuffer& buffer,
+                                     const std::string& name)
     { baseWriter.attachScalarVertexData(buffer, name.c_str()); }
 
     /*!
      * \brief Add a buffer where the data is associated with the
      *        degrees of freedom to the current VTK output file.
      */
-    static void attachVectorDofData_(BaseOutputWriter &baseWriter,
-                                     VectorBuffer &buffer,
-                                     const std::string &name)
+    static void attachVectorDofData_(BaseOutputWriter& baseWriter,
+                                     VectorBuffer& buffer,
+                                     const std::string& name)
     { baseWriter.attachVectorVertexData(buffer, name.c_str()); }
 
 
@@ -74,9 +74,9 @@ public:
      * \brief Add a buffer where the data is associated with the
      *        degrees of freedom to the current VTK output file.
      */
-    static void attachTensorDofData_(BaseOutputWriter &baseWriter,
-                                     TensorBuffer &buffer,
-                                     const std::string &name)
+    static void attachTensorDofData_(BaseOutputWriter& baseWriter,
+                                     TensorBuffer& buffer,
+                                     const std::string& name)
     { baseWriter.attachTensorVertexData(buffer, name.c_str()); }
 };
 

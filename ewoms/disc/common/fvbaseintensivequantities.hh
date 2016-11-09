@@ -31,6 +31,7 @@
 #include "fvbaseproperties.hh"
 
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 namespace Ewoms {
 
@@ -53,7 +54,7 @@ public:
     { evalPoint_ = 0; }
 
     // copy constructor
-    FvBaseIntensiveQuantities(const FvBaseIntensiveQuantities &v)
+    FvBaseIntensiveQuantities(const FvBaseIntensiveQuantities& v)
     {
         evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
@@ -62,7 +63,7 @@ public:
     /*!
      * \brief Assignment operator
      */
-    FvBaseIntensiveQuantities &operator=(const FvBaseIntensiveQuantities &v)
+    FvBaseIntensiveQuantities& operator=(const FvBaseIntensiveQuantities& v)
     {
         evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
@@ -94,15 +95,15 @@ public:
      *
      * The evaluation point is only used by semi-smooth models.
      */
-    const Implementation &evalPoint() const
+    const Implementation& evalPoint() const
     { return (evalPoint_ == 0)?asImp_():*evalPoint_; }
 
     /*!
      * \brief Update all quantities for a given control volume.
      */
-    void update(const ElementContext &elemCtx,
-                int dofIdx,
-                int timeIdx)
+    void update(const ElementContext& elemCtx,
+                unsigned dofIdx,
+                unsigned timeIdx)
     { extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, dofIdx, timeIdx); }
 
     /*!
@@ -114,9 +115,9 @@ public:
      * \param timeIdx The index for the time discretization for which
      *                the intensive quantities should be calculated
      */
-    void updateScvGradients(const ElementContext &elemCtx,
-                            int dofIdx,
-                            int timeIdx)
+    void updateScvGradients(const ElementContext& OPM_UNUSED elemCtx,
+                            unsigned OPM_UNUSED dofIdx,
+                            unsigned OPM_UNUSED timeIdx)
     { }
 
     /*!
@@ -145,9 +146,9 @@ public:
     }
 
 private:
-    const Implementation &asImp_() const
+    const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
-    Implementation &asImp_()
+    Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
     // the evaluation point of the local jacobian

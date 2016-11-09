@@ -74,7 +74,7 @@ class VtkPrimaryVarsModule : public BaseOutputModule<TypeTag>
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
 public:
-    VtkPrimaryVarsModule(const Simulator &simulator)
+    VtkPrimaryVarsModule(const Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -110,28 +110,28 @@ public:
      * \brief Modify the internal buffers according to the intensive quantities relevant for
      *        an element
      */
-    void processElement(const ElementContext &elemCtx)
+    void processElement(const ElementContext& elemCtx)
     {
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
-        const auto &elementMapper = elemCtx.model().elementMapper();
+        const auto& elementMapper = elemCtx.model().elementMapper();
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        int elemIdx = elementMapper.index(elemCtx.element());
+        unsigned elemIdx = static_cast<unsigned>(elementMapper.index(elemCtx.element()));
 #else
-        int elemIdx = elementMapper .map(elemCtx.element());
+        unsigned elemIdx = static_cast<unsigned>(elementMapper .map(elemCtx.element()));
 #endif
         if (processRankOutput_() && !processRank_.empty())
-            processRank_[elemIdx] = this->simulator_.gridView().comm().rank();
+            processRank_[elemIdx] = static_cast<unsigned>(this->simulator_.gridView().comm().rank());
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
-            int I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
-            const auto &priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
+            unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);
+            const auto& priVars = elemCtx.primaryVars(i, /*timeIdx=*/0);
 
             if (dofIndexOutput_())
                 dofIndex_[I] = I;
 
-            for (int eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 if (primaryVarsOutput_() && !primaryVars_[eqIdx].empty())
                     primaryVars_[eqIdx][I] = priVars[eqIdx];
             }
@@ -141,7 +141,7 @@ public:
     /*!
      * \brief Add all buffers to the VTK output writer.
      */
-    void commitBuffers(BaseOutputWriter &baseWriter)
+    void commitBuffers(BaseOutputWriter& baseWriter)
     {
         VtkMultiWriter *vtkWriter = dynamic_cast<VtkMultiWriter*>(&baseWriter);
         if (!vtkWriter) {

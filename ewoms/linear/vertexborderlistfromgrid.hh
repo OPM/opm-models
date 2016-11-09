@@ -30,6 +30,8 @@
 #include "overlaptypes.hh"
 #include "blacklist.hh"
 
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/istl/bcrsmatrix.hh>
@@ -58,7 +60,7 @@ class VertexBorderListFromGrid
     static const int dimWorld = GridView::dimensionworld;
 
 public:
-    VertexBorderListFromGrid(const GridView &gridView, const VertexMapper &map)
+    VertexBorderListFromGrid(const GridView& gridView, const VertexMapper& map)
         : gridView_(gridView), map_(map)
     {
         gridView.communicate(*this,
@@ -72,9 +74,9 @@ public:
                 && vIt->partitionType() != Dune::BorderEntity)
             {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-                int vIdx = map_.index(*vIt);
+                Index vIdx = static_cast<Index>(map_.index(*vIt));
 #else
-                int vIdx = map_.map(*vIt);
+                Index vIdx = static_cast<Index>(map_.map(*vIt));
 #endif
                 blackList_.addIndex(vIdx);
             }
@@ -85,15 +87,15 @@ public:
     bool contains(int dim, int codim) const
     { return dim == codim; }
 
-    bool fixedsize(int dim, int codim) const
+    bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
     { return true; }
 
     template <class EntityType>
-    size_t size(const EntityType &e) const
+    size_t size(const EntityType& OPM_UNUSED e) const
     { return 2; }
 
     template <class MessageBufferImp, class EntityType>
-    void gather(MessageBufferImp &buff, const EntityType &e) const
+    void gather(MessageBufferImp& buff, const EntityType& e) const
     {
         buff.write(static_cast<int>(gridView_.comm().rank()));
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
@@ -104,24 +106,24 @@ public:
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp &buff, const EntityType &e, size_t n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
     {
         BorderIndex bIdx;
 
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-        bIdx.localIdx = map_.index(e);
+        bIdx.localIdx = static_cast<Index>(map_.index(e));
 #else
-        bIdx.localIdx = map_.map(e);
+        bIdx.localIdx = static_cast<Index>(map_.map(e));
 #endif
         {
             int tmp;
             buff.read(tmp);
-            bIdx.peerRank = tmp;
+            bIdx.peerRank = static_cast<ProcessRank>(tmp);
         }
         {
             int tmp;
             buff.read(tmp);
-            bIdx.peerIdx = tmp;
+            bIdx.peerIdx = static_cast<Index>(tmp);
         }
         bIdx.borderDistance = 0;
 
@@ -129,7 +131,7 @@ public:
     }
 
     // Access to the border list.
-    const BorderList &borderList() const
+    const BorderList& borderList() const
     { return borderList_; }
 
     // Access to the black-list indices.
@@ -138,7 +140,7 @@ public:
 
 private:
     const GridView gridView_;
-    const VertexMapper &map_;
+    const VertexMapper& map_;
     BorderList borderList_;
     BlackList blackList_;
 };

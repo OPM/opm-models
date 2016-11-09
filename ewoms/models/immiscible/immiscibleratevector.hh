@@ -96,7 +96,7 @@ public:
      *
      * \param value The mass rate in \f$[kg/(m^2\,s)]\f$ (unit for areal fluxes)
      */
-    void setMassRate(const ParentType &value)
+    void setMassRate(const ParentType& value)
     { ParentType::operator=(value); }
 
     /*!
@@ -108,10 +108,10 @@ public:
      *
      * \param value The new molar rate in \f$[mol/(m^2\,s)]\f$
      */
-    void setMolarRate(const ParentType &value)
+    void setMolarRate(const ParentType& value)
     {
         // convert to mass rates
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             ParentType::operator[](conti0EqIdx + compIdx) =
                 value[conti0EqIdx + compIdx]*FluidSystem::molarMass(compIdx);
     }
@@ -143,9 +143,9 @@ public:
      *               \f$[m^3/(m^2\,s)]\f$ (unit for areal fluxes)
      */
     template <class FluidState, class RhsEval>
-    void setVolumetricRate(const FluidState &fluidState, int phaseIdx, const RhsEval& volume)
+    void setVolumetricRate(const FluidState& fluidState, unsigned phaseIdx, const RhsEval& volume)
     {
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] =
                 fluidState.density(phaseIdx, compIdx)
                 * fluidState.massFraction(phaseIdx, compIdx)

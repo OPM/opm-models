@@ -33,7 +33,9 @@
 
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
+
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -99,18 +101,18 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext &elemCtx, int dofIdx, int timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
-        const auto &priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-        const auto &problem = elemCtx.problem();
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
         Scalar flashTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, FlashTolerance);
 
         // extract the total molar densities of the components
         ComponentVector cTotal;
-        for (int compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             cTotal[compIdx] = priVars.makeEvaluation(cTot0Idx + compIdx, timeIdx);
 
         const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
@@ -127,7 +129,7 @@ public:
 
         // compute the phase compositions, densities and pressures
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
-        const MaterialLawParams &materialParams =
+        const MaterialLawParams& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         FlashSolver::template solve<MaterialLaw>(fluidState_,
                                                  materialParams,
@@ -141,7 +143,7 @@ public:
         Valgrind::CheckDefined(relativePermeability_);
 
         // set the phase viscosities
-        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             paramCache.updatePhase(fluidState_, phaseIdx);
 
             const Evaluation& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
@@ -175,25 +177,25 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
-    const FluidState &fluidState() const
+    const FluidState& fluidState() const
     { return fluidState_; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::intrinsicPermeability
      */
-    const DimMatrix &intrinsicPermeability() const
+    const DimMatrix& intrinsicPermeability() const
     { return intrinsicPerm_; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::relativePermeability
      */
-    const Evaluation& relativePermeability(int phaseIdx) const
+    const Evaluation& relativePermeability(unsigned phaseIdx) const
     { return relativePermeability_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
-    const Evaluation& mobility(int phaseIdx) const
+    const Evaluation& mobility(unsigned phaseIdx) const
     {
         return mobility_[phaseIdx];
     }
