@@ -210,7 +210,7 @@ public:
     {
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance,
                              "The maximum allowed error between of the linear solver");
-        EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverOverlapSize,
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, LinearSolverOverlapSize,
                              "The size of the algebraic overlap for the linear solver");
         EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations,
                              "The maximum number of iterations of the linear solver");
@@ -388,7 +388,7 @@ private:
                                             simulator_.model().dofMapper());
 
         // create the overlapping Jacobian matrix
-        unsigned overlapSize = static_cast<unsigned>(EWOMS_GET_PARAM(TypeTag, int, LinearSolverOverlapSize));
+        unsigned overlapSize = EWOMS_GET_PARAM(TypeTag, unsigned, LinearSolverOverlapSize);
         overlappingMatrix_ = new OverlappingMatrix(M,
                                                    borderListCreator.borderList(),
                                                    borderListCreator.blackList(),
