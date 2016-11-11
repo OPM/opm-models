@@ -135,7 +135,7 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 
 # the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
 EwomsAddApplication(ebos
-                    SOURCES applications/ebos/ebos.cc
+                    SOURCES ebos/ebos.cc
                     EXE_NAME ebos
                     CONDITION ${OPM_GRID_FOUND} AND ${OPM_PARSER_FOUND} AND ${ERT_FOUND})
 
@@ -145,7 +145,7 @@ endif()
 
 # the ART to DGF file format conversion utility
 EwomsAddApplication(art2dgf
-                    SOURCES applications/art2dgf.cc
+                    SOURCES art2dgf/art2dgf.cc
                     EXE_NAME art2dgf)
 
 add_dependencies(test-suite art2dgf)

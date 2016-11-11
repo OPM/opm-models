@@ -56,5 +56,5 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 # for eWoms we do not list all headers explicitly. instead we
 # glob through the source tree...
-file(GLOB_RECURSE TMP RELATIVE "${CMAKE_SOURCE_DIR}" "ewoms/*.hh")
+file(GLOB_RECURSE TMP RELATIVE "${CMAKE_SOURCE_DIR}" "ewoms/*.hh" "ebos/*.hh")
 list (APPEND PUBLIC_HEADER_FILES ${TMP})
