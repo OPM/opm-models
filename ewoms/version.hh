@@ -20,6 +20,9 @@
   module for the precise wording of the license and the list of
   copyright holders.
 */
+#ifndef EWOMS_VERSION_HH
+#define EWOMS_VERSION_HH
+
 #define EWOMS_VERSION_MAJOR 2017
 #define EWOMS_VERSION_MINOR 04
 #define EWOMS_VERSION_REVISION -1 // -1 means that this is a version from the development branch...
@@ -56,3 +59,5 @@ inline std::string versionString()
 }
 
 } // namespace Ewoms
+
+#endif // EWOMS_VERSION_HH
