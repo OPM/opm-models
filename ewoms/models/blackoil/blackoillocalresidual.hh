@@ -78,10 +78,12 @@ public:
         const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
         const auto& fs = intQuants.fluidState();
 
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            storage[conti0EqIdx + compIdx] = 0.0;
+        storage = 0.0;
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!FluidSystem::phaseIsActive(phaseIdx))
+                continue;
+
             unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
             LhsEval surfaceVolume =
                 Toolbox::template decay<LhsEval>(fs.saturation(phaseIdx))
@@ -113,6 +115,30 @@ public:
             FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
         storage[conti0EqIdx + oilCompIdx] *=
             FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+
+        // deal with the two-phase cases
+        if (FluidSystem::numActivePhases() != 3) {
+            assert(FluidSystem::numActivePhases() == 2);
+            const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+            if (!FluidSystem::phaseIsActive(oilPhaseIdx)) {
+                // the gas-water case
+                const auto& eval =
+                    priVars.makeEvaluation(Indices::compositionSwitchIdx, /*timeIdx=*/0);
+                storage[conti0EqIdx + oilCompIdx] = Toolbox::template decay<LhsEval>(eval);
+            }
+            else if (!FluidSystem::phaseIsActive(gasPhaseIdx)) {
+                // the oil-water case
+                const auto& eval =
+                    priVars.makeEvaluation(Indices::compositionSwitchIdx, /*timeIdx=*/0);
+                storage[conti0EqIdx + gasCompIdx] = Toolbox::template decay<LhsEval>(eval);
+            }
+            else if (!FluidSystem::phaseIsActive(waterPhaseIdx)) {
+                // the oil-gas case
+                const auto& eval =
+                    priVars.makeEvaluation(Indices::waterSaturationIdx, /*timeIdx=*/0);
+                storage[conti0EqIdx + waterCompIdx] = Toolbox::template decay<LhsEval>(eval);
+            }
+        }
     }
 
     /*!
@@ -131,6 +157,9 @@ public:
         const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         unsigned interiorIdx = extQuants.interiorIndex();
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            if (!FluidSystem::phaseIsActive(phaseIdx))
+                continue;
+
             unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
             const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
             if (upIdx == interiorIdx)
