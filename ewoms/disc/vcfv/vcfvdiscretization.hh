@@ -132,7 +132,6 @@ class VcfvDiscretization : public FvBaseDiscretization<TypeTag>
 
     enum { dim = GridView::dimension };
 
-
 public:
     VcfvDiscretization(Simulator& simulator)
         : ParentType(simulator)
@@ -155,7 +154,7 @@ public:
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper& dofMapper() const
-    { return this->simulator_.problem().vertexMapper(); }
+    { return this->vertexMapper(); }
 
     /*!
      * \brief Serializes the current state of the model.

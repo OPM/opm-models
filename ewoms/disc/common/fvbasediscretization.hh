@@ -350,6 +350,8 @@ public:
     FvBaseDiscretization(Simulator& simulator)
         : simulator_(simulator)
         , gridView_(simulator.gridView())
+        , elementMapper_(gridView_)
+        , vertexMapper_(gridView_)
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
@@ -1238,6 +1240,10 @@ public:
                 // notify the problem that the grid has changed
                 simulator_.problem().gridChanged();
 
+                // update the entity mappers
+                elementMapper_.update();
+                vertexMapper_.update();
+
                 // notify the modules for visualization output
                 auto outIt = outputModules_.begin();
                 auto outEndIt = outputModules_.end();
@@ -1404,16 +1410,16 @@ public:
                 "The discretization class must implement the dofMapper() method!"); }
 
     /*!
-     * \brief Mapper for vertices to indices.
+     * \brief Returns the mapper for vertices to indices.
      */
     const VertexMapper& vertexMapper() const
-    { return simulator_.problem().vertexMapper(); }
+    { return vertexMapper_; }
 
     /*!
-     * \brief Mapper for elements to indices.
+     * \brief Returns the mapper for elements to indices.
      */
     const ElementMapper& elementMapper() const
-    { return simulator_.problem().elementMapper(); }
+    { return elementMapper_; }
 
     /*!
      * \brief Resets the Jacobian matrix linearizer, so that the
@@ -1761,6 +1767,10 @@ protected:
 
     // the representation of the spatial domain of the problem
     GridView gridView_;
+
+    // the mappers for element and vertex entities to global indices
+    ElementMapper elementMapper_;
+    VertexMapper vertexMapper_;
 
     // a vector with all auxiliary equations to be considered
     std::vector<std::shared_ptr<BaseAuxiliaryModule<TypeTag> > > auxEqModules_;

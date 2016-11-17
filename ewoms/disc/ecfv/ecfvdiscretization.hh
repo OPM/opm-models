@@ -133,8 +133,6 @@ class EcfvDiscretization : public FvBaseDiscretization<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
-
-
 public:
     EcfvDiscretization(Simulator& simulator)
         : ParentType(simulator)
@@ -157,7 +155,7 @@ public:
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper& dofMapper() const
-    { return this->simulator_.problem().elementMapper(); }
+    { return this->elementMapper(); }
 
     /*!
      * \brief Syncronize the values of the primary variables on the
