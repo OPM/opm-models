@@ -29,7 +29,6 @@
 #define EWOMS_TIMER_HH
 
 #include <chrono>
-#include <time.h>
 
 #if HAVE_MPI
 #include <mpi.h>
@@ -52,13 +51,8 @@ class Timer
     {
         // The timespec data structure is more accurate than Linux (or at least POSIX)
         // specific. for other operating systems, we use Dune::Timer
-#if defined(CLOCK_MONOTONIC) && defined(CLOCK_PROCESS_CPUTIME_ID)
-        struct timespec realtimeData;
-        struct timespec cputimeData;
-#else
         std::chrono::high_resolution_clock::time_point realtimeData;
-        std::chrono::high_resolution_clock::time_point cputimeData;
-#endif
+        std::clock_t cputimeData;
     };
 public:
     Timer()
@@ -109,15 +103,9 @@ public:
         const auto& t1 = startTime_.realtimeData;
         const auto& t2 = stopTime.realtimeData;
 
-#if defined(CLOCK_MONOTONIC) && defined(CLOCK_PROCESS_CPUTIME_ID)
-        return
-            static_cast<double>(t2.tv_sec - t1.tv_sec)
-            + static_cast<double>(t2.tv_nsec - t1.tv_nsec)/1e9;
-#else
         std::chrono::duration<double> dt =
             std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1);
         return dt.count();
-#endif
     }
 
     /*!
@@ -136,15 +124,7 @@ public:
         const auto& t1 = startTime_.cputimeData;
         const auto& t2 = stopTime.cputimeData;
 
-#if defined(CLOCK_MONOTONIC) && defined(CLOCK_PROCESS_CPUTIME_ID)
-        return
-            static_cast<double>(t2.tv_sec - t1.tv_sec)
-            + static_cast<double>(t2.tv_nsec - t1.tv_nsec)/1e9;
-#else
-        std::chrono::duration<double> dt =
-            std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1);
-        return dt.count();
-#endif
+        return static_cast<double>(t2 - t1)/CLOCKS_PER_SEC;
     }
 
     /*!
@@ -183,16 +163,8 @@ private:
     {
         // This method is more accurate than  Linux (or at least POSIX) specific. for other operating
         // systems, we use Dune::Timer
-#if defined(CLOCK_MONOTONIC) && defined(CLOCK_PROCESS_CPUTIME_ID)
-        // measure the real time
-        clock_gettime(CLOCK_MONOTONIC, &timeData.realtimeData);
-
-        // measure the CPU time
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &timeData.cputimeData);
-#else
         timeData.realtimeData = std::chrono::high_resolution_clock::now();
-        timeData.cputimeData = std::chrono::high_resolution_clock::now();
-#endif
+        timeData.cputimeData = std::clock();
     }
 
     bool isStopped_;
