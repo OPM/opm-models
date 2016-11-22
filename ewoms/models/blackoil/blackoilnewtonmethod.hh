@@ -32,7 +32,7 @@
 
 #include <ewoms/common/signum.hh>
 
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 
 namespace Ewoms {
 

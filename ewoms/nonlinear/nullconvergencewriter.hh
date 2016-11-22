@@ -30,7 +30,7 @@
 
 #include <ewoms/common/propertysystem.hh>
 
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 
 namespace Ewoms {
 namespace Properties {

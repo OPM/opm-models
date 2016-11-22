@@ -34,7 +34,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/ErrorMacros.hpp>

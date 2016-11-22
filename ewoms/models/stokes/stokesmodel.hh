@@ -50,7 +50,7 @@
 #include <opm/material/heatconduction/FluidConduction.hpp>
 #include <opm/material/fluidsystems/SinglePhaseFluidSystem.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
