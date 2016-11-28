@@ -233,6 +233,9 @@ public:
 
         // set the phase densities and viscosities
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            if (!FluidSystem::phaseIsActive(phaseIdx))
+                continue;
+
             const auto& b = FluidSystem::inverseFormationVolumeFactor(fluidState_, phaseIdx, pvtRegionIdx);
             fluidState_.setInvB(phaseIdx, b);
 
@@ -242,29 +245,35 @@ public:
 
         // calculate the phase densities
         Evaluation rho;
-        rho = fluidState_.invB(waterPhaseIdx);
-        rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-        fluidState_.setDensity(waterPhaseIdx, rho);
-
-        rho = fluidState_.invB(gasPhaseIdx);
-        rho *= FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-        if (FluidSystem::enableVaporizedOil()) {
-            rho +=
-                fluidState_.invB(gasPhaseIdx) *
-                fluidState_.Rv() *
-                FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
+            rho = fluidState_.invB(waterPhaseIdx);
+            rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+            fluidState_.setDensity(waterPhaseIdx, rho);
         }
-        fluidState_.setDensity(gasPhaseIdx, rho);
 
-        rho = fluidState_.invB(oilPhaseIdx);
-        rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
-        if (FluidSystem::enableDissolvedGas()) {
-            rho +=
-                fluidState_.invB(oilPhaseIdx) *
-                fluidState_.Rs() *
-                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+        if (FluidSystem::phaseIsActive(gasPhaseIdx)) {
+            rho = fluidState_.invB(gasPhaseIdx);
+            rho *= FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+            if (FluidSystem::enableVaporizedOil()) {
+                rho +=
+                    fluidState_.invB(gasPhaseIdx) *
+                    fluidState_.Rv() *
+                    FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+            }
+            fluidState_.setDensity(gasPhaseIdx, rho);
         }
-        fluidState_.setDensity(oilPhaseIdx, rho);
+
+        if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
+            rho = fluidState_.invB(oilPhaseIdx);
+            rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+            if (FluidSystem::enableDissolvedGas()) {
+                rho +=
+                    fluidState_.invB(oilPhaseIdx) *
+                    fluidState_.Rs() *
+                    FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+            }
+            fluidState_.setDensity(oilPhaseIdx, rho);
+        }
 
         // retrieve the porosity from the problem
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
@@ -285,6 +294,9 @@ public:
 #ifndef NDEBUG
         // some safety checks in debug mode
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+            if (!FluidSystem::phaseIsActive(phaseIdx))
+                continue;
+
             assert(std::isfinite(Toolbox::value(fluidState_.density(phaseIdx))));
             assert(std::isfinite(Toolbox::value(fluidState_.saturation(phaseIdx))));
             assert(std::isfinite(Toolbox::value(fluidState_.temperature(phaseIdx))));

@@ -350,7 +350,7 @@ public:
             return false;
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-            // only the oil and the water phases are present. the gas phase appears as
+            // Only the oil and the water phases are present. The gas phase appears as
             // soon as more of the gas component is present in the oil phase than what
             // the saturated phase contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
@@ -388,7 +388,7 @@ public:
         else {
             assert(primaryVarsMeaning() == Sw_pg_Rv);
 
-            // only the gas and the water phases are present. the oil phase appears as
+            // Only the gas and the water phases are present. The oil phase appears as
             // soon as more of the oil component is present in the gas phase than what
             // the saturated phase contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
