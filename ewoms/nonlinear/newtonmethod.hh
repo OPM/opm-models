@@ -34,7 +34,7 @@
 #include <ewoms/common/timer.hh>
 
 #include <opm/material/common/ClassName.hpp>
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/ErrorMacros.hpp>
 

@@ -46,7 +46,7 @@
 #include <ewoms/io/vtkblackoilmodule.hh>
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 

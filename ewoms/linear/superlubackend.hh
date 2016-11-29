@@ -32,7 +32,7 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/linear/solvers.hh>
 
-#include <opm/material/common/Unused.hpp>
+#include <opm/common/Unused.hpp>
 
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
