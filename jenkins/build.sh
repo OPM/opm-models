@@ -6,8 +6,8 @@ upstreams=(opm-common
            opm-parser
            opm-output
            opm-material
-           opm-core
-           opm-grid)
+           opm-grid
+           opm-core)
 
 declare -A upstreamRev
 upstreamRev[opm-common]=master
