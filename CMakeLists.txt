@@ -137,9 +137,9 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 EwomsAddApplication(ebos
                     SOURCES ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION ${OPM_GRID_FOUND} AND ${OPM_PARSER_FOUND} AND ${ERT_FOUND})
+                    CONDITION ${OPM_GRID_FOUND} AND ${OPM_PARSER_FOUND} AND ${ERT_FOUND} AND ${OPM_CORE_FOUND})
 
-if(OPM_GRID_FOUND AND ERT_FOUND)
+if(OPM_GRID_FOUND AND ERT_FOUND AND OPM_CORE_FOUND)
   install(TARGETS ebos DESTINATION bin)
 endif()
 
