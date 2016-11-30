@@ -115,6 +115,9 @@ NEW_PROP_TAG(DisableWells);
 // print statements in debug mode.
 NEW_PROP_TAG(EnableDebuggingChecks);
 
+// If this property is set to false, the SWATINIT keyword will not be handled by ebos.
+NEW_PROP_TAG(EnableSwatinit);
+
 // Set the problem property
 SET_TYPE_PROP(EclBaseProblem, Problem, Ewoms::EclProblem<TypeTag>);
 
@@ -211,10 +214,13 @@ SET_INT_PROP(EclBaseProblem, RestartWritingInterval, 0xffffff); // disable
 
 // By default, ebos should handle the wells internally, so we don't disable the well
 // treatment
-SET_INT_PROP(EclBaseProblem, DisableWells, false);
+SET_BOOL_PROP(EclBaseProblem, DisableWells, false);
 
 // By default, we enable the debugging checks if we're compiled in debug mode
-SET_INT_PROP(EclBaseProblem, EnableDebuggingChecks, true);
+SET_BOOL_PROP(EclBaseProblem, EnableDebuggingChecks, true);
+
+// ebos handles the SWATINIT keyword by default
+SET_BOOL_PROP(EclBaseProblem, EnableSwatinit, true);
 } // namespace Properties
 
 /*!
@@ -632,6 +638,16 @@ public:
     }
 
     /*!
+     * \brief Returns the porosity of an element
+     *
+     * Note that this method is *not* part of the generic eWoms problem API because it
+     * would bake the assumption that only the elements are the degrees of freedom into
+     * the interface.
+     */
+    Scalar porosity(unsigned elementIdx) const
+    { return porosity_[elementIdx]; }
+
+    /*!
      * \brief Returns the depth of an degree of freedom [m]
      *
      * For ECL problems this is defined as the average of the depth of an element and is
@@ -694,9 +710,18 @@ public:
     const MaterialLawParams& materialLawParams(unsigned globalDofIdx) const
     { return materialLawManager_->materialLawParams(globalDofIdx); }
 
+    /*!
+     * \brief Returns the ECL material law manager
+     *
+     * Note that this method is *not* part of the generic eWoms problem API because it
+     * would force all problens use the ECL material laws.
+     */
     const std::shared_ptr<EclMaterialLawManager> materialLawManager() const
     { return materialLawManager_; }
 
+    /*!
+     * \copydoc materialLawManager()
+     */
     std::shared_ptr<EclMaterialLawManager> materialLawManager()
     { return materialLawManager_; }
 

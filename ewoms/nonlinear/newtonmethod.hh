@@ -549,6 +549,18 @@ public:
     void eraseMatrix()
     { linearSolver_.eraseMatrix(); }
 
+    /*!
+     * \brief Returns the linear solver backend object for external use.
+     */
+    LinearSolverBackend& linearSolver()
+    { return linearSolver_; }
+
+    /*!
+     * \copydoc linearSolver()
+     */
+    const LinearSolverBackend& linearSolver() const
+    { return linearSolver_; }
+
 protected:
     /*!
      * \brief Returns true if the Newton method ought to be chatty.
