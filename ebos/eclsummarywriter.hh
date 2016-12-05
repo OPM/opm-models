@@ -106,7 +106,7 @@ public:
         const auto& deck = simulator.gridManager().deck();
 
         // populate the set of quantities to write
-        if (deck->hasKeyword("ALL"))
+        if (deck.hasKeyword("ALL"))
             handleAllKeyword__();
         else
             addPresentSummaryKeywords_(deck);
@@ -334,9 +334,9 @@ private:
     bool writeWopt_() const
     { return summaryKeywords_.count("WOPT") > 0; }
 
-    void addVariables_(std::shared_ptr< const Opm::EclipseState > eclState)
+    void addVariables_(const Opm::EclipseState& eclState)
     {
-        const auto& wellsVector = eclState->getSchedule().getWells();
+        const auto& wellsVector = eclState.getSchedule().getWells();
         for (size_t wellIdx = 0; wellIdx < wellsVector.size(); ++ wellIdx) {
             const auto& eclWell = wellsVector[wellIdx];
             auto& wellInfo = ertWellInfo_[eclWell->name()];
@@ -517,9 +517,9 @@ private:
     }
 
     // add all quantities which are present in the summary section of the deck
-    void addPresentSummaryKeywords_(std::shared_ptr< const Opm::Deck > deck)
+    void addPresentSummaryKeywords_(const Opm::Deck& deck)
     {
-        Opm::Section summarySection(*deck, "SUMMARY");
+        Opm::Section summarySection(deck, "SUMMARY");
         auto kwIt = summarySection.begin();
         auto kwEndIt = summarySection.end();
         // skip the first keyword as this is "SUMMARY". bug in opm-parser?
