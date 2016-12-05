@@ -346,19 +346,19 @@ public:
     template <class Simulator>
     void writeHeader(const Simulator& simulator, unsigned reportStepIdx)
     {
-        const auto& eclGrid = simulator.gridManager().eclGrid();
+        const auto& eclGrid = simulator.gridManager().eclState().getInputGrid();
         const auto& eclState = simulator.gridManager().eclState();
-        const auto& eclSchedule = eclState->getSchedule();
+        const auto& eclSchedule = eclState.getSchedule();
 
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
 
         ecl_rsthead_type rstHeader;
         rstHeader.sim_time = simulator.startTime() + secondsElapsed;
-        rstHeader.nactive = eclGrid->getNumActive();
-        rstHeader.nx = eclGrid->getNX();
-        rstHeader.ny = eclGrid->getNY();
-        rstHeader.nz = eclGrid->getNZ();
+        rstHeader.nactive = eclGrid.getNumActive();
+        rstHeader.nx = eclGrid.getNX();
+        rstHeader.ny = eclGrid.getNY();
+        rstHeader.nz = eclGrid.getNZ();
         rstHeader.nwells = eclSchedule.numWells(reportStepIdx);
         rstHeader.niwelz = numIwellItemsPerWell;
         rstHeader.nzwelz = numZwelStringsPerWell;
@@ -568,8 +568,8 @@ public:
     ErtSummary(const Simulator& simulator)
     {
         const auto& gridManager = simulator.gridManager();
-        const auto& eclGrid = gridManager.eclGrid();
-        const auto& timeMap = gridManager.schedule()->getTimeMap();
+        const auto& eclGrid = gridManager.eclState().getInputGrid();
+        const auto& timeMap = gridManager.eclState().getSchedule().getTimeMap();
 
         std::string caseName = gridManager.caseName();
 
@@ -584,9 +584,9 @@ public:
                                           /*joinString=*/":",
                                           startTime,
                                           /*timeIsInDays=*/true, // if not, it's hours...
-                                          eclGrid->getNX(),
-                                          eclGrid->getNY(),
-                                          eclGrid->getNZ());
+                                          eclGrid.getNX(),
+                                          eclGrid.getNY(),
+                                          eclGrid.getNZ());
     }
 
     ~ErtSummary()

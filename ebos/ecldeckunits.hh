@@ -84,8 +84,8 @@ public:
 
     EclDeckUnits(const Simulator& simulator)
     {
-        const auto& eclDeck = simulator.gridManager().deck();
-        const Opm::UnitSystem& deckUnitSystem = eclDeck->getActiveUnitSystem();
+        const auto& deck = simulator.gridManager().deck();
+        const Opm::UnitSystem& deckUnitSystem = deck.getActiveUnitSystem();
 
         deckToSiFactor_.resize(numDimensions);
         deckToSiOffset_.resize(numDimensions, 0.0);
