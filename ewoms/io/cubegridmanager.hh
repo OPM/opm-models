@@ -85,18 +85,18 @@ public:
                              "executed after it was loaded");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeX,
                              "The size of the domain in x direction");
-        EWOMS_REGISTER_PARAM(TypeTag, int, CellsX,
+        EWOMS_REGISTER_PARAM(TypeTag, unsigned, CellsX,
                              "The number of intervalls in x direction");
         if (dimWorld > 1) {
             EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeY,
                                  "The size of the domain in y direction");
-            EWOMS_REGISTER_PARAM(TypeTag, int, CellsY,
+            EWOMS_REGISTER_PARAM(TypeTag, unsigned, CellsY,
                                  "The number of intervalls in y direction");
         }
         if (dimWorld > 2) {
             EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ,
                                  "The size of the domain in z direction");
-            EWOMS_REGISTER_PARAM(TypeTag, int, CellsZ,
+            EWOMS_REGISTER_PARAM(TypeTag, unsigned, CellsZ,
                                  "The number of intervalls in z direction");
         }
     }
