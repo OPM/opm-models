@@ -56,7 +56,7 @@ class OverlappingBCRSMatrix : public BCRSMatrix
     typedef BCRSMatrix ParentType;
 
 public:
-    typedef Ewoms::Linear::DomesticOverlapFromBCRSMatrix<BCRSMatrix> Overlap;
+    typedef Ewoms::Linear::DomesticOverlapFromBCRSMatrix Overlap;
 
 private:
     typedef std::vector<std::set<Index> > Entries;
@@ -65,19 +65,20 @@ public:
     typedef typename ParentType::ColIterator ColIterator;
     typedef typename ParentType::ConstColIterator ConstColIterator;
     typedef typename ParentType::block_type block_type;
+    typedef typename ParentType::field_type field_type;
 
     // no real copying done at the moment
     OverlappingBCRSMatrix(const OverlappingBCRSMatrix& other)
         : ParentType(other)
     {}
 
-    OverlappingBCRSMatrix(const BCRSMatrix& nativeMatrix,
+    template <class NativeBCRSMatrix>
+    OverlappingBCRSMatrix(const NativeBCRSMatrix& nativeMatrix,
                           const BorderList& borderList,
                           const BlackList& blackList,
                           unsigned overlapSize)
     {
-        overlap_ = std::shared_ptr<Overlap>(
-            new Overlap(nativeMatrix, borderList, blackList, overlapSize));
+        overlap_ = std::make_shared<Overlap>(nativeMatrix, borderList, blackList, overlapSize);
         myRank_ = 0;
 #if HAVE_MPI
         MPI_Comm_rank(MPI_COMM_WORLD, &myRank_);
@@ -122,7 +123,8 @@ public:
     /*!
      * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
      */
-    void assignAdd(const BCRSMatrix& nativeMatrix)
+    template <class NativeBCRSMatrix>
+    void assignAdd(const NativeBCRSMatrix& nativeMatrix)
     {
         // copy the native entries
         assignFromNative_(nativeMatrix);
@@ -137,7 +139,8 @@ public:
      *
      * The non-master entries are copied from the master
      */
-    void assignCopy(const BCRSMatrix& nativeMatrix)
+    template <class NativeBCRSMatrix>
+    void assignCopy(const NativeBCRSMatrix& nativeMatrix)
     {
         // copy the native entries
         assignFromNative_(nativeMatrix);
@@ -203,7 +206,8 @@ public:
     }
 
 private:
-    void assignFromNative_(const BCRSMatrix& nativeMatrix)
+    template <class NativeBCRSMatrix>
+    void assignFromNative_(const NativeBCRSMatrix& nativeMatrix)
     {
         // first, set everything to 0,
         BCRSMatrix::operator=(0.0);
@@ -215,8 +219,8 @@ private:
                 continue; // row corresponds to a black-listed entry
             }
 
-            ConstColIterator nativeColIt = nativeMatrix[nativeRowIdx].begin();
-            const ConstColIterator& nativeColEndIt = nativeMatrix[nativeRowIdx].end();
+            auto nativeColIt = nativeMatrix[nativeRowIdx].begin();
+            const auto& nativeColEndIt = nativeMatrix[nativeRowIdx].end();
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
                 Index domesticColIdx = overlap_->nativeToDomestic(static_cast<Index>(nativeColIt.index()));
 
@@ -232,12 +236,22 @@ private:
                     // algebraic one...
                     continue;
 
-                (*this)[static_cast<unsigned>(domesticRowIdx)][static_cast<unsigned>(domesticColIdx)] = *nativeColIt;
+                // we need to copy the block matrices manually since it seems that (at
+                // least some versions of) Dune have an endless recursion bug when
+                // assigning dense matrices of different field type
+                const auto& src = *nativeColIt;
+                auto& dest = (*this)[static_cast<unsigned>(domesticRowIdx)][static_cast<unsigned>(domesticColIdx)];
+                for (unsigned i = 0; i < src.rows; ++i) {
+                    for (unsigned j = 0; j < src.cols; ++j) {
+                        dest[i][j] = static_cast<field_type>(src[i][j]);
+                    }
+                }
             }
         }
     }
 
-    void build_(const BCRSMatrix& nativeMatrix)
+    template <class NativeBCRSMatrix>
+    void build_(const NativeBCRSMatrix& nativeMatrix)
     {
         size_t numDomestic = overlap_->numDomestic();
 
@@ -249,22 +263,8 @@ private:
         buildIndices_(nativeMatrix);
     }
 
-    int numDomesticEntriesInRowFor_(const BCRSMatrix& nativeMatrix, int peerRank, int rowIdx)
-    {
-        int numEntries = 0;
-
-        typedef typename BCRSMatrix::ConstColIterator ColIt;
-        ColIt colIt = nativeMatrix[rowIdx].begin();
-        ColIt colEndIt = nativeMatrix[rowIdx].end();
-        for (; colIt != colEndIt; ++colIt) {
-            if (overlap_->isDomesticIndexFor(peerRank, colIt.index()))
-                ++numEntries;
-        }
-
-        return numEntries;
-    }
-
-    void buildIndices_(const BCRSMatrix& nativeMatrix)
+    template <class NativeBCRSMatrix>
+    void buildIndices_(const NativeBCRSMatrix& nativeMatrix)
     {
         /////////
         // first, add all local matrix entries
@@ -275,8 +275,8 @@ private:
             if (domesticRowIdx < 0)
                 continue;
 
-            ConstColIterator nativeColIt = nativeMatrix[nativeRowIdx].begin();
-            ConstColIterator nativeColEndIt = nativeMatrix[nativeRowIdx].end();
+            auto nativeColIt = nativeMatrix[nativeRowIdx].begin();
+            const auto& nativeColEndIt = nativeMatrix[nativeRowIdx].end();
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
                 int domesticColIdx = overlap_->nativeToDomestic(static_cast<Index>(nativeColIt.index()));
 
@@ -374,7 +374,8 @@ private:
     }
 
     // send the overlap indices to a peer
-    void sendIndices_(const BCRSMatrix& nativeMatrix, ProcessRank peerRank)
+    template <class NativeBCRSMatrix>
+    void sendIndices_(const NativeBCRSMatrix& nativeMatrix, ProcessRank peerRank)
     {
 #if HAVE_MPI
         // send size of foreign overlap to peer
@@ -401,9 +402,8 @@ private:
 
             ColumnIndexSet& colIndices = entryIndices[globalRowIdx];
 
-            typedef typename BCRSMatrix::ConstColIterator ColIt;
-            ColIt nativeColIt = nativeMatrix[static_cast<unsigned>(nativeRowIdx)].begin();
-            ColIt nativeColEndIt = nativeMatrix[static_cast<unsigned>(nativeRowIdx)].end();
+            auto nativeColIt = nativeMatrix[static_cast<unsigned>(nativeRowIdx)].begin();
+            const auto& nativeColEndIt = nativeMatrix[static_cast<unsigned>(nativeRowIdx)].end();
             for (; nativeColIt != nativeColEndIt; ++nativeColIt) {
                 unsigned nativeColIdx = static_cast<unsigned>(nativeColIt.index());
                 Index domesticColIdx = overlap_->nativeToDomestic(static_cast<Index>(nativeColIdx));
