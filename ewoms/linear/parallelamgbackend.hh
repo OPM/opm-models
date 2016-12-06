@@ -69,6 +69,9 @@ SET_INT_PROP(ParallelAmgLinearSolver, AmgCoarsenTarget, 5000);
 
 SET_TYPE_PROP(ParallelAmgLinearSolver, LinearSolverBackend,
               Ewoms::Linear::ParallelAmgBackend<TypeTag>);
+
+SET_TYPE_PROP(ParallelAmgLinearSolver, LinearSolverScalar,
+              typename GET_PROP_TYPE(TypeTag, Scalar));
 } // namespace Properties
 
 namespace Linear {
@@ -85,15 +88,19 @@ class ParallelAmgBackend
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
-    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
     typedef typename GET_PROP_TYPE(TypeTag, BorderListCreator) BorderListCreator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
 
+    static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    typedef Dune::FieldVector<LinearSolverScalar, numEq> VectorBlock;
+    typedef Dune::FieldMatrix<LinearSolverScalar, numEq, numEq> MatrixBlock;
+
+    typedef Dune::BCRSMatrix<MatrixBlock> Matrix;
+    typedef Dune::BlockVector<VectorBlock> Vector;
 
     // define the smoother used for the AMG and specify its
     // arguments
@@ -106,11 +113,12 @@ class ParallelAmgBackend
 #if HAVE_MPI
     typedef Dune::OwnerOverlapCopyCommunication<Ewoms::Linear::Index>
     OwnerOverlapCopyCommunication;
-    typedef Dune::OverlappingSchwarzOperator<Matrix, Vector, Vector,
-                                             OwnerOverlapCopyCommunication>
-    FineOperator;
+    typedef Dune::OverlappingSchwarzOperator<Matrix,
+                                             Vector,
+                                             Vector,
+                                             OwnerOverlapCopyCommunication> FineOperator;
     typedef Dune::OverlappingSchwarzScalarProduct<Vector,
-                                                  OwnerOverlapCopyCommunication>   FineScalarProduct;
+                                                  OwnerOverlapCopyCommunication> FineScalarProduct;
     typedef Dune::BlockPreconditioner<Vector,
                                       Vector,
                                       OwnerOverlapCopyCommunication,
@@ -156,7 +164,8 @@ public:
     void eraseMatrix()
     { cleanup_(); }
 
-    void prepareMatrix(const Matrix& M)
+    template <class NativeBCRSMatrix>
+    void prepareMatrix(const NativeBCRSMatrix& M)
     {
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
@@ -170,7 +179,8 @@ public:
         overlappingMatrix_->assignAdd(M);
     }
 
-    void prepareRhs(const Matrix& M, Vector& b)
+    template <class NativeBCRSMatrix, class NativeVector>
+    void prepareRhs(const NativeBCRSMatrix& M, NativeVector& b)
     {
         if (!overlappingMatrix_) {
             // make sure that the overlapping matrix and block vectors
@@ -192,7 +202,8 @@ public:
      *
      * \return true if the residual reduction could be achieved, else false.
      */
-    bool solve(Vector& x)
+    template <class NativeVector>
+    bool solve(NativeVector& x)
     {
         int verbosity = 0;
         if (simulator_.gridManager().gridView().comm().rank() == 0)
@@ -296,7 +307,8 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    void prepare_(const Matrix& M)
+    template <class NativeBCRSMatrix>
+    void prepare_(const NativeBCRSMatrix& M)
     {
         BorderListCreator borderListCreator(simulator_.gridView(),
                                             simulator_.model().dofMapper());

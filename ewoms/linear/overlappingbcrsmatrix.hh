@@ -114,6 +114,12 @@ public:
         }
     }
 
+    ParentType& asParent()
+    { return *this; }
+
+    const ParentType& asParent() const
+    { return *this; }
+
     /*!
      * \brief Returns the domestic overlap for the process.
      */

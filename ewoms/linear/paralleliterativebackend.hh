@@ -644,8 +644,8 @@ SET_PROP(ParallelIterativeLinearSolver, OverlappingMatrix)
 {
     static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
-    typedef Dune::FieldMatrix<LinearSolverScalar, numEq, numEq> VectorBlock;
-    typedef Dune::BCRSMatrix<VectorBlock> NonOverlappingMatrix;
+    typedef Dune::FieldMatrix<LinearSolverScalar, numEq, numEq> MatrixBlock;
+    typedef Dune::BCRSMatrix<MatrixBlock> NonOverlappingMatrix;
     typedef Ewoms::Linear::OverlappingBCRSMatrix<NonOverlappingMatrix> type;
 };
 
