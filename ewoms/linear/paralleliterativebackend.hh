@@ -319,14 +319,13 @@ public:
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 100.0;
-        Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
             new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
                 simulator_.gridView().comm(),
                 residWeightVec,
-                /*fixPointTolerance=*/linearSolverFixPointTolerance,
                 /*residualReductionTolerance=*/linearSolverTolerance,
+                /*fixPointTolerance=*/0.0,
                 /*absoluteResidualTolerance=*/linearSolverAbsTolerance);
 
         // done creating the convergence criterion
