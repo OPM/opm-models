@@ -235,6 +235,16 @@ public:
     void equilCartesianCoordinate(unsigned cellIdx, std::array<int,3>& ijk) const
     { return asImp_().equilCartesianIndexMapper().cartesianCoordinate(cellIdx, ijk); }
 
+    /*!
+     * \brief Return the names of the wells which do not penetrate any cells on the local
+     *        process.
+     *
+     * This is a kludge around the fact that for distributed grids, not all wells are
+     * seen by all proccesses.
+     */
+    std::unordered_set<std::string> defunctWellNames() const
+    { return std::unordered_set<std::string>(); }
+
 private:
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
