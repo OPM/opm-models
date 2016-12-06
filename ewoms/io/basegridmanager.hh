@@ -71,6 +71,8 @@ public:
         : simulator_(simulator)
     {}
 
+    BaseGridManager(const BaseGridManager&) = delete;
+
     /*!
      * \brief Returns a reference to the grid view to be used.
      */
