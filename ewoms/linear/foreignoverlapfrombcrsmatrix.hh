@@ -58,17 +58,17 @@ namespace Linear {
  * The foreign overlap are all (row) indices which overlap with the
  * some of the current process's local indices.
  */
-template <class BCRSMatrix>
 class ForeignOverlapFromBCRSMatrix
 {
-    ForeignOverlapFromBCRSMatrix(const ForeignOverlapFromBCRSMatrix& )
-    {}
-
 public:
+    // overlaps should never be copied!
+    ForeignOverlapFromBCRSMatrix(const ForeignOverlapFromBCRSMatrix&) = delete;
+
     /*!
      * \brief Constructs the foreign overlap given a BCRS matrix and
      *        an initial list of border indices.
      */
+    template <class BCRSMatrix>
     ForeignOverlapFromBCRSMatrix(const BCRSMatrix& A,
                                  const BorderList& borderList,
                                  const BlackList& blackList,
@@ -347,6 +347,7 @@ protected:
     // extend the foreign overlaps by 'overlapSize' levels. this uses
     // a greedy algorithm which extends the region by one level and
     // then calls itself recursively...
+    template <class BCRSMatrix>
     void extendForeignOverlap_(const BCRSMatrix& A,
                                SeedList& seedList,
                                BorderDistance borderDistance,
@@ -464,6 +465,7 @@ protected:
         return -1;
     }
 
+    template <class BCRSMatrix>
     void addNonNeighborOverlapIndices_(const BCRSMatrix& OPM_UNUSED A,
                                        SeedList& seedList,
                                        BorderDistance borderDist)

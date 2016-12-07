@@ -49,19 +49,20 @@ namespace Linear {
  * The foreign overlap are all (row) indices which overlap with the
  * some of the current process's local indices.
  */
-template <class BCRSMatrix>
 class DomesticOverlapFromBCRSMatrix
 {
-    DomesticOverlapFromBCRSMatrix(const DomesticOverlapFromBCRSMatrix& ) = delete;
-
-    typedef Ewoms::Linear::ForeignOverlapFromBCRSMatrix<BCRSMatrix> ForeignOverlap;
+    typedef Ewoms::Linear::ForeignOverlapFromBCRSMatrix ForeignOverlap;
     typedef Ewoms::Linear::GlobalIndices<ForeignOverlap> GlobalIndices;
 
 public:
+    // overlaps should never be copied!
+    DomesticOverlapFromBCRSMatrix(const DomesticOverlapFromBCRSMatrix&) = delete;
+
     /*!
      * \brief Constructs the foreign overlap given a BCRS matrix and
      *        an initial list of border indices.
      */
+    template <class BCRSMatrix>
     DomesticOverlapFromBCRSMatrix(const BCRSMatrix& A,
                                   const BorderList& borderList,
                                   const BlackList& blackList,
@@ -93,18 +94,18 @@ public:
 #ifndef NDEBUG
         // check consistency of global indices
         for (unsigned domIdx = 0; domIdx < numDomestic(); ++domIdx) {
-            assert(globalToDomestic(domesticToGlobal(domIdx)) == domIdx);
+            assert(globalToDomestic(domesticToGlobal(domIdx)) == static_cast<Index>(domIdx));
         }
 #endif // NDEBUG
 
         // send the foreign overlap for which we are master to the
         // peers
-        std::map<int, MpiBuffer<int> *> sizeBufferMap;
+        std::map<int, MpiBuffer<unsigned> *> sizeBufferMap;
 
         auto peerIt = peerSet_.begin();
         const auto& peerEndIt = peerSet_.end();
         for (; peerIt != peerEndIt; ++peerIt) {
-            auto& buffer = *(new MpiBuffer<int>(1));
+            auto& buffer = *(new MpiBuffer<unsigned>(1));
             sizeBufferMap[*peerIt] = &buffer;
             buffer[0] = foreignOverlap_.foreignOverlapWithPeer(*peerIt).size();
             buffer.send(*peerIt);
@@ -112,7 +113,7 @@ public:
 
         peerIt = peerSet_.begin();
         for (; peerIt != peerEndIt; ++peerIt) {
-            MpiBuffer<int> rcvBuffer(1);
+            MpiBuffer<unsigned> rcvBuffer(1);
             rcvBuffer.receive(*peerIt);
 
             assert(rcvBuffer[0] == domesticOverlapWithPeer_.find(*peerIt)->second.size());
@@ -143,13 +144,6 @@ public:
      */
     const PeerSet& peerSet() const
     { return peerSet_; }
-
-    /*!
-     * \brief Returns the number of indices on the border with a given
-     *        peer rank.
-     */
-    size_t numBorder(ProcessRank peerRank) const
-    { return foreignOverlap_.numBorder(peerRank); }
 
     /*!
      * \brief Returns true iff a domestic index is a border index.
@@ -191,7 +185,7 @@ public:
         // maximal for the index
         const auto& domOverlap = domesticOverlapByIndex_[internalDomesticIdx];
         return domOverlap.size() > 0
-            && int(domOverlap.begin()->second) == foreignOverlap_.overlapSize();
+            && domOverlap.begin()->second == foreignOverlap_.overlapSize();
     }
 
     /*!

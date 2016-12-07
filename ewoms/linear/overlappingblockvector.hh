@@ -105,6 +105,7 @@ public:
      * \brief Assign an overlapping block vector from a
      *        non-overlapping one, border entries are added.
      */
+    template <class BlockVector>
     void assignAddBorder(const BlockVector& nativeBlockVector)
     {
         size_t numDomestic = overlap_->numDomestic();
@@ -113,9 +114,9 @@ public:
         for (unsigned domRowIdx = 0; domRowIdx < numDomestic; ++domRowIdx) {
             Index nativeRowIdx = overlap_->domesticToNative(static_cast<Index>(domRowIdx));
             if (nativeRowIdx < 0)
-                (*this)[static_cast<unsigned>(domRowIdx)] = 0.0;
+                (*this)[domRowIdx] = 0.0;
             else
-                (*this)[static_cast<unsigned>(domRowIdx)] = nativeBlockVector[static_cast<unsigned>(nativeRowIdx)];
+                (*this)[domRowIdx] = nativeBlockVector[nativeRowIdx];
         }
 
         // add up the contents of border rows, for the remaining rows,
@@ -127,7 +128,8 @@ public:
      * \brief Assign an overlapping block vector from a non-overlapping one, border
      *        entries are assigned using their respective master ranks.
      */
-    void assign(const BlockVector& nativeBlockVector)
+    template <class NativeBlockVector>
+    void assign(const NativeBlockVector& nativeBlockVector)
     {
         size_t numDomestic = overlap_->numDomestic();
 
@@ -149,7 +151,8 @@ public:
      * \brief Assign the local values to a non-overlapping block
      *        vector.
      */
-    void assignTo(BlockVector& nativeBlockVector) const
+    template <class NativeBlockVector>
+    void assignTo(NativeBlockVector& nativeBlockVector) const
     {
         // assign the local rows
         size_t numNative = overlap_->numNative();

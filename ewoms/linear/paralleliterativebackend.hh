@@ -73,6 +73,10 @@ NEW_PROP_TAG(LinearSolverBackend);
 NEW_PROP_TAG(LinearSolverWrapper);
 NEW_PROP_TAG(PreconditionerWrapper);
 
+
+//! The floating point type used internally by the linear solver
+NEW_PROP_TAG(LinearSolverScalar);
+
 /*!
  * \brief The size of the algebraic overlap of the linear solver.
  *
@@ -195,9 +199,9 @@ public:
         : simulator_(simulator)
         , gridSequenceNumber_( -1 )
     {
-        overlappingMatrix_ = 0;
-        overlappingb_ = 0;
-        overlappingx_ = 0;
+        overlappingMatrix_ = nullptr;
+        overlappingb_ = nullptr;
+        overlappingx_ = nullptr;
     }
 
     ~ParallelIterativeSolverBackend()
@@ -315,14 +319,13 @@ public:
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 100.0;
-        Scalar linearSolverFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
             new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
                 simulator_.gridView().comm(),
                 residWeightVec,
-                /*fixPointTolerance=*/linearSolverFixPointTolerance,
                 /*residualReductionTolerance=*/linearSolverTolerance,
+                /*fixPointTolerance=*/0.0,
                 /*absoluteResidualTolerance=*/linearSolverAbsTolerance);
 
         // done creating the convergence criterion
@@ -569,12 +572,11 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
     class PreconditionerWrapper##PREC_NAME                                      \
     {                                                                           \
         typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;                 \
-        typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix; \
-        typedef typename GET_PROP_TYPE(TypeTag,                                 \
-                                       OverlappingVector) OverlappingVector;    \
+        typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix; \
+        typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector; \
                                                                                 \
     public:                                                                     \
-        typedef ISTL_PREC_TYPE<JacobianMatrix, OverlappingVector,               \
+        typedef ISTL_PREC_TYPE<OverlappingMatrix, OverlappingVector,            \
                                OverlappingVector> SequentialPreconditioner;     \
         PreconditionerWrapper##PREC_NAME()                                      \
         {}                                                                      \
@@ -586,9 +588,10 @@ EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
                                  "preconditioner");                             \
         }                                                                       \
                                                                                 \
-        void prepare(JacobianMatrix& matrix)                                    \
+        void prepare(OverlappingMatrix& matrix)                                 \
         {                                                                       \
-            Scalar relaxationFactor= EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);\
+            Scalar relaxationFactor =                                           \
+                EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);     \
             seqPreCond_ = new SequentialPreconditioner(matrix,                  \
                                                        relaxationFactor);       \
         }                                                                       \
@@ -630,24 +633,41 @@ SET_INT_PROP(ParallelIterativeLinearSolver, PreconditionerOrder, 0);
 //! set the GMRes restart parameter to 10 by default
 SET_INT_PROP(ParallelIterativeLinearSolver, GMResRestart, 10);
 
-SET_TYPE_PROP(ParallelIterativeLinearSolver, OverlappingMatrix,
-              Ewoms::Linear::OverlappingBCRSMatrix<typename GET_PROP_TYPE(
-                  TypeTag, JacobianMatrix)>);
-SET_TYPE_PROP(ParallelIterativeLinearSolver, Overlap,
+//! by default use the same kind of floating point values for the linearization and for
+//! the linear solve
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
+              LinearSolverScalar,
+              typename GET_PROP_TYPE(TypeTag, Scalar));
+
+SET_PROP(ParallelIterativeLinearSolver, OverlappingMatrix)
+{
+    static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
+    typedef Dune::FieldMatrix<LinearSolverScalar, numEq, numEq> MatrixBlock;
+    typedef Dune::BCRSMatrix<MatrixBlock> NonOverlappingMatrix;
+    typedef Ewoms::Linear::OverlappingBCRSMatrix<NonOverlappingMatrix> type;
+};
+
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
+              Overlap,
               typename GET_PROP_TYPE(TypeTag, OverlappingMatrix)::Overlap);
+
 SET_PROP(ParallelIterativeLinearSolver, OverlappingVector)
 {
-    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
+    static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
+    typedef Dune::FieldVector<LinearSolverScalar, numEq> VectorBlock;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
-    typedef Ewoms::Linear::OverlappingBlockVector<typename Vector::block_type,
-                                                  Overlap> type;
+    typedef Ewoms::Linear::OverlappingBlockVector<VectorBlock, Overlap> type;
 };
+
 SET_PROP(ParallelIterativeLinearSolver, OverlappingScalarProduct)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector, Overlap> type;
 };
+
 SET_PROP(ParallelIterativeLinearSolver, OverlappingLinearOperator)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
@@ -656,11 +676,16 @@ SET_PROP(ParallelIterativeLinearSolver, OverlappingLinearOperator)
                                                OverlappingVector> type;
 };
 
-SET_TYPE_PROP(ParallelIterativeLinearSolver, LinearSolverBackend,
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
+              LinearSolverBackend,
               Ewoms::Linear::ParallelIterativeSolverBackend<TypeTag>);
-SET_TYPE_PROP(ParallelIterativeLinearSolver, LinearSolverWrapper,
+
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
+              LinearSolverWrapper,
               Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
-SET_TYPE_PROP(ParallelIterativeLinearSolver, PreconditionerWrapper,
+
+SET_TYPE_PROP(ParallelIterativeLinearSolver,
+              PreconditionerWrapper,
               Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
 
 //! set the default overlap size to 2

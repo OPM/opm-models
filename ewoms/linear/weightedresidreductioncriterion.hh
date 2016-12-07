@@ -65,18 +65,15 @@ public:
 
     WeightedResidualReductionCriterion(const CollectiveCommunication& comm,
                                        const Vector& residWeights,
-                                       Scalar fixPointTolerance,
                                        Scalar residualReductionTolerance,
+                                       Scalar fixPointTolerance,
                                        Scalar absResidualTolerance = 0.0)
         : comm_(comm),
           residWeightVec_(residWeights),
           fixPointTolerance_(fixPointTolerance),
           residualReductionTolerance_(residualReductionTolerance),
           absResidualTolerance_(absResidualTolerance)
-    {
-        Scalar minFixPointTolerance = 100*std::numeric_limits<Scalar>::epsilon();
-        fixPointTolerance_ = std::max(fixPointTolerance_, minFixPointTolerance);
-    }
+    { }
 
     /*!
      * \brief Sets the relative weight of each row of the residual.
