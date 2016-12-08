@@ -42,6 +42,8 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
+#include <opm/common/ResetLocale.hpp>
+
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/common/version.hh>
 #include <dune/common/parametertreeparser.hh>
@@ -210,6 +212,8 @@ static inline int start(int argc, char **argv)
         signal(SIGPIPE, resetTerminal_);
         signal(SIGTERM, resetTerminal_);
     }
+
+    Opm::resetLocale();
 
     // initialize MPI, finalize is done automatically on exit
 #if HAVE_DUNE_FEM
