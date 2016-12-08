@@ -692,7 +692,7 @@ SET_TYPE_PROP(ParallelIterativeLinearSolver,
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
 
 //! set the default number of maximum iterations for the linear solver
-SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 250);
+SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 1000);
 } // namespace Properties
 } // namespace Ewoms
 
