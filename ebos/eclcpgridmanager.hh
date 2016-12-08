@@ -28,8 +28,11 @@
 #define EWOMS_ECL_CP_GRID_MANAGER_HH
 
 #include "eclbasegridmanager.hh"
+#include "ecltransmissibility.hh"
 
 #include <dune/grid/CpGrid.hpp>
+
+#include <dune/common/version.hh>
 
 namespace Ewoms {
 template <class TypeTag>
@@ -59,6 +62,7 @@ class EclCpGridManager : public EclBaseGridManager<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
 
 public:
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
@@ -135,9 +139,55 @@ public:
         MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
         MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
 
-        // distribute the grid and switch to the distributed view.
-        grid_->loadBalance();
-        grid_->switchToDistributedView();
+        if (mpiSize > 1) {
+            // the CpGrid's loadBalance() method likes to have the transmissibilities as
+            // its edge weights. since this is (kind of) a layering violation and
+            // transmissibilities are relatively expensive to compute, we only do it if
+            // more than a single process is involved in the simulation.
+            cartesianIndexMapper_ = new CartesianIndexMapper(*grid_);
+            EclTransmissibility<TypeTag> eclTrans(*this);
+            eclTrans.update();
+
+            // convert to transmissibility for faces
+            // TODO: grid_->numFaces() is not generic. use grid_->size(1) instead? (might
+            // not work)
+            const auto& gridView = grid_->leafGridView();
+            unsigned numFaces = grid_->numFaces();
+            std::vector<double> faceTrans(numFaces, 0.0);
+            ElementMapper elemMapper(this->gridView());
+            auto elemIt = gridView.template begin</*codim=*/0>();
+            const auto& elemEndIt = gridView.template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++ elemIt) {
+                const auto& elem = *elemIt;
+                auto isIt = gridView.ibegin(elem);
+                const auto& isEndIt = gridView.iend(elem);
+                for (; isIt != isEndIt; ++ isIt) {
+                    const auto& is = *isIt;
+                    if (!is.neighbor())
+                        continue;
+
+#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
+                    unsigned I = elemMapper.index(is.inside());
+                    unsigned J = elemMapper.index(is.outside());
+#else
+                    unsigned I = elemMapper.map(is.inside());
+                    unsigned J = elemMapper.map(is.outside());
+#endif
+
+                    // FIXME (?): this is not portable!
+                    unsigned faceIdx = is.id();
+
+                    faceTrans[faceIdx] = eclTrans.transmissibility(I, J);
+                }
+            }
+
+            //distribute the grid and switch to the distributed view.
+            defunctWellNames_ = std::get<1>(grid_->loadBalance(&this->eclState(), faceTrans.data()));
+            grid_->switchToDistributedView();
+
+            delete cartesianIndexMapper_;
+            cartesianIndexMapper_ = nullptr;
+        }
 #endif
 
         cartesianIndexMapper_ = new CartesianIndexMapper(*grid_);
@@ -156,14 +206,17 @@ public:
     const CartesianIndexMapper& equilCartesianIndexMapper() const
     { return *equilCartesianIndexMapper_; }
 
+    std::unordered_set<std::string> defunctWellNames() const
+    { return defunctWellNames_; }
+
 protected:
     void createGrids_()
     {
-        const auto& gridProps = this->eclState()->get3DProperties();
+        const auto& gridProps = this->eclState().get3DProperties();
         const std::vector<double>& porv = gridProps.getDoubleGridProperty("PORV").getData();
 
         grid_ = new Dune::CpGrid();
-        grid_->processEclipseFormat(this->eclState()->getInputGrid(),
+        grid_->processEclipseFormat(this->eclState().getInputGrid(),
                                     /*isPeriodic=*/false,
                                     /*flipNormals=*/false,
                                     /*clipZ=*/false,
@@ -174,7 +227,7 @@ protected:
         // is allergic to distributed grids and the simulation grid is distributed before
         // the initial condition is calculated.
         equilGrid_ = new Dune::CpGrid();
-        equilGrid_->processEclipseFormat(this->eclState()->getInputGrid(),
+        equilGrid_->processEclipseFormat(this->eclState().getInputGrid(),
                                          /*isPeriodic=*/false,
                                          /*flipNormals=*/false,
                                          /*clipZ=*/false,
@@ -186,6 +239,8 @@ protected:
     EquilGrid* equilGrid_;
     CartesianIndexMapper* cartesianIndexMapper_;
     CartesianIndexMapper* equilCartesianIndexMapper_;
+
+    std::unordered_set<std::string> defunctWellNames_;
 };
 
 } // namespace Ewoms

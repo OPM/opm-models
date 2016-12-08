@@ -301,7 +301,7 @@ public:
      */
     EclProblem(Simulator& simulator)
         : ParentType(simulator)
-        , transmissibilities_(simulator)
+        , transmissibilities_(simulator.gridManager())
         , thresholdPressures_(simulator)
         , wellManager_(simulator)
         , deckUnits_(simulator)
@@ -326,8 +326,8 @@ public:
         this->gravity_ = 0.0;
 
         // the "NOGRAV" keyword from Frontsim disables gravity...
-        auto deck = simulator.gridManager().deck();
-        if (!deck->hasKeyword("NOGRAV") && EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
+        const auto& deck = simulator.gridManager().deck();
+        if (!deck.hasKeyword("NOGRAV") && EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             this->gravity_[dim - 1] = 9.80665;
 
         initFluidSystem_();
@@ -338,7 +338,7 @@ public:
         readInitialCondition_();
 
         // Set the start time of the simulation
-        const auto& timeMap = simulator.gridManager().schedule()->getTimeMap();
+        const auto& timeMap = simulator.gridManager().eclState().getSchedule().getTimeMap();
         tm curTime = boost::posix_time::to_tm(timeMap.getStartTime(/*timeStepIdx=*/0));
 
         Scalar startTime = std::mktime(&curTime);
@@ -393,8 +393,8 @@ public:
     {
         // Proceed to the next report step
         Simulator& simulator = this->simulator();
-        auto eclState = this->simulator().gridManager().eclState();
-        const auto& schedule = eclState->getSchedule();
+        auto& eclState = this->simulator().gridManager().eclState();
+        const auto& schedule = eclState.getSchedule();
         const auto& events = schedule.getEvents();
         const auto& timeMap = schedule.getTimeMap();
 
@@ -411,7 +411,7 @@ public:
             // has changed, the grid may need be re-created which has some serious
             // implications on e.g., the solution of the simulation.)
             const auto& miniDeck = schedule.getModifierDeck(nextEpisodeIdx);
-            eclState->applyModifierDeck(miniDeck);
+            eclState.applyModifierDeck(miniDeck);
 
             // re-compute all quantities which may possibly be affected.
             transmissibilities_.update();
@@ -520,7 +520,7 @@ public:
         const auto& eclState = simulator.gridManager().eclState();
         int episodeIdx = simulator.episodeIndex();
 
-        const auto& timeMap = eclState->getSchedule().getTimeMap();
+        const auto& timeMap = eclState.getSchedule().getTimeMap();
         int numReportSteps = timeMap.size() - 1;
         if (episodeIdx + 1 >= numReportSteps) {
             simulator.setFinished(true);
@@ -597,7 +597,7 @@ public:
                                            unsigned timeIdx) const
     {
         unsigned globalSpaceIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
-        return intrinsicPermeability_[globalSpaceIdx];
+        return transmissibilities_.permeability(globalSpaceIdx);
     }
 
     /*!
@@ -607,7 +607,7 @@ public:
      * Its main (only?) usage is the ECL transmissibility calculation code...
      */
     const DimMatrix& intrinsicPermeability(unsigned globalElemIdx) const
-    { return intrinsicPermeability_[globalElemIdx]; }
+    { return transmissibilities_.permeability(globalElemIdx); }
 
     /*!
      * \copydoc BlackOilBaseProblem::transmissibility
@@ -889,16 +889,16 @@ private:
 
     void readRockParameters_()
     {
-        auto deck = this->simulator().gridManager().deck();
-        auto eclState = this->simulator().gridManager().eclState();
+        const auto& deck = this->simulator().gridManager().deck();
+        const auto& eclState = this->simulator().gridManager().eclState();
         const auto& gridManager = this->simulator().gridManager();
 
         // the ROCK keyword has not been specified, so we don't need
         // to read rock parameters
-        if (!deck->hasKeyword("ROCK"))
+        if (!deck.hasKeyword("ROCK"))
             return;
 
-        const auto& rockKeyword = deck->getKeyword("ROCK");
+        const auto& rockKeyword = deck.getKeyword("ROCK");
         rockParams_.resize(rockKeyword.size());
         for (size_t rockRecordIdx = 0; rockRecordIdx < rockKeyword.size(); ++ rockRecordIdx) {
             const auto& rockRecord = rockKeyword.getRecord(rockRecordIdx);
@@ -910,11 +910,11 @@ private:
 
         // PVTNUM has not been specified, so everything is in the first region and we
         // don't need to care...
-        if (!eclState->get3DProperties().hasDeckIntGridProperty("PVTNUM"))
+        if (!eclState.get3DProperties().hasDeckIntGridProperty("PVTNUM"))
             return;
 
         const std::vector<int>& pvtnumData =
-            eclState->get3DProperties().getIntGridProperty("PVTNUM").getData();
+            eclState.get3DProperties().getIntGridProperty("PVTNUM").getData();
         unsigned numElem = gridManager.gridView().size(0);
         rockTableIdx_.resize(numElem);
         for (size_t elemIdx = 0; elemIdx < numElem; ++ elemIdx) {
@@ -928,49 +928,11 @@ private:
     void readMaterialParameters_()
     {
         const auto& gridManager = this->simulator().gridManager();
-        auto deck = gridManager.deck();
-        auto eclState = gridManager.eclState();
-        const auto& props = eclState->get3DProperties();
-
-        size_t numDof = this->model().numGridDof();
+        const auto& deck = gridManager.deck();
+        const auto& eclState = gridManager.eclState();
 
         // the PVT region number
         updatePvtnum_();
-
-        ////////////////////////////////
-        // intrinsic permeability
-
-        intrinsicPermeability_.resize(numDof);
-
-        // read the intrinsic permeabilities from the eclState. Note that all arrays
-        // provided by eclState are one-per-cell of "uncompressed" grid, whereas the
-        // opm-grid CpGrid object might remove a few elements...
-        if (props.hasDeckDoubleGridProperty("PERMX")) {
-                const std::vector<double>& permxData =
-                props.getDoubleGridProperty("PERMX").getData();
-            std::vector<double> permyData(permxData);
-            if (props.hasDeckDoubleGridProperty("PERMY"))
-                permyData = props.getDoubleGridProperty("PERMY").getData();
-            std::vector<double> permzData(permxData);
-            if (props.hasDeckDoubleGridProperty("PERMZ"))
-                permzData = props.getDoubleGridProperty("PERMZ").getData();
-
-            for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
-                unsigned cartesianElemIdx = gridManager.cartesianIndex(dofIdx);
-                intrinsicPermeability_[dofIdx] = 0.0;
-                intrinsicPermeability_[dofIdx][0][0] = permxData[cartesianElemIdx];
-                intrinsicPermeability_[dofIdx][1][1] = permyData[cartesianElemIdx];
-                intrinsicPermeability_[dofIdx][2][2] = permzData[cartesianElemIdx];
-            }
-
-            // for now we don't care about non-diagonal entries
-        }
-        else
-            OPM_THROW(std::logic_error,
-                      "Can't read the intrinsic permeability from the ecl state. "
-                      "(The PERM{X,Y,Z} keywords are missing)");
-        ////////////////////////////////
-
 
         ////////////////////////////////
         // porosity
@@ -979,12 +941,13 @@ private:
 
         ////////////////////////////////
         // fluid-matrix interactions (saturation functions; relperm/capillary pressure)
+        size_t numDof = this->model().numGridDof();
         std::vector<int> compressedToCartesianElemIdx(numDof);
         for (unsigned elemIdx = 0; elemIdx < numDof; ++elemIdx)
             compressedToCartesianElemIdx[elemIdx] = gridManager.cartesianIndex(elemIdx);
 
         materialLawManager_ = std::make_shared<EclMaterialLawManager>();
-        materialLawManager_->initFromDeck(*deck, *eclState, compressedToCartesianElemIdx);
+        materialLawManager_->initFromDeck(deck, eclState, compressedToCartesianElemIdx);
         ////////////////////////////////
     }
 
@@ -992,8 +955,8 @@ private:
     {
         const auto& gridManager = this->simulator().gridManager();
         const auto& eclState = gridManager.eclState();
-        const auto& eclGrid = eclState->getInputGrid();
-        const auto& props = eclState->get3DProperties();
+        const auto& eclGrid = eclState.getInputGrid();
+        const auto& props = eclState.get3DProperties();
 
         size_t numDof = this->model().numGridDof();
 
@@ -1044,18 +1007,18 @@ private:
 
     void initFluidSystem_()
     {
-        auto deck = this->simulator().gridManager().deck();
-        auto eclState = this->simulator().gridManager().eclState();
+        const auto& deck = this->simulator().gridManager().deck();
+        const auto& eclState = this->simulator().gridManager().eclState();
 
-        FluidSystem::initFromDeck(*deck, *eclState);
+        FluidSystem::initFromDeck(deck, eclState);
    }
 
     void readInitialCondition_()
     {
         const auto& gridManager = this->simulator().gridManager();
-        auto deck = gridManager.deck();
+        const auto& deck = gridManager.deck();
 
-        if (!deck->hasKeyword("EQUIL"))
+        if (!deck.hasKeyword("EQUIL"))
             readExplicitInitialCondition_();
         else
             readEquilInitialCondition_();
@@ -1087,32 +1050,32 @@ private:
     void readExplicitInitialCondition_()
     {
         const auto& gridManager = this->simulator().gridManager();
-        auto deck = gridManager.deck();
-        auto eclState = gridManager.eclState();
+        const auto& deck = gridManager.deck();
+        const auto& eclState = gridManager.eclState();
 
         // since the values specified in the deck do not need to be consistent, we use an
         // initial condition that conserves the total mass specified by these values.
         useMassConservativeInitialCondition_ = true;
 
         // make sure all required quantities are enables
-        if (FluidSystem::phaseIsActive(waterPhaseIdx) && !deck->hasKeyword("SWAT"))
+        if (FluidSystem::phaseIsActive(waterPhaseIdx) && !deck.hasKeyword("SWAT"))
             OPM_THROW(std::runtime_error,
                       "The ECL input file requires the presence of the SWAT keyword if "
                       "the water phase is active");
-        if (FluidSystem::phaseIsActive(gasPhaseIdx) && !deck->hasKeyword("SGAS"))
+        if (FluidSystem::phaseIsActive(gasPhaseIdx) && !deck.hasKeyword("SGAS"))
             OPM_THROW(std::runtime_error,
                       "The ECL input file requires the presence of the SGAS keyword if "
                       "the gas phase is active");
 
-        if (!deck->hasKeyword("PRESSURE"))
+        if (!deck.hasKeyword("PRESSURE"))
              OPM_THROW(std::runtime_error,
                       "The ECL input file requires the presence of the PRESSURE "
                       "keyword if the model is initialized explicitly");
-        if (FluidSystem::enableDissolvedGas() && !deck->hasKeyword("RS"))
+        if (FluidSystem::enableDissolvedGas() && !deck.hasKeyword("RS"))
             OPM_THROW(std::runtime_error,
                       "The ECL input file requires the RS keyword to be present if"
                       " dissolved gas is enabled");
-        if (FluidSystem::enableVaporizedOil() && !deck->hasKeyword("RV"))
+        if (FluidSystem::enableVaporizedOil() && !deck.hasKeyword("RV"))
             OPM_THROW(std::runtime_error,
                       "The ECL input file requires the RV keyword to be present if"
                       " vaporized oil is enabled");
@@ -1126,27 +1089,27 @@ private:
 
         std::vector<double> waterSaturationData;
         if (FluidSystem::phaseIsActive(waterPhaseIdx))
-            waterSaturationData = deck->getKeyword("SWAT").getSIDoubleData();
+            waterSaturationData = deck.getKeyword("SWAT").getSIDoubleData();
         else
             waterSaturationData.resize(numCartesianCells, 0.0);
 
         std::vector<double> gasSaturationData;
         if (FluidSystem::phaseIsActive(gasPhaseIdx))
-            gasSaturationData = deck->getKeyword("SGAS").getSIDoubleData();
+            gasSaturationData = deck.getKeyword("SGAS").getSIDoubleData();
         else
             gasSaturationData.resize(numCartesianCells, 0.0);
 
         const std::vector<double>& pressureData =
-            deck->getKeyword("PRESSURE").getSIDoubleData();
+            deck.getKeyword("PRESSURE").getSIDoubleData();
         const std::vector<double> *rsData = 0;
         if (FluidSystem::enableDissolvedGas())
-            rsData = &deck->getKeyword("RS").getSIDoubleData();
+            rsData = &deck.getKeyword("RS").getSIDoubleData();
         const std::vector<double> *rvData = 0;
         if (FluidSystem::enableVaporizedOil())
-            rvData = &deck->getKeyword("RV").getSIDoubleData();
+            rvData = &deck.getKeyword("RV").getSIDoubleData();
         // initial reservoir temperature
         const std::vector<double>& tempiData =
-            eclState->get3DProperties().getDoubleGridProperty("TEMPI").getData();
+            eclState.get3DProperties().getDoubleGridProperty("TEMPI").getData();
 
         // make sure that the size of the data arrays is correct
 #ifndef NDEBUG
@@ -1297,7 +1260,7 @@ private:
     void updatePvtnum_()
     {
         const auto& eclState = this->simulator().gridManager().eclState();
-        const auto& eclProps = eclState->get3DProperties();
+        const auto& eclProps = eclState.get3DProperties();
 
         if (!eclProps.hasDeckIntGridProperty("PVTNUM"))
             return;
@@ -1350,7 +1313,6 @@ private:
 
     std::vector<Scalar> porosity_;
     std::vector<Scalar> elementCenterDepth_;
-    std::vector<DimMatrix> intrinsicPermeability_;
     EclTransmissibility<TypeTag> transmissibilities_;
 
     std::shared_ptr<EclMaterialLawManager> materialLawManager_;
