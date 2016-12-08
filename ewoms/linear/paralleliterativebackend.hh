@@ -318,7 +318,7 @@ public:
         }
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 100.0;
+        Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 10.0;
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
             new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
