@@ -318,7 +318,7 @@ public:
         }
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 100.0;
+        Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 10.0;
         typedef typename GridView::CollectiveCommunication Comm;
         auto *convCrit =
             new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
@@ -692,7 +692,7 @@ SET_TYPE_PROP(ParallelIterativeLinearSolver,
 SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
 
 //! set the default number of maximum iterations for the linear solver
-SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 250);
+SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 1000);
 } // namespace Properties
 } // namespace Ewoms
 
