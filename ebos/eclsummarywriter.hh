@@ -520,10 +520,15 @@ private:
     void addPresentSummaryKeywords_(const Opm::Deck& deck)
     {
         Opm::Section summarySection(deck, "SUMMARY");
+
+        if (summarySection.size() == 0)
+            return;
+
         auto kwIt = summarySection.begin();
         auto kwEndIt = summarySection.end();
         // skip the first keyword as this is "SUMMARY". bug in opm-parser?
         ++kwIt;
+
         for (; kwIt != kwEndIt; ++kwIt)
             summaryKeywords_.insert((*kwIt).name());
     }
