@@ -29,13 +29,13 @@
 #ifndef EWOMS_QUANTITY_CALLBACKS_HH
 #define EWOMS_QUANTITY_CALLBACKS_HH
 
-#include <ewoms/common/declval.hh>
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/common/Valgrind.hpp>
 
 #include <type_traits>
+#include <utility>
 
 namespace Ewoms {
 /*!
@@ -49,10 +49,10 @@ class TemperatureCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
-    typedef decltype(Ewoms::declval<IQFluidState>().temperature(0)) ResultType;
+    typedef decltype(std::declval<IQFluidState>().temperature(0)) ResultType;
 
     TemperatureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -83,10 +83,10 @@ class PressureCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
-    typedef decltype(Ewoms::declval<IQFluidState>().pressure(0)) ResultType;
+    typedef decltype(std::declval<IQFluidState>().pressure(0)) ResultType;
 
     PressureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -131,7 +131,7 @@ class BoundaryPressureCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
     typedef typename std::remove_reference<IQFluidState>::type::Scalar IQScalar;
     typedef Opm::MathToolbox<IQScalar> Toolbox;
 
@@ -191,10 +191,10 @@ class DensityCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
-    typedef decltype(Ewoms::declval<IQFluidState>().density(0)) ResultType;
+    typedef decltype(std::declval<IQFluidState>().density(0)) ResultType;
 
     DensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -238,10 +238,10 @@ class MolarDensityCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
-    typedef decltype(Ewoms::declval<IQFluidState>().molarDensity(0)) ResultType;
+    typedef decltype(std::declval<IQFluidState>().molarDensity(0)) ResultType;
 
     MolarDensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -285,10 +285,10 @@ class ViscosityCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
-    typedef decltype(Ewoms::declval<IQFluidState>().viscosity(0)) ResultType;
+    typedef decltype(std::declval<IQFluidState>().viscosity(0)) ResultType;
 
     ViscosityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -407,10 +407,10 @@ class MoleFractionCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(Ewoms::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
 
 public:
-    typedef decltype(Ewoms::declval<IQFluidState>().moleFraction(0, 0)) ResultType;
+    typedef decltype(std::declval<IQFluidState>().moleFraction(0, 0)) ResultType;
 
     MoleFractionCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)

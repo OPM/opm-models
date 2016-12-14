@@ -31,14 +31,13 @@
 #include "blackoilproperties.hh"
 #include "blackoilfluidstate.hh"
 
-#include <ewoms/common/declval.hh>
-
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/common/Valgrind.hpp>
 
 #include <dune/common/fmatrix.hh>
 
 #include <cstring>
+#include <utility>
 
 namespace Ewoms {
 /*!
@@ -340,7 +339,7 @@ public:
      * specified, the PVT region index is 0.)
      */
     auto pvtRegionIndex() const
-        -> decltype(declval<FluidState>().pvtRegionIndex())
+        -> decltype(std::declval<FluidState>().pvtRegionIndex())
     { return fluidState_.pvtRegionIndex(); }
 
     /*!
