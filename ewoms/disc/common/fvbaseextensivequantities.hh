@@ -30,7 +30,7 @@
 
 #include "fvbaseproperties.hh"
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/common/Unused.hpp>
 
 namespace Ewoms {

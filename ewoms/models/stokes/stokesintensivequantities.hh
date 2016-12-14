@@ -33,7 +33,7 @@
 #include <ewoms/models/common/energymodule.hh>
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/common/fvector.hh>

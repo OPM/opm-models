@@ -32,7 +32,7 @@
 
 #include <ewoms/models/immiscible/immiscibleintensivequantities.hh>
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 
 namespace Ewoms {
 

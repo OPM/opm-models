@@ -40,7 +40,7 @@
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/timer.hh>
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 
 #include <opm/common/ResetLocale.hpp>
 
