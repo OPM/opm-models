@@ -37,12 +37,8 @@
  * \brief Copy of dune-istl's linear solvers with added support for
  *        pluggable convergence criteria.
  *
- * For eWoms, pluggable convergence criteria for the linear solvers
- * are an important feature. Unfortunatly, the DUNE developers don't
- * seem to care, so this could not go directly into ISTL. For
- * details, see
- *
- * http://www.dune-project.org/flyspray/index.php?do=details&task_id=1018
+ * For eWoms, pluggable convergence criteria for the linear solvers are an important
+ * feature that is not implemented by Dune's version of this file.
  */
 #ifndef EWOMS_SOLVERS_HH
 #define EWOMS_SOLVERS_HH
