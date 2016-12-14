@@ -33,7 +33,7 @@
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>

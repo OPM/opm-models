@@ -38,7 +38,7 @@
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidstates/SimpleModularFluidState.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 
 namespace Ewoms {
 /*!

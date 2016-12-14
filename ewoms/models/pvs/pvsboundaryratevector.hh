@@ -31,7 +31,7 @@
 #include "pvsproperties.hh"
 
 #include <ewoms/models/common/energymodule.hh>
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 
 namespace Ewoms {
 

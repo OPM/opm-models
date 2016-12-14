@@ -47,7 +47,7 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 

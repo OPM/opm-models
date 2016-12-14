@@ -36,7 +36,7 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 

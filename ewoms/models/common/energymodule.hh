@@ -32,7 +32,7 @@
 #include <ewoms/disc/common/fvbaseproperties.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/common/Unused.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>

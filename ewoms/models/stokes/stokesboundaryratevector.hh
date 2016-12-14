@@ -29,7 +29,7 @@
 #define EWOMS_STOKES_BOUNDARY_RATE_VECTOR_HH
 
 #include <opm/material/densead/Math.hpp>
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include <dune/common/fvector.hh>

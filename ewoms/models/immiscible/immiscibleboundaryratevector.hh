@@ -28,7 +28,7 @@
 #ifndef EWOMS_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
 
-#include <opm/material/common/Valgrind.hpp>
+#include <opm/common/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include "immiscibleintensivequantities.hh"
