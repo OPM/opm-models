@@ -43,7 +43,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/material/common/ClassName.hpp>
+#include <dune/common/classname.hh>
 
 #include <cmath>
 
@@ -337,7 +337,7 @@ public:
                         unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: The local residual " << Opm::className<Implementation>()
+                   "Not implemented: The local residual " << Dune::className<Implementation>()
                    << " does not implement the required method 'computeStorage()'");
     }
 
@@ -354,7 +354,7 @@ public:
                      unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Opm::className<Implementation>()
+                  "Not implemented: The local residual " << Dune::className<Implementation>()
                   << " does not implement the required method 'computeFlux()'");
     }
 
@@ -370,7 +370,7 @@ public:
                        unsigned OPM_UNUSED timeIdx) const
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Opm::className<Implementation>()
+                  "Not implemented: The local residual " << Dune::className<Implementation>()
                   << " does not implement the required method 'computeSource()'");
     }
 

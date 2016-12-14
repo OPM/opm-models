@@ -42,7 +42,7 @@
 #ifndef EWOMS_PROPERTIES_HH
 #define EWOMS_PROPERTIES_HH
 
-#include <opm/material/common/ClassName.hpp>
+#include <dune/common/classname.hh>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
@@ -74,7 +74,7 @@ namespace Properties {
         static int init() {                                             \
             propertyName = #PropTagName;                                \
             PropertyRegistryKey key(                                    \
-                /*effTypeTagName=*/ Opm::className<TTAG(EffTypeTagName)>(), \
+                /*effTypeTagName=*/ Dune::className<TTAG(EffTypeTagName)>(), \
                 /*kind=*/PropKind,                                      \
                 /*name=*/#PropTagName,                                  \
                 /*value=*/#__VA_ARGS__,                                 \
@@ -628,8 +628,8 @@ public:
     template <class TypeTag, class Child1, class Child2, typename ... RemainingChildren>
     static void addChildren()
     {
-        std::string typeTagName = Opm::className<TypeTag>();
-        children_[typeTagName].push_front(Opm::className<Child1>());
+        std::string typeTagName = Dune::className<TypeTag>();
+        children_[typeTagName].push_front(Dune::className<Child1>());
         addChildren<TypeTag, Child2, RemainingChildren...>();
     }
 
@@ -644,7 +644,7 @@ public:
     template <class TypeTag, class Splice1, typename ... RemainingSplices>
     static void addSplices()
     {
-        std::string typeTagName = Opm::className<TypeTag>();
+        std::string typeTagName = Dune::className<TypeTag>();
 
         SpliceRegistryEntry<TypeTag, Splice1> *tmp = new SpliceRegistryEntry<TypeTag, Splice1>;
 
@@ -1029,7 +1029,7 @@ const std::string getDiagnostic(std::string propTagName)
 {
     std::string result;
 
-    std::string TypeTagName(Opm::className<TypeTag>());
+    std::string TypeTagName(Dune::className<TypeTag>());
 
     propTagName.replace(0, strlen("PTag("), "");
     auto n = propTagName.length();
@@ -1115,7 +1115,7 @@ template <class TypeTag>
 void printValues(std::ostream& os = std::cout)
 {
     std::set<std::string> printedProps;
-    print_(Opm::className<TypeTag>(), Opm::className<TypeTag>(), /*splicePropertyName=*/"", os, /*indent=*/"", printedProps);
+    print_(Dune::className<TypeTag>(), Dune::className<TypeTag>(), /*splicePropertyName=*/"", os, /*indent=*/"", printedProps);
 }
 #else // !defined NO_PROPERTY_INTROSPECTION
 template <class TypeTag>

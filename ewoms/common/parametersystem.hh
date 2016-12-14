@@ -35,7 +35,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
-#include <opm/material/common/ClassName.hpp>
+#include <dune/common/classname.hh>
 
 #include <dune/common/parametertree.hh>
 
@@ -716,7 +716,7 @@ private:
         // make sure that the parameter is used consistently. since
         // this is potentially quite expensive, it is only done if
         // debugging code is not explicitly turned off.
-        check_(Opm::className<ParamType>(), propTagName, paramName);
+        check_(Dune::className<ParamType>(), propTagName, paramName);
 #endif
 
         typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
@@ -780,8 +780,8 @@ void registerParam(const char *paramName, const char *propertyName, const char *
 
     ParamInfo paramInfo;
     paramInfo.paramName = paramName;
-    paramInfo.paramTypeName = Opm::className<ParamType>();
-    std::string tmp = Opm::className<TypeTag>();
+    paramInfo.paramTypeName = Dune::className<ParamType>();
+    std::string tmp = Dune::className<TypeTag>();
     tmp.replace(0, strlen("Opm::Properties::TTag::"), "");
     paramInfo.propertyName = propertyName;
     paramInfo.usageString = usageString;
