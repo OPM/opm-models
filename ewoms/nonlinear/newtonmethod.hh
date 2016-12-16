@@ -413,6 +413,11 @@ public:
                 updateTime_ += updateTimer_.realTimeElapsed();
                 updateTimer_.halt();
 
+                if (asImp_().verbose_())
+                    // make sure that the line currently holding the cursor is prestine
+                    std::cout << clearRemainingLine
+                              << std::flush;
+
                 // tell the implementation that we're done with this iteration
                 prePostProcessTimer.start();
                 asImp_().endIteration_(nextSolution, currentSolution);
