@@ -413,7 +413,7 @@ public:
                 updateTime_ += updateTimer_.realTimeElapsed();
                 updateTimer_.halt();
 
-                if (asImp_().verbose_())
+                if (asImp_().verbose_() && isatty(fileno(stdout)))
                     // make sure that the line currently holding the cursor is prestine
                     std::cout << clearRemainingLine
                               << std::flush;
