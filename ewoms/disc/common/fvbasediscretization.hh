@@ -1578,10 +1578,15 @@ public:
             ElementContext elemCtx(simulator_);
             ElementIterator elemIt = threadedElemIt.beginParallel();
             for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+                const auto& elem = *elemIt;
+                if (elem.partitionType() != Dune::InteriorEntity)
+                    // ignore non-interior entities
+                    continue;
+
                 if (needFullContextUpdate)
-                    elemCtx.updateAll(*elemIt);
+                    elemCtx.updateAll(elem);
                 else {
-                    elemCtx.updatePrimaryStencil(*elemIt);
+                    elemCtx.updatePrimaryStencil(elem);
                     elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
                 }
 
