@@ -342,10 +342,11 @@ public:
         // to an undefined value, so we have to iterate...
         size_t nDof = this->numTotalDof();
         for (unsigned dofIdx = 0; dofIdx < nDof; ++ dofIdx) {
-            if (this->dofTotalVolume(dofIdx) > 0) {
+            if (this->dofTotalVolume(dofIdx) > 0.0) {
                 referencePressure_ =
                     this->solution(/*timeIdx=*/0)[dofIdx][/*pvIdx=*/Indices::pressure0Idx];
-                break;
+                if (referencePressure_ > 0.0)
+                    break;
             }
         }
     }
