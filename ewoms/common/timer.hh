@@ -49,8 +49,6 @@ class Timer
 {
     struct TimeData
     {
-        // The timespec data structure is more accurate than Linux (or at least POSIX)
-        // specific. for other operating systems, we use Dune::Timer
         std::chrono::high_resolution_clock::time_point realtimeData;
         std::clock_t cputimeData;
     };
@@ -68,92 +66,134 @@ public:
     }
 
     /*!
-     * \brief Stop counting the time resources used by the simulation.
+     * \brief Stop counting the time resources.
+     *
+     * Returns the wall clock time the timer was active.
      */
-    void stop()
+    double stop()
     {
+        if (!isStopped_) {
+            TimeData stopTime;
+
+            measure_(stopTime);
+
+            const auto& t1 = startTime_.realtimeData;
+            const auto& t2 = stopTime.realtimeData;
+            std::chrono::duration<double> dt =
+                std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1);
+
+            realTimeElapsed_ += dt.count();
+            cpuTimeElapsed_ +=
+                static_cast<double>(stopTime.cputimeData
+                                    - startTime_.cputimeData)/CLOCKS_PER_SEC;
+        }
+
         isStopped_ = true;
-        measure_(stopTime_);
+
+        return realTimeElapsed_;
     }
 
     /*!
-     * \brief Stop the measurement and always return 0 for all timing values
+     * \brief Stop the measurement reset all timing values
      */
     void halt()
     {
         isStopped_ = true;
-
-        measure_(startTime_);
-        stopTime_ = startTime_;
+        cpuTimeElapsed_ = 0.0;
+        realTimeElapsed_ = 0.0;
     }
 
     /*!
-     * \brief Return the real time [s] elapsed
-     *
-     * If stop() was not yet called, this returns the time elapsed
-     * since the last call to start().
+     * \brief Make the current point in time t=0 but do not change the status of the timer.
+     */
+    void reset()
+    {
+        cpuTimeElapsed_ = 0.0;
+        realTimeElapsed_ = 0.0;
+
+        measure_(startTime_);
+    }
+
+    /*!
+     * \brief Return the  real time [s] elapsed  during the periods the  timer was active
+     *        since the last reset.
      */
     double realTimeElapsed() const
     {
-        TimeData stopTime(stopTime_);
+        if (isStopped_)
+            return realTimeElapsed_;
 
-        if (!isStopped_)
-            measure_(stopTime);
+        TimeData stopTime;
+
+        measure_(stopTime);
 
         const auto& t1 = startTime_.realtimeData;
         const auto& t2 = stopTime.realtimeData;
-
         std::chrono::duration<double> dt =
             std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1);
-        return dt.count();
+
+        return realTimeElapsed_ + dt.count();
     }
 
     /*!
-     * \brief Return the CPU time [s] used by all threads of the local process
+     * \brief This is an alias for realTimeElapsed()
      *
-     * If stop() was not yet called, this returns the time elapsed
-     * since the last call to start().
+     * Its main purpose is to make the API of the class a superset of Dune::Timer
+     */
+    double elapsed() const
+    { return realTimeElapsed(); }
+
+    /*!
+     * \brief Return the CPU time [s] used by all threads of the local process for the
+     *        periods the timer was active
      */
     double cpuTimeElapsed() const
     {
-        TimeData stopTime(stopTime_);
+        if (isStopped_)
+            return cpuTimeElapsed_;
 
-        if (!isStopped_)
-            measure_(stopTime);
+        TimeData stopTime;
+
+        measure_(stopTime);
 
         const auto& t1 = startTime_.cputimeData;
         const auto& t2 = stopTime.cputimeData;
 
-        return static_cast<double>(t2 - t1)/CLOCKS_PER_SEC;
+        return cpuTimeElapsed_ + static_cast<double>(t2 - t1)/CLOCKS_PER_SEC;
     }
 
     /*!
-     * \brief Return the CPU time [s] used by all threads of the all processes of the simulation
+     * \brief Return the CPU time [s] used by all threads of the all processes of program
      *
-     * If stop() was not yet called, this returns the time elapsed
-     * since the last call to start(). Note that this method must be
-     * called synchronously by all processes of the simulation...
+     * The value returned only differs from cpuTimeElapsed() if MPI is used.
      */
     double globalCpuTimeElapsed() const
     {
-        TimeData stopTime(stopTime_);
-
-        if (!isStopped_)
-            measure_(stopTime);
-
         double val = cpuTimeElapsed();
         double globalVal = val;
 
 #if HAVE_MPI
         MPI_Reduce(&val,
-            &globalVal,
-            /*count=*/1,
-            MPI_DOUBLE,
-            MPI_SUM,
-            /*rootRank=*/0,
-            MPI_COMM_WORLD);
+                   &globalVal,
+                   /*count=*/1,
+                   MPI_DOUBLE,
+                   MPI_SUM,
+                   /*rootRank=*/0,
+                   MPI_COMM_WORLD);
 #endif
+
         return globalVal;
+    }
+
+    /*!
+     * \brief Adds the time of another timer to the current one
+     */
+    Timer& operator+=(const Timer& other)
+    {
+        realTimeElapsed_ += other.realTimeElapsed();
+        cpuTimeElapsed_ += other.cpuTimeElapsed();
+
+        return *this;
     }
 
 private:
@@ -161,15 +201,16 @@ private:
     // the argument.
     static void measure_(TimeData& timeData)
     {
-        // This method is more accurate than  Linux (or at least POSIX) specific. for other operating
-        // systems, we use Dune::Timer
+        // Note: On Linux -- or rather fully POSIX compliant systems -- using
+        // clock_gettime() would be more accurate for the CPU time.
         timeData.realtimeData = std::chrono::high_resolution_clock::now();
         timeData.cputimeData = std::clock();
     }
 
     bool isStopped_;
+    double cpuTimeElapsed_;
+    double realTimeElapsed_;
     TimeData startTime_;
-    TimeData stopTime_;
 };
 } // namespace Ewoms
 

@@ -158,11 +158,7 @@ public:
      * If you overload this method don't forget to call ParentType::finishInit()
      */
     void finishInit()
-    {
-        linearizeTime_ = 0.0;
-        solveTime_ = 0.0;
-        updateTime_ = 0.0;
-    }
+    { }
 
     /*!
      * \brief Allows to improve the performance by prefetching all data which is
@@ -184,20 +180,6 @@ public:
         if (enableVtkOutput_())
             defaultVtkWriter_->gridChanged();
     }
-
-    /*!
-     * \brief Returns the total wall time spend on solving the
-     *        system [s].
-     */
-    Scalar solveTime() const
-    { return solveTime_; }
-
-    /*!
-     * \brief Returns the total wall time spend on updating the
-     *        iterative solutions [s].
-     */
-    Scalar updateTime() const
-    { return updateTime_; }
 
     /*!
      * \brief Evaluate the boundary conditions for a boundary segment.
@@ -349,13 +331,17 @@ public:
      */
     void finalize()
     {
-        const auto& timer = simulator().timer();
-        Scalar simulationTime = timer.realTimeElapsed();
-        Scalar setupTime = simulator().setupTime();
-        Scalar prePostProcessTime = simulator().prePostProcessTime();
-        Scalar localCpuTime = timer.cpuTimeElapsed();
-        Scalar globalCpuTime = timer.globalCpuTimeElapsed();
-        Scalar totalWriteTime = simulator().totalWriteTime();
+        const auto& executionTimer = simulator().executionTimer();
+
+        Scalar executionTime = executionTimer.realTimeElapsed();
+        Scalar setupTime = simulator().setupTimer().realTimeElapsed();
+        Scalar prePostProcessTime = simulator().prePostProcessTimer().realTimeElapsed();
+        Scalar localCpuTime = executionTimer.cpuTimeElapsed();
+        Scalar globalCpuTime = executionTimer.globalCpuTimeElapsed();
+        Scalar writeTime = simulator().writeTimer().realTimeElapsed();
+        Scalar linearizeTime = simulator().linearizeTimer().realTimeElapsed();
+        Scalar solveTime = simulator().solveTimer().realTimeElapsed();
+        Scalar updateTime = simulator().updateTimer().realTimeElapsed();
         unsigned numProcesses = static_cast<unsigned>(this->gridView().comm().size());
         unsigned threadsPerProcess = ThreadManager::maxThreads();
         if (gridView().comm().rank() == 0) {
@@ -364,19 +350,19 @@ public:
                       << "\n"
                       << "------------------------ Timing receipt ------------------------\n"
                       << "Setup time: " << setupTime << " seconds" << Simulator::humanReadableTime(setupTime)
-                      << ", " << setupTime/(simulationTime + setupTime)*100 << "%\n"
-                      << "Simulation time: " << simulationTime << " seconds" << Simulator::humanReadableTime(simulationTime)
-                      << ", " << simulationTime/(simulationTime + setupTime)*100 << "%\n"
-                      << "    Linearization time: " << linearizeTime_ << " seconds" << Simulator::humanReadableTime(linearizeTime_)
-                      << ", " << linearizeTime_/simulationTime*100 << "%\n"
-                      << "    Linear solve time: "  << solveTime_ << " seconds" << Simulator::humanReadableTime(solveTime_)
-                      << ", " << solveTime_/simulationTime*100 << "%\n"
-                      << "    Newton update time: "  << updateTime_ << " seconds" << Simulator::humanReadableTime(updateTime_)
-                      << ", " << updateTime_/simulationTime*100 << "%\n"
+                      << ", " << setupTime/(executionTime + setupTime)*100 << "%\n"
+                      << "Simulation time: " << executionTime << " seconds" << Simulator::humanReadableTime(executionTime)
+                      << ", " << executionTime/(executionTime + setupTime)*100 << "%\n"
+                      << "    Linearization time: " << linearizeTime << " seconds" << Simulator::humanReadableTime(linearizeTime)
+                      << ", " << linearizeTime/executionTime*100 << "%\n"
+                      << "    Linear solve time: "  << solveTime << " seconds" << Simulator::humanReadableTime(solveTime)
+                      << ", " << solveTime/executionTime*100 << "%\n"
+                      << "    Newton update time: "  << updateTime << " seconds" << Simulator::humanReadableTime(updateTime)
+                      << ", " << updateTime/executionTime*100 << "%\n"
                       << "    Pre/postprocess time: "  << prePostProcessTime << " seconds" << Simulator::humanReadableTime(prePostProcessTime)
-                      << ", " << prePostProcessTime/simulationTime*100 << "%\n"
-                      << "    Output write time: "  << totalWriteTime << " seconds" << Simulator::humanReadableTime(totalWriteTime)
-                      << ", " << totalWriteTime/simulationTime*100 << "%\n"
+                      << ", " << prePostProcessTime/executionTime*100 << "%\n"
+                      << "    Output write time: "  << writeTime << " seconds" << Simulator::humanReadableTime(writeTime)
+                      << ", " << writeTime/executionTime*100 << "%\n"
                       << "First process' simulation CPU time: "  << localCpuTime << " seconds" <<  Simulator::humanReadableTime(localCpuTime) << "\n"
                       << "Number of processes: " << numProcesses << "\n"
                       << "Threads per processes: " << threadsPerProcess << "\n"
@@ -384,7 +370,7 @@ public:
                       << "\n"
                       << "Note 1: If not stated otherwise, all times are wall clock times\n"
                       << "Note 2: Taxes and administrative overhead are "
-                      << (simulationTime - (linearizeTime_+solveTime_+updateTime_+prePostProcessTime+totalWriteTime))/simulationTime*100
+                      << (executionTime - (linearizeTime+solveTime+updateTime+prePostProcessTime+writeTime))/executionTime*100
                       << "%\n"
                       << "\n"
                       << "Our simulation hours are 24/7. Thank you for choosing us.\n"
@@ -415,11 +401,6 @@ public:
 
         for (unsigned i = 0; i < maxFails; ++i) {
             bool converged = model().update(newtonMethod());
-
-            linearizeTime_ += newtonMethod().linearizeTime();
-            solveTime_ += newtonMethod().solveTime();
-            updateTime_ += newtonMethod().updateTime();
-
             if (converged)
                 return;
 
@@ -686,11 +667,6 @@ private:
     // Attributes required for the actual simulation
     Simulator& simulator_;
     mutable VtkMultiWriter *defaultVtkWriter_;
-
-    // CPU time keeping
-    Scalar linearizeTime_;
-    Scalar solveTime_;
-    Scalar updateTime_;
 };
 
 } // namespace Ewoms

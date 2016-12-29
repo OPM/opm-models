@@ -52,6 +52,8 @@
 #include <ewoms/common/simulator.hh>
 #include <ewoms/aux/baseauxiliarymodule.hh>
 #include <ewoms/common/alignedallocator.hh>
+#include <ewoms/common/timer.hh>
+#include <ewoms/common/timerguard.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/common/Valgrind.hpp>
@@ -1157,26 +1159,48 @@ public:
      */
     bool update(NewtonMethod& solver)
     {
+        Ewoms::TimerGuard prePostProcessGuard(prePostProcessTimer_);
+
 #if HAVE_VALGRIND
         for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i)
             asImp_().solution(/*timeIdx=*/0)[i].checkDefined();
 #endif // HAVE_VALGRIND
 
-        Timer prePostProcessTimer;
-        prePostProcessTimer.start();
+        // make sure all timers are prestine
+        prePostProcessTimer_.halt();
+        linearizeTimer_.halt();
+        solveTimer_.halt();
+        updateTimer_.halt();
+
+        prePostProcessTimer_.start();
         asImp_().updateBegin();
-        prePostProcessTimer.stop();
-        simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+        prePostProcessTimer_.stop();
 
-        bool converged = solver.apply();
+        bool converged = false;
 
-        prePostProcessTimer.start();
+        try {
+            converged = solver.apply();
+        }
+        catch(...) {
+            prePostProcessTimer_ += solver.prePostProcessTimer();
+            linearizeTimer_ += solver.linearizeTimer();
+            solveTimer_ += solver.solveTimer();
+            updateTimer_ += solver.updateTimer();
+
+            throw;
+        }
+
+        prePostProcessTimer_ += solver.prePostProcessTimer();
+        linearizeTimer_ += solver.linearizeTimer();
+        solveTimer_ += solver.solveTimer();
+        updateTimer_ += solver.updateTimer();
+
+        prePostProcessTimer_.start();
         if (converged)
             asImp_().updateSuccessful();
         else
             asImp_().updateFailed();
-        prePostProcessTimer.stop();
-        simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+        prePostProcessTimer_.stop();
 
 #if HAVE_VALGRIND
         // make sure that the "non-pseudo" primary variables are defined. Note that
@@ -1699,6 +1723,18 @@ public:
     }
 #endif
 
+    const Ewoms::Timer& prePostProcessTimer() const
+    { return prePostProcessTimer_; }
+
+    const Ewoms::Timer& linearizeTimer() const
+    { return linearizeTimer_; }
+
+    const Ewoms::Timer& solveTimer() const
+    { return solveTimer_; }
+
+    const Ewoms::Timer& updateTimer() const
+    { return updateTimer_; }
+
 protected:
     void resizeAndResetIntensiveQuantitiesCache_()
     {
@@ -1781,6 +1817,11 @@ protected:
     std::vector<std::shared_ptr<BaseAuxiliaryModule<TypeTag> > > auxEqModules_;
 
     NewtonMethod newtonMethod_;
+
+    Ewoms::Timer prePostProcessTimer_;
+    Ewoms::Timer linearizeTimer_;
+    Ewoms::Timer solveTimer_;
+    Ewoms::Timer updateTimer_;
 
     // calculates the local jacobian matrix for a given element
     std::vector<LocalLinearizer> localLinearizer_;

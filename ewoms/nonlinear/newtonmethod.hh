@@ -32,6 +32,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/timer.hh>
+#include <ewoms/common/timerguard.hh>
 
 #include <dune/common/classname.hh>
 #include <opm/common/Unused.hpp>
@@ -307,22 +308,31 @@ public:
             clearRemainingLine = blubb;
         }
 
+        // make sure all timers are prestine
+        prePostProcessTimer_.halt();
+        linearizeTimer_.halt();
+        solveTimer_.halt();
+        updateTimer_.halt();
+
         SolutionVector& nextSolution = model().solution(/*historyIdx=*/0);
         SolutionVector currentSolution(nextSolution);
         GlobalEqVector solutionUpdate(nextSolution.size());
 
         Linearizer& linearizer = model().linearizer();
 
+        Ewoms::TimerGuard prePostProcessTimerGuard(prePostProcessTimer_);
+
         // tell the implementation that we begin solving
+        prePostProcessTimer_.start();
         asImp_().begin_(nextSolution);
-
-        linearizeTime_ = 0.0;
-        solveTime_ = 0.0;
-        updateTime_ = 0.0;
-
-        Timer prePostProcessTimer;
+        prePostProcessTimer_.stop();
 
         try {
+            Ewoms::TimerGuard innerPrePostProcessTimerGuard(prePostProcessTimer_);
+            Ewoms::TimerGuard linearizeTimerGuard(linearizeTimer_);
+            Ewoms::TimerGuard updateTimerGuard(updateTimer_);
+            Ewoms::TimerGuard solveTimerGuard(solveTimer_);
+
             // execute the method as long as the implementation thinks
             // that we should do another iteration
             while (asImp_().proceed_()) {
@@ -330,10 +340,9 @@ public:
 
                 // notify the implementation that we're about to start
                 // a new iteration
-                prePostProcessTimer.start();
+                prePostProcessTimer_.start();
                 asImp_().beginIteration_();
-                prePostProcessTimer.stop();
-                simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+                prePostProcessTimer_.stop();
 
                 // make the current solution to the old one
                 currentSolution = nextSolution;
@@ -348,8 +357,6 @@ public:
                 linearizeTimer_.start();
                 asImp_().linearize_();
                 linearizeTimer_.stop();
-                linearizeTime_ += linearizeTimer_.realTimeElapsed();
-                linearizeTimer_.halt();
 
                 // notify the implementation of the successful linearization on order to
                 // give it the chance to update the error and thus to terminate the
@@ -360,8 +367,6 @@ public:
                 linearSolver_.prepareRhs(M, b);
                 asImp_().preSolve_(currentSolution,  b);
                 updateTimer_.stop();
-                updateTime_ += updateTimer_.realTimeElapsed();;
-                updateTimer_.halt();
 
                 if (!asImp_().proceed_())
                     break;
@@ -378,18 +383,15 @@ public:
                 linearSolver_.prepareMatrix(M);
                 bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
-                solveTime_ += solveTimer_.realTimeElapsed();;
-                solveTimer_.halt();
 
                 if (!converged) {
+                    solveTimer_.stop();
                     if (asImp_().verbose_())
                         std::cout << "Newton: Linear solver did not converge\n" << std::flush;
-                    solveTimer_.stop();
 
-                    prePostProcessTimer.start();
+                    prePostProcessTimer_.start();
                     asImp_().failed_();
-                    prePostProcessTimer.stop();
-                    simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+                    prePostProcessTimer_.stop();
 
                     return false;
                 }
@@ -410,8 +412,6 @@ public:
                                     solutionUpdate);
                 asImp_().update_(nextSolution, currentSolution, solutionUpdate, b);
                 updateTimer_.stop();
-                updateTime_ += updateTimer_.realTimeElapsed();
-                updateTimer_.halt();
 
                 if (asImp_().verbose_() && isatty(fileno(stdout)))
                     // make sure that the line currently holding the cursor is prestine
@@ -419,39 +419,33 @@ public:
                               << std::flush;
 
                 // tell the implementation that we're done with this iteration
-                prePostProcessTimer.start();
+                prePostProcessTimer_.start();
                 asImp_().endIteration_(nextSolution, currentSolution);
-                prePostProcessTimer.stop();
-                simulator_.addPrePostProcessTime(prePostProcessTimer.realTimeElapsed());
+                prePostProcessTimer_.stop();
             }
         }
         catch (const Dune::Exception& e)
         {
-            linearizeTime_ += linearizeTimer_.realTimeElapsed();
-            solveTime_ += solveTimer_.realTimeElapsed();
-            updateTime_ += updateTimer_.realTimeElapsed();
-            linearizeTimer_.halt();
-            solveTimer_.halt();
-            updateTimer_.halt();
             if (asImp_().verbose_())
                 std::cout << "Newton method caught exception: \""
                           << e.what() << "\"\n" << std::flush;
+
+            prePostProcessTimer_.start();
             asImp_().failed_();
+            prePostProcessTimer_.stop();
+
             return false;
         }
         catch (const Opm::NumericalProblem& e)
         {
-            linearizeTime_ += linearizeTimer_.realTimeElapsed();
-            solveTime_ += solveTimer_.realTimeElapsed();
-            updateTime_ += updateTimer_.realTimeElapsed();
-            linearizeTimer_.halt();
-            solveTimer_.halt();
-            updateTimer_.halt();
-
             if (asImp_().verbose_())
                 std::cout << "Newton method caught exception: \""
                           << e.what() << "\"\n" << std::flush;
+
+            prePostProcessTimer_.start();
             asImp_().failed_();
+            prePostProcessTimer_.stop();
+
             return false;
         }
 
@@ -461,59 +455,42 @@ public:
                       << std::flush;
 
         // tell the implementation that we're done
+        prePostProcessTimer_.start();
         asImp_().end_();
+        prePostProcessTimer_.stop();
 
         // print the timing summary of the time step
         if (asImp_().verbose_()) {
             Scalar elapsedTot =
-                linearizeTime_
-                + solveTime_
-                + updateTime_;
+                linearizeTimer_.realTimeElapsed()
+                + solveTimer_.realTimeElapsed()
+                + updateTimer_.realTimeElapsed();
             std::cout << "Linearization/solve/update time: "
-                      << linearizeTime_ << "("
-                      << 100 * linearizeTime_/elapsedTot << "%)/"
-                      << solveTime_ << "("
-                      << 100 * solveTime_/elapsedTot << "%)/"
-                      << updateTime_ << "("
-                      << 100 * updateTime_/elapsedTot << "%)"
+                      << linearizeTimer_.realTimeElapsed() << "("
+                      << 100 * linearizeTimer_.realTimeElapsed()/elapsedTot << "%)/"
+                      << solveTimer_.realTimeElapsed() << "("
+                      << 100 * solveTimer_.realTimeElapsed()/elapsedTot << "%)/"
+                      << updateTimer_.realTimeElapsed() << "("
+                      << 100 * updateTimer_.realTimeElapsed()/elapsedTot << "%)"
                       << "\n" << std::flush;
         }
 
 
-        // if we're not converged, tell the implementation that we've failed, else tell
-        // it that we succeeded
+        // if we're not converged, tell the implementation that we've failed
         if (!asImp_().converged()) {
+            prePostProcessTimer_.start();
             asImp_().failed_();
+            prePostProcessTimer_.stop();
             return false;
         }
 
+        // if we converged, tell the implementation that we've succeeded
+        prePostProcessTimer_.start();
         asImp_().succeeded_();
+        prePostProcessTimer_.stop();
+
         return true;
     }
-
-    /*!
-     * \brief Returns the wall time spend so far for linearizing the
-     *        non-linear system for all iterations of the current time
-     *        step.
-     */
-    Scalar linearizeTime() const
-    { return linearizeTime_; }
-
-    /*!
-     * \brief Returns the wall time spend so far for solving the
-     *        linear systems for all iterations of the current time
-     *        step.
-     */
-    Scalar solveTime() const
-    { return solveTime_; }
-
-    /*!
-     * \brief Returns the wall time spend so far for updating the
-     *        iterative solutions of the non-linear system for all
-     *        iterations of the current time step.
-     */
-    Scalar updateTime() const
-    { return updateTime_; }
 
     /*!
      * \brief Suggest a new time-step size based on the old time-step
@@ -565,6 +542,18 @@ public:
      */
     const LinearSolverBackend& linearSolver() const
     { return linearSolver_; }
+
+    const Ewoms::Timer& prePostProcessTimer() const
+    { return prePostProcessTimer_; }
+
+    const Ewoms::Timer& linearizeTimer() const
+    { return linearizeTimer_; }
+
+    const Ewoms::Timer& solveTimer() const
+    { return solveTimer_; }
+
+    const Ewoms::Timer& updateTimer() const
+    { return updateTimer_; }
 
 protected:
     /*!
@@ -840,13 +829,10 @@ protected:
 
     Simulator& simulator_;
 
+    Ewoms::Timer prePostProcessTimer_;
     Ewoms::Timer linearizeTimer_;
     Ewoms::Timer solveTimer_;
     Ewoms::Timer updateTimer_;
-
-    Scalar linearizeTime_;
-    Scalar solveTime_;
-    Scalar updateTime_;
 
     std::ostringstream endIterMsgStream_;
 
