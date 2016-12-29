@@ -27,7 +27,7 @@
 #ifndef EWOMS_PARALLEL_AMG_BACKEND_HH
 #define EWOMS_PARALLEL_AMG_BACKEND_HH
 
-#include <ewoms/linear/paralleliterativebackend.hh>
+#include <ewoms/linear/parallelbicgstabbackend.hh>
 #include <ewoms/linear/superlubackend.hh>
 #include <ewoms/linear/vertexborderlistfromgrid.hh>
 #include <ewoms/linear/overlappingbcrsmatrix.hh>
@@ -35,7 +35,6 @@
 #include <ewoms/linear/overlappingpreconditioner.hh>
 #include <ewoms/linear/overlappingscalarproduct.hh>
 #include <ewoms/linear/overlappingoperator.hh>
-#include <ewoms/linear/solverpreconditioner.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
@@ -59,7 +58,7 @@ class ParallelAmgBackend;
 }
 
 namespace Properties {
-NEW_TYPE_TAG(ParallelAmgLinearSolver, INHERITS_FROM(ParallelIterativeLinearSolver));
+NEW_TYPE_TAG(ParallelAmgLinearSolver, INHERITS_FROM(ParallelBiCGStabLinearSolver));
 
 NEW_PROP_TAG(AmgCoarsenTarget);
 
@@ -137,20 +136,14 @@ class ParallelAmgBackend
 public:
     ParallelAmgBackend(const Simulator& simulator)
         : simulator_(simulator)
-    {
-        overlappingMatrix_ = nullptr;
-        overlappingb_ = nullptr;
-        overlappingx_ = nullptr;
-
-        amg_ = nullptr;
-    }
+    { }
 
     ~ParallelAmgBackend()
     { cleanup_(); }
 
     static void registerParameters()
     {
-        ParallelIterativeSolverBackend<TypeTag>::registerParameters();
+        ParallelBiCGStabSolverBackend<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, int, AmgCoarsenTarget,
                              "The coarsening target for the agglomerations of "
@@ -216,18 +209,18 @@ public:
         /////////////
         // create the parallel scalar product and the parallel operator
 #if HAVE_MPI
-        FineOperator fineOperator(*overlappingMatrix_, *istlComm_);
+        auto fineOperator = std::make_shared<FineOperator>(*overlappingMatrix_, *istlComm_);
 #else
-        FineOperator fineOperator(*overlappingMatrix_);
+        auto fineOperator = std::make_shared<FineOperator>(*overlappingMatrix_);
 #endif
 
 #if HAVE_MPI
-        FineScalarProduct scalarProduct(*istlComm_);
+        auto scalarProduct = std::make_shared<FineScalarProduct>(*istlComm_);
 #else
-        FineScalarProduct scalarProduct;
+        auto scalarProduct = std::make_shared<FineScalarProduct>();
 #endif
 
-        setupAmg_(fineOperator);
+        setupAmg_(*fineOperator);
 
         /////////////
         // set-up the linear solver
@@ -235,21 +228,11 @@ public:
         if (verbosity > 1 && simulator_.gridManager().gridView().comm().rank() == 0)
             std::cout << "Creating the solver\n" << std::flush;
 
-        typedef Ewoms::BiCGSTABSolver<Vector> SolverType;
-        Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        int maxIterations = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);
-        SolverType solver(fineOperator,
-                          scalarProduct,
-                          /*preconditioner=*/*amg_,
-                          linearSolverTolerance,
-                          /*maxSteps=*/maxIterations,
-                          verbosity);
-
         /////
         // create a residual reduction convergence criterion
 
         // set the weighting of the residuals
-        OverlappingVector residWeightVec(*overlappingx_);
+        Vector residWeightVec(*overlappingx_);
         residWeightVec = 0.0;
         const auto& overlap = overlappingMatrix_->overlap();
         for (Index localIdx = 0; localIdx < static_cast<Index>(overlap.numLocal()); ++localIdx) {
@@ -260,43 +243,51 @@ public:
             }
         }
 
+        Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 10.0;
         typedef typename GridView::CollectiveCommunication Comm;
-        auto *convCrit =
-            new Ewoms::WeightedResidualReductionCriterion<Vector, Comm>(
+        auto convCrit =
+            std::make_shared<Ewoms::Linear::WeightedResidualReductionCriterion<Vector, Comm> >(
                 simulator_.gridView().comm(),
                 residWeightVec,
                 /*residualReductionTolerance=*/linearSolverTolerance,
                 /*fixPointTolerance=*/0.0,
-                /*absoluteResidualTolerance=*/linearSolverAbsTolerance);
+                /*absoluteResidualTolerance=*/linearSolverAbsTolerance,
+                /*maxError=*/EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverMaxError));
 
         // done creating the convergence criterion
         /////
 
-        // tell the linear solver to use it
-        typedef Ewoms::ConvergenceCriterion<Vector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
+        /////
+        // create the actual linear solver
+        Ewoms::Linear::BiCGStabSolver<FineOperator, Vector, AMG>
+            bicgstabSolver(amg_, convCrit, scalarProduct);
+        /////
 
-        Dune::InverseOperatorResult result;
-        int solverSucceeded = 1;
-        try
-        {
-            solver.apply(*overlappingx_, *overlappingb_, result);
-            solverSucceeded = simulator_.gridManager().gridView().comm().min(solverSucceeded);
+        //////
+        // actually run the linear solver
+        try {
+            int verbosity = 0;
+            if (overlappingMatrix_->overlap().myRank() == 0)
+                verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+            bicgstabSolver.setVerbosity(verbosity);
+            bicgstabSolver.setMaxIterations(EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations));
+            bicgstabSolver.setLinearOperator(fineOperator.get());
+            bicgstabSolver.setRhs(overlappingb_.get());
+            bicgstabSolver.apply(*overlappingx_);
         }
-        catch (const Dune::Exception& )
-        {
-            solverSucceeded = 0;
-            solverSucceeded = simulator_.gridManager().gridView().comm().min(solverSucceeded);
+        catch (...) {
+            return false;
         }
 
-        if (!solverSucceeded)
+        const SolverReport report = bicgstabSolver.report();
+        if (!report.converged())
             return false;
 
         // copy the result back to the non-overlapping vector
         overlappingx_->assignTo(x);
 
-        return result.converged;
+        return report.converged();
     }
 
 private:
@@ -316,22 +307,22 @@ private:
 
         // create the overlapping Jacobian matrix
         unsigned overlapSize = EWOMS_GET_PARAM(TypeTag, unsigned, LinearSolverOverlapSize);
-        overlappingMatrix_ = new OverlappingMatrix(M,
-                                                   borderListCreator.borderList(),
-                                                   blackList,
-                                                   overlapSize);
+        overlappingMatrix_ = std::make_shared<OverlappingMatrix>(M,
+                                                                 borderListCreator.borderList(),
+                                                                 blackList,
+                                                                 overlapSize);
 
         // create the overlapping vectors for the residual and the
         // solution
-        overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
-        overlappingx_ = new OverlappingVector(*overlappingb_);
+        overlappingb_ = std::make_shared<OverlappingVector>(overlappingMatrix_->overlap());
+        overlappingx_ = std::make_shared<OverlappingVector>(*overlappingb_);
 
         // writeOverlapToVTK_();
 
 #if HAVE_MPI
         // create and initialize DUNE's OwnerOverlapCopyCommunication
         // using the domestic overlap
-        istlComm_ = new OwnerOverlapCopyCommunication(MPI_COMM_WORLD);
+        istlComm_ = std::make_shared<OwnerOverlapCopyCommunication>(MPI_COMM_WORLD);
         setupAmgIndexSet_(overlappingMatrix_->overlap(), istlComm_->indexSet());
         istlComm_->remoteIndices().template rebuild<false>();
 #endif
@@ -339,16 +330,11 @@ private:
 
     void cleanup_()
     {
-        // create the overlapping Jacobian matrix and vectors
-        delete overlappingMatrix_;
-        delete overlappingb_;
-        delete overlappingx_;
-        delete amg_;
-
-        overlappingMatrix_ = nullptr;
-        overlappingb_ = nullptr;
-        overlappingx_ = nullptr;
-        amg_ = nullptr;
+        amg_.reset();
+        istlComm_.reset();
+        overlappingMatrix_.reset();
+        overlappingb_.reset();
+        overlappingx_.reset();
     }
 
 #if HAVE_MPI
@@ -383,7 +369,7 @@ private:
     void setupAmg_(FineOperator& fineOperator)
     {
         if (amg_)
-            return;
+            amg_.reset();
 
         int verbosity = 0;
         if (simulator_.gridManager().gridView().comm().rank() == 0)
@@ -425,22 +411,22 @@ private:
 
 // instantiate the AMG preconditioner
 #if HAVE_MPI
-        amg_ = new AMG(fineOperator, coarsenCriterion, smootherArgs, *istlComm_);
+        amg_ = std::make_shared<AMG>(fineOperator, coarsenCriterion, smootherArgs, *istlComm_);
 #else
-        amg_ = new AMG(fineOperator, coarsenCriterion, smootherArgs);
+        amg_ = std::make_shared<AMG>(fineOperator, coarsenCriterion, smootherArgs);
 #endif
     }
 
     const Simulator& simulator_;
 
-    AMG *amg_;
+    std::shared_ptr<AMG> amg_;
 
 #if HAVE_MPI
-    OwnerOverlapCopyCommunication *istlComm_;
+    std::shared_ptr<OwnerOverlapCopyCommunication> istlComm_;
 #endif
-    OverlappingMatrix *overlappingMatrix_;
-    OverlappingVector *overlappingb_;
-    OverlappingVector *overlappingx_;
+    std::shared_ptr<OverlappingMatrix> overlappingMatrix_;
+    std::shared_ptr<OverlappingVector> overlappingb_;
+    std::shared_ptr<OverlappingVector> overlappingx_;
 };
 
 } // namespace Linear

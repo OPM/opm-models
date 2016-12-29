@@ -32,6 +32,8 @@
 #include <iostream>
 
 namespace Ewoms {
+namespace Linear {
+
 /*! \addtogroup Linear
  * \{
  */
@@ -67,12 +69,14 @@ public:
                                        const Vector& residWeights,
                                        Scalar residualReductionTolerance,
                                        Scalar fixPointTolerance,
-                                       Scalar absResidualTolerance = 0.0)
+                                       Scalar absResidualTolerance = 0.0,
+                                       Scalar maxError = 0.0)
         : comm_(comm),
           residWeightVec_(residWeights),
           fixPointTolerance_(fixPointTolerance),
           residualReductionTolerance_(residualReductionTolerance),
-          absResidualTolerance_(absResidualTolerance)
+          absResidualTolerance_(absResidualTolerance),
+          maxError_(maxError)
     { }
 
     /*!
@@ -194,9 +198,18 @@ public:
         // we're converged if the solution is better than the tolerance
         // fix-point and residual tolerance.
         return
-            fixPointError_ <= fixPointTolerance_ ||
             residualAccuracy() <= residualReductionTolerance() ||
             residualError_ <= absResidualTolerance_;
+    }
+
+    /*!
+     * \copydoc ConvergenceCriterion::failed()
+     */
+    bool failed() const
+    {
+        return
+            (!converged() && fixPointError_ <= fixPointTolerance_)
+            || residualError_ > maxError_;
     }
 
     /*!
@@ -218,13 +231,6 @@ public:
         os << std::setw(20) << " ResidRed ";
         os << std::setw(20) << " Rate ";
         os << std::endl;
-
-        os << std::setw(20) << 0 << " ";
-        os << std::setw(20) << " ";
-        os << std::setw(20) << residualError_ << " ";
-        os << std::setw(20) << 1/residualAccuracy() << " ";
-        os << std::setw(20) << " ";
-        os << std::endl << std::flush;
     }
 
     /*!
@@ -232,11 +238,13 @@ public:
      */
     void print(Scalar iter, std::ostream& os = std::cout) const
     {
+        static constexpr Scalar eps = std::numeric_limits<Scalar>::min()*1e10;
+
         os << std::setw(20) << iter << " ";
         os << std::setw(20) << fixPointAccuracy() << " ";
         os << std::setw(20) << residualError_ << " ";
-        os << std::setw(20) << 1/residualAccuracy() << " ";
-        os << std::setw(20) << lastResidualError_ / std::max<Scalar>(residualError_, 1e-80) << " ";
+        os << std::setw(20) << 1.0/residualAccuracy() << " ";
+        os << std::setw(20) << lastResidualError_ / std::max<Scalar>(residualError_, eps) << " ";
         os << std::endl << std::flush;
     }
 
@@ -298,10 +306,13 @@ private:
     // the maximum allowed absolute tolerance of the residual for the
     // solution to be considered converged
     Scalar absResidualTolerance_;
+
+    // The maximum error which is tolerated before we fail.
+    Scalar maxError_;
 };
 
 //! \} end documentation
 
-} // end namespace Ewoms
+}} // end namespace Linear,Ewoms
 
 #endif

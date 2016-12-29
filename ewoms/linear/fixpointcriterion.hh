@@ -32,6 +32,8 @@
 #include <opm/common/Unused.hpp>
 
 namespace Ewoms {
+namespace Linear {
+
 /*! \addtogroup Linear
  * \{
  */
@@ -173,6 +175,6 @@ private:
 
 //! \} end documentation
 
-} // end namespace Ewoms
+}} // end namespace Linear, Ewoms
 
 #endif

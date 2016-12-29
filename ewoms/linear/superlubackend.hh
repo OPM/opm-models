@@ -30,7 +30,6 @@
 #if HAVE_SUPERLU
 
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/linear/solvers.hh>
 
 #include <opm/common/Unused.hpp>
 

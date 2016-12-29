@@ -22,36 +22,33 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::ParallelIterativeSolverBackend
+ * \copydoc Ewoms::Linear::ParallelBiCGStabSolverBackend
  */
-#ifndef EWOMS_PARALLEL_ITERATIVE_BACKEND_HH
-#define EWOMS_PARALLEL_ITERATIVE_BACKEND_HH
+#ifndef EWOMS_PARALLEL_BICGSTAB_BACKEND_HH
+#define EWOMS_PARALLEL_BICGSTAB_BACKEND_HH
 
-#include <ewoms/linear/overlappingbcrsmatrix.hh>
-#include <ewoms/linear/overlappingblockvector.hh>
-#include <ewoms/linear/overlappingpreconditioner.hh>
-#include <ewoms/linear/overlappingscalarproduct.hh>
-#include <ewoms/linear/overlappingoperator.hh>
-#include <ewoms/linear/solverpreconditioner.hh>
+#include "overlappingbcrsmatrix.hh"
+#include "overlappingblockvector.hh"
+#include "overlappingpreconditioner.hh"
+#include "overlappingscalarproduct.hh"
+#include "overlappingoperator.hh"
+#include "bicgstabsolver.hh"
+#include "weightedresidreductioncriterion.hh"
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <ewoms/linear/solvers.hh>
-
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
-
 #include <dune/istl/preconditioners.hh>
-
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/fvector.hh>
 
+#include <memory>
 #include <sstream>
 #include <iostream>
 
 namespace Ewoms {
 namespace Properties {
-NEW_TYPE_TAG(ParallelIterativeLinearSolver);
+NEW_TYPE_TAG(ParallelBiCGStabLinearSolver);
 
 // forward declaration of the required property tags
 NEW_PROP_TAG(Simulator);
@@ -70,9 +67,7 @@ NEW_PROP_TAG(OverlappingLinearOperator);
 
 //! The type of the linear solver to be used
 NEW_PROP_TAG(LinearSolverBackend);
-NEW_PROP_TAG(LinearSolverWrapper);
 NEW_PROP_TAG(PreconditionerWrapper);
-
 
 //! The floating point type used internally by the linear solver
 NEW_PROP_TAG(LinearSolverScalar);
@@ -92,6 +87,14 @@ NEW_PROP_TAG(LinearSolverOverlapSize);
 NEW_PROP_TAG(LinearSolverTolerance);
 
 /*!
+ * \brief Specifies the maximum error which the linear solver may encounter before it
+ *        gives up.
+ *
+ * By default this is 10^7.
+ */
+NEW_PROP_TAG(LinearSolverMaxError);
+
+/*!
  * \brief Specifies the verbosity of the linear solver
  *
  * By default it is 0, i.e. it doesn't print anything. Setting this
@@ -108,9 +111,6 @@ NEW_PROP_TAG(PreconditionerOrder);
 
 //! The relaxation factor of the preconditioner
 NEW_PROP_TAG(PreconditionerRelaxation);
-
-//! number of iterations between solver restarts for the GMRES solver
-NEW_PROP_TAG(GMResRestart);
 } // namespace Properties
 } // namespace Ewoms
 
@@ -121,27 +121,8 @@ namespace Linear {
  *
  * \brief Implements a generic linear solver abstraction.
  *
- * This class' intention is to be used in conjunction with the
- * vertex-centered finite volume discretization, so it assumes that
- * the vertices are the only degrees of freedom.  It is also capable
- * of parallel executions on arbitrary grids and is generic in the
- * sense that it allows to combine any linear solver implemented by
- * Dune-ISTL with any preconditioner (except the algebraic multigrid
- * preconditioner). To set the linear solver, use
- * \code
- * SET_TYPE_PROP(YourTypeTag, LinearSolverWrapper,
- *               Ewoms::Linear::SolverWrapper$SOLVER<TypeTag>);
- * \endcode
+ * Chosing the preconditioner works by setting the "PreconditionerWrapper" property:
  *
- * The possible choices for '\c $SOLVER' are:
- * - \c Richardson: A fixpoint solver using the Richardson iteration
- * - \c SteepestDescent: The steepest descent solver
- * - \c ConjugatedGradients: A conjugated gradients solver
- * - \c BiCGStab: A stabilized bi-conjugated gradients solver
- * - \c MinRes: A solver based on the  minimized residual algorithm
- * - \c RestartedGMRes: A restarted GMRES solver
- *
- * Chosing the preconditioner works in an analogous way:
  * \code
  * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,
  *               Ewoms::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
@@ -160,11 +141,9 @@ namespace Linear {
  *            that it is computationally cheaper because it does not
  *            need to consider things which are only required for
  *            higher orders
- * - \c Solver: A BiCGSTAB solver wrapped into the preconditioner
- *              interface (may be useful for parallel computations)
  */
 template <class TypeTag>
-class ParallelIterativeSolverBackend
+class ParallelBiCGStabSolverBackend
 {
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) Implementation;
 
@@ -182,8 +161,6 @@ class ParallelIterativeSolverBackend
     typedef typename GET_PROP_TYPE(TypeTag, PreconditionerWrapper) PreconditionerWrapper;
     typedef typename PreconditionerWrapper::SequentialPreconditioner SequentialPreconditioner;
 
-    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverWrapper) LinearSolverWrapper;
-
     typedef Ewoms::Linear::OverlappingPreconditioner<SequentialPreconditioner,
                                                      Overlap> ParallelPreconditioner;
     typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector,
@@ -195,7 +172,7 @@ class ParallelIterativeSolverBackend
     enum { dimWorld = GridView::dimensionworld };
 
 public:
-    ParallelIterativeSolverBackend(const Simulator& simulator)
+    ParallelBiCGStabSolverBackend(const Simulator& simulator)
         : simulator_(simulator)
         , gridSequenceNumber_( -1 )
     {
@@ -204,7 +181,7 @@ public:
         overlappingx_ = nullptr;
     }
 
-    ~ParallelIterativeSolverBackend()
+    ~ParallelBiCGStabSolverBackend()
     { cleanup_(); }
 
     /*!
@@ -218,10 +195,11 @@ public:
                              "The size of the algebraic overlap for the linear solver");
         EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations,
                              "The maximum number of iterations of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverMaxError,
+                             "The maximum error which the linear solver tolerates without giving up");
         EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverVerbosity,
                              "The verbosity level of the linear solver");
 
-        LinearSolverWrapper::registerParameters();
         PreconditionerWrapper::registerParameters();
     }
 
@@ -291,16 +269,17 @@ public:
             return false;
         }
 
+        /////
         // create the parallel preconditioner
-        ParallelPreconditioner parPreCond(precWrapper_.get(),
-                                          overlappingMatrix_->overlap());
+        auto parPreCond =
+            std::make_shared<ParallelPreconditioner>(precWrapper_.get(),
+                                                     overlappingMatrix_->overlap());
+        /////
 
         // create the parallel scalar product and the parallel operator
-        ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
+        auto parScalarProduct =
+            std::make_shared<ParallelScalarProduct>(overlappingMatrix_->overlap());
         ParallelOperator parOperator(*overlappingMatrix_);
-
-        // retrieve the linear solver
-        auto& solver = solverWrapper_.get(parOperator, parScalarProduct, parPreCond);
 
         /////
         // create a residual reduction convergence criterion
@@ -320,52 +299,55 @@ public:
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         Scalar linearSolverAbsTolerance = simulator_.model().newtonMethod().tolerance() / 10.0;
         typedef typename GridView::CollectiveCommunication Comm;
-        auto *convCrit =
-            new Ewoms::WeightedResidualReductionCriterion<OverlappingVector, Comm>(
+        auto convCrit =
+            std::make_shared<Ewoms::Linear::WeightedResidualReductionCriterion<OverlappingVector, Comm> >(
                 simulator_.gridView().comm(),
                 residWeightVec,
                 /*residualReductionTolerance=*/linearSolverTolerance,
                 /*fixPointTolerance=*/0.0,
-                /*absoluteResidualTolerance=*/linearSolverAbsTolerance);
+                /*absoluteResidualTolerance=*/linearSolverAbsTolerance,
+                /*maxError=*/EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverMaxError));
 
         // done creating the convergence criterion
         /////
 
-        // tell the linear solver to use it
-        typedef Ewoms::ConvergenceCriterion<OverlappingVector> ConvergenceCriterion;
-        solver.setConvergenceCriterion(std::shared_ptr<ConvergenceCriterion>(convCrit));
+        /////
+        // create the actual linear solver
+        Ewoms::Linear::BiCGStabSolver<ParallelOperator, OverlappingVector, ParallelPreconditioner>
+            bicgstabSolver(parPreCond, convCrit, parScalarProduct);
+        /////
 
-        // run the linear solver and have some fun
-        Dune::InverseOperatorResult result;
-        int solverSucceeded = 1;
+        //////
+        // actually run the linear solver
         try {
-            solver.apply(*overlappingx_, *overlappingb_, result);
-            solverSucceeded = simulator_.gridView().comm().min(solverSucceeded);
+            int verbosity = 0;
+            if (parOperator.overlap().myRank() == 0)
+                verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
+            bicgstabSolver.setVerbosity(verbosity);
+            bicgstabSolver.setMaxIterations(EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations));
+            bicgstabSolver.setLinearOperator(&parOperator);
+            bicgstabSolver.setRhs(overlappingb_);
+            bicgstabSolver.apply(*overlappingx_);
+            bicgstabSolver.report();
         }
-        catch (const Dune::Exception& ) {
-            solverSucceeded = 0;
-            solverSucceeded = simulator_.gridView().comm().min(solverSucceeded);
-        }
-
-        // free the unneeded memory of the sequential preconditioner
-        // and the linear solver
-        solverWrapper_.cleanup();
-        precWrapper_.cleanup();
-
-        if (!solverSucceeded) {
+        catch (...) {
             Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
             return false;
         }
 
+        const SolverReport& report = bicgstabSolver.report();
+        //////
+
+        //////
+        // do some janitorial work and set the non-parallel solution vector
+        precWrapper_.cleanup();
+        Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
+
         // copy the result back to the non-overlapping vector
         overlappingx_->assignTo(x);
 
-        // reset the singularity limit to the same value as before the
-        // linear solver was invoked.
-        Dune::FMatrixPrecision<Scalar>::set_singular_limit(oldSingularLimit);
-
         // return the result of the solver
-        return result.converged;
+        return report.converged();
     }
 
 private:
@@ -462,66 +444,7 @@ private:
     OverlappingVector *overlappingx_;
 
     PreconditionerWrapper precWrapper_;
-    LinearSolverWrapper solverWrapper_;
 };
-
-/*!
- * \brief Macro to create a wrapper around an ISTL solver
- */
-#define EWOMS_WRAP_ISTL_SOLVER(SOLVER_NAME, ISTL_SOLVER_NAME)                      \
-    template <class TypeTag>                                                       \
-    class SolverWrapper##SOLVER_NAME                                               \
-    {                                                                              \
-        typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;                    \
-        typedef typename GET_PROP_TYPE(TypeTag,                                    \
-                                       OverlappingMatrix) OverlappingMatrix;       \
-        typedef typename GET_PROP_TYPE(TypeTag,                                    \
-                                       OverlappingVector) OverlappingVector;       \
-                                                                                   \
-        typedef ISTL_SOLVER_NAME<OverlappingVector> ParallelSolver;                \
-                                                                                   \
-    public:                                                                        \
-        SolverWrapper##SOLVER_NAME()                                               \
-        {}                                                                         \
-                                                                                   \
-        static void registerParameters()                                           \
-        {}                                                                         \
-                                                                                   \
-        template <class LinearOperator, class ScalarProduct, class Preconditioner> \
-        ParallelSolver& get(LinearOperator& parOperator,                           \
-                            ScalarProduct& parScalarProduct,                       \
-                            Preconditioner& parPreCond)                            \
-        {                                                                          \
-            Scalar tolerance = EWOMS_GET_PARAM(TypeTag, Scalar,                    \
-                                               LinearSolverTolerance);             \
-            int maxIter = EWOMS_GET_PARAM(TypeTag, int, LinearSolverMaxIterations);\
-                                                                                   \
-            int verbosity = 0;                                                     \
-            if (parOperator.overlap().myRank() == 0)                               \
-                verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);  \
-            solver_ = new ParallelSolver(parOperator, parScalarProduct,            \
-                                         parPreCond, tolerance, maxIter,           \
-                                         verbosity);                               \
-                                                                                   \
-            return *solver_;                                                       \
-        }                                                                          \
-                                                                                   \
-        void cleanup()                                                             \
-        { delete solver_; }                                                        \
-                                                                                   \
-    private:                                                                       \
-        ParallelSolver *solver_;                                                   \
-    };
-
-EWOMS_WRAP_ISTL_SOLVER(Richardson, Ewoms::LoopSolver)
-EWOMS_WRAP_ISTL_SOLVER(SteepestDescent, Ewoms::GradientSolver)
-EWOMS_WRAP_ISTL_SOLVER(ConjugatedGradients, Ewoms::CGSolver)
-EWOMS_WRAP_ISTL_SOLVER(BiCGStab, Ewoms::BiCGSTABSolver)
-EWOMS_WRAP_ISTL_SOLVER(MinRes, Ewoms::MINRESSolver)
-EWOMS_WRAP_ISTL_SOLVER(RestartedGMRes, Ewoms::RestartedGMResSolver)
-
-#undef EWOMS_WRAP_ISTL_SOLVER
-#undef EWOMS_ISTL_SOLVER_TYPDEF
 
 #define EWOMS_WRAP_ISTL_PRECONDITIONER(PREC_NAME, ISTL_PREC_TYPE)               \
     template <class TypeTag>                                                    \
@@ -612,8 +535,7 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(GaussSeidel, Dune::SeqGS)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SOR, Dune::SeqSOR)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SSOR, Dune::SeqSSOR)
 EWOMS_WRAP_ISTL_SIMPLE_PRECONDITIONER(ILU0, Dune::SeqILU0)
-EWOMS_WRAP_ISTL_PRECONDITIONER(ILUm, Dune::SeqILUn)
-EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
+EWOMS_WRAP_ISTL_PRECONDITIONER(ILUn, Dune::SeqILUn)
 
 #undef EWOMS_WRAP_ISTL_PRECONDITIONER
 } // namespace Linear
@@ -622,24 +544,21 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(Solver, Ewoms::Linear::SolverPreconditioner)
 namespace Ewoms {
 namespace Properties {
 //! make the linear solver shut up by default
-SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverVerbosity, 0);
+SET_INT_PROP(ParallelBiCGStabLinearSolver, LinearSolverVerbosity, 0);
 
 //! set the preconditioner relaxation parameter to 1.0 by default
-SET_SCALAR_PROP(ParallelIterativeLinearSolver, PreconditionerRelaxation, 1.0);
+SET_SCALAR_PROP(ParallelBiCGStabLinearSolver, PreconditionerRelaxation, 1.0);
 
 //! set the preconditioner order to 0 by default
-SET_INT_PROP(ParallelIterativeLinearSolver, PreconditionerOrder, 0);
-
-//! set the GMRes restart parameter to 10 by default
-SET_INT_PROP(ParallelIterativeLinearSolver, GMResRestart, 10);
+SET_INT_PROP(ParallelBiCGStabLinearSolver, PreconditionerOrder, 0);
 
 //! by default use the same kind of floating point values for the linearization and for
 //! the linear solve
-SET_TYPE_PROP(ParallelIterativeLinearSolver,
+SET_TYPE_PROP(ParallelBiCGStabLinearSolver,
               LinearSolverScalar,
               typename GET_PROP_TYPE(TypeTag, Scalar));
 
-SET_PROP(ParallelIterativeLinearSolver, OverlappingMatrix)
+SET_PROP(ParallelBiCGStabLinearSolver, OverlappingMatrix)
 {
     static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
@@ -648,11 +567,11 @@ SET_PROP(ParallelIterativeLinearSolver, OverlappingMatrix)
     typedef Ewoms::Linear::OverlappingBCRSMatrix<NonOverlappingMatrix> type;
 };
 
-SET_TYPE_PROP(ParallelIterativeLinearSolver,
+SET_TYPE_PROP(ParallelBiCGStabLinearSolver,
               Overlap,
               typename GET_PROP_TYPE(TypeTag, OverlappingMatrix)::Overlap);
 
-SET_PROP(ParallelIterativeLinearSolver, OverlappingVector)
+SET_PROP(ParallelBiCGStabLinearSolver, OverlappingVector)
 {
     static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
@@ -661,14 +580,14 @@ SET_PROP(ParallelIterativeLinearSolver, OverlappingVector)
     typedef Ewoms::Linear::OverlappingBlockVector<VectorBlock, Overlap> type;
 };
 
-SET_PROP(ParallelIterativeLinearSolver, OverlappingScalarProduct)
+SET_PROP(ParallelBiCGStabLinearSolver, OverlappingScalarProduct)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
     typedef typename GET_PROP_TYPE(TypeTag, Overlap) Overlap;
     typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector, Overlap> type;
 };
 
-SET_PROP(ParallelIterativeLinearSolver, OverlappingLinearOperator)
+SET_PROP(ParallelBiCGStabLinearSolver, OverlappingLinearOperator)
 {
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
@@ -676,23 +595,22 @@ SET_PROP(ParallelIterativeLinearSolver, OverlappingLinearOperator)
                                                OverlappingVector> type;
 };
 
-SET_TYPE_PROP(ParallelIterativeLinearSolver,
+SET_TYPE_PROP(ParallelBiCGStabLinearSolver,
               LinearSolverBackend,
-              Ewoms::Linear::ParallelIterativeSolverBackend<TypeTag>);
+              Ewoms::Linear::ParallelBiCGStabSolverBackend<TypeTag>);
 
-SET_TYPE_PROP(ParallelIterativeLinearSolver,
-              LinearSolverWrapper,
-              Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
-
-SET_TYPE_PROP(ParallelIterativeLinearSolver,
+SET_TYPE_PROP(ParallelBiCGStabLinearSolver,
               PreconditionerWrapper,
               Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
 
 //! set the default overlap size to 2
-SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverOverlapSize, 2);
+SET_INT_PROP(ParallelBiCGStabLinearSolver, LinearSolverOverlapSize, 2);
+
+//! set the default for the maximum tolerated error of the linear solver to 10^7
+SET_SCALAR_PROP(ParallelBiCGStabLinearSolver, LinearSolverMaxError, 1e7);
 
 //! set the default number of maximum iterations for the linear solver
-SET_INT_PROP(ParallelIterativeLinearSolver, LinearSolverMaxIterations, 1000);
+SET_INT_PROP(ParallelBiCGStabLinearSolver, LinearSolverMaxIterations, 1000);
 } // namespace Properties
 } // namespace Ewoms
 
