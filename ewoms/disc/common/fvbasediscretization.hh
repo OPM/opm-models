@@ -1157,7 +1157,7 @@ public:
      *
      * \param solver The non-linear solver
      */
-    bool update(NewtonMethod& solver)
+    bool update()
     {
         Ewoms::TimerGuard prePostProcessGuard(prePostProcessTimer_);
 
@@ -1179,21 +1179,21 @@ public:
         bool converged = false;
 
         try {
-            converged = solver.apply();
+            converged = newtonMethod_.apply();
         }
         catch(...) {
-            prePostProcessTimer_ += solver.prePostProcessTimer();
-            linearizeTimer_ += solver.linearizeTimer();
-            solveTimer_ += solver.solveTimer();
-            updateTimer_ += solver.updateTimer();
+            prePostProcessTimer_ += newtonMethod_.prePostProcessTimer();
+            linearizeTimer_ += newtonMethod_.linearizeTimer();
+            solveTimer_ += newtonMethod_.solveTimer();
+            updateTimer_ += newtonMethod_.updateTimer();
 
             throw;
         }
 
-        prePostProcessTimer_ += solver.prePostProcessTimer();
-        linearizeTimer_ += solver.linearizeTimer();
-        solveTimer_ += solver.solveTimer();
-        updateTimer_ += solver.updateTimer();
+        prePostProcessTimer_ += newtonMethod_.prePostProcessTimer();
+        linearizeTimer_ += newtonMethod_.linearizeTimer();
+        solveTimer_ += newtonMethod_.solveTimer();
+        updateTimer_ += newtonMethod_.updateTimer();
 
         prePostProcessTimer_.start();
         if (converged)

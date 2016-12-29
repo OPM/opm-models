@@ -400,7 +400,7 @@ public:
         }
 
         for (unsigned i = 0; i < maxFails; ++i) {
-            bool converged = model().update(newtonMethod());
+            bool converged = model().update();
             if (converged)
                 return;
 
