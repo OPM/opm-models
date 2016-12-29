@@ -49,8 +49,6 @@ class Timer
 {
     struct TimeData
     {
-        // The timespec data structure is more accurate than Linux (or at least POSIX)
-        // specific. for other operating systems, we use Dune::Timer
         std::chrono::high_resolution_clock::time_point realtimeData;
         std::clock_t cputimeData;
     };
@@ -187,13 +185,24 @@ public:
         return globalVal;
     }
 
+    /*!
+     * \brief Adds the time of another timer to the current one
+     */
+    Timer& operator+=(const Timer& other)
+    {
+        realTimeElapsed_ += other.realTimeElapsed();
+        cpuTimeElapsed_ += other.cpuTimeElapsed();
+
+        return *this;
+    }
+
 private:
     // measure the current time and put it into the object passed via
     // the argument.
     static void measure_(TimeData& timeData)
     {
-        // This method is more accurate than  Linux (or at least POSIX) specific. for other operating
-        // systems, we use Dune::Timer
+        // Note: On Linux -- or rather fully POSIX compliant systems -- using
+        // clock_gettime() would be more accurate for the CPU time.
         timeData.realtimeData = std::chrono::high_resolution_clock::now();
         timeData.cputimeData = std::clock();
     }

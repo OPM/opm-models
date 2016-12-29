@@ -33,6 +33,7 @@
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/timer.hh>
+#include <ewoms/common/timerguard.hh>
 
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -81,6 +82,8 @@ public:
 
     Simulator(bool verbose = true)
     {
+        Ewoms::TimerGuard setupTimerGuard(setupTimer_);
+
         setupTimer_.start();
 
         verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
@@ -120,6 +123,8 @@ public:
         if (verbose_)
             std::cout << "Finish init of the problem\n" << std::flush;
         problem_->finishInit();
+
+        setupTimer_.stop();
 
         if (verbose_)
             std::cout << "Construction of simulation done\n" << std::flush;
@@ -253,23 +258,53 @@ public:
     { return endTime_; }
 
     /*!
-     * \brief Returns the current wall time required by actually running the simulation.
+     * \brief Returns a reference to the timer object which measures the time needed to
+     *        set up and initialize the simulation
      */
-    const Ewoms::Timer& timer() const
+    const Ewoms::Timer& setupTimer() const
+    { return setupTimer_; }
+
+    /*!
+     * \brief Returns a reference to the timer object which measures the time needed to
+     *        run the simulation
+     */
+    const Ewoms::Timer& executionTimer() const
     { return executionTimer_; }
 
     /*!
-     * \brief Returns total wall clock time required to write the visualization and
-     *        restart files over the course of the simulation
+     * \brief Returns a reference to the timer object which measures the time needed for
+     *        pre- and postprocessing of the solutions.
      */
-    Scalar totalWriteTime() const
-    { return totalWriteTime_; }
+    const Ewoms::Timer& prePostProcessTimer() const
+    { return prePostProcessTimer_; }
 
     /*!
-     * \brief Returns the wall time required by setting up and initializing the simulation.
+     * \brief Returns a reference to the timer object which measures the time needed for
+     *        linarizing the solutions.
      */
-    double setupTime() const
-    { return setupTimer_.realTimeElapsed(); }
+    const Ewoms::Timer& linearizeTimer() const
+    { return linearizeTimer_; }
+
+    /*!
+     * \brief Returns a reference to the timer object which measures the time needed by
+     *        the solver.
+     */
+    const Ewoms::Timer& solveTimer() const
+    { return solveTimer_; }
+
+    /*!
+     * \brief Returns a reference to the timer object which measures the time needed to
+     *        the solutions of the non-linear system of equations.
+     */
+    const Ewoms::Timer& updateTimer() const
+    { return updateTimer_; }
+
+    /*!
+     * \brief Returns a reference to the timer object which measures the time needed to
+     *        write the visualization output
+     */
+    const Ewoms::Timer& writeTimer() const
+    { return writeTimer_; }
 
     /*!
      * \brief Set the current time step size to a given value.
@@ -482,6 +517,13 @@ public:
      */
     void run()
     {
+        // create TimerGuard objects to hedge for exceptions
+        TimerGuard setupTimerGuard(setupTimer_);
+        TimerGuard executionTimerGuard(executionTimer_);
+        TimerGuard prePostProcessTimerGuard(prePostProcessTimer_);
+        TimerGuard writeTimerGuard(writeTimer_);
+
+        setupTimer_.start();
         Scalar restartTime = EWOMS_GET_PARAM(TypeTag, Scalar, RestartTime);
         if (restartTime > -1e30) {
             // try to restart a previous simulation
@@ -522,18 +564,13 @@ public:
             timeStepSize_ = oldTimeStepSize;
             timeStepIdx_ = oldTimeStepIdx;
         }
-
         setupTimer_.stop();
 
-        totalWriteTime_ = 0.0;
         executionTimer_.start();
-
-        prePostProcessTime_ = 0;
-        Timer prePostProcessTimer;
         bool episodeBegins = episodeIsOver() || (timeStepIdx_ == 0);
         // do the time steps
         while (!finished()) {
-            prePostProcessTimer.start();
+            prePostProcessTimer_.start();
             if (episodeBegins) {
                 // notify the problem that a new episode has just been
                 // started.
@@ -543,8 +580,7 @@ public:
                     // the problem can chose to terminate the simulation in
                     // beginEpisode(), so we have handle this case.
                     problem_->endEpisode();
-                    prePostProcessTimer.stop();
-                    prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+                    prePostProcessTimer_.stop();
                     break;
                 }
             }
@@ -564,28 +600,41 @@ public:
                 // beginTimeStep(), so we have handle this case.
                 problem_->endTimeStep();
                 problem_->endEpisode();
-                prePostProcessTimer.stop();
-                prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+                prePostProcessTimer_.stop();
                 break;
             }
-            prePostProcessTimer.stop();
-            prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+            prePostProcessTimer_.stop();
 
-            // execute the time integration scheme
-            problem_->timeIntegration();
+            try {
+                // execute the time integration scheme
+                problem_->timeIntegration();
+            }
+            catch (...) {
+                const auto& model = problem_->model();
+                prePostProcessTimer_ += model.prePostProcessTimer();
+                linearizeTimer_ += model.linearizeTimer();
+                solveTimer_ += model.solveTimer();
+                updateTimer_ += model.updateTimer();
+
+                throw;
+            }
+
+            const auto& model = problem_->model();
+            prePostProcessTimer_ += model.prePostProcessTimer();
+            linearizeTimer_ += model.linearizeTimer();
+            solveTimer_ += model.solveTimer();
+            updateTimer_ += model.updateTimer();
 
             // post-process the current solution
-            prePostProcessTimer.start();
+            prePostProcessTimer_.start();
             problem_->endTimeStep();
-            prePostProcessTimer.stop();
-            prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+            prePostProcessTimer_.stop();
 
             // write the result to disk
             writeTimer_.start();
             if (problem_->shouldWriteOutput())
                 problem_->writeOutput();
             writeTimer_.stop();
-            totalWriteTime_ += writeTimer_.realTimeElapsed();
 
             // do the next time integration
             Scalar oldDt = timeStepSize();
@@ -604,7 +653,7 @@ public:
             time_ += oldDt;
             ++timeStepIdx_;
 
-            prePostProcessTimer.start();
+            prePostProcessTimer_.start();
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
                 // Notify the problem about the end of the current episode...
@@ -614,27 +663,18 @@ public:
             else
                 // ask the problem to provide the next time step size
                 setTimeStepSize(problem_->nextTimeStepSize());
-            prePostProcessTimer.stop();
-            prePostProcessTime_ += prePostProcessTimer.realTimeElapsed();
+            prePostProcessTimer_.stop();
 
             // write restart file if mandated by the problem
             writeTimer_.start();
             if (problem_->shouldWriteRestartFile())
                 serialize();
             writeTimer_.stop();
-            totalWriteTime_ += writeTimer_.realTimeElapsed();
         }
-
         executionTimer_.stop();
 
         problem_->finalize();
     }
-
-    Scalar prePostProcessTime() const
-    { return prePostProcessTime_; }
-
-    void addPrePostProcessTime(Scalar value)
-    { prePostProcessTime_ += value; }
 
     /*!
      * \brief Given a time step size in seconds, return it in a format which is more
@@ -795,15 +835,19 @@ private:
 
     Ewoms::Timer setupTimer_;
     Ewoms::Timer executionTimer_;
+    Ewoms::Timer prePostProcessTimer_;
+    Ewoms::Timer linearizeTimer_;
+    Ewoms::Timer solveTimer_;
+    Ewoms::Timer updateTimer_;
     Ewoms::Timer writeTimer_;
-    Scalar totalWriteTime_;
+
     Scalar startTime_;
-    Scalar prePostProcessTime_;
     Scalar time_;
     Scalar endTime_;
 
     Scalar timeStepSize_;
     int timeStepIdx_;
+
     bool finished_;
     bool verbose_;
 };
