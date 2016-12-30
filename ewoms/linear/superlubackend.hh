@@ -35,6 +35,7 @@
 
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
+#include <dune/common/version.hh>
 
 namespace Ewoms {
 namespace Properties {

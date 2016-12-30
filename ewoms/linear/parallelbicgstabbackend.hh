@@ -72,6 +72,9 @@ NEW_PROP_TAG(PreconditionerWrapper);
 //! The floating point type used internally by the linear solver
 NEW_PROP_TAG(LinearSolverScalar);
 
+//! The number of "inner" equations (number of equations in a dense matrix block)
+NEW_PROP_TAG(NumEq);
+
 /*!
  * \brief The size of the algebraic overlap of the linear solver.
  *

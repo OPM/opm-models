@@ -31,6 +31,12 @@
 #include "residreductioncriterion.hh"
 #include "linearsolverreport.hh"
 
+#include <ewoms/common/timer.hh>
+#include <ewoms/common/timerguard.hh>
+
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
 #include <memory>
 
 namespace Ewoms {

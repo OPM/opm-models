@@ -30,6 +30,7 @@
 #include "convergencecriterion.hh"
 
 #include <ewoms/common/timer.hh>
+#include <ewoms/common/timerguard.hh>
 
 namespace Ewoms {
 namespace Linear {
