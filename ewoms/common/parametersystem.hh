@@ -708,7 +708,7 @@ private:
     }
 
     template <class ParamType, class PropTag>
-    static const ParamType& retrieve_(const char *propTagName,
+    static const ParamType& retrieve_(const char OPM_OPTIM_UNUSED *propTagName,
                                       const char *paramName,
                                       bool errorIfNotRegistered = true)
     {

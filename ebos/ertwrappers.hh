@@ -281,7 +281,7 @@ public:
     /*!
      * \brief Save the grid to an .EGRID file.
      */
-    void write(const std::string& fileName, unsigned reportStepIdx)
+    void write(const std::string& fileName, unsigned OPM_UNUSED reportStepIdx)
     {
 #if HAVE_ERT
         // we convert the units ourselfs, so we set convertFromMetric to
@@ -594,7 +594,7 @@ public:
 
     // add all wells in the well manager to the summary output and
     // write the result.
-    void writeTimeStep(const WellManager& wellManager)
+    void writeTimeStep(const WellManager& OPM_UNUSED wellManager)
     { }
 
     ecl_sum_type *ertHandle() const

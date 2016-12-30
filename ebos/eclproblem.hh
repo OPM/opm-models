@@ -615,7 +615,7 @@ public:
      */
     template <class Context>
     Scalar transmissibility(const Context& context,
-                            unsigned fromDofLocalIdx,
+                            unsigned OPM_OPTIM_UNUSED fromDofLocalIdx,
                             unsigned toDofLocalIdx) const
     {
         assert(fromDofLocalIdx == 0);
@@ -775,9 +775,9 @@ public:
      */
     template <class Context>
     void boundary(BoundaryRateVector& values,
-                  const Context& context,
-                  unsigned spaceIdx,
-                  unsigned timeIdx) const
+                  const Context& OPM_UNUSED context,
+                  unsigned OPM_UNUSED spaceIdx,
+                  unsigned OPM_UNUSED timeIdx) const
     { values.setNoFlow(); }
 
     /*!

@@ -900,7 +900,7 @@ public:
      * This method is purely intented for debugging purposes. If the program is compiled
      * with optimizations enabled, it becomes a no-op.
      */
-    void checkConservativeness(Scalar tolerance = -1, bool verbose=false) const
+    void checkConservativeness(Scalar OPM_OPTIM_UNUSED tolerance = -1, bool OPM_OPTIM_UNUSED verbose=false) const
     {
 #ifndef NDEBUG
         Scalar totalBoundaryArea(0.0);
