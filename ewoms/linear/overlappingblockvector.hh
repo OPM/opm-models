@@ -131,7 +131,7 @@ public:
     template <class NativeBlockVector>
     void assign(const NativeBlockVector& nativeBlockVector)
     {
-        size_t numDomestic = overlap_->numDomestic();
+        Index numDomestic = overlap_->numDomestic();
 
         // assign the local rows from the non-overlapping block vector
         for (Index domRowIdx = 0; domRowIdx < numDomestic; ++domRowIdx) {
