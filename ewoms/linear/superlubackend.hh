@@ -30,12 +30,12 @@
 #if HAVE_SUPERLU
 
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/linear/solvers.hh>
 
 #include <opm/common/Unused.hpp>
 
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>
+#include <dune/common/version.hh>
 
 namespace Ewoms {
 namespace Properties {

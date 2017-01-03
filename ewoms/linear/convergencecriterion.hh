@@ -37,6 +37,8 @@
 #include <iomanip>
 
 namespace Ewoms {
+namespace Linear {
+
 /*! \addtogroup Linear
  * \{
  */
@@ -111,6 +113,13 @@ public:
     virtual bool converged() const = 0;
 
     /*!
+     * \brief Returns true if the convergence criterion cannot be met anymore because the
+     *        solver has broken down.
+     */
+    virtual bool failed() const
+    { return false; }
+
+    /*!
      * \brief Returns the accuracy of the solution at the last update.
      *
      * A value of zero means that the solution was exact.
@@ -144,6 +153,6 @@ public:
 
 //! \} end documentation
 
-} // end namespace Ewoms
+}} // end namespace Linear, Ewoms
 
 #endif

@@ -36,7 +36,7 @@
 
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/io/vtkprimaryvarsmodule.hh>
-#include <ewoms/linear/paralleliterativebackend.hh>
+#include <ewoms/linear/parallelbicgstabbackend.hh>
 
 namespace Ewoms {
 namespace Properties {
@@ -49,15 +49,15 @@ NEW_TYPE_TAG(FvBaseDiscretization,
 
 //! set the splices for the finite volume discretizations
 NEW_PROP_TAG(LinearSolverSplice);
-NEW_PROP_TAG(ParallelIterativeLinearSolver);
+NEW_PROP_TAG(ParallelBiCGStabLinearSolver);
 
 NEW_PROP_TAG(LocalLinearizerSplice);
 NEW_PROP_TAG(FiniteDifferenceLocalLinearizer);
 
 SET_SPLICES(FvBaseDiscretization, LinearSolverSplice, LocalLinearizerSplice);
 
-//! use a parallel iterative linear solver by default
-SET_TAG_PROP(FvBaseDiscretization, LinearSolverSplice, ParallelIterativeLinearSolver);
+//! use a parallel BiCGStab linear solver by default
+SET_TAG_PROP(FvBaseDiscretization, LinearSolverSplice, ParallelBiCGStabLinearSolver);
 
 //! by default, use finite differences to linearize the system of PDEs
 SET_TAG_PROP(FvBaseDiscretization, LocalLinearizerSplice, FiniteDifferenceLocalLinearizer);
