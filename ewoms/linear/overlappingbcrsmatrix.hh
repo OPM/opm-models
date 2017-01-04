@@ -133,10 +133,10 @@ public:
     void assignAdd(const NativeBCRSMatrix& nativeMatrix)
     {
         // copy the native entries
-        assignFromNative_(nativeMatrix);
+        assignFromNative(nativeMatrix);
 
         // communicate and add the contents of overlapping rows
-        syncAdd_();
+        syncAdd();
     }
 
     /*!
@@ -149,10 +149,10 @@ public:
     void assignCopy(const NativeBCRSMatrix& nativeMatrix)
     {
         // copy the native entries
-        assignFromNative_(nativeMatrix);
+        assignFromNative(nativeMatrix);
 
         // communicate and add the contents of overlapping rows
-        syncCopy_();
+        syncCopy();
     }
 
     /*!
@@ -211,9 +211,8 @@ public:
                                 "row");
     }
 
-private:
     template <class NativeBCRSMatrix>
-    void assignFromNative_(const NativeBCRSMatrix& nativeMatrix)
+    void assignFromNative(const NativeBCRSMatrix& nativeMatrix)
     {
         // first, set everything to 0,
         BCRSMatrix::operator=(0.0);
@@ -256,6 +255,68 @@ private:
         }
     }
 
+    // communicates and adds up the contents of overlapping rows
+    void syncAdd()
+    {
+        // first, send all entries to the peers
+        const PeerSet& peerSet = overlap_->peerSet();
+        typename PeerSet::const_iterator peerIt = peerSet.begin();
+        typename PeerSet::const_iterator peerEndIt = peerSet.end();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+
+            sendEntries_(peerRank);
+        }
+
+        // then, receive entries from the peers
+        peerIt = peerSet.begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+
+            receiveAddEntries_(peerRank);
+        }
+
+        // finally, make sure that everything which we send was
+        // received by the peers
+        peerIt = peerSet.begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+            entryValuesSendBuff_[peerRank]->wait();
+        }
+    }
+
+    // communicates and copies the contents of overlapping rows from
+    // the master
+    void syncCopy()
+    {
+        // first, send all entries to the peers
+        const PeerSet& peerSet = overlap_->peerSet();
+        typename PeerSet::const_iterator peerIt = peerSet.begin();
+        typename PeerSet::const_iterator peerEndIt = peerSet.end();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+
+            sendEntries_(peerRank);
+        }
+
+        // then, receive entries from the peers
+        peerIt = peerSet.begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+
+            receiveCopyEntries_(peerRank);
+        }
+
+        // finally, make sure that everything which we send was
+        // received by the peers
+        peerIt = peerSet.begin();
+        for (; peerIt != peerEndIt; ++peerIt) {
+            ProcessRank peerRank = *peerIt;
+            entryValuesSendBuff_[peerRank]->wait();
+        }
+    }
+
+private:
     template <class NativeBCRSMatrix>
     void build_(const NativeBCRSMatrix& nativeMatrix)
     {
@@ -509,67 +570,6 @@ private:
             }
         }
 #endif // HAVE_MPI
-    }
-
-    // communicates and adds up the contents of overlapping rows
-    void syncAdd_()
-    {
-        // first, send all entries to the peers
-        const PeerSet& peerSet = overlap_->peerSet();
-        typename PeerSet::const_iterator peerIt = peerSet.begin();
-        typename PeerSet::const_iterator peerEndIt = peerSet.end();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-
-            sendEntries_(peerRank);
-        }
-
-        // then, receive entries from the peers
-        peerIt = peerSet.begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-
-            receiveAddEntries_(peerRank);
-        }
-
-        // finally, make sure that everything which we send was
-        // received by the peers
-        peerIt = peerSet.begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-            entryValuesSendBuff_[peerRank]->wait();
-        }
-    }
-
-    // communicates and copies the contents of overlapping rows from
-    // the master
-    void syncCopy_()
-    {
-        // first, send all entries to the peers
-        const PeerSet& peerSet = overlap_->peerSet();
-        typename PeerSet::const_iterator peerIt = peerSet.begin();
-        typename PeerSet::const_iterator peerEndIt = peerSet.end();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-
-            sendEntries_(peerRank);
-        }
-
-        // then, receive entries from the peers
-        peerIt = peerSet.begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-
-            receiveCopyEntries_(peerRank);
-        }
-
-        // finally, make sure that everything which we send was
-        // received by the peers
-        peerIt = peerSet.begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-            entryValuesSendBuff_[peerRank]->wait();
-        }
     }
 
     void sendEntries_(ProcessRank peerRank)

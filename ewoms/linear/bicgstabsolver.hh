@@ -57,9 +57,9 @@ class BiCGStabSolver
     typedef typename LinearOperator::field_type Scalar;
 
 public:
-    BiCGStabSolver(std::shared_ptr<Preconditioner> preconditioner,
-                   std::shared_ptr<ConvergenceCriterion> convergenceCriterion,
-                   std::shared_ptr<Dune::ScalarProduct<Vector> > scalarProduct)
+    BiCGStabSolver(Preconditioner& preconditioner,
+                   ConvergenceCriterion& convergenceCriterion,
+                   Dune::ScalarProduct<Vector>& scalarProduct)
         : preconditioner_(preconditioner)
         , convergenceCriterion_(convergenceCriterion)
         , scalarProduct_(scalarProduct)
@@ -143,7 +143,7 @@ public:
         // preconditioner does not change the initial solution x if the initial solution
         // is a zero vector.
         Vector r = *b_;
-        preconditioner_->pre(x, r);
+        preconditioner_.pre(x, r);
 
 #ifndef NDEBUG
         // ensure that the preconditioner does not change the initial solution. since
@@ -158,15 +158,15 @@ public:
         }
 #endif // NDEBUG
 
-        convergenceCriterion_->setInitial(x, r);
-        if (convergenceCriterion_->converged()) {
+        convergenceCriterion_.setInitial(x, r);
+        if (convergenceCriterion_.converged()) {
             report_.setConverged(true);
             return report_.converged();
         }
 
         if (verbosity_ > 0) {
             std::cout << "-------- BiCGStabSolver --------" << std::endl;
-            convergenceCriterion_->printInitial();
+            convergenceCriterion_.printInitial();
         }
 
         // r0 = b - Ax (i.e., r -= A*x_0 = b, because x_0 == 0)
@@ -196,7 +196,7 @@ public:
 
         for (; report_.iterations() < maxIterations_; report_.increment()) {
             // rho_i = (r0hat,r_(i-1))
-            Scalar rho_i = scalarProduct_->dot(r0hat, r);
+            Scalar rho_i = scalarProduct_.dot(r0hat, r);
 
             // beta = (rho_i/rho_(i-1))*(alpha/omega_(i-1))
             if (std::abs(rho) <= breakdownEps || std::abs(omega) <= breakdownEps)
@@ -225,13 +225,13 @@ public:
             }
 
             // y = K^-1 * p_i
-            preconditioner_->apply(y, p);
+            preconditioner_.apply(y, p);
 
             // v_i = A*y
             A_->apply(y, v);
 
             // alpha = rho_i/(r0hat,v_i)
-            Scalar denom = scalarProduct_->dot(r0hat, v);
+            Scalar denom = scalarProduct_.dot(r0hat, v);
             if (std::abs(denom) <= breakdownEps)
                 OPM_THROW(Opm::NumericalProblem,
                           "Breakdown of the BiCGStab solver (division by zero)");
@@ -252,21 +252,21 @@ public:
             }
 
             // do convergence check and print terminal output
-            convergenceCriterion_->update(h, s);
-            if (convergenceCriterion_->converged()) {
+            convergenceCriterion_.update(/*curSol=*/h, /*delta=*/y, s);
+            if (convergenceCriterion_.converged()) {
                 if (verbosity_ > 0) {
-                    convergenceCriterion_->print(report_.iterations() + 0.5);
+                    convergenceCriterion_.print(report_.iterations() + 0.5);
                     std::cout << "-------- /BiCGStabSolver --------" << std::endl;
                 }
 
                 // x = h; // not necessary because x and h are the same object
-                preconditioner_->post(x);
+                preconditioner_.post(x);
                 report_.setConverged(true);
                 return report_.converged();
             }
-            else if (convergenceCriterion_->failed()) {
+            else if (convergenceCriterion_.failed()) {
                 if (verbosity_ > 0) {
-                    convergenceCriterion_->print(report_.iterations() + 0.5);
+                    convergenceCriterion_.print(report_.iterations() + 0.5);
                     std::cout << "-------- /BiCGStabSolver --------" << std::endl;
                 }
 
@@ -275,42 +275,42 @@ public:
             }
 
             if (verbosity_ > 1)
-                convergenceCriterion_->print(report_.iterations() + 0.5);
+                convergenceCriterion_.print(report_.iterations() + 0.5);
 
             // z = K^-1*s
             z = s;
-            preconditioner_->apply(z, s);
+            preconditioner_.apply(z, s);
 
             // t = Az
             t = z;
             A_->apply(z, t);
 
             // omega_i = (t*s)/(t*t)
-            denom = scalarProduct_->dot(t, t);
+            denom = scalarProduct_.dot(t, t);
             if (std::abs(denom) <= breakdownEps)
                 OPM_THROW(Opm::NumericalProblem,
                           "Breakdown of the BiCGStab solver (division by zero)");
-            omega = scalarProduct_->dot(t, s)/denom;
+            omega = scalarProduct_.dot(t, s)/denom;
 
             // x_i = h + omega_i*z
             // x = h; // not necessary because x and h are the same object
             x.axpy(/*a=*/omega, /*y=*/z);
 
             // do convergence check and print terminal output
-            convergenceCriterion_->update(x, r);
-            if (convergenceCriterion_->converged()) {
+            convergenceCriterion_.update(/*curSol=*/x, /*delta=*/z, r);
+            if (convergenceCriterion_.converged()) {
                 if (verbosity_ > 0) {
-                    convergenceCriterion_->print(1.0 + report_.iterations());
+                    convergenceCriterion_.print(1.0 + report_.iterations());
                     std::cout << "-------- /BiCGStabSolver --------" << std::endl;
                 }
 
-                preconditioner_->post(x);
+                preconditioner_.post(x);
                 report_.setConverged(true);
                 return report_.converged();
             }
-            else if (convergenceCriterion_->failed()) {
+            else if (convergenceCriterion_.failed()) {
                 if (verbosity_ > 0) {
-                    convergenceCriterion_->print(1.0 + report_.iterations());
+                    convergenceCriterion_.print(1.0 + report_.iterations());
                     std::cout << "-------- /BiCGStabSolver --------" << std::endl;
                 }
 
@@ -319,7 +319,7 @@ public:
             }
 
             if (verbosity_ > 1)
-                convergenceCriterion_->print(1.0 + report_.iterations());
+                convergenceCriterion_.print(1.0 + report_.iterations());
 
             // r_i = s - omega*t
             // r = s; // not necessary because r and s are the same object
@@ -342,9 +342,9 @@ private:
     const LinearOperator* A_;
     const Vector* b_;
 
-    std::shared_ptr<Preconditioner> preconditioner_;
-    std::shared_ptr<ConvergenceCriterion> convergenceCriterion_;
-    std::shared_ptr<Dune::ScalarProduct<Vector> > scalarProduct_;
+    Preconditioner& preconditioner_;
+    ConvergenceCriterion& convergenceCriterion_;
+    Dune::ScalarProduct<Vector>& scalarProduct_;
     Ewoms::Linear::SolverReport report_;
 
     unsigned maxIterations_;

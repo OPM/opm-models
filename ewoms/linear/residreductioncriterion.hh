@@ -55,13 +55,9 @@ class ResidReductionCriterion : public ConvergenceCriterion<Vector>
     typedef typename Vector::field_type Scalar;
 
 public:
-    ResidReductionCriterion(Dune::ScalarProduct<Vector>& scalarProduct)
-        : scalarProduct_(scalarProduct)
-    {}
-
     ResidReductionCriterion(Dune::ScalarProduct<Vector>& scalarProduct,
-                            Scalar reduction)
-        : scalarProduct_(scalarProduct), defectReduction_(reduction)
+                            Scalar tolerance = 1e-6)
+        : scalarProduct_(scalarProduct), tolerance_(tolerance)
     {}
 
     /*!
@@ -69,59 +65,61 @@ public:
      * linear residual.
      */
     void setTolerance(Scalar tol)
-    { defectReduction_ = tol; }
+    { tolerance_ = tol; }
 
-  /*!
-   * \brief Return the maximum allowed weighted maximum of the reduction of the linear residual.
-   */
-  Scalar tolerance() const
-  {
-    return initialDefect_*defectReduction_;
-  }
+    /*!
+     * \brief Return the maximum allowed weighted maximum of the reduction of the linear residual.
+     */
+    Scalar tolerance() const
+    { return tolerance_; }
 
     /*!
      * \copydoc ConvergenceCriterion::setInitial(const Vector& , const Vector& )
      */
     void setInitial(const Vector& OPM_UNUSED curSol, const Vector& curResid)
     {
+        static constexpr Scalar eps = std::numeric_limits<Scalar>::min()*1e10;
+
         // make sure that we don't allow an initial error of 0 to avoid
         // divisions by zero
-        initialDefect_ = std::max(scalarProduct_.norm(curResid), 1e-20);
-        curDefect_ = initialDefect_;
+        curDefect_ = scalarProduct_.norm(curResid);
+        lastDefect_ = curDefect_;
+        initialDefect_ = std::max(curDefect_, eps);
     }
 
     /*!
      * \copydoc ConvergenceCriterion::update(const Vector& , const Vector& )
      */
-    void update(const Vector& OPM_UNUSED curSol, const Vector& curResid)
-    { curDefect_ = scalarProduct_.norm(curResid); }
+    void update(const Vector& OPM_UNUSED curSol,
+                const Vector& OPM_UNUSED changeIndicator,
+                const Vector& curResid)
+    {
+        lastDefect_ = curDefect_;
+        curDefect_ = scalarProduct_.norm(curResid);
+    }
 
     /*!
      * \copydoc ConvergenceCriterion::converged()
      */
     bool converged() const
-    { return curDefect_ <= tolerance(); }
+    { return accuracy() <= tolerance(); }
 
     /*!
      * \copydoc ConvergenceCriterion::accuracy()
      */
     Scalar accuracy() const
-    { return curDefect_; }
+    { return curDefect_/initialDefect_; }
 
     /*!
      * \copydoc ConvergenceCriterion::printInitial()
      */
     void printInitial(std::ostream& os=std::cout) const
     {
-        os << std::setw(20) << " Iter ";
-        os << std::setw(20) << " Defect ";
-        os << std::setw(20) << " Reduction ";
+        os << std::setw(20) << "iteration ";
+        os << std::setw(20) << "residual ";
+        os << std::setw(20) << "accuracy ";
+        os << std::setw(20) << "rate ";
         os << std::endl;
-
-        os << std::setw(20) << 0 << " ";
-        os << std::setw(20) << curDefect_ << " ";
-        os << std::setw(20) << defectReduction_ << " ";
-        os << std::endl << std::flush;
     }
 
     /*!
@@ -129,18 +127,22 @@ public:
      */
     void print(Scalar iter, std::ostream& os=std::cout) const
     {
+        static constexpr Scalar eps = std::numeric_limits<Scalar>::min()*1e10;
+
         os << std::setw(20) << iter << " ";
         os << std::setw(20) << curDefect_ << " ";
-        os << std::setw(20) << defectReduction_ << " ";
-        os << std::endl << std::flush;
+        os << std::setw(20) << accuracy() << " ";
+        os << std::setw(20) << (lastDefect_/std::max(eps, curDefect_)) << " ";
+        os << std::endl;
     }
 
 private:
     Dune::ScalarProduct<Vector>& scalarProduct_;
 
+    Scalar tolerance_;
     Scalar initialDefect_;
     Scalar curDefect_;
-    Scalar defectReduction_;
+    Scalar lastDefect_;
 };
 
 //! \} end documentation
