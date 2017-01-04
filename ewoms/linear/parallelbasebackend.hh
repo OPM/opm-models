@@ -35,6 +35,7 @@
 #include <ewoms/linear/parallelbasebackend.hh>
 #include <ewoms/linear/istlpreconditionerwrappers.hh>
 
+#include <ewoms/common/genericguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
@@ -249,6 +250,12 @@ public:
 
         auto parPreCond = asImp_().preparePreconditioner_();
 
+        auto cleanupPrecondFn =
+            [this]() -> void
+            { this->asImp_().cleanupPreconditioner_(); };
+
+        GenericGuard<decltype(cleanupPrecondFn)> precondGuard(cleanupPrecondFn);
+
         // create the parallel scalar product and the parallel operator
         ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
         ParallelOperator parOperator(*overlappingMatrix_);
@@ -257,6 +264,11 @@ public:
         auto solver = asImp_().prepareSolver_(parOperator,
                                               parScalarProduct,
                                               *parPreCond);
+
+        auto cleanupSolverFn =
+            [this]() -> void
+            { this->asImp_().cleanupSolver_(); };
+        GenericGuard<decltype(cleanupSolverFn)> solverGuard(cleanupSolverFn);
 
         // run the linear solver and have some fun
         bool result = asImp_().runSolver_(solver);
@@ -284,7 +296,7 @@ protected:
             // there's noting to do
             return;
 
-        cleanup_();
+        asImp_().cleanup_();
         gridSequenceNumber_ = curSeqNum;
 
         BorderListCreator borderListCreator(simulator_.gridView(),
@@ -366,6 +378,11 @@ protected:
 
         // create the parallel preconditioner
         return std::make_shared<ParallelPreconditioner>(precWrapper_.get(), overlappingMatrix_->overlap());
+    }
+
+    void cleanupPreconditioner_()
+    {
+        precWrapper_.cleanup();
     }
 
     void writeOverlapToVTK_()

@@ -122,6 +122,11 @@ protected:
                                   parPreCond);
     }
 
+    void cleanupSolver_()
+    {
+        solverWrapper_.cleanup();
+    }
+
     bool runSolver_(std::shared_ptr<RawLinearSolver> solver)
     {
         Dune::InverseOperatorResult result;

@@ -145,9 +145,6 @@ public:
 protected:
     friend ParentType;
 
-    bool runSolver_(std::shared_ptr<RawLinearSolver> solver)
-    { return solver->apply(*this->overlappingx_); }
-
     std::shared_ptr<AMG> preparePreconditioner_()
     {
 #if HAVE_MPI
@@ -169,6 +166,9 @@ protected:
 
         return amg_;
     }
+
+    void cleanupPreconditioner_()
+    { /* nothing to do */ }
 
     std::shared_ptr<RawLinearSolver> prepareSolver_(ParallelOperator& parOperator,
                                                     ParallelScalarProduct& parScalarProduct,
@@ -198,6 +198,12 @@ protected:
 
         return bicgstabSolver;
     }
+
+    bool runSolver_(std::shared_ptr<RawLinearSolver> solver)
+    { return solver->apply(*this->overlappingx_); }
+
+    void cleanupSolver_()
+    { /* nothing to do */ }
 
 #if HAVE_MPI
     template <class ParallelIndexSet>
