@@ -155,7 +155,6 @@ protected:
             if (nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx))
                 ++ numPriVarsSwitched_;
             succeeded = 1;
-            succeeded = this->simulator_.gridView().comm().min(succeeded);
         }
         catch (...)
         {
@@ -163,8 +162,8 @@ protected:
                       << " caught an exception while primary variable switching"
                       << "\n"  << std::flush;
             succeeded = 0;
-            succeeded = this->simulator_.gridView().comm().min(succeeded);
         }
+        succeeded = this->simulator_.gridView().comm().min(succeeded);
 
         if (!succeeded) {
             OPM_THROW(Opm::NumericalProblem,
