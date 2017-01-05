@@ -44,15 +44,33 @@ class GenericGuard
 public:
     GenericGuard(Callback& callback)
         : callback_(callback)
+        , isEnabled_(true)
     { }
 
     ~GenericGuard()
     {
-        callback_();
+        if (isEnabled_)
+            callback_();
     }
+
+    /*!
+     * \brief Specify whether the guard object is "on duty" or not.
+     *
+     * If the guard object is destroyed while it is "off-duty", the cleanup callback is
+     * not called. At construction, guards are on duty.
+     */
+    void setEnabled(bool value)
+    { isEnabled_ = value; }
+
+    /*!
+     * \brief Returns whether the guard object is "on duty" or not.
+     */
+    bool enabled() const
+    { return isEnabled_; }
 
 private:
     Callback& callback_;
+    bool isEnabled_;
 };
 
 } // namespace Ewoms
