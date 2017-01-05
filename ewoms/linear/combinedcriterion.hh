@@ -116,7 +116,7 @@ public:
     void setInitial(const Vector& curSol, const Vector& curResid) override
     {
         updateErrors_(curSol, curSol, curResid);
-        hasFailed_ = false;
+        stagnates_ = false;
 
         // to avoid divisions by zero, make sure that we don't use an initial error of 0
         residualError_ = std::max<Scalar>(residualError_,
@@ -147,7 +147,7 @@ public:
      * \copydoc ConvergenceCriterion::failed()
      */
     bool failed() const override
-    { return !converged() && (hasFailed_ || residualError_ > maxResidual_); }
+    { return !converged() && (stagnates_ || residualError_ > maxResidual_); }
 
     /*!
      * \copydoc ConvergenceCriterion::accuracy()
@@ -189,21 +189,23 @@ private:
     {
         lastResidualError_ = residualError_;
         residualError_ = 0.0;
-        hasFailed_ = true;
+        stagnates_ = true;
         for (size_t i = 0; i < curResid.size(); ++i) {
             for (unsigned j = 0; j < BlockType::dimension; ++j) {
                 residualError_ =
                     std::max<Scalar>(residualError_,
                                      std::abs(curResid[i][j]));
 
-                if (hasFailed_ && changeIndicator[i][j] != 0.0)
+                if (stagnates_ && changeIndicator[i][j] != 0.0)
                     // only stagnation means that we've failed!
-                    hasFailed_ = false;
+                    stagnates_ = false;
             }
         }
 
         residualError_ = comm_.max(residualError_);
-        hasFailed_ = comm_.max(hasFailed_);
+
+        // the linear solver only stagnates if all processes stagnate
+        stagnates_ = comm_.min(stagnates_);
     }
 
     const CollectiveCommunication& comm_;
@@ -228,9 +230,9 @@ private:
     // The maximum error which is tolerated before we fail.
     Scalar maxResidual_;
 
-    // Should the attempt to solve the linear system of equations considered to be
-    // failed?
-    bool hasFailed_;
+    // does the linear solver seem to stagnate, i.e. were the last two solutions
+    // identical?
+    bool stagnates_;
 };
 
 //! \} end documentation

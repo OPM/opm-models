@@ -635,7 +635,7 @@ private:
         MpiBuffer<block_type> &mpiRecvBuff = *entryValuesRecvBuff_[peerRank];
 
         MpiBuffer<Index> &mpiRowIndicesRecvBuff = *rowIndicesRecvBuff_[peerRank];
-        MpiBuffer<Index> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
+        MpiBuffer<unsigned> &mpiRowSizesRecvBuff = *rowSizesRecvBuff_[peerRank];
         MpiBuffer<Index> &mpiColIndicesRecvBuff = *entryColIndicesRecvBuff_[peerRank];
 
         mpiRecvBuff.receive(peerRank);

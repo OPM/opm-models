@@ -236,6 +236,9 @@ public:
                 OPM_THROW(Opm::NumericalProblem,
                           "Breakdown of the BiCGStab solver (division by zero)");
             alpha = rho_i/denom;
+            if (std::abs(alpha) <= breakdownEps)
+                OPM_THROW(Opm::NumericalProblem,
+                          "Breakdown of the BiCGStab solver (stagnation detected)");
 
             // h = x_(i-1) + alpha*y
             // s = r_(i-1) - alpha*v_i
@@ -291,6 +294,9 @@ public:
                 OPM_THROW(Opm::NumericalProblem,
                           "Breakdown of the BiCGStab solver (division by zero)");
             omega = scalarProduct_.dot(t, s)/denom;
+            if (std::abs(omega) <= breakdownEps)
+                OPM_THROW(Opm::NumericalProblem,
+                          "Breakdown of the BiCGStab solver (stagnation detected)");
 
             // x_i = h + omega_i*z
             // x = h; // not necessary because x and h are the same object

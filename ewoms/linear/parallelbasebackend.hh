@@ -319,28 +319,22 @@ protected:
 
     void rescale_()
     {
-        size_t numNative = overlappingMatrix_->overlap().numNative();
+        const auto& overlap = overlappingMatrix_->overlap();
+        for (unsigned domesticRowIdx = 0; domesticRowIdx < overlap.numLocal(); ++domesticRowIdx) {
+            Index nativeRowIdx = overlap.domesticToNative(static_cast<Index>(domesticRowIdx));
+            auto& row = (*overlappingMatrix_)[domesticRowIdx];
 
-        // rescale the overlapping linear system of equations by the equation weights
-        auto rowIt = overlappingMatrix_->begin();
-        const auto& rowEndIt = overlappingMatrix_->end();
-        for (; rowIt != rowEndIt; ++ rowIt) {
-            unsigned rowIdx = rowIt.index();
-
-            if (rowIdx >= numNative || simulator_.model().dofTotalVolume(rowIdx) <= 0.0)
-                continue; // the row represents a non-local degree of freedom
-
-            auto colIt = rowIt->begin();
-            const auto& colEndIt = rowIt->end();
+            auto colIt = row.begin();
+            const auto& colEndIt = row.end();
             for (; colIt != colEndIt; ++ colIt) {
                 auto& entry = *colIt;
                 for (unsigned i = 0; i < entry.rows; ++i)
-                    entry[i] *= simulator_.model().eqWeight(rowIdx, i);
+                    entry[i] *= simulator_.model().eqWeight(nativeRowIdx, i);
             }
 
-            auto& rhsEntry = (*overlappingb_)[rowIdx];
+            auto& rhsEntry = (*overlappingb_)[domesticRowIdx];
             for (unsigned i = 0; i < rhsEntry.size(); ++i)
-                rhsEntry[i] *= simulator_.model().eqWeight(rowIdx, i);
+                rhsEntry[i] *= simulator_.model().eqWeight(nativeRowIdx, i);
         }
     }
 
