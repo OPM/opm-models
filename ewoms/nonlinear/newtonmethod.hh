@@ -368,8 +368,14 @@ public:
                 asImp_().preSolve_(currentSolution,  b);
                 updateTimer_.stop();
 
-                if (!asImp_().proceed_())
+                if (!asImp_().proceed_()) {
+                    // tell the implementation that we're done with this iteration
+                    prePostProcessTimer_.start();
+                    asImp_().endIteration_(nextSolution, currentSolution);
+                    prePostProcessTimer_.stop();
+
                     break;
+                }
 
                 // solve the resulting linear equation system
                 if (asImp_().verbose_()) {
