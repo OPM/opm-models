@@ -369,6 +369,10 @@ public:
                 updateTimer_.stop();
 
                 if (!asImp_().proceed_()) {
+                    if (asImp_().verbose_() && isatty(fileno(stdout)))
+                        std::cout << clearRemainingLine
+                                  << std::flush;
+
                     // tell the implementation that we're done with this iteration
                     prePostProcessTimer_.start();
                     asImp_().endIteration_(nextSolution, currentSolution);
