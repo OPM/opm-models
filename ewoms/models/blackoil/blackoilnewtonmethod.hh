@@ -47,6 +47,7 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
     typedef typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
+    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -111,6 +112,35 @@ protected:
         ParentType::endIteration_(uCurrentIter, uLastIter);
     }
 
+    void update_(SolutionVector& nextSolution,
+                 const SolutionVector& currentSolution,
+                 const GlobalEqVector& solutionUpdate,
+                 const GlobalEqVector& currentResidual)
+    {
+        const auto& comm = this->simulator_.gridView().comm();
+
+        int succeeded;
+        try {
+            ParentType::update_(nextSolution,
+                                currentSolution,
+                                solutionUpdate,
+                                currentResidual);
+            succeeded = 1;
+        }
+        catch (...) {
+            std::cout << "Newton update threw an exception on rank "
+                      << comm.rank() << "\n";
+            succeeded = 0;
+        }
+        succeeded = comm.min(succeeded);
+
+        if (!succeeded)
+            OPM_THROW(Opm::NumericalProblem,
+                      "A process did not succeed in adapting the primary variables");
+
+        numPriVarsSwitched_ = comm.sum(numPriVarsSwitched_);
+    }
+
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
@@ -120,57 +150,38 @@ protected:
                                  const EqVector& update,
                                  const EqVector& OPM_UNUSED currentResidual)
     {
-        int succeeded;
-        try {
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                // calculate the update of the current primary variable. For the
-                // black-oil model we limit the pressure and saturation updates, but do
-                // we not clamp anything after the specified number of iterations was
-                // reached
-                Scalar delta = update[eqIdx];
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+            // calculate the update of the current primary variable. For the
+            // black-oil model we limit the pressure and saturation updates, but do
+            // we not clamp anything after the specified number of iterations was
+            // reached
+            Scalar delta = update[eqIdx];
 
-                // limit changes in water saturation to 20%
-                if (eqIdx == Indices::waterSaturationIdx
+            // limit changes in water saturation to 20%
+            if (eqIdx == Indices::waterSaturationIdx
+                && std::abs(delta) > 0.2)
+            {
+                delta = Ewoms::signum(delta)*0.2;
+            }
+            else if (eqIdx == Indices::compositionSwitchIdx) {
+                // the switching primary variable for composition is tricky because the
+                // "reasonable" value ranges it exhibits vary widely depending on its
+                // interpretation (it can represent Sg, Rs or Rv).  so far, we only limit
+                // changes in gas saturation to 20%
+                if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg
                     && std::abs(delta) > 0.2)
                 {
                     delta = Ewoms::signum(delta)*0.2;
                 }
-                else if (eqIdx == Indices::compositionSwitchIdx) {
-                    // the switching primary variable for composition is tricky because the
-                    // "reasonable" value ranges it exhibits vary widely depending on its
-                    // interpretation (it can represent Sg, Rs or Rv).  so far, we only limit
-                    // changes in gas saturation to 20%
-                    if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg
-                        && std::abs(delta) > 0.2)
-                    {
-                        delta = Ewoms::signum(delta)*0.2;
-                    }
-                }
-
-                // do the actual update
-                nextValue[eqIdx] = currentValue[eqIdx] - delta;
             }
 
-            // switch the new primary variables to something which is physically meaningful
-            if (nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx))
-                ++ numPriVarsSwitched_;
-            succeeded = 1;
-        }
-        catch (...)
-        {
-            std::cout << "rank " << this->simulator_.gridView().comm().rank()
-                      << " caught an exception while primary variable switching"
-                      << "\n"  << std::flush;
-            succeeded = 0;
-        }
-        succeeded = this->simulator_.gridView().comm().min(succeeded);
-
-        if (!succeeded) {
-            OPM_THROW(Opm::NumericalProblem,
-                       "A process did not succeed in adapting the primary variables");
+            // do the actual update
+            nextValue[eqIdx] = currentValue[eqIdx] - delta;
         }
 
-        numPriVarsSwitched_ = this->simulator_.gridView().comm().sum(numPriVarsSwitched_);
+        // switch the new primary variables to something which is physically meaningful
+        if (nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx))
+            ++ numPriVarsSwitched_;
     }
 
 private:
