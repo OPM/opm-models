@@ -252,14 +252,21 @@ public:
 
         (*overlappingx_) = 0.0;
 
-        int preconditionerIsReady = 1;
+        int preconditionerIsReady;
         try {
             // update sequential preconditioner
             precWrapper_.prepare(*overlappingMatrix_);
+            preconditionerIsReady = 1;
         }
         catch (const Dune::Exception& e) {
             std::cout << "Preconditioner threw exception \"" << e.what()
                       << " on rank " << overlappingMatrix_->overlap().myRank()
+                      << "\n"  << std::flush;
+            preconditionerIsReady = 0;
+        }
+        catch (...) {
+            std::cout << "Preconditioner threw exception on rank "
+                      << overlappingMatrix_->overlap().myRank()
                       << "\n"  << std::flush;
             preconditionerIsReady = 0;
         }

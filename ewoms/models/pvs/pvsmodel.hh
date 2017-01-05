@@ -472,47 +472,65 @@ public:
     {
         numSwitched_ = 0;
 
-        std::vector<bool> visited(this->numGridDof(), false);
-        ElementContext elemCtx(this->simulator_);
+        int succeeded;
+        try {
+            std::vector<bool> visited(this->numGridDof(), false);
+            ElementContext elemCtx(this->simulator_);
 
-        ElementIterator elemIt = this->gridView_.template begin<0>();
-        ElementIterator elemEndIt = this->gridView_.template end<0>();
-        for (; elemIt != elemEndIt; ++elemIt) {
-            const Element& elem = *elemIt;
-            if (elem.partitionType() != Dune::InteriorEntity)
-                continue;
-            elemCtx.updateStencil(elem);
-
-            size_t numLocalDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
-            for (unsigned dofIdx = 0; dofIdx < numLocalDof; ++dofIdx) {
-                unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-
-                if (visited[globalIdx])
+            ElementIterator elemIt = this->gridView_.template begin<0>();
+            ElementIterator elemEndIt = this->gridView_.template end<0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+                if (elem.partitionType() != Dune::InteriorEntity)
                     continue;
-                visited[globalIdx] = true;
+                elemCtx.updateStencil(elem);
 
-                // compute the intensive quantities of the current degree of freedom
-                auto& priVars = this->solution(/*timeIdx=*/0)[globalIdx];
-                elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
-                const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
+                size_t numLocalDof = elemCtx.stencil(/*timeIdx=*/0).numPrimaryDof();
+                for (unsigned dofIdx = 0; dofIdx < numLocalDof; ++dofIdx) {
+                    unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
 
-                // evaluate primary variable switch
-                short oldPhasePresence = priVars.phasePresence();
+                    if (visited[globalIdx])
+                        continue;
+                    visited[globalIdx] = true;
 
-                // set the primary variables and the new phase state
-                // from the current fluid state
-                priVars.assignNaive(intQuants.fluidState());
+                    // compute the intensive quantities of the current degree of freedom
+                    auto& priVars = this->solution(/*timeIdx=*/0)[globalIdx];
+                    elemCtx.updateIntensiveQuantities(priVars, dofIdx, /*timeIdx=*/0);
+                    const IntensiveQuantities& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
-                if (oldPhasePresence != priVars.phasePresence()) {
-                    if (verbosity_ > 1)
-                        printSwitchedPhases_(elemCtx,
-                                             dofIdx,
-                                             intQuants.fluidState(),
-                                             oldPhasePresence,
-                                             priVars);
-                    ++numSwitched_;
+                    // evaluate primary variable switch
+                    short oldPhasePresence = priVars.phasePresence();
+
+                    // set the primary variables and the new phase state
+                    // from the current fluid state
+                    priVars.assignNaive(intQuants.fluidState());
+
+                    if (oldPhasePresence != priVars.phasePresence()) {
+                        if (verbosity_ > 1)
+                            printSwitchedPhases_(elemCtx,
+                                                 dofIdx,
+                                                 intQuants.fluidState(),
+                                                 oldPhasePresence,
+                                                 priVars);
+                        ++numSwitched_;
+                    }
                 }
             }
+
+            succeeded = 1;
+        }
+        catch (...)
+        {
+            std::cout << "rank " << this->simulator_.gridView().comm().rank()
+                      << " caught an exception during primary variable switching"
+                      << "\n"  << std::flush;
+            succeeded = 0;
+        }
+        succeeded = this->simulator_.gridView().comm().min(succeeded);
+
+        if (!succeeded) {
+            OPM_THROW(Opm::NumericalProblem,
+                       "A process did not succeed in adapting the primary variables");
         }
 
         // make sure that if there was a variable switch in an

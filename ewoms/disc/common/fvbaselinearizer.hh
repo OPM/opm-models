@@ -178,16 +178,29 @@ public:
         try {
             linearize_();
             succeeded = 1;
-            succeeded = gridView_().comm().min(succeeded);
         }
-        catch (Opm::NumericalProblem& e)
+        catch (const std::exception& e)
         {
             std::cout << "rank " << simulator_().gridView().comm().rank()
                       << " caught an exception while linearizing:" << e.what()
                       << "\n"  << std::flush;
             succeeded = 0;
-            succeeded = gridView_().comm().min(succeeded);
         }
+        catch (const Dune::Exception& e)
+        {
+            std::cout << "rank " << simulator_().gridView().comm().rank()
+                      << " caught an exception while linearizing:" << e.what()
+                      << "\n"  << std::flush;
+            succeeded = 0;
+        }
+        catch (...)
+        {
+            std::cout << "rank " << simulator_().gridView().comm().rank()
+                      << " caught an exception while linearizing"
+                      << "\n"  << std::flush;
+            succeeded = 0;
+        }
+        succeeded = gridView_().comm().min(succeeded);
 
         if (!succeeded) {
             OPM_THROW(Opm::NumericalProblem,
