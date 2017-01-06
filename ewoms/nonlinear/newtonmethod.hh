@@ -362,7 +362,7 @@ public:
                 // give it the chance to update the error and thus to terminate the
                 // Newton method without the need of solving the last linearization.
                 updateTimer_.start();
-                const auto& M = linearizer.matrix();
+                auto& M = linearizer.matrix();
                 auto& b = linearizer.residual();
                 linearSolver_.prepareRhs(M, b);
                 asImp_().preSolve_(currentSolution,  b);

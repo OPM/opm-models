@@ -111,18 +111,22 @@ public:
      * \brief Set the maximum allowed weighted maximum difference between two
      * iterations
      */
+    /*!
+     * \brief Set the maximum allowed maximum difference between two
+     *        iterationsfor the solution considered to be converged.
+     */
     void setTolerance(Scalar tol)
     { tolerance_ = tol; }
 
     /*!
-     * \brief Return the maximum allowed weighted maximum difference between two
-     * iterations
+     * \brief Return the maximum allowed weighted difference between two
+     *        iterations for the solution considered to be converged.
      */
     Scalar tolerance() const
     { return tolerance_; }
 
     /*!
-     * \copydoc ConvergenceCriterion::setInitial(const Vector& , const Vector& )
+     * \copydoc ConvergenceCriterion::setInitial(const Vector&, const Vector&)
      */
     void setInitial(const Vector& curSol, const Vector& OPM_UNUSED curResid)
     {
@@ -131,18 +135,19 @@ public:
     }
 
     /*!
-     * \copydoc ConvergenceCriterion::update(const Vector& , const Vector& )
+     * \copydoc ConvergenceCriterion::update(const Vector&, const Vector&, const Vector&)
      */
-    void update(const Vector& curSol, const Vector& OPM_UNUSED curResid)
+    void update(const Vector& curSol,
+                const Vector& OPM_UNUSED changeIndicator,
+                const Vector& OPM_UNUSED curResid)
     {
         assert(curSol.size() == lastSol_.size());
 
         delta_ = 0.0;
         for (size_t i = 0; i < curSol.size(); ++i) {
             for (size_t j = 0; j < BlockType::dimension; ++j) {
-                delta_ = std::max<Scalar>(delta_, weight(i, j)
-                                                  * std::abs(curSol[i][j]
-                                                             - lastSol_[i][j]));
+                delta_ =
+                    std::max(delta_, weight(i, j)*std::abs(curSol[i][j] - lastSol_[i][j]));
             }
         }
 
@@ -154,7 +159,7 @@ public:
      * \copydoc ConvergenceCriterion::converged()
      */
     bool converged() const
-    { return delta_ < tolerance(); }
+    { return accuracy() < tolerance(); }
 
     /*!
      * \copydoc ConvergenceCriterion::accuracy()

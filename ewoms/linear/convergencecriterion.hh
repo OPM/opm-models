@@ -101,10 +101,12 @@ public:
      *
      * \param curSol The current iterative solution of the linear system
      *               of equations
+     * \param changeIndicator A vector where all non-zero values indicate that the
+     *                        solution has changed since the last iteration.
      * \param curResid The residual vector of the current iterative
      *                 solution of the linear system of equations
      */
-    virtual void update(const Vector& curSol, const Vector& curResid) = 0;
+    virtual void update(const Vector& curSol, const Vector& changeIndicator, const Vector& curResid) = 0;
 
     /*!
      * \brief Returns true if and only if the convergence criterion is
