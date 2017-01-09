@@ -185,7 +185,7 @@ public:
 
 private:
     // update the weighted absolute residual
-    void updateErrors_(const Vector& curSol, const Vector& changeIndicator,  const Vector& curResid)
+    void updateErrors_(const Vector& OPM_UNUSED curSol, const Vector& changeIndicator,  const Vector& curResid)
     {
         lastResidualError_ = residualError_;
         residualError_ = 0.0;
