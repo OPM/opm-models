@@ -39,7 +39,10 @@
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
+#include <vector>
+#include <string>
 #include <memory>
 
 namespace Ewoms {
@@ -52,6 +55,7 @@ NEW_PROP_TAG(Problem);
 NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
+NEW_PROP_TAG(PredeterminedTimeStepsFile);
 }
 
 /*!
@@ -93,6 +97,17 @@ public:
         time_ = 0.0;
         endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+
+        const std::string& predetTimeStepFile =
+            EWOMS_GET_PARAM(TypeTag, std::string, PredeterminedTimeStepsFile);
+        if (!predetTimeStepFile.empty()) {
+            std::ifstream is(predetTimeStepFile);
+            while (!is.eof()) {
+                Scalar dt;
+                is >> dt;
+                forcedTimeSteps_.push_back(dt);
+            }
+        }
 
         episodeIdx_ = 0;
         episodeStartTime_ = 0;
@@ -141,6 +156,9 @@ public:
                              "The size of the initial time step [s]");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestartTime,
                              "The simulation time at which a restart should be attempted [s]");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, PredeterminedTimeStepsFile,
+                             "A file with a list of predetermined time step sizes (one "
+                             "time step per line)");
 
         GridManager::registerParameters();
         Model::registerParameters();
@@ -660,9 +678,19 @@ public:
                 problem_->endEpisode();
                 episodeBegins = true;
             }
-            else
-                // ask the problem to provide the next time step size
-                setTimeStepSize(problem_->nextTimeStepSize());
+            else {
+                Scalar dt;
+                if (timeStepIdx_ < static_cast<int>(forcedTimeSteps_.size())) {
+                    // use the next time step size from the input file
+                    dt = forcedTimeSteps_[timeStepIdx_];
+                }
+                else {
+                    // ask the problem to provide the next time step size
+                    dt = problem_->nextTimeStepSize();
+                }
+
+                setTimeStepSize(dt);
+            }
             prePostProcessTimer_.stop();
 
             // write restart file if mandated by the problem
@@ -841,6 +869,7 @@ private:
     Ewoms::Timer updateTimer_;
     Ewoms::Timer writeTimer_;
 
+    std::vector<Scalar> forcedTimeSteps_;
     Scalar startTime_;
     Scalar time_;
     Scalar endTime_;
