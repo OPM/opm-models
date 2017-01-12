@@ -40,6 +40,8 @@
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>
 #endif
 
+#include <string>
+
 namespace Ewoms {
 namespace Properties {
 ///////////////////////////////////
@@ -113,6 +115,9 @@ NEW_PROP_TAG(InitialTimeStepSize);
 //! The default value for the simulation's restart time
 NEW_PROP_TAG(RestartTime);
 
+//! The name of the file with a number of forced time step lengths
+NEW_PROP_TAG(PredeterminedTimeStepsFile);
+
 ///////////////////////////////////
 // Values for the properties
 ///////////////////////////////////
@@ -178,6 +183,9 @@ SET_SCALAR_PROP(NumericModel, InitialTimeStepSize, -1e35);
 
 //! The default value for the simulation's restart time
 SET_SCALAR_PROP(NumericModel, RestartTime, -1e35);
+
+//! By default, do not force any time steps
+SET_STRING_PROP(NumericModel, PredeterminedTimeStepsFile, "");
 
 } // namespace Properties
 } // namespace Ewoms
