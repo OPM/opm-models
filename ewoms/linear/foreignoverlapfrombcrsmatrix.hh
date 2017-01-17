@@ -466,7 +466,7 @@ protected:
     }
 
     template <class BCRSMatrix>
-    void addNonNeighborOverlapIndices_(const BCRSMatrix& OPM_UNUSED A,
+    void addNonNeighborOverlapIndices_(const BCRSMatrix& A OPM_UNUSED,
                                        SeedList& seedList,
                                        BorderDistance borderDist)
     {

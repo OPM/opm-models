@@ -115,9 +115,9 @@ public:
      * \param timeIdx The index for the time discretization for which
      *                the intensive quantities should be calculated
      */
-    void updateScvGradients(const ElementContext& OPM_UNUSED elemCtx,
-                            unsigned OPM_UNUSED dofIdx,
-                            unsigned OPM_UNUSED timeIdx)
+    void updateScvGradients(const ElementContext& elemCtx OPM_UNUSED,
+                            unsigned dofIdx OPM_UNUSED,
+                            unsigned timeIdx OPM_UNUSED)
     { }
 
     /*!

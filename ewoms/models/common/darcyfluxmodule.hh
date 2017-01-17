@@ -93,9 +93,9 @@ class DarcyIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 protected:
-    void update_(const ElementContext& OPM_UNUSED elemCtx,
-                 unsigned OPM_UNUSED dofIdx,
-                 unsigned OPM_UNUSED timeIdx)
+    void update_(const ElementContext& elemCtx OPM_UNUSED,
+                 unsigned dofIdx OPM_UNUSED,
+                 unsigned timeIdx OPM_UNUSED)
     { }
 };
 

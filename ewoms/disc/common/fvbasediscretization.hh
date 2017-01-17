@@ -312,7 +312,7 @@ class FvBaseDiscretization
     protected:
         SolutionVector blockVector_;
     public:
-        BlockVectorWrapper(const std::string& OPM_UNUSED name, const size_t size)
+        BlockVectorWrapper(const std::string& name OPM_UNUSED, const size_t size)
             : blockVector_(size)
         {}
 
@@ -566,7 +566,7 @@ public:
      * \brief Allows to improve the performance by prefetching all data which is
      *        associated with a given element.
      */
-    void prefetch(const Element& OPM_UNUSED elem) const
+    void prefetch(const Element& elem OPM_UNUSED) const
     {
         // do nothing by default
     }
@@ -1124,7 +1124,7 @@ public:
      * \param globalVertexIdx The global index of the vertex
      * \param eqIdx The index of the equation
      */
-    Scalar eqWeight(unsigned OPM_UNUSED globalVertexIdx, unsigned OPM_UNUSED eqIdx) const
+    Scalar eqWeight(unsigned globalVertexIdx OPM_UNUSED, unsigned eqIdx OPM_UNUSED) const
     { return 1.0; }
 
     /*!
@@ -1322,7 +1322,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void serialize(Restarter& OPM_UNUSED res)
+    void serialize(Restarter& res OPM_UNUSED)
     {
         OPM_THROW(std::runtime_error,
                   "Not implemented: The discretization chosen for this problem does not support"
@@ -1337,7 +1337,7 @@ public:
      * \param res The serializer object
      */
     template <class Restarter>
-    void deserialize(Restarter& OPM_UNUSED res)
+    void deserialize(Restarter& res OPM_UNUSED)
     {
         OPM_THROW(std::runtime_error,
                   "Not implemented: The discretization chosen for this problem does not support"
@@ -1492,7 +1492,7 @@ public:
      *
      * \copydetails Doxygen::ecfvElemCtxParam
      */
-    void updatePVWeights(const ElementContext& OPM_UNUSED elemCtx) const
+    void updatePVWeights(const ElementContext& elemCtx OPM_UNUSED) const
     { }
 
     /*!
@@ -1759,10 +1759,10 @@ protected:
         }
     }
     template <class Context>
-    void supplementInitialSolution_(PrimaryVariables& OPM_UNUSED priVars,
-                                    const Context& OPM_UNUSED context,
-                                    unsigned OPM_UNUSED dofIdx,
-                                    unsigned OPM_UNUSED timeIdx)
+    void supplementInitialSolution_(PrimaryVariables& priVars OPM_UNUSED,
+                                    const Context& context OPM_UNUSED,
+                                    unsigned dofIdx OPM_UNUSED,
+                                    unsigned timeIdx OPM_UNUSED)
     { }
 
     static bool enableIntensiveQuantitiesCache_()

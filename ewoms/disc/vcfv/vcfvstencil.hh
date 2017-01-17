@@ -108,7 +108,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
-    static const ScvLocalGeometry& get(unsigned OPM_UNUSED scvIdx)
+    static const ScvLocalGeometry& get(unsigned scvIdx OPM_UNUSED)
     {
         OPM_THROW(std::logic_error,
                 "Not implemented: VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>");

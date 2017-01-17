@@ -85,14 +85,14 @@ class ElementBorderListFromGrid
         }
 
         // data handle methods
-        bool contains(int OPM_UNUSED dim, int codim) const
+        bool contains(int dim OPM_UNUSED, int codim) const
         { return codim == 0; }
 
-        bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
+        bool fixedsize(int dim OPM_UNUSED, int codim OPM_UNUSED) const
         { return true; }
 
         template <class EntityType>
-        size_t size(const EntityType& OPM_UNUSED e) const
+        size_t size(const EntityType& e OPM_UNUSED) const
         { return 2; }
 
         template <class MessageBufferImp, class EntityType>
@@ -110,7 +110,7 @@ class ElementBorderListFromGrid
         template <class MessageBufferImp>
         void scatter(MessageBufferImp& buff,
                      const Element& e,
-                     size_t OPM_UNUSED n)
+                     size_t n OPM_UNUSED)
         {
             // discard the index if it is not on the process boundary
             bool isInteriorNeighbor = false;
@@ -158,9 +158,9 @@ class ElementBorderListFromGrid
         // entities (i.e., elements) but the dune grid uses some code which causes the
         // compiler to invoke the scatter method for every codim...
         template <class MessageBufferImp, class EntityType>
-        void scatter(MessageBufferImp& OPM_UNUSED buff,
-                     const EntityType& OPM_UNUSED e,
-                     size_t OPM_UNUSED n)
+        void scatter(MessageBufferImp& buff OPM_UNUSED,
+                     const EntityType& e OPM_UNUSED,
+                     size_t n OPM_UNUSED)
         { }
 
         const std::set<ProcessRank>& peerSet() const
@@ -187,14 +187,14 @@ class ElementBorderListFromGrid
         {}
 
         // data handle methods
-        bool contains(int OPM_UNUSED dim, int codim) const
+        bool contains(int dim OPM_UNUSED, int codim) const
         { return codim == 0; }
 
-        bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
+        bool fixedsize(int dim OPM_UNUSED, int codim OPM_UNUSED) const
         { return true; }
 
         template <class EntityType>
-        size_t size(const EntityType& OPM_UNUSED e) const
+        size_t size(const EntityType& e OPM_UNUSED) const
         { return 2; }
 
         template <class MessageBufferImp, class EntityType>
@@ -209,7 +209,7 @@ class ElementBorderListFromGrid
         }
 
         template <class MessageBufferImp, class EntityType>
-        void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
+        void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
         {
             int peerRank;
             int peerIdx;

@@ -159,7 +159,7 @@ public:
      *
      * \param phaseIdx The index of the fluid phase
      */
-    Scalar upstreamWeight(unsigned OPM_UNUSED phaseIdx) const
+    Scalar upstreamWeight(unsigned phaseIdx OPM_UNUSED) const
     { return 1.0; }
 
     /*!

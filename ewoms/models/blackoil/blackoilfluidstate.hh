@@ -93,7 +93,7 @@ public:
      *        state.
      */
     template <class FluidState>
-    void assign(const FluidState& OPM_UNUSED fs)
+    void assign(const FluidState& fs OPM_UNUSED)
     {
         assert(false); // not yet implemented
     }
@@ -125,7 +125,7 @@ public:
     const Evaluation& saturation(unsigned phaseIdx) const
     { return saturation_[phaseIdx]; }
 
-    const Evaluation& temperature(unsigned OPM_UNUSED phaseIdx) const
+    const Evaluation& temperature(unsigned phaseIdx OPM_UNUSED) const
     { return temperature_; }
 
     const Evaluation& invB(unsigned phaseIdx) const
@@ -168,13 +168,13 @@ public:
     Evaluation viscosity(unsigned phaseIdx) const
     { return FluidSystem::viscosity(*this, phaseIdx, pvtRegionIdx_); }
 
-    Evaluation enthalpy(unsigned OPM_UNUSED phaseIdx) const
+    Evaluation enthalpy(unsigned phaseIdx OPM_UNUSED) const
     {
         OPM_THROW(Opm::NotImplemented,
                   "The black-oil model does not support energy conservation yet.");
     }
 
-    Evaluation internalEnergy(unsigned OPM_UNUSED phaseIdx) const
+    Evaluation internalEnergy(unsigned phaseIdx OPM_UNUSED) const
     {
         OPM_THROW(Opm::NotImplemented,
                   "The black-oil model does not support energy conservation yet.");

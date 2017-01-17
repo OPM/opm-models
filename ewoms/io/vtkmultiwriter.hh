@@ -487,12 +487,12 @@ private:
 
     // make sure the field is well defined if running under valgrind
     // and make sure that all values can be displayed by paraview
-    void sanitizeScalarBuffer_(ScalarBuffer& OPM_UNUSED b)
+    void sanitizeScalarBuffer_(ScalarBuffer& b OPM_UNUSED)
     {
         // nothing to do: this is done by VtkScalarFunction
     }
 
-    void sanitizeVectorBuffer_(VectorBuffer& OPM_UNUSED b)
+    void sanitizeVectorBuffer_(VectorBuffer& b OPM_UNUSED)
     {
         // nothing to do: this is done by VtkVectorFunction
     }

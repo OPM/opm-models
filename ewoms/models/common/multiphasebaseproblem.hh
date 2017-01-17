@@ -138,9 +138,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimMatrix& intrinsicPermeability(const Context& OPM_UNUSED context,
-                                           unsigned OPM_UNUSED spaceIdx,
-                                           unsigned OPM_UNUSED timeIdx) const
+    const DimMatrix& intrinsicPermeability(const Context& context OPM_UNUSED,
+                                           unsigned spaceIdx OPM_UNUSED,
+                                           unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::intrinsicPermeability()");
@@ -156,9 +156,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar porosity(const Context& OPM_UNUSED context,
-                    unsigned OPM_UNUSED spaceIdx,
-                    unsigned OPM_UNUSED timeIdx) const
+    Scalar porosity(const Context& context OPM_UNUSED,
+                    unsigned spaceIdx OPM_UNUSED,
+                    unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::porosity()");
@@ -174,9 +174,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context& OPM_UNUSED context,
-                             unsigned OPM_UNUSED spaceIdx,
-                             unsigned OPM_UNUSED timeIdx) const
+    Scalar heatCapacitySolid(const Context& context OPM_UNUSED,
+                             unsigned spaceIdx OPM_UNUSED,
+                             unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: Problem::heatCapacitySolid()");
@@ -193,9 +193,9 @@ public:
      */
     template <class Context>
     const HeatConductionLawParams&
-    heatConductionParams(const Context& OPM_UNUSED context,
-                         unsigned OPM_UNUSED spaceIdx,
-                         unsigned OPM_UNUSED timeIdx) const
+    heatConductionParams(const Context& context OPM_UNUSED,
+                         unsigned spaceIdx OPM_UNUSED,
+                         unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::heatConductionParams()");
@@ -210,9 +210,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar tortuosity(const Context& OPM_UNUSED context,
-                      unsigned OPM_UNUSED spaceIdx,
-                      unsigned OPM_UNUSED timeIdx) const
+    Scalar tortuosity(const Context& context OPM_UNUSED,
+                      unsigned spaceIdx OPM_UNUSED,
+                      unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: Problem::tortuosity()");
@@ -227,9 +227,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar dispersivity(const Context& OPM_UNUSED context,
-                        unsigned OPM_UNUSED spaceIdx,
-                        unsigned OPM_UNUSED timeIdx) const
+    Scalar dispersivity(const Context& context OPM_UNUSED,
+                        unsigned spaceIdx OPM_UNUSED,
+                        unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: Problem::dispersivity()");
@@ -250,9 +250,9 @@ public:
      */
     template <class Context>
     const MaterialLawParams &
-    materialLawParams(const Context& OPM_UNUSED context,
-                      unsigned OPM_UNUSED spaceIdx,
-                      unsigned OPM_UNUSED timeIdx) const
+    materialLawParams(const Context& context OPM_UNUSED,
+                      unsigned spaceIdx OPM_UNUSED,
+                      unsigned timeIdx OPM_UNUSED) const
     {
         static MaterialLawParams dummy;
         return dummy;
@@ -267,9 +267,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar temperature(const Context& OPM_UNUSED context,
-                       unsigned OPM_UNUSED spaceIdx,
-                       unsigned OPM_UNUSED timeIdx) const
+    Scalar temperature(const Context& context OPM_UNUSED,
+                       unsigned spaceIdx OPM_UNUSED,
+                       unsigned timeIdx OPM_UNUSED) const
     { return asImp_().temperature(); }
 
     /*!
@@ -293,9 +293,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimVector& gravity(const Context& OPM_UNUSED context,
-                             unsigned OPM_UNUSED spaceIdx,
-                             unsigned OPM_UNUSED timeIdx) const
+    const DimVector& gravity(const Context& context OPM_UNUSED,
+                             unsigned spaceIdx OPM_UNUSED,
+                             unsigned timeIdx OPM_UNUSED) const
     { return asImp_().gravity(); }
 
     /*!

@@ -233,7 +233,7 @@ public:
      *
      * \param boundaryFaceIdx The local index of the boundary segment
      */
-    const Intersection& intersection(unsigned OPM_UNUSED boundaryFaceIdx) const
+    const Intersection& intersection(unsigned boundaryFaceIdx OPM_UNUSED) const
     { return *intersectionIt_; }
 
     /*!

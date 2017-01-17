@@ -258,7 +258,7 @@ protected:
     /*!
      * \brief Reset the all relevant internal attributes to 0
      */
-    void reset_(const ElementContext& OPM_UNUSED elemCtx)
+    void reset_(const ElementContext& elemCtx OPM_UNUSED)
     {
         residual_ = 0.0;
         jacobian_ = 0.0;

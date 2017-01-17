@@ -56,7 +56,7 @@ class NullConvergenceWriter
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
 
 public:
-    NullConvergenceWriter(NewtonMethod& method OPM_UNUSED)
+    NullConvergenceWriter(NewtonMethod& method  OPM_UNUSED)
     {}
 
     /*!
@@ -82,8 +82,8 @@ public:
      * \param deltaU The negative difference between the solution
      *        vectors of the previous and the current iteration.
      */
-    void writeFields(const SolutionVector& uLastIter OPM_UNUSED,
-                     const GlobalEqVector& deltaU OPM_UNUSED)
+    void writeFields(const SolutionVector& uLastIter  OPM_UNUSED,
+                     const GlobalEqVector& deltaU  OPM_UNUSED)
     {}
 
     /*!
