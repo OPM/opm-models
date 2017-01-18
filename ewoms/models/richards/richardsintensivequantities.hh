@@ -78,6 +78,7 @@ public:
     {}
 
     RichardsIntensiveQuantities(const RichardsIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     RichardsIntensiveQuantities& operator=(const RichardsIntensiveQuantities& other)

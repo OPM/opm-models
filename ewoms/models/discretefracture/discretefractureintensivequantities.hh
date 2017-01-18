@@ -74,6 +74,7 @@ public:
     { }
 
     DiscreteFractureIntensiveQuantities(const DiscreteFractureIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     DiscreteFractureIntensiveQuantities& operator=(const DiscreteFractureIntensiveQuantities& other)

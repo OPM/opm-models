@@ -84,6 +84,7 @@ public:
     { }
 
     ImmiscibleIntensiveQuantities(const ImmiscibleIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     ImmiscibleIntensiveQuantities& operator=(const ImmiscibleIntensiveQuantities& other)
