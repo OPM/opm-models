@@ -51,12 +51,11 @@ class FvBaseIntensiveQuantities
 public:
     // default constructor
     FvBaseIntensiveQuantities()
-    { evalPoint_ = 0; }
+    { }
 
     // copy constructor
     FvBaseIntensiveQuantities(const FvBaseIntensiveQuantities& v)
     {
-        evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
     }
 
@@ -65,7 +64,6 @@ public:
      */
     FvBaseIntensiveQuantities& operator=(const FvBaseIntensiveQuantities& v)
     {
-        evalPoint_ = 0;
         extrusionFactor_ = v.extrusionFactor_;
 
         return *this;
@@ -76,27 +74,6 @@ public:
      */
     static void registerParameters()
     { }
-
-    /*!
-     * \brief Sets the evaluation point used by the local jacobian.
-     *
-     * The evaluation point is only used by semi-smooth models.
-     *
-     * \param ep A pointer to the IntensiveQuantities object of the evaluation point
-     */
-    void setEvalPoint(const Implementation *ep)
-    {
-        evalPoint_ = ep;
-        Valgrind::CheckDefined(evalPoint_);
-    }
-
-    /*!
-     * \brief Returns the evaluation point used by the local jacobian.
-     *
-     * The evaluation point is only used by semi-smooth models.
-     */
-    const Implementation& evalPoint() const
-    { return (evalPoint_ == 0)?asImp_():*evalPoint_; }
 
     /*!
      * \brief Update all quantities for a given control volume.
@@ -137,22 +114,13 @@ public:
      *        quantities in the intensive quantities are defined.
      */
     void checkDefined() const
-    {
-#if !defined NDEBUG && HAVE_VALGRIND
-        Valgrind::CheckDefined(evalPoint_);
-        if (evalPoint_ && evalPoint_ != this)
-            evalPoint_->checkDefined();
-#endif
-    }
+    { }
 
 private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
-
-    // the evaluation point of the local jacobian
-    const Implementation *evalPoint_;
 
     Scalar extrusionFactor_;
 };
