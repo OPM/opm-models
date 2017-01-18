@@ -120,6 +120,7 @@ namespace Ewoms
                     indexMap.resize( localSize );
                     for( size_t i=0; i<localSize; ++i )
                     {
+                        assert( localIndexMap_[ i ] != -1 );
                         const int id = distributedGlobalIndex_[ localIndexMap_[ i ] ];
                         indexMap[ i ] = globalPosition_[ id ] ;
 #ifndef NDEBUG
@@ -223,10 +224,11 @@ namespace Ewoms
 
                 localIndexMap_.clear();
                 const size_t gridSize = gridManager.grid().size( 0 );
-                localIndexMap_.reserve( gridSize );
+                localIndexMap_.resize( gridSize, -1 );
 
                 // store the local Cartesian index
                 IndexMapType distributedCartesianIndex;
+                int interiorElementIdx = 0;
                 distributedCartesianIndex.resize(gridSize, -1);
 
                 auto localView = gridManager.grid().leafGridView();
@@ -244,7 +246,7 @@ namespace Ewoms
                     // only store interior element for collection
                     if( element.partitionType() == Dune :: InteriorEntity )
                     {
-                        localIndexMap_[elemIdx] = elemIdx;
+                        localIndexMap_[elemIdx] = interiorElementIdx++;
                     }
                 }
 
