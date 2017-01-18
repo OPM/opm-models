@@ -164,7 +164,7 @@ public:
      * \brief Allows to improve the performance by prefetching all data which is
      *        associated with a given element.
      */
-    void prefetch(const Element& OPM_UNUSED elem) const
+    void prefetch(const Element& elem OPM_UNUSED) const
     {
         // do nothing by default
     }
@@ -191,10 +191,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void boundary(BoundaryRateVector& OPM_UNUSED values,
-                  const Context& OPM_UNUSED context,
-                  unsigned OPM_UNUSED spaceIdx,
-                  unsigned OPM_UNUSED timeIdx) const
+    void boundary(BoundaryRateVector& values OPM_UNUSED,
+                  const Context& context OPM_UNUSED,
+                  unsigned spaceIdx OPM_UNUSED,
+                  unsigned timeIdx OPM_UNUSED) const
     { OPM_THROW(std::logic_error, "Problem does not provide a boundary() method"); }
 
     /*!
@@ -208,10 +208,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void constraints(Constraints& OPM_UNUSED constraints,
-                     const Context& OPM_UNUSED context,
-                     unsigned OPM_UNUSED spaceIdx,
-                     unsigned OPM_UNUSED timeIdx) const
+    void constraints(Constraints& constraints OPM_UNUSED,
+                     const Context& context OPM_UNUSED,
+                     unsigned spaceIdx OPM_UNUSED,
+                     unsigned timeIdx OPM_UNUSED) const
     { OPM_THROW(std::logic_error, "Problem does not provide a constraints() method"); }
 
     /*!
@@ -227,10 +227,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void source(RateVector& OPM_UNUSED rate,
-                const Context& OPM_UNUSED context,
-                unsigned OPM_UNUSED spaceIdx,
-                unsigned OPM_UNUSED timeIdx) const
+    void source(RateVector& rate OPM_UNUSED,
+                const Context& context OPM_UNUSED,
+                unsigned spaceIdx OPM_UNUSED,
+                unsigned timeIdx OPM_UNUSED) const
     { OPM_THROW(std::logic_error, "Problem does not provide a source() method"); }
 
     /*!
@@ -244,10 +244,10 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void initial(PrimaryVariables& OPM_UNUSED values,
-                 const Context& OPM_UNUSED context,
-                 unsigned OPM_UNUSED spaceIdx,
-                 unsigned OPM_UNUSED timeIdx) const
+    void initial(PrimaryVariables& values OPM_UNUSED,
+                 const Context& context OPM_UNUSED,
+                 unsigned spaceIdx OPM_UNUSED,
+                 unsigned timeIdx OPM_UNUSED) const
     { OPM_THROW(std::logic_error, "Problem does not provide a initial() method"); }
 
     /*!
@@ -266,9 +266,9 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    Scalar extrusionFactor(const Context& OPM_UNUSED context,
-                           unsigned OPM_UNUSED spaceIdx,
-                           unsigned OPM_UNUSED timeIdx) const
+    Scalar extrusionFactor(const Context& context OPM_UNUSED,
+                           unsigned spaceIdx OPM_UNUSED,
+                           unsigned timeIdx OPM_UNUSED) const
     { return asImp_().extrusionFactor(); }
 
     Scalar extrusionFactor() const

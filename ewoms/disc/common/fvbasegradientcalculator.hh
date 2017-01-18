@@ -210,8 +210,8 @@ public:
      *               freedom
      */
     template <class QuantityCallback>
-    auto calculateBoundaryValue(const ElementContext& OPM_UNUSED elemCtx,
-                                unsigned OPM_UNUSED fapIdx,
+    auto calculateBoundaryValue(const ElementContext& elemCtx OPM_UNUSED,
+                                unsigned fapIdx OPM_UNUSED,
                                 const QuantityCallback& quantityCallback)
         -> decltype(quantityCallback.boundaryValue())
     { return quantityCallback.boundaryValue(); }

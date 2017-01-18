@@ -138,7 +138,7 @@ public:
      *
      * \param os The output stream to which the message gets written.
      */
-    virtual void printInitial(std::ostream& OPM_UNUSED os = std::cout) const
+    virtual void printInitial(std::ostream& os OPM_UNUSED= std::cout) const
     {}
 
     /*!
@@ -149,7 +149,7 @@ public:
      *             are chosen by the linear solver.
      * \param os The output stream to which the message gets written.
      */
-    virtual void print(Scalar OPM_UNUSED iter, std::ostream& OPM_UNUSED os = std::cout) const
+    virtual void print(Scalar iter OPM_UNUSED, std::ostream& os OPM_UNUSED = std::cout) const
     {}
 };
 

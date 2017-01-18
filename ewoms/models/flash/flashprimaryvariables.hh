@@ -99,8 +99,8 @@ public:
      */
     template <class FluidState>
     void assignMassConservative(const FluidState& fluidState,
-                                const MaterialLawParams& OPM_UNUSED matParams,
-                                bool OPM_UNUSED isInEquilibrium = false)
+                                const MaterialLawParams& matParams OPM_UNUSED,
+                                bool isInEquilibrium OPM_UNUSED= false)
     {
         // there is no difference between naive and mass conservative
         // assignment in the flash model. (we only need the total

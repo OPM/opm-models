@@ -331,10 +331,10 @@ public:
      * \copydetails Doxygen::storageParam
      * \copydetails Doxygen::ecfvScvCtxParams
      */
-    void computeStorage(EqVector& OPM_UNUSED storage,
-                        const ElementContext& OPM_UNUSED elemCtx,
-                        unsigned OPM_UNUSED dofIdx,
-                        unsigned OPM_UNUSED timeIdx) const
+    void computeStorage(EqVector& storage OPM_UNUSED,
+                        const ElementContext& elemCtx OPM_UNUSED,
+                        unsigned dofIdx OPM_UNUSED,
+                        unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: The local residual " << Dune::className<Implementation>()
@@ -348,10 +348,10 @@ public:
      * \copydetails Doxygen::areaFluxParam
      * \copydetails Doxygen::ecfvScvfCtxParams
      */
-    void computeFlux(RateVector& OPM_UNUSED flux,
-                     const ElementContext& OPM_UNUSED elemCtx,
-                     unsigned OPM_UNUSED scvfIdx,
-                     unsigned OPM_UNUSED timeIdx) const
+    void computeFlux(RateVector& flux OPM_UNUSED,
+                     const ElementContext& elemCtx OPM_UNUSED,
+                     unsigned scvfIdx OPM_UNUSED,
+                     unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: The local residual " << Dune::className<Implementation>()
@@ -364,10 +364,10 @@ public:
      * \copydoc Doxygen::sourceParam
      * \copydoc Doxygen::ecfvScvCtxParams
      */
-    void computeSource(RateVector& OPM_UNUSED source,
-                       const ElementContext& OPM_UNUSED elemCtx,
-                       unsigned OPM_UNUSED dofIdx,
-                       unsigned OPM_UNUSED timeIdx) const
+    void computeSource(RateVector& source OPM_UNUSED,
+                       const ElementContext& elemCtx OPM_UNUSED,
+                       unsigned dofIdx OPM_UNUSED,
+                       unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "Not implemented: The local residual " << Dune::className<Implementation>()

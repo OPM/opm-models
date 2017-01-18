@@ -63,27 +63,27 @@ public:
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
     template <class Context>
-    unsigned pvtRegionIndex(const Context& OPM_UNUSED context,
-                            unsigned OPM_UNUSED spaceIdx,
-                            unsigned OPM_UNUSED timeIdx) const
+    unsigned pvtRegionIndex(const Context& context OPM_UNUSED,
+                            unsigned spaceIdx OPM_UNUSED,
+                            unsigned timeIdx OPM_UNUSED) const
     { return 0; }
 
     /*!
      * \brief Returns the compressibility of the porous medium of a cell
      */
     template <class Context>
-    Scalar rockCompressibility(const Context& OPM_UNUSED context,
-                               unsigned OPM_UNUSED spaceIdx,
-                               unsigned OPM_UNUSED timeIdx) const
+    Scalar rockCompressibility(const Context& context OPM_UNUSED,
+                               unsigned spaceIdx OPM_UNUSED,
+                               unsigned timeIdx OPM_UNUSED) const
     { return 0.0; }
 
     /*!
      * \brief Returns the reference pressure for rock the compressibility of a cell
      */
     template <class Context>
-    Scalar rockReferencePressure(const Context& OPM_UNUSED context,
-                                 unsigned OPM_UNUSED spaceIdx,
-                                 unsigned OPM_UNUSED timeIdx) const
+    Scalar rockReferencePressure(const Context& context OPM_UNUSED,
+                                 unsigned spaceIdx OPM_UNUSED,
+                                 unsigned timeIdx OPM_UNUSED) const
     { return 1e5; }
 
 private:

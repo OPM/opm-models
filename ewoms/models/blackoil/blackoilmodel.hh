@@ -297,7 +297,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(unsigned globalDofIdx, unsigned OPM_UNUSED eqIdx) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx OPM_UNUSED) const
     {
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves

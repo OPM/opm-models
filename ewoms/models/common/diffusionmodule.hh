@@ -74,10 +74,10 @@ public:
      *        integration point.
       */
     template <class Context>
-    static void addDiffusiveFlux(RateVector& OPM_UNUSED flux,
-                                 const Context& OPM_UNUSED context,
-                                 unsigned OPM_UNUSED spaceIdx,
-                                 unsigned OPM_UNUSED timeIdx)
+    static void addDiffusiveFlux(RateVector& flux OPM_UNUSED,
+                                 const Context& context OPM_UNUSED,
+                                 unsigned spaceIdx OPM_UNUSED,
+                                 unsigned timeIdx OPM_UNUSED)
     {}
 };
 
@@ -160,7 +160,7 @@ public:
      * \brief Returns the tortuousity of the sub-domain of a fluid
      *        phase in the porous medium.
      */
-    Scalar tortuosity(unsigned OPM_UNUSED phaseIdx) const
+    Scalar tortuosity(unsigned phaseIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error, "Method tortuosity() does not make sense "
                                     "if diffusion is disabled");
@@ -170,7 +170,7 @@ public:
      * \brief Returns the molecular diffusion coefficient for a
      *        component in a phase.
      */
-    Scalar diffusionCoefficient(unsigned OPM_UNUSED phaseIdx, unsigned OPM_UNUSED compIdx) const
+    Scalar diffusionCoefficient(unsigned phaseIdx OPM_UNUSED, unsigned compIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error, "Method diffusionCoefficient() does not "
                                     "make sense if diffusion is disabled");
@@ -180,7 +180,7 @@ public:
      * \brief Returns the effective molecular diffusion coefficient of
      *        the porous medium for a component in a phase.
      */
-    Scalar effectiveDiffusionCoefficient(unsigned OPM_UNUSED phaseIdx, unsigned OPM_UNUSED compIdx) const
+    Scalar effectiveDiffusionCoefficient(unsigned phaseIdx OPM_UNUSED, unsigned compIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() "
                                     "does not make sense if diffusion is "
@@ -193,11 +193,11 @@ protected:
      *        mass fluxes.
      */
     template <class FluidState>
-    void update_(FluidState& OPM_UNUSED fs,
-                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& OPM_UNUSED paramCache,
-                 const ElementContext& OPM_UNUSED elemCtx,
-                 unsigned OPM_UNUSED dofIdx,
-                 unsigned OPM_UNUSED timeIdx)
+    void update_(FluidState& fs OPM_UNUSED,
+                 typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache OPM_UNUSED,
+                 const ElementContext& elemCtx OPM_UNUSED,
+                 unsigned dofIdx OPM_UNUSED,
+                 unsigned timeIdx OPM_UNUSED)
     { }
 };
 
@@ -306,16 +306,16 @@ protected:
      * \brief Update the quantities required to calculate
      *        the diffusive mass fluxes.
      */
-    void update_(const ElementContext& OPM_UNUSED elemCtx,
-                 unsigned OPM_UNUSED faceIdx,
-                 unsigned OPM_UNUSED timeIdx)
+    void update_(const ElementContext& elemCtx OPM_UNUSED,
+                 unsigned faceIdx OPM_UNUSED,
+                 unsigned timeIdx OPM_UNUSED)
     {}
 
     template <class Context, class FluidState>
-    void updateBoundary_(const Context& OPM_UNUSED context,
-                         unsigned OPM_UNUSED bfIdx,
-                         unsigned OPM_UNUSED timeIdx,
-                         const FluidState& OPM_UNUSED fluidState)
+    void updateBoundary_(const Context& context OPM_UNUSED,
+                         unsigned bfIdx OPM_UNUSED,
+                         unsigned timeIdx OPM_UNUSED,
+                         const FluidState& fluidState OPM_UNUSED)
     {}
 
 public:
@@ -325,8 +325,8 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    const Evaluation& moleFractionGradientNormal(unsigned OPM_UNUSED phaseIdx,
-                                                 unsigned OPM_UNUSED compIdx) const
+    const Evaluation& moleFractionGradientNormal(unsigned phaseIdx OPM_UNUSED,
+                                                 unsigned compIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "The method moleFractionGradient() does not "
@@ -340,8 +340,8 @@ public:
      * \copydoc Doxygen::phaseIdxParam
      * \copydoc Doxygen::compIdxParam
      */
-    const Evaluation& effectiveDiffusionCoefficient(unsigned OPM_UNUSED phaseIdx,
-                                                    unsigned OPM_UNUSED compIdx) const
+    const Evaluation& effectiveDiffusionCoefficient(unsigned phaseIdx OPM_UNUSED,
+                                                    unsigned compIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                   "The method effectiveDiffusionCoefficient() "

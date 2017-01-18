@@ -51,14 +51,14 @@ public:
         : mapper_(mapper), container_(container)
     {}
 
-    bool contains(int OPM_UNUSED dim, int codim) const
+    bool contains(int dim OPM_UNUSED, int codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(int OPM_UNUSED dim, int OPM_UNUSED codim) const
+    bool fixedsize(int dim OPM_UNUSED, int codim OPM_UNUSED) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -66,7 +66,7 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType& OPM_UNUSED e) const
+    size_t size(const EntityType& e OPM_UNUSED) const
     {
         // communicate a field type per entity
         return 1;
@@ -84,7 +84,7 @@ public:
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
@@ -119,14 +119,14 @@ public:
     {
     }
 
-    bool contains(unsigned OPM_UNUSED dim, unsigned codim) const
+    bool contains(unsigned dim OPM_UNUSED, unsigned codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(unsigned OPM_UNUSED dim, unsigned OPM_UNUSED codim) const
+    bool fixedsize(unsigned dim OPM_UNUSED, unsigned codim OPM_UNUSED) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -134,7 +134,7 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType& OPM_UNUSED e) const
+    size_t size(const EntityType& e OPM_UNUSED) const
     {
         // communicate a field type per entity
         return 1;
@@ -152,7 +152,7 @@ public:
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
@@ -182,14 +182,14 @@ public:
         : mapper_(mapper), container_(container)
     {}
 
-    bool contains(unsigned OPM_UNUSED dim, unsigned codim) const
+    bool contains(unsigned dim OPM_UNUSED, unsigned codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(unsigned OPM_UNUSED dim, unsigned OPM_UNUSED codim) const
+    bool fixedsize(unsigned dim OPM_UNUSED, unsigned codim OPM_UNUSED) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -197,7 +197,7 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType& OPM_UNUSED e) const
+    size_t size(const EntityType& e OPM_UNUSED) const
     {
         // communicate a field type per entity
         return 1;
@@ -215,7 +215,7 @@ public:
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
@@ -247,14 +247,14 @@ public:
         : mapper_(mapper), container_(container)
     {}
 
-    bool contains(unsigned OPM_UNUSED dim, unsigned codim) const
+    bool contains(unsigned dim OPM_UNUSED, unsigned codim) const
     {
         // return true if the codim is the same as the codim which we
         // are asked to communicate with.
         return codim == commCodim;
     }
 
-    bool fixedsize(unsigned OPM_UNUSED dim, unsigned OPM_UNUSED codim) const
+    bool fixedsize(unsigned dim OPM_UNUSED, unsigned codim OPM_UNUSED) const
     {
         // for each DOF we communicate a single value which has a
         // fixed size
@@ -262,7 +262,7 @@ public:
     }
 
     template <class EntityType>
-    size_t size(const EntityType& OPM_UNUSED e) const
+    size_t size(const EntityType& e OPM_UNUSED) const
     {
         // communicate a field type per entity
         return 1;
@@ -280,7 +280,7 @@ public:
     }
 
     template <class MessageBufferImp, class EntityType>
-    void scatter(MessageBufferImp& buff, const EntityType& e, size_t OPM_UNUSED n)
+    void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));

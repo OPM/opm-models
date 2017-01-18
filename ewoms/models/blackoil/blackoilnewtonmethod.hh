@@ -148,7 +148,7 @@ protected:
                                  PrimaryVariables& nextValue,
                                  const PrimaryVariables& currentValue,
                                  const EqVector& update,
-                                 const EqVector& OPM_UNUSED currentResidual)
+                                 const EqVector& currentResidual OPM_UNUSED)
     {
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             // calculate the update of the current primary variable. For the

@@ -100,9 +100,9 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    Scalar temperature(const Context& OPM_UNUSED context,
-                       unsigned OPM_UNUSED spaceIdx,
-                       unsigned OPM_UNUSED timeIdx) const
+    Scalar temperature(const Context& context OPM_UNUSED,
+                       unsigned spaceIdx OPM_UNUSED,
+                       unsigned timeIdx OPM_UNUSED) const
     { return asImp_().temperature(); }
 
     /*!
@@ -122,9 +122,9 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context& OPM_UNUSED context,
-                             unsigned OPM_UNUSED spaceIdx,
-                             unsigned OPM_UNUSED timeIdx) const
+    Scalar heatCapacitySolid(const Context& context OPM_UNUSED,
+                             unsigned spaceIdx OPM_UNUSED,
+                             unsigned timeIdx OPM_UNUSED) const
     { return 0; }
 
     /*!
@@ -135,9 +135,9 @@ public:
      */
     template <class Context>
     const HeatConductionLawParams &
-    heatConductionParams(const Context& OPM_UNUSED context,
-                         unsigned OPM_UNUSED spaceIdx,
-                         unsigned OPM_UNUSED timeIdx) const
+    heatConductionParams(const Context& context OPM_UNUSED,
+                         unsigned spaceIdx OPM_UNUSED,
+                         unsigned timeIdx OPM_UNUSED) const
     {
         static const HeatConductionLawParams dummy;
         return dummy;
@@ -153,9 +153,9 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    const DimVector& gravity(const Context& OPM_UNUSED context,
-                             unsigned OPM_UNUSED spaceIdx,
-                             unsigned OPM_UNUSED timeIdx) const
+    const DimVector& gravity(const Context& context OPM_UNUSED,
+                             unsigned spaceIdx OPM_UNUSED,
+                             unsigned timeIdx OPM_UNUSED) const
     { return asImp_().gravity(); }
 
     /*!

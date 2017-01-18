@@ -217,31 +217,31 @@ public:
     /*!
      * \brief Return the volume flux of mass
      */
-    Scalar volumeFlux(unsigned OPM_UNUSED phaseIdx) const
+    Scalar volumeFlux(unsigned phaseIdx OPM_UNUSED) const
     { return volumeFlux_; }
 
     /*!
      * \brief Return the weight of the upstream index
      */
-    Scalar upstreamWeight(unsigned OPM_UNUSED phaseIdx) const
+    Scalar upstreamWeight(unsigned phaseIdx OPM_UNUSED) const
     { return 1.0; }
 
     /*!
      * \brief Return the weight of the downstream index
      */
-    Scalar downstreamWeight(unsigned OPM_UNUSED phaseIdx) const
+    Scalar downstreamWeight(unsigned phaseIdx OPM_UNUSED) const
     { return 0.0; }
 
     /*!
      * \brief Return the local index of the upstream sub-control volume.
      */
-    unsigned upstreamIndex(unsigned OPM_UNUSED phaseIdx) const
+    unsigned upstreamIndex(unsigned phaseIdx OPM_UNUSED) const
     { return upstreamIdx_; }
 
     /*!
      * \brief Return the local index of the downstream sub-control volume.
      */
-    unsigned downstreamIndex(unsigned OPM_UNUSED phaseIdx) const
+    unsigned downstreamIndex(unsigned phaseIdx OPM_UNUSED) const
     { return downstreamIdx_; }
 
     /*!

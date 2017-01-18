@@ -54,7 +54,7 @@ class NullBorderListCreator
 {
 public:
     NullBorderListCreator(const GridView& gridView,
-                          const DofMapper& OPM_UNUSED map)
+                          const DofMapper& map OPM_UNUSED)
     {
         if (gridView.comm().size() > 1)
             OPM_THROW(std::runtime_error,

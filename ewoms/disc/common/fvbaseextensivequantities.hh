@@ -90,8 +90,8 @@ public:
     void updateBoundary(const Context& context,
                         unsigned bfIdx,
                         unsigned timeIdx,
-                        const FluidState& OPM_UNUSED fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& OPM_UNUSED paramCache)
+                        const FluidState& fluidState OPM_UNUSED,
+                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache OPM_UNUSED)
     {
         unsigned dofIdx = context.interiorScvIndex(bfIdx, timeIdx);
         interiorScvIdx_ = static_cast<unsigned short>(dofIdx);

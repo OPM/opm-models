@@ -69,7 +69,7 @@ class SuperLUBackend
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
 
 public:
-    SuperLUBackend(Simulator& OPM_UNUSED simulator)
+    SuperLUBackend(Simulator& simulator OPM_UNUSED)
     {}
 
     static void registerParameters()
@@ -92,7 +92,7 @@ public:
         M_ = &M;
     }
 
-    void prepareRhs(const Matrix& OPM_UNUSED M, Vector& b)
+    void prepareRhs(const Matrix& M OPM_UNUSED, Vector& b)
     {
         b_ = &b;
     }

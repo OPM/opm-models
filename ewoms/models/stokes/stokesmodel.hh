@@ -298,7 +298,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarWeight
      */
-    Scalar primaryVarWeight(unsigned OPM_UNUSED globalDofIdx, unsigned pvIdx) const
+    Scalar primaryVarWeight(unsigned globalDofIdx OPM_UNUSED, unsigned pvIdx) const
     {
         // for stokes flow the pressure gradients are often quite
         // small, so we need higher precision for pressure. TODO: find

@@ -110,9 +110,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const DimMatrix& fractureIntrinsicPermeability(const Context& OPM_UNUSED context,
-                                                   unsigned OPM_UNUSED spaceIdx,
-                                                   unsigned OPM_UNUSED timeIdx) const
+    const DimMatrix& fractureIntrinsicPermeability(const Context& context OPM_UNUSED,
+                                                   unsigned spaceIdx OPM_UNUSED,
+                                                   unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::fractureIntrinsicPermeability()");
@@ -127,9 +127,9 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar fracturePorosity(const Context& OPM_UNUSED context,
-                            unsigned OPM_UNUSED spaceIdx,
-                            unsigned OPM_UNUSED timeIdx) const
+    Scalar fracturePorosity(const Context& context OPM_UNUSED,
+                            unsigned spaceIdx OPM_UNUSED,
+                            unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
                    "Not implemented: Problem::fracturePorosity()");

@@ -337,7 +337,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const Stencil& stencil(unsigned OPM_UNUSED timeIdx) const
+    const Stencil& stencil(unsigned timeIdx OPM_UNUSED) const
     { return stencil_; }
 
     /*!
@@ -348,7 +348,7 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    const GlobalPosition& pos(unsigned dofIdx, unsigned OPM_UNUSED timeIdx) const
+    const GlobalPosition& pos(unsigned dofIdx, unsigned timeIdx OPM_UNUSED) const
     { return stencil_.subControlVolume(dofIdx).globalPos(); }
 
     /*!
@@ -522,7 +522,7 @@ public:
      *               extensive quantities are requested
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
-    const ExtensiveQuantities& extensiveQuantities(unsigned fluxIdx, unsigned OPM_UNUSED timeIdx) const
+    const ExtensiveQuantities& extensiveQuantities(unsigned fluxIdx, unsigned timeIdx OPM_UNUSED) const
     { return extensiveQuantities_[fluxIdx]; }
 
     /*!
