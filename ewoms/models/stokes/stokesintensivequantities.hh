@@ -80,6 +80,7 @@ public:
     {}
 
     StokesIntensiveQuantities(const StokesIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     StokesIntensiveQuantities& operator=(const StokesIntensiveQuantities& other)

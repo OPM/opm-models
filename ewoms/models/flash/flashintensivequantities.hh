@@ -93,6 +93,7 @@ public:
     { }
 
     FlashIntensiveQuantities(const FlashIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     FlashIntensiveQuantities& operator=(const FlashIntensiveQuantities& other)

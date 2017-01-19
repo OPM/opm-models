@@ -87,6 +87,7 @@ public:
     }
 
     BlackOilIntensiveQuantities(const BlackOilIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     BlackOilIntensiveQuantities& operator=(const BlackOilIntensiveQuantities& other)

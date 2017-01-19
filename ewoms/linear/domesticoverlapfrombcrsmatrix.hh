@@ -523,7 +523,7 @@ protected:
             domesticOverlapByIndex_[static_cast<unsigned>(domesticIdx)][static_cast<unsigned>(peerRank)] = borderDistance;
             domesticOverlapWithPeer_[static_cast<unsigned>(peerRank)].push_back(domesticIdx);
 
-            assert(borderDistance >= 0);
+            //assert(borderDistance >= 0);
             assert(globalIdx >= 0);
             assert(domesticIdx >= 0);
             assert(!(borderDistance == 0 && !foreignOverlap_.isLocal(domesticIdx)));

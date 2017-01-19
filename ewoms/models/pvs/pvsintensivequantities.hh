@@ -99,6 +99,7 @@ public:
     { }
 
     PvsIntensiveQuantities(const PvsIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     PvsIntensiveQuantities& operator=(const PvsIntensiveQuantities& other)

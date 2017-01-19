@@ -93,6 +93,7 @@ public:
     {}
 
     NcpIntensiveQuantities(const NcpIntensiveQuantities& other)
+        : ParentType()
     { std::memcpy(this, &other, sizeof(other)); }
 
     NcpIntensiveQuantities& operator=(const NcpIntensiveQuantities& other)
