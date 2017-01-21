@@ -101,7 +101,7 @@ namespace Linear {
         }                                                                          \
                                                                                    \
         void cleanup()                                                             \
-        { delete solver_; }                                                        \
+        { solver_.reset(); }                                                       \
                                                                                    \
     private:                                                                       \
         std::shared_ptr<RawSolver> solver_;                                        \
