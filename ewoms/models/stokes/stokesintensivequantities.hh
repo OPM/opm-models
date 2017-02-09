@@ -97,7 +97,7 @@ public:
 
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
-        Valgrind::CheckDefined(fluidState_.pressure(phaseIdx));
+        Opm::Valgrind::CheckDefined(fluidState_.pressure(phaseIdx));
 
         // set the saturation of the phase to 1. for the stokes model,
         // saturation is not a meaningful quanity, but it allows us to
@@ -143,10 +143,10 @@ public:
         pressureGrad_ = 0.0;
         for (unsigned i = 0; i < elemCtx.numDof(/*timeIdx=*/0); ++i) {
             const auto& feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
-            Valgrind::CheckDefined(feGrad);
+            Opm::Valgrind::CheckDefined(feGrad);
             DimVector tmp(feGrad);
             tmp *= elemCtx.intensiveQuantities(i, timeIdx).fluidState().pressure(phaseIdx);
-            Valgrind::CheckDefined(tmp);
+            Opm::Valgrind::CheckDefined(tmp);
 
             pressureGrad_ += tmp;
         }

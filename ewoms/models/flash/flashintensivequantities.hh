@@ -141,7 +141,7 @@ public:
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_,
                                             materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
+        Opm::Valgrind::CheckDefined(relativePermeability_);
 
         // set the phase viscosities
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -151,7 +151,7 @@ public:
             fluidState_.setViscosity(phaseIdx, mu);
 
             mobility_[phaseIdx] = relativePermeability_[phaseIdx] / mu;
-            Valgrind::CheckDefined(mobility_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(mobility_[phaseIdx]);
         }
 
         /////////////
@@ -160,7 +160,7 @@ public:
 
         // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
-        Valgrind::CheckDefined(porosity_);
+        Opm::Valgrind::CheckDefined(porosity_);
 
         // intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);

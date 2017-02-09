@@ -120,7 +120,7 @@ public:
             sumSat += val;
         }
         fluidState_.setSaturation(numPhases - 1, 1.0 - sumSat);
-        Valgrind::CheckDefined(sumSat);
+        Opm::Valgrind::CheckDefined(sumSat);
 
         // set the fluid phase temperature
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
@@ -163,7 +163,7 @@ public:
 
         // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
-        Valgrind::CheckDefined(porosity_);
+        Opm::Valgrind::CheckDefined(porosity_);
 
         // relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
@@ -230,8 +230,8 @@ public:
 #if !defined NDEBUG && HAVE_VALGRIND
         ParentType::checkDefined();
 
-        Valgrind::CheckDefined(porosity_);
-        Valgrind::CheckDefined(relativePermeability_);
+        Opm::Valgrind::CheckDefined(porosity_);
+        Opm::Valgrind::CheckDefined(relativePermeability_);
 
         fluidState_.checkDefined();
 #endif

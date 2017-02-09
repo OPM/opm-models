@@ -75,16 +75,16 @@ public:
     void checkDefined() const
     {
 #ifndef NDEBUG
-        Valgrind::CheckDefined(pvtRegionIdx_);
+        Opm::Valgrind::CheckDefined(pvtRegionIdx_);
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-            Valgrind::CheckDefined(saturation_[phaseIdx]);
-            Valgrind::CheckDefined(pressure_[phaseIdx]);
-            Valgrind::CheckDefined(invB_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(saturation_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(pressure_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(invB_[phaseIdx]);
         }
 
-        Valgrind::CheckDefined(Rs_);
-        Valgrind::CheckDefined(Rv_);
+        Opm::Valgrind::CheckDefined(Rs_);
+        Opm::Valgrind::CheckDefined(Rv_);
 #endif // NDEBUG
     }
 

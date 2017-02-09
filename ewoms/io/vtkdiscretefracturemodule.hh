@@ -188,7 +188,7 @@ public:
             const auto& fs = intQuants.fractureFluidState();
 
             if (porosityOutput_()) {
-                Valgrind::CheckDefined(intQuants.fracturePorosity());
+                Opm::Valgrind::CheckDefined(intQuants.fracturePorosity());
                 fracturePorosity_[I] = intQuants.fracturePorosity();
             }
             if (intrinsicPermeabilityOutput_()) {
@@ -198,20 +198,20 @@ public:
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (saturationOutput_()) {
-                    Valgrind::CheckDefined(fs.saturation(phaseIdx));
+                    Opm::Valgrind::CheckDefined(fs.saturation(phaseIdx));
                     fractureSaturation_[phaseIdx][I] = fs.saturation(phaseIdx);
                 }
                 if (mobilityOutput_()) {
-                    Valgrind::CheckDefined(intQuants.fractureMobility(phaseIdx));
+                    Opm::Valgrind::CheckDefined(intQuants.fractureMobility(phaseIdx));
                     fractureMobility_[phaseIdx][I] = intQuants.fractureMobility(phaseIdx);
                 }
                 if (relativePermeabilityOutput_()) {
-                    Valgrind::CheckDefined(intQuants.fractureRelativePermeability(phaseIdx));
+                    Opm::Valgrind::CheckDefined(intQuants.fractureRelativePermeability(phaseIdx));
                     fractureRelativePermeability_[phaseIdx][I] =
                         intQuants.fractureRelativePermeability(phaseIdx);
                 }
                 if (volumeFractionOutput_()) {
-                    Valgrind::CheckDefined(intQuants.fractureVolume());
+                    Opm::Valgrind::CheckDefined(intQuants.fractureVolume());
                     fractureVolumeFraction_[I] += intQuants.fractureVolume();
                 }
             }
@@ -234,7 +234,7 @@ public:
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight =
                         std::max<Scalar>(1e-16, std::abs(extQuants.fractureVolumeFlux(phaseIdx)));
-                    Valgrind::CheckDefined(extQuants.extrusionFactor());
+                    Opm::Valgrind::CheckDefined(extQuants.extrusionFactor());
                     assert(extQuants.extrusionFactor() > 0);
                     weight *= extQuants.extrusionFactor();
 

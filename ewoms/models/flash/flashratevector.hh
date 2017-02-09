@@ -62,7 +62,7 @@ class FlashRateVector
 
 public:
     FlashRateVector() : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)

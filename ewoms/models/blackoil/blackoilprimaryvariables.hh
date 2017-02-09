@@ -96,7 +96,7 @@ public:
     BlackOilPrimaryVariables()
         : ParentType()
     {
-        Valgrind::SetUndefined(*this);
+        Opm::Valgrind::SetUndefined(*this);
         pvtRegionIdx_ = 0;
     }
 
@@ -106,7 +106,7 @@ public:
     BlackOilPrimaryVariables(Scalar value)
         : ParentType(value)
     {
-        Valgrind::SetUndefined(primaryVarsMeaning_);
+        Opm::Valgrind::SetUndefined(primaryVarsMeaning_);
         pvtRegionIdx_ = 0;
     }
 
@@ -161,8 +161,8 @@ public:
 #ifndef NDEBUG
         // make sure the temperature is the same in all fluid phases
         for (unsigned phaseIdx = 1; phaseIdx < numPhases; ++phaseIdx) {
-            Valgrind::CheckDefined(fluidState.temperature(0));
-            Valgrind::CheckDefined(fluidState.temperature(phaseIdx));
+            Opm::Valgrind::CheckDefined(fluidState.temperature(0));
+            Opm::Valgrind::CheckDefined(fluidState.temperature(phaseIdx));
 
             assert(fluidState.temperature(0) == fluidState.temperature(phaseIdx));
         }

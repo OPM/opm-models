@@ -203,7 +203,7 @@ protected:
         // calculate the "raw" pressure gradient
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
+                Opm::Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
                 continue;
             }
 
@@ -212,7 +212,7 @@ protected:
                                        elemCtx,
                                        faceIdx,
                                        pressureCallback);
-            Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
         }
 
         // correct the pressure gradients by the gravitational acceleration
@@ -272,13 +272,13 @@ protected:
             }
         }
 
-        Valgrind::SetUndefined(K_);
+        Opm::Valgrind::SetUndefined(K_);
         elemCtx.problem().intersectionIntrinsicPermeability(K_, elemCtx, faceIdx, timeIdx);
-        Valgrind::CheckDefined(K_);
+        Opm::Valgrind::CheckDefined(K_);
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
+                Opm::Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
                 continue;
             }
 
@@ -329,7 +329,7 @@ protected:
         // calculate the pressure gradient
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
+                Opm::Valgrind::SetUndefined(potentialGrad_[phaseIdx]);
                 continue;
             }
 
@@ -338,7 +338,7 @@ protected:
                                                elemCtx,
                                                boundaryFaceIdx,
                                                pressureCallback);
-            Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
         }
 
         const auto& scvf = elemCtx.stencil(timeIdx).boundaryFace(boundaryFaceIdx);
@@ -372,7 +372,7 @@ protected:
                 Evaluation rhoIn = intQuantsIn.fluidState().density(phaseIdx);
                 Evaluation pStatIn = - gTimesDist*rhoIn;
 
-                Valgrind::CheckDefined(pStatIn);
+                Opm::Valgrind::CheckDefined(pStatIn);
 
                 // compute the hydrostatic gradient between the two control volumes (this
                 // gradient exhibitis the same direction as the vector between the two
@@ -387,7 +387,7 @@ protected:
                 for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
                     potentialGrad_[phaseIdx][dimIdx] += f[dimIdx];
 
-                Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
+                Opm::Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 for (unsigned dimIdx = 0; dimIdx < potentialGrad_[phaseIdx].size(); ++dimIdx) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][dimIdx]))) {
                         OPM_THROW(Opm::NumericalProblem,
@@ -405,7 +405,7 @@ protected:
 
         Scalar kr[numPhases];
         MaterialLaw::relativePermeabilities(kr, matParams, fluidState);
-        Valgrind::CheckDefined(kr);
+        Opm::Valgrind::CheckDefined(kr);
 
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
@@ -430,7 +430,7 @@ protected:
                     kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
             else
                 mobility_[phaseIdx] = intQuantsIn.mobility(phaseIdx);
-            Valgrind::CheckDefined(mobility_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(mobility_[phaseIdx]);
         }
     }
 
@@ -444,7 +444,7 @@ protected:
     {
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const DimVector& normal = scvf.normal();
-        Valgrind::CheckDefined(normal);
+        Opm::Valgrind::CheckDefined(normal);
 
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             filterVelocity_[phaseIdx] = 0.0;
@@ -454,7 +454,7 @@ protected:
             }
 
             asImp_().calculateFilterVelocity_(phaseIdx);
-            Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
             volumeFlux_[phaseIdx] = 0.0;
             for (unsigned i = 0; i < normal.size(); ++i)
                 volumeFlux_[phaseIdx] += (filterVelocity_[phaseIdx][i] * normal[i]);
@@ -473,7 +473,7 @@ protected:
     {
         const auto& scvf = elemCtx.stencil(timeIdx).boundaryFace(boundaryFaceIdx);
         const DimVector& normal = scvf.normal();
-        Valgrind::CheckDefined(normal);
+        Opm::Valgrind::CheckDefined(normal);
 
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
@@ -483,7 +483,7 @@ protected:
             }
 
             asImp_().calculateFilterVelocity_(phaseIdx);
-            Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
+            Opm::Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
             volumeFlux_[phaseIdx] = 0.0;
             for (unsigned i = 0; i < normal.size(); ++i)
                 volumeFlux_[phaseIdx] += (filterVelocity_[phaseIdx][i] * normal[i]);

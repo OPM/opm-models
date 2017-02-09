@@ -66,7 +66,7 @@ class PvsRateVector
 
 public:
     PvsRateVector() : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)

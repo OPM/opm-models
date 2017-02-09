@@ -77,7 +77,7 @@ class RichardsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
 public:
     RichardsPrimaryVariables() : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)

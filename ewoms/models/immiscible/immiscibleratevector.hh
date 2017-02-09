@@ -67,7 +67,7 @@ public:
      * \brief Default constructor
      */
     ImmiscibleRateVector() : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar

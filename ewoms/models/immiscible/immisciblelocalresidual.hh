@@ -185,9 +185,9 @@ public:
                        unsigned dofIdx,
                        unsigned timeIdx) const
     {
-        Valgrind::SetUndefined(source);
+        Opm::Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
-        Valgrind::CheckDefined(source);
+        Opm::Valgrind::CheckDefined(source);
     }
 
 private:

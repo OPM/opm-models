@@ -138,7 +138,7 @@ public:
         for (unsigned i = 0; i < data.size(); ++i)
             target[i] = static_cast<T>(data[i]);
 
-        Valgrind::CheckDefined(target, data.size());
+        Opm::Valgrind::CheckDefined(target, data.size());
 #endif
     }
 
