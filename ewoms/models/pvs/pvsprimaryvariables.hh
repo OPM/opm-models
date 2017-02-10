@@ -84,15 +84,15 @@ class PvsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
 public:
     PvsPrimaryVariables() : ParentType()
-    { Valgrind::SetDefined(*this); }
+    { Opm::Valgrind::SetDefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
     explicit PvsPrimaryVariables(Scalar value) : ParentType(value)
     {
-        Valgrind::CheckDefined(value);
-        Valgrind::SetDefined(*this);
+        Opm::Valgrind::CheckDefined(value);
+        Opm::Valgrind::SetDefined(*this);
 
         phasePresence_ = 0;
     }
@@ -103,7 +103,7 @@ public:
      */
     PvsPrimaryVariables(const PvsPrimaryVariables& value) : ParentType(value)
     {
-        Valgrind::SetDefined(*this);
+        Opm::Valgrind::SetDefined(*this);
 
         phasePresence_ = value.phasePresence_;
     }
@@ -280,7 +280,7 @@ public:
 
         // set the pressure of the first phase
         (*this)[pressure0Idx] = FsToolbox::value(fluidState.pressure(/*phaseIdx=*/0));
-        Valgrind::CheckDefined((*this)[pressure0Idx]);
+        Opm::Valgrind::CheckDefined((*this)[pressure0Idx]);
 
         // determine the phase presence.
         phasePresence_ = 0;
@@ -313,12 +313,12 @@ public:
 
             if (phaseIsPresent(phaseIdx)) {
                 (*this)[switch0Idx + switchIdx] = FsToolbox::value(fluidState.saturation(phaseIdx));
-                Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
+                Opm::Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
             else {
                 (*this)[switch0Idx + switchIdx] =
                     FsToolbox::value(fluidState.moleFraction(lowestPhaseIdx, compIdx));
-                Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
+                Opm::Valgrind::CheckDefined((*this)[switch0Idx + switchIdx]);
             }
         }
 
@@ -327,7 +327,7 @@ public:
         for (unsigned compIdx = numPhases - 1; compIdx < numComponents - 1; ++compIdx) {
             (*this)[switch0Idx + compIdx] =
                 FsToolbox::value(fluidState.moleFraction(lowestPhaseIdx, compIdx + 1));
-            Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);
+            Opm::Valgrind::CheckDefined((*this)[switch0Idx + compIdx]);
         }
     }
 

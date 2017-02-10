@@ -122,10 +122,10 @@ public:
     {
         flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        Valgrind::CheckDefined(flux);
+        Opm::Valgrind::CheckDefined(flux);
 
         addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        Valgrind::CheckDefined(flux);
+        Opm::Valgrind::CheckDefined(flux);
     }
 
     /*!
@@ -196,9 +196,9 @@ public:
                        unsigned dofIdx,
                        unsigned timeIdx) const
     {
-        Valgrind::SetUndefined(source);
+        Opm::Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
-        Valgrind::CheckDefined(source);
+        Opm::Valgrind::CheckDefined(source);
 
         // evaluate the NCPs (i.e., the "phase presence" equations)
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {

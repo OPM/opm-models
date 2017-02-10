@@ -60,7 +60,7 @@ class FvBasePrimaryVariables
 public:
     FvBasePrimaryVariables()
         : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Construction from a scalar value
@@ -116,7 +116,7 @@ public:
      */
     void checkDefined() const
     {
-        Valgrind::CheckDefined(*static_cast<const ParentType*>(this));
+        Opm::Valgrind::CheckDefined(*static_cast<const ParentType*>(this));
     }
 };
 

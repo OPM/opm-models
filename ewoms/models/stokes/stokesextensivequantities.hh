@@ -96,7 +96,7 @@ public:
 
         onBoundary_ = isBoundaryFace;
         normal_ = scvf.normal();
-        Valgrind::CheckDefined(normal_);
+        Opm::Valgrind::CheckDefined(normal_);
 
         // calculate gradients and secondary variables at IPs
         const auto& gradCalc = elemCtx.gradientCalculator();
@@ -123,7 +123,7 @@ public:
         }
 
         volumeFlux_ = (velocity_ * normal_);
-        Valgrind::CheckDefined(volumeFlux_);
+        Opm::Valgrind::CheckDefined(volumeFlux_);
 
         // set the upstream and downstream DOFs
         upstreamIdx_ = scvf.interiorIndex();
@@ -133,11 +133,11 @@ public:
 
         EnergyExtensiveQuantities::update_(elemCtx, scvfIdx, timeIdx);
 
-        Valgrind::CheckDefined(density_);
-        Valgrind::CheckDefined(viscosity_);
-        Valgrind::CheckDefined(velocity_);
-        Valgrind::CheckDefined(pressureGrad_);
-        Valgrind::CheckDefined(velocityGrad_);
+        Opm::Valgrind::CheckDefined(density_);
+        Opm::Valgrind::CheckDefined(viscosity_);
+        Opm::Valgrind::CheckDefined(velocity_);
+        Opm::Valgrind::CheckDefined(pressureGrad_);
+        Opm::Valgrind::CheckDefined(velocityGrad_);
     }
 
     /*!

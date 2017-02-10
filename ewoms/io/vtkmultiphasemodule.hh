@@ -281,7 +281,7 @@ public:
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = std::max<Scalar>(1e-16,
                                                      std::abs(Toolbox::value(extQuants.volumeFlux(phaseIdx))));
-                    Valgrind::CheckDefined(extQuants.extrusionFactor());
+                    Opm::Valgrind::CheckDefined(extQuants.extrusionFactor());
                     assert(extQuants.extrusionFactor() > 0);
                     weight *= extQuants.extrusionFactor();
 

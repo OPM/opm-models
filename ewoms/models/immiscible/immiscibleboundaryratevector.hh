@@ -115,8 +115,8 @@ public:
             else
                 density = insideIntQuants.fluidState().density(phaseIdx);
 
-            Valgrind::CheckDefined(density);
-            Valgrind::CheckDefined(extQuants.volumeFlux(phaseIdx));
+            Opm::Valgrind::CheckDefined(density);
+            Opm::Valgrind::CheckDefined(extQuants.volumeFlux(phaseIdx));
 
             // add advective flux of current component in current
             // phase
@@ -141,8 +141,8 @@ public:
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < numEq; ++i)
-            Valgrind::CheckDefined((*this)[i]);
-        Valgrind::CheckDefined(*this);
+            Opm::Valgrind::CheckDefined((*this)[i]);
+        Opm::Valgrind::CheckDefined(*this);
 #endif
     }
 

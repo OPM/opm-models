@@ -90,7 +90,7 @@ public:
 
     PressureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
-    { Valgrind::SetUndefined(phaseIdx_); }
+    { Opm::Valgrind::SetUndefined(phaseIdx_); }
 
     PressureCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
@@ -110,7 +110,7 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
     }
 
@@ -141,7 +141,7 @@ public:
     BoundaryPressureCallback(const ElementContext& elemCtx, const FluidState& boundaryFs)
         : elemCtx_(elemCtx)
         , boundaryFs_(boundaryFs)
-    { Valgrind::SetUndefined(phaseIdx_); }
+    { Opm::Valgrind::SetUndefined(phaseIdx_); }
 
     BoundaryPressureCallback(const ElementContext& elemCtx,
                              const FluidState& boundaryFs,
@@ -164,13 +164,13 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().pressure(phaseIdx_);
     }
 
     IQScalar boundaryValue() const
     {
-        Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
         return boundaryFs_.pressure(phaseIdx_);
     }
 
@@ -198,7 +198,7 @@ public:
 
     DensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
-    { Valgrind::SetUndefined(phaseIdx_); }
+    { Opm::Valgrind::SetUndefined(phaseIdx_); }
 
     DensityCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
@@ -218,7 +218,7 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().density(phaseIdx_);
     }
 
@@ -245,7 +245,7 @@ public:
 
     MolarDensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
-    { Valgrind::SetUndefined(phaseIdx_); }
+    { Opm::Valgrind::SetUndefined(phaseIdx_); }
 
     MolarDensityCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
@@ -265,7 +265,7 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().molarDensity(phaseIdx_);
     }
 
@@ -292,7 +292,7 @@ public:
 
     ViscosityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
-    { Valgrind::SetUndefined(phaseIdx_); }
+    { Opm::Valgrind::SetUndefined(phaseIdx_); }
 
     ViscosityCallback(const ElementContext& elemCtx, unsigned phaseIdx)
         : elemCtx_(elemCtx)
@@ -312,7 +312,7 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().viscosity(phaseIdx_);
     }
 
@@ -367,7 +367,7 @@ public:
 
     VelocityComponentCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
-    { Valgrind::SetUndefined(dimIdx_); }
+    { Opm::Valgrind::SetUndefined(dimIdx_); }
 
     VelocityComponentCallback(const ElementContext& elemCtx, unsigned dimIdx)
         : elemCtx_(elemCtx)
@@ -387,7 +387,7 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(dimIdx_);
+        Opm::Valgrind::CheckDefined(dimIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).velocityCenter()[dimIdx_];
     }
 
@@ -415,8 +415,8 @@ public:
     MoleFractionCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     {
-        Valgrind::SetUndefined(phaseIdx_);
-        Valgrind::SetUndefined(compIdx_);
+        Opm::Valgrind::SetUndefined(phaseIdx_);
+        Opm::Valgrind::SetUndefined(compIdx_);
     }
 
     MoleFractionCallback(const ElementContext& elemCtx, unsigned phaseIdx, unsigned compIdx)
@@ -446,8 +446,8 @@ public:
      */
     ResultType operator()(unsigned dofIdx) const
     {
-        Valgrind::CheckDefined(phaseIdx_);
-        Valgrind::CheckDefined(compIdx_);
+        Opm::Valgrind::CheckDefined(phaseIdx_);
+        Opm::Valgrind::CheckDefined(compIdx_);
         return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().moleFraction(phaseIdx_, compIdx_);
     }
 

@@ -337,7 +337,7 @@ protected:
 
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const auto& normal = scvf.normal();
-        Valgrind::CheckDefined(normal);
+        Opm::Valgrind::CheckDefined(normal);
 
         // obtain the Ergun coefficient from the intensive quantity object. Until a
         // better method comes along, we use arithmetic averaging.
@@ -444,7 +444,7 @@ protected:
                     velocity,
                     residual);
 
-        Valgrind::CheckDefined(residual);
+        Opm::Valgrind::CheckDefined(residual);
     }
 
     void gradForchheimerResid_(DimVector& residual,

@@ -180,7 +180,7 @@ public:
                 Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
                 assert(std::isfinite(dofVolume));
-                Valgrind::CheckDefined(dofVolume);
+                Opm::Valgrind::CheckDefined(dofVolume);
 
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                     residual[dofIdx][eqIdx] /= dofVolume;
@@ -277,13 +277,13 @@ public:
             unsigned i = face.interiorIndex();
             unsigned j = face.exteriorIndex();
 
-            Valgrind::SetUndefined(flux);
+            Opm::Valgrind::SetUndefined(flux);
             asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx, timeIdx);
-            Valgrind::CheckDefined(flux);
+            Opm::Valgrind::CheckDefined(flux);
 
             Scalar alpha = elemCtx.extensiveQuantities(scvfIdx, timeIdx).extrusionFactor();
             alpha *= face.area();
-            Valgrind::CheckDefined(alpha);
+            Opm::Valgrind::CheckDefined(alpha);
             for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 flux[eqIdx] *= alpha;
 
@@ -312,7 +312,7 @@ public:
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
-                Valgrind::CheckDefined(residual[i][j]);
+                Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }
 #endif
@@ -404,7 +404,7 @@ protected:
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
-                Valgrind::CheckDefined(residual[i][j]);
+                Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }
 #endif
@@ -422,12 +422,12 @@ protected:
     {
         BoundaryRateVector values;
 
-        Valgrind::SetUndefined(values);
+        Opm::Valgrind::SetUndefined(values);
         boundaryCtx.problem().boundary(values,
                                        boundaryCtx,
                                        boundaryFaceIdx,
                                        timeIdx);
-        Valgrind::CheckDefined(values);
+        Opm::Valgrind::CheckDefined(values);
 
         const auto& stencil = boundaryCtx.stencil(timeIdx);
         unsigned dofIdx = stencil.boundaryFace(boundaryFaceIdx).interiorIndex();
@@ -464,7 +464,7 @@ protected:
                 elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
             Scalar scvVolume =
                elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
-            Valgrind::CheckDefined(scvVolume);
+            Opm::Valgrind::CheckDefined(scvVolume);
 
             // mass balance within the element. this is the \f$\frac{m}{\partial t}\f$
             // term if using implicit euler as time discretization.
@@ -475,7 +475,7 @@ protected:
                                     elemCtx,
                                     dofIdx,
                                     /*timeIdx=*/0);
-            Valgrind::CheckDefined(tmp);
+            Opm::Valgrind::CheckDefined(tmp);
 
             if (elemCtx.enableStorageCache()) {
                 const auto& model = elemCtx.model();
@@ -491,7 +491,7 @@ protected:
                     // might invalidate that assumption.)
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                         tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
-                    Valgrind::CheckDefined(tmp2);
+                    Opm::Valgrind::CheckDefined(tmp2);
 
                     model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
                 }
@@ -499,7 +499,7 @@ protected:
                     // if the storage term is cached and we're not looking at the first
                     // iteration of the time step, we take the cached data.
                     tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
-                    Valgrind::CheckDefined(tmp2);
+                    Opm::Valgrind::CheckDefined(tmp2);
                 }
             }
             else {
@@ -510,7 +510,7 @@ protected:
                                         elemCtx,
                                         dofIdx,
                                         /*timeIdx=*/1);
-                Valgrind::CheckDefined(tmp2);
+                Opm::Valgrind::CheckDefined(tmp2);
             }
 
             for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -520,7 +520,7 @@ protected:
                 residual[dofIdx][eqIdx] += tmp[eqIdx];
             }
 
-            Valgrind::CheckDefined(residual[dofIdx]);
+            Opm::Valgrind::CheckDefined(residual[dofIdx]);
 
             // deal with the source term
             asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
@@ -529,7 +529,7 @@ protected:
                 residual[dofIdx][eqIdx] -= sourceRate[eqIdx];
             }
 
-            Valgrind::CheckDefined(residual[dofIdx]);
+            Opm::Valgrind::CheckDefined(residual[dofIdx]);
         }
 
 #if !defined NDEBUG
@@ -538,7 +538,7 @@ protected:
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
                 assert(std::isfinite(Toolbox::value(residual[i][j])));
-                Valgrind::CheckDefined(residual[i][j]);
+                Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }
 #endif

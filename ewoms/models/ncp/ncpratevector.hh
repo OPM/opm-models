@@ -66,7 +66,7 @@ class NcpRateVector
 
 public:
     NcpRateVector() : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \copydoc ImmiscibleRateVector::ImmiscibleRateVector(Scalar)
@@ -121,7 +121,7 @@ public:
             (*this)[conti0EqIdx + compIdx] = fluidState.molarity(phaseIdx, compIdx) * volume;
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volume);
-        Valgrind::CheckDefined(*this);
+        Opm::Valgrind::CheckDefined(*this);
     }
 
     /*!

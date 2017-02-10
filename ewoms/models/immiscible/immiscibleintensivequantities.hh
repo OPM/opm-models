@@ -104,7 +104,7 @@ public:
         const typename MaterialLaw::Params& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-        Valgrind::CheckDefined(priVars);
+        Opm::Valgrind::CheckDefined(priVars);
 
         Evaluation sumSat = 0.0;
         for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
@@ -116,11 +116,11 @@ public:
 
         EvalPhaseVector pC;
         MaterialLaw::capillaryPressures(pC, materialParams, fluidState_);
-        Valgrind::CheckDefined(pC);
+        Opm::Valgrind::CheckDefined(pC);
 
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_, materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
+        Opm::Valgrind::CheckDefined(relativePermeability_);
 
         const Evaluation& p0 = priVars.makeEvaluation(pressure0Idx, timeIdx);
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)

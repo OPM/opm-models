@@ -125,7 +125,7 @@ public:
             gradv[axisIdx] = normal;
             gradv[axisIdx] *= (velocity[axisIdx]
                                - insideIntQuants.velocity()[axisIdx]) / dist;
-            Valgrind::CheckDefined(gradv[axisIdx]);
+            Opm::Valgrind::CheckDefined(gradv[axisIdx]);
         }
 
         // specify the mass fluxes over the boundary

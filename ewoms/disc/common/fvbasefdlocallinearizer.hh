@@ -275,7 +275,7 @@ public:
         unsigned globalIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
         Scalar pvWeight = elemCtx.model().primaryVarWeight(globalIdx, pvIdx);
         assert(pvWeight > 0 && std::isfinite(pvWeight));
-        Valgrind::CheckDefined(pvWeight);
+        Opm::Valgrind::CheckDefined(pvWeight);
 
         return baseEpsilon()/pvWeight;
     }
@@ -469,7 +469,7 @@ protected:
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < derivResidual_.size(); ++i)
-            Valgrind::CheckDefined(derivResidual_[i]);
+            Opm::Valgrind::CheckDefined(derivResidual_[i]);
 #endif
     }
 
@@ -491,7 +491,7 @@ protected:
                 // regard to the primary variable 'pvIdx' of the degree of freedom
                 // 'primaryDofIdx'
                 jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] = derivResidual_[dofIdx][eqIdx];
-                Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
+                Opm::Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
             }
         }
     }

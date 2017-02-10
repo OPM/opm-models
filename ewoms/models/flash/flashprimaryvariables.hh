@@ -76,15 +76,15 @@ class FlashPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
 public:
     FlashPrimaryVariables() : ParentType()
-    { Valgrind::SetDefined(*this); }
+    { Opm::Valgrind::SetDefined(*this); }
 
     /*!
      * \copydoc ImmisciblePrimaryVariables::ImmisciblePrimaryVariables(Scalar)
      */
     FlashPrimaryVariables(Scalar value) : ParentType(value)
     {
-        Valgrind::CheckDefined(value);
-        Valgrind::SetDefined(*this);
+        Opm::Valgrind::CheckDefined(value);
+        Opm::Valgrind::SetDefined(*this);
     }
 
     /*!

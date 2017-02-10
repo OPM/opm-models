@@ -125,8 +125,8 @@ public:
             Sg = 0.0;
         }
 
-        Valgrind::CheckDefined(Sg);
-        Valgrind::CheckDefined(Sw);
+        Opm::Valgrind::CheckDefined(Sg);
+        Opm::Valgrind::CheckDefined(Sw);
 
         Evaluation So = 1.0 - Sw - Sg;
         fluidState_.setSaturation(waterPhaseIdx, Sw);
@@ -223,7 +223,7 @@ public:
 
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
-        Valgrind::CheckDefined(mobility_);
+        Opm::Valgrind::CheckDefined(mobility_);
 
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;

@@ -96,17 +96,17 @@ public:
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             storage[conti0EqIdx + compIdx] = fs.molarity(phaseIdx, compIdx);
         }
-        Valgrind::CheckDefined(storage);
+        Opm::Valgrind::CheckDefined(storage);
 
         // momentum balance
         for (unsigned axisIdx = 0; axisIdx < dimWorld; ++ axisIdx) {
             storage[momentum0EqIdx + axisIdx] =
                 fs.density(phaseIdx) * intQuants.velocity()[axisIdx];
         }
-        Valgrind::CheckDefined(storage);
+        Opm::Valgrind::CheckDefined(storage);
 
         EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
-        Valgrind::CheckDefined(storage);
+        Opm::Valgrind::CheckDefined(storage);
     }
 
     /*!
@@ -119,9 +119,9 @@ public:
     {
         flux = 0.0;
         addAdvectiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        Valgrind::CheckDefined(flux);
+        Opm::Valgrind::CheckDefined(flux);
         addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
-        Valgrind::CheckDefined(flux);
+        Opm::Valgrind::CheckDefined(flux);
     }
 
     /*!
@@ -197,9 +197,9 @@ public:
         const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
 
         // retrieve the source term intrinsic to the problem
-        Valgrind::SetUndefined(source);
+        Opm::Valgrind::SetUndefined(source);
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
-        Valgrind::CheckDefined(source);
+        Opm::Valgrind::CheckDefined(source);
 
         const auto& gravity = intQuants.gravity();
         const auto& gradp = intQuants.pressureGradient();
@@ -209,9 +209,9 @@ public:
         assert(std::isfinite(density));
         assert(std::isfinite(source.two_norm()));
 
-        Valgrind::CheckDefined(gravity);
-        Valgrind::CheckDefined(gradp);
-        Valgrind::CheckDefined(density);
+        Opm::Valgrind::CheckDefined(gravity);
+        Opm::Valgrind::CheckDefined(gradp);
+        Opm::Valgrind::CheckDefined(density);
 
         // deal with the pressure and volumetric terms
         for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)

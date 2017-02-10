@@ -669,8 +669,8 @@ protected:
         heatConductivity_ =
             HeatConductionLaw::template heatConductivity<FluidState, Evaluation>(heatCondParams, fs);
 
-        Valgrind::CheckDefined(heatCapacitySolid_);
-        Valgrind::CheckDefined(heatConductivity_);
+        Opm::Valgrind::CheckDefined(heatCapacitySolid_);
+        Opm::Valgrind::CheckDefined(heatConductivity_);
     }
 
 public:
@@ -796,7 +796,7 @@ protected:
         // arithmetic mean
         heatConductivity_ =
             0.5 * (intQuantsInside.heatConductivity() + intQuantsOutside.heatConductivity());
-        Valgrind::CheckDefined(heatConductivity_);
+        Opm::Valgrind::CheckDefined(heatConductivity_);
     }
 
     template <class Context, class FluidState>

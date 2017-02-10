@@ -946,7 +946,7 @@ public:
                                                          boundaryCtx,
                                                          faceIdx,
                                                          /*timeIdx=*/0);
-                    Valgrind::CheckDefined(values);
+                    Opm::Valgrind::CheckDefined(values);
 
                     unsigned dofIdx = boundaryCtx.interiorScvIndex(faceIdx, /*timeIdx=*/0);
                     const auto& insideIntQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
@@ -971,7 +971,7 @@ public:
                                             elemCtx,
                                             dofIdx,
                                             /*timeIdx=*/0);
-                Valgrind::CheckDefined(values);
+                Opm::Valgrind::CheckDefined(values);
 
                 const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
                 Scalar dofVolume =
@@ -1208,7 +1208,7 @@ public:
         // solution vectors for definedness...
         for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
             for (size_t eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                Valgrind::CheckDefined(asImp_().solution(/*timeIdx=*/0)[i][eqIdx]);
+                Opm::Valgrind::CheckDefined(asImp_().solution(/*timeIdx=*/0)[i][eqIdx]);
         }
 #endif // HAVE_VALGRIND
 

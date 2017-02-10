@@ -286,7 +286,7 @@ protected:
                     // 'primaryDofIdx'
                     jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] =
                         resid[dofIdx][eqIdx].derivative(pvIdx);
-                    Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
+                    Opm::Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
                 }
             }
         }

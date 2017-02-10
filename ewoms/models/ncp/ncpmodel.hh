@@ -343,7 +343,7 @@ public:
                         std::min(minActivityCoeff_[globalIdx][compIdx],
                                  Toolbox::value(fs.fugacityCoefficient(phaseIdx, compIdx))
                                  * Toolbox::value(fs.pressure(phaseIdx)));
-                    Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
+                    Opm::Valgrind::CheckDefined(minActivityCoeff_[globalIdx][compIdx]);
                 }
                 if (minActivityCoeff_[globalIdx][compIdx] <= 0)
                     OPM_THROW(Opm::NumericalProblem,
@@ -368,7 +368,7 @@ public:
             unsigned compIdx = pvIdx - fugacity0Idx;
             assert(0 <= compIdx && compIdx <= numComponents);
 
-            Valgrind::CheckDefined(minActivityCoeff_[globalDofIdx][compIdx]);
+            Opm::Valgrind::CheckDefined(minActivityCoeff_[globalDofIdx][compIdx]);
             static const Scalar fugacityBaseWeight =
                 GET_PROP_VALUE(TypeTag, NcpFugacitiesBaseWeight);
             result = fugacityBaseWeight / minActivityCoeff_[globalDofIdx][compIdx];

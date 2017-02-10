@@ -91,11 +91,11 @@ public:
         const auto& fractureMapper = problem.fractureMapper();
         unsigned globalVertexIdx = elemCtx.globalSpaceIndex(vertexIdx, timeIdx);
 
-        Valgrind::SetUndefined(fractureFluidState_);
-        Valgrind::SetUndefined(fractureVolume_);
-        Valgrind::SetUndefined(fracturePorosity_);
-        Valgrind::SetUndefined(fractureIntrinsicPermeability_);
-        Valgrind::SetUndefined(fractureRelativePermeabilities_);
+        Opm::Valgrind::SetUndefined(fractureFluidState_);
+        Opm::Valgrind::SetUndefined(fractureVolume_);
+        Opm::Valgrind::SetUndefined(fracturePorosity_);
+        Opm::Valgrind::SetUndefined(fractureIntrinsicPermeability_);
+        Opm::Valgrind::SetUndefined(fractureRelativePermeabilities_);
 
         // do nothing if there is no fracture within the current degree of freedom
         if (!fractureMapper.isFractureVertex(globalVertexIdx)) {

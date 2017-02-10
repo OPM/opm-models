@@ -106,9 +106,9 @@ public:
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < numEq; ++i) {
-            Valgrind::CheckDefined((*this)[i]);
+            Opm::Valgrind::CheckDefined((*this)[i]);
         }
-        Valgrind::CheckDefined(*this);
+        Opm::Valgrind::CheckDefined(*this);
 #endif
     }
 

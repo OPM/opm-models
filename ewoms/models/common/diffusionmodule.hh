@@ -404,7 +404,7 @@ protected:
                 for (unsigned i = 0; i < normal.size(); ++i)
                     moleFractionGradientNormal_[phaseIdx][compIdx] +=
                         normal[i]*moleFractionGradient[i];
-                Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
+                Opm::Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
 
                 // use the arithmetic average for the effective
                 // diffusion coefficients.
@@ -414,7 +414,7 @@ protected:
                      intQuantsOutside.effectiveDiffusionCoefficient(phaseIdx, compIdx))
                     / 2;
 
-                Valgrind::CheckDefined(effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
+                Opm::Valgrind::CheckDefined(effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
             }
         }
     }
@@ -457,14 +457,14 @@ protected:
                      -
                      fluidStateInside.moleFraction(phaseIdx, compIdx))
                     / dist;
-                Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
+                Opm::Valgrind::CheckDefined(moleFractionGradientNormal_[phaseIdx][compIdx]);
 
                 // use effective diffusion coefficients of the interior finite
                 // volume.
                 effectiveDiffusionCoefficient_[phaseIdx][compIdx] =
                     intQuantsInside.effectiveDiffusionCoefficient(phaseIdx, compIdx);
 
-                Valgrind::CheckDefined(effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
+                Opm::Valgrind::CheckDefined(effectiveDiffusionCoefficient_[phaseIdx][compIdx]);
             }
         }
     }

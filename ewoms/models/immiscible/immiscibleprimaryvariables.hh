@@ -81,7 +81,7 @@ public:
      * \brief Default constructor
      */
     ImmisciblePrimaryVariables() : ParentType()
-    { Valgrind::SetUndefined(*this); }
+    { Opm::Valgrind::SetUndefined(*this); }
 
     /*!
      * \brief Constructor with assignment from scalar

@@ -122,11 +122,11 @@ public:
         Evaluation sumSat = 0.0;
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             fluidState_.setSaturation(phaseIdx, priVars.explicitSaturationValue(phaseIdx, timeIdx));
-            Valgrind::CheckDefined(fluidState_.saturation(phaseIdx));
+            Opm::Valgrind::CheckDefined(fluidState_.saturation(phaseIdx));
             sumSat += fluidState_.saturation(phaseIdx);
         }
-        Valgrind::CheckDefined(priVars.implicitSaturationIdx());
-        Valgrind::CheckDefined(sumSat);
+        Opm::Valgrind::CheckDefined(priVars.implicitSaturationIdx());
+        Opm::Valgrind::CheckDefined(sumSat);
         fluidState_.setSaturation(priVars.implicitSaturationIdx(), 1.0 - sumSat);
 
         /////////////
@@ -231,7 +231,7 @@ public:
         // calculate relative permeabilities
         MaterialLaw::relativePermeabilities(relativePermeability_,
                                             materialParams, fluidState_);
-        Valgrind::CheckDefined(relativePermeability_);
+        Opm::Valgrind::CheckDefined(relativePermeability_);
 
         // mobilities
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
@@ -240,7 +240,7 @@ public:
 
         // porosity
         porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
-        Valgrind::CheckDefined(porosity_);
+        Opm::Valgrind::CheckDefined(porosity_);
 
         // intrinsic permeability
         intrinsicPerm_ = problem.intrinsicPermeability(elemCtx, dofIdx, timeIdx);
