@@ -86,32 +86,8 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <bool prepareValues = true, bool prepareGradients = true>
-    void prepare(const ElementContext& elemCtx, unsigned timeIdx)
-    {
-        const auto& stencil = elemCtx.stencil(timeIdx);
-        for (unsigned fapIdx = 0; fapIdx < stencil.numInteriorFaces(); ++ fapIdx) {
-            const auto& scvf = stencil.interiorFace(fapIdx);
-            const auto& normal = scvf.normal();
-            const auto& interiorPos = stencil.subControlVolume(scvf.interiorIndex()).globalPos();
-            const auto& exteriorPos = stencil.subControlVolume(scvf.exteriorIndex()).globalPos();
-
-            interiorDistance_[fapIdx] = 0;
-            exteriorDistance_[fapIdx] = 0;
-            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
-                interiorDistance_[fapIdx] +=
-                    (interiorPos[dimIdx] - scvf.integrationPos()[dimIdx])
-                    * normal[dimIdx];
-
-                exteriorDistance_[fapIdx] +=
-                    (exteriorPos[dimIdx] - scvf.integrationPos()[dimIdx])
-                    * normal[dimIdx];
-            }
-
-            interiorDistance_[fapIdx] = std::abs(interiorDistance_[fapIdx]);
-            exteriorDistance_[fapIdx] = std::abs(exteriorDistance_[fapIdx]);
-        }
-    }
-
+    void prepare(const ElementContext& elemCtx OPM_UNUSED, unsigned timeIdx OPM_UNUSED)
+    { /* noting to do */ }
 
     /*!
      * \brief Calculates the value of an arbitrary quantity at any
@@ -130,15 +106,38 @@ public:
                         const QuantityCallback& quantityCallback) const
         -> typename std::remove_reference<decltype(quantityCallback.operator()(0))>::type
     {
-        const auto& face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(fapIdx);
+        const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
+        const auto& face = stencil.interiorFace(fapIdx);
 
-        // average weighted by distance to DOF coordinate...
+        // calculate the distances of the position of the interior and of the exterior
+        // finite volume to the position of the integration point.
+        const auto& normal = face.normal();
+        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).globalPos();
+        const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).globalPos();
+        const auto& integrationPos = face.integrationPos();
+
+        Scalar interiorDistance = 0.0;
+        Scalar exteriorDistance = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            interiorDistance +=
+                (interiorPos[dimIdx] - integrationPos[dimIdx])
+                * normal[dimIdx];
+
+            exteriorDistance +=
+                (exteriorPos[dimIdx] - integrationPos[dimIdx])
+                * normal[dimIdx];
+        }
+
+        interiorDistance = std::sqrt(std::abs(interiorDistance));
+        exteriorDistance = std::sqrt(std::abs(exteriorDistance));
+
+        // use the average weighted by distance...
         auto value(quantityCallback(face.interiorIndex()));
-        value *= interiorDistance_[fapIdx];
+        value *= interiorDistance;
         auto tmp(quantityCallback(face.exteriorIndex()));
-        tmp *= exteriorDistance_[fapIdx];
+        tmp *= exteriorDistance;
         value += tmp;
-        value /= interiorDistance_[fapIdx] + exteriorDistance_[fapIdx];
+        value /= interiorDistance + exteriorDistance;
 
         return value;
     }
@@ -163,8 +162,8 @@ public:
         const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto& face = stencil.interiorFace(fapIdx);
 
-        const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).center();
-        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
+        const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).globalPos();
+        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).globalPos();
 
         // this is slightly hacky because the derivatives of the quantity for the
         // exterior DOF are thrown away and this code thus assumes that the exterior DOF
@@ -185,9 +184,9 @@ public:
             distSquared += tmp*tmp;
         }
 
-        // divide the gradient by the squared distance between the centers of the
-        // sub-control volumes: the gradient is the normalized directional vector between
-        // the two centers times the ratio of the difference of the values and their
+        // divide the gradient by the squared distance between the positions of the
+        // control volumes: the gradient is the normalized directional vector between the
+        // two centers times the ratio of the difference of the values and their
         // distance, i.e., d/abs(d) * delta y / abs(d) = d*delta y / abs(d)^2.
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
@@ -262,15 +261,6 @@ public:
             quantityGrad[dimIdx] *= tmp/distSquared;
         }
     }
-
-private:
-    // distance [m] of the the flux approximation point to the center
-    // of the control volume to the inside of the face
-    Scalar interiorDistance_[maxFap];
-
-    // distance [m] of the the flux approximation point to the center
-    // of the control volume to the outside of the face
-    Scalar exteriorDistance_[maxFap];
 };
 } // namespace Ewoms
 
