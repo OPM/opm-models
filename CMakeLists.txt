@@ -153,7 +153,7 @@ add_dependencies(test-suite art2dgf)
 opm_add_test(art2dgf
   NO_COMPILE
   DRIVER_ARGS --plain
-  TEST_ARGS "data/fracture.art")
+  TEST_ARGS "data/fracture-raw.art")
 
 opm_add_test(test_blackoilfluidstate
   DRIVER_ARGS --plain)
