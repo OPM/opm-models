@@ -432,6 +432,13 @@ public:
     { return maxOilSaturation_[globalDofIdx]; }
 
     /*!
+     * \brief Sets an elements maximum oil phase saturation observed during the
+     *        simulation (used for restarting from UNRST-files).
+     */
+    void setMaxOilSaturation(const Scalar value, unsigned globalDofIdx)
+    { maxOilSaturation_[globalDofIdx] = value; }
+
+    /*!
      * \brief Update the maximum oil saturation observed during the simulation for all
      *        elements.
      *
