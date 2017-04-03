@@ -38,9 +38,9 @@
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_rst_file.h>
@@ -166,16 +166,16 @@ public:
 
 private:
 #if HAVE_ERT
-    static ecl_type_enum ertType_()
+    static ecl_data_type ertType_()
     {
         if (std::is_same<T, float>::value)
-        { return ECL_FLOAT_TYPE; }
+        { return ECL_FLOAT; }
         if (std::is_same<T, double>::value)
-        { return ECL_DOUBLE_TYPE; }
+        { return ECL_DOUBLE; }
         if (std::is_same<T, int>::value)
-        { return ECL_INT_TYPE; }
+        { return ECL_INT; }
         if (std::is_same<T, const char*>::value)
-        { return ECL_CHAR_TYPE; }
+        { return ECL_CHAR; }
 
         OPM_THROW(std::logic_error,
                   "Unhandled type for data elements in ErtKeyword");
