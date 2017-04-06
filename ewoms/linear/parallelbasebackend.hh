@@ -54,6 +54,7 @@ NEW_TYPE_TAG(ParallelBaseLinearSolver);
 // forward declaration of the required property tags
 NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(NumEq);
 NEW_PROP_TAG(JacobianMatrix);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(VertexMapper);

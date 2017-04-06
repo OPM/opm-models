@@ -32,12 +32,13 @@
 #ifndef EWOMS_PARAMETERS_HH
 #define EWOMS_PARAMETERS_HH
 
-#include <opm/common/Unused.hpp>
 #include <ewoms/common/propertysystem.hh>
+
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
-#include <dune/common/classname.hh>
+#include <opm/common/Unused.hpp>
 
+#include <dune/common/classname.hh>
 #include <dune/common/parametertree.hh>
 
 #include <map>
