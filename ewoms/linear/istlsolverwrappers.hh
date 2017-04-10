@@ -55,6 +55,9 @@ NEW_PROP_TAG(JacobianMatrix);
 NEW_PROP_TAG(OverlappingMatrix);
 NEW_PROP_TAG(OverlappingVector);
 NEW_PROP_TAG(GMResRestart);
+NEW_PROP_TAG(LinearSolverTolerance);
+NEW_PROP_TAG(LinearSolverMaxIterations);
+NEW_PROP_TAG(LinearSolverVerbosity);
 } // namespace Properties
 
 namespace Linear {

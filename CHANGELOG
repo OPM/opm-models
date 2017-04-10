@@ -1,5 +1,25 @@
-Changes in eWoms 2016.04
+Changes in eWoms 2017.04
 ========================
+
+- Re-implementation of the BiCGSTAB linear solver to avoid potential
+  copyright issues with dune-istl while retaining the performance
+  improvement due to custom convergence criteria.
+- Support for using a different floating point precision in the linear
+  solver than in the linearization.
+- Various cleanups in the linear solver backends.
+- Various changes in ebos to use it as an upstream framework. These
+  are primarily motivated by flow_ebos, a new simulator for ECL
+  problems that is part of the opm-simulators module.
+- Support for passing the transmissibilities as edge weights for
+  partitioning the grid in ebos.
+- Support for two-phase blackoil simulations.
+- Support for explicit prefetching and addition of PffGridVector, a
+  prefetch-friendly container class.
+- Better support for non-Linux unix systems like MacOS X.
+- Many bugfixes all over the place.
+
+Changes in eWoms 2016.04 and eWoms 2016.10
+==========================================
 
 - Support for Dune 2.2 has been removed: Dune 2.3 has been released in
   February 2014, so it should be old enough to be available everywhere
@@ -27,12 +47,15 @@ Changes in eWoms 2016.04
  - The calculated transmissibilities and threshold pressures are now
    the same as those calculated by the `flow` simulator from
    opm-autodiff.
+ - Support for the VAPPARS keyword.
  - Proper support for specifying the pore volume directly (using the
    ECL "PORV" keyword), minimum pore volume ("MINPV") and the most
    common pore volume modifier keywords ("NGT", "MULTPV" and
    "MULTREGP")
  - Support for simple geology changes during the simulation, e.g., the
    "MULTFLT" keyword can now occur in the "SCHEDULE" section.
+- Support for caching the initial storage term of time steps for
+  better performance.
 - Support for lockless multithreaded linearization. This code only
   works for spatial discretizations that guarantee that the
   linearization for a degree of freedom is only written to by a single
