@@ -3,11 +3,11 @@
 # and by the CMake build scripts.
 ################################
 Module: ewoms
-Version: 2017.04-pre
-Codename: Fabienne
+Version: 2017.10-pre
+Codename: Buddy Holly
 Description: The eWoms simulation framework for flow  and transport in porous media
-Url: http://opm-project.org/ewoms
-MaintainerName: Andreas Lauser
-Maintainer: and@poware.org
+Url: http://opm-project.org
+MaintainerName: The Open Porous Media Project
+Maintainer: opm@opm-project.org
 Depends: dune-grid (>= 2.3) dune-istl  (>= 2.3) opm-common opm-material
 Suggests: dune-localfunctions (>= 2.3) dune-fem  (>= 2.4) dune-alugrid (>= 2.4) opm-parser opm-grid opm-core
