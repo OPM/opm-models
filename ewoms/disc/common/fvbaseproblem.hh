@@ -136,6 +136,9 @@ public:
             defaultVtkWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
     }
 
+    ~FvBaseProblem()
+    { delete defaultVtkWriter_; }
+
     /*!
      * \brief Registers all available parameters for the problem and
      *        the model.
