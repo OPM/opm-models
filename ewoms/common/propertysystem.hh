@@ -611,7 +611,7 @@ public:
         { return PropertyInfo<typename GetProperty<TypeTag, PropTag>::template GetEffectiveTypeTag_<TypeTag>::type, PropTag>::propertyName; }
     };
 
-    typedef std::list<SpliceRegistryEntryBase*> SpliceList;
+    typedef std::list<std::unique_ptr<SpliceRegistryEntryBase> > SpliceList;
     typedef std::map<std::string, SpliceList> SpliceListMap;
 
     typedef std::list<std::string> ChildrenList;
@@ -646,9 +646,7 @@ public:
     {
         std::string typeTagName = Dune::className<TypeTag>();
 
-        SpliceRegistryEntry<TypeTag, Splice1> *tmp = new SpliceRegistryEntry<TypeTag, Splice1>;
-
-        splices_[typeTagName].push_front(tmp);
+        splices_[typeTagName].emplace_front(new SpliceRegistryEntry<TypeTag, Splice1>);
         addSplices<TypeTag, RemainingSplices...>();
     }
 
