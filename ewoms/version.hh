@@ -27,7 +27,7 @@
 #define EWOMS_VERSION_MINOR 04
 #define EWOMS_VERSION_REVISION -1 // -1 means that this is a version from the development branch...
 
-#define EWOMS_VERSION_SUFFIX "rc1"
+#define EWOMS_VERSION_SUFFIX "rc2"
 #define EWOMS_VERSION_CODENAME "Fabienne"
 
 #include <string>
