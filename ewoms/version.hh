@@ -42,7 +42,7 @@ inline std::string versionString()
     oss << EWOMS_VERSION_MAJOR << "."
         << std::setfill('0') << std::setw(2)  << EWOMS_VERSION_MINOR;
 
-    if (EWOMS_VERSION_REVISION >= 0)
+    if (EWOMS_VERSION_REVISION > 0)
         oss << "." << EWOMS_VERSION_REVISION;
 
     // append the version suffix to the version string
