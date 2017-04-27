@@ -260,8 +260,8 @@ public:
 
                     const auto& inputPGrad = extQuants.potentialGrad(phaseIdx);
                     DimVector pGrad;
-                    for (unsigned j = 0; j < numPhases; ++j)
-                        pGrad[j] = Toolbox::value(inputPGrad[j])*weight;
+                    for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                        pGrad[dimIdx] = Toolbox::value(inputPGrad[dimIdx])*weight;
                     potentialGradient_[phaseIdx][I] += pGrad;
                 } // end for all phases
             } // end for all faces
