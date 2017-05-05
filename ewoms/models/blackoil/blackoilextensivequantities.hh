@@ -29,6 +29,7 @@
 #define EWOMS_BLACK_OIL_EXTENSIVE_QUANTITIES_HH
 
 #include "blackoilproperties.hh"
+#include "blackoilsolventmodules.hh"
 
 #include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 
@@ -48,7 +49,37 @@ namespace Ewoms {
 template <class TypeTag>
 class BlackOilExtensiveQuantities
     : public MultiPhaseBaseExtensiveQuantities<TypeTag>
-{ };
+    , public BlackOilSolventExtensiveQuantities<TypeTag>
+{
+    typedef MultiPhaseBaseExtensiveQuantities<TypeTag> MultiPhaseParent;
+    typedef BlackOilSolventExtensiveQuantities<TypeTag> SolventParent;
+
+    typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+
+public:
+    /*!
+     * \brief Update the extensive quantities for a given sub-control-volume-face.
+     *
+     * \param elemCtx Reference to the current element context.
+     * \param scvfIdx The local index of the sub-control-volume face for
+     *                which the extensive quantities should be calculated.
+     * \param timeIdx The index used by the time discretization.
+     */
+    void update(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
+    {
+        MultiPhaseParent::update(elemCtx, scvfIdx, timeIdx);
+
+        asImp_().updateSolvent(elemCtx, scvfIdx, timeIdx);
+    }
+
+protected:
+    Implementation& asImp_()
+    { return *static_cast<Implementation*>(this); }
+
+    const Implementation& asImp_() const
+    { return *static_cast<const Implementation*>(this); }
+};
 
 } // namespace Ewoms
 

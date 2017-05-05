@@ -30,6 +30,7 @@
 
 #include "blackoilproperties.hh"
 #include "blackoilfluidstate.hh"
+#include "blackoilsolventmodules.hh"
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/common/Valgrind.hpp>
@@ -51,8 +52,10 @@ template <class TypeTag>
 class BlackOilIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
+    , public BlackOilSolventIntensiveQuantities<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -64,6 +67,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
+    enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -116,9 +120,14 @@ public:
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
             // -> threephase case
             Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
+        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
             // -> gas-water case
             Sg = 1 - Sw;
+
+            // deal with solvent
+            if (enableSolvent)
+                Sg -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx);
+        }
         else {
             assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs);
             // -> oil-water case
@@ -129,9 +138,16 @@ public:
         Opm::Valgrind::CheckDefined(Sw);
 
         Evaluation So = 1.0 - Sw - Sg;
+
+        // deal with solvent
+        if (enableSolvent)
+            So -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx);
+
         fluidState_.setSaturation(waterPhaseIdx, Sw);
         fluidState_.setSaturation(gasPhaseIdx, Sg);
         fluidState_.setSaturation(oilPhaseIdx, So);
+
+        asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
         // now we compute all phase pressures
         Evaluation pC[numPhases];
@@ -150,6 +166,13 @@ public:
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                 fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
         }
+
+        // calculate relative permeabilities. note that we store the result into the
+        // mobility_ class attribute. the division by the phase viscosity happens later.
+        MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
+        Opm::Valgrind::CheckDefined(mobility_);
+
+        asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
         Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
 
@@ -221,17 +244,13 @@ public:
                 fluidState_.setRs(0.0);
         }
 
-        // calculate relative permeabilities
-        MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
-        Opm::Valgrind::CheckDefined(mobility_);
-
         typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.setRegionIndex(pvtRegionIdx);
         paramCache.setMaxOilSat(SoMax);
         paramCache.updateAll(fluidState_);
 
-        // set the phase densities and viscosities
+        // compute the phase densities and transform the phase permeabilities into mobilities
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
@@ -242,6 +261,7 @@ public:
             const auto& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
             mobility_[phaseIdx] /= mu;
         }
+        Opm::Valgrind::CheckDefined(mobility_);
 
         // calculate the phase densities
         Evaluation rho;
@@ -286,6 +306,8 @@ public:
             Evaluation x = rockCompressibility*(fluidState_.pressure(oilPhaseIdx) - rockRefPressure);
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
+
+        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
 
         // update the quantities which are required by the chosen
         // velocity model
@@ -353,6 +375,11 @@ public:
     }
 
 private:
+    friend BlackOilSolventIntensiveQuantities<TypeTag>;
+
+    Implementation& asImp_()
+    { return *static_cast<Implementation*>(this); }
+
     FluidState fluidState_;
     Evaluation porosity_;
     Evaluation mobility_[numPhases];

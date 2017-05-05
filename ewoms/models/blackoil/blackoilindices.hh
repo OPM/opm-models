@@ -35,9 +35,15 @@ namespace Ewoms {
  *
  * \brief The primary variable and equation indices for the black-oil model.
  */
-template <int PVOffset = 0>
+template <unsigned numSolventsV, unsigned PVOffset>
 struct BlackOilIndices
 {
+    //! Number of solvent components considered
+    static const int numSolvents = numSolventsV;
+
+    //! The number of equations
+    static const int numEq = 3 + numSolvents;
+
     ////////
     // Primary variable indices
     ////////
@@ -58,6 +64,10 @@ struct BlackOilIndices
      */
     static const int compositionSwitchIdx = PVOffset + 2;
 
+    //! Index of the primary variable for the first solvent
+    static const int solventSaturationIdx  = PVOffset + 3;
+    // numSolvents-1 primary variables follow
+
     ////////
     // Equation indices
     ////////
@@ -66,8 +76,9 @@ struct BlackOilIndices
     static const int conti0EqIdx = PVOffset + 0;
     // two continuity equations follow
 
-    //! The number of equations
-    static const int numEq = 3;
+    //! Index of the continuity equation for the first solvent component
+    static const int contiSolventEqIdx = PVOffset + 3;
+    // numSolvents-1 continuity equations follow
 };
 
 } // namespace Ewoms

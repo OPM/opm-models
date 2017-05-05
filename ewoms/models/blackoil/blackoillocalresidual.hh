@@ -29,6 +29,7 @@
 #define EWOMS_BLACK_OIL_LOCAL_RESIDUAL_HH
 
 #include "blackoilproperties.hh"
+#include "blackoilsolventmodules.hh"
 
 namespace Ewoms {
 /*!
@@ -63,6 +64,7 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { waterCompIdx = FluidSystem::waterCompIdx };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
+    typedef BlackOilSolventModule<TypeTag> SolventModule;
 
 public:
     /*!
@@ -106,6 +108,9 @@ public:
                     * surfaceVolume;
             }
         }
+
+        // deal with solvents (if present)
+        SolventModule::addStorage(storage, intQuants);
 
         // convert surface volumes to component masses
         unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
@@ -167,6 +172,9 @@ public:
             else
                 evalPhaseFluxes_<Scalar>(flux, phaseIdx, extQuants, up);
         }
+
+        // deal with solvents (if present)
+        SolventModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
