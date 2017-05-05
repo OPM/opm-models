@@ -38,14 +38,14 @@ namespace Ewoms {
 template <int PVOffset = 0>
 struct BlackOilIndices
 {
+    ////////
     // Primary variable indices
+    ////////
 
     //! The index of the water saturation
     static const int waterSaturationIdx  = PVOffset + 0;
 
-    /*!
-     * \brief Index of the oil pressure in a vector of primary variables
-     */
+    //! Index of the oil pressure in a vector of primary variables
     static const int pressureSwitchIdx  = PVOffset + 1;
 
     /*!
@@ -58,11 +58,13 @@ struct BlackOilIndices
      */
     static const int compositionSwitchIdx = PVOffset + 2;
 
-    // indices of the equations
+    ////////
+    // Equation indices
+    ////////
 
     //! Index of the continuity equation of the first phase
     static const int conti0EqIdx = PVOffset + 0;
-    // numPhases - 1 continuity equations follow
+    // two continuity equations follow
 
     //! The number of equations
     static const int numEq = 3;
