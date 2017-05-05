@@ -40,6 +40,8 @@
 #include "blackoillocalresidual.hh"
 #include "blackoilnewtonmethod.hh"
 #include "blackoilproperties.hh"
+#include "blackoilsolventmodules.hh"
+#include "blackoildarcyfluxmodule.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
 #include <ewoms/io/vtkcompositionmodule.hh>
@@ -66,6 +68,7 @@ namespace Properties {
 //! The type tag for the black-oil problems
 NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
                                           VtkBlackOil,
+                                          VtkBlackOilSolvent,
                                           VtkComposition));
 
 //! Set the local residual function
@@ -96,8 +99,13 @@ SET_TYPE_PROP(BlackOilModel, IntensiveQuantities, Ewoms::BlackOilIntensiveQuanti
 //! the ExtensiveQuantities property
 SET_TYPE_PROP(BlackOilModel, ExtensiveQuantities, Ewoms::BlackOilExtensiveQuantities<TypeTag>);
 
+//! Use the the velocity module which is aware of the black-oil specific model extensions
+//! (i.e., the polymer and solvent extensions)
+SET_TYPE_PROP(BlackOilModel, FluxModule, Ewoms::BlackOilDarcyFluxModule<TypeTag>);
+
 //! The indices required by the model
-SET_TYPE_PROP(BlackOilModel, Indices, Ewoms::BlackOilIndices</*PVOffset=*/0>);
+SET_TYPE_PROP(BlackOilModel, Indices,
+              Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent)?1:0, /*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
 SET_PROP(BlackOilModel, FluidSystem)
@@ -109,6 +117,9 @@ private:
 public:
     typedef Opm::FluidSystems::BlackOil<Scalar> type;
 };
+
+// by default, the ECL solvent module is disabled
+SET_BOOL_PROP(BlackOilModel, EnableSolvent, false);
 
 } // namespace Properties
 
@@ -193,6 +204,8 @@ class BlackOilModel
     enum { numComponents = FluidSystem::numComponents };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
+    typedef BlackOilSolventModule<TypeTag> SolventModule;
+
 public:
     BlackOilModel(Simulator& simulator)
         : ParentType(simulator)
@@ -204,6 +217,8 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
+
+        SolventModule::registerParameters();
 
         // register runtime parameters of the VTK output modules
         Ewoms::VtkBlackOilModule<TypeTag>::registerParameters();
@@ -240,6 +255,8 @@ public:
             oss << "pressure_switching";
         else if (pvIdx == Indices::compositionSwitchIdx)
             oss << "composition_switching";
+        else if (SolventModule::primaryVarApplies(pvIdx))
+            return SolventModule::primaryVarName(pvIdx);
         else
             assert(false);
 
@@ -255,6 +272,8 @@ public:
 
         if (Indices::conti0EqIdx <= eqIdx && eqIdx < Indices::conti0EqIdx + numComponents)
             oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
+        else if (SolventModule::eqApplies(eqIdx))
+            return SolventModule::eqName(eqIdx);
         else
             assert(false);
 
@@ -280,6 +299,10 @@ public:
         else if (Indices::pressureSwitchIdx == pvIdx)
             return 1.0/300e5;
 
+        // deal with primary variables stemming from the solvent module
+        else if (SolventModule::primaryVarApplies(pvIdx))
+            return SolventModule::primaryVarWeight(pvIdx);
+
         // if the primary variable is either the gas saturation, Rs or Rv
         assert(Indices::compositionSwitchIdx == pvIdx);
 
@@ -292,6 +315,7 @@ public:
             assert(pvMeaning == PrimaryVariables::Sw_pg_Rv);
             return 1.0/0.025; // oil vaporization factor
         }
+
     }
 
     /*!
@@ -303,6 +327,9 @@ public:
         // themselves
         if (globalDofIdx >= this->numGridDof())
             return 1.0;
+
+        else if (SolventModule::eqApplies(eqIdx))
+            return SolventModule::eqWeight(eqIdx);
 
         // it is said that all kilograms are equal!
         return 1.0;
@@ -341,6 +368,8 @@ public:
 
         if (maxOilSaturation_.size() > 0)
             outstream << maxOilSaturation_[dofIdx] << " ";
+
+        SolventModule::serializeEntity(*this, outstream, dof);
     }
 
     /*!
@@ -383,6 +412,8 @@ public:
         if (!instream.good())
             OPM_THROW(std::runtime_error,
                       "Could not deserialize degree of freedom " << dofIdx);
+
+        SolventModule::deserializeEntity(*this, instream, dof);
 
         typedef typename PrimaryVariables::PrimaryVarsMeaning PVM;
         priVars.setPrimaryVarsMeaning(static_cast<PVM>(primaryVarsMeaning));
@@ -472,7 +503,7 @@ public:
     }
 
 /*
-    // hack: this interferres with the static polymorphism trick
+    // hack: this interferes with the static polymorphism trick
 protected:
     friend ParentType;
     friend Discretization;
@@ -490,6 +521,7 @@ protected:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which make sense for the blackoil model
+        SolventModule::registerOutputModules(*this, this->simulator_);
         this->addOutputModule(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
         this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
     }

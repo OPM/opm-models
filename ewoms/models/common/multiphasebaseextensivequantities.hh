@@ -52,13 +52,11 @@ class MultiPhaseBaseExtensiveQuantities
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxExtensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscExtensiveQuantities) ParentType;
-
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
-
 
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
     typedef typename FluxModule::FluxExtensiveQuantities FluxExtensiveQuantities;
