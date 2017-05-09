@@ -96,9 +96,6 @@ public:
      */
     static void registerParameters()
     {
-        if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
-            return;
-
         if (!enableSolvent)
             return;
 
