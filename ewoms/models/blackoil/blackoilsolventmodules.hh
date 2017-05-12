@@ -133,7 +133,7 @@ public:
     static void setNumSatRegions(unsigned numRegions)
     {
         ssfnKrg_.resize(numRegions);
-        ssfnKrg_.resize(numRegions);
+        ssfnKrs_.resize(numRegions);
     }
 
     /*!
@@ -164,7 +164,7 @@ public:
             // solvents have disabled at compile time
             return;
 
-        VtkBlackOilSolventModule<TypeTag>::registerParameters();
+        Ewoms::VtkBlackOilSolventModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -461,8 +461,8 @@ public:
             Evaluation Fsolgas = solventSaturation_/Stot;
 
             Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
-            solventMobility_ = krg * ssfnKrs.eval(Fsolgas);
-            krg *= ssfnKrg.eval(Fhydgas);
+            solventMobility_ = krg * ssfnKrs.eval(Fsolgas, /*extrapolate=*/true);
+            krg *= ssfnKrg.eval(Fhydgas, /*extrapolate=*/true);
         }
     }
 
@@ -530,6 +530,8 @@ class BlackOilSolventIntensiveQuantities<TypeTag, false>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+
 
 public:
     void solventPreSatFuncUpdate_(const ElementContext& elemCtx OPM_UNUSED,
@@ -558,6 +560,12 @@ public:
 
     const Evaluation& solventMobility() const
     { OPM_THROW(std::runtime_error, "solventMobility() called but solvents are disabled"); }
+
+    const Evaluation& solventInverseFormationVolumeFactor() const
+     { OPM_THROW(std::runtime_error, "solventInverseFormationVolumeFactor() called but solvents are disabled"); }
+
+    const Scalar& solventRefDensity() const
+     { OPM_THROW(std::runtime_error, "solventRefDensity() called but solvents are disabled"); }
 };
 
 /*!
