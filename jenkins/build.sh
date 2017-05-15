@@ -23,9 +23,12 @@ then
   upstreamRev[opm-common]=pull/`echo $ghprbCommentBody | sed -r 's/.*opm-common=([0-9]+).*/\1/g'`/merge
 fi
 
-# Currently no downstream
+# Downstreams and revisions
 declare -a downstreams
+downstreams=(opm-simulators)
+
 declare -A downstreamRev
+downstreamRev[opm-simulators]=master
 
 # Clone opm-common
 pushd .
@@ -42,5 +45,11 @@ source $WORKSPACE/deps/opm-common/jenkins/build-opm-module.sh
 
 parseRevisions
 printHeader ewoms
+
+# Setup opm-data
+if grep -q "with downstreams" <<< $ghprbCommentBody
+then
+  source $WORKSPACE/deps/opm-common/jenkins/setup-opm-data.sh
+fi
 
 build_module_full ewoms
