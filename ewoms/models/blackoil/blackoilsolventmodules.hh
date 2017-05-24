@@ -39,6 +39,13 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/MiscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #endif
 
 #include <opm/common/Valgrind.hpp>
@@ -108,8 +115,8 @@ public:
 
         solventPvt_.initFromDeck(deck, eclState);
 
-        // initialize the objects which deal with the SSFN keyword
         const auto& tableManager = eclState.getTableManager();
+        // initialize the objects which deal with the SSFN keyword
         const auto& ssfnTables = tableManager.getSsfnTables();
         unsigned numSatRegions = tableManager.getTabdims().getNumSatTables();
         setNumSatRegions(numSatRegions);
@@ -122,6 +129,228 @@ public:
                                                    ssfnTable.getSolventRelPermMultiplierColumn(),
                                                    /*sortInput=*/true);
         }
+
+        // initialize the objects needed for miscible solvent and oil simulations
+        isMiscible_ = false;
+        if (deck.hasKeyword("MISCIBLE")) {
+            isMiscible_ = true;
+
+            unsigned numSatRegions = tableManager.getTabdims().getNumSatTables();
+            unsigned numMiscRegions = 1;
+
+            // misicible hydrocabon relative permeability wrt water
+            const auto& sof2Tables = tableManager.getSof2Tables();
+            if (!sof2Tables.empty()) {
+
+                // resize the attributes of the object
+                sof2Krn_.resize(numSatRegions);
+                for (unsigned satRegionIdx = 0; satRegionIdx < numSatRegions; ++ satRegionIdx) {
+                    const auto& sof2Table = sof2Tables.template getTable<Opm::Sof2Table>(satRegionIdx);
+                    sof2Krn_[satRegionIdx].setXYContainers(sof2Table.getSoColumn(),
+                                                       sof2Table.getKroColumn(),
+                                                       /*sortInput=*/true);
+                }
+
+            } else {
+                OPM_THROW(std::runtime_error, "SOF2 must be specified in MISCIBLE (SOLVENT) runs\n");
+            }
+
+            const auto& miscTables = tableManager.getMiscTables();
+            if (!miscTables.empty()) {
+
+                assert(numMiscRegions == miscTables.size());
+
+                // resize the attributes of the object
+                misc_.resize(numMiscRegions);
+                for (unsigned miscRegionIdx = 0; miscRegionIdx < numMiscRegions; ++miscRegionIdx) {
+                    const auto& miscTable = miscTables.template getTable<Opm::MiscTable>(miscRegionIdx);
+
+                    // solventFraction = Ss / (Ss + Sg);
+                    const auto& solventFraction = miscTable.getSolventFractionColumn();
+                    const auto& misc = miscTable.getMiscibilityColumn();
+                    misc_[miscRegionIdx].setXYContainers(solventFraction, misc);
+
+                }
+            } else {
+                OPM_THROW(std::runtime_error, "MISC must be specified in MISCIBLE (SOLVENT) runs\n");
+            }
+
+            // resize the attributes of the object
+            pmisc_.resize(numMiscRegions);
+            const auto& pmiscTables = tableManager.getPmiscTables();
+            if (!pmiscTables.empty()) {
+
+                assert(numMiscRegions == pmiscTables.size());
+
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    const auto& pmiscTable = pmiscTables.template getTable<Opm::PmiscTable>(regionIdx);
+
+                    // Copy data
+                    const auto& po = pmiscTable.getOilPhasePressureColumn();
+                    const auto& pmisc = pmiscTable.getMiscibilityColumn();
+
+                    pmisc_[regionIdx].setXYContainers(po, pmisc);
+
+                }
+            } else {
+                std::vector<double> x = {0.0,1.0e20};
+                std::vector<double> y = {1.0,1.0};
+                TabulatedFunction constant = TabulatedFunction(2, x, y);
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    setPmisc(regionIdx, constant);
+                }
+
+            }
+
+            // miscible relative permeability multipleiers
+            msfnKrsg_.resize(numSatRegions);
+            msfnKro_.resize(numSatRegions);
+            const auto& msfnTables = tableManager.getMsfnTables();
+            if (!msfnTables.empty()) {
+
+                assert(numSatRegions == msfnTables.size());
+
+
+                for (unsigned regionIdx = 0; regionIdx < numSatRegions; ++regionIdx) {
+                    const Opm::MsfnTable& msfnTable = msfnTables.template getTable<Opm::MsfnTable>(regionIdx);
+
+                    // Copy data
+                    // Ssg = Ss + Sg;
+                    const auto& Ssg = msfnTable.getGasPhaseFractionColumn();
+                    const auto& krsg = msfnTable.getGasSolventRelpermMultiplierColumn();
+                    const auto& kro = msfnTable.getOilRelpermMultiplierColumn();
+
+                    msfnKrsg_[regionIdx].setXYContainers(Ssg, krsg);
+                    msfnKro_[regionIdx].setXYContainers(Ssg, kro);
+
+                }
+            } else {
+                std::vector<double> x = {0.0,1.0};
+                std::vector<double> y = {1.0,0.0};
+                TabulatedFunction unit = TabulatedFunction(2, x, x);
+                TabulatedFunction inv_unit = TabulatedFunction(2, x, y);
+
+                for (unsigned regionIdx = 0; regionIdx < numSatRegions; ++regionIdx) {
+                    setMsfn(regionIdx, unit, inv_unit);
+                }
+            }
+            // resize the attributes of the object
+            sorwmis_.resize(numMiscRegions);
+            const auto& sorwmisTables = tableManager.getSorwmisTables();
+            if (!sorwmisTables.empty()) {
+                assert(numMiscRegions == sorwmisTables.size());
+
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    const auto& sorwmisTable = sorwmisTables.template getTable<Opm::SorwmisTable>(regionIdx);
+
+                    // Copy data
+                    const auto& sw = sorwmisTable.getWaterSaturationColumn();
+                    const auto& sorwmis = sorwmisTable.getMiscibleResidualOilColumn();
+
+                    sorwmis_[regionIdx].setXYContainers(sw, sorwmis);
+                }
+            } else {
+                // default
+                std::vector<double> x = {0.0,1.0};
+                std::vector<double> y = {0.0,0.0};
+                TabulatedFunction zero = TabulatedFunction(2, x, y);
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    setSorwmis(regionIdx, zero);
+                }
+            }
+
+            // resize the attributes of the object
+            sgcwmis_.resize(numMiscRegions);
+            const auto& sgcwmisTables = tableManager.getSgcwmisTables();
+            if (!sgcwmisTables.empty()) {
+
+                assert(numMiscRegions ==sgcwmisTables.size());
+
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    const auto& sgcwmisTable = sgcwmisTables.template getTable<Opm::SgcwmisTable>(regionIdx);
+
+                    // Copy data
+                    const auto& sw = sgcwmisTable.getWaterSaturationColumn();
+                    const auto& sgcwmis = sgcwmisTable.getMiscibleResidualGasColumn();
+
+                    sgcwmis_[regionIdx].setXYContainers(sw, sgcwmis);
+                }
+            } else {
+                // default
+                std::vector<double> x = {0.0,1.0};
+                std::vector<double> y = {0.0,0.0};
+                TabulatedFunction zero = TabulatedFunction(2, x, y);
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    setSgcmis(regionIdx, zero);
+                }
+            }
+
+
+            if (deck.hasKeyword("TLMIXPAR")) {
+                // resize the attributes of the object
+                tlMixParamViscosity_.resize(numMiscRegions);
+                tlMixParamDensity_.resize(numMiscRegions);
+
+                assert(numMiscRegions == deck.getKeyword("TLMIXPAR").size() );
+
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    const auto& tlmixparRecord = deck.getKeyword("TLMIXPAR").getRecord(regionIdx);
+                    const auto& mix_params_viscosity = tlmixparRecord.getItem("TL_VISCOSITY_PARAMETER").getSIDoubleData();
+                    tlMixParamViscosity_[regionIdx] = mix_params_viscosity[0];
+                    const auto& mix_params_density = tlmixparRecord.getItem("TL_DENSITY_PARAMETER").getSIDoubleData();
+                    const int numDensityItems = mix_params_density.size();
+                    if (numDensityItems == 0) {
+                        tlMixParamDensity_[regionIdx] = tlMixParamViscosity_[regionIdx];
+                    } else if (numDensityItems == 1) {
+                        tlMixParamDensity_[regionIdx] = mix_params_density[0];
+                    } else {
+                        OPM_THROW(std::runtime_error, "Only one value can be entered for the TL parameter pr MISC region.");
+                    }
+                }
+            } else {
+                OPM_THROW(std::runtime_error, "TLMIXPAR must be specified in MISCIBLE (SOLVENT) runs\n");
+            }
+
+            // resize the attributes of the object
+            tlPMixTable_.resize(numMiscRegions);
+            if (deck.hasKeyword("TLPMIXPA")) {
+                const auto& tlpmixparTables = tableManager.getTlpmixpaTables();
+                if (!tlpmixparTables.empty()) {
+
+                    assert(numMiscRegions == tlpmixparTables.size());
+                    for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                        const auto& tlpmixparTable = tlpmixparTables.template getTable<Opm::TlpmixpaTable>(regionIdx);
+
+                        // Copy data
+                        const auto& po = tlpmixparTable.getOilPhasePressureColumn();
+                        const auto& tlpmixpa = tlpmixparTable.getMiscibilityColumn();
+
+                        tlPMixTable_[regionIdx].setXYContainers(po, tlpmixpa);
+
+                    }
+                } else {
+                    // if empty keyword. Try to use the pmisc table as default.
+                    if (pmisc_.size() > 0) {
+                        tlPMixTable_ = pmisc_;
+                    } else {
+                        OPM_THROW(std::invalid_argument, "If the pressure dependent TL values in TLPMIXPA is defaulted (no entries), then the PMISC tables must be specified.");
+                    }
+                }
+            } else {
+                // default
+                std::vector<double> x = {0.0,1.0e20};
+                std::vector<double> y = {1.0,1.0};
+                TabulatedFunction ones = TabulatedFunction(2, x, y);
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                    setTlpmixpa(regionIdx, ones);
+                }
+            }
+
+
+        }
+
+
+
     }
 #endif
 
@@ -150,10 +379,106 @@ public:
     }
 
     /*!
+     * \brief Specify misicible hydrocabon relative permeability wrt water of a single region.
+     *
+     * The index of specified here must be in range [0, numSatRegions)
+     */
+    static void setSof2(unsigned satRegionIdx,
+                        const TabulatedFunction& sof2Krn)
+    {
+        sof2Krn_[satRegionIdx] = sof2Krn;
+    }
+
+    /*!
+     * \brief Misicibility function wrt solvent fraction of a single region.
+     *
+     * The index of specified here must be in range [0, numMiscRegions)
+     */
+    static void setMisc(unsigned miscRegionIdx,
+                        const TabulatedFunction& misc)
+    {
+        misc_[miscRegionIdx] = misc;
+    }
+
+    /*!
+     * \brief Misicibility function wrt pressure of a single region.
+     *
+     * The index of specified here must be in range [0, numMiscRegions)
+     */
+    static void setPmisc(unsigned miscRegionIdx,
+                        const TabulatedFunction& pmisc)
+    {
+        pmisc_[miscRegionIdx] = pmisc;
+    }
+
+    /*!
+     * \brief Specify misicible relative permeability multipliers of a single region.
+     *
+     * The index of specified here must be in range [0, numSatRegions)
+     */
+    static void setMsfn(unsigned satRegionIdx,
+                        const TabulatedFunction& msfnKrsg,
+                        const TabulatedFunction& msfnKro)
+    {
+        msfnKrsg_[satRegionIdx] = msfnKrsg;
+        msfnKro_[satRegionIdx] = msfnKro;
+    }
+
+    /*!
+     * \brief Misicibe residual oil saturation function wrt water saturation of a single region.
+     *
+     * The index of specified here must be in range [0, numMiscRegions)
+     */
+    static void setSorwmis(unsigned miscRegionIdx,
+                        const TabulatedFunction& sorwmis)
+    {
+        sorwmis_[miscRegionIdx] = sorwmis;
+    }
+
+    /*!
+     * \brief Misicibe critical gas saturation function wrt water saturation of a single region.
+     *
+     * The index of specified here must be in range [0, numMiscRegions)
+     */
+    static void setSgcmis(unsigned miscRegionIdx,
+                        const TabulatedFunction& sgcwmis)
+    {
+        sgcwmis_[miscRegionIdx] = sgcwmis;
+    }
+
+    /*!
+     * \brief Todd-Longstaff mixing parameters of a single region.
+     *
+     * The index of specified here must be in range [0, numMiscRegions)
+     */
+    static void setTlmixpar(unsigned miscRegionIdx,
+                        const Scalar& tlMixParamViscosity,
+                            const Scalar& tlMixParamDensity)
+    {
+        tlMixParamViscosity_[miscRegionIdx] = tlMixParamViscosity;
+        tlMixParamDensity_[miscRegionIdx] = tlMixParamDensity;
+    }
+
+    /*!
+     * \brief Todd-Longstaff mixing parameter multiplier wrt pressure of a single region.
+     *
+     * The index of specified here must be in range [0, numMiscRegions)
+     */
+    static void setTlpmixpa(unsigned miscRegionIdx,
+                        const TabulatedFunction& tlPMixTable)
+    {
+        tlPMixTable_[miscRegionIdx] = tlPMixTable;
+    }
+
+    /*!
      * \brief Specify the solvent PVT of a all PVT regions.
      */
     static void setSolventPvt(const SolventPvt& value)
     { solventPvt_ = value; }
+
+
+    static void setIsMiscible(const bool isMiscible)
+    { isMiscible_ = isMiscible; }
 
     /*!
      * \brief Register all run-time parameters for the black-oil solvent module.
@@ -368,11 +693,110 @@ public:
         return ssfnKrs_[satnumRegionIdx];
     }
 
+    static const TabulatedFunction& sof2Krn(const ElementContext& elemCtx,
+                                            unsigned scvIdx,
+                                            unsigned timeIdx)
+    {
+        unsigned satnumRegionIdx = elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return sof2Krn_[satnumRegionIdx];
+    }
+
+    static const TabulatedFunction& misc(const ElementContext& elemCtx,
+                                         unsigned scvIdx,
+                                         unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return misc_[miscnumRegionIdx];
+    }
+
+    static const TabulatedFunction& pmisc(const ElementContext& elemCtx,
+                                          unsigned scvIdx,
+                                          unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return pmisc_[miscnumRegionIdx];
+    }
+
+    static const TabulatedFunction& msfnKrsg(const ElementContext& elemCtx,
+                                             unsigned scvIdx,
+                                             unsigned timeIdx)
+    {
+        unsigned satnumRegionIdx = elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return msfnKrsg_[satnumRegionIdx];
+    }
+
+    static const TabulatedFunction& msfnKro(const ElementContext& elemCtx,
+                                            unsigned scvIdx,
+                                            unsigned timeIdx)
+    {
+        unsigned satnumRegionIdx = elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return msfnKro_[satnumRegionIdx];
+    }
+
+    static const TabulatedFunction& sorwmis(const ElementContext& elemCtx,
+                                            unsigned scvIdx,
+                                            unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return sorwmis_[miscnumRegionIdx];
+    }
+
+    static const TabulatedFunction& sgcwmis(const ElementContext& elemCtx,
+                                            unsigned scvIdx,
+                                            unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return sgcwmis_[miscnumRegionIdx];
+    }
+
+    static const TabulatedFunction& tlPMixTable(const ElementContext& elemCtx,
+                                            unsigned scvIdx,
+                                            unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return tlPMixTable_[miscnumRegionIdx];
+    }
+
+    static const Scalar& tlMixParamViscosity(const ElementContext& elemCtx,
+                                             unsigned scvIdx,
+                                             unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return tlMixParamViscosity_[miscnumRegionIdx];
+    }
+
+    static const Scalar& tlMixParamDensity(const ElementContext& elemCtx,
+                                           unsigned scvIdx,
+                                           unsigned timeIdx)
+    {
+        unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return tlMixParamDensity_[miscnumRegionIdx];
+    }
+
+    static bool isMiscible()
+    {
+        return isMiscible_;
+    }
+
+
 private:
     static SolventPvt solventPvt_;
 
     static std::vector<TabulatedFunction> ssfnKrg_; // the krg(Fs) column of the SSFN table
     static std::vector<TabulatedFunction> ssfnKrs_; // the krs(Fs) column of the SSFN table
+    static std::vector<TabulatedFunction> sof2Krn_; // the krn(Sn) column of the SOF2 table
+    static std::vector<TabulatedFunction> misc_;    // the misc(Ss) column of the MISC table
+    static std::vector<TabulatedFunction> pmisc_;   // the pmisc(pg) column of the PMISC table
+    static std::vector<TabulatedFunction> msfnKrsg_; // the krsg(Ssg) column of the MSFN table
+    static std::vector<TabulatedFunction> msfnKro_; // the kro(Ssg) column of the MSFN table
+    static std::vector<TabulatedFunction> sorwmis_; // the sorwmis(Sw) column of the SORWMIS table
+    static std::vector<TabulatedFunction> sgcwmis_; // the sgcwmis(Sw) column of the SGCWMIS table
+
+    static std::vector<Scalar> tlMixParamViscosity_; // Todd-Longstaff mixing parameter for viscosity
+    static std::vector<Scalar> tlMixParamDensity_;   //  Todd-Longstaff mixing parameter for density
+    static std::vector<TabulatedFunction> tlPMixTable_; // the tlpmixpa(Po) column of the TLPMIXPA table
+
+    static bool isMiscible_;
 };
 
 template <class TypeTag, bool enableSolventV>
@@ -386,6 +810,52 @@ BlackOilSolventModule<TypeTag, enableSolventV>::ssfnKrg_;
 template <class TypeTag, bool enableSolventV>
 std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
 BlackOilSolventModule<TypeTag, enableSolventV>::ssfnKrs_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::sof2Krn_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::misc_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::pmisc_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::msfnKrsg_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::msfnKro_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::sorwmis_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::sgcwmis_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::Scalar>
+BlackOilSolventModule<TypeTag, enableSolventV>::tlMixParamViscosity_;
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::Scalar>
+BlackOilSolventModule<TypeTag, enableSolventV>::tlMixParamDensity_;
+
+
+template <class TypeTag, bool enableSolventV>
+std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
+BlackOilSolventModule<TypeTag, enableSolventV>::tlPMixTable_;
+
+template <class TypeTag, bool enableSolventV>
+bool
+BlackOilSolventModule<TypeTag, enableSolventV>::isMiscible_;
+
 
 /*!
  * \ingroup BlackOil
@@ -403,14 +873,19 @@ class BlackOilSolventIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef BlackOilSolventModule<TypeTag> SolventModule;
 
+    enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     static constexpr int solventSaturationIdx = Indices::solventSaturationIdx;
     static constexpr int oilPhaseIdx = FluidSystem::oilPhaseIdx;
     static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
+    static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
+    static constexpr double cutOff = 1e-16;
+
 
 public:
     /*!
@@ -420,13 +895,18 @@ public:
      * were pure hydrocarbons.
      */
     void solventPreSatFuncUpdate_(const ElementContext& elemCtx,
-                                  unsigned scvIdx,
+                                  unsigned dofIdx,
                                   unsigned timeIdx)
     {
-        const PrimaryVariables& priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         auto& fs = asImp_().fluidState_;
         solventSaturation_ = priVars.makeEvaluation(solventSaturationIdx, timeIdx);
         hydrocarbonSaturation_ = fs.saturation(gasPhaseIdx);
+
+        // apply a cut-off. Don't waste calculations if no solvent
+        if (std::abs(solventSaturation().value()) < cutOff) {
+            return;
+        }
 
         // make the saturation of the gas phase which is used by the saturation functions
         // the sum of the solvent "saturation" and the saturation the hydrocarbon gas.
@@ -436,12 +916,12 @@ public:
     /*!
      * \brief Called after the saturation functions have been doing their magic
      *
-     * At this point, the pressures of the fluid state are final. After this function,
-     * all saturations and relative permeabilities must be final. (i.e., the "hydrocarbon
+     * After this function, all saturations, pressures
+     * and relative permeabilities must be final. (i.e., the "hydrocarbon
      * saturations".)
      */
     void solventPostSatFuncUpdate_(const ElementContext& elemCtx,
-                                   unsigned scvIdx,
+                                   unsigned dofIdx,
                                    unsigned timeIdx)
     {
         // revert the gas "saturation" of the fluid state back to the saturation of the
@@ -449,21 +929,107 @@ public:
         auto& fs = asImp_().fluidState_;
         fs.setSaturation(gasPhaseIdx, hydrocarbonSaturation_);
 
-        const auto& ssfnKrg = SolventModule::ssfnKrg(elemCtx, scvIdx, timeIdx);
-        const auto& ssfnKrs = SolventModule::ssfnKrs(elemCtx, scvIdx, timeIdx);
-
-        // compute the mobility of the solvent "phase". this only covers the "immiscible"
-        // case.
         solventMobility_ = 0.0;
-        Evaluation Stot = hydrocarbonSaturation_ + solventSaturation_;
-        if (Stot > 1e-12) { // apply a cut-off
-            Evaluation Fhydgas = hydrocarbonSaturation_/Stot;
-            Evaluation Fsolgas = solventSaturation_/Stot;
 
-            Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
-            solventMobility_ = krg * ssfnKrs.eval(Fsolgas, /*extrapolate=*/true);
-            krg *= ssfnKrg.eval(Fhydgas, /*extrapolate=*/true);
+        // apply a cut-off. Don't waste calculations if no solvent
+        if (std::abs(solventSaturation().value()) < cutOff) {
+            return;
         }
+
+        // Pressure effects on capillary pressure miscibility
+        if(SolventModule::isMiscible()) {
+
+            const Evaluation& p = fs.pressure(oilPhaseIdx); // or gas pressure?
+            const Evaluation pmisc = SolventModule::pmisc(elemCtx, dofIdx, timeIdx).eval(p, /*extrapolate=*/true);
+            const Evaluation& pgImisc = fs.pressure(gasPhaseIdx);
+
+            // compute capillary pressure for miscible fluid
+            const auto& problem = elemCtx.problem();
+            const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+            Evaluation pgMisc = 0.0;
+            Evaluation pC[numPhases];
+            const auto& materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
+            MaterialLaw::capillaryPressures(pC, materialParams, fs);
+
+            //oil is the reference phase for pressure
+            if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
+                pgMisc = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
+            } else {
+                const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
+                pgMisc = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
+            }
+
+           fs.setPressure(gasPhaseIdx, pmisc * pgMisc + (1.0 - pmisc) * pgImisc);
+        }
+
+
+        Evaluation gasSolventSat = hydrocarbonSaturation_ + solventSaturation_;
+
+        if (std::abs(gasSolventSat.value()) < cutOff) { // avoid division by zero
+            return;
+        }
+
+        Evaluation Fhydgas = hydrocarbonSaturation_/gasSolventSat;
+        Evaluation Fsolgas = solventSaturation_/gasSolventSat;
+
+        // account for miscibility of oil and solvent
+        if(SolventModule::isMiscible()) {
+            const auto& misc = SolventModule::misc(elemCtx, dofIdx, timeIdx);
+            const auto& pmisc = SolventModule::pmisc(elemCtx, dofIdx, timeIdx);
+            const Evaluation& p = fs.pressure(oilPhaseIdx); // or gas pressure?
+            const Evaluation miscibility = misc.eval(Fsolgas, /*extrapolate=*/true) * pmisc.eval(p, /*extrapolate=*/true);
+
+            // TODO adjust endpoints of sn and ssg
+            unsigned cellIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+            const auto& materialLawManager = elemCtx.problem().materialLawManager();
+            const auto& scaledDrainageInfo =
+                    materialLawManager->oilWaterScaledEpsInfoDrainage(cellIdx);
+
+            const Scalar& sgcr = scaledDrainageInfo.Sgcr;
+            const Scalar& sogcr = scaledDrainageInfo.Sogcr;
+            const Evaluation& sw = fs.saturation(waterPhaseIdx);
+            const auto& sorwmis = SolventModule::sorwmis(elemCtx, dofIdx, timeIdx);
+            const auto& sgcwmis = SolventModule::sgcwmis(elemCtx, dofIdx, timeIdx);
+
+            Evaluation sor = miscibility * sorwmis.eval(sw,  /*extrapolate=*/true) + ( 1.0 - miscibility) * sogcr;
+            Evaluation sgc = miscibility * sgcwmis.eval(sw,  /*extrapolate=*/true) + ( 1.0 - miscibility) * sgcr;
+
+            const Evaluation oilGasSolventSat = gasSolventSat + fs.saturation(oilPhaseIdx);
+            const Evaluation zero = 0.0;
+            const Evaluation oilGasSolventEffSat = std::max(oilGasSolventSat - sor - sgc, zero);
+
+            Evaluation F_totalGas = 0.0;
+            if (std::abs(oilGasSolventEffSat.value()) > cutOff) {
+                const Evaluation gasSolventEffSat = std::max(gasSolventSat - sgc, zero);
+                F_totalGas = gasSolventEffSat / oilGasSolventEffSat;
+            }
+            const auto& msfnKro = SolventModule::msfnKro(elemCtx, dofIdx, timeIdx);
+            const auto& msfnKrsg = SolventModule::msfnKrsg(elemCtx, dofIdx, timeIdx);
+            const auto& sof2Krn = SolventModule::sof2Krn(elemCtx, dofIdx, timeIdx);
+
+            const Evaluation mkrgt = msfnKrsg.eval( F_totalGas, /*extrapolate=*/true ) * sof2Krn.eval( oilGasSolventSat, /*extrapolate=*/true);
+            const Evaluation mkro = msfnKro.eval( F_totalGas, /*extrapolate=*/true ) * sof2Krn.eval( oilGasSolventSat, /*extrapolate=*/true );
+
+            Evaluation& kro = asImp_().mobility_[oilPhaseIdx];
+            Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
+
+            // combine immiscible and miscible part of the relperm
+            krg *= (1.0 - miscibility);
+            krg += miscibility * mkrgt;
+            kro *= (1.0 - miscibility);
+            kro += miscibility * mkro;
+        }
+
+
+
+        // compute the mobility of the solvent "phase" and modify the gas phase
+        const auto& ssfnKrg = SolventModule::ssfnKrg(elemCtx, dofIdx, timeIdx);
+        const auto& ssfnKrs = SolventModule::ssfnKrs(elemCtx, dofIdx, timeIdx);
+
+        Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
+        solventMobility_ = krg * ssfnKrs.eval(Fsolgas, /*extrapolate=*/true);
+        krg *= ssfnKrg.eval(Fhydgas, /*extrapolate=*/true);
+
     }
 
     /*!
@@ -472,9 +1038,9 @@ public:
      *
      * At this point the pressures and saturations of the fluid state are correct.
      */
-    void solventPvtUpdate_(const ElementContext& elemCtx OPM_UNUSED,
-                           unsigned scvIdx OPM_UNUSED,
-                           unsigned timeIdx OPM_UNUSED)
+    void solventPvtUpdate_(const ElementContext& elemCtx,
+                           unsigned scvIdx,
+                           unsigned timeIdx)
     {
         const auto& iq = asImp_();
         const auto& fs = iq.fluidState();
@@ -486,10 +1052,14 @@ public:
         const Evaluation& p = fs.pressure(gasPhaseIdx);
         solventInvFormationVolumeFactor_ = solventPvt.inverseFormationVolumeFactor(pvtRegionIdx, T, p);
 
-        // TODO: implement solvent "miscibility"
         solventDensity_ = solventInvFormationVolumeFactor_*solventRefDensity_;
         solventViscosity_ = solventPvt.viscosity(pvtRegionIdx, T, p);
+
+        effectiveProperties(elemCtx, scvIdx, timeIdx);
+
         solventMobility_ /= solventViscosity_;
+
+
     }
 
     const Evaluation& solventSaturation() const
@@ -510,6 +1080,163 @@ public:
     // This could be stored pr pvtRegion instead
     const Scalar& solventRefDensity() const
     { return solventRefDensity_; }
+
+private:
+    // Computes the effective properties based on
+    // Todd-Longstaff mixing model.
+    void effectiveProperties(const ElementContext& elemCtx,
+                             unsigned scvIdx,
+                             unsigned timeIdx)
+    {
+        if (!SolventModule::isMiscible()) {
+            return;
+        }
+
+        // Don't waste calculations if no solvent
+        // Apply a cut-off for small and negative solvent saturations
+        if ( solventSaturation() < cutOff) { //
+            return;
+        }
+
+        auto& fs = asImp_().fluidState_;
+
+        // Compute effective saturations
+        const auto& sorwmis = SolventModule::sorwmis(elemCtx, scvIdx, timeIdx);
+        const auto& sgcwmis = SolventModule::sgcwmis(elemCtx, scvIdx, timeIdx);
+        const Evaluation& sw = fs.saturation(waterPhaseIdx);
+        const Evaluation oilEffSat = fs.saturation(oilPhaseIdx) - sorwmis.eval(sw,  /*extrapolate=*/true);
+        const Evaluation gasEffSat = fs.saturation(gasPhaseIdx) - sgcwmis.eval(sw,  /*extrapolate=*/true);
+        const Evaluation solventEffSat = solventSaturation() - sgcwmis.eval(sw,  /*extrapolate=*/true);
+        const Evaluation oilGasSolventEffSat =  oilEffSat + gasEffSat + solventEffSat;
+        const Evaluation oilSolventEffSat = oilEffSat + solventEffSat;
+        const Evaluation solventGasEffSat = solventEffSat + gasEffSat;
+
+        // Compute effective viscosities
+        const Evaluation& muGas = fs.viscosity(gasPhaseIdx);
+        const Evaluation& muOil = fs.viscosity(oilPhaseIdx);
+        const Evaluation& muSolvent = solventViscosity_;
+
+        const Evaluation muOilPow = pow(muOil, 0.25);
+        const Evaluation muGasPow = pow(muGas, 0.25);
+        const Evaluation muSolventPow = pow(muSolvent, 0.25);
+
+        Evaluation muMixOilSolvent = muOil;
+        if ( std::abs(oilSolventEffSat.value()) > cutOff)
+            muMixOilSolvent *= muSolvent / pow( ( (oilEffSat / oilSolventEffSat) * muSolventPow) + ( (solventEffSat / oilSolventEffSat) * muOilPow) , 4.0);
+        Evaluation muMixSolventGas = muGas;
+        if ( std::abs(solventGasEffSat.value()) > cutOff)
+            muMixSolventGas *= muSolvent / pow( ( (gasEffSat / solventGasEffSat) * muSolventPow) + ( (solventEffSat / solventGasEffSat) * muGasPow) , 4.0);
+
+        Evaluation muMixSolventGasOil = muOil;
+        if (std::abs(oilGasSolventEffSat.value()) > cutOff)
+            muMixSolventGasOil *= muSolvent * muGas / pow( ( (oilEffSat / oilGasSolventEffSat) * muSolventPow *  muGasPow)
+                  + ( (solventEffSat / oilGasSolventEffSat) * muOilPow *  muGasPow) + ( (gasEffSat / oilGasSolventEffSat) * muSolventPow * muOilPow), 4.0);
+
+        // Mixing parameter for viscosity
+        // The pressureMixingParameter represent the miscibility of the solvent while the mixingParameterViscosity the effect of the porous media.
+        // The pressureMixingParameter is not implemented in ecl100.
+        const Evaluation& po = fs.pressure(oilPhaseIdx);
+        const auto& tlPMixTable = SolventModule::tlPMixTable(elemCtx, scvIdx, timeIdx);
+        const Evaluation tlMixParamMu = SolventModule::tlMixParamViscosity(elemCtx, scvIdx, timeIdx) * tlPMixTable.eval(po,  /*extrapolate=*/true);
+
+        Evaluation muOilEff = pow(muOil,1.0 - tlMixParamMu) * pow(muMixOilSolvent, tlMixParamMu);
+        Evaluation muGasEff = pow(muGas,1.0 - tlMixParamMu) * pow(muMixSolventGas, tlMixParamMu);
+        Evaluation muSolventEff = pow(muSolvent,1.0 - tlMixParamMu) * pow(muMixSolventGasOil, tlMixParamMu);
+
+        // Compute effective densities
+        const Evaluation& rhoGas = fs.density(gasPhaseIdx);
+        const Evaluation& rhoOil = fs.density(oilPhaseIdx);
+        const Evaluation& rhoSolvent = solventDensity_;
+
+        // Mixing parameter for density
+        // The pressureMixingParameter represent the miscibility of the solvent while the mixingParameterDenisty the effect of the porous media.
+        // The pressureMixingParameter is not implemented in ecl100.
+        const Evaluation tlMixParamRho = SolventModule::tlMixParamDensity(elemCtx, scvIdx, timeIdx) * tlPMixTable.eval(po,  /*extrapolate=*/true);
+
+        // compute effective viscosities for density calculations. These have to
+        // be recomputed as a different mixing parameter may be used.
+        const Evaluation muOilEffPow = pow(pow(muOil, 1.0 - tlMixParamRho) * pow(muMixOilSolvent, tlMixParamRho), 0.25);
+        const Evaluation muGasEffPow = pow(pow(muGas, 1.0 - tlMixParamRho) * pow(muMixSolventGas, tlMixParamRho), 0.25);
+        const Evaluation muSolventEffPow = pow(pow(muSolvent, 1.0 - tlMixParamRho) * pow(muMixSolventGasOil, tlMixParamRho), 0.25);
+
+        const Evaluation oilGasEffSaturation = oilEffSat + gasEffSat;
+        Evaluation sof = 0.0;
+        Evaluation sgf = 0.0;
+        if ( std::abs(oilGasEffSaturation.value()) > cutOff ) {
+                sof = oilEffSat / oilGasEffSaturation;
+                sgf = gasEffSat / oilGasEffSaturation;
+        }
+
+        const Evaluation muSolventOilGasPow = muSolventPow * ( (sgf * muOilPow) + (sof * muGasPow) );
+
+        Evaluation rhoMixSolventGasOil = 0.0;
+        if (std::abs(oilGasSolventEffSat.value()) > cutOff )
+            rhoMixSolventGasOil = (rhoOil * oilEffSat / oilGasSolventEffSat) + (rhoGas * gasEffSat / oilGasSolventEffSat) + (rhoSolvent * solventEffSat / oilGasSolventEffSat);
+
+        Evaluation rhoGasEff = 0.0;
+        if ( std::abs(muSolvent.value() - muGas.value()) < cutOff ) {
+            rhoGasEff = ( (1.0 - tlMixParamRho) * rhoGas) + (tlMixParamRho * rhoMixSolventGasOil);
+        } else {
+            const Evaluation solventGasEffFraction = (muGasPow * (muSolventPow - muGasEffPow)) / (muGasEffPow * (muSolventPow - muGasPow));
+            rhoGasEff = (rhoGas * solventGasEffFraction) + (rhoSolvent * (1.0 - solventGasEffFraction));
+        }
+
+        Evaluation rhoOilEff = 0.0;
+        if ( std::abs(muGas.value() - muOil.value()) < cutOff ) {
+            rhoOilEff = ( (1.0 - tlMixParamRho) * rhoOil) + (tlMixParamRho * rhoMixSolventGasOil);
+        } else {
+            const Evaluation solventOilEffFraction = (muOilPow * (muOilEffPow - muSolventPow)) / (muOilEffPow * (muOilPow - muSolventPow));
+            rhoOilEff = (rhoOil * solventOilEffFraction) + (rhoSolvent * (1.0 - solventOilEffFraction));
+        }
+
+        Evaluation rhoSolventEff = 0.0;
+        if ( std::abs( ( muSolventOilGasPow.value() - (muOilPow.value() * muGasPow.value()))) < cutOff ) {
+            rhoSolventEff = ( (1.0 - tlMixParamRho) * rhoSolvent) + (tlMixParamRho * rhoMixSolventGasOil);
+        } else {
+            const Evaluation sfraction_se = (muSolventOilGasPow - ( muOilPow * muGasPow * muSolventPow / muSolventEffPow) ) / ( muSolventOilGasPow - (muOilPow * muGasPow));
+            rhoSolventEff = (rhoSolvent * sfraction_se) + (rhoGas * sgf * (1.0 - sfraction_se)) + (rhoOil * sof * (1.0 - sfraction_se));
+        }
+
+        unsigned pvtRegionIdx = asImp_().pvtRegionIndex();
+        // compute invB from densities.
+        const Evaluation bOilEff = rhoOilEff / (FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx) + FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx) * fs.Rs());
+        const Evaluation bGasEff = rhoGasEff / (FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx) + FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx) * fs.Rv());
+        const Evaluation bSolventEff = rhoSolventEff / solventRefDensity();
+
+        // account for pressure effects
+        const auto& pmiscTable = SolventModule::pmisc(elemCtx, scvIdx, timeIdx);
+        const Evaluation pmisc = pmiscTable.eval(po, /*extrapolate=*/true);
+
+        // copy the unmodified invB factors
+        const Evaluation bo = fs.invB(oilPhaseIdx);
+        const Evaluation bg = fs.invB(gasPhaseIdx);
+        const Evaluation bs = solventInverseFormationVolumeFactor();
+
+        // Set the effective invB factors
+        fs.setInvB(oilPhaseIdx, pmisc * bOilEff + (1.0 - pmisc) * bo);
+        fs.setInvB(gasPhaseIdx, pmisc * bGasEff + (1.0 - pmisc) * bg);
+        solventInvFormationVolumeFactor_ = pmisc * bSolventEff + (1.0 - pmisc) * bs;
+
+        // set the densities
+        fs.setDensity(oilPhaseIdx, fs.invB(oilPhaseIdx) * (FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx) + FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx) * fs.Rs()) );
+        fs.setDensity(gasPhaseIdx, fs.invB(gasPhaseIdx) * (FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx) + FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx) * fs.Rv()) );
+        solventDensity_ = solventInverseFormationVolumeFactor() *  solventRefDensity();
+
+        // set the viscosity / mobility
+        // TODO make it possible to store and modify the viscosity in fs directly
+
+        // keep the mu*b interpolation
+        Evaluation& mobo = asImp_().mobility_[oilPhaseIdx];
+        muOilEff = fs.invB(oilPhaseIdx) / (pmisc * bOilEff / muOilEff + (1.0 - pmisc) * bo / muOil);
+        mobo *= muOil / muOilEff;
+
+        Evaluation& mobg = asImp_().mobility_[gasPhaseIdx];
+        muGasEff = fs.invB(gasPhaseIdx) / (pmisc * bGasEff / muGasEff + (1.0 - pmisc) * bg / muGas);
+        mobg *= muGas / muGasEff;
+
+        // Update viscosity of solvent
+        solventViscosity_ = solventInvFormationVolumeFactor_ / (pmisc * bSolventEff / muSolventEff + (1.0 - pmisc) * bs / muSolvent);
+    }
 
 protected:
     Implementation& asImp_()
