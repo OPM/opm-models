@@ -41,6 +41,7 @@
 #include "blackoilnewtonmethod.hh"
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
+#include "blackoilpolymermodules.hh"
 #include "blackoildarcyfluxmodule.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
@@ -105,7 +106,7 @@ SET_TYPE_PROP(BlackOilModel, FluxModule, Ewoms::BlackOilDarcyFluxModule<TypeTag>
 
 //! The indices required by the model
 SET_TYPE_PROP(BlackOilModel, Indices,
-              Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent)?1:0, /*PVOffset=*/0>);
+              Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent)?1:0, GET_PROP_VALUE(TypeTag, EnablePolymer)?1:0, /*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
 SET_PROP(BlackOilModel, FluidSystem)
@@ -120,6 +121,7 @@ public:
 
 // by default, the ECL solvent module is disabled
 SET_BOOL_PROP(BlackOilModel, EnableSolvent, false);
+SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
 
 } // namespace Properties
 
@@ -205,6 +207,8 @@ class BlackOilModel
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     typedef BlackOilSolventModule<TypeTag> SolventModule;
+    typedef BlackOilPolymerModule<TypeTag> PolymerModule;
+
 
 public:
     BlackOilModel(Simulator& simulator)
@@ -219,6 +223,7 @@ public:
         ParentType::registerParameters();
 
         SolventModule::registerParameters();
+        PolymerModule::registerParameters();
 
         // register runtime parameters of the VTK output modules
         Ewoms::VtkBlackOilModule<TypeTag>::registerParameters();
@@ -257,6 +262,8 @@ public:
             oss << "composition_switching";
         else if (SolventModule::primaryVarApplies(pvIdx))
             return SolventModule::primaryVarName(pvIdx);
+        else if (PolymerModule::primaryVarApplies(pvIdx))
+            return PolymerModule::primaryVarName(pvIdx);
         else
             assert(false);
 
@@ -274,6 +281,8 @@ public:
             oss << "conti_" << FluidSystem::phaseName(eqIdx - Indices::conti0EqIdx);
         else if (SolventModule::eqApplies(eqIdx))
             return SolventModule::eqName(eqIdx);
+        else if (PolymerModule::eqApplies(eqIdx))
+            return PolymerModule::eqName(eqIdx);
         else
             assert(false);
 
@@ -303,6 +312,10 @@ public:
         else if (SolventModule::primaryVarApplies(pvIdx))
             return SolventModule::primaryVarWeight(pvIdx);
 
+        // deal with primary variables stemming from the polymer module
+        else if (PolymerModule::primaryVarApplies(pvIdx))
+            return PolymerModule::primaryVarWeight(pvIdx);
+
         // if the primary variable is either the gas saturation, Rs or Rv
         assert(Indices::compositionSwitchIdx == pvIdx);
 
@@ -330,6 +343,9 @@ public:
 
         else if (SolventModule::eqApplies(eqIdx))
             return SolventModule::eqWeight(eqIdx);
+
+        else if (PolymerModule::eqApplies(eqIdx))
+            return PolymerModule::eqWeight(eqIdx);
 
         // it is said that all kilograms are equal!
         return 1.0;
@@ -370,6 +386,8 @@ public:
             outstream << maxOilSaturation_[dofIdx] << " ";
 
         SolventModule::serializeEntity(*this, outstream, dof);
+        PolymerModule::serializeEntity(*this, outstream, dof);
+
     }
 
     /*!
@@ -414,6 +432,7 @@ public:
                       "Could not deserialize degree of freedom " << dofIdx);
 
         SolventModule::deserializeEntity(*this, instream, dof);
+        PolymerModule::deserializeEntity(*this, instream, dof);
 
         typedef typename PrimaryVariables::PrimaryVarsMeaning PVM;
         priVars.setPrimaryVarsMeaning(static_cast<PVM>(primaryVarsMeaning));
@@ -522,6 +541,8 @@ protected:
 
         // add the VTK output modules which make sense for the blackoil model
         SolventModule::registerOutputModules(*this, this->simulator_);
+        PolymerModule::registerOutputModules(*this, this->simulator_);
+
         this->addOutputModule(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
         this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
     }

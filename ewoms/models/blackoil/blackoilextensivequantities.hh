@@ -30,6 +30,8 @@
 
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
+#include "blackoilpolymermodules.hh"
+
 
 #include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 
@@ -50,9 +52,13 @@ template <class TypeTag>
 class BlackOilExtensiveQuantities
     : public MultiPhaseBaseExtensiveQuantities<TypeTag>
     , public BlackOilSolventExtensiveQuantities<TypeTag>
+    , public BlackOilPolymerExtensiveQuantities<TypeTag>
+
 {
     typedef MultiPhaseBaseExtensiveQuantities<TypeTag> MultiPhaseParent;
     typedef BlackOilSolventExtensiveQuantities<TypeTag> SolventParent;
+    typedef BlackOilPolymerExtensiveQuantities<TypeTag> PolymerParent;
+
 
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -71,6 +77,7 @@ public:
         MultiPhaseParent::update(elemCtx, scvfIdx, timeIdx);
 
         asImp_().updateSolvent(elemCtx, scvfIdx, timeIdx);
+        asImp_().updatePolymer(elemCtx, scvfIdx, timeIdx);
     }
 
 protected:

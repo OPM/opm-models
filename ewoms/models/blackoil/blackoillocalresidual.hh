@@ -30,6 +30,8 @@
 
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
+#include "blackoilpolymermodules.hh"
+
 
 namespace Ewoms {
 /*!
@@ -65,6 +67,8 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef BlackOilSolventModule<TypeTag> SolventModule;
+    typedef BlackOilPolymerModule<TypeTag> PolymerModule;
+
 
 public:
     /*!
@@ -109,9 +113,6 @@ public:
             }
         }
 
-        // deal with solvents (if present)
-        SolventModule::addStorage(storage, intQuants);
-
         // convert surface volumes to component masses
         unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
         storage[conti0EqIdx + waterCompIdx] *=
@@ -120,6 +121,12 @@ public:
             FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
         storage[conti0EqIdx + oilCompIdx] *=
             FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+
+        // deal with solvents (if present)
+        SolventModule::addStorage(storage, intQuants);
+
+        // deal with polymer (if present)
+        PolymerModule::addStorage(storage, intQuants);
 
         // deal with the two-phase cases
         if (FluidSystem::numActivePhases() != 3) {
@@ -175,6 +182,9 @@ public:
 
         // deal with solvents (if present)
         SolventModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+
+        // deal with polymer (if present)
+        PolymerModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!

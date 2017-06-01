@@ -30,6 +30,7 @@
 
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
+#include "blackoilpolymermodules.hh"
 
 #include <ewoms/disc/common/fvbaseprimaryvariables.hh>
 
@@ -44,6 +45,9 @@
 namespace Ewoms {
 template <class TypeTag, bool enableSolvent>
 class BlackOilSolventModule;
+
+template <class TypeTag, bool enablePolymer>
+class BlackOilPolymerModule;
 
 /*!
  * \ingroup BlackOilModel
@@ -81,6 +85,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     // component indices from the fluid system
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+    enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
@@ -88,6 +93,8 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef BlackOilSolventModule<TypeTag, enableSolvent> SolventModule;
+    typedef BlackOilPolymerModule<TypeTag, enablePolymer> PolymerModule;
+
 
     static_assert(numPhases == 3, "The black-oil model assumes three phases!");
     static_assert(numComponents == 3, "The black-oil model assumes three components!");
@@ -240,6 +247,9 @@ public:
 
         // set the primary variables of the solvent module
         SolventModule::assignPrimaryVars(*this, solSat);
+
+        // set the primary variables of the polymer module
+        PolymerModule::assignPrimaryVars(*this, solSat);
     }
 
     /*!
@@ -499,6 +509,14 @@ private:
             return 0.0;
 
         return (*this)[Indices::solventSaturationIdx];
+    }
+
+    Scalar polymerConcentration() const
+    {
+        if (!enablePolymer)
+            return 0.0;
+
+        return (*this)[Indices::polymerConcentrationIdx];
     }
 
     template <class Container>
