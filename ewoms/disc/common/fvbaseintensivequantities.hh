@@ -54,20 +54,7 @@ public:
     { }
 
     // copy constructor
-    FvBaseIntensiveQuantities(const FvBaseIntensiveQuantities& v)
-    {
-        extrusionFactor_ = v.extrusionFactor_;
-    }
-
-    /*!
-     * \brief Assignment operator
-     */
-    FvBaseIntensiveQuantities& operator=(const FvBaseIntensiveQuantities& v)
-    {
-        extrusionFactor_ = v.extrusionFactor_;
-
-        return *this;
-    }
+    FvBaseIntensiveQuantities(const FvBaseIntensiveQuantities& v) = default;
 
     /*!
      * \brief Register all run-time parameters for the intensive quantities.
