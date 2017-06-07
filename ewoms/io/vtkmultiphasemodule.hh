@@ -46,6 +46,7 @@ namespace Properties {
 NEW_TYPE_TAG(VtkMultiPhase);
 
 // create the property tags needed for the multi phase module
+NEW_PROP_TAG(VtkWriteExtrusionFactor);
 NEW_PROP_TAG(VtkWritePressures);
 NEW_PROP_TAG(VtkWriteDensities);
 NEW_PROP_TAG(VtkWriteSaturations);
@@ -62,6 +63,7 @@ NEW_PROP_TAG(EnableVtkOutput);
 NEW_PROP_TAG(Evaluation);
 
 // set default values for what quantities to output
+SET_BOOL_PROP(VtkMultiPhase, VtkWriteExtrusionFactor, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePressures, true);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteDensities, true);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteSaturations, true);
@@ -134,6 +136,8 @@ public:
      */
     static void registerParameters()
     {
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteExtrusionFactor,
+                             "Include the extrusion factor of the degrees of freedom into the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePressures,
                              "Include the phase pressures in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteDensities,
@@ -164,6 +168,7 @@ public:
      */
     void allocBuffers()
     {
+        if (extrusionFactorOutput_()) this->resizeScalarBuffer_(extrusionFactor_);
         if (pressureOutput_()) this->resizePhaseBuffer_(pressure_);
         if (densityOutput_()) this->resizePhaseBuffer_(density_);
         if (saturationOutput_()) this->resizePhaseBuffer_(saturation_);
@@ -218,6 +223,7 @@ public:
             const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto& fs = intQuants.fluidState();
 
+            if (extrusionFactorOutput_()) extrusionFactor_[I] = intQuants.extrusionFactor();
             if (porosityOutput_()) porosity_[I] = Toolbox::value(intQuants.porosity());
             if (intrinsicPermeabilityOutput_()) {
                 const auto& K = problem.intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
@@ -312,6 +318,8 @@ public:
         if (!vtkWriter)
             return;
 
+        if (extrusionFactorOutput_())
+            this->commitScalarBuffer_(baseWriter, "extrusionFactor", extrusionFactor_);
         if (pressureOutput_())
             this->commitPhaseBuffer_(baseWriter, "pressure_%s", pressure_);
         if (densityOutput_())
@@ -381,6 +389,9 @@ public:
     }
 
 private:
+    static bool extrusionFactorOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteExtrusionFactor); }
+
     static bool pressureOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePressures); }
 
@@ -414,6 +425,7 @@ private:
     static bool potentialGradientOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePotentialGradients); }
 
+    ScalarBuffer extrusionFactor_;
     PhaseBuffer pressure_;
     PhaseBuffer density_;
     PhaseBuffer saturation_;
