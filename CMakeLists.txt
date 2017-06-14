@@ -18,7 +18,7 @@ cmake_minimum_required (VERSION 2.8)
 # work around some build system quirk: the *_FOUND variables must
 # always be present even if a given library was not found. (the build
 # system sometimes does not seem to define them in that case.)
-set(ERT_FOUND "0")
+set(ECL_FOUND "0")
 
 # add the current projects cmake module directory to the search
 # path. This is not required anymore once support for federated builds
@@ -137,7 +137,7 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 EwomsAddApplication(ebos
                     SOURCES ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION ${OPM_GRID_FOUND} AND ${OPM_PARSER_FOUND} AND ${ERT_FOUND} AND ${OPM_CORE_FOUND})
+                    CONDITION ${OPM_GRID_FOUND} AND ${OPM_PARSER_FOUND} AND ${ECL_FOUND} AND ${OPM_CORE_FOUND})
 
 if(OPM_GRID_FOUND AND ERT_FOUND AND OPM_CORE_FOUND)
   install(TARGETS ebos DESTINATION bin)
