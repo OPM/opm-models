@@ -1048,9 +1048,28 @@ class BlackOilPolymerExtensiveQuantities
     typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
 
 public:
+    /*!
+     * \brief Method which calculates the shear factor based on flow velocity
+     *
+     * This is the variant of the method which assumes that the problem is specified
+     * using permeabilities, i.e., *not* via transmissibilities.
+     */
+    template <class Dummy = bool> // we need to make this method a template to avoid
+                                  // compiler errors if it is not instantiated!
+    void updateShearMultipliersPerm(const ElementContext& elemCtx OPM_UNUSED,
+                                    unsigned scvfIdx OPM_UNUSED,
+                                    unsigned timeIdx OPM_UNUSED)
+    {
+        OPM_THROW(std::runtime_error,
+                  "The extension of the blackoil model for polymers is not yet "
+                  "implemented for problems specified using permeabilities.");
+    }
 
     /*!
      * \brief Method which calculates the shear factor based on flow velocity
+     *
+     * This is the variant of the method which assumes that the problem is specified
+     * using transmissibilities, i.e., *not* via permeabilities.
      */
     template <class Dummy = bool> // we need to make this method a template to avoid
                                   // compiler errors if it is not instantiated!
@@ -1133,6 +1152,11 @@ public:
     void updateShearMultipliers(const ElementContext& elemCtx OPM_UNUSED,
                               unsigned scvfIdx OPM_UNUSED,
                               unsigned timeIdx OPM_UNUSED)
+    { }
+
+    void updateShearMultipliersPerm(const ElementContext& elemCtx OPM_UNUSED,
+                                    unsigned scvfIdx OPM_UNUSED,
+                                    unsigned timeIdx OPM_UNUSED)
     { }
 
     const Evaluation& polymerShearFactor() const
