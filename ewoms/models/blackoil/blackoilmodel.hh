@@ -70,6 +70,7 @@ namespace Properties {
 NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
                                           VtkBlackOil,
                                           VtkBlackOilSolvent,
+                                          VtkBlackOilPolymer,
                                           VtkComposition));
 
 //! Set the local residual function

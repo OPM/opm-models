@@ -29,7 +29,7 @@
 #define EWOMS_BLACK_OIL_POLYMER_MODULE_HH
 
 #include "blackoilproperties.hh"
- // #include <ewoms/io/vtkblackoilpolymermodule.hh>
+#include <ewoms/io/vtkblackoilpolymermodule.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
@@ -365,10 +365,10 @@ public:
     static void registerParameters()
     {
         if (!enablePolymer)
-            // polymers have disabled at compile time
+            // polymers have been disabled at compile time
             return;
 
-        //Ewoms::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
+        Ewoms::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -378,16 +378,16 @@ public:
                                       Simulator& simulator)
     {
         if (!enablePolymer)
-            // polymers have disabled at compile time
+            // polymers have been disabled at compile time
             return;
 
-        //model.addOutputModule(new Ewoms::VtkBlackOilPolymerModule<TypeTag>(simulator));
+        model.addOutputModule(new Ewoms::VtkBlackOilPolymerModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
     {
         if (!enablePolymer)
-            // polymers have disabled at compile time
+            // polymers have been disabled at compile time
             return false;
 
         return pvIdx == polymerConcentrationIdx;
