@@ -189,10 +189,10 @@ public:
             this->commitScalarBuffer_(baseWriter, "density_solvent", solventDensity_);
 
         if (solventViscosityOutput_())
-            this->commitScalarBuffer_(baseWriter, "density_solvent", solventViscosity_);
+            this->commitScalarBuffer_(baseWriter, "viscosity_solvent", solventViscosity_);
 
         if (solventMobilityOutput_())
-            this->commitScalarBuffer_(baseWriter, "density_solvent", solventMobility_);
+            this->commitScalarBuffer_(baseWriter, "mobility_solvent", solventMobility_);
     }
 
 private:
