@@ -53,7 +53,6 @@ class BlackOilExtensiveQuantities
     : public MultiPhaseBaseExtensiveQuantities<TypeTag>
     , public BlackOilSolventExtensiveQuantities<TypeTag>
     , public BlackOilPolymerExtensiveQuantities<TypeTag>
-
 {
     typedef MultiPhaseBaseExtensiveQuantities<TypeTag> MultiPhaseParent;
     typedef BlackOilSolventExtensiveQuantities<TypeTag> SolventParent;

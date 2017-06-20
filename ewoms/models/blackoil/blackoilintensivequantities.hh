@@ -152,8 +152,6 @@ public:
         fluidState_.setSaturation(oilPhaseIdx, So);
 
         asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().polymerPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-
 
         // now we compute all phase pressures
         Evaluation pC[numPhases];
@@ -178,8 +176,9 @@ public:
         MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
         Opm::Valgrind::CheckDefined(mobility_);
 
+        // update the Saturation functions for the blackoil extensions.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().polymerPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().polymerSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
 
         Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
