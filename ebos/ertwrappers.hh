@@ -575,14 +575,12 @@ public:
 
         // the correct start time has not yet been set in the
         // simulator, so we extract it from the ECL deck->..
-        tm curTime = boost::posix_time::to_tm(timeMap.getStartTime(/*timeStepIdx=*/0));
-        double startTime = std::mktime(&curTime);
 
         ertHandle_ = ecl_sum_alloc_writer(caseName.c_str(),
                                           /*formatted=*/false,
                                           /*unified=*/true,
                                           /*joinString=*/":",
-                                          startTime,
+                                          timeMap.getStartTime(/*timeStepIdx=*/0),
                                           /*timeIsInDays=*/true, // if not, it's hours...
                                           eclGrid.getNX(),
                                           eclGrid.getNY(),
