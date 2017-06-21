@@ -175,7 +175,6 @@ public:
         // initialize the objects which deal with the PLYMAX keyword
         const auto& plymaxTables = tableManager.getPlymaxTables();
         unsigned numMixRegions = plymaxTables.size();
-        assert(numMixRegions == 1);// TODO: supports PLMIXNUM
         setNumMixRegions(numMixRegions);
         if (!plymaxTables.empty()) {
             for (unsigned mixRegionIdx = 0; mixRegionIdx < numMixRegions; ++ mixRegionIdx) {
@@ -903,8 +902,7 @@ public:
         waterViscosityCorrection_ = muWater * ( (1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective );
 
         // adjust water mobility
-        Evaluation& mobWater = asImp_().mobility_[waterPhaseIdx];
-        mobWater *= waterViscosityCorrection_ / resistanceFactor;
+        asImp_().mobility_[waterPhaseIdx] *= waterViscosityCorrection_ / resistanceFactor;
 
         // effectiveWaterViscosity / effectivePolymerViscosity
         polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
