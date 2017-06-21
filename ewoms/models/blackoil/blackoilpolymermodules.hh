@@ -366,7 +366,7 @@ public:
     static void registerParameters()
     {
         if (!enablePolymer)
-            // polymers have disabled at compile time
+            // polymers have been disabled at compile time
             return;
 
         Ewoms::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
@@ -379,7 +379,7 @@ public:
                                       Simulator& simulator)
     {
         if (!enablePolymer)
-            // polymers have disabled at compile time
+            // polymers have been disabled at compile time
             return;
 
         model.addOutputModule(new Ewoms::VtkBlackOilPolymerModule<TypeTag>(simulator));
@@ -388,7 +388,7 @@ public:
     static bool primaryVarApplies(unsigned pvIdx)
     {
         if (!enablePolymer)
-            // polymers have disabled at compile time
+            // polymers have been disabled at compile time
             return false;
 
         return pvIdx == polymerConcentrationIdx;
@@ -714,8 +714,8 @@ public:
             shearEffectMultiplier[i] = (1.0 + (viscosityMultiplier - 1.0)*shearEffectRefMultiplier[i]) / viscosityMultiplier;
             shearEffectMultiplier[i] = Opm::log(shearEffectMultiplier[i]);
         }
-        // store the logarithm velocity and logarithm multipliers in a table for easy look up and
-        // linear interpolation in the logarithm space.
+        // store the logarithmic velocity and logarithmic multipliers in a table for easy look up and
+        // linear interpolation in the logarithmic space.
         TabulatedFunction logShearEffectMultiplier = TabulatedFunction(numTableEntries, shearEffectRefLogVelocity, shearEffectMultiplier );
 
         // Find sheared velocity (v) that satisfies
@@ -732,7 +732,7 @@ public:
         };
 
         // Solve F = 0 using Newton
-        // Use log(v0) as inital value for u
+        // Use log(v0) as initial value for u
         auto u = v0AbsLog;
         bool converged = false;
         for (int i = 0; i < 20; ++i ) {
@@ -860,13 +860,15 @@ class BlackOilPolymerIntensiveQuantities
 
 
 public:
+
     /*!
-     * \brief Updates the saturation functions properties for the polymer module.
+     * \brief Update the intensive properties needed to handle polymers from the
+     *        primary variables
      *
      */
-    void polymerSatFuncUpdate_(const ElementContext& elemCtx,
-                               unsigned dofIdx,
-                               unsigned timeIdx)
+    void polymerPropertiesUpdate_(const ElementContext& elemCtx,
+                                  unsigned dofIdx,
+                                  unsigned timeIdx)
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
@@ -907,20 +909,9 @@ public:
         // effectiveWaterViscosity / effectivePolymerViscosity
         polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
 
-    }
-
-    /*!
-     * \brief Update the intensive properties needed to handle polymers from the
-     *        primary variables
-     *
-     */
-    void polymerPropertiesUpdate_(const ElementContext& elemCtx,
-                                  unsigned scvIdx,
-                                  unsigned timeIdx)
-    {
         // update rock properties
-        polymerDeadPoreVolume_ = PolymerModule::plyrockDeadPoreVolume(elemCtx, scvIdx, timeIdx);
-        polymerRockDensity_ = PolymerModule::plyrockRockDensityFactor(elemCtx, scvIdx, timeIdx);
+        polymerDeadPoreVolume_ = PolymerModule::plyrockDeadPoreVolume(elemCtx, dofIdx, timeIdx);
+        polymerRockDensity_ = PolymerModule::plyrockRockDensityFactor(elemCtx, dofIdx, timeIdx);
     }
 
     const Evaluation& polymerConcentration() const
@@ -966,11 +957,6 @@ class BlackOilPolymerIntensiveQuantities<TypeTag, false>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
 
 public:
-    void polymerSatFuncUpdate_(const ElementContext& elemCtx OPM_UNUSED,
-                               unsigned scvIdx OPM_UNUSED,
-                               unsigned timeIdx OPM_UNUSED)
-    { }
-
     void polymerPropertiesUpdate_(const ElementContext& elemCtx OPM_UNUSED,
                                   unsigned scvIdx OPM_UNUSED,
                                   unsigned timeIdx OPM_UNUSED)

@@ -176,10 +176,8 @@ public:
         MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
         Opm::Valgrind::CheckDefined(mobility_);
 
-        // update the Saturation functions for the blackoil extensions.
+        // update the Saturation functions for the blackoil solvent module.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().polymerSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-
 
         Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
 
