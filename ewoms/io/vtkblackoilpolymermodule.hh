@@ -49,7 +49,7 @@ NEW_TYPE_TAG(VtkBlackOilPolymer);
 NEW_PROP_TAG(EnablePolymer);
 NEW_PROP_TAG(EnableVtkOutput);
 NEW_PROP_TAG(VtkWritePolymerConcentration);
-NEW_PROP_TAG(VtkWritePolymerAlivePoreSpace);
+NEW_PROP_TAG(VtkWritePolymerDeadPoreVolume);
 NEW_PROP_TAG(VtkWritePolymerAdsorption);
 NEW_PROP_TAG(VtkWritePolymerRockDensity);
 NEW_PROP_TAG(VtkWritePolymerViscosityCorrection);
@@ -57,7 +57,7 @@ NEW_PROP_TAG(VtkWriteWaterViscosityCorrection);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkBlackOilPolymer, VtkWritePolymerConcentration, true);
-SET_BOOL_PROP(VtkBlackOilPolymer, VtkWritePolymerAlivePoreSpace, true);
+SET_BOOL_PROP(VtkBlackOilPolymer, VtkWritePolymerDeadPoreVolume, true);
 SET_BOOL_PROP(VtkBlackOilPolymer, VtkWritePolymerViscosityCorrection, true);
 SET_BOOL_PROP(VtkBlackOilPolymer, VtkWriteWaterViscosityCorrection, true);
 SET_BOOL_PROP(VtkBlackOilPolymer, VtkWritePolymerRockDensity, true);
@@ -106,8 +106,8 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePolymerConcentration,
                              "Include the concentration of the polymer component in the water phase "
                              "in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePolymerAlivePoreSpace,
-                             "Include the fraction of the \"alive\" pore space "
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePolymerDeadPoreVolume,
+                             "Include the fraction of the \"dead\" pore volume "
                              "in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePolymerRockDensity,
                              "Include the amount of already adsorbed polymer component"
@@ -137,8 +137,8 @@ public:
 
         if (polymerConcentrationOutput_())
             this->resizeScalarBuffer_(polymerConcentration_);
-        if (polymerAlivePoreSpaceOutput_())
-            this->resizeScalarBuffer_(polymerAlivePoreSpace_);
+        if (polymerDeadPoreVolumeOutput_())
+            this->resizeScalarBuffer_(polymerDeadPoreVolume_);
         if (polymerRockDensityOutput_())
             this->resizeScalarBuffer_(polymerRockDensity_);
         if (polymerAdsorptionOutput_())
@@ -169,9 +169,9 @@ public:
                 polymerConcentration_[globalDofIdx] =
                     Opm::scalarValue(intQuants.polymerConcentration());
 
-            if (polymerAlivePoreSpaceOutput_())
-                polymerAlivePoreSpace_[globalDofIdx] =
-                    Opm::scalarValue(intQuants.polymerAlivePoreSpace());
+            if (polymerDeadPoreVolumeOutput_())
+                polymerDeadPoreVolume_[globalDofIdx] =
+                    Opm::scalarValue(intQuants.polymerDeadPoreVolume());
 
             if (polymerRockDensityOutput_())
                 polymerRockDensity_[globalDofIdx] =
@@ -206,8 +206,8 @@ public:
         if (polymerConcentrationOutput_())
             this->commitScalarBuffer_(baseWriter, "polymer concentration", polymerConcentration_);
 
-        if (polymerAlivePoreSpaceOutput_())
-            this->commitScalarBuffer_(baseWriter, "alive pore volume fraction", polymerAlivePoreSpace_);
+        if (polymerDeadPoreVolumeOutput_())
+            this->commitScalarBuffer_(baseWriter, "dead pore volume fraction", polymerDeadPoreVolume_);
 
         if (polymerRockDensityOutput_())
             this->commitScalarBuffer_(baseWriter, "polymer rock density", polymerRockDensity_);
@@ -226,8 +226,8 @@ private:
     static bool polymerConcentrationOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerConcentration); }
 
-    static bool polymerAlivePoreSpaceOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerAlivePoreSpace); }
+    static bool polymerDeadPoreVolumeOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerDeadPoreVolume); }
 
     static bool polymerRockDensityOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerRockDensity); }
@@ -242,7 +242,7 @@ private:
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerViscosityCorrection); }
 
     ScalarBuffer polymerConcentration_;
-    ScalarBuffer polymerAlivePoreSpace_;
+    ScalarBuffer polymerDeadPoreVolume_;
     ScalarBuffer polymerRockDensity_;
     ScalarBuffer polymerAdsorption_;
     ScalarBuffer polymerViscosityCorrection_;

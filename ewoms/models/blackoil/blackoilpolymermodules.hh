@@ -370,7 +370,7 @@ public:
             // polymers have disabled at compile time
             return;
 
-        //Ewoms::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
+        Ewoms::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -383,7 +383,7 @@ public:
             // polymers have disabled at compile time
             return;
 
-        //model.addOutputModule(new Ewoms::VtkBlackOilPolymerModule<TypeTag>(simulator));
+        model.addOutputModule(new Ewoms::VtkBlackOilPolymerModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
