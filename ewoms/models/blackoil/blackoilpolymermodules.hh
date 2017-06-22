@@ -644,6 +644,11 @@ public:
         return plyviscViscosityMultiplierTable_[pvtnumRegionIdx];
     }
 
+    static const TabulatedFunction& plyviscViscosityMultiplierTable(unsigned pvtnumRegionIdx)
+    {
+        return plyviscViscosityMultiplierTable_[pvtnumRegionIdx];
+    }
+
     static const Scalar plymaxMaxConcentration(const ElementContext& elemCtx,
                                                unsigned scvIdx,
                                                unsigned timeIdx)
