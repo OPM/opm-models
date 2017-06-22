@@ -76,7 +76,7 @@ public:
     typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
     typedef Dune::VTKWriter<GridView> VtkWriter;
-#if DUNE_VERSION_NEWER(DUNE_GRID, 3, 0)
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2, 5)
     typedef std::shared_ptr< Dune::VTKFunction< GridView > > FunctionPtr;
 #else
     typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;

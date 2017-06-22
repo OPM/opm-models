@@ -38,6 +38,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
+#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
@@ -186,6 +187,7 @@ public:
                       << "\n"  << std::flush;
             succeeded = 0;
         }
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 5)
         catch (const Dune::Exception& e)
         {
             std::cout << "rank " << simulator_().gridView().comm().rank()
@@ -193,6 +195,7 @@ public:
                       << "\n"  << std::flush;
             succeeded = 0;
         }
+#endif
         catch (...)
         {
             std::cout << "rank " << simulator_().gridView().comm().rank()
