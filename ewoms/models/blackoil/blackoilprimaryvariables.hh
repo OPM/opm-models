@@ -459,7 +459,7 @@ public:
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,
                                                                      pg,
-                                                                     /*So=*/0.0,
+                                                                     /*So=*/ Scalar(0),
                                                                      SoMax);
 
             Scalar Rv = (*this)[Indices::compositionSwitchIdx];
