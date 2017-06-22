@@ -27,10 +27,8 @@
 #ifndef EWOMS_OVERLAPPING_SCALAR_PRODUCT_HH
 #define EWOMS_OVERLAPPING_SCALAR_PRODUCT_HH
 
-#if HAVE_MPI
-#include <mpi.h>
-#endif
-
+#include <dune/common/version.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/istl/scalarproducts.hh>
 
 namespace Ewoms {
@@ -45,43 +43,40 @@ class OverlappingScalarProduct
 {
 public:
     typedef typename OverlappingBlockVector::field_type field_type;
+    typedef typename Dune::CollectiveCommunication<typename Dune::MPIHelper::MPICommunicator> CollectiveCommunication;
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2, 5)
+    typedef typename Dune::ScalarProduct<OverlappingBlockVector>::real_type real_type;
+#else
+    typedef double real_type;
+#endif
 
     enum { category = Dune::SolverCategory::overlapping };
 
-    OverlappingScalarProduct(const Overlap& overlap) : overlap_(overlap)
+    OverlappingScalarProduct(const Overlap& overlap)
+        : overlap_(overlap), comm_( Dune::MPIHelper::getCollectiveCommunication() )
     {}
 
     field_type dot(const OverlappingBlockVector& x,
                    const OverlappingBlockVector& y)
     {
-        double sum = 0;
+        field_type sum = 0;
         size_t numLocal = overlap_.numLocal();
         for (unsigned localIdx = 0; localIdx < numLocal; ++localIdx) {
             if (overlap_.iAmMasterOf(static_cast<int>(localIdx)))
                 sum += x[localIdx] * y[localIdx];
         }
 
-        // compute the global sum
-        double sumGlobal = 0.0;
-#if HAVE_MPI
-        MPI_Allreduce(&sum,            // source buffer
-                      &sumGlobal,      // destination buffer
-                      1,               // number of objects in buffers
-                      MPI_DOUBLE,      // data type
-                      MPI_SUM,         // operation
-                      MPI_COMM_WORLD); // communicator
-#else
-        sumGlobal = sum;
-#endif // HAVE_MPI
-
-        return sumGlobal;
+        // return the global sum
+        return comm_.sum( sum );
     }
 
-    double norm(const OverlappingBlockVector& x)
+    real_type norm(const OverlappingBlockVector& x)
     { return std::sqrt(dot(x, x)); }
 
 private:
     const Overlap& overlap_;
+    const CollectiveCommunication comm_;
 };
 
 } // namespace Linear
