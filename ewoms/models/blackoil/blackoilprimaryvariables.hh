@@ -325,76 +325,99 @@ public:
      * meaningful manner. (e.g. if the gas phase appears and the composition switching
      * variable changes its meaning from the gas dissolution factor Rs to the gas
      * saturation Sg, the value for this variable is set to zero.)
+     * A Scalar eps can be passed to make the switching condition more strict.
+     * Useful for avoiding ocsilation in the primaryVarsMeaning.
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
-    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx)
+    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx, Scalar eps = 0.0)
     {
-        // this function accesses some low level functions directly for better
-        // performance (instead of going the canonical way through the
-        // IntensiveQuantities). The reason is that most intensive quantities are not
+        static const Scalar thresholdWaterFilledCell = 1.0 - eps;
+
+        // this function accesses quite a few black-oil specific low-level functions
+        // directly for better performance (instead of going the canonical way through
+        // the IntensiveQuantities). The reason is that most intensive quantities are not
         // required to be able to decide if the primary variables needs to be switched or
         // not, so it would be a waste to compute them.
-
         Scalar Sw = (*this)[Indices::waterSaturationIdx];
         if (primaryVarsMeaning() == Sw_po_Sg) {
-            // both hydrocarbon phases are present.
+
+            // special case for cells with almost only water
+            if (Sw >= thresholdWaterFilledCell) {
+
+                // make sure water saturations does not exceed 1.0
+                (*this)[Indices::waterSaturationIdx] = std::min(Sw, 1.0);
+
+                return false;
+            }
+
+            // phase equilibrium, i.e., both hydrocarbon phases are present.
             Scalar Sg = 0.0;
-            if( compositionSwitchEnabled )
-              Sg =  (*this)[Indices::compositionSwitchIdx];
+            if (compositionSwitchEnabled)
+                Sg = (*this)[Indices::compositionSwitchIdx];
+
             Scalar So = 1.0 - Sw - Sg - solventSaturation();
 
-            Scalar So2 = 1.0 - Sw;
-            if (Sg < 0.0 && So2 > 0.0 && FluidSystem::enableDissolvedGas()) {
-                // the gas phase disappeared, i.e., switch the primary variables to { Sw,
-                // po, xoG }.
+            Scalar So2 = 1.0 - Sw - solventSaturation();
+            if (Sg < -eps && So2 > 0.0 && FluidSystem::enableDissolvedGas()) {
+                // the hydrocarbon gas phase disappeared and some oil phase is left,
+                // i.e., switch the primary variables to { Sw, po, Rs }.
                 //
-                // by a lucky coincidence the pressure switching variable already
+                // by a "lucky" coincidence the pressure switching variable already
                 // represents the oil phase pressure, so we do not need to change
-                // this. For the gas mole fraction, we use the low level blackoil PVT
-                // objects to calculate the mole fraction of gas saturated oil.
+                // this. For the gas dissolution factor, we use the low-level blackoil
+                // PVT objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                So = 1.0;
-                Scalar SoMax = 1.0;
+                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
                 Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
                                                                                    po,
-                                                                                   So,
+                                                                                   So2,
                                                                                    SoMax);
-
                 setPrimaryVarsMeaning(Sw_po_Rs);
-                (*this)[Indices::pressureSwitchIdx] = po;
-                if( compositionSwitchEnabled )
+                if (compositionSwitchEnabled)
                     (*this)[Indices::compositionSwitchIdx] = RsSat;
+
+                // because more than one primary variable switch can occur at a time,
+                // call this method recursively
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
 
             Scalar Sg2 = 1.0 - Sw - solventSaturation();
-            if (So < 0.0 && Sg2 > 0.0 && FluidSystem::enableVaporizedOil()) {
-                // the oil phase disappeared, i.e., switch the primary variables to { Sw,
-                // pg, xgO }.
+            if (So < -eps && Sg2 > 0.0 && FluidSystem::enableVaporizedOil()) {
+                // the oil phase disappeared and some hydrocarbon gas phase is still
+                // present, i.e., switch the primary variables to { Sw, pg, Rv }.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
-                Scalar T = asImp_().temperature_();
-                So = 0.0;
-                Scalar SoMax = 1.0;
 
-                Scalar pC[numPhases];
+                // we only have the oil pressure readily available, but we need the gas
+                // pressure, i.e. we must determine capillary pressure
+                Scalar pC[numPhases] = { 0.0 };
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
                 computeCapillaryPressures_(pC, /*So=*/0.0, Sg2 + solventSaturation(), Sw, matParams);
                 Scalar pg = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
 
-                Scalar RvSat = FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
-                                                                                    T,
-                                                                                    pg,
-                                                                                    So,
-                                                                                    SoMax);
+                // we start at the Rv value that corresponds to that of oil-saturated
+                // hydrocarbon gas
+                Scalar T = asImp_().temperature_();
+                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar RvSat =
+                    FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
+                                                                         T,
+                                                                         pg,
+                                                                         0.0,
+                                                                         SoMax);
 
                 setPrimaryVarsMeaning(Sw_pg_Rv);
                 (*this)[Indices::pressureSwitchIdx] = pg;
-                if( compositionSwitchEnabled )
+                if (compositionSwitchEnabled)
                     (*this)[Indices::compositionSwitchIdx] = RvSat;
+
+                // because more than one primary variable switch can occur at a time,
+                // call this method recursively
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -402,39 +425,43 @@ public:
             return false;
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-            // Only the oil and the water phases are present. The gas phase appears as
-            // soon as more of the gas component is present in the oil phase than what
-            // the saturated phase contains. Note that we use the blackoil specific
-            // low-level PVT objects here for performance reasons.
-            Scalar T = asImp_().temperature_();
-            Scalar po = (*this)[Indices::pressureSwitchIdx];
-            Scalar So = 1 - Sw;
 
-            if (So <= 0.0) {
+            assert(compositionSwitchEnabled);
+
+            // special case for cells with almost only water
+            if (Sw >= thresholdWaterFilledCell) {
                 // switch back to phase equilibrium mode if the oil phase vanishes (i.e.,
                 // the water-only case)
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
-                (*this)[Indices::pressureSwitchIdx] = po;
-                if( compositionSwitchEnabled )
-                    (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
+                (*this)[Indices::waterSaturationIdx] = std::min(Sw, 1.0); // water saturation
+                (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
+
+                // because more than one primary variable switch can occur at a time,
+                // call this method recursively
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
 
-            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
-            Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
-
-            Scalar Rs = 0.0;
-            if( compositionSwitchEnabled )
-                Rs = (*this)[Indices::compositionSwitchIdx];
-            if (Rs > RsSat) {
+            // Only the oil and the water phases are present. The hydrocarbon gas phase
+            // appears as soon as more of the gas component is present in the oil phase
+            // than what saturated oil can hold.
+            Scalar T = asImp_().temperature_();
+            Scalar po = (*this)[Indices::pressureSwitchIdx];
+            Scalar So = 1.0 - Sw - solventSaturation();
+            Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            Scalar RsSat =
+                FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
+            Scalar Rs = (*this)[Indices::compositionSwitchIdx];
+            if (Rs > RsSat*(1.0 + eps)) {
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::pressureSwitchIdx] = po;
-                if( compositionSwitchEnabled )
-                    (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
+                (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
+
+                // because more than one primary variable switch can occur at a time,
+                // call this method recursively
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -443,57 +470,71 @@ public:
         }
         else {
             assert(primaryVarsMeaning() == Sw_pg_Rv);
+            assert(compositionSwitchEnabled);
 
-            // Only the gas and the water phases are present. The oil phase appears as
-            // soon as more of the oil component is present in the gas phase than what
-            // the saturated phase contains. Note that we use the blackoil specific
-            // low-level PVT objects here for performance reasons.
-            Scalar T = asImp_().temperature_();
             Scalar pg = (*this)[Indices::pressureSwitchIdx];
-            Scalar Sg = 1 - Sw - solventSaturation();
+            Scalar Sg = 1.0 - Sw - solventSaturation();
 
-            if (Sg <= 0.0) {
-                // switch back to phase equilibrium mode if the gas phase also vanishes
-                setPrimaryVarsMeaning(Sw_po_Sg);
-
+            // special case for cells with almost only water
+            if (Sw >= thresholdWaterFilledCell) {
+                // switch to phase equilibrium mode because the hydrocarbon gas phase
+                // disappears. here we need the capillary pressures to calculate the oil
+                // phase pressure using the gas phase pressure
                 Scalar pC[numPhases] = { 0.0 };
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
-                computeCapillaryPressures_(pC, /*So=*/0.0, /*Sg=*/solventSaturation(), Sw, matParams);
+                computeCapillaryPressures_(pC,
+                                           /*So=*/0.0,
+                                           /*Sg=*/Sg + solventSaturation(),
+                                           Sw,
+                                           matParams);
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
 
-                (*this)[Indices::waterSaturationIdx] = 1.0;
+                setPrimaryVarsMeaning(Sw_po_Sg);
+                (*this)[Indices::waterSaturationIdx] = std::min(Sw, 1.0);
                 (*this)[Indices::pressureSwitchIdx] = po;
-                if( compositionSwitchEnabled )
-                    (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
+                (*this)[Indices::compositionSwitchIdx] = 1.0 - (*this)[Indices::waterSaturationIdx]; // hydrocarbon gas saturation
+
+                // because more than one primary variable switch can occur at a time,
+                // call this method recursively
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
 
+            // Only the gas and the water phases are present. The oil phase appears as
+            // soon as more of the oil component is present in the hydrocarbon gas phase
+            // than what saturated gas contains. Note that we use the blackoil specific
+            // low-level PVT objects here for performance reasons.
+            Scalar T = asImp_().temperature_();
             Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,
                                                                      pg,
-                                                                     /*So=*/ Scalar(0),
+                                                                     /*So=*/Scalar(0.0),
                                                                      SoMax);
 
-            Scalar Rv = 0.0;
-            if( compositionSwitchEnabled )
-                Rv = (*this)[Indices::compositionSwitchIdx];
-            if (Rv > RvSat) {
-                // the oil phase appears, i.e., switch the primary variables to { Sw,
-                // po, Sg }.
-
-                Sg = 1.0 - Sw - solventSaturation();
-                Scalar pC[numPhases];
+            Scalar Rv = (*this)[Indices::compositionSwitchIdx];
+            if (Rv > RvSat*(1.0 + eps)) {
+                // switch to phase equilibrium mode because the oil phase appears. here
+                // we also need the capillary pressures to calculate the oil phase
+                // pressure using the gas phase pressure
+                Scalar pC[numPhases] = { 0.0 };
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
-                computeCapillaryPressures_(pC, /*So=*/0.0, Sg + solventSaturation(), Sw, matParams);
+                computeCapillaryPressures_(pC,
+                                           /*So=*/0.0,
+                                           /*Sg=*/Sg + solventSaturation(),
+                                           Sw,
+                                           matParams);
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
 
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::pressureSwitchIdx] = po;
-                if( compositionSwitchEnabled )
-                    (*this)[Indices::compositionSwitchIdx] = Sg; // gas saturation, i.e., So = 0
+                (*this)[Indices::compositionSwitchIdx] = Sg; // hydrocarbon gas saturation
+
+                // because more than one primary variable switch can occur at a time,
+                // call this method recursively
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }

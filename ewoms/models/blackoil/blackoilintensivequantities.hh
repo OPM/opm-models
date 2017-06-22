@@ -123,14 +123,14 @@ public:
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
 
         Evaluation Sg = 0.0;
-        if( compositionSwitchEnabled )
+        if (compositionSwitchEnabled)
         {
             if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
                 // -> threephase case
                 Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
             else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
                 // -> gas-water case
-                Sg = 1 - Sw;
+                Sg = 1.0 - Sw;
 
                 // deal with solvent
                 if (enableSolvent)
