@@ -728,11 +728,11 @@ public:
 
         // Set up the function
         // u = log(v)
-        auto F = [&logShearEffectMultiplier, &v0AbsLog](const auto& u) {
+        auto F = [&logShearEffectMultiplier, &v0AbsLog](const Evaluation& u) {
             return u + logShearEffectMultiplier.eval(u, true) - v0AbsLog;
         };
         // and its derivative
-        auto dF = [&logShearEffectMultiplier](const auto& u) {
+        auto dF = [&logShearEffectMultiplier](const Evaluation& u) {
             return 1 + logShearEffectMultiplier.evalDerivative(u, true);
         };
 
