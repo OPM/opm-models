@@ -87,6 +87,9 @@ public:
 
     }
 
+    void updatePolymer(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
+    { asImp_().updateShearMultipliersPerm(elemCtx, scvfIdx, timeIdx); }
+
 protected:
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }

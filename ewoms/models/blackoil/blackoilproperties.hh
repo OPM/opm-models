@@ -42,6 +42,8 @@ NEW_PROP_TAG(HeatConductionLaw);
 NEW_PROP_TAG(HeatConductionLawParams);
 //! Enable the ECL-blackoil extension for solvents. ("Second gas")
 NEW_PROP_TAG(EnableSolvent);
+//! Enable the ECL-blackoil extension for polymer.
+NEW_PROP_TAG(EnablePolymer);
 }} // namespace Properties, Ewoms
 
 #endif

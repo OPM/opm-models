@@ -78,6 +78,24 @@ public:
     { return 0; }
 
     /*!
+     * \brief Returns the index of the relevant region for solvent mixing functions
+     */
+    template <class Context>
+    unsigned miscnumRegionIndex(const Context& context OPM_UNUSED,
+                                unsigned spaceIdx OPM_UNUSED,
+                                unsigned timeIdx OPM_UNUSED) const
+    { return 0; }
+
+    /*!
+     * \brief Returns the index of the relevant region for polymer mixing functions
+     */
+    template <class Context>
+    unsigned plmixnumRegionIndex(const Context& context OPM_UNUSED,
+                                 unsigned spaceIdx OPM_UNUSED,
+                                 unsigned timeIdx OPM_UNUSED) const
+    { return 0; }
+
+    /*!
      * \brief Returns the compressibility of the porous medium of a cell
      */
     template <class Context>

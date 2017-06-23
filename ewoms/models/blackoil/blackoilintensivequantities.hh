@@ -31,6 +31,8 @@
 #include "blackoilproperties.hh"
 #include "blackoilfluidstate.hh"
 #include "blackoilsolventmodules.hh"
+#include "blackoilpolymermodules.hh"
+
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/common/Valgrind.hpp>
@@ -53,6 +55,7 @@ class BlackOilIntensiveQuantities
     : public GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities)
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
     , public BlackOilSolventIntensiveQuantities<TypeTag>
+    , public BlackOilPolymerIntensiveQuantities<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
@@ -68,6 +71,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+    enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -172,6 +176,7 @@ public:
         MaterialLaw::relativePermeabilities(mobility_, materialParams, fluidState_);
         Opm::Valgrind::CheckDefined(mobility_);
 
+        // update the Saturation functions for the blackoil solvent module.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
         Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
@@ -308,6 +313,8 @@ public:
         }
 
         asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
+
 
         // update the quantities which are required by the chosen
         // velocity model
@@ -376,6 +383,8 @@ public:
 
 private:
     friend BlackOilSolventIntensiveQuantities<TypeTag>;
+    friend BlackOilPolymerIntensiveQuantities<TypeTag>;
+
 
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
