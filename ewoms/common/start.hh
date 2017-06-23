@@ -234,10 +234,7 @@ static inline int start(int argc, char **argv)
         ThreadManager::init();
 
         // read the initial time step and the end time
-        double endTime;
-        double initialTimeStepSize;
-
-        endTime = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
+        Scalar endTime = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         if (endTime < -1e50) {
             if (myRank == 0)
                 Parameters::printUsage<TypeTag>(argv[0],
@@ -245,7 +242,7 @@ static inline int start(int argc, char **argv)
             return 1;
         }
 
-        initialTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+        Scalar initialTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
         if (initialTimeStepSize < -1e50) {
             if (myRank == 0)
                 Parameters::printUsage<TypeTag>(argv[0],

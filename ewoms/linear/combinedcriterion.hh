@@ -174,7 +174,7 @@ public:
      */
     void print(Scalar iter, std::ostream& os = std::cout) const override
     {
-        static constexpr Scalar eps = std::numeric_limits<Scalar>::min()*1e10;
+        const Scalar eps = std::numeric_limits<Scalar>::min()*1e10;
 
         os << std::setw(20) << iter << " ";
         os << std::setw(20) << absResidual() << " ";

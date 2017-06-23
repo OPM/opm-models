@@ -625,7 +625,7 @@ protected:
 
             const auto& r = currentResidual[dofIdx];
             for (unsigned eqIdx = 0; eqIdx < r.size(); ++eqIdx)
-                error_ = std::max(std::abs(r[eqIdx] * model().eqWeight(dofIdx, eqIdx)), error_);
+                error_ = Opm::max(std::abs(r[eqIdx] * model().eqWeight(dofIdx, eqIdx)), error_);
         }
 
         // take the other processes into account

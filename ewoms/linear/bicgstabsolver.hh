@@ -121,7 +121,7 @@ public:
     bool apply(Vector& x)
     {
         // epsilon used for detecting breakdowns
-        static constexpr Scalar breakdownEps = std::numeric_limits<Scalar>::min()*1e10;
+        const Scalar breakdownEps = std::numeric_limits<Scalar>::min() * Scalar(1e10);
 
         // start the stop watch for the solution proceedure, but make sure that it is
         // turned off regardless of how we leave the stadium. (i.e., that the timer gets

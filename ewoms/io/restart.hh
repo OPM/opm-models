@@ -72,10 +72,10 @@ class Restart
     /*!
      * \brief Return the restart file name.
      */
-    template <class GridView>
+    template <class GridView, class Scalar>
     static const std::string restartFileName_(const GridView& gridView,
                                               const std::string& simName,
-                                              double t)
+                                              Scalar t)
     {
         int rank = gridView.comm().rank();
         std::ostringstream oss;
@@ -163,8 +163,8 @@ public:
      * \brief Start reading a restart file at a certain simulated
      *        time.
      */
-    template <class Simulator>
-    void deserializeBegin(Simulator& simulator, double t)
+    template <class Simulator, class Scalar>
+    void deserializeBegin(Simulator& simulator, Scalar t)
     {
         fileName_ = restartFileName_(simulator.gridView(), simulator.problem().name(), t);
 
