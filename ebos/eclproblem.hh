@@ -28,11 +28,14 @@
 #ifndef EWOMS_ECL_PROBLEM_HH
 #define EWOMS_ECL_PROBLEM_HH
 
+//#define DISABLE_ALUGRID_SFC_ORDERING 1
+//#define EBOS_USE_ALUGRID 1
+
 // make sure that the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly
 // hacky...
 #if EBOS_USE_ALUGRID
 //#define DISABLE_ALUGRID_SFC_ORDERING 1
-#if !HAVE_DUNE_ALUGRID || !DUNE_VERSION_NEWER(DUNE_ALUGRID, 2,4)
+#if !HAVE_DUNE_ALUGRID
 #warning "ALUGrid was indicated to be used for the ECL black oil simulator, but this "
 #warning "requires the presence of dune-alugrid >= 2.4. Falling back to Dune::CpGrid"
 #undef EBOS_USE_ALUGRID
@@ -1054,7 +1057,7 @@ private:
     Scalar cellCenterDepth( const Element& element ) const
     {
         typedef typename Element :: Geometry Geometry;
-        static constexpr int zCoord = Geometry ::dimension - 1;
+        static constexpr int zCoord = Element :: dimension - 1;
         Scalar zz = 0.0;
 
         const Geometry geometry = element.geometry();

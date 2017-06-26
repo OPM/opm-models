@@ -174,27 +174,35 @@ namespace Ewoms
 
         enum { ioRank = 0 };
 
+        static const bool needsReordering = ! std::is_same<
+            typename GridManager::Grid, typename GridManager::EquilGrid > :: value ;
+
         CollectDataToIORank( const GridManager& gridManager )
             : toIORankComm_( ),
               isIORank_( gridManager.grid().comm().rank() == ioRank ),
               isParallel_( gridManager.grid().comm().size() > 1 )
         {
-            if ( !isParallel_ )
+            // index maps only have to be build when reordering is needed
+            if( ! needsReordering && ! isParallel_ )
             {
-                // no need to collect anything.
-                return;
+                return ;
             }
-            typedef typename GridManager::GridView GridView;
-            typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout>
-                ElementMapper;
 
             const CollectiveCommunication& comm = gridManager.grid().comm();
-            ElementMapper elemMapper(gridManager.gridView());
+
             {
                 std::set< int > send, recv;
                 // the I/O rank receives from all other ranks
                 if( isIORank() )
                 {
+                    typedef typename GridManager::EquilGrid::LeafGridView EquilGridView;
+                    const EquilGridView equilGridView = gridManager.equilGrid().leafGridView() ;
+
+                    typedef Dune::MultipleCodimMultipleGeomTypeMapper< EquilGridView, Dune::MCMGElementLayout>
+                        EquilElementMapper;
+
+                    EquilElementMapper equilElemMapper( equilGridView );
+
                     // the I/O rank needs a picture of the global grid, here we
                     // use equilGrid which represents a view on the global grid
                     const size_t globalSize = gridManager.equilGrid().leafGridView().size( 0 );
@@ -206,9 +214,9 @@ namespace Ewoms
                     const auto& elemEndIt = gridManager.equilGrid().leafGridView().template end<0>();
                     for (; elemIt != elemEndIt; ++elemIt) {
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
-                        int elemIdx = elemMapper.index(*elemIt );
+                        int elemIdx = equilElemMapper.index(*elemIt );
 #else
-                        int elemIdx = elemMapper.map(*elemIt );
+                        int elemIdx = equilElemMapper.map(*elemIt );
 #endif
                         int cartElemIdx = gridManager.equilCartesianIndexMapper().cartesianIndex(elemIdx);
                         globalCartesianIndex_[elemIdx] = cartElemIdx;
@@ -235,9 +243,16 @@ namespace Ewoms
                 IndexMapType distributedCartesianIndex;
                 distributedCartesianIndex.resize(gridSize, -1);
 
-                auto localView = gridManager.grid().leafGridView();
-                for( auto it = localView.template begin< 0 >(),
-                     end = localView.template end< 0 >(); it != end; ++it )
+                typedef typename GridManager::GridView LocalGridView;
+                const LocalGridView localGridView = gridManager.gridView() ;
+
+                typedef Dune::MultipleCodimMultipleGeomTypeMapper< LocalGridView, Dune::MCMGElementLayout>
+                    ElementMapper;
+
+                ElementMapper elemMapper( localGridView );
+
+                for( auto it = localGridView.template begin< 0, Dune::Interior_Partition >(),
+                     end = localGridView.template end< 0, Dune::Interior_Partition >(); it != end; ++it )
                 {
                     const auto element = *it ;
 #if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
@@ -248,10 +263,9 @@ namespace Ewoms
                     distributedCartesianIndex[elemIdx] = gridManager.cartesianIndex( elemIdx );
 
                     // only store interior element for collection
-                    if( element.partitionType() == Dune :: InteriorEntity )
-                    {
-                        localIndexMap_.push_back( elemIdx );
-                    }
+                    assert( element.partitionType() == Dune :: InteriorEntity );
+
+                    localIndexMap_.push_back( elemIdx );
                 }
 
                 // insert send and recv linkage to communicator
@@ -297,9 +311,9 @@ namespace Ewoms
                     {
                       it->second->resize( globalSize );
                     }
+
                     // the last index map is the local one
                     doUnpack( indexMaps.back(), buffer );
-
                 }
             }
 
@@ -308,7 +322,7 @@ namespace Ewoms
             {
                 // we should only get one link
                 if( link != 0 ) {
-                    OPM_THROW(std::logic_error,"link in method pack is not 0 as execpted");
+                    OPM_THROW(std::logic_error,"link in method pack is not 0 as expected");
                 }
 
                 size_t buffers = bufferList_.size();
@@ -388,11 +402,13 @@ namespace Ewoms
         template <class BufferList>
         void collect( BufferList& bufferList ) const
         {
-            if ( !isParallel_ )
+            // index maps only have to be build when reordering is needed
+            if( ! needsReordering && ! isParallel_ )
             {
-                // no need to collect anything.
-                return;
+                return ;
             }
+
+            // this also packs and unpacks the local buffers one ioRank
             PackUnPackOutputBuffers< BufferList >
                 packUnpack( bufferList,
                             localIndexMap_,
@@ -400,8 +416,15 @@ namespace Ewoms
                             numCells(),
                             isIORank() );
 
+            if ( ! isParallel_ )
+            {
+                // no need to collect anything.
+                return;
+            }
+
             //toIORankComm_.exchangeCached( packUnpack );
             toIORankComm_.exchange( packUnpack );
+
 #ifndef NDEBUG
             // mkae sure every process is on the same page
             toIORankComm_.barrier();

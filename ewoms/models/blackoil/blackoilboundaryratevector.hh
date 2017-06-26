@@ -164,7 +164,7 @@ public:
         // unit normal
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             Scalar& val = this->operator[](eqIdx);
-            val = std::max<Scalar>(0.0, val);
+            val = std::max( Scalar(0), val);
         }
     }
 
@@ -172,7 +172,7 @@ public:
      * \copydoc ImmiscibleBoundaryRateVector::setNoFlow
      */
     void setNoFlow()
-    { (*this) = 0.0; }
+    { (*this) = Scalar(0); }
 };
 
 } // namespace Ewoms

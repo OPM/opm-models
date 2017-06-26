@@ -354,7 +354,7 @@ public:
     {
         Scalar maximumTimeStepSize =
             std::min(episodeMaxTimeStepSize(),
-                     std::max<Scalar>(0.0, endTime() - this->time()));
+                     std::max( Scalar(0), endTime() - this->time()));
 
         return std::min(timeStepSize_, maximumTimeStepSize);
     }
@@ -386,7 +386,7 @@ public:
     {
         assert(timeStepSize_ >= 0.0);
         Scalar eps =
-            std::max(std::abs(this->time()), timeStepSize())
+            std::max(Scalar(std::abs(this->time())), timeStepSize())
             *std::numeric_limits<Scalar>::epsilon()*1e3;
         return finished_ || (this->time()*(1.0 + eps) >= endTime());
     }
