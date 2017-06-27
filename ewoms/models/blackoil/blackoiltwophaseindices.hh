@@ -23,10 +23,10 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilIndices
+ * \copydoc Ewoms::BlackOilTwoPhaseIndices
  */
-#ifndef EWOMS_BLACK_OIL_INDICES_HH
-#define EWOMS_BLACK_OIL_INDICES_HH
+#ifndef EWOMS_BLACK_OIL_TWO_PHASE_INDICES_HH
+#define EWOMS_BLACK_OIL_TWO_PHASE_INDICES_HH
 
 namespace Ewoms {
 
@@ -36,10 +36,10 @@ namespace Ewoms {
  * \brief The primary variable and equation indices for the black-oil model.
  */
 template <unsigned numSolventsV, unsigned numPolymersV, unsigned PVOffset>
-struct BlackOilIndices
+struct BlackOilTwoPhaseIndices
 {
     //! Number of phases active at all times
-    static const int numPhases = 3;
+    static const int numPhases = 2;
 
     //! Number of solvent components considered
     static const int numSolvents = numSolventsV;
@@ -50,9 +50,9 @@ struct BlackOilIndices
     //! The number of equations
     static const int numEq = numPhases + numSolvents + numPolymers;
 
-    ////////
+    //////////////////////////////
     // Primary variable indices
-    ////////
+    //////////////////////////////
 
     //! The index of the water saturation
     static const int waterSaturationIdx  = PVOffset + 0;
@@ -64,23 +64,21 @@ struct BlackOilIndices
      * \brief Index of the switching variable which determines the composition of the
      *        hydrocarbon phases.
      *
-     * Depending on the phases present, this variable is either interpreted as the
-     * saturation of the gas phase, as the mole fraction of the gas component in the oil
-     * phase or as the mole fraction of the oil component in the gas phase.
+     * \note For Two-Phase models this is disabled.
      */
-    static const int compositionSwitchIdx = PVOffset + 2;
+    static const int compositionSwitchIdx = -1000000;
 
     //! Index of the primary variable for the first solvent
-    static const int solventSaturationIdx  = compositionSwitchIdx + numSolvents;
+    static const int solventSaturationIdx  = PVOffset + numPhases;
 
     //! Index of the primary variable for the first polymer
     static const int polymerConcentrationIdx  = solventSaturationIdx + numPolymers;
 
     // numSolvents-1 primary variables follow
 
-    ////////
+    //////////////////////
     // Equation indices
-    ////////
+    //////////////////////
 
     //! Index of the continuity equation of the first phase
     static const int conti0EqIdx = PVOffset + 0;
