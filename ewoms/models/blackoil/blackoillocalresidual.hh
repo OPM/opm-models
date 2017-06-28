@@ -133,7 +133,8 @@ public:
         PolymerModule::addStorage(storage, intQuants);
 
         // deal with the two-phase cases for three-phase model
-        if ( ! compositionSwitchEnabled ) {
+        if ( compositionSwitchEnabled && FluidSystem::numActivePhases() < 3 )
+        {
             assert(FluidSystem::numActivePhases() == 2);
             const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
             if (!FluidSystem::phaseIsActive(oilPhaseIdx)) {
