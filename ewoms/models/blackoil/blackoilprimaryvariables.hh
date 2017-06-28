@@ -76,6 +76,9 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { pressureSwitchIdx = Indices::pressureSwitchIdx };
     enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
 
+    // if compositionSwitchIdx is negative then this feature is disabled in Indices
+    static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
+
     // phase indices from the fluid system
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
@@ -292,14 +295,16 @@ public:
         if (primaryVarsMeaning() == Sw_po_Sg) {
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
-            (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
+            if( compositionSwitchEnabled )
+                (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
             const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
 
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
-            (*this)[compositionSwitchIdx] = Rs;
+            if( compositionSwitchEnabled )
+                (*this)[compositionSwitchIdx] = Rs;
         }
         else {
             assert(primaryVarsMeaning() == Sw_pg_Rv);
@@ -307,7 +312,8 @@ public:
             const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
             (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
-            (*this)[compositionSwitchIdx] = Rv;
+            if( compositionSwitchEnabled )
+                (*this)[compositionSwitchIdx] = Rv;
         }
     }
 
@@ -333,7 +339,9 @@ public:
         Scalar Sw = (*this)[Indices::waterSaturationIdx];
         if (primaryVarsMeaning() == Sw_po_Sg) {
             // both hydrocarbon phases are present.
-            Scalar Sg = (*this)[Indices::compositionSwitchIdx];
+            Scalar Sg = 0.0;
+            if( compositionSwitchEnabled )
+              Sg =  (*this)[Indices::compositionSwitchIdx];
             Scalar So = 1.0 - Sw - Sg - solventSaturation();
 
             Scalar So2 = 1.0 - Sw;
@@ -357,7 +365,8 @@ public:
 
                 setPrimaryVarsMeaning(Sw_po_Rs);
                 (*this)[Indices::pressureSwitchIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = RsSat;
+                if( compositionSwitchEnabled )
+                    (*this)[Indices::compositionSwitchIdx] = RsSat;
 
                 return true;
             }
@@ -384,7 +393,8 @@ public:
 
                 setPrimaryVarsMeaning(Sw_pg_Rv);
                 (*this)[Indices::pressureSwitchIdx] = pg;
-                (*this)[Indices::compositionSwitchIdx] = RvSat;
+                if( compositionSwitchEnabled )
+                    (*this)[Indices::compositionSwitchIdx] = RvSat;
 
                 return true;
             }
@@ -406,7 +416,8 @@ public:
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
                 (*this)[Indices::pressureSwitchIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
+                if( compositionSwitchEnabled )
+                    (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
 
                 return true;
             }
@@ -414,13 +425,16 @@ public:
             Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
             Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
 
-            Scalar Rs = (*this)[Indices::compositionSwitchIdx];
+            Scalar Rs = 0.0;
+            if( compositionSwitchEnabled )
+                Rs = (*this)[Indices::compositionSwitchIdx];
             if (Rs > RsSat) {
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::pressureSwitchIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
+                if( compositionSwitchEnabled )
+                    (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
 
                 return true;
             }
@@ -449,7 +463,8 @@ public:
 
                 (*this)[Indices::waterSaturationIdx] = 1.0;
                 (*this)[Indices::pressureSwitchIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
+                if( compositionSwitchEnabled )
+                    (*this)[Indices::compositionSwitchIdx] = 0.0; // gas saturation
 
                 return true;
             }
@@ -462,7 +477,9 @@ public:
                                                                      /*So=*/ Scalar(0),
                                                                      SoMax);
 
-            Scalar Rv = (*this)[Indices::compositionSwitchIdx];
+            Scalar Rv = 0.0;
+            if( compositionSwitchEnabled )
+                Rv = (*this)[Indices::compositionSwitchIdx];
             if (Rv > RvSat) {
                 // the oil phase appears, i.e., switch the primary variables to { Sw,
                 // po, Sg }.
@@ -475,7 +492,8 @@ public:
 
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::pressureSwitchIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = Sg; // gas saturation, i.e., So = 0
+                if( compositionSwitchEnabled )
+                    (*this)[Indices::compositionSwitchIdx] = Sg; // gas saturation, i.e., So = 0
 
                 return true;
             }

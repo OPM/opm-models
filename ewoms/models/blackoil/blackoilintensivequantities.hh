@@ -70,6 +70,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
 
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -81,6 +82,10 @@ class BlackOilIntensiveQuantities
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { dimWorld = GridView::dimensionworld };
+    enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
+
+    // if compositionSwitchIdx is negative then this feature is disabled in Indices
+    static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -120,22 +125,26 @@ public:
         // extract the water and the gas saturations for convenience
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
 
-        Evaluation Sg;
-        if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
-            // -> threephase case
-            Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-        else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
-            // -> gas-water case
-            Sg = 1 - Sw;
+        Evaluation Sg = 0.0;
+        if( compositionSwitchEnabled )
+        {
+            if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
+                // -> threephase case
+                Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
+            else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
+                // -> gas-water case
+                Sg = 1 - Sw;
 
-            // deal with solvent
-            if (enableSolvent)
-                Sg -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx);
-        }
-        else {
-            assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs);
-            // -> oil-water case
-            Sg = 0.0;
+                // deal with solvent
+                if (enableSolvent)
+                    Sg -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx);
+            }
+            else
+            {
+                assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs);
+                // -> oil-water case
+                Sg = 0.0;
+            }
         }
 
         Opm::Valgrind::CheckDefined(Sg);

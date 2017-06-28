@@ -64,6 +64,10 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
+    enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
+
+    // if compositionSwitchIdx is negative then this feature is disabled in Indices
+    static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef BlackOilSolventModule<TypeTag> SolventModule;
@@ -128,8 +132,9 @@ public:
         // deal with polymer (if present)
         PolymerModule::addStorage(storage, intQuants);
 
-        // deal with the two-phase cases
-        if (FluidSystem::numActivePhases() != 3) {
+        // deal with the two-phase cases for three-phase model
+        if ( compositionSwitchEnabled && FluidSystem::numActivePhases() < 3 )
+        {
             assert(FluidSystem::numActivePhases() == 2);
             const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
             if (!FluidSystem::phaseIsActive(oilPhaseIdx)) {
