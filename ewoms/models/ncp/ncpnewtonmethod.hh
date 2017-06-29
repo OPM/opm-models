@@ -132,12 +132,33 @@ protected:
         nextValue = currentValue;
         nextValue -= update;
 
-        // put crash barriers along the update path at the update
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx)
-            saturationChop_(nextValue[saturation0Idx + phaseIdx],
-                            currentValue[saturation0Idx + phaseIdx]);
-        pressureChop_(nextValue[pressure0Idx],
-                      currentValue[pressure0Idx]);
+        ////
+        // put crash barriers along the update path
+        ////
+
+        // saturations: limit the change of any saturation to at most 20%
+        Scalar sumSatDelta = 0.0;
+        Scalar maxSatDelta = 0.0;
+        for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+            maxSatDelta = std::max(std::abs(update[saturation0Idx + phaseIdx]),
+                                   maxSatDelta);
+            sumSatDelta += update[saturation0Idx + phaseIdx];
+        }
+        maxSatDelta = std::max(std::abs(- sumSatDelta), maxSatDelta);
+
+        if (maxSatDelta > 0.2) {
+            Scalar alpha = 0.2/maxSatDelta;
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases - 1; ++phaseIdx) {
+                nextValue[saturation0Idx + phaseIdx] =
+                    currentValue[saturation0Idx + phaseIdx]
+                    - alpha*update[saturation0Idx + phaseIdx];
+            }
+        }
+
+        // limit pressure reference change to 20% of the total value per iteration
+        clampValue_(nextValue[pressure0Idx],
+                    currentValue[pressure0Idx]*0.8,
+                    currentValue[pressure0Idx]*1.2);
 
         // fugacities
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
@@ -182,19 +203,6 @@ protected:
 private:
     void clampValue_(Scalar& val, Scalar minVal, Scalar maxVal) const
     { val = std::max(minVal, std::min(val, maxVal)); }
-
-    void pressureChop_(Scalar& val, Scalar oldVal) const
-    {
-        // limit pressure updates to 20% per iteration
-        clampValue_(val, oldVal * 0.8, oldVal * 1.2);
-    }
-
-    void saturationChop_(Scalar& val, Scalar oldVal) const
-    {
-        // limit saturation updates to 20% per iteration
-        const Scalar maxDelta = 0.20;
-        clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
-    }
 };
 } // namespace Ewoms
 
