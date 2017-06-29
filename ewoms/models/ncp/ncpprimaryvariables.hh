@@ -163,9 +163,19 @@ public:
         EnergyModule::setPriVarTemperatures(*this, fluidState);
 
         // assign fugacities.
+        typename FluidSystem::template ParameterCache<Scalar> paramCache;
+        paramCache.updatePhase(fluidState, refPhaseIdx);
+        Scalar pRef = FsToolbox::value(fluidState.pressure(refPhaseIdx));
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            Scalar fug = FsToolbox::value(fluidState.fugacity(refPhaseIdx, compIdx));
-            (*this)[fugacity0Idx + compIdx] = fug;
+            // we always compute the fugacities because they are quite exotic quantities
+            // and this easily forgotten to be specified
+            Scalar fugCoeff =
+                FluidSystem::template fugacityCoefficient<FluidState, Scalar>(fluidState,
+                                                                              paramCache,
+                                                                              refPhaseIdx,
+                                                                              compIdx);
+            (*this)[fugacity0Idx + compIdx] =
+                fugCoeff*fluidState.moleFraction(refPhaseIdx, compIdx)*pRef;
         }
 
         // assign pressure of first phase
