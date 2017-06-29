@@ -250,6 +250,10 @@ SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
 //! Most models use extensive quantities for their storage term (so far, only the Stokes
 //! model does), so we disable this by default.
 SET_BOOL_PROP(FvBaseDiscretization, ExtensiveStorageTerm, false);
+
+// use volumetric residuals is default
+SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
+
 } // namespace Properties
 
 /*!
