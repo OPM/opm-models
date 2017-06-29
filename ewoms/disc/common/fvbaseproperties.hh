@@ -156,6 +156,7 @@ NEW_PROP_TAG(DiscBaseOutputModule);
 //! The class to create grid communication handles
 NEW_PROP_TAG(GridCommHandleFactory);
 
+
 /*!
  * \brief The OpenMP threads manager
  */
@@ -289,6 +290,9 @@ NEW_PROP_TAG(TimeDiscHistorySize);
  * Most models don't need this, but the (Navier-)Stokes ones do...
  */
 NEW_PROP_TAG(RequireScvCenterGradients);
+
+//! \brief Specify whether to use volumetric residuals or not
+NEW_PROP_TAG(UseVolumetricResidual);
 
 }} // namespace Properties, Ewoms
 
