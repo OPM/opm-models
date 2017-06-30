@@ -263,7 +263,7 @@ public:
             oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
         else if (pvIdx == Indices::pressureSwitchIdx)
             oss << "pressure_switching";
-        else if (pvIdx == Indices::compositionSwitchIdx)
+        else if (static_cast<int>(pvIdx) == Indices::compositionSwitchIdx)
             oss << "composition_switching";
         else if (SolventModule::primaryVarApplies(pvIdx))
             return SolventModule::primaryVarName(pvIdx);

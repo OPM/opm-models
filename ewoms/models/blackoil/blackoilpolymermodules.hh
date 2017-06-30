@@ -711,11 +711,11 @@ public:
         // where M(v) is computed from user input
         // and P = viscosityMultiplier
         const std::vector<Scalar>& shearEffectRefMultiplier = plyshlogShearEffectRefMultiplier_[pvtnumRegionIdx];
-        int numTableEntries = shearEffectRefLogVelocity.size();
-        assert (shearEffectRefMultiplier.size() == numTableEntries);
+        size_t numTableEntries = shearEffectRefLogVelocity.size();
+        assert(shearEffectRefMultiplier.size() == numTableEntries);
 
         std::vector<Scalar> shearEffectMultiplier(numTableEntries, 1.0);
-        for (int i = 0; i < numTableEntries; ++i) {
+        for (size_t i = 0; i < numTableEntries; ++i) {
             shearEffectMultiplier[i] = (1.0 + (viscosityMultiplier - 1.0)*shearEffectRefMultiplier[i]) / viscosityMultiplier;
             shearEffectMultiplier[i] = Opm::log(shearEffectMultiplier[i]);
         }
