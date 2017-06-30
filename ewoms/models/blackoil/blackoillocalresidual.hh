@@ -121,8 +121,9 @@ public:
         unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
         storage[conti0EqIdx + waterCompIdx] *=
             FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-        storage[conti0EqIdx + gasCompIdx] *=
-            FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+        if (compositionSwitchEnabled)
+            storage[conti0EqIdx + gasCompIdx] *=
+                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
         storage[conti0EqIdx + oilCompIdx] *=
             FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
 
@@ -168,8 +169,7 @@ public:
     {
         assert(timeIdx == 0);
 
-        for (unsigned compIdx = 0; compIdx < numComponents; ++ compIdx)
-            flux[conti0EqIdx + compIdx] = 0.0;
+        flux = 0.0;
 
         const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
         unsigned interiorIdx = extQuants.interiorIndex();
