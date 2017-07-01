@@ -189,17 +189,6 @@ public:
                 evalPhaseFluxes_<Scalar>(flux, phaseIdx, extQuants, up);
         }
 
-        if (!blackoilConserveSurfaceVolume) {
-           for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-               unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
-               unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
-               const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
-               unsigned pvtRegionIdx = up.pvtRegionIndex();
-               Scalar refDensity = FluidSystem::referenceDensity(phaseIdx, pvtRegionIdx);
-               flux[conti0EqIdx + compIdx] *= refDensity;
-           }
-        }
-
         // deal with solvents (if present)
         SolventModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
@@ -227,29 +216,31 @@ protected:
                           const IntensiveQuantities& up) const
     {
         unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+        unsigned pvtRegionIdx = up.pvtRegionIndex();
         const auto& fs = up.fluidState();
 
         Evaluation surfaceVolumeFlux =
-                Toolbox::template decay<UpEval>(fs.invB(phaseIdx))
-                * extQuants.volumeFlux(phaseIdx);
+            Toolbox::template decay<UpEval>(fs.invB(phaseIdx))
+            * extQuants.volumeFlux(phaseIdx);
 
         flux[conti0EqIdx + compIdx] +=
-                surfaceVolumeFlux;
+            surfaceVolumeFlux *
+            FluidSystem::referenceDensity(phaseIdx, pvtRegionIdx);
 
         // dissolved gas (in the oil phase).
         if (phaseIdx == oilPhaseIdx && FluidSystem::enableDissolvedGas()) {
             flux[conti0EqIdx + gasCompIdx] +=
-                    Toolbox::template decay<UpEval>(fs.Rs())
-                    * surfaceVolumeFlux;
-
+                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx)
+                * Toolbox::template decay<UpEval>(fs.Rs())
+                * surfaceVolumeFlux;
         }
 
         // vaporized oil (in the gas phase).
         if (phaseIdx == gasPhaseIdx && FluidSystem::enableVaporizedOil()) {
             flux[conti0EqIdx + oilCompIdx] +=
-                    Toolbox::template decay<UpEval>(fs.Rv())
-                    * surfaceVolumeFlux;
-
+                FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx)
+                * Toolbox::template decay<UpEval>(fs.Rv())
+                * surfaceVolumeFlux;
         }
     }
 
