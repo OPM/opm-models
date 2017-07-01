@@ -250,6 +250,12 @@ SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
 //! Most models don't need the gradients at the center of the SCVs, so
 //! we disable them by default.
 SET_BOOL_PROP(FvBaseDiscretization, RequireScvCenterGradients, false);
+
+
+// use volumetric residuals is default
+SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
+
+
 } // namespace Properties
 
 /*!

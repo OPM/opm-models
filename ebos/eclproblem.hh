@@ -225,6 +225,7 @@ SET_BOOL_PROP(EclBaseProblem, EnableDebuggingChecks, true);
 
 // ebos handles the SWATINIT keyword by default
 SET_BOOL_PROP(EclBaseProblem, EnableSwatinit, true);
+
 } // namespace Properties
 
 /*!

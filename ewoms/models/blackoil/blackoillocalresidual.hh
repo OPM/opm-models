@@ -69,6 +69,8 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     // if compositionSwitchIdx is negative then this feature is disabled in Indices
     static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
 
+    static constexpr bool blackoilConserveSurfaceVolume = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume);
+
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
@@ -118,14 +120,16 @@ public:
         }
 
         // convert surface volumes to component masses
-        unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
-        storage[conti0EqIdx + waterCompIdx] *=
-            FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-        if (compositionSwitchEnabled)
-            storage[conti0EqIdx + gasCompIdx] *=
-                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-        storage[conti0EqIdx + oilCompIdx] *=
-            FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        if (!blackoilConserveSurfaceVolume) {
+            unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
+            storage[conti0EqIdx + waterCompIdx] *=
+                FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+            if (compositionSwitchEnabled)
+                storage[conti0EqIdx + gasCompIdx] *=
+                    FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+            storage[conti0EqIdx + oilCompIdx] *=
+                FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        }
 
         // deal with solvents (if present)
         SolventModule::addStorage(storage, intQuants);
