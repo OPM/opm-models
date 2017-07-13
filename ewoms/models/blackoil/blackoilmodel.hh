@@ -367,11 +367,7 @@ public:
     template <class DofEntity>
     void serializeEntity(std::ostream& outstream, const DofEntity& dof)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
-#else
-        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().map(dof));
-#endif
 
         // write phase state
         if (!outstream.good()) {
@@ -407,11 +403,7 @@ public:
     void deserializeEntity(std::istream& instream,
                            const DofEntity& dof)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
-#else
-        unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().map(dof));
-#endif
 
         // read in the "real" primary variables of the DOF
         auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];

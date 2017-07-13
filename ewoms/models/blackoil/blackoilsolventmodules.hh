@@ -643,11 +643,7 @@ public:
         if (!enableSolvent)
             return;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         unsigned dofIdx = model.dofMapper().index(dof);
-#else
-        unsigned dofIdx = model.dofMapper().map(dof);
-#endif
 
         const PrimaryVariables& priVars = model.solution(/*timeIdx=*/0)[dofIdx];
         outstream << priVars[solventSaturationIdx];
@@ -659,11 +655,7 @@ public:
         if (!enableSolvent)
             return;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         unsigned dofIdx = model.dofMapper().index(dof);
-#else
-        unsigned dofIdx = model.dofMapper().map(dof);
-#endif
 
         PrimaryVariables& priVars0 = model.solution(/*timeIdx=*/0)[dofIdx];
         PrimaryVariables& priVars1 = model.solution(/*timeIdx=*/1)[dofIdx];

@@ -73,11 +73,7 @@ public:
             if (vIt->partitionType() != Dune::InteriorEntity
                 && vIt->partitionType() != Dune::BorderEntity)
             {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
                 Index vIdx = static_cast<Index>(map_.index(*vIt));
-#else
-                Index vIdx = static_cast<Index>(map_.map(*vIt));
-#endif
                 blackList_.addIndex(vIdx);
             }
         }
@@ -98,11 +94,7 @@ public:
     void gather(MessageBufferImp& buff, const EntityType& e) const
     {
         buff.write(static_cast<int>(gridView_.comm().rank()));
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         buff.write(static_cast<int>(map_.index(e)));
-#else
-        buff.write(static_cast<int>(map_.map(e)));
-#endif
     }
 
     template <class MessageBufferImp, class EntityType>
@@ -110,11 +102,7 @@ public:
     {
         BorderIndex bIdx;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         bIdx.localIdx = static_cast<Index>(map_.index(e));
-#else
-        bIdx.localIdx = static_cast<Index>(map_.map(e));
-#endif
         {
             int tmp;
             buff.read(tmp);

@@ -477,11 +477,6 @@ class VcfvStencil
 public:
     typedef typename GridView::Traits::template Codim<dim>::Entity          Entity;
 private:
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
-    typedef typename GridView::Traits::template Codim<0>::EntityPointer     ElementPointer;
-    typedef typename GridView::Traits::template Codim<dim>::EntityPointer   EntityPointer;
-#endif
-
     typedef typename Element::Geometry Geometry;
     typedef Dune::FieldVector<Scalar,dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar,dimWorld> GlobalPosition;
@@ -821,11 +816,7 @@ public:
     VcfvStencil(const GridView& gridView, const VertexMapper& vertexMapper)
         : gridView_(gridView)
         , vertexMapper_( vertexMapper )
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         , element_(*gridView.template begin</*codim=*/0>())
-#else
-        , elementPtr_(gridView.template begin</*codim=*/0>())
-#endif
     {
         static bool localGeometriesInitialized = false;
         if (!localGeometriesInitialized) {
@@ -846,19 +837,11 @@ public:
      */
     void updateTopology(const Element& e)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         element_ = e;
 
         numVertices = e.subEntities(/*codim=*/dim);
         numEdges = e.subEntities(/*codim=*/dim-1);
         numFaces = (dim<3)?0:e.subEntities(/*codim=*/1);
-#else
-        elementPtr_ = ElementPointer(e);
-
-        numVertices = e.template count</*codim=*/dim>();
-        numEdges = e.template count</*codim=*/dim-1>();
-        numFaces = (dim<3)?0:e.template count</*codim=*/1>();
-#endif
 
         numBoundarySegments_ = 0; // TODO: really required here(?)
 
@@ -1061,13 +1044,8 @@ public:
 #if HAVE_DUNE_LOCALFUNCTIONS
     void updateCenterGradients()
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         const auto& localFiniteElement = feCache_.get(element_.type());
         const auto& geom = element_.geometry();
-#else
-        const auto& localFiniteElement = feCache_.get(elementPtr_->type());
-        const auto& geom = elementPtr_->geometry();
-#endif
 
         std::vector<ShapeJacobian> localJac;
 
@@ -1091,11 +1069,7 @@ public:
     { return numDof(); }
 
     Dune::PartitionType partitionType(unsigned scvIdx) const
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     { return element_.template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
-#else
-    { return elementPtr_->template subEntity</*codim=*/dim>(scvIdx)->partitionType(); }
-#endif
 
     const SubControlVolume& subControlVolume(unsigned scvIdx) const
     {
@@ -1123,30 +1097,17 @@ public:
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         return static_cast<unsigned>(vertexMapper_.subIndex(element_, static_cast<int>(dofIdx), /*codim=*/dim));
-#else
-        return static_cast<unsigned>(vertexMapper_.map(*elementPtr_, static_cast<int>(dofIdx), /*codim=*/dim));
-#endif
     }
 
     /*!
      * \brief Return the global space index given the index of a degree of
      *        freedom.
      */
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
-    Entity
-#else
-    EntityPointer
-#endif
-    entity(unsigned dofIdx) const
+    Entity entity(unsigned dofIdx) const
     {
         assert(0 <= dofIdx && dofIdx < numDof());
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         return element_.template subEntity<dim>(static_cast<int>(dofIdx));
-#else
-        return elementPtr_->template subEntity<dim>(static_cast<int>(dofIdx));
-#endif
     }
 
 private:
@@ -1392,11 +1353,7 @@ private:
     const GridView&     gridView_;
     const VertexMapper& vertexMapper_;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     Element element_;
-#else
-    ElementPointer elementPtr_;
-#endif
 
 #if HAVE_DUNE_LOCALFUNCTIONS
     static LocalFiniteElementCache feCache_;
