@@ -34,12 +34,14 @@
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
 
-#include <dune/common/classname.hh>
+#include <opm/material/densead/Math.hpp>
+
 #include <opm/common/Unused.hpp>
 #include <opm/common/Exceptions.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
 #include <dune/istl/istlexception.hh>
+#include <dune/common/classname.hh>
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
