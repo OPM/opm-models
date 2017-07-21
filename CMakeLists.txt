@@ -180,18 +180,6 @@ opm_add_test(finger_immiscible_ecfv_adaptive
              NO_COMPILE
              TEST_ARGS --enable-grid-adaptation=true --end-time=25e3)
 
-opm_add_test(test_stokes
-             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
-
-opm_add_test(test_stokes2c_ad
-             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
-
-opm_add_test(test_stokes2c_fd
-             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
-
-opm_add_test(test_stokesni
-             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
-
 foreach(tapp co2injection_flash_ni_vcfv
              co2injection_flash_ni_ecfv
              co2injection_flash_vcfv
@@ -300,7 +288,6 @@ opm_add_test(obstacle_pvs_restart
              DEPENDS obstacle_pvs
              DRIVER_ARGS --restart
              TEST_ARGS --pvs-verbosity=2 --end-time=30000)
-
 
 opm_add_test(tutorial1
              SOURCES tutorial/tutorial1.cc)
