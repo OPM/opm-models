@@ -71,20 +71,6 @@ public:
     { extrusionFactor_ = elemCtx.problem().extrusionFactor(elemCtx, dofIdx, timeIdx); }
 
     /*!
-     * \brief Update all gradients for a given control volume.
-     *
-     * \param elemCtx The execution context from which the method is called.
-     * \param dofIdx The index of the sub-control volume for which the
-     *               intensive quantities should be calculated.
-     * \param timeIdx The index for the time discretization for which
-     *                the intensive quantities should be calculated
-     */
-    void updateScvGradients(const ElementContext& elemCtx OPM_UNUSED,
-                            unsigned dofIdx OPM_UNUSED,
-                            unsigned timeIdx OPM_UNUSED)
-    { }
-
-    /*!
      * \brief Return how much a given sub-control volume is extruded.
      *
      * This means the factor by which a lower-dimensional (1D or 2D)

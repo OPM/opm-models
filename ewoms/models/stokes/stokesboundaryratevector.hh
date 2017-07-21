@@ -62,8 +62,10 @@ class StokesBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
 
 public:
     StokesBoundaryRateVector() : ParentType()
@@ -92,16 +94,18 @@ public:
      *                   of the system on the integration point of the
      *                   boundary segment.
      */
-    template <class Context, class FluidState>
+    template <class VelocityEval, class Context, class FluidState>
     void setFreeFlow(const Context& context,
                      unsigned bfIdx,
                      unsigned timeIdx,
-                     const DimVector& velocity, const FluidState& fluidState)
+                     const Dune::FieldVector<VelocityEval, dimWorld>& velocity,
+                     const FluidState& fluidState)
     {
         const auto& stencil = context.stencil(timeIdx);
         const auto& scvf = stencil.boundaryFace(bfIdx);
 
         unsigned insideScvIdx = context.interiorScvIndex(bfIdx, timeIdx);
+        unsigned focusDofIdx = context.focusDofIndex();
         //const auto& insideScv = stencil.subControlVolume(insideScvIdx);
         const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
@@ -109,55 +113,65 @@ public:
         const auto& normal = scvf.normal();
 
         // distance between the center of the SCV and center of the boundary face
-        DimVector distVec = stencil.subControlVolume(insideScvIdx).geometry().center();
-        const auto& scvPos = context.element().geometry().corner(static_cast<int>(insideScvIdx));
-        distVec.axpy(-1, scvPos);
+        DimVector distVec = context.element().geometry().corner(static_cast<int>(insideScvIdx));
+        distVec -= stencil.subControlVolume(insideScvIdx).geometry().center();
 
         Scalar dist = 0.0;
-        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            dist += distVec[dimIdx] * normal[dimIdx];
-        dist = std::abs(dist);
-
-        DimVector gradv[dimWorld];
-        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
-            // Approximation of the pressure gradient at the boundary
-            // segment's integration point.
-            gradv[axisIdx] = normal;
-            gradv[axisIdx] *= (velocity[axisIdx]
-                               - insideIntQuants.velocity()[axisIdx]) / dist;
-            Opm::Valgrind::CheckDefined(gradv[axisIdx]);
+        Evaluation volumeFlux = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            dist += distVec[dimIdx]*normal[dimIdx];
+            volumeFlux -= velocity[dimIdx]*normal[dimIdx];
         }
 
-        // specify the mass fluxes over the boundary
-        Scalar volumeFlux = 0;
-        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            volumeFlux += velocity[dimIdx]*normal[dimIdx];
-
+        // mass fluxes over the boundary
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updatePhase(fluidState, phaseIdx);
-        Scalar density = FluidSystem::density(fluidState, paramCache, phaseIdx);
-        Scalar molarDensity = density / fluidState.averageMolarMass(phaseIdx);
+
+        const auto& density = FluidSystem::density(fluidState, paramCache, phaseIdx);
+        const auto& molarDensity = density / Opm::scalarValue(fluidState.averageMolarMass(phaseIdx));
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[conti0EqIdx + compIdx] =
-                volumeFlux
-                * molarDensity
-                * fluidState.moleFraction(phaseIdx, compIdx);
+            if (volumeFlux > 0.0) {
+                // outflow
+                if (insideScvIdx == focusDofIdx)
+                    (*this)[conti0EqIdx + compIdx] =
+                        volumeFlux
+                        * insideIntQuants.fluidState().molarity(phaseIdx, compIdx);
+                else
+                    (*this)[conti0EqIdx + compIdx] =
+                        Opm::scalarValue(volumeFlux)
+                        * Opm::scalarValue(insideIntQuants.fluidState().molarity(phaseIdx, compIdx));
+            }
+            else {
+                // inflow
+                (*this)[conti0EqIdx + compIdx] =
+                    volumeFlux
+                    * molarDensity
+                    * fluidState.moleFraction(phaseIdx, compIdx);
+            }
         }
 
-        // calculate the momentum flux over the boundary
-        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
-            // calculate a row of grad v + (grad v)^T
-            DimVector tmp(0.0);
-            for (unsigned j = 0; j < dimWorld; ++j) {
-                tmp[j] = gradv[axisIdx][j] + gradv[j][axisIdx];
+        // momentum flux over the boundary
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            if (volumeFlux > 0.0) {
+                // outflow
+                if (insideScvIdx == focusDofIdx)
+                    (*this)[momentum0EqIdx + dimIdx] =
+                        - insideIntQuants.fluidState().density(phaseIdx)
+                        * normal[dimIdx]
+                        * velocity[dimIdx];
+                else
+                    (*this)[momentum0EqIdx + dimIdx] =
+                        - Opm::scalarValue(insideIntQuants.fluidState().density(phaseIdx))
+                        * normal[dimIdx]
+                        * Opm::scalarValue(velocity[dimIdx]);
             }
-
-            // the momentum flux due to viscous forces
-            Scalar tmp2 = 0.0;
-            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-                tmp2 += tmp[dimIdx]*normal[dimIdx];
-
-            (*this)[momentum0EqIdx + axisIdx] = -insideIntQuants.fluidState().viscosity(phaseIdx) * tmp2;
+            else {
+                // inflow
+                (*this)[momentum0EqIdx + dimIdx] =
+                    - density
+                    * normal[dimIdx]
+                    * velocity[dimIdx];
+            }
         }
 
         EnergyModule::setEnthalpyRate(*this, fluidState, phaseIdx, volumeFlux);
@@ -182,17 +196,25 @@ public:
                    const DimVector& velocity,
                    const FluidState& fluidState)
     {
+        const auto& stencil = context.stencil(timeIdx);
+        const auto& scvf = stencil.boundaryFace(bfIdx);
+
+        // the outer unit normal
+        const auto& normal = scvf.normal();
+
         const auto& intQuants = context.intensiveQuantities(bfIdx, timeIdx);
 
-        setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
+        Scalar velDir = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            velDir += Toolbox::value(velocity[dimIdx])*normal[dimIdx];
 
-        // don't let mass flow out
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = std::min<Scalar>(0.0, (*this)[conti0EqIdx + compIdx]);
-
-        // don't let momentum flow out
-        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            (*this)[momentum0EqIdx + axisIdx] = std::min<Scalar>(0.0, (*this)[momentum0EqIdx + axisIdx]);
+        // don't allow velocities to exhibit the same direction as the face normal
+        if (velDir > 0.0)
+            (*this) = 0.0;
+        else {
+            const auto& fluidState = intQuants.fluidState();
+            setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
+        }
     }
 
     /*!
@@ -201,22 +223,32 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    void setOutFlow(const Context& context, unsigned spaceIdx, unsigned timeIdx)
+    void setOutFlow(const Context& context, unsigned bfIdx, unsigned timeIdx)
     {
-        const auto& intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
+        const auto& stencil = context.stencil(timeIdx);
+        const auto& scvf = stencil.boundaryFace(bfIdx);
 
-        DimVector velocity = intQuants.velocity();
+        // the outer unit normal
+        const auto& normal = scvf.normal();
+
+        const auto& intQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        const EvalDimVector& velocity = intQuants.velocity();
+
+        Scalar velDir = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            velDir += Toolbox::value(velocity[dimIdx])*normal[dimIdx];
+        }
+
+        // don't allow velocities to exhibit the opposite direction as the face normal
+        if (velDir < 0.0)
+            (*this) = 0.0;
+        else {
+            const auto& fluidState = intQuants.fluidState();
+            setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
+        }
+
         const auto& fluidState = intQuants.fluidState();
-
-        setFreeFlow(context, spaceIdx, timeIdx, velocity, fluidState);
-
-        // don't let mass flow in
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] = std::max<Scalar>(0.0, (*this)[conti0EqIdx + compIdx]);
-
-        // don't let momentum flow in
-        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            (*this)[momentum0EqIdx + axisIdx] = std::max<Scalar>(0.0, (*this)[momentum0EqIdx + axisIdx]);
+        setFreeFlow(context, bfIdx, timeIdx, velocity, fluidState);
     }
 
     /*!
@@ -225,16 +257,32 @@ public:
      * \copydoc Doxygen::contextParams
      */
     template <class Context>
-    void setNoFlow(const Context& context, unsigned spaceIdx, unsigned timeIdx)
+    void setNoFlow(const Context& context,
+                   unsigned spaceIdx,
+                   unsigned timeIdx)
     {
-        static DimVector v0(0.0);
+        // due to shear stresses, there usually is a flux of momentum over the boundary
+        // even if there is no mass flux. we can thus treat the boundary segment as if it
+        // was free-flow but only use the part of the velocity that is perpendicular to
+        // the face normal
 
         const auto& intQuants = context.intensiveQuantities(spaceIdx, timeIdx);
-        const auto& fluidState = intQuants.fluidState(); // don't care
+        const auto& stencil = context.stencil(timeIdx);
+        const auto& scvf = stencil.boundaryFace(spaceIdx);
+        const auto& normal = scvf.normal();
+        const auto& velocity = intQuants.velocity();
 
-        // no flow of mass and no slip for the momentum
-        setFreeFlow(context, spaceIdx, timeIdx,
-                    /*velocity = */ v0, fluidState);
+        auto beta = velocity[0];
+        beta = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            beta += velocity[dimIdx]*normal[dimIdx];
+
+        auto projectedVelocity = velocity;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            projectedVelocity[dimIdx] = velocity[dimIdx] - beta*normal[dimIdx];
+
+        const auto& fluidState = intQuants.fluidState();
+        setFreeFlow(context, spaceIdx, timeIdx, projectedVelocity, fluidState);
     }
 };
 

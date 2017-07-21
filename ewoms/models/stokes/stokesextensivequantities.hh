@@ -55,6 +55,7 @@ class StokesExtensiveQuantities
     : public EnergyExtensiveQuantities<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)>
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -64,6 +65,7 @@ class StokesExtensiveQuantities
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
     typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
@@ -107,23 +109,23 @@ public:
         VelocityCallback<TypeTag> velocityCallback(elemCtx);
         VelocityComponentCallback<TypeTag> velocityComponentCallback(elemCtx);
 
-        pressure_ = gradCalc.calculateValue(elemCtx, scvfIdx, pressureCallback);
+        pressure_ = gradCalc.calculateScalarValue(elemCtx, scvfIdx, pressureCallback);
         gradCalc.calculateGradient(pressureGrad_, elemCtx, scvfIdx, pressureCallback);
-        density_ = gradCalc.calculateValue(elemCtx, scvfIdx, densityCallback);
-        molarDensity_ = gradCalc.calculateValue(elemCtx, scvfIdx, molarDensityCallback);
-        viscosity_ = gradCalc.calculateValue(elemCtx, scvfIdx, viscosityCallback);
-        velocity_ = gradCalc.calculateValue(elemCtx, scvfIdx, velocityCallback);
+        density_ = gradCalc.calculateScalarValue(elemCtx, scvfIdx, densityCallback);
+        molarDensity_ = gradCalc.calculateScalarValue(elemCtx, scvfIdx, molarDensityCallback);
+        viscosity_ = gradCalc.calculateScalarValue(elemCtx, scvfIdx, viscosityCallback);
 
+        volumeFlux_ = 0.0;
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             velocityComponentCallback.setDimIndex(dimIdx);
             gradCalc.calculateGradient(velocityGrad_[dimIdx],
                                        elemCtx,
                                        scvfIdx,
                                        velocityComponentCallback);
-        }
 
-        volumeFlux_ = (velocity_ * normal_);
-        Opm::Valgrind::CheckDefined(volumeFlux_);
+            volumeFlux_ += velocity_[dimIdx]*normal_[dimIdx];
+            Opm::Valgrind::CheckDefined(volumeFlux_);
+        }
 
         // set the upstream and downstream DOFs
         upstreamIdx_ = scvf.interiorIndex();
@@ -158,7 +160,7 @@ public:
      * \brief Return the pressure \f$\mathrm{[Pa]}\f$ at the integration
      *        point.
      */
-    Scalar pressure() const
+    const Evaluation& pressure() const
     { return pressure_; }
 
     /*!
@@ -166,58 +168,58 @@ public:
      * integration
      *        point.
      */
-    Scalar density() const
+    const Evaluation& density() const
     { return density_; }
 
     /*!
      * \brief Return the molar density \f$ \mathrm{[mol/m^3]} \f$ at the
      * integration point.
      */
-    Scalar molarDensity() const
+    const Evaluation& molarDensity() const
     { return molarDensity_; }
 
     /*!
      * \brief Return the viscosity \f$ \mathrm{[m^2/s]} \f$ at the integration
      *        point.
      */
-    Scalar viscosity() const
+    const Evaluation& viscosity() const
     { return viscosity_; }
 
     /*!
      * \brief Return the pressure gradient at the integration point.
      */
-    const DimVector& pressureGrad() const
+    const EvalDimVector& pressureGrad() const
     { return pressureGrad_; }
 
     /*!
      * \brief Return the velocity vector at the integration point.
      */
-    const DimVector& velocity() const
+    const EvalDimVector& velocity() const
     { return velocity_; }
 
     /*!
      * \brief Return the velocity gradient at the integration
      *        point of a face.
      */
-    const DimVector& velocityGrad(unsigned axisIdx) const
+    const EvalDimVector& velocityGrad(unsigned axisIdx) const
     { return velocityGrad_[axisIdx]; }
 
     /*!
      * \brief Return the eddy viscosity (if implemented).
      */
     Scalar eddyViscosity() const
-    { return 0; }
+    { return 0.0; }
 
     /*!
     * \brief Return the eddy diffusivity (if implemented).
     */
     Scalar eddyDiffusivity() const
-    { return 0; }
+    { return 0.0; }
 
     /*!
      * \brief Return the volume flux of mass
      */
-    Scalar volumeFlux(unsigned phaseIdx OPM_UNUSED) const
+    const Evaluation& volumeFlux(unsigned phaseIdx OPM_UNUSED) const
     { return volumeFlux_; }
 
     /*!
@@ -281,17 +283,17 @@ private:
     bool onBoundary_;
 
     // values at the integration point
-    Scalar density_;
-    Scalar molarDensity_;
-    Scalar viscosity_;
-    Scalar pressure_;
-    Scalar volumeFlux_;
-    DimVector velocity_;
+    Evaluation density_;
+    Evaluation molarDensity_;
+    Evaluation viscosity_;
+    Evaluation pressure_;
+    Evaluation volumeFlux_;
+    EvalDimVector velocity_;
     DimVector normal_;
 
     // gradients at the IPs
-    DimVector pressureGrad_;
-    DimVector velocityGrad_[dimWorld];
+    EvalDimVector pressureGrad_;
+    EvalDimVector velocityGrad_[dimWorld];
 
     // local index of the upstream dof
     unsigned upstreamIdx_;

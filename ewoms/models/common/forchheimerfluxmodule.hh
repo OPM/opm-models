@@ -47,8 +47,7 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(MaterialLaw);
-}
-}
+}}
 
 namespace Ewoms {
 template <class TypeTag>
@@ -87,6 +86,7 @@ template <class TypeTag>
 class ForchheimerBaseProblem
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
 public:
     /*!
@@ -119,13 +119,12 @@ public:
      * mobility to passability ratio is the inverse of phase' the viscosity.
      */
     template <class Context>
-    Scalar mobilityPassabilityRatio(Context& context,
-                                    unsigned spaceIdx,
-                                    unsigned timeIdx,
-                                    unsigned phaseIdx) const
+    Evaluation mobilityPassabilityRatio(Context& context,
+                                        unsigned spaceIdx,
+                                        unsigned timeIdx,
+                                        unsigned phaseIdx) const
     {
-        return 1.0 / context.intensiveQuantities(spaceIdx, timeIdx).fluidState().viscosity(
-                         phaseIdx);
+        return 1.0 / context.intensiveQuantities(spaceIdx, timeIdx).fluidState().viscosity(phaseIdx);
     }
 };
 
@@ -137,6 +136,7 @@ template <class TypeTag>
 class ForchheimerIntensiveQuantities
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -149,18 +149,14 @@ public:
      * reduced by turbolence. A value of 0 means that it is not
      * influenced.
      */
-    Scalar ergunCoefficient() const
-    {
-        return ergunCoefficient_;
-    }
+    const Evaluation& ergunCoefficient() const
+    { return ergunCoefficient_; }
 
     /*!
      * \brief Returns the passability of a phase.
      */
-    Scalar mobilityPassabilityRatio(unsigned phaseIdx) const
-    {
-        return mobilityPassabilityRatio_[phaseIdx];
-    }
+    const Evaluation& mobilityPassabilityRatio(unsigned phaseIdx) const
+    { return mobilityPassabilityRatio_[phaseIdx]; }
 
 protected:
     void update_(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
@@ -177,8 +173,8 @@ protected:
     }
 
 private:
-    Scalar ergunCoefficient_;
-    Scalar mobilityPassabilityRatio_[numPhases];
+    Evaluation ergunCoefficient_;
+    Evaluation mobilityPassabilityRatio_[numPhases];
 };
 
 /*!
@@ -229,21 +225,25 @@ class ForchheimerExtensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
-
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
+    typedef Dune::FieldMatrix<Evaluation, dimWorld, dimWorld> DimEvalMatrix;
 
 public:
     /*!
      * \brief Return the Ergun coefficent at the face's integration point.
      */
-    Scalar ergunCoefficient() const
+    const Evaluation& ergunCoefficient() const
     { return ergunCoefficient_; }
 
     /*!
@@ -252,7 +252,7 @@ public:
      *
      * Usually, that's the inverse of the viscosity.
      */
-    Scalar mobilityPassabilityRatio(unsigned phaseIdx) const
+    Evaluation& mobilityPassabilityRatio(unsigned phaseIdx) const
     { return mobilityPassabilityRatio_[phaseIdx]; }
 
 protected:
@@ -262,6 +262,7 @@ protected:
     {
         DarcyExtQuants::calculateGradients_(elemCtx, faceIdx, timeIdx);
 
+        auto focusDofIdx = elemCtx.focusDofIndex();
         unsigned i = static_cast<unsigned>(this->interiorDofIdx_);
         unsigned j = static_cast<unsigned>(this->exteriorDofIdx_);
         const auto& intQuantsIn = elemCtx.intensiveQuantities(i, timeIdx);
@@ -271,10 +272,22 @@ protected:
         assert(isDiagonal_(this->K_));
         sqrtK_ = 0.0;
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            sqrtK_[dimIdx][dimIdx] = std::sqrt(this->K_[dimIdx][dimIdx]);
+            sqrtK_[dimIdx] = std::sqrt(this->K_[dimIdx][dimIdx]);
 
         // obtain the Ergun coefficient. Lacking better ideas, we use its the arithmetic mean.
-        ergunCoefficient_ = (intQuantsIn.ergunCoefficient() + intQuantsEx.ergunCoefficient())/2;
+        if (focusDofIdx == i) {
+            ergunCoefficient_ =
+                (intQuantsIn.ergunCoefficient() +
+                 Toolbox::value(intQuantsEx.ergunCoefficient()))/2;
+        }
+        else if (focusDofIdx == j)
+            ergunCoefficient_ =
+                (Toolbox::value(intQuantsIn.ergunCoefficient()) +
+                 intQuantsEx.ergunCoefficient())/2;
+        else
+            ergunCoefficient_ =
+                (Toolbox::value(intQuantsIn.ergunCoefficient()) +
+                 Toolbox::value(intQuantsEx.ergunCoefficient()))/2;
 
         // obtain the mobility to passability ratio for each phase.
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
@@ -284,8 +297,18 @@ protected:
             unsigned upIdx = static_cast<unsigned>(this->upstreamIndex_(phaseIdx));
             const auto& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
-            density_[phaseIdx] = up.fluidState().density(phaseIdx);
-            mobilityPassabilityRatio_[phaseIdx] = up.mobilityPassabilityRatio(phaseIdx);
+            if (focusDofIdx == upIdx) {
+                density_[phaseIdx] =
+                    up.fluidState().density(phaseIdx);
+                mobilityPassabilityRatio_[phaseIdx] =
+                    up.mobilityPassabilityRatio(phaseIdx);
+            }
+            else {
+                density_[phaseIdx] =
+                    Toolbox::value(up.fluidState().density(phaseIdx));
+                mobilityPassabilityRatio_[phaseIdx] =
+                    Toolbox::value(up.mobilityPassabilityRatio(phaseIdx));
+            }
         }
     }
 
@@ -302,25 +325,37 @@ protected:
                                                     fluidState,
                                                     paramCache);
 
+        auto focusDofIdx = elemCtx.focusDofIndex();
         unsigned i = static_cast<unsigned>(this->interiorDofIdx_);
         const auto& intQuantsIn = elemCtx.intensiveQuantities(i, timeIdx);
 
         // obtain the Ergun coefficient. Because we are on the boundary here, we will
         // take the Ergun coefficient of the interior
-        ergunCoefficient_ = intQuantsIn.ergunCoefficient();
+        if (focusDofIdx == i)
+            ergunCoefficient_ = intQuantsIn.ergunCoefficient();
+        else
+            ergunCoefficient_ = Toolbox::value(intQuantsIn.ergunCoefficient());
 
         // calculate the square root of the intrinsic permeability
         assert(isDiagonal_(this->K_));
         sqrtK_ = 0.0;
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            sqrtK_[dimIdx][dimIdx] = std::sqrt(this->K_[dimIdx][dimIdx]);
+            sqrtK_[dimIdx] = std::sqrt(this->K_[dimIdx][dimIdx]);
 
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
 
-            density_[phaseIdx] = intQuantsIn.fluidState().density(phaseIdx);
-            mobilityPassabilityRatio_[phaseIdx] = intQuantsIn.mobilityPassabilityRatio(phaseIdx);
+            if (focusDofIdx == i) {
+                density_[phaseIdx] = intQuantsIn.fluidState().density(phaseIdx);
+                mobilityPassabilityRatio_[phaseIdx] = intQuantsIn.mobilityPassabilityRatio(phaseIdx);
+            }
+            else {
+                density_[phaseIdx] =
+                    Toolbox::value(intQuantsIn.fluidState().density(phaseIdx));
+                mobilityPassabilityRatio_[phaseIdx] =
+                    Toolbox::value(intQuantsIn.mobilityPassabilityRatio(phaseIdx));
+            }
         }
     }
 
@@ -332,8 +367,11 @@ protected:
      */
     void calculateFluxes_(const ElementContext& elemCtx, unsigned scvfIdx, unsigned timeIdx)
     {
-        const auto& intQuantsI = elemCtx.intensiveQuantities(asImp_().interiorIndex(), timeIdx);
-        const auto& intQuantsJ = elemCtx.intensiveQuantities(asImp_().exteriorIndex(), timeIdx);
+        auto focusDofIdx = elemCtx.focusDofIndex();
+        auto i = asImp_().interiorIndex();
+        auto j = asImp_().exteriorIndex();
+        const auto& intQuantsI = elemCtx.intensiveQuantities(i, timeIdx);
+        const auto& intQuantsJ = elemCtx.intensiveQuantities(j, timeIdx);
 
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const auto& normal = scvf.normal();
@@ -341,20 +379,35 @@ protected:
 
         // obtain the Ergun coefficient from the intensive quantity object. Until a
         // better method comes along, we use arithmetic averaging.
-        ergunCoefficient_ = (intQuantsI.ergunCoefficient() + intQuantsJ.ergunCoefficient()) / 2;
+        if (focusDofIdx == i)
+            ergunCoefficient_ =
+                (intQuantsI.ergunCoefficient() +
+                 Toolbox::value(intQuantsJ.ergunCoefficient())) / 2;
+        else if (focusDofIdx == j)
+            ergunCoefficient_ =
+                (Toolbox::value(intQuantsI.ergunCoefficient()) +
+                 intQuantsJ.ergunCoefficient()) / 2;
+        else
+            ergunCoefficient_ =
+                (Toolbox::value(intQuantsI.ergunCoefficient()) +
+                 Toolbox::value(intQuantsJ.ergunCoefficient())) / 2;
 
         ///////////////
         // calculate the weights of the upstream and the downstream control volumes
         ///////////////
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                this->filterVelocity_[phaseIdx] = 0;
-                this->volumeFlux_[phaseIdx] = 0;
+                this->filterVelocity_[phaseIdx] = 0.0;
+                this->volumeFlux_[phaseIdx] = 0.0;
                 continue;
             }
 
             calculateForchheimerFlux_(phaseIdx);
-            this->volumeFlux_[phaseIdx] = (this->filterVelocity_[phaseIdx] * normal);
+
+            this->volumeFlux_[phaseIdx] = 0.0;
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++ dimIdx)
+                this->volumeFlux_[phaseIdx] +=
+                    this->filterVelocity_[phaseIdx][dimIdx]*normal[dimIdx];
         }
     }
 
@@ -373,33 +426,37 @@ protected:
         ///////////////
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; phaseIdx++) {
             if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
-                this->filterVelocity_[phaseIdx] = 0;
-                this->volumeFlux_[phaseIdx] = 0;
+                this->filterVelocity_[phaseIdx] = 0.0;
+                this->volumeFlux_[phaseIdx] = 0.0;
                 continue;
             }
 
             calculateForchheimerFlux_(phaseIdx);
-            this->volumeFlux_[phaseIdx] = (this->filterVelocity_[phaseIdx] * normal);
+
+            this->volumeFlux_[phaseIdx] = 0.0;
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                this->volumeFlux_[phaseIdx] +=
+                    this->filterVelocity_[phaseIdx][dimIdx]*normal[dimIdx];
         }
     }
 
     void calculateForchheimerFlux_(unsigned phaseIdx)
     {
         // initial guess: filter velocity is zero
-        DimVector& velocity = this->filterVelocity_[phaseIdx];
-        velocity = 0;
+        DimEvalVector& velocity = this->filterVelocity_[phaseIdx];
+        velocity = 0.0;
 
         // the change of velocity between two consecutive Newton iterations
-        DimVector deltaV(1e5);
+        DimEvalVector deltaV(1e5);
         // the function value that is to be minimized of the equation that is to be
         // fulfilled
-        DimVector residual;
+        DimEvalVector residual;
         // derivative of equation that is to be solved
-        DimMatrix gradResid;
+        DimEvalMatrix gradResid;
 
         // search by means of the Newton method for a root of Forchheimer equation
         unsigned newtonIter = 0;
-        while (deltaV.two_norm() > 1e-11) {
+        while (deltaV.one_norm() > 1e-11) {
             if (newtonIter >= 50)
                 OPM_THROW(Opm::NumericalProblem,
                           "Could not determine Forchheimer velocity within "
@@ -415,14 +472,14 @@ protected:
         }
     }
 
-    void forchheimerResid_(DimVector& residual, unsigned phaseIdx) const
+    void forchheimerResid_(DimEvalVector& residual, unsigned phaseIdx) const
     {
-        const DimVector& velocity = this->filterVelocity_[phaseIdx];
+        const DimEvalVector& velocity = this->filterVelocity_[phaseIdx];
 
         // Obtaining the upstreamed quantities
-        Scalar mobility = this->mobility_[phaseIdx];
-        Scalar density = density_[phaseIdx];
-        Scalar mobilityPassabilityRatio = mobilityPassabilityRatio_[phaseIdx];
+        const auto& mobility = this->mobility_[phaseIdx];
+        const auto& density = density_[phaseIdx];
+        const auto& mobilityPassabilityRatio = mobilityPassabilityRatio_[phaseIdx];
 
         // optain the quantites for the integration point
         const auto& pGrad = this->potentialGrad_[phaseIdx];
@@ -431,7 +488,10 @@ protected:
         residual = velocity;
 
         // residual += mobility_\alpha K(\grad p_\alpha - \rho_\alpha g)
-        this->K_.usmv(mobility, pGrad, residual);
+        // -> this->K_.usmv(mobility, pGrad, residual);
+        assert(isDiagonal_(this->K_));
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++ dimIdx)
+            residual[dimIdx] += mobility*pGrad[dimIdx]*this->K_[dimIdx][dimIdx];
 
         // Forchheimer turbulence correction:
         //
@@ -440,24 +500,37 @@ protected:
         //   * mobility_\alpha
         //   * C_E / \eta_{r,\alpha}
         //   * abs(v_\alpha) * sqrt(K)*v_\alpha
-        sqrtK_.usmv(density*mobilityPassabilityRatio*ergunCoefficient_*velocity.two_norm(),
-                    velocity,
-                    residual);
-
+        //
+        // -> sqrtK_.usmv(density*mobilityPassabilityRatio*ergunCoefficient_*velocity.two_norm(),
+        //                velocity,
+        //                residual);
+        Evaluation absVel = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            absVel += velocity[dimIdx]*velocity[dimIdx];
+        // the derivatives of the square root of 0 are undefined, so we must guard
+        // against this case
+        if (absVel <= 0.0)
+            absVel = 0.0;
+        else
+            absVel = Toolbox::sqrt(absVel);
+        const auto& alpha = density*mobilityPassabilityRatio*ergunCoefficient_*absVel;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            residual[dimIdx] += sqrtK_[dimIdx]*alpha*velocity[dimIdx];
         Opm::Valgrind::CheckDefined(residual);
     }
 
-    void gradForchheimerResid_(DimVector& residual,
-                               DimMatrix& gradResid,
+    void gradForchheimerResid_(DimEvalVector& residual,
+                               DimEvalMatrix& gradResid,
                                unsigned phaseIdx)
     {
-        DimVector& velocity = this->filterVelocity_[phaseIdx];
+        // TODO (?) use AD for this.
+        DimEvalVector& velocity = this->filterVelocity_[phaseIdx];
         forchheimerResid_(residual, phaseIdx);
 
         Scalar eps = 1e-11;
-        DimVector tmp;
+        DimEvalVector tmp;
         for (unsigned i = 0; i < dimWorld; ++i) {
-            Scalar coordEps = std::max(eps, velocity[i] * (1 + eps));
+            Scalar coordEps = std::max(eps, Toolbox::scalarValue(velocity[i]) * (1 + eps));
             velocity[i] += coordEps;
             forchheimerResid_(tmp, phaseIdx);
             tmp -= residual;
@@ -497,16 +570,16 @@ private:
 
 protected:
     // intrinsic permeability tensor and its square root
-    DimMatrix sqrtK_;
+    DimVector sqrtK_;
 
     // Ergun coefficient of all phases at the integration point
-    Scalar ergunCoefficient_;
+    Evaluation ergunCoefficient_;
 
     // Passability of all phases at the integration point
-    Scalar mobilityPassabilityRatio_[numPhases];
+    Evaluation mobilityPassabilityRatio_[numPhases];
 
     // Density of all phases at the integration point
-    Scalar density_[numPhases];
+    Evaluation density_[numPhases];
 };
 
 } // namespace Ewoms

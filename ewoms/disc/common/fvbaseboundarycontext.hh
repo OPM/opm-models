@@ -181,6 +181,13 @@ public:
     }
 
     /*!
+     * \brief Return the local sub-control volume index upon which the linearization is
+     *        currently focused.
+     */
+    unsigned focusDofIndex() const
+    { return elemCtx_.focusDofIndex(); }
+
+    /*!
      * \brief Return the local sub-control volume index of the
      *        interior of a boundary segment
      *
@@ -188,9 +195,7 @@ public:
      * \param timeIdx The index of the solution used by the time discretization
      */
     unsigned interiorScvIndex(unsigned boundaryFaceIdx, unsigned timeIdx) const
-    {
-        return stencil(timeIdx).boundaryFace(boundaryFaceIdx).interiorIndex();
-    }
+    { return stencil(timeIdx).boundaryFace(boundaryFaceIdx).interiorIndex(); }
 
     /*!
      * \brief Return the global space index of the sub-control volume

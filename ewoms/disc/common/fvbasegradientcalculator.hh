@@ -47,7 +47,6 @@ class EcfvDiscretization;
 template<class TypeTag>
 class FvBaseGradientCalculator
 {
-
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -64,11 +63,6 @@ class FvBaseGradientCalculator
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
     typedef Dune::FieldVector<Evaluation, dim> EvalDimVector;
-
-    static_assert(std::is_same<Evaluation, Scalar>::value ||
-                  std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value,
-                  "So far, automatic differentiation is only available for the "
-                  "element-centered finite volume discretization!");
 
 public:
     /*!
@@ -90,54 +84,114 @@ public:
     { /* noting to do */ }
 
     /*!
-     * \brief Calculates the value of an arbitrary quantity at any
-     *        interior flux approximation point.
+     * \brief Calculates the value of an arbitrary scalar quantity at any interior flux
+     *        approximation point.
      *
      * \param elemCtx The current execution context
-     * \param fapIdx The local index of the flux approximation point
-     *               in the current element's stencil.
+     * \param fapIdx The local index of the flux approximation point in the current
+     *               element's stencil.
      * \param quantityCallback A callable object returning the value
      *               of the quantity at an index of a degree of
      *               freedom
      */
     template <class QuantityCallback>
-    auto calculateValue(const ElementContext& elemCtx,
-                        unsigned fapIdx,
-                        const QuantityCallback& quantityCallback) const
+    auto calculateScalarValue(const ElementContext& elemCtx,
+                              unsigned fapIdx,
+                              const QuantityCallback& quantityCallback) const
         -> typename std::remove_reference<decltype(quantityCallback.operator()(0))>::type
     {
-        const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
-        const auto& face = stencil.interiorFace(fapIdx);
+        typedef decltype(quantityCallback.operator()(0)) RawReturnType;
+        typedef typename std::remove_const<typename std::remove_reference<RawReturnType>::type>::type ReturnType;
 
-        // calculate the distances of the position of the interior and of the exterior
-        // finite volume to the position of the integration point.
-        const auto& normal = face.normal();
-        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).globalPos();
-        const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).globalPos();
-        const auto& integrationPos = face.integrationPos();
+        typedef Opm::MathToolbox<ReturnType> Toolbox;
 
-        Scalar interiorDistance = 0.0;
-        Scalar exteriorDistance = 0.0;
-        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
-            interiorDistance +=
-                (interiorPos[dimIdx] - integrationPos[dimIdx])
-                * normal[dimIdx];
+        Scalar interiorDistance;
+        Scalar exteriorDistance;
+        computeDistances_(interiorDistance, exteriorDistance, elemCtx, fapIdx);
 
-            exteriorDistance +=
-                (exteriorPos[dimIdx] - integrationPos[dimIdx])
-                * normal[dimIdx];
-        }
-
-        interiorDistance = std::sqrt(std::abs(interiorDistance));
-        exteriorDistance = std::sqrt(std::abs(exteriorDistance));
+        const auto& face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(fapIdx);
+        auto i = face.interiorIndex();
+        auto j = face.exteriorIndex();
+        auto focusDofIdx = elemCtx.focusDofIndex();
 
         // use the average weighted by distance...
-        auto value(quantityCallback(face.interiorIndex()));
-        value *= interiorDistance;
-        auto tmp(quantityCallback(face.exteriorIndex()));
-        tmp *= exteriorDistance;
-        value += tmp;
+        ReturnType value;
+        if (i == focusDofIdx)
+            value = quantityCallback(i)*interiorDistance;
+        else
+            value = Toolbox::value(quantityCallback(i))*interiorDistance;
+
+        if (j == focusDofIdx)
+            value += quantityCallback(j)*exteriorDistance;
+        else
+            value += Toolbox::value(quantityCallback(j))*exteriorDistance;
+
         value /= interiorDistance + exteriorDistance;
+
+        return value;
+    }
+
+    /*!
+     * \brief Calculates the value of an arbitrary vectorial quantity at any interior flux
+     *        approximation point.
+     *
+     * \param elemCtx The current execution context
+     * \param fapIdx The local index of the flux approximation point in the current
+     *               element's stencil.
+     * \param quantityCallback A callable object returning the value
+     *               of the quantity at an index of a degree of
+     *               freedom
+     */
+    template <class QuantityCallback>
+    auto calculateVectorValue(const ElementContext& elemCtx,
+                              unsigned fapIdx,
+                              const QuantityCallback& quantityCallback) const
+        -> typename std::remove_reference<decltype(quantityCallback.operator()(0))>::type
+    {
+        typedef decltype(quantityCallback.operator()(0)) RawReturnType;
+        typedef typename std::remove_const<typename std::remove_reference<RawReturnType>::type>::type ReturnType;
+
+        typedef decltype(std::declval<ReturnType>()[0]) RawFieldType;
+        typedef typename std::remove_const<typename std::remove_reference<RawFieldType>::type>::type FieldType;
+
+        typedef Opm::MathToolbox<FieldType> Toolbox;
+
+        Scalar interiorDistance;
+        Scalar exteriorDistance;
+        computeDistances_(interiorDistance, exteriorDistance, elemCtx, fapIdx);
+
+        const auto& face = elemCtx.stencil(/*timeIdx=*/0).interiorFace(fapIdx);
+        auto i = face.interiorIndex();
+        auto j = face.exteriorIndex();
+        auto focusDofIdx = elemCtx.focusDofIndex();
+
+        // use the average weighted by distance...
+        ReturnType value;
+        if (i == focusDofIdx) {
+            value = quantityCallback(i);
+            for (int k = 0; k < value.size(); ++k)
+                value[k] *= interiorDistance;
+        }
+        else {
+            const auto& dofVal = Toolbox::value(quantityCallback(i));
+            for (int k = 0; k < dofVal.size(); ++k)
+                value[k] = Toolbox::value(dofVal[k])*interiorDistance;
+        }
+
+        if (j == focusDofIdx) {
+            const auto& dofVal = quantityCallback(j);
+            for (int k = 0; k < dofVal.size(); ++k)
+                value[k] += dofVal[k]*exteriorDistance;
+        }
+        else {
+            const auto& dofVal = quantityCallback(j);
+            for (int k = 0; k < dofVal.size(); ++k)
+                value[k] += Toolbox::value(dofVal[k])*exteriorDistance;
+        }
+
+        Scalar totDistance = interiorDistance + exteriorDistance;
+        for (int k = 0; k < value.size(); ++k)
+            value[k] /= totDistance;
 
         return value;
     }
@@ -162,35 +216,42 @@ public:
         const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto& face = stencil.interiorFace(fapIdx);
 
-        const auto& exteriorPos = stencil.subControlVolume(face.exteriorIndex()).globalPos();
-        const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).globalPos();
+        auto i = face.interiorIndex();
+        auto j = face.exteriorIndex();
+        auto focusIdx = elemCtx.focusDofIndex();
 
-        // this is slightly hacky because the derivatives of the quantity for the
-        // exterior DOF are thrown away and this code thus assumes that the exterior DOF
-        // is not a primary degree of freedom. Basically this means that two-point flux
-        // approximation scheme is used. A way to fix this in a conceptionally elegant
-        // way would be to introduce the concept of extensive evaluations, but
-        // unfortunately this makes things quite a bit slower. (and also quite a bit
-        // harder to comprehend :/ )
-        Evaluation deltay =
-            Toolbox::value(quantityCallback(face.exteriorIndex()))
-            - quantityCallback(face.interiorIndex());
+        const auto& interiorPos = stencil.subControlVolume(i).globalPos();
+        const auto& exteriorPos = stencil.subControlVolume(j).globalPos();
 
-        Scalar distSquared = 0;
+        Evaluation deltay;
+        if (i == focusIdx) {
+            deltay =
+                Toolbox::value(quantityCallback(j))
+                - quantityCallback(i);
+        }
+        else if (j == focusIdx) {
+            deltay =
+                quantityCallback(j)
+                - Toolbox::value(quantityCallback(i));
+        }
+        else
+            deltay =
+                Toolbox::value(quantityCallback(j))
+                - Toolbox::value(quantityCallback(i));
+
+        Scalar distSquared = 0.0;
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
-            quantityGrad[dimIdx] = deltay;
-
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
         }
 
-        // divide the gradient by the squared distance between the positions of the
-        // control volumes: the gradient is the normalized directional vector between the
-        // two centers times the ratio of the difference of the values and their
+        // divide the gradient by the squared distance between the centers of the
+        // sub-control volumes: the gradient is the normalized directional vector between
+        // the two centers times the ratio of the difference of the values and their
         // distance, i.e., d/abs(d) * delta y / abs(d) = d*delta y / abs(d)^2.
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = exteriorPos[dimIdx] - interiorPos[dimIdx];
-            quantityGrad[dimIdx] *= tmp/distSquared;
+            quantityGrad[dimIdx] = deltay*(tmp/distSquared);
         }
     }
 
@@ -235,10 +296,22 @@ public:
                                    unsigned faceIdx,
                                    const QuantityCallback& quantityCallback) const
     {
+        typedef typename std::decay<decltype(quantityCallback(0))>::type Evaluation;
+        typedef typename std::decay<decltype(quantityCallback.boundaryValue())>::type BoundaryEvaluation;
+
+        typedef Opm::MathToolbox<Evaluation> Toolbox;
+        typedef Opm::MathToolbox<BoundaryEvaluation> BoundaryToolbox;
+
         const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto& face = stencil.boundaryFace(faceIdx);
 
-        auto deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
+        Evaluation deltay;
+        if (face.interiorIndex() == elemCtx.focusDofIndex())
+            deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
+        else
+            deltay =
+                BoundaryToolbox::value(quantityCallback.boundaryValue())
+                - Toolbox::value(quantityCallback(face.interiorIndex()));
 
         const auto& boundaryFacePos = face.integrationPos();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();
@@ -247,8 +320,6 @@ public:
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
             distSquared += tmp*tmp;
-
-            quantityGrad[dimIdx] = deltay;
         }
 
         // divide the gradient by the squared distance between the center of the
@@ -258,8 +329,42 @@ public:
         // = d*deltay / abs(d)^2.
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
             Scalar tmp = boundaryFacePos[dimIdx] - interiorPos[dimIdx];
-            quantityGrad[dimIdx] *= tmp/distSquared;
+            quantityGrad[dimIdx] = deltay*(tmp/distSquared);
         }
+    }
+
+private:
+    void computeDistances_(Scalar& interiorDistance,
+                           Scalar& exteriorDistance,
+                           const ElementContext& elemCtx,
+                           unsigned fapIdx) const
+    {
+        const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
+        const auto& face = stencil.interiorFace(fapIdx);
+
+        // calculate the distances of the position of the interior and of the exterior
+        // finite volume to the position of the integration point.
+        const auto& normal = face.normal();
+        auto i = face.interiorIndex();
+        auto j = face.exteriorIndex();
+        const auto& interiorPos = stencil.subControlVolume(i).globalPos();
+        const auto& exteriorPos = stencil.subControlVolume(j).globalPos();
+        const auto& integrationPos = face.integrationPos();
+
+        interiorDistance = 0.0;
+        exteriorDistance = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+            interiorDistance +=
+                (interiorPos[dimIdx] - integrationPos[dimIdx])
+                * normal[dimIdx];
+
+            exteriorDistance +=
+                (exteriorPos[dimIdx] - integrationPos[dimIdx])
+                * normal[dimIdx];
+        }
+
+        interiorDistance = std::sqrt(std::abs(interiorDistance));
+        exteriorDistance = std::sqrt(std::abs(exteriorDistance));
     }
 };
 } // namespace Ewoms

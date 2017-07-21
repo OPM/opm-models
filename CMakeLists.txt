@@ -159,10 +159,13 @@ opm_add_test(test_blackoilfluidstate
 opm_add_test(waterair_pvs_ni
              TEST_ARGS --grid-global-refinements=1)
 
-opm_add_test(lens_immiscible_vcfv
+opm_add_test(lens_immiscible_vcfv_ad
              TEST_ARGS --end-time=3000)
 
-opm_add_test(lens_immiscible_ecfv
+opm_add_test(lens_immiscible_vcfv_fd
+             TEST_ARGS --end-time=3000)
+
+opm_add_test(lens_immiscible_ecfv_ad
              TEST_ARGS --end-time=3000)
 
 opm_add_test(finger_immiscible_ecfv
@@ -180,8 +183,10 @@ opm_add_test(finger_immiscible_ecfv_adaptive
 opm_add_test(test_stokes
              CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
+opm_add_test(test_stokes2c_ad
+             CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
-opm_add_test(test_stokes2c
+opm_add_test(test_stokes2c_fd
              CONDITION ${SUPERLU_FOUND} AND ${DUNE_LOCALFUNCTIONS_FOUND})
 
 opm_add_test(test_stokesni
@@ -203,8 +208,10 @@ foreach(tapp co2injection_flash_ni_vcfv
              co2injection_immiscible_ni_ecfv
              co2injection_ncp_ni_ecfv
              co2injection_pvs_ni_ecfv
-             powerinjection_forchheimer
-             powerinjection_darcy
+             powerinjection_forchheimer_fd
+             powerinjection_forchheimer_ad
+             powerinjection_darcy_fd
+             powerinjection_darcy_ad
              cuvette_pvs
              infiltration_pvs
              lens_richards_vcfv
@@ -257,16 +264,24 @@ opm_add_test(obstacle_immiscible_parallel
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
-opm_add_test(lens_immiscible_vcfv_parallel
-             EXE_NAME lens_immiscible_vcfv
+opm_add_test(lens_immiscible_vcfv_fd_parallel
+             EXE_NAME lens_immiscible_vcfv_fd
              NO_COMPILE
              PROCESSORS 4
              CONDITION ${MPI_FOUND}
              DRIVER_ARGS --parallel-simulation=4
              TEST_ARGS --end-time=250 --initial-time-step-size=250)
 
-opm_add_test(lens_immiscible_ecfv_parallel
-             EXE_NAME lens_immiscible_ecfv
+opm_add_test(lens_immiscible_vcfv_ad_parallel
+             EXE_NAME lens_immiscible_vcfv_ad
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION ${MPI_FOUND}
+             DRIVER_ARGS --parallel-simulation=4
+             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+
+opm_add_test(lens_immiscible_ecfv_ad_parallel
+             EXE_NAME lens_immiscible_ecfv_ad
              NO_COMPILE
              PROCESSORS 4
              CONDITION ${MPI_FOUND}

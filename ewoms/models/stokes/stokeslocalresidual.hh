@@ -32,6 +32,8 @@
 #include "stokesextensivequantities.hh"
 #include "stokesproperties.hh"
 
+#include <opm/material/common/MathToolbox.hpp>
+
 #include <opm/common/Valgrind.hpp>
 
 #include <dune/grid/common/grid.hh>
@@ -51,6 +53,7 @@ class StokesLocalResidual
     typedef typename GET_PROP_TYPE(TypeTag, DiscLocalResidual) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -60,7 +63,8 @@ class StokesLocalResidual
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { dimWorld = GridView::dimensionworld };
-    enum { phaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { stokesPhaseIdx = GET_PROP_VALUE(TypeTag, StokesPhaseIndex) };
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numComponents = FluidSystem::numComponents };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { momentum0EqIdx = Indices::momentum0EqIdx };
@@ -68,6 +72,8 @@ class StokesLocalResidual
 
     typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     /*!
@@ -84,28 +90,44 @@ public:
     /*!
      * \copydoc FvBaseLocalResidual::computeStorage
      */
-    void computeStorage(EqVector& storage,
+    template <class LhsEval>
+    void computeStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                         const ElementContext& elemCtx,
                         unsigned dofIdx,
                         unsigned timeIdx) const
     {
+        if (elemCtx.focusDofIndex() == dofIdx)
+            computeStorage_<LhsEval>(storage, elemCtx, dofIdx, timeIdx);
+        else
+            computeStorage_<Scalar>(storage, elemCtx, dofIdx, timeIdx);
+    }
+
+    template <class DensityEval, class LhsEval>
+    void computeStorage_(Dune::FieldVector<LhsEval, numEq>& storage,
+                         const ElementContext& elemCtx,
+                         unsigned dofIdx,
+                         unsigned timeIdx) const
+    {
         const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, timeIdx);
         const auto& fs = intQuants.fluidState();
 
-        // mass storage
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            storage[conti0EqIdx + compIdx] = fs.molarity(phaseIdx, compIdx);
-        }
+        storage = 0.0;
+
+        // mass
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
+            storage[conti0EqIdx + compIdx] = Opm::decay<DensityEval>(fs.molarity(stokesPhaseIdx, compIdx));
         Opm::Valgrind::CheckDefined(storage);
 
-        // momentum balance
+        // momentum
         for (unsigned axisIdx = 0; axisIdx < dimWorld; ++ axisIdx) {
             storage[momentum0EqIdx + axisIdx] =
-                fs.density(phaseIdx) * intQuants.velocity()[axisIdx];
+                Opm::decay<DensityEval>(fs.density(stokesPhaseIdx)) *
+                Opm::decay<LhsEval>(intQuants.velocity()[axisIdx]);
         }
         Opm::Valgrind::CheckDefined(storage);
 
-        EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), phaseIdx);
+        // energy
+        EnergyModule::addPhaseStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx), stokesPhaseIdx);
         Opm::Valgrind::CheckDefined(storage);
     }
 
@@ -134,39 +156,52 @@ public:
     {
         const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
+        auto upIdx = extQuants.upstreamIndex(stokesPhaseIdx);
+        auto focusDofIdx = elemCtx.focusDofIndex();
+
         // data attached to upstream DOF
-        const IntensiveQuantities& up =
-            elemCtx.intensiveQuantities(extQuants.upstreamIndex(phaseIdx), timeIdx);
+        const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
         auto normal = extQuants.normal();
 
         // mass fluxes
-        Scalar vTimesN = extQuants.velocity() * normal;
+        Evaluation vTimesN = 0.0;
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+            vTimesN += extQuants.velocity()[dimIdx]*normal[dimIdx];
+
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            flux[conti0EqIdx + compIdx] = up.fluidState().molarity(phaseIdx, compIdx) * vTimesN;
+            flux[conti0EqIdx + compIdx] = up.fluidState().molarity(stokesPhaseIdx, compIdx) * vTimesN;
 
         // momentum flux
-        Scalar mu =
-            up.fluidState().viscosity(phaseIdx)
-            + extQuants.eddyViscosity();
+        Evaluation mu;
+        if (upIdx == focusDofIdx)
+            mu = up.fluidState().viscosity(stokesPhaseIdx) + extQuants.eddyViscosity();
+        else
+            mu =
+                Opm::scalarValue(up.fluidState().viscosity(stokesPhaseIdx)) +
+                Opm::scalarValue(extQuants.eddyViscosity());
         for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx) {
             // deal with the surface forces, i.e. the $\div[ \mu
             // (\grad[v] + \grad[v^T])]$ term on the right hand side
             // of the equation
-            DimVector tmp;
+            EvalDimVector tmp;
             for (unsigned j = 0; j < dimWorld; ++j) {
                 tmp[j] = extQuants.velocityGrad(/*velocityComp=*/axisIdx)[j];
                 tmp[j] += extQuants.velocityGrad(/*velocityComp=*/j)[axisIdx];
             }
 
-            flux[momentum0EqIdx + axisIdx] = -mu * (tmp * normal);
+            Evaluation alpha = 0.0;
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                alpha += tmp[dimIdx] * normal[dimIdx];
+            flux[momentum0EqIdx + axisIdx] = -mu*alpha;
 
             // this adds the convective momentum flux term $rho v
             // div[v]$ to the Stokes equation, transforming it to
             // Navier-Stokes.
             if (enableNavierTerm_()) {
-                flux[momentum0EqIdx + axisIdx] +=
-                    up.velocity()[axisIdx] * (up.velocity() * normal);
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    flux[momentum0EqIdx + axisIdx] +=
+                        up.velocity()[axisIdx] * up.velocity()[dimIdx]*normal[dimIdx];
             }
         }
 
@@ -201,22 +236,46 @@ public:
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
         Opm::Valgrind::CheckDefined(source);
 
+        // if the current DOF is not the one we currently focus on, we need
+        // to throw away the derivatives!
+        if (!std::is_same<Scalar, Evaluation>::value
+            && dofIdx != elemCtx.focusDofIndex())
+        {
+            for (int i = 0; i < numEq; ++i)
+                source[i] = Toolbox::value(source[i]);
+        }
+
         const auto& gravity = intQuants.gravity();
         const auto& gradp = intQuants.pressureGradient();
-        Scalar density = intQuants.fluidState().density(phaseIdx);
+        const auto& fs = intQuants.fluidState();
 
-        assert(std::isfinite(gradp.two_norm()));
-        assert(std::isfinite(density));
-        assert(std::isfinite(source.two_norm()));
+#ifndef NDEBUG
+        assert(Opm::isfinite(fs.density(stokesPhaseIdx)));
+        for (unsigned dimIdx = 0; dimIdx < dimWorld; ++ dimIdx) {
+            assert(Opm::isfinite(gradp[dimIdx]));
+            assert(Opm::isfinite(source[dimIdx]));
+        }
 
         Opm::Valgrind::CheckDefined(gravity);
         Opm::Valgrind::CheckDefined(gradp);
-        Opm::Valgrind::CheckDefined(density);
+        Opm::Valgrind::CheckDefined(fs.density(stokesPhaseIdx));
+#endif
+
+        auto focusDofIdx = elemCtx.focusDofIndex();
 
         // deal with the pressure and volumetric terms
-        for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
-            source[momentum0EqIdx + axisIdx] +=
-                gradp[axisIdx] - density * gravity[axisIdx];
+        if (dofIdx == focusDofIdx) {
+            for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+                source[momentum0EqIdx + axisIdx] +=
+                    gradp[axisIdx] -
+                    fs.density(stokesPhaseIdx)*gravity[axisIdx];
+        }
+        else {
+            for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
+                source[momentum0EqIdx + axisIdx] +=
+                    gradp[axisIdx] -
+                    Opm::scalarValue(fs.density(stokesPhaseIdx))*gravity[axisIdx];
+        }
     }
 
 private:

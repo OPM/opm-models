@@ -34,12 +34,14 @@
 
 #include "stokesproperties.hh"
 #include "stokeslocalresidual.hh"
+#include "stokeselementcontext.hh"
 #include "stokesproblem.hh"
 #include "stokesindices.hh"
 #include "stokeslocalresidual.hh"
 #include "stokesmodel.hh"
 #include "stokesintensivequantities.hh"
 #include "stokesextensivequantities.hh"
+#include "stokesratevector.hh"
 #include "stokesboundaryratevector.hh"
 
 #include <ewoms/linear/superlubackend.hh>
@@ -111,9 +113,8 @@ SET_TAG_PROP(StokesModel, LinearSolverSplice, SuperLULinearSolver);
          "solver for the Stokes models."
 #endif
 
-//! the Stokes model requires center gradients, and those are only available when using
-//! P1-finite-element gradients.
-SET_BOOL_PROP(StokesModel, UseP1FiniteElementGradients, true);
+//! the class holding all element specific data
+SET_TYPE_PROP(StokesModel, ElementContext, Ewoms::StokesElementContext<TypeTag>);
 
 //! the Model property
 SET_TYPE_PROP(StokesModel, Model, Ewoms::StokesModel<TypeTag>);
@@ -123,6 +124,9 @@ SET_TYPE_PROP(StokesModel, IntensiveQuantities, Ewoms::StokesIntensiveQuantities
 
 //! the ExtensiveQuantities property
 SET_TYPE_PROP(StokesModel, ExtensiveQuantities, Ewoms::StokesExtensiveQuantities<TypeTag>);
+
+//! the RateVector property
+SET_TYPE_PROP(StokesModel, RateVector, Ewoms::StokesRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
 SET_TYPE_PROP(StokesModel, BoundaryRateVector, Ewoms::StokesBoundaryRateVector<TypeTag>);
@@ -172,9 +176,9 @@ SET_BOOL_PROP(StokesModel, EnableEnergy, false);
 //! Disable the inertial term for the Stokes model by default
 SET_BOOL_PROP(StokesModel, EnableNavierTerm, false);
 
-//! The (Navier-)Stokes needs the gradients at the center of the SCVs, so
-//! we enable them here.
-SET_BOOL_PROP(StokesModel, RequireScvCenterGradients, true);
+//! The (Navier-)Stokes needs the gradients at the center of the SCVs, so we enable
+//! support for extensive quantities in the storage term here.
+SET_BOOL_PROP(StokesModel, ExtensiveStorageTerm, true);
 
 //! Enable the inertial term for the Navier-Stokes model
 SET_BOOL_PROP(NavierStokesModel, EnableNavierTerm, true);
@@ -229,6 +233,7 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -243,7 +248,9 @@ class StokesModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
-    typedef typename GridView::template Codim<0>::Entity   Element;
+    typedef typename GridView::template Codim<0>::Entity Element;
+
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     StokesModel(Simulator& simulator)
@@ -359,21 +366,22 @@ public:
                 const auto& intQuants = elemCtx.intensiveQuantities(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
                 const auto& fluidState = intQuants.fluidState();
 
-                pressure[globalIdx] = fluidState.pressure(phaseIdx);
-                density[globalIdx] = fluidState.density(phaseIdx);
-                temperature[globalIdx] = fluidState.temperature(phaseIdx);
-                viscosity[globalIdx] = fluidState.viscosity(phaseIdx);
+                pressure[globalIdx] = Toolbox::value(fluidState.pressure(phaseIdx));
+                density[globalIdx] = Toolbox::value(fluidState.density(phaseIdx));
+                temperature[globalIdx] = Toolbox::value(fluidState.temperature(phaseIdx));
+                viscosity[globalIdx] = Toolbox::value(fluidState.viscosity(phaseIdx));
 
-                // this seems to be a bug in Dune's dense vector
-                // classes: It is possible to assign a DynamicVector
-                // from a scalar and also to add a FieldVector to it,
-                // but it is impossible to directly copy a FieldVector
-                // into a DynamicVector...
+                // this seems to be a bug in Dune's dense vector classes: It is possible
+                // to assign a DynamicVector from a scalar and also to add a FieldVector
+                // to it, but it is impossible to directly copy a FieldVector into a
+                // DynamicVector...
                 velocity[globalIdx] = 0;
-                velocity[globalIdx] += intQuants.velocityCenter();
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    velocity[globalIdx][dimIdx] += Toolbox::value(intQuants.velocityCenter()[dimIdx]);
 
                 for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-                    (*moleFraction[compIdx])[globalIdx] = fluidState.moleFraction(phaseIdx, compIdx);
+                    (*moleFraction[compIdx])[globalIdx] =
+                        Toolbox::value(fluidState.moleFraction(phaseIdx, compIdx));
             }
         }
 

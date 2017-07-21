@@ -129,7 +129,7 @@ public:
      * \brief Given a fluid state, set the enthalpy rate which emerges
      *        from a volumetric rate.
      */
-    template <class FluidState>
+    template <class RateVector, class FluidState>
     static void setEnthalpyRate(RateVector& rateVec OPM_UNUSED,
                                 const FluidState& fluidState OPM_UNUSED,
                                 unsigned phaseIdx OPM_UNUSED,
@@ -331,11 +331,11 @@ public:
      * \brief Given a fluid state, set the enthalpy rate which emerges
      *        from a volumetric rate.
      */
-    template <class FluidState>
+    template <class RateVector, class FluidState>
     static void setEnthalpyRate(RateVector& rateVec,
                                 const FluidState& fluidState,
                                 unsigned phaseIdx,
-                                Scalar volume)
+                                const Evaluation& volume)
     {
         rateVec[energyEqIdx] =
             volume

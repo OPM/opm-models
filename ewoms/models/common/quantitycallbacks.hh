@@ -50,20 +50,22 @@ class TemperatureCallback
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
     typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IQFluidState>().temperature(0)) ResultRawType;
 
 public:
-    typedef decltype(std::declval<IQFluidState>().temperature(0)) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     TemperatureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
     {}
 
     /*!
-     * \brief Return the temperature given the index of a
-     *        degree of freedom within an element context.
+     * \brief Return the temperature given the index of a degree of freedom within an
+     *        element context.
      *
-     * In this context, we assume that thermal equilibrium applies,
-     * i.e. that the temperature of all phases is equal.
+     * In this context, we assume that thermal equilibrium applies, i.e. that the
+     * temperature of all phases is equal.
      */
     ResultType operator()(unsigned dofIdx) const
     { return elemCtx_.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState().temperature(/*phaseIdx=*/0); }
@@ -84,9 +86,11 @@ class PressureCallback
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
     typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IQFluidState>().pressure(0)) ResultRawType;
 
 public:
-    typedef decltype(std::declval<IQFluidState>().pressure(0)) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     PressureCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -105,8 +109,8 @@ public:
     { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
-     * \brief Return the pressure of a phase given the index of a
-     *        degree of freedom within an element context.
+     * \brief Return the pressure of the specified phase given the index of a degree of
+     *        freedom within an element context.
      */
     ResultType operator()(unsigned dofIdx) const
     {
@@ -131,8 +135,9 @@ class BoundaryPressureCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
-    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
-    typedef typename std::remove_reference<IQFluidState>::type::Scalar IQScalar;
+    typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQRawFluidState;
+    typedef typename std::remove_const<typename std::remove_reference<IQRawFluidState>::type>::type IQFluidState;
+    typedef typename IQFluidState::Scalar IQScalar;
     typedef Opm::MathToolbox<IQScalar> Toolbox;
 
 public:
@@ -192,9 +197,11 @@ class DensityCallback
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
     typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IQFluidState>().density(0)) ResultRawType;
 
 public:
-    typedef decltype(std::declval<IQFluidState>().density(0)) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     DensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -242,6 +249,7 @@ class MolarDensityCallback
 
 public:
     typedef decltype(std::declval<IQFluidState>().molarDensity(0)) ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     MolarDensityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -286,9 +294,11 @@ class ViscosityCallback
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
     typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IQFluidState>().viscosity(0)) ResultRawType;
 
 public:
-    typedef decltype(std::declval<IQFluidState>().viscosity(0)) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     ViscosityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -333,8 +343,14 @@ class VelocityCallback
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
+    typedef decltype(IntensiveQuantities().velocityCenter()) ResultRawType;
+
+    enum { dim = GridView::dimensionworld };
+
 public:
-    typedef decltype(IntensiveQuantities().velocityCenter()) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename ResultType::field_type ResultFieldType;
+    typedef typename Opm::MathToolbox<ResultFieldType>::ValueType ResultFieldValueType;
 
     VelocityCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -362,8 +378,11 @@ class VelocityComponentCallback
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
+    typedef decltype(IntensiveQuantities().velocityCenter()[0]) ResultRawType;
+
 public:
-    typedef decltype(IntensiveQuantities().velocityCenter()[0]) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     VelocityComponentCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -408,9 +427,11 @@ class MoleFractionCallback
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
 
     typedef decltype(std::declval<IntensiveQuantities>().fluidState()) IQFluidState;
+    typedef decltype(std::declval<IQFluidState>().moleFraction(0, 0)) ResultRawType;
 
 public:
-    typedef decltype(std::declval<IQFluidState>().moleFraction(0, 0)) ResultType;
+    typedef typename std::remove_const<typename std::remove_reference<ResultRawType>::type>::type ResultType;
+    typedef typename Opm::MathToolbox<ResultType>::ValueType ResultValueType;
 
     MoleFractionCallback(const ElementContext& elemCtx)
         : elemCtx_(elemCtx)
@@ -426,23 +447,22 @@ public:
     {}
 
     /*!
-     * \brief Set the index of the fluid phase for which a mole
-     *        fraction should be returned.
+     * \brief Set the index of the fluid phase for which a mole fraction should be
+     *        returned.
      */
     void setPhaseIndex(unsigned phaseIdx)
     { phaseIdx_ = static_cast<unsigned short>(phaseIdx); }
 
     /*!
-     * \brief Set the index of the component for which the mole
-     *        fraction should be returned.
+     * \brief Set the index of the component for which the mole fraction should be
+     *        returned.
      */
     void setComponentIndex(unsigned compIdx)
     { compIdx_ = static_cast<unsigned short>(compIdx); }
 
     /*!
-     * \brief Return the mole fraction of a component in a phase given
-     *        the index of a degree of freedom within an element
-     *        context.
+     * \brief Return the mole fraction of a component in a phase given the index of a
+     *        degree of freedom within an element context.
      */
     ResultType operator()(unsigned dofIdx) const
     {

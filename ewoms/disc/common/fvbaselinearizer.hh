@@ -268,7 +268,7 @@ private:
         createMatrix_();
 
         // initialize the Jacobian matrix and the vector for the residual function
-        *matrix_ = 0;
+        (*matrix_) = 0.0;
         residual_.resize(model_().numTotalDof());
         residual_ = 0;
 
@@ -336,7 +336,7 @@ private:
     void resetSystem_()
     {
         residual_ = 0.0;
-        (*matrix_) = 0;
+        (*matrix_) = 0.0;
     }
 
     // query the problem for all constraint degrees of freedom. note that this method is
@@ -398,6 +398,8 @@ private:
 
         applyConstraintsToSolution_();
 
+        *matrix_ = 0.0;
+
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
 #ifdef _OPENMP
@@ -442,8 +444,7 @@ private:
         auto& localLinearizer = model_().localLinearizer(threadId);
 
         // the actual work of linearization is done by the local linearizer class
-        elementCtx->updateAll(elem);
-        localLinearizer.linearize(*elementCtx);
+        localLinearizer.linearize(*elementCtx, elem);
 
         // update the right hand side and the Jacobian matrix
         if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))

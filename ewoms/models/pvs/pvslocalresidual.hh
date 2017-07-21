@@ -134,7 +134,7 @@ public:
     {
         const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-        unsigned interiorIdx = extQuants.interiorIndex();
+        unsigned focusDofIdx = elemCtx.focusDofIndex();
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream and the downstream DOFs
             // of the current phase
@@ -144,7 +144,7 @@ public:
             // this is a bit hacky because it is specific to the element-centered
             // finite volume scheme. (N.B. that if finite differences are used to
             // linearize the system of equations, it does not matter.)
-            if (upIdx == interiorIdx) {
+            if (upIdx == focusDofIdx) {
                 Evaluation tmp =
                     up.fluidState().molarDensity(phaseIdx)
                     * extQuants.volumeFlux(phaseIdx);

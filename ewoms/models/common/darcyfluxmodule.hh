@@ -199,6 +199,7 @@ protected:
         unsigned j = scvf.exteriorIndex();
         interiorDofIdx_ = static_cast<short>(i);
         exteriorDofIdx_ = static_cast<short>(j);
+        unsigned focusDofIdx = elemCtx.focusDofIndex();
 
         // calculate the "raw" pressure gradient
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -243,19 +244,39 @@ protected:
                     continue;
 
                 // calculate the hydrostatic pressure at the integration point of the face
-                auto rhoIn = intQuantsIn.fluidState().density(phaseIdx);
-                auto pStatIn = - rhoIn*(gIn*distVecIn);
+                Evaluation pStatIn;
+
+                if (std::is_same<Scalar, Evaluation>::value ||
+                    interiorDofIdx_ == static_cast<int>(focusDofIdx))
+                {
+                    const Evaluation& rhoIn = intQuantsIn.fluidState().density(phaseIdx);
+                    pStatIn = - rhoIn*(gIn*distVecIn);
+                }
+                else {
+                    Scalar rhoIn = Toolbox::value(intQuantsIn.fluidState().density(phaseIdx));
+                    pStatIn = - rhoIn*(gIn*distVecIn);
+                }
 
                 // the quantities on the exterior side of the face do not influence the
                 // result for the TPFA scheme, so they can be treated as scalar values.
-                Scalar rhoEx = Toolbox::value(intQuantsEx.fluidState().density(phaseIdx));
-                Scalar pStatEx = - rhoEx*(gEx*distVecEx);
+                Evaluation pStatEx;
+
+                if (std::is_same<Scalar, Evaluation>::value ||
+                    exteriorDofIdx_ == static_cast<int>(focusDofIdx))
+                {
+                    const Evaluation& rhoEx = intQuantsEx.fluidState().density(phaseIdx);
+                    pStatEx = - rhoEx*(gEx*distVecEx);
+                }
+                else {
+                    Scalar rhoEx = Toolbox::value(intQuantsEx.fluidState().density(phaseIdx));
+                    pStatEx = - rhoEx*(gEx*distVecEx);
+                }
 
                 // compute the hydrostatic gradient between the two control volumes (this
                 // gradient exhibitis the same direction as the vector between the two
                 // control volume centers and the length (pStaticExterior -
                 // pStaticInterior)/distanceInteriorToExterior
-                EvalDimVector f(distVecTotal);
+                Dune::FieldVector<Evaluation, dimWorld> f(distVecTotal);
                 f *= (pStatEx - pStatIn)/absDistTotalSquared;
 
                 // calculate the final potential gradient
@@ -296,14 +317,10 @@ protected:
                 downstreamDofIdx_[phaseIdx] = exteriorDofIdx_;
             }
 
-            const auto& up =
-                elemCtx.intensiveQuantities(static_cast<unsigned>(upstreamDofIdx_[phaseIdx]),
-                                            timeIdx);
-            // this is also slightly hacky because it assumes that the derivative of the
-            // flux between two DOFs only depends on the primary variables in the
-            // upstream direction. For non-TPFA flux approximation schemes, this is not
-            // true...
-            if (upstreamDofIdx_[phaseIdx] == interiorDofIdx_)
+            // we only carry the derivatives along if the upstream DOF is the one which
+            // we currently focus on
+            const auto& up = elemCtx.intensiveQuantities(upstreamDofIdx_[phaseIdx], timeIdx);
+            if (upstreamDofIdx_[phaseIdx] == static_cast<int>(focusDofIdx))
                 mobility_[phaseIdx] = up.mobility(phaseIdx);
             else
                 mobility_[phaseIdx] = Toolbox::value(up.mobility(phaseIdx));
@@ -345,6 +362,7 @@ protected:
         auto i = scvf.interiorIndex();
         interiorDofIdx_ = static_cast<short>(i);
         exteriorDofIdx_ = -1;
+        int focusDofIdx = elemCtx.focusDofIndex();
 
         // calculate the intrinsic permeability
         const auto& intQuantsIn = elemCtx.intensiveQuantities(i, timeIdx);
@@ -428,6 +446,8 @@ protected:
             if (upstreamDofIdx_[phaseIdx] < 0)
                 mobility_[phaseIdx] =
                     kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+            else if (upstreamDofIdx_[phaseIdx] != focusDofIdx)
+                mobility_[phaseIdx] = Toolbox::value(intQuantsIn.mobility(phaseIdx));
             else
                 mobility_[phaseIdx] = intQuantsIn.mobility(phaseIdx);
             Opm::Valgrind::CheckDefined(mobility_[phaseIdx]);
@@ -449,15 +469,15 @@ protected:
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
             filterVelocity_[phaseIdx] = 0.0;
             volumeFlux_[phaseIdx] = 0.0;
-            if (!elemCtx.model().phaseIsConsidered(phaseIdx)) {
+            if (!elemCtx.model().phaseIsConsidered(phaseIdx))
                 continue;
-            }
 
             asImp_().calculateFilterVelocity_(phaseIdx);
             Opm::Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
+
             volumeFlux_[phaseIdx] = 0.0;
             for (unsigned i = 0; i < normal.size(); ++i)
-                volumeFlux_[phaseIdx] += (filterVelocity_[phaseIdx][i] * normal[i]);
+                volumeFlux_[phaseIdx] += filterVelocity_[phaseIdx][i] * normal[i];
         }
     }
 
@@ -486,7 +506,7 @@ protected:
             Opm::Valgrind::CheckDefined(filterVelocity_[phaseIdx]);
             volumeFlux_[phaseIdx] = 0.0;
             for (unsigned i = 0; i < normal.size(); ++i)
-                volumeFlux_[phaseIdx] += (filterVelocity_[phaseIdx][i] * normal[i]);
+                volumeFlux_[phaseIdx] += filterVelocity_[phaseIdx][i] * normal[i];
         }
     }
 

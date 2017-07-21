@@ -70,10 +70,12 @@ class StokesIntensiveQuantities
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename GridView::ctype CoordScalar;
+    typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<CoordScalar, dim> LocalPosition;
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
     typedef Opm::CompositionalFluidState<Evaluation, FluidSystem, enableEnergy> FluidState;
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
     StokesIntensiveQuantities()
@@ -96,7 +98,7 @@ public:
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-        fluidState_.setPressure(phaseIdx, priVars[pressureIdx]);
+        fluidState_.setPressure(phaseIdx, priVars.makeEvaluation(pressureIdx, timeIdx));
         Opm::Valgrind::CheckDefined(fluidState_.pressure(phaseIdx));
 
         // set the saturation of the phase to 1. for the stokes model,
@@ -106,13 +108,13 @@ public:
         fluidState_.setSaturation(phaseIdx, 1.0);
 
         // set the phase composition
-        Scalar sumx = 0;
+        Evaluation sumx = 0;
         for (unsigned compIdx = 1; compIdx < numComponents; ++compIdx) {
             fluidState_.setMoleFraction(phaseIdx, compIdx,
-                                        priVars[moleFrac1Idx + compIdx - 1]);
-            sumx += priVars[moleFrac1Idx + compIdx - 1];
+                                        priVars.makeEvaluation(moleFrac1Idx + compIdx - 1, timeIdx));
+            sumx += fluidState_.moleFraction(phaseIdx, compIdx);
         }
-        fluidState_.setMoleFraction(phaseIdx, 0, 1 - sumx);
+        fluidState_.setMoleFraction(phaseIdx, 0, 1.0 - sumx);
 
         // create NullParameterCache and do dummy update
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
@@ -126,7 +128,7 @@ public:
 
         // the effective velocity of the control volume
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-            velocityCenter_[dimIdx] = priVars[Indices::velocity0Idx + dimIdx];
+            velocityCenter_[dimIdx] = priVars.makeEvaluation(Indices::velocity0Idx + dimIdx, timeIdx);
 
         // the gravitational acceleration applying to the material
         // inside the volume
@@ -134,21 +136,40 @@ public:
     }
 
     /*!
-     * \copydoc IntensiveQuantities::updateScvGradients
+     * \brief Update all gradients for a given sub-control volume.
+     *
+     * These gradients can actually be considered as extensive quantities, but since they
+     * are attributed to the sub-control volumes and they are also not primary variables,
+     * they are hacked into the framework like this.
+     *
+     * \param elemCtx The execution context from which the method is called.
+     * \param dofIdx The index of the sub-control volume for which the
+     *               intensive quantities should be calculated.
+     * \param timeIdx The index for the time discretization for which
+     *                the intensive quantities should be calculated
      */
     void updateScvGradients(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
+        auto focusDofIdx = elemCtx.focusDofIndex();
+
         // calculate the pressure gradient at the SCV using finite
         // element gradients
         pressureGrad_ = 0.0;
         for (unsigned i = 0; i < elemCtx.numDof(/*timeIdx=*/0); ++i) {
             const auto& feGrad = elemCtx.stencil(timeIdx).subControlVolume(dofIdx).gradCenter[i];
-            Opm::Valgrind::CheckDefined(feGrad);
-            DimVector tmp(feGrad);
-            tmp *= elemCtx.intensiveQuantities(i, timeIdx).fluidState().pressure(phaseIdx);
-            Opm::Valgrind::CheckDefined(tmp);
+            const auto& fs = elemCtx.intensiveQuantities(i, timeIdx).fluidState();
 
-            pressureGrad_ += tmp;
+            if (i == focusDofIdx) {
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    pressureGrad_[dimIdx] += feGrad[dimIdx]*fs.pressure(phaseIdx);
+            }
+            else {
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    pressureGrad_[dimIdx] += feGrad[dimIdx]*Toolbox::value(fs.pressure(phaseIdx));
+            }
+
+            Opm::Valgrind::CheckDefined(feGrad);
+            Opm::Valgrind::CheckDefined(pressureGrad_);
         }
 
         // integrate the velocity over the sub-control volume
@@ -160,18 +181,19 @@ public:
         static const unsigned quadratureOrder = 2;
         const auto& rule = Dune::QuadratureRules<Scalar, dimWorld>::rule(geomType, quadratureOrder);
 
-        // integrate the veloc over the sub-control volume
+        // calculate the average velocity inside of the sub-control volume
         velocity_ = 0.0;
         for (auto it = rule.begin(); it != rule.end(); ++it) {
             const auto& posScvLocal = it->position();
             const auto& posElemLocal = scvLocalGeom.global(posScvLocal);
 
-            DimVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
+            DimEvalVector velocityAtPos = velocityAtPos_(elemCtx, timeIdx, posElemLocal);
             Scalar weight = it->weight();
             Scalar detjac = 1.0;
-            // scvLocalGeom.integrationElement(posScvLocal) *
-            // elemGeom.integrationElement(posElemLocal);
-            velocity_.axpy(weight * detjac, velocityAtPos);
+
+            for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
+                velocity_[dimIdx] += weight*detjac*velocityAtPos[dimIdx];
+            }
         }
 
         // since we want the average velocity, we have to divide the
@@ -200,19 +222,19 @@ public:
     /*!
      * \brief Returns the average velocity in the sub-control volume.
      */
-    const DimVector& velocity() const
+    const DimEvalVector& velocity() const
     { return velocity_; }
 
     /*!
      * \brief Returns the velocity at the center in the sub-control volume.
      */
-    const DimVector& velocityCenter() const
+    const DimEvalVector& velocityCenter() const
     { return velocityCenter_; }
 
     /*!
      * \brief Returns the pressure gradient in the sub-control volume.
      */
-    const DimVector& pressureGradient() const
+    const DimEvalVector& pressureGradient() const
     { return pressureGrad_; }
 
     /*!
@@ -223,32 +245,41 @@ public:
     { return gravity_; }
 
 private:
-    DimVector velocityAtPos_(const ElementContext& elemCtx,
-                             unsigned timeIdx,
-                             const LocalPosition& localPos) const
+    DimEvalVector velocityAtPos_(const ElementContext& elemCtx,
+                                 unsigned timeIdx,
+                                 const LocalPosition& localPos) const
     {
-        auto& feCache =
-            elemCtx.gradientCalculator().localFiniteElementCache();
-        const auto& localFiniteElement =
-            feCache.get(elemCtx.element().type());
+        auto focusDofIdx = elemCtx.focusDofIndex();
+
+        auto& feCache = elemCtx.gradientCalculator().localFiniteElementCache();
+        const auto& localFiniteElement = feCache.get(elemCtx.element().type());
 
         typedef Dune::FieldVector<Scalar, 1> ShapeValue;
         std::vector<ShapeValue> shapeValue;
 
         localFiniteElement.localBasis().evaluateFunction(localPos, shapeValue);
 
-        DimVector result(0.0);
+        DimEvalVector result(0.0);
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numDof(/*timeIdx=*/0); dofIdx++) {
-            result.axpy(shapeValue[dofIdx][0], elemCtx.intensiveQuantities(dofIdx, timeIdx).velocityCenter());
+            const auto& vCenter = elemCtx.intensiveQuantities(dofIdx, timeIdx).velocityCenter();
+
+            if (dofIdx == focusDofIdx) {
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    result[dimIdx] += shapeValue[dofIdx][0]*vCenter[dimIdx];
+            }
+            else {
+                for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
+                    result[dimIdx] += shapeValue[dofIdx][0]*Toolbox::value(vCenter[dimIdx]);
+            }
         }
 
         return result;
     }
 
-    DimVector velocity_;
-    DimVector velocityCenter_;
+    DimEvalVector velocity_;
+    DimEvalVector velocityCenter_;
     DimVector gravity_;
-    DimVector pressureGrad_;
+    DimEvalVector pressureGrad_;
     FluidState fluidState_;
 };
 
