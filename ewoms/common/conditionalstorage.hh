@@ -56,11 +56,15 @@ public:
         : data_(std::move(t))
     {};
 
-    operator T() const { return data_; }
-    operator T() { return data_; }
+    const T& operator*() const
+    { return data_; }
+    T& operator*()
+    { return data_; }
 
-    const T& get() const { return data_; }
-    T& get() { return data_; }
+    const T* operator->() const
+    { return &data_; }
+    T* operator->()
+    { return &data_; }
 
 private:
     T data_;
@@ -79,12 +83,15 @@ public:
     ConditionalStorage(const T&)
     {};
 
-    operator T() const { OPM_THROW(std::logic_error, "data member deactivated"); }
-    operator T() { OPM_THROW(std::logic_error, "data member deactivated"); }
+    const T& operator*() const
+    { OPM_THROW(std::logic_error, "data member deactivated"); }
+    T& operator*()
+    { OPM_THROW(std::logic_error, "data member deactivated"); }
 
-    const T& get() const { OPM_THROW(std::logic_error, "data member deactivated"); }
-    T& get() { OPM_THROW(std::logic_error, "data member deactivated"); }
-
+    const T* operator->() const
+    { OPM_THROW(std::logic_error, "data member deactivated"); }
+    T* operator->()
+    { OPM_THROW(std::logic_error, "data member deactivated"); }
 };
 
 } // namespace Ewoms
