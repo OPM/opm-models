@@ -51,6 +51,8 @@ namespace Ewoms {
 template<class TypeTag>
 class FvBaseElementContext
 {
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext) Implementation;
+
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
@@ -79,8 +81,6 @@ class FvBaseElementContext
 
     static const unsigned dim = GridView::dimension;
     static const unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
-    static const unsigned requireScvCenterGradients =
-        GET_PROP_VALUE(TypeTag, RequireScvCenterGradients);
 
     typedef typename GridView::ctype CoordScalar;
     typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
@@ -100,6 +100,7 @@ public:
         simulatorPtr_ = &simulator;
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
         stashedDofIdx_ = -1;
+        focusDofIdx_ = -1;
     }
 
     static void *operator new(size_t size) {
@@ -119,9 +120,9 @@ public:
      */
     void updateAll(const Element& elem)
     {
-        updateStencil(elem);
-        updateAllIntensiveQuantities();
-        updateAllExtensiveQuantities();
+        asImp_().updateStencil(elem);
+        asImp_().updateAllIntensiveQuantities();
+        asImp_().updateAllExtensiveQuantities();
     }
 
     /*!
@@ -139,15 +140,6 @@ public:
         // most models don't need them, so that we only do this if the model explicitly
         // enables them
         stencil_.update(elem);
-
-        if (requireScvCenterGradients) {
-#if HAVE_DUNE_LOCALFUNCTIONS
-            stencil_.updateCenterGradients();
-#else
-            // center gradients require dune-localfunctions
-            assert(false);
-#endif
-        }
 
         // resize the arrays containing the flux and the volume variables
         dofVars_.resize(stencil_.numDof());
@@ -192,19 +184,17 @@ public:
      */
     void updateAllIntensiveQuantities()
     {
-        stashedDofIdx_ = -1;
-
         if (!enableStorageCache_) {
             // if the storage cache is disabled, we need to calculate the storage term
             // from scratch, i.e. we need the intensive quantities of all of the history.
             for (unsigned timeIdx = 0; timeIdx < timeDiscHistorySize; ++ timeIdx)
-                updateIntensiveQuantities(timeIdx);
+                asImp_().updateIntensiveQuantities(timeIdx);
         }
         else
             // if the storage cache is enabled, we only need to recalculate the storage
             // term for the most recent point of history (i.e., for the current iterative
             // solution)
-            updateIntensiveQuantities(/*timeIdx=*/0);
+            asImp_().updateIntensiveQuantities(/*timeIdx=*/0);
     }
 
     /*!
@@ -236,26 +226,14 @@ public:
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updateIntensiveQuantities(const PrimaryVariables& priVars, unsigned dofIdx, unsigned timeIdx)
-    {
-        updateSingleIntQuants_(priVars, dofIdx, timeIdx);
-
-        // update gradients inside a sub control volume
-        size_t nDof = numDof(timeIdx);
-        for (unsigned gradDofIdx = 0; gradDofIdx < nDof; gradDofIdx++) {
-            dofVars_[gradDofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
-                                                                                 gradDofIdx,
-                                                                                 timeIdx);
-        }
-    }
+    { asImp_().updateSingleIntQuants_(priVars, dofIdx, timeIdx); }
 
     /*!
      * \brief Compute the extensive quantities of all sub-control volume
      *        faces of the current element for all time indices.
      */
     void updateAllExtensiveQuantities()
-    {
-        updateExtensiveQuantities(/*timeIdx=*/0);
-    }
+    { asImp_().updateExtensiveQuantities(/*timeIdx=*/0); }
 
     /*!
      * \brief Compute the extensive quantities of all sub-control volume
@@ -266,14 +244,32 @@ public:
      */
     void updateExtensiveQuantities(unsigned timeIdx)
     {
-        gradientCalculator_.prepare(/*context=*/*this, timeIdx);
+        gradientCalculator_.prepare(/*context=*/asImp_(), timeIdx);
 
         for (unsigned fluxIdx = 0; fluxIdx < numInteriorFaces(timeIdx); fluxIdx++) {
-            extensiveQuantities_[fluxIdx].update(/*context=*/ *this,
+            extensiveQuantities_[fluxIdx].update(/*context=*/asImp_(),
                                                  /*localIndex=*/fluxIdx,
                                                  timeIdx);
         }
     }
+
+    /*!
+     * \brief Sets the degree of freedom on which the simulator is currently "focused" on
+     *
+     * I.e., in the case of automatic differentiation, all derivatives are with regard to
+     * the primary variables of that degree of freedom. Only "primary" DOFs can be
+     * focused on.
+     */
+    void setFocusDofIndex(unsigned dofIdx)
+    { focusDofIdx_ = dofIdx; }
+
+    /*!
+     * \brief Returns the degree of freedom on which the simulator is currently "focused" on
+     *
+     * \copydetails setFocusDof()
+     */
+    unsigned focusDofIndex() const
+    { return focusDofIdx_; }
 
     /*!
      * \brief Return a reference to the simulator.
@@ -540,6 +536,13 @@ public:
     void setEnableStorageCache(bool yesno)
     { enableStorageCache_ = yesno; }
 
+private:
+    Implementation& asImp_()
+    { return *static_cast<Implementation*>(this); }
+
+    const Implementation& asImp_() const
+    { return *static_cast<const Implementation*>(this); }
+
 protected:
     /*!
      * \brief Update the first 'n' intensive quantities objects from the primary variables.
@@ -571,13 +574,6 @@ protected:
                                                         timeIdx);
             }
         }
-
-        // update gradients
-        for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
-            dofVars_[dofIdx].intensiveQuantities[timeIdx].updateScvGradients(/*context=*/*this,
-                                                                             dofIdx,
-                                                                             timeIdx);
-        }
     }
 
     void updateSingleIntQuants_(const PrimaryVariables& priVars, unsigned dofIdx, unsigned timeIdx)
@@ -590,14 +586,11 @@ protected:
 #endif
 
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
-        dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/*this, dofIdx, timeIdx);
+        dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/asImp_(), dofIdx, timeIdx);
     }
 
     IntensiveQuantities intensiveQuantitiesStashed_;
     PrimaryVariables priVarsStashed_;
-
-    bool enableStorageCache_;
-    int stashedDofIdx_;
 
     GradientCalculator gradientCalculator_;
 
@@ -608,6 +601,10 @@ protected:
     const Element *elemPtr_;
     const GridView gridView_;
     Stencil stencil_;
+
+    int stashedDofIdx_;
+    int focusDofIdx_;
+    bool enableStorageCache_;
 };
 
 } // namespace Ewoms

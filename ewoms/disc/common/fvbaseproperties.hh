@@ -283,12 +283,11 @@ NEW_PROP_TAG(BorderListCreator);
 NEW_PROP_TAG(TimeDiscHistorySize);
 
 /*!
- * \brief Specify whether the gradients in the center of the SCVs need
- *        to be updated.
+ * \brief Specify whether the storage terms use extensive quantities or not.
  *
  * Most models don't need this, but the (Navier-)Stokes ones do...
  */
-NEW_PROP_TAG(RequireScvCenterGradients);
+NEW_PROP_TAG(ExtensiveStorageTerm);
 
 }} // namespace Properties, Ewoms
 

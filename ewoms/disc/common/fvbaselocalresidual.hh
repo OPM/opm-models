@@ -72,10 +72,11 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryContext) BoundaryContext;
+
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    enum { extensiveStorageTerm = GET_PROP_VALUE(TypeTag, ExtensiveStorageTerm) };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Evaluation, numEq> EvalVector;
@@ -173,9 +174,9 @@ public:
 
         // make the residual volume specific (i.e., make it incorrect mass per cubic
         // meter instead of total mass)
-        size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned dofIdx=0; dofIdx < numDof; ++dofIdx) {
-            if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0) {
+            if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0.0) {
                 // interior DOF
                 Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
@@ -203,23 +204,44 @@ public:
                      const ElementContext& elemCtx,
                      unsigned timeIdx) const
     {
+        // the derivative of the storage term depends on the current primary variables;
+        // for time indices != 0, the storage term is constant (because these solutions
+        // are not changed by the Newton method!)
         if (timeIdx == 0) {
-            // for the most current solution, the storage term depends on the current
-            // primary variables
-
             // calculate the amount of conservation each quantity inside
             // all primary sub control volumes
             size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
             for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
                 storage[dofIdx] = 0.0;
-                asImp_().computeStorage(storage[dofIdx], elemCtx, dofIdx, timeIdx);
 
                 // the volume of the associated DOF
                 Scalar alpha =
                     elemCtx.stencil(timeIdx).subControlVolume(dofIdx).volume()
                     * elemCtx.intensiveQuantities(dofIdx, timeIdx).extrusionFactor();
-                for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
-                    storage[dofIdx][eqIdx] *= alpha;
+
+                // If the degree of freedom which we currently look at is the one at the
+                // center of attention, we need to consider the derivatives for the
+                // storage term, else the storage term is constant w.r.t. the primary
+                // variables of the focused DOF.
+                if (dofIdx == elemCtx.focusDofIndex()) {
+                    asImp_().computeStorage(storage[dofIdx],
+                                            elemCtx,
+                                            dofIdx,
+                                            timeIdx);
+
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        storage[dofIdx][eqIdx] *= alpha;
+                }
+                else {
+                    Dune::FieldVector<Scalar, numEq> tmp;
+                    asImp_().computeStorage(tmp,
+                                            elemCtx,
+                                            dofIdx,
+                                            timeIdx);
+
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        storage[dofIdx][eqIdx] = tmp[eqIdx]*alpha;
+                }
             }
         }
         else {
@@ -422,10 +444,7 @@ protected:
         BoundaryRateVector values;
 
         Opm::Valgrind::SetUndefined(values);
-        boundaryCtx.problem().boundary(values,
-                                       boundaryCtx,
-                                       boundaryFaceIdx,
-                                       timeIdx);
+        boundaryCtx.problem().boundary(values, boundaryCtx, boundaryFaceIdx, timeIdx);
         Opm::Valgrind::CheckDefined(values);
 
         const auto& stencil = boundaryCtx.stencil(timeIdx);
@@ -436,9 +455,8 @@ protected:
                 stencil.boundaryFace(boundaryFaceIdx).area()
                 * insideIntQuants.extrusionFactor();
 
-        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
             residual[dofIdx][eqIdx] += values[eqIdx];
-        }
     }
 
     /*!
@@ -465,15 +483,19 @@ protected:
                elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
             Opm::Valgrind::CheckDefined(scvVolume);
 
-            // mass balance within the element. this is the \f$\frac{m}{\partial t}\f$
-            // term if using implicit euler as time discretization.
-            //
-            // TODO (?): we might need a more explicit way for doing the time
-            // discretization...
-            asImp_().computeStorage(tmp,
-                                    elemCtx,
-                                    dofIdx,
-                                    /*timeIdx=*/0);
+            // if the model uses extensive quantities in its storage term, and we use
+            // automatic differention and current DOF is also not the one we currently
+            // focus on, the storage term does not need any derivatives!
+            if (!extensiveStorageTerm &&
+                !std::is_same<Scalar, Evaluation>::value &&
+                dofIdx != elemCtx.focusDofIndex())
+            {
+                asImp_().computeStorage(tmp2, elemCtx, dofIdx, /*timeIdx=*/0);
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                    tmp[eqIdx] = tmp2[eqIdx];
+            }
+            else
+                asImp_().computeStorage(tmp, elemCtx, dofIdx, /*timeIdx=*/0);
             Opm::Valgrind::CheckDefined(tmp);
 
             if (elemCtx.enableStorageCache()) {
@@ -505,13 +527,11 @@ protected:
                 // if the mass storage at the beginning of the time step is not cached,
                 // we re-calculate it from scratch.
                 tmp2 = 0.0;
-                asImp_().computeStorage(tmp2,
-                                        elemCtx,
-                                        dofIdx,
-                                        /*timeIdx=*/1);
+                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
                 Opm::Valgrind::CheckDefined(tmp2);
             }
 
+            // Use the implicit Euler time discretization
             for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                 tmp[eqIdx] -= tmp2[eqIdx];
                 tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
@@ -523,9 +543,22 @@ protected:
 
             // deal with the source term
             asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                sourceRate[eqIdx] *= scvVolume;
-                residual[dofIdx][eqIdx] -= sourceRate[eqIdx];
+
+            // if the model uses extensive quantities in its storage term, and we use
+            // automatic differention and current DOF is also not the one we currently
+            // focus on, the storage term does not need any derivatives!
+            if (!extensiveStorageTerm &&
+                !std::is_same<Scalar, Evaluation>::value &&
+                dofIdx != elemCtx.focusDofIndex())
+            {
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                    residual[dofIdx][eqIdx] -= Opm::scalarValue(sourceRate[eqIdx])*scvVolume;
+            }
+            else {
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    sourceRate[eqIdx] *= scvVolume;
+                    residual[dofIdx][eqIdx] -= sourceRate[eqIdx];
+                }
             }
 
             Opm::Valgrind::CheckDefined(residual[dofIdx]);
@@ -536,7 +569,7 @@ protected:
         size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                assert(Opm::isfinite(residual[i][j]));
                 Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }

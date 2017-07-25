@@ -172,14 +172,14 @@ public:
         flux = 0.0;
 
         const ExtensiveQuantities& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
-        unsigned interiorIdx = extQuants.interiorIndex();
+        unsigned focusDofIdx = elemCtx.focusDofIndex();
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
 
             unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
             const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
-            if (upIdx == interiorIdx)
+            if (upIdx == focusDofIdx)
                 evalPhaseFluxes_<Evaluation>(flux, phaseIdx, extQuants, up);
             else
                 evalPhaseFluxes_<Scalar>(flux, phaseIdx, extQuants, up);

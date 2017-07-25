@@ -82,7 +82,7 @@ public:
     {
         const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-        unsigned interiorIdx = extQuants.interiorIndex();
+        unsigned focusDofIdx = elemCtx.focusDofIndex();
         unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(liquidPhaseIdx));
 
         const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
@@ -90,7 +90,7 @@ public:
         // compute advective mass flux of the liquid phase. This is slightly hacky
         // because it is specific to the element-centered finite volume method.
         const Evaluation& rho = up.fluidState().density(liquidPhaseIdx);
-        if (interiorIdx == upIdx)
+        if (focusDofIdx == upIdx)
             flux[contiEqIdx] = extQuants.volumeFlux(liquidPhaseIdx)*rho;
         else
             flux[contiEqIdx] = extQuants.volumeFlux(liquidPhaseIdx)*Toolbox::value(rho);

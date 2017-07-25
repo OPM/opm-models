@@ -28,6 +28,7 @@
 #ifndef EWOMS_ECFV_STENCIL_HH
 #define EWOMS_ECFV_STENCIL_HH
 
+#include <ewoms/common/conditionalstorage.hh>
 #include <ewoms/common/quadraturegeometries.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
@@ -49,7 +50,10 @@ namespace Ewoms {
  * approach. This means that each element corresponds to a control
  * volume.
  */
-template <class Scalar, class GridView>
+template <class Scalar,
+          class GridView,
+          bool needFaceIntegrationPos = true,
+          bool needFaceNormal = true>
 class EcfvStencil
 {
     enum { dimWorld = GridView::dimensionworld };
@@ -161,20 +165,23 @@ public:
     /*!
      * \brief Represents a face of a sub-control volume.
      */
-    class SubControlVolumeFace
+    template <bool needNormal, bool needIntegrationPos>
+    class EcfvSubControlVolumeFace
     {
     public:
-        SubControlVolumeFace()
+        EcfvSubControlVolumeFace()
         {}
 
-        SubControlVolumeFace(const Intersection& intersection, unsigned localNeighborIdx)
+        EcfvSubControlVolumeFace(const Intersection& intersection, unsigned localNeighborIdx)
         {
             exteriorIdx_ = static_cast<unsigned short>(localNeighborIdx);
 
-            normal_ = intersection.centerUnitOuterNormal();
+            if (needNormal)
+                normal_ = intersection.centerUnitOuterNormal();
 
             const auto& geometry = intersection.geometry();
-            integrationPos_ = geometry.center();
+            if (needIntegrationPos)
+              integrationPos_ = geometry.center();
             area_ = geometry.volume();
         }
 
@@ -204,14 +211,14 @@ public:
          *        integration point.
          */
         const GlobalPosition& integrationPos() const
-        { return integrationPos_; }
+        { return integrationPos_.get(); }
 
         /*!
          * \brief Returns the outer unit normal at the face's
          *        integration point.
          */
         const WorldVector& normal() const
-        { return normal_; }
+        { return normal_.get(); }
 
         /*!
          * \brief Returns the area [m^2] of the face
@@ -220,13 +227,14 @@ public:
         { return area_; }
 
     private:
-        GlobalPosition integrationPos_;
-        WorldVector normal_;
-
+        ConditionalStorage<needIntegrationPos, GlobalPosition> integrationPos_;
+        ConditionalStorage<needNormal, WorldVector> normal_;
         Scalar area_;
 
         unsigned short exteriorIdx_;
     };
+
+    typedef EcfvSubControlVolumeFace<needFaceIntegrationPos, needFaceNormal> SubControlVolumeFace;
 
     EcfvStencil(const GridView& gridView, const Mapper& mapper)
         : gridView_(gridView)

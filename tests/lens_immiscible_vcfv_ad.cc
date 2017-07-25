@@ -22,34 +22,31 @@
 */
 /*!
  * \file
- * \ingroup StokesModel
  *
- * \brief Declares the properties required by the Stokes model.
+ * \brief Two-phase test for the immiscible model which uses the
+ *        vertex-centered finite volume discretization
  */
-#ifndef EWOMS_STOKES_PROPERTIES_HH
-#define EWOMS_STOKES_PROPERTIES_HH
+#include "config.h"
 
-#include <ewoms/disc/vcfv/vcfvdiscretization.hh>
+#include <ewoms/common/start.hh>
+#include <ewoms/models/immiscible/immisciblemodel.hh>
+#include "problems/lensproblem.hh"
 
 namespace Ewoms {
 namespace Properties {
-//! Enumerations for the Stokes models accessible using a generic name
-NEW_PROP_TAG(Indices);
-NEW_PROP_TAG(Fluid);
-NEW_PROP_TAG(FluidSystem);
-NEW_PROP_TAG(HeatConductionLaw);
-NEW_PROP_TAG(HeatConductionLawParams);
-//! The index of the considered fluid phase
-NEW_PROP_TAG(StokesPhaseIndex);
-//! The type of the base class for problems using the stokes model
-NEW_PROP_TAG(BaseProblem);
-//! Returns whether gravity is considered in the problem
-NEW_PROP_TAG(EnableGravity);
-//! Specify whether the energy equation is enabled or not
-NEW_PROP_TAG(EnableEnergy);
-//! Specify whether the model should feature an inertial term or not
-NEW_PROP_TAG(EnableNavierTerm);
-} // namespace Properties
-} // namespace Ewoms
+NEW_TYPE_TAG(LensProblemVcfvAd, INHERITS_FROM(ImmiscibleTwoPhaseModel, LensBaseProblem));
 
+// use automatic differentiation for this simulator
+SET_TAG_PROP(LensProblemVcfvAd, LocalLinearizerSplice, AutoDiffLocalLinearizer);
+
+// use linear finite element gradients if dune-localfunctions is available
+#if HAVE_DUNE_LOCALFUNCTIONS
+SET_BOOL_PROP(LensProblemVcfvAd, UseP1FiniteElementGradients, true);
 #endif
+}}
+
+int main(int argc, char **argv)
+{
+    typedef TTAG(LensProblemVcfvAd) ProblemTypeTag;
+    return Ewoms::start<ProblemTypeTag>(argc, argv);
+}

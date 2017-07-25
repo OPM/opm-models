@@ -50,6 +50,7 @@ class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
@@ -101,7 +102,7 @@ public:
                         unsigned timeIdx) const
     {
         storage = 0.0;
-        for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
+        for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
         EnergyModule::addSolidHeatStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
@@ -135,17 +136,16 @@ public:
         ////////
         // advective fluxes of all components in all phases
         ////////
-        unsigned interiorIdx = extQuants.interiorIndex();
+        unsigned focusDofIdx = elemCtx.focusDofIndex();
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             // data attached to upstream DOF of the current phase.
             unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
 
             const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, /*timeIdx=*/0);
 
-            // add advective flux of current component in current phase. This is slightly
-            // hacky because it is specific to the element-centered finite volume method.
+            // add advective flux of current component in current phase.
             const Evaluation& rho = up.fluidState().density(phaseIdx);
-            if (interiorIdx == upIdx)
+            if (focusDofIdx == upIdx)
                 flux[conti0EqIdx + phaseIdx] += extQuants.volumeFlux(phaseIdx)*rho;
             else
                 flux[conti0EqIdx + phaseIdx] += extQuants.volumeFlux(phaseIdx)*Toolbox::value(rho);

@@ -247,9 +247,9 @@ SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverTolerance, 1e-3);
 //! Set the history size of the time discretization to 2 (for implicit euler)
 SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
 
-//! Most models don't need the gradients at the center of the SCVs, so
-//! we disable them by default.
-SET_BOOL_PROP(FvBaseDiscretization, RequireScvCenterGradients, false);
+//! Most models use extensive quantities for their storage term (so far, only the Stokes
+//! model does), so we disable this by default.
+SET_BOOL_PROP(FvBaseDiscretization, ExtensiveStorageTerm, false);
 } // namespace Properties
 
 /*!

@@ -157,9 +157,7 @@ public:
      */
     void linearize(const Element& element)
     {
-        internalElemContext_->updateAll(element);
-
-        linearize(*internalElemContext_);
+        linearize(*internalElemContext_, element);
     }
 
     /*!
@@ -176,26 +174,32 @@ public:
      * \param elemCtx The element execution context for which the local residual and its
      *                local Jacobian should be calculated.
      */
-    void linearize(ElementContext& elemCtx)
+    void linearize(ElementContext& elemCtx, const Element& elem)
     {
+        elemCtx.updateStencil(elem);
+        elemCtx.updateAllIntensiveQuantities();
+
         // update the weights of the primary variables for the context
         model_().updatePVWeights(elemCtx);
 
+        // resize the internal arrays of the linearizer
         resize_(elemCtx);
         reset_(elemCtx);
 
-        // calculate the local residual
-        localResidual_.eval(elemCtx);
+        // compute the local residual and its Jacobian
+        unsigned numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned focusDofIdx = 0; focusDofIdx < numPrimaryDof; focusDofIdx++) {
+            elemCtx.setFocusDofIndex(focusDofIdx);
+            elemCtx.updateAllExtensiveQuantities();
 
-        // calculate the local jacobian matrix
-        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-        for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; dofIdx++) {
+            // calculate the local residual
+            localResidual_.eval(elemCtx);
+
             // convert the local Jacobian matrix and the right hand side from the data
             // structures used by the automatic differentiation code to the conventional
             // ones used by the linear solver.
-            updateLocalLinearization_(elemCtx, dofIdx);
+            updateLocalLinearization_(elemCtx, focusDofIdx);
         }
-
     }
 
     /*!
@@ -266,27 +270,26 @@ protected:
 
     /*!
      * \brief Updates the current local Jacobian matrix with the partial derivatives of
-     *        all equations in regard to the primary variable 'pvIdx' at vertex 'dofIdx'.
+     *        all equations for the degree of freedom associated with 'focusDofIdx'.
      */
     void updateLocalLinearization_(const ElementContext& elemCtx,
-                                   unsigned primaryDofIdx)
+                                   unsigned focusDofIdx)
     {
         const auto& resid = localResidual_.residual();
 
         for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++)
-            residual_[primaryDofIdx][eqIdx] = resid[primaryDofIdx][eqIdx].value();
+            residual_[focusDofIdx][eqIdx] = resid[focusDofIdx][eqIdx].value();
 
         size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
             for (unsigned eqIdx = 0; eqIdx < numEq; eqIdx++) {
                 for (unsigned pvIdx = 0; pvIdx < numEq; pvIdx++) {
-                    // A[dofIdx][primaryDofIdx][eqIdx][pvIdx] is the partial derivative of
-                    // the residual function 'eqIdx' for the degree of freedom 'dofIdx' with
-                    // regard to the primary variable 'pvIdx' of the degree of freedom
-                    // 'primaryDofIdx'
-                    jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx] =
-                        resid[dofIdx][eqIdx].derivative(pvIdx);
-                    Opm::Valgrind::CheckDefined(jacobian_[dofIdx][primaryDofIdx][eqIdx][pvIdx]);
+                    // A[dofIdx][focusDofIdx][eqIdx][pvIdx] is the partial derivative of
+                    // the residual function 'eqIdx' for the degree of freedom 'dofIdx'
+                    // with regard to the focus variable 'pvIdx' of the degree of freedom
+                    // 'focusDofIdx'
+                    jacobian_[dofIdx][focusDofIdx][eqIdx][pvIdx] = resid[dofIdx][eqIdx].derivative(pvIdx);
+                    Opm::Valgrind::CheckDefined(jacobian_[dofIdx][focusDofIdx][eqIdx][pvIdx]);
                 }
             }
         }
