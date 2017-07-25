@@ -177,11 +177,11 @@ public:
             exteriorIdx_ = static_cast<unsigned short>(localNeighborIdx);
 
             if (needNormal)
-                normal_ = intersection.centerUnitOuterNormal();
+                (*normal_) = intersection.centerUnitOuterNormal();
 
             const auto& geometry = intersection.geometry();
             if (needIntegrationPos)
-              integrationPos_ = geometry.center();
+                (*integrationPos_) = geometry.center();
             area_ = geometry.volume();
         }
 
@@ -211,14 +211,14 @@ public:
          *        integration point.
          */
         const GlobalPosition& integrationPos() const
-        { return integrationPos_.get(); }
+        { return *integrationPos_; }
 
         /*!
          * \brief Returns the outer unit normal at the face's
          *        integration point.
          */
         const WorldVector& normal() const
-        { return normal_.get(); }
+        { return *normal_; }
 
         /*!
          * \brief Returns the area [m^2] of the face
