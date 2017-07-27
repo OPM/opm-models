@@ -365,10 +365,9 @@ public:
         , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
     {
 #if HAVE_DUNE_FEM
-        if( enableGridAdaptation_ && ! Dune::Fem::Capabilities::isLocallyAdaptive< Grid >::v )
-        {
-            OPM_THROW(Opm::NotImplemented,"WARNING: adaptation enabled, but chosen Grid is not capable of adaptivity");
-        }
+        if (enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
+            OPM_THROW(Opm::NotImplemented,
+                      "Grid adaptation enabled, but chosen Grid is not capable of adaptivity");
 #else
         if (enableGridAdaptation_)
             OPM_THROW(Opm::NotImplemented,
@@ -498,11 +497,8 @@ public:
         resizeAndResetIntensiveQuantitiesCache_();
         if (storeIntensiveQuantities()) {
             // invalidate all cached intensive quantities
-            for (unsigned timeIdx = 0; timeIdx < historySize; ++ timeIdx) {
-                std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
-                          intensiveQuantityCacheUpToDate_[timeIdx].end(),
-                          false);
-            }
+            for (unsigned timeIdx = 0; timeIdx < historySize; ++ timeIdx)
+                invalidateIntensiveQuantitiesCache(timeIdx);
         }
     }
 
@@ -598,21 +594,13 @@ public:
      * \param globalIdx The global space index for the entity where a hint is requested.
      * \param timeIdx The index used by the time discretization.
      */
-    const IntensiveQuantities *thermodynamicHint(unsigned globalIdx, unsigned timeIdx) const
+    const IntensiveQuantities* thermodynamicHint(unsigned globalIdx, unsigned timeIdx) const
     {
         if (!enableThermodynamicHints_())
             return 0;
 
-        if (intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
-            return &intensiveQuantityCache_[timeIdx][globalIdx];
-
-        // use the intensive quantities for the first up-to-date time index as hint
-        for (unsigned timeIdx2 = 0; timeIdx2 < historySize; ++timeIdx2)
-            if (intensiveQuantityCacheUpToDate_[timeIdx2][globalIdx])
-                return &intensiveQuantityCache_[timeIdx2][globalIdx];
-
-        // no suitable up-to-date intensive quantities...
-        return 0;
+        // the intensive quantities cache doubles as thermodynamic hint
+        return cachedIntensiveQuantities(globalIdx, timeIdx);
     }
 
     /*!
@@ -626,7 +614,7 @@ public:
      *                  hint is requested.
      * \param timeIdx The index used by the time discretization.
      */
-    const IntensiveQuantities *cachedIntensiveQuantities(unsigned globalIdx, unsigned timeIdx) const
+    const IntensiveQuantities* cachedIntensiveQuantities(unsigned globalIdx, unsigned timeIdx) const
     {
         if (!enableIntensiveQuantitiesCache_() ||
             !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
@@ -1289,9 +1277,7 @@ public:
         // previous time step so that we can start the next
         // update at a physically meaningful solution.
         solution(/*timeIdx=*/0) = solution(/*timeIdx=*/1);
-        std::fill(intensiveQuantityCacheUpToDate_[0].begin(),
-                  intensiveQuantityCacheUpToDate_[0].end(),
-                  false);
+        invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
     }
 
     /*!
@@ -1752,9 +1738,7 @@ protected:
             for(unsigned timeIdx=0; timeIdx<historySize; ++timeIdx) {
                 intensiveQuantityCache_[timeIdx].resize(numDof);
                 intensiveQuantityCacheUpToDate_[timeIdx].resize(numDof);
-                std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
-                          intensiveQuantityCacheUpToDate_[timeIdx].end(),
-                          false );
+                invalidateIntensiveQuantitiesCache(timeIdx);
             }
         }
     }
