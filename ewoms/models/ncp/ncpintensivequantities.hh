@@ -92,12 +92,9 @@ public:
     NcpIntensiveQuantities()
     {}
 
-    NcpIntensiveQuantities(const NcpIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    NcpIntensiveQuantities(const NcpIntensiveQuantities& other) = default;
 
-    NcpIntensiveQuantities& operator=(const NcpIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    NcpIntensiveQuantities& operator=(const NcpIntensiveQuantities& other)  = default;
 
     /*!
      * \brief IntensiveQuantities::update

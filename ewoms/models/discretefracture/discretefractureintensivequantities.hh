@@ -73,12 +73,9 @@ public:
     DiscreteFractureIntensiveQuantities()
     { }
 
-    DiscreteFractureIntensiveQuantities(const DiscreteFractureIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    DiscreteFractureIntensiveQuantities(const DiscreteFractureIntensiveQuantities& other) = default;
 
-    DiscreteFractureIntensiveQuantities& operator=(const DiscreteFractureIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    DiscreteFractureIntensiveQuantities& operator=(const DiscreteFractureIntensiveQuantities& other) = default;
 
     /*!
      * \copydoc IntensiveQuantities::update

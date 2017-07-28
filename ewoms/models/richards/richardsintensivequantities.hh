@@ -77,12 +77,9 @@ public:
     RichardsIntensiveQuantities()
     {}
 
-    RichardsIntensiveQuantities(const RichardsIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    RichardsIntensiveQuantities(const RichardsIntensiveQuantities& other) = default;
 
-    RichardsIntensiveQuantities& operator=(const RichardsIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    RichardsIntensiveQuantities& operator=(const RichardsIntensiveQuantities& other) = default;
 
     /*!
      * \copydoc IntensiveQuantities::update

@@ -99,12 +99,9 @@ public:
         fluidState_.setRv(0.0);
     }
 
-    BlackOilIntensiveQuantities(const BlackOilIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    BlackOilIntensiveQuantities(const BlackOilIntensiveQuantities& other) = default;
 
-    BlackOilIntensiveQuantities& operator=(const BlackOilIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    BlackOilIntensiveQuantities& operator=(const BlackOilIntensiveQuantities& other) = default;
 
     /*!
      * \copydoc IntensiveQuantities::update
