@@ -83,12 +83,9 @@ public:
     ImmiscibleIntensiveQuantities()
     { }
 
-    ImmiscibleIntensiveQuantities(const ImmiscibleIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    ImmiscibleIntensiveQuantities(const ImmiscibleIntensiveQuantities& other) = default;
 
-    ImmiscibleIntensiveQuantities& operator=(const ImmiscibleIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    ImmiscibleIntensiveQuantities& operator=(const ImmiscibleIntensiveQuantities& other) = default;
 
     /*!
      * \copydoc IntensiveQuantities::update

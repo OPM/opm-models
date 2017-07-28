@@ -98,12 +98,9 @@ public:
     PvsIntensiveQuantities()
     { }
 
-    PvsIntensiveQuantities(const PvsIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    PvsIntensiveQuantities(const PvsIntensiveQuantities& other) = default;
 
-    PvsIntensiveQuantities& operator=(const PvsIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    PvsIntensiveQuantities& operator=(const PvsIntensiveQuantities& other) = default;
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::update

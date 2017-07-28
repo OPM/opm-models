@@ -92,12 +92,9 @@ public:
     FlashIntensiveQuantities()
     { }
 
-    FlashIntensiveQuantities(const FlashIntensiveQuantities& other)
-        : ParentType()
-    { std::memcpy(this, &other, sizeof(other)); }
+    FlashIntensiveQuantities(const FlashIntensiveQuantities& other) = default;
 
-    FlashIntensiveQuantities& operator=(const FlashIntensiveQuantities& other)
-    { std::memcpy(this, &other, sizeof(other)); return *this; }
+    FlashIntensiveQuantities& operator=(const FlashIntensiveQuantities& other) = default;
 
     /*!
      * \copydoc IntensiveQuantities::update
