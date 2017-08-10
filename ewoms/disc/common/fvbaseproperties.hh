@@ -289,6 +289,9 @@ NEW_PROP_TAG(TimeDiscHistorySize);
  */
 NEW_PROP_TAG(ExtensiveStorageTerm);
 
+//! \brief Specify whether to use volumetric residuals or not
+NEW_PROP_TAG(UseVolumetricResidual);
+
 }} // namespace Properties, Ewoms
 
 #endif

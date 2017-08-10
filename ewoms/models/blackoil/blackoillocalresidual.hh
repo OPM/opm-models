@@ -69,6 +69,8 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     // if compositionSwitchIdx is negative then this feature is disabled in Indices
     static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
 
+    static constexpr bool blackoilConserveSurfaceVolume = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume);
+
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
@@ -118,15 +120,17 @@ public:
         }
 
         // convert surface volumes to component masses
-        unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
-        storage[conti0EqIdx + waterCompIdx] *=
-            FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-        if (compositionSwitchEnabled)
-            storage[conti0EqIdx + gasCompIdx] *=
-                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-        storage[conti0EqIdx + oilCompIdx] *=
-            FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        if (!blackoilConserveSurfaceVolume) {
+            unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
+            storage[conti0EqIdx + waterCompIdx] *=
+                    FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+            if (compositionSwitchEnabled)
+                storage[conti0EqIdx + gasCompIdx] *=
+                        FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
 
+            storage[conti0EqIdx + oilCompIdx] *=
+                    FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+        }
         // deal with solvents (if present)
         SolventModule::addStorage(storage, intQuants);
 
@@ -185,6 +189,17 @@ public:
                 evalPhaseFluxes_<Scalar>(flux, phaseIdx, extQuants, up);
         }
 
+        if (!blackoilConserveSurfaceVolume) {
+           for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+               unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+               unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
+               const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+               unsigned pvtRegionIdx = up.pvtRegionIndex();
+               Scalar refDensity = FluidSystem::referenceDensity(phaseIdx, pvtRegionIdx);
+               flux[conti0EqIdx + compIdx] *= refDensity;
+           }
+        }
+
         // deal with solvents (if present)
         SolventModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
@@ -212,31 +227,29 @@ protected:
                           const IntensiveQuantities& up) const
     {
         unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
-        unsigned pvtRegionIdx = up.pvtRegionIndex();
         const auto& fs = up.fluidState();
 
         Evaluation surfaceVolumeFlux =
-            Toolbox::template decay<UpEval>(fs.invB(phaseIdx))
-            * extQuants.volumeFlux(phaseIdx);
+                Toolbox::template decay<UpEval>(fs.invB(phaseIdx))
+                * extQuants.volumeFlux(phaseIdx);
 
         flux[conti0EqIdx + compIdx] +=
-            surfaceVolumeFlux *
-            FluidSystem::referenceDensity(phaseIdx, pvtRegionIdx);
+                surfaceVolumeFlux;
 
         // dissolved gas (in the oil phase).
         if (phaseIdx == oilPhaseIdx && FluidSystem::enableDissolvedGas()) {
             flux[conti0EqIdx + gasCompIdx] +=
-                FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx)
-                * Toolbox::template decay<UpEval>(fs.Rs())
-                * surfaceVolumeFlux;
+                    Toolbox::template decay<UpEval>(fs.Rs())
+                    * surfaceVolumeFlux;
+
         }
 
         // vaporized oil (in the gas phase).
         if (phaseIdx == gasPhaseIdx && FluidSystem::enableVaporizedOil()) {
             flux[conti0EqIdx + oilCompIdx] +=
-                FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx)
-                * Toolbox::template decay<UpEval>(fs.Rv())
-                * surfaceVolumeFlux;
+                    Toolbox::template decay<UpEval>(fs.Rv())
+                    * surfaceVolumeFlux;
+
         }
     }
 

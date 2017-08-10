@@ -75,6 +75,8 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryContext) BoundaryContext;
 
+    static constexpr bool useVolumetricResidual = GET_PROP_VALUE(TypeTag, UseVolumetricResidual);
+
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { extensiveStorageTerm = GET_PROP_VALUE(TypeTag, ExtensiveStorageTerm) };
 
@@ -172,19 +174,21 @@ public:
         // evaluate the boundary conditions
         asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
 
-        // make the residual volume specific (i.e., make it incorrect mass per cubic
-        // meter instead of total mass)
-        unsigned numDof = elemCtx.numDof(/*timeIdx=*/0);
-        for (unsigned dofIdx=0; dofIdx < numDof; ++dofIdx) {
-            if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0.0) {
-                // interior DOF
-                Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
+        if (useVolumetricResidual) {
+            // make the residual volume specific (i.e., make it incorrect mass per cubic
+            // meter instead of total mass)
+            size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
+            for (unsigned dofIdx=0; dofIdx < numDof; ++dofIdx) {
+                if (elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0) > 0.0) {
+                    // interior DOF
+                    Scalar dofVolume = elemCtx.dofTotalVolume(dofIdx, /*timeIdx=*/0);
 
-                assert(std::isfinite(dofVolume));
-                Opm::Valgrind::CheckDefined(dofVolume);
+                    assert(std::isfinite(dofVolume));
+                    Opm::Valgrind::CheckDefined(dofVolume);
 
-                for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
-                    residual[dofIdx][eqIdx] /= dofVolume;
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        residual[dofIdx][eqIdx] /= dofVolume;
+                }
             }
         }
     }
@@ -338,6 +342,7 @@ public:
             }
         }
 #endif
+
     }
 
     /////////////////////////////

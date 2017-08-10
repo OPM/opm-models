@@ -89,6 +89,8 @@ class BlackOilSolventModule
     static constexpr unsigned enableSolvent = enableSolventV;
     static constexpr unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
     static constexpr unsigned numPhases = FluidSystem::numPhases;
+    static constexpr bool blackoilConserveSurfaceVolume = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume);
+
 
 public:
 #if HAVE_OPM_PARSER
@@ -558,11 +560,17 @@ public:
     {
         if (!enableSolvent)
             return;
-
-        storage[contiSolventEqIdx] +=
-            Toolbox::template decay<LhsEval>(intQuants.porosity())
-            * Toolbox::template decay<LhsEval>(intQuants.solventSaturation())
-            * Toolbox::template decay<LhsEval>(intQuants.solventDensity());
+        if (blackoilConserveSurfaceVolume) {
+            storage[contiSolventEqIdx] +=
+                    Toolbox::template decay<LhsEval>(intQuants.porosity())
+                    * Toolbox::template decay<LhsEval>(intQuants.solventSaturation())
+                    * Toolbox::template decay<LhsEval>(intQuants.solventInverseFormationVolumeFactor());
+        } else {
+            storage[contiSolventEqIdx] +=
+                    Toolbox::template decay<LhsEval>(intQuants.porosity())
+                    * Toolbox::template decay<LhsEval>(intQuants.solventSaturation())
+                    * Toolbox::template decay<LhsEval>(intQuants.solventDensity());
+        }
     }
 
     static void computeFlux(RateVector& flux,
@@ -580,14 +588,25 @@ public:
         unsigned inIdx = extQuants.interiorIndex();
         const auto& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
 
-        if (upIdx == inIdx)
-            flux[contiSolventEqIdx] =
-                extQuants.solventVolumeFlux()
-                *up.solventDensity();
-        else
-            flux[contiSolventEqIdx] =
-                extQuants.solventVolumeFlux()
-                *Opm::decay<Scalar>(up.solventDensity());
+        if (blackoilConserveSurfaceVolume) {
+            if (upIdx == inIdx)
+                flux[contiSolventEqIdx] =
+                        extQuants.solventVolumeFlux()
+                        *up.solventInverseFormationVolumeFactor();
+            else
+                flux[contiSolventEqIdx] =
+                        extQuants.solventVolumeFlux()
+                        *Opm::decay<Scalar>(up.solventInverseFormationVolumeFactor());
+        } else {
+            if (upIdx == inIdx)
+                flux[contiSolventEqIdx] =
+                        extQuants.solventVolumeFlux()
+                        *up.solventDensity();
+            else
+                flux[contiSolventEqIdx] =
+                        extQuants.solventVolumeFlux()
+                        *Opm::decay<Scalar>(up.solventDensity());
+        }
     }
 
     /*!

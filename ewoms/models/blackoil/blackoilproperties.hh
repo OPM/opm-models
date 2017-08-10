@@ -44,6 +44,8 @@ NEW_PROP_TAG(HeatConductionLawParams);
 NEW_PROP_TAG(EnableSolvent);
 //! Enable the ECL-blackoil extension for polymer.
 NEW_PROP_TAG(EnablePolymer);
+//! Enable surface volume scaling
+NEW_PROP_TAG(BlackoilConserveSurfaceVolume);
 }} // namespace Properties, Ewoms
 
 #endif
