@@ -346,7 +346,10 @@ public:
             if (Sw >= thresholdWaterFilledCell) {
 
                 // make sure water saturations does not exceed 1.0
-                (*this)[Indices::waterSaturationIdx] = std::min(Sw, 1.0);
+                (*this)[Indices::waterSaturationIdx] = 1.0;
+                // the hydrocarbon gas saturation is set to 0.0
+                if (compositionSwitchEnabled)
+                    (*this)[Indices::compositionSwitchIdx] = 0.0;
 
                 return false;
             }
@@ -433,7 +436,7 @@ public:
                 // switch back to phase equilibrium mode if the oil phase vanishes (i.e.,
                 // the water-only case)
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::waterSaturationIdx] = std::min(Sw, 1.0); // water saturation
+                (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
                 // because more than one primary variable switch can occur at a time,
@@ -490,9 +493,9 @@ public:
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
 
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::waterSaturationIdx] = std::min(Sw, 1.0);
+                (*this)[Indices::waterSaturationIdx] = 1.0;
                 (*this)[Indices::pressureSwitchIdx] = po;
-                (*this)[Indices::compositionSwitchIdx] = 1.0 - (*this)[Indices::waterSaturationIdx]; // hydrocarbon gas saturation
+                (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
