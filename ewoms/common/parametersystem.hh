@@ -173,6 +173,7 @@ NEW_PROP_TAG(ParameterMetaData);
 NEW_PROP_TAG(ParameterGroupPrefix);
 NEW_PROP_TAG(Description);
 
+NEW_PROP_TAG(SimulatorParameter);
 
 //! Set the ParameterMetaData property
 SET_PROP(ParameterSystem, ParameterMetaData)
@@ -214,6 +215,11 @@ private:
         return obj;
     }
 };
+
+struct EmptyParameters {};
+
+//! Set the ParameterMetaData property
+SET_TYPE_PROP(ParameterSystem, SimulatorParameter, EmptyParameters );
 
 SET_STRING_PROP(ParameterSystem, ParameterGroupPrefix, "");
 SET_STRING_PROP(ParameterSystem, Description, "");

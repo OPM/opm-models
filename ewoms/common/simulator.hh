@@ -45,6 +45,7 @@
 #include <string>
 #include <memory>
 
+
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
@@ -79,12 +80,26 @@ class Simulator
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
+    typedef typename GET_PROP_TYPE(TypeTag, SimulatorParameter)  SimulatorParameter;
+
 
 public:
     // do not allow to copy simulators around
     Simulator(const Simulator& ) = delete;
 
     Simulator(bool verbose = true)
+        : simulatorParameter_()
+    {
+        init( verbose );
+    }
+
+    Simulator(const SimulatorParameter& parameter, bool verbose = true)
+        : simulatorParameter_( parameter )
+    {
+        init( verbose );
+    }
+
+    void init( bool verbose )
     {
         Ewoms::TimerGuard setupTimerGuard(setupTimer_);
 
@@ -852,7 +867,12 @@ public:
         restarter.deserializeSectionEnd();
     }
 
+    const SimulatorParameter& simulatorParameter() const { return simulatorParameter_; }
+    SimulatorParameter& simulatorParameter() { return simulatorParameter_; }
+
 private:
+    SimulatorParameter simulatorParameter_;
+
     std::unique_ptr<GridManager> gridManager_;
     std::unique_ptr<Model> model_;
     std::unique_ptr<Problem> problem_;
