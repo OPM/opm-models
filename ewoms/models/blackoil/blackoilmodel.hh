@@ -209,8 +209,8 @@ class BlackOilModel
     enum { numComponents = FluidSystem::numComponents };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
-    // if compositionSwitchIdx is negative then this feature is disabled in Indices
-    static const bool compositionSwitchEnabled = (Indices::compositionSwitchIdx >= 0);
+    static const bool compositionSwitchEnabled = Indices::gasEnabled;
+    static const bool waterEnabled = Indices::waterEnabled;
 
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
@@ -512,7 +512,9 @@ public:
                 Scalar So = 0.0;
                 switch (priVars.primaryVarsMeaning()) {
                 case PrimaryVariables::Sw_po_Sg:
-                    So = 1.0 - priVars[Indices::waterSaturationIdx];
+                    So = 1.0;
+                    if( waterEnabled)
+                        So -= priVars[Indices::waterSaturationIdx];
                     if( compositionSwitchEnabled )
                         So -= priVars[Indices::compositionSwitchIdx];
                     break;
@@ -520,7 +522,9 @@ public:
                     So = 0.0;
                     break;
                 case PrimaryVariables::Sw_po_Rs:
-                    So = 1.0 - priVars[Indices::waterSaturationIdx];
+                    So = 1.0;
+                    if (waterEnabled)
+                        So -= priVars[Indices::waterSaturationIdx];
                     break;
                 }
 

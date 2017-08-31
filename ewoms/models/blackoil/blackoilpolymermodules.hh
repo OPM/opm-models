@@ -82,7 +82,7 @@ class BlackOilPolymerModule
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned contiPolymerEqIdx = Indices::contiPolymerEqIdx;
-    static constexpr unsigned contiWaterEqIdx = Indices::conti0EqIdx + FluidSystem::waterCompIdx ;
+    static constexpr unsigned contiWaterEqIdx = Indices::conti0EqIdx + Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
     static constexpr unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
 
 
