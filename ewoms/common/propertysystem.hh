@@ -45,6 +45,7 @@
 #include <dune/common/classname.hh>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
+#include <opm/common/Unused.hpp>
 
 #include <type_traits> // required for 'is_base_of<A, B>'
 
@@ -85,7 +86,7 @@ namespace Properties {
         static std::string propertyName() { return #PropTagName; }      \
     };                                                                  \
     namespace fooPropInfo_ ## EffTypeTagName {                          \
-    static const int foo_ ## PropTagName  =                             \
+    static const int foo_ ## PropTagName OPM_UNUSED  =                  \
         PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();  \
     }
 
@@ -100,7 +101,7 @@ namespace Properties {
             return 0;                                                   \
         }                                                               \
     };                                                                  \
-    static const int fooTypeTagInfo_ ## TagName =                       \
+    static const int fooTypeTagInfo_ ## TagName OPM_UNUSED =            \
         TypeTagInfo<TagName>::init();
 
 //! Internal macro which is only required if the property introspection is enabled
@@ -113,7 +114,7 @@ namespace Properties {
             return 0;                                                   \
         }                                                               \
     };                                                                  \
-    static const int fooSpliceInfo_ ## SpliceName =                     \
+    static const int fooSpliceInfo_ ## SpliceName OPM_UNUSED =          \
         SpliceInfo<TTAG(SpliceName)>::init();
 
 #else
