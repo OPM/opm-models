@@ -72,51 +72,47 @@ namespace Properties {
     struct PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>        \
     {                                                                   \
         static int init() {                                             \
-            propertyName = #PropTagName;                                \
             PropertyRegistryKey key(                                    \
                 /*effTypeTagName=*/ Dune::className<TTAG(EffTypeTagName)>(), \
                 /*kind=*/PropKind,                                      \
-                /*name=*/#PropTagName,                                  \
+                /*name=*/propertyName(),                                \
                 /*value=*/#__VA_ARGS__,                                 \
                 /*file=*/__FILE__,                                      \
                 /*line=*/__LINE__);                                     \
             PropertyRegistry::addKey(key);                              \
             return 0;                                                   \
         }                                                               \
-        static std::string propertyName;                                \
-        static int foo;                                                 \
+        static std::string propertyName() { return #PropTagName; }      \
     };                                                                  \
-    std::string PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::propertyName; \
-    int PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::foo =    \
+    static const int fooPropInfo_ ## EffTypeTagName ## _ ## PropTagName  = \
         PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();
 
-//! Internal macro which is only required if the property introspection is enabled
-#define TTAG_INFO_(...)                                     \
-    template <>                                             \
-    struct TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>        \
-    {                                                       \
-        static int init() {                                 \
-            TypeTagRegistry::addChildren<__VA_ARGS__>();    \
-            return 0;                                       \
-        }                                                   \
-        static int foo;                                     \
-    };                                                      \
-    int TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::foo =    \
-        TypeTagInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::init();
 
 //! Internal macro which is only required if the property introspection is enabled
-#define SPLICE_INFO_(...)                                   \
-    template <>                                             \
-    struct SpliceInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>         \
-    {                                                       \
-        static int init() {                                 \
-            TypeTagRegistry::addSplices<__VA_ARGS__>();     \
-            return 0;                                       \
-        }                                                   \
-        static int foo;                                     \
-    };                                                      \
-    int SpliceInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::foo =     \
-    SpliceInfo<EWOMS_GET_HEAD_(__VA_ARGS__)>::init();
+#define TTAG_INFO_(TagName, ...)                                        \
+    template <>                                                         \
+    struct TypeTagInfo<TTAG(TagName)>                                   \
+    {                                                                   \
+        static int init() {                                             \
+            TypeTagRegistry::addAllChildren<TTAG(TagName), __VA_ARGS__>(); \
+            return 0;                                                   \
+        }                                                               \
+    };                                                                  \
+    static const int fooTypeTagInfo_ ## TagName =                       \
+        TypeTagInfo<TagName>::init();
+
+//! Internal macro which is only required if the property introspection is enabled
+#define SPLICE_INFO_(SpliceName, ...)                                   \
+    template <>                                                         \
+    struct SpliceInfo<TTAG(SpliceName)>                                 \
+    {                                                                   \
+        static int init() {                                             \
+            TypeTagRegistry::addAllSplices<TTAG(SpliceName), __VA_ARGS__>(); \
+            return 0;                                                   \
+        }                                                               \
+    };                                                                  \
+    static const int fooSpliceInfo_ ## SpliceName =                     \
+        SpliceInfo<TTAG(SpliceName)>::init();
 
 #else
 //! Don't do anything if introspection is disabled
@@ -169,7 +165,7 @@ namespace Properties {
  */
 #define NEW_TYPE_TAG(...)                       \
     namespace TTag {                            \
-    struct EWOMS_GET_HEAD_(__VA_ARGS__, blubb)  \
+    struct EWOMS_GET_HEAD_(__VA_ARGS__)         \
         : public TypeTag<__VA_ARGS__>           \
     { };                                        \
     TTAG_INFO_(__VA_ARGS__, void)               \
@@ -218,7 +214,7 @@ namespace Properties {
     {                                                               \
         typedef RevertedTuple<__VA_ARGS__>::type tuple;             \
     };                                                              \
-    SPLICE_INFO_(TTAG(TypeTagName), __VA_ARGS__)                    \
+    SPLICE_INFO_(TypeTagName, __VA_ARGS__)                    \
     }                                                               \
     extern int semicolonHack_
 
@@ -599,23 +595,34 @@ struct GetProperty;
 class TypeTagRegistry
 {
 public:
-    struct SpliceRegistryEntryBase {
-        virtual ~SpliceRegistryEntryBase() {}
-        virtual std::string propertyName() const = 0;
+    struct SpliceRegistryEntry {
+        SpliceRegistryEntry(const std::string& name)
+        { name_ = name; }
+
+        std::string propertyName() const
+        { return name_; }
+
+    private:
+        std::string name_;
     };
 
-    template <class TypeTag, class PropTag>
-    struct SpliceRegistryEntry : public SpliceRegistryEntryBase
-    {
-        virtual std::string propertyName() const
-        { return PropertyInfo<typename GetProperty<TypeTag, PropTag>::template GetEffectiveTypeTag_<TypeTag>::type, PropTag>::propertyName; }
-    };
-
-    typedef std::list<std::unique_ptr<SpliceRegistryEntryBase> > SpliceList;
+    typedef std::list<std::unique_ptr<SpliceRegistryEntry> > SpliceList;
     typedef std::map<std::string, SpliceList> SpliceListMap;
 
     typedef std::list<std::string> ChildrenList;
     typedef std::map<std::string, ChildrenList> ChildrenListMap;
+
+    // this method adds the children of a type tag to the registry if the registry does
+    // not yet contain an entry for that type tag
+    template <class TypeTag, typename ... Children>
+    static void addAllChildren()
+    {
+        std::string typeTagName = Dune::className<TypeTag>();
+
+        if (children_().find(typeTagName) == children_().end())
+            addChildren<TypeTag, Children...>();
+    }
+
 
     // end of recursion. the last argument is not a child, but 'void'
     // which is required for the macro magic...
@@ -629,9 +636,23 @@ public:
     static void addChildren()
     {
         std::string typeTagName = Dune::className<TypeTag>();
-        children_[typeTagName].push_front(Dune::className<Child1>());
+
+        children_()[typeTagName].emplace_front(Dune::className<Child1>());
+
         addChildren<TypeTag, Child2, RemainingChildren...>();
     }
+
+    // this method adds the splices of a type tag to the registry if the registry does
+    // not yet contain an entry for that type tag
+    template <class TypeTag, typename ... Splices>
+    static void addAllSplices()
+    {
+        std::string typeTagName = Dune::className<TypeTag>();
+
+        if (splices_().find(typeTagName) == splices_().end())
+            addSplices<TypeTag, Splices...>();
+    }
+
 
     // end of recursion. the last argument is not a child, but 'void'
     // which is required for the macro magic...
@@ -644,42 +665,52 @@ public:
     template <class TypeTag, class Splice1, typename ... RemainingSplices>
     static void addSplices()
     {
-        std::string typeTagName = Dune::className<TypeTag>();
+        const std::string& typeTagName = Dune::className<TypeTag>();
+        const std::string& propName =
+            PropertyInfo<typename GetProperty<TypeTag, Splice1>::template GetEffectiveTypeTag_<TypeTag>::type, Splice1>::propertyName();
 
-        splices_[typeTagName].emplace_front(new SpliceRegistryEntry<TypeTag, Splice1>);
+        splices_()[typeTagName].emplace_front(new SpliceRegistryEntry(propName));
+
         addSplices<TypeTag, RemainingSplices...>();
     }
 
     static const SpliceList& splices(const std::string& typeTagName)
-    { return splices_[typeTagName]; }
+    { return splices_()[typeTagName]; }
 
     static const ChildrenList& children(const std::string& typeTagName)
-    { return children_[typeTagName]; }
+    { return children_()[typeTagName]; }
 
 private:
-    static SpliceListMap splices_;
-    static ChildrenListMap children_;
+    static SpliceListMap& splices_()
+    {
+        static SpliceListMap data;
+        return data;
+    }
+    static ChildrenListMap& children_()
+    {
+        static ChildrenListMap data;
+        return data;
+    }
 };
-
-TypeTagRegistry::SpliceListMap TypeTagRegistry::splices_;
-TypeTagRegistry::ChildrenListMap TypeTagRegistry::children_;
 
 class PropertyRegistry
 {
+    typedef Ewoms::Properties::TypeTagRegistry TypeTagRegistry;
+
 public:
     typedef std::map<std::string, PropertyRegistryKey> KeyList;
     typedef std::map<std::string, KeyList> KeyListMap;
 
     static void addKey(const PropertyRegistryKey& key)
     {
-        keys_[key.effTypeTagName()][key.propertyName()] = key;
+        keys_()[key.effTypeTagName()][key.propertyName()] = key;
     }
 
     static const std::string& getSpliceTypeTagName(const std::string& typeTagName,
                                                    const std::string& propertyName)
     {
-        const auto& keyIt = keys_.find(typeTagName);
-        const auto& keyEndIt = keys_.end();
+        const auto& keyIt = keys_().find(typeTagName);
+        const auto& keyEndIt = keys_().end();
         if (keyIt == keyEndIt)
             OPM_THROW(std::runtime_error,
                       "Unknown type tag key '" << typeTagName << "'");
@@ -692,7 +723,7 @@ public:
             return propIt->second.propertyValue();
 
         // ..., if not, check all splices,  ...
-        typedef TypeTagRegistry::SpliceList SpliceList;
+        typedef typename TypeTagRegistry::SpliceList SpliceList;
         const SpliceList& splices = TypeTagRegistry::splices(typeTagName);
         SpliceList::const_iterator spliceIt = splices.begin();
         for (; spliceIt != splices.end(); ++spliceIt) {
@@ -726,19 +757,18 @@ public:
 
     static const PropertyRegistryKey& getKey(const std::string& effTypeTagName,
                                              const std::string& propertyName)
-    {
-        return keys_[effTypeTagName][propertyName];
-    }
+    { return keys_()[effTypeTagName][propertyName]; }
 
     static const KeyList& getKeys(const std::string& effTypeTagName)
-    {
-        return keys_[effTypeTagName];
-    }
+    { return keys_()[effTypeTagName]; }
 
 private:
-    static KeyListMap keys_;
+    static KeyListMap& keys_()
+    {
+        static KeyListMap data;
+        return data;
+    }
 };
-PropertyRegistry::KeyListMap PropertyRegistry::keys_;
 
 #endif // !defined NO_PROPERTY_INTROSPECTION
 
@@ -802,10 +832,9 @@ struct propertyDefinedOnSelf
                                    PropertyTag> >::value;
 };
 
-// template class to revert the order or a std::tuple's
-// arguments. This is required to make the properties of children
-// defined on the right overwrite the properties of the previous
-// children. See https://sydius.me/2011/07/reverse-tuple-in-c/
+// template class to revert the order or a std::tuple's arguments. This is required to
+// make the properties of children defined on the right overwrite the properties of the
+// children on the left. See https://sydius.me/2011/07/reverse-tuple-in-c/
 template<typename... Args>
 class RevertedTuple
 {
@@ -953,12 +982,12 @@ public:
 };
 
 #if !defined NO_PROPERTY_INTROSPECTION
-int myReplaceAll_(std::string& s,
-                  const std::string& pattern,
-                  const std::string& replacement);
-int myReplaceAll_(std::string& s,
-                  const std::string& pattern,
-                  const std::string& replacement)
+inline int myReplaceAll_(std::string& s,
+                         const std::string& pattern,
+                         const std::string& replacement);
+inline int myReplaceAll_(std::string& s,
+                         const std::string& pattern,
+                         const std::string& replacement)
 {
     size_t pos;
     int i = 0;
@@ -969,8 +998,8 @@ int myReplaceAll_(std::string& s,
     return i;
 }
 
-std::string canonicalTypeTagNameToName_(const std::string& canonicalName);
-std::string canonicalTypeTagNameToName_(const std::string& canonicalName)
+inline std::string canonicalTypeTagNameToName_(const std::string& canonicalName);
+inline std::string canonicalTypeTagNameToName_(const std::string& canonicalName)
 {
     std::string result(canonicalName);
     myReplaceAll_(result, "Ewoms::Properties::TTag::", "TTAG(");
@@ -986,9 +1015,9 @@ inline bool getDiagnostic_(const std::string& typeTagName,
 {
     const PropertyRegistryKey *key = 0;
 
-    const PropertyRegistry::KeyList& keys =
+    const typename PropertyRegistry::KeyList& keys =
         PropertyRegistry::getKeys(typeTagName);
-    PropertyRegistry::KeyList::const_iterator it = keys.begin();
+    typename PropertyRegistry::KeyList::const_iterator it = keys.begin();
     for (; it != keys.end(); ++it) {
         if (it->second.propertyName() == propTagName) {
             key = &it->second;
@@ -1008,7 +1037,7 @@ inline bool getDiagnostic_(const std::string& typeTagName,
     }
 
     // print properties defined on children
-    typedef TypeTagRegistry::ChildrenList ChildrenList;
+    typedef typename TypeTagRegistry::ChildrenList ChildrenList;
     const ChildrenList& children = TypeTagRegistry::children(typeTagName);
     ChildrenList::const_iterator ttagIt = children.begin();
     std::string newIndent = indent + "  ";
@@ -1054,9 +1083,9 @@ inline void print_(const std::string& rootTypeTagName,
         os << indent << "Inherited from splice " << splicePropName << " (set to " << canonicalTypeTagNameToName_(curTypeTagName) << "):";
     else
         os << indent << "Inherited from " << canonicalTypeTagNameToName_(curTypeTagName) << ":";
-    const PropertyRegistry::KeyList& keys =
+    const typename PropertyRegistry::KeyList& keys =
         PropertyRegistry::getKeys(curTypeTagName);
-    PropertyRegistry::KeyList::const_iterator it = keys.begin();
+    typename PropertyRegistry::KeyList::const_iterator it = keys.begin();
     bool somethingPrinted = false;
     for (; it != keys.end(); ++it) {
         const PropertyRegistryKey& key = it->second;
@@ -1101,7 +1130,7 @@ inline void print_(const std::string& rootTypeTagName,
     }
 
     // ... then, over the children
-    typedef TypeTagRegistry::ChildrenList ChildrenList;
+    typedef typename TypeTagRegistry::ChildrenList ChildrenList;
     const ChildrenList& children = TypeTagRegistry::children(curTypeTagName);
     ChildrenList::const_iterator ttagIt = children.begin();
     for (; ttagIt != children.end(); ++ttagIt) {
@@ -1119,7 +1148,7 @@ void printValues(std::ostream& os = std::cout)
 template <class TypeTag>
 void printValues(std::ostream& os = std::cout)
 {
-    std::cout <<
+    os <<
         "The eWoms property system was compiled with the macro\n"
         "NO_PROPERTY_INTROSPECTION defined.\n"
         "No diagnostic messages this time, sorry.\n";
