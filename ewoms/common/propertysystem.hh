@@ -84,8 +84,10 @@ namespace Properties {
         }                                                               \
         static std::string propertyName() { return #PropTagName; }      \
     };                                                                  \
-    static const int fooPropInfo_ ## EffTypeTagName ## _ ## PropTagName  = \
-        PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();
+    namespace fooPropInfo_ ## EffTypeTagName {                          \
+    static const int foo_ ## PropTagName  =                             \
+        PropertyInfo<TTAG(EffTypeTagName), PTAG(PropTagName)>::init();  \
+    }
 
 
 //! Internal macro which is only required if the property introspection is enabled
