@@ -168,6 +168,20 @@ opm_add_test(lens_immiscible_vcfv_fd
 opm_add_test(lens_immiscible_ecfv_ad
              TEST_ARGS --end-time=3000)
 
+# this test is identical to the simulation of the lens problem that
+# uses the element centered finite volume discretization in
+# conjunction with automatic differentiation
+# (lens_immiscible_ecfv_ad). The only difference is that it uses
+# multiple compile units in order to ensure that eWoms code can be
+# used within libraries that use the same type tag within multiple
+# compile units.
+opm_add_test(lens_immiscible_ecfv_ad_mcu
+             ONLY_COMPILE
+             SOURCES
+                tests/lens_immiscible_ecfv_ad_cu1.cc
+                tests/lens_immiscible_ecfv_ad_cu2.cc
+                tests/lens_immiscible_ecfv_ad_main.cc)
+
 opm_add_test(finger_immiscible_ecfv
              CONDITION ${DUNE_ALUGRID_FOUND})
 
