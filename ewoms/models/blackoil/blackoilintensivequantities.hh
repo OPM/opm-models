@@ -114,6 +114,7 @@ public:
 
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& priVars0 = elemCtx.primaryVars(dofIdx, timeIdx+1);
 
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
@@ -193,11 +194,25 @@ public:
             // in the threephase case, gas and oil phases are potentially present, i.e.,
             // we use the compositions of the gas-saturated oil and oil-saturated gas.
             if (FluidSystem::enableDissolvedGas()) {
-                const Evaluation& RsSat =
+                //const Evaluation& RsSat =
+                Evaluation RsSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             oilPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
+                //if(FluidSystem::enableDRSDT()){
+                if(FluidSystem::enableRateLimmitedDissolvedGas()){
+                    const auto intQuants0 = elemCtx.intensiveQuantities(dofIdx, timeIdx+1);
+                    const auto RsSat0 = intQuants0.fluidState().Rs();
+                    const double drs_max = 0.0;
+
+
+                    if((RsSat-RsSat0)>drs_max){
+                        RsSat = RsSat0+drs_max;
+                    }
+                }
+
+
                 fluidState_.setRs(RsSat);
             }
             else
