@@ -59,7 +59,8 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
     typedef FvBasePrimaryVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) Implementation;
-
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext)    ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -381,14 +382,21 @@ public:
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
                 Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
-                Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
+                Scalar Rs = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
                                                                                    po,
                                                                                    So2,
                                                                                    SoMax);
+
+                if(FluidSystem::enableRateLimitedDissolvedGas()>Opm::FluidSystems::None){
+                    Scalar Rs0 = problem.model().cellValues(globalDofIdx,Model::rsPrev);
+                    Scalar So0 = problem.model().cellValues(globalDofIdx,Model::soPrev);
+                    const double dt = problem.simulator().timeStepSize();
+                    Rs = FluidSystem::rateLimitedUpdate(So, So0, Rs, Rs0, dt);
+                }
                 setPrimaryVarsMeaning(Sw_po_Rs);
                 if (compositionSwitchEnabled)
-                    (*this)[Indices::compositionSwitchIdx] = RsSat;
+                    (*this)[Indices::compositionSwitchIdx] = Rs;
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
