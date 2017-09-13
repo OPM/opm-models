@@ -35,6 +35,7 @@
 
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/common/Valgrind.hpp>
 
 #include <dune/common/fmatrix.hh>
@@ -200,20 +201,19 @@ public:
                                                             oilPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
+                Evaluation Rs_tmp = RsSat;
                 //if(FluidSystem::enableDRSDT()){
-                if(FluidSystem::enableRateLimmitedDissolvedGas()){
-                    const auto intQuants0 = elemCtx.intensiveQuantities(dofIdx, timeIdx+1);
-                    const auto RsSat0 = intQuants0.fluidState().Rs();
-                    const double drs_max = 0.0;
-
-
-                    if((RsSat-RsSat0)>drs_max){
-                        RsSat = RsSat0+drs_max;
-                    }
+                if(FluidSystem::enableRateLimmitedDissolvedGas() > Opm::FluidSystems::None){
+                    // immit the updated Rs value by a given rate pr volume
+                    auto Rs =rateLimmitedDissolvedGasUpdate(RsSat,So,elemCtx,dofIdx,timeIdx);
+                    fluidState_.setRs(Rs);
+                }else{
+                  fluidState_.setRs(RsSat);
                 }
 
 
-                fluidState_.setRs(RsSat);
+
+
             }
             else
                 fluidState_.setRs(0.0);
@@ -232,7 +232,11 @@ public:
         else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs) {
             // if the switching variable is the mole fraction of the gas component in the
             // oil phase, we can directly set the composition of the oil phase
-            const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
+            auto Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
+
+            if(FluidSystem::enableRateLimmitedDissolvedGas() == Opm::FluidSystems::All){
+                Rs = rateLimmitedDissolvedGasUpdate(Rs,So,elemCtx,dofIdx,timeIdx);
+            }
             fluidState_.setRs(Rs);
 
             if (FluidSystem::enableVaporizedOil()) {
@@ -358,6 +362,22 @@ public:
 #endif
     }
 
+    /*! function to update Rs with rate limmitation this is used if keyword DRSDT is pressent in configuration file
+     */
+    Evaluation rateLimmitedDissolvedGasUpdate(const Evaluation& RsSat,const Evaluation& So, const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    {
+
+        assert(timeIdx==0);
+        const auto intQuants0 = elemCtx.intensiveQuantities(dofIdx, timeIdx+1);
+        //const auto RsSat0_tmp = Toolbox::value(intQuants0.fluidState().Rs());//remove derivatives
+        const auto RsSat0_tmp = intQuants0.fluidState().Rs();//remove derivatives
+        const auto RsSat0 = Toolbox::value(RsSat0_tmp);
+        const Scalar So0 = Toolbox::value(intQuants0.fluidState().saturation(oilPhaseIdx));//remove derivaitves may be a problem when adjoint is implemented
+        double dt=1.0;//hack until now how to get timestep here.
+        auto Rs = FluidSystem::rateLimmitedUpdate(So,So0,RsSat,RsSat0,dt);
+        return Rs;
+
+    }
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
