@@ -13,6 +13,10 @@
 #       cmake/Modules/${project}-prereqs.cmake   Dependencies             #
 #                                                                         #
 ###########################################################################
+
+# Mandatory call to project
+project(ewoms CXX)
+
 cmake_minimum_required (VERSION 2.8)
 
 # add the current projects cmake module directory to the search
