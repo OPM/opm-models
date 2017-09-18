@@ -122,6 +122,8 @@ public:
         fluidState_.setPvtRegionIndex(pvtRegionIdx);
 
         // extract the water and the gas saturations for convenience
+        // time index here is only used to deside if one crate a iday or not timeIdx==1 will
+        // give a scalar.
         Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
 
         Evaluation Sg = 0.0;
@@ -364,17 +366,25 @@ public:
 
     /*! function to update Rs with rate limmitation this is used if keyword DRSDT is pressent in configuration file
      */
-    Evaluation rateLimmitedDissolvedGasUpdate(const Evaluation& RsSat,const Evaluation& So, const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    Evaluation rateLimmitedDissolvedGasUpdate(const Evaluation& RsE,const Evaluation& So, const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
+        using Model = typename std::decay
+            <decltype(elemCtx.model())>::type;
 
         assert(timeIdx==0);
-        const auto intQuants0 = elemCtx.intensiveQuantities(dofIdx, timeIdx+1);
+        //const auto intQuants0 = elemCtx.intensiveQuantities(dofIdx, 1);// do not understand why this do not work
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+        Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevRs);
+        Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevSo);
         //const auto RsSat0_tmp = Toolbox::value(intQuants0.fluidState().Rs());//remove derivatives
-        const auto RsSat0_tmp = intQuants0.fluidState().Rs();//remove derivatives
-        const auto RsSat0 = Toolbox::value(RsSat0_tmp);
-        const Scalar So0 = Toolbox::value(intQuants0.fluidState().saturation(oilPhaseIdx));//remove derivaitves may be a problem when adjoint is implemented
-        double dt=1.0;//hack until now how to get timestep here.
-        auto Rs = FluidSystem::rateLimmitedUpdate(So,So0,RsSat,RsSat0,dt);
+        //const auto Rs0_tmp = intQuants0.fluidState().Rs();//remove derivatives
+        //const auto Rs0 = Toolbox::value(RsSat0_tmp);
+        //const Scalar So0 = Toolbox::value(intQuants0.fluidState().saturation(oilPhaseIdx));//remove derivaitves may be a problem when adjoint is implemented
+        //double dt = 1.0;//hack until now how to get timestep here.
+        // hope this this is set properly
+        const double dt = elemCtx.simulator().timeStepSize();//.currentStepLength();
+        //auto & gg = sim.gridManager();
+        auto Rs = FluidSystem::rateLimmitedUpdate(So,So0,RsE,Rs0,dt);
         return Rs;
 
     }
