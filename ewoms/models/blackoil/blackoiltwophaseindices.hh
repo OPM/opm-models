@@ -87,7 +87,7 @@ struct BlackOilTwoPhaseIndices
     // Equation indices
     //////////////////////
     //! \brief returns the index of "active" component
-    static constexpr unsigned canonicalToActiveComponentIndex(unsigned compIdx)
+    static const unsigned canonicalToActiveComponentIndex(unsigned compIdx)
     {
         // assumes canonical oil = 0, water = 1, gas = 2;
         if(!gasEnabled) {

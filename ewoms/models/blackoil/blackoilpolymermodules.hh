@@ -82,7 +82,6 @@ class BlackOilPolymerModule
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned contiPolymerEqIdx = Indices::contiPolymerEqIdx;
-    static constexpr unsigned contiWaterEqIdx = Indices::conti0EqIdx + Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
     static constexpr unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
 
 
@@ -477,6 +476,8 @@ public:
         unsigned upIdx = extQuants.upstreamIndex(FluidSystem::waterPhaseIdx);
         unsigned inIdx = extQuants.interiorIndex();
         const auto& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+        const unsigned contiWaterEqIdx = Indices::conti0EqIdx + Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
+
 
         if (upIdx == inIdx) {
             flux[contiPolymerEqIdx] =
