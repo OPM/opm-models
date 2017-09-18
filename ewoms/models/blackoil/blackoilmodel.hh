@@ -204,7 +204,10 @@ class BlackOilModel
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
+    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+    typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = FluidSystem::numComponents };
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
@@ -216,11 +219,18 @@ class BlackOilModel
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
 
 
+
+
 public:
     BlackOilModel(Simulator& simulator)
         : ParentType(simulator)
     {}
-
+    enum CellValuesName : unsigned {
+        prevSo = 0,
+        prevRs = 1,
+        maxOil = 2,
+        numCellValues,
+    };
     /*!
      * \brief Register all run-time parameters for the immiscible model.
      */
@@ -242,6 +252,11 @@ public:
     void finishInit()
     {
         maxOilSaturation_.resize(this->numGridDof(), 0.0);
+        cellValues_.resize(numCellValues);
+        cellValues_.resize(this->numGridDof());
+        for(unsigned i=0; i < cellValues_.size() ; ++i){
+            cellValues_[i].fill( 0.0);
+        }
         ParentType::finishInit();
 
         Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
@@ -388,8 +403,16 @@ public:
         outstream << priVars.primaryVarsMeaning() << " ";
         outstream << priVars.pvtRegionIndex() << " ";
 
+        if (cellValues_.size()>0){
+            for(unsigned i=0;i<numCellValues;++i){
+                if(cellValues_.size() >0 ){
+                    outstream << cellValues_[dofIdx][i];
+                }
+            }
+        }
         if (maxOilSaturation_.size() > 0)
             outstream << maxOilSaturation_[dofIdx] << " ";
+
 
         SolventModule::serializeEntity(*this, outstream, dof);
         PolymerModule::serializeEntity(*this, outstream, dof);
@@ -430,8 +453,17 @@ public:
         unsigned pvtRegionIdx;
         instream >> pvtRegionIdx;
 
+        if (cellValues_.size()>0){
+            for(unsigned i=0;i<numCellValues;++i){
+                if(cellValues_.size() >0 ){
+                    instream >> cellValues_[dofIdx][i];
+                }
+            }
+        }
         if (maxOilSaturation_.size() > 0)
             instream >> maxOilSaturation_[dofIdx];
+
+
 
         if (!instream.good())
             OPM_THROW(std::runtime_error,
@@ -485,7 +517,10 @@ public:
      * match the results of the 'flow' and ECLIPSE 100 simulators.
      */
     Scalar maxOilSaturation(unsigned globalDofIdx) const
-    { return maxOilSaturation_[globalDofIdx]; }
+    {
+        assert(maxOilSaturation_[globalDofIdx] == cellValues_[globalDofIdx][maxOil]);
+        return maxOilSaturation_[globalDofIdx];
+    }
 
     /*!
      * \brief Sets an elements maximum oil phase saturation observed during the
@@ -527,6 +562,55 @@ public:
                 maxOilSaturation_[dofIdx] = std::max(maxOilSaturation_[dofIdx], So);
             }
         }
+    }
+
+
+
+    Scalar cellValues(unsigned globalDofIdx,CellValuesName cv) const
+    { return cellValues_[globalDofIdx][cv]; }
+
+    /*!
+     * \brief Sets an elements maximum oil phase saturation observed during the
+     *        simulation (used for restarting from UNRST-files).
+     */
+    void setCellValues(const Scalar value, unsigned globalDofIdx)
+    { cellValues_[globalDofIdx] = value; }
+
+    /*!
+     * \brief Update the maximum oil saturation observed during the simulation for all
+     *        elements.
+     *
+     * This method must be called manually by the problem because depending on the exact
+     * simulation it sometimes needs to be called after a time step or before an episode
+     * starts.
+     */
+    //void updateCellValues(ElementContext& elemCtx,& gridManager)
+    void updateCellValues(ElementContext& elemCtx,const GridView& gridView)
+    {
+
+        //ElementContext elemCtx(this->simulator());
+        //const auto& gridManager = this->simulator().gridManager();
+        //auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+        //const auto& elemEndIt = gridManage.gridView().template end</*codim=*/0>();
+        auto elemIt = gridView.template begin</*codim=*/0>();
+        const auto& elemEndIt = gridView.template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++elemIt) {
+            auto & elem = *elemIt;
+            elemCtx.updatePrimaryStencil(elem);
+            signed timeIdx = 0;// after a valid step befor new step is started..
+            elemCtx.updatePrimaryIntensiveQuantities(timeIdx);// unnesseary
+            unsigned dofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, timeIdx);
+            const auto& intQuants = elemCtx.intensiveQuantities(/*spaceIdx=*/0, timeIdx);
+            //const auto RsSat0_tmp = Toolbox::value(intQuants0.fluidState().Rs());//remove derivatives
+            const auto Rs = Toolbox::value(intQuants.fluidState().Rs());//remove derivatives
+            const auto So = Toolbox::value(intQuants.fluidState().saturation(FluidSystem::oilPhaseIdx ));//remove derivaitves may be a problem when adjoint is implemented
+            //const auto maxSo = Toolbox::value(intQuants.fluidState().saturationMax(FluidSystem::oilPhaseIdx));
+            // suppolse compressedDofIdx is global elment number
+            cellValues_[dofIdx][prevRs] = Rs;
+            cellValues_[dofIdx][prevSo] = So;
+            cellValues_[dofIdx][maxOil]  = std::max( cellValues_[dofIdx][maxOil], So);
+        }
+
     }
 
 /*
@@ -572,6 +656,7 @@ private:
     }
 
     std::vector<Scalar> maxOilSaturation_;
+    std::vector< std::array<Scalar,numCellValues> > cellValues_;//Rs value of the prevois time stem used for ratelimmited dissolution
 };
 } // namespace Ewoms
 
