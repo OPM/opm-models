@@ -66,8 +66,8 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { waterCompIdx = FluidSystem::waterCompIdx };
     enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
 
-    // if compositionSwitchIdx is negative then this feature is disabled in Indices
-    static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
+    static const bool compositionSwitchEnabled = Indices::gasEnabled;
+    static const bool waterEnabled = Indices::waterEnabled;
 
     static constexpr bool blackoilConserveSurfaceVolume = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume);
 
@@ -96,24 +96,26 @@ public:
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
 
-            unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+            unsigned activeCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
             LhsEval surfaceVolume =
                 Toolbox::template decay<LhsEval>(fs.saturation(phaseIdx))
                 * Toolbox::template decay<LhsEval>(fs.invB(phaseIdx))
                 * Toolbox::template decay<LhsEval>(intQuants.porosity());
 
-            storage[conti0EqIdx + compIdx] += surfaceVolume;
+            storage[conti0EqIdx + activeCompIdx] += surfaceVolume;
 
             // account for dissolved gas
             if (phaseIdx == oilPhaseIdx && FluidSystem::enableDissolvedGas()) {
-                storage[conti0EqIdx + gasCompIdx] +=
+                unsigned activeGasCompIdx = Indices::canonicalToActiveComponentIndex(gasCompIdx);
+                storage[conti0EqIdx + activeGasCompIdx] +=
                     Toolbox::template decay<LhsEval>(intQuants.fluidState().Rs())
                     * surfaceVolume;
             }
 
             // account for vaporized oil
             if (phaseIdx == gasPhaseIdx && FluidSystem::enableVaporizedOil()) {
-                storage[conti0EqIdx + oilCompIdx] +=
+                unsigned activeOilCompIdx = Indices::canonicalToActiveComponentIndex(oilCompIdx);
+                storage[conti0EqIdx + activeOilCompIdx] +=
                     Toolbox::template decay<LhsEval>(intQuants.fluidState().Rv())
                     * surfaceVolume;
             }
@@ -122,13 +124,18 @@ public:
         // convert surface volumes to component masses
         if (!blackoilConserveSurfaceVolume) {
             unsigned pvtRegionIdx = intQuants.pvtRegionIndex();
-            storage[conti0EqIdx + waterCompIdx] *=
-                    FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-            if (compositionSwitchEnabled)
-                storage[conti0EqIdx + gasCompIdx] *=
+            if (waterEnabled) {
+                unsigned activeWaterCompIdx = Indices::canonicalToActiveComponentIndex(waterCompIdx);
+                storage[conti0EqIdx +  activeWaterCompIdx] *=
+                        FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+            }
+            if (compositionSwitchEnabled) {
+                unsigned activeGasCompIdx = Indices::canonicalToActiveComponentIndex(gasCompIdx);
+                storage[conti0EqIdx + activeGasCompIdx] *=
                         FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
-
-            storage[conti0EqIdx + oilCompIdx] *=
+            }
+            unsigned activeOilCompIdx = Indices::canonicalToActiveComponentIndex(oilCompIdx);
+            storage[conti0EqIdx + activeOilCompIdx] *=
                     FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
         }
         // deal with solvents (if present)
@@ -137,30 +144,6 @@ public:
         // deal with polymer (if present)
         PolymerModule::addStorage(storage, intQuants);
 
-        // deal with the two-phase cases for three-phase model
-        if ( compositionSwitchEnabled && FluidSystem::numActivePhases() < 3 )
-        {
-            assert(FluidSystem::numActivePhases() == 2);
-            const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-            if (!FluidSystem::phaseIsActive(oilPhaseIdx)) {
-                // the gas-water case
-                const auto& eval =
-                    priVars.makeEvaluation(Indices::compositionSwitchIdx, /*timeIdx=*/0);
-                storage[conti0EqIdx + oilCompIdx] = Toolbox::template decay<LhsEval>(eval);
-            }
-            else if (!FluidSystem::phaseIsActive(gasPhaseIdx)) {
-                // the oil-water case
-                const auto& eval =
-                    priVars.makeEvaluation(Indices::compositionSwitchIdx, /*timeIdx=*/0);
-                storage[conti0EqIdx + gasCompIdx] = Toolbox::template decay<LhsEval>(eval);
-            }
-            else if (!FluidSystem::phaseIsActive(waterPhaseIdx)) {
-                // the oil-gas case
-                const auto& eval =
-                    priVars.makeEvaluation(Indices::waterSaturationIdx, /*timeIdx=*/0);
-                storage[conti0EqIdx + waterCompIdx] = Toolbox::template decay<LhsEval>(eval);
-            }
-        }
     }
 
     /*!
@@ -191,12 +174,12 @@ public:
 
         if (!blackoilConserveSurfaceVolume) {
            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
-               unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+               unsigned activeCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
                unsigned upIdx = static_cast<unsigned>(extQuants.upstreamIndex(phaseIdx));
                const IntensiveQuantities& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
                unsigned pvtRegionIdx = up.pvtRegionIndex();
                Scalar refDensity = FluidSystem::referenceDensity(phaseIdx, pvtRegionIdx);
-               flux[conti0EqIdx + compIdx] *= refDensity;
+               flux[conti0EqIdx + activeCompIdx] *= refDensity;
            }
         }
 
@@ -226,7 +209,7 @@ protected:
                           const ExtensiveQuantities& extQuants,
                           const IntensiveQuantities& up) const
     {
-        unsigned compIdx = FluidSystem::solventComponentIndex(phaseIdx);
+        unsigned compIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
         const auto& fs = up.fluidState();
 
         Evaluation surfaceVolumeFlux =
@@ -238,7 +221,7 @@ protected:
 
         // dissolved gas (in the oil phase).
         if (phaseIdx == oilPhaseIdx && FluidSystem::enableDissolvedGas()) {
-            flux[conti0EqIdx + gasCompIdx] +=
+            flux[conti0EqIdx + Indices::canonicalToActiveComponentIndex(gasCompIdx)] +=
                     Toolbox::template decay<UpEval>(fs.Rs())
                     * surfaceVolumeFlux;
 
@@ -246,7 +229,7 @@ protected:
 
         // vaporized oil (in the gas phase).
         if (phaseIdx == gasPhaseIdx && FluidSystem::enableVaporizedOil()) {
-            flux[conti0EqIdx + oilCompIdx] +=
+            flux[conti0EqIdx + Indices::canonicalToActiveComponentIndex(oilCompIdx)] +=
                     Toolbox::template decay<UpEval>(fs.Rv())
                     * surfaceVolumeFlux;
 

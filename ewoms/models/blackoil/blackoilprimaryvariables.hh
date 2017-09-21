@@ -76,8 +76,8 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { pressureSwitchIdx = Indices::pressureSwitchIdx };
     enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
 
-    // if compositionSwitchIdx is negative then this feature is disabled in Indices
-    static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0 );
+    static const bool compositionSwitchEnabled = Indices::gasEnabled;
+    static const bool waterEnabled = Indices::waterEnabled;
 
     // phase indices from the fluid system
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -293,7 +293,8 @@ public:
 
         // assign the actual primary variables
         if (primaryVarsMeaning() == Sw_po_Sg) {
-            (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
+            if (waterEnabled)
+                (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
             if( compositionSwitchEnabled )
                 (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
@@ -301,7 +302,8 @@ public:
         else if (primaryVarsMeaning() == Sw_po_Rs) {
             const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
 
-            (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
+            if (waterEnabled)
+                (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(oilPhaseIdx));
             if( compositionSwitchEnabled )
                 (*this)[compositionSwitchIdx] = Rs;
@@ -310,7 +312,9 @@ public:
             assert(primaryVarsMeaning() == Sw_pg_Rv);
 
             const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
-            (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
+            if (waterEnabled)
+                (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
+
             (*this)[pressureSwitchIdx] = FsToolbox::value(fluidState.pressure(gasPhaseIdx));
             if( compositionSwitchEnabled )
                 (*this)[compositionSwitchIdx] = Rv;
@@ -339,14 +343,18 @@ public:
         // the IntensiveQuantities). The reason is that most intensive quantities are not
         // required to be able to decide if the primary variables needs to be switched or
         // not, so it would be a waste to compute them.
-        Scalar Sw = (*this)[Indices::waterSaturationIdx];
+        Scalar Sw = 0.0;
+        if (waterEnabled)
+            Sw = (*this)[Indices::waterSaturationIdx];
+
         if (primaryVarsMeaning() == Sw_po_Sg) {
 
             // special case for cells with almost only water
             if (Sw >= thresholdWaterFilledCell) {
 
                 // make sure water saturations does not exceed 1.0
-                (*this)[Indices::waterSaturationIdx] = 1.0;
+                if (waterEnabled)
+                    (*this)[Indices::waterSaturationIdx] = 1.0;
                 // the hydrocarbon gas saturation is set to 0.0
                 if (compositionSwitchEnabled)
                     (*this)[Indices::compositionSwitchIdx] = 0.0;
@@ -436,7 +444,9 @@ public:
                 // switch back to phase equilibrium mode if the oil phase vanishes (i.e.,
                 // the water-only case)
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
+                if (waterEnabled)
+                    (*this)[Indices::waterSaturationIdx] = 1.0; // water saturation
+
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
                 // because more than one primary variable switch can occur at a time,
@@ -493,7 +503,9 @@ public:
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
 
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::waterSaturationIdx] = 1.0;
+                if (waterEnabled)
+                    (*this)[Indices::waterSaturationIdx] = 1.0;
+
                 (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
