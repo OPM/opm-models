@@ -425,11 +425,7 @@ public:
         // write primary variables
         ParentType::serializeEntity(outstream, dofEntity);
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(this->dofMapper().index(dofEntity));
-#else
-        unsigned dofIdx = static_cast<unsigned>(this->dofMapper().map(dofEntity));
-#endif
         if (!outstream.good())
             OPM_THROW(std::runtime_error, "Could not serialize DOF " << dofIdx);
 
@@ -446,11 +442,7 @@ public:
         ParentType::deserializeEntity(instream, dofEntity);
 
         // read phase presence
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(this->dofMapper().index(dofEntity));
-#else
-        unsigned dofIdx = static_cast<unsigned>(this->dofMapper().map(dofEntity));
-#endif
         if (!instream.good())
             OPM_THROW(std::runtime_error,
                        "Could not deserialize DOF " << dofIdx);

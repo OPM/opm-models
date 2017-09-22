@@ -308,7 +308,7 @@ static inline int start(int argc, char **argv)
             std::cout << e.what() << ". Abort!\n" << std::flush;
         return 1;
     }
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 5)
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
     catch (Dune::Exception& e)
     {
         if (myRank == 0)

@@ -171,23 +171,15 @@ protected:
                     // get local vertex number from edge
                     const int localVx = refElem.subEntity(edge, edgeCodim, vx, Grid::dimension);
 
-#if DUNE_VERSION_NEWER(DUNE_GRID,2,4)
                     // get vertex
                     const auto vertex = element.template subEntity<Grid::dimension>(localVx);
-#else
-                    // get vertex
-                    const auto vertexPtr = element.template subEntity<Grid::dimension>(localVx);
-                    const auto& vertex = *vertexPtr ;
-#endif
 
                     // if vertex has parameter 1 insert as a fracture vertex
-                    if (dgfPointer.parameters( vertex )[ 0 ] > 0) {
-#if DUNE_VERSION_NEWER(DUNE_GRID, 2,4)
-                        vertexIndices.push_back(static_cast<unsigned>(elementMapper.subIndex(element, static_cast<int>(localVx), Grid::dimension)));
-#else
-                        vertexIndices.push_back(static_cast<unsigned>(elementMapper.map(element, static_cast<int>(localVx), Grid::dimension)));
-#endif
-                    }
+                    if (dgfPointer.parameters( vertex )[ 0 ] > 0)
+                        vertexIndices.push_back(
+                            static_cast<unsigned>(elementMapper.subIndex(element,
+                                                                         static_cast<int>(localVx),
+                                                                         Grid::dimension)));
                 }
                 // if 2 vertices have been found with flag 1 insert a fracture edge
                 if (static_cast<int>(vertexIndices.size()) == Grid::dimension)

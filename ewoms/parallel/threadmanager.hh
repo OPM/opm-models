@@ -82,16 +82,7 @@ public:
                       "OpenMP is not available. The only valid values for "
                       "threads-per-process is 1 and -1 but it is " << numThreads_ << "!");
         numThreads_ = 1;
-#elif !DUNE_VERSION_NEWER(DUNE_COMMON, 2,4) && !defined NDEBUG
-        if (numThreads_ != 1)
-            OPM_THROW(std::invalid_argument,
-                      "You seem to be using Dune "
-                      <<DUNE_COMMON_VERSION_MAJOR<<"."<<DUNE_COMMON_VERSION_MINOR
-                      << " in debug mode and with the number of OpenMP threads larger than 1. "
-                      "This Dune version does not support thread parallelism in debug mode!");
-        numThreads_ = 1;
-
-#elif DUNE_VERSION_NEWER(DUNE_COMMON, 2,4) && !defined NDEBUG && defined DUNE_INTERFACECHECK
+#elif !defined NDEBUG && defined DUNE_INTERFACECHECK
         if (numThreads_ != 1)
             OPM_THROW(std::invalid_argument,
                       "You explicitly enabled Barton-Nackman interface checking in Dune. "
@@ -99,6 +90,7 @@ public:
                       "thread parallelism!");
         numThreads_ = 1;
 #else
+
         if (numThreads_ == 0)
             OPM_THROW(std::invalid_argument,
                       "Zero threads per process are not possible: It must be at least 1, "

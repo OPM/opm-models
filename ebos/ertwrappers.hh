@@ -242,12 +242,7 @@ public:
         auto elemIt = grid.leafGridView().template begin<0>();
         const auto& elemEndIt = grid.leafGridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
             int elemIdx = elemMapper.index(*elemIt );
-#else
-            int elemIdx = elemMapper.map(*elemIt );
-#endif
-
             int cartElemIdx = cartesianMapper.cartesianIndex(elemIdx);
             actnumData[cartElemIdx] = 1;
         }

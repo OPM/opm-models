@@ -75,22 +75,14 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp& buff, const EntityType& e) const
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
 
         FieldType tmp;
         buff.read(tmp);
@@ -143,22 +135,14 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp& buff, const EntityType& e) const
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         buff.read(container_[dofIdx]);
     }
 
@@ -206,22 +190,14 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp& buff, const EntityType& e) const
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         FieldType tmp;
         buff.read(tmp);
         container_[dofIdx] = std::max(container_[dofIdx], tmp);
@@ -271,22 +247,14 @@ public:
     template <class MessageBufferImp, class EntityType>
     void gather(MessageBufferImp& buff, const EntityType& e) const
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         buff.write(container_[dofIdx]);
     }
 
     template <class MessageBufferImp, class EntityType>
     void scatter(MessageBufferImp& buff, const EntityType& e, size_t n OPM_UNUSED)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned dofIdx = static_cast<unsigned>(mapper_.index(e));
-#else
-        unsigned dofIdx = static_cast<unsigned>(mapper_.map(e));
-#endif
         FieldType tmp;
         buff.read(tmp);
         container_[dofIdx] = std::min(container_[dofIdx], tmp);

@@ -187,7 +187,7 @@ public:
                       << "\n"  << std::flush;
             succeeded = 0;
         }
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 5)
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
         catch (const Dune::Exception& e)
         {
             std::cout << "rank " << simulator_().gridView().comm().rank()

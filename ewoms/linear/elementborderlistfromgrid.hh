@@ -74,11 +74,7 @@ class ElementBorderListFromGrid
             const auto& elemEndIt = gridView_.template end<0>();
             for (; elemIt != elemEndIt; ++elemIt) {
                 if (elemIt->partitionType() != Dune::InteriorEntity) {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
                     Index elemIdx = static_cast<Index>(map_.index(*elemIt));
-#else
-                    Index elemIdx = static_cast<Index>(map_.map(*elemIt));
-#endif
                     blackList_.addIndex(elemIdx);
                 }
             }
@@ -98,11 +94,7 @@ class ElementBorderListFromGrid
         template <class MessageBufferImp, class EntityType>
         void gather(MessageBufferImp& buff, const EntityType& e) const
         {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             unsigned myIdx = static_cast<unsigned>(map_.index(e));
-#else
-            unsigned myIdx = static_cast<unsigned>(map_.map(e));
-#endif
             buff.write(static_cast<unsigned>(gridView_.comm().rank()));
             buff.write(myIdx);
         }
@@ -119,11 +111,7 @@ class ElementBorderListFromGrid
             for (; isIt != isEndIt; ++isIt) {
                 if (!isIt->neighbor())
                     continue;
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
                 else if (isIt->outside().partitionType() == Dune::InteriorEntity) {
-#else
-                else if (isIt->outside()->partitionType() == Dune::InteriorEntity) {
-#endif
                     isInteriorNeighbor = true;
                     break;
                 }
@@ -133,11 +121,7 @@ class ElementBorderListFromGrid
 
             BorderIndex bIdx;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             bIdx.localIdx = static_cast<Index>(map_.index(e));
-#else
-            bIdx.localIdx = static_cast<Index>(map_.map(e));
-#endif
             {
                 ProcessRank tmp;
                 buff.read(tmp);
@@ -201,11 +185,7 @@ class ElementBorderListFromGrid
         void gather(MessageBufferImp& buff, const EntityType& e) const
         {
             buff.write(static_cast<int>(gridView_.comm().rank()));
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             buff.write(static_cast<int>(map_.index(e)));
-#else
-            buff.write(static_cast<int>(map_.map(e)));
-#endif
         }
 
         template <class MessageBufferImp, class EntityType>
@@ -217,11 +197,7 @@ class ElementBorderListFromGrid
 
             buff.read(peerRank);
             buff.read(peerIdx);
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             localIdx = static_cast<Index>(map_.index(e));
-#else
-            localIdx = static_cast<Index>(map_.map(e));
-#endif
 
             PeerBlackListedEntry pIdx;
             pIdx.nativeIndexOfPeer = static_cast<Index>(peerIdx);
