@@ -235,10 +235,10 @@ public:
             // if the switching variable is the mole fraction of the gas component in the
             // oil phase, we can directly set the composition of the oil phase
             auto Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-
-            if(FluidSystem::enableRateLimmitedDissolvedGas() == Opm::FluidSystems::All){
-                Rs = rateLimmitedDissolvedGasUpdate(Rs,So,elemCtx,dofIdx,timeIdx);
-            }
+// this should be handled by variable switching Gas should appear
+//            if(FluidSystem::enableRateLimmitedDissolvedGas() == Opm::FluidSystems::All){
+//                Rs = rateLimmitedDissolvedGasUpdate(Rs,So,elemCtx,dofIdx,timeIdx);
+//            }
             fluidState_.setRs(Rs);
 
             if (FluidSystem::enableVaporizedOil()) {
