@@ -166,13 +166,13 @@ namespace Properties {
  * NEW_TYPE_TAG(FooBarTypeTag, INHERITS_FROM(FooTypeTag, BarTypeTag));
  * \endcode
  */
-#define NEW_TYPE_TAG(...)                       \
-    namespace TTag {                            \
-    struct EWOMS_GET_HEAD_(__VA_ARGS__)         \
-        : public TypeTag<__VA_ARGS__>           \
-    { };                                        \
-    TTAG_INFO_(__VA_ARGS__, void)               \
-    }                                           \
+#define NEW_TYPE_TAG(...)                           \
+    namespace TTag {                                \
+    struct EWOMS_GET_HEAD_(__VA_ARGS__, dontcare)   \
+        : public TypeTag<__VA_ARGS__>               \
+    { };                                            \
+    TTAG_INFO_(__VA_ARGS__, void)                   \
+    }                                               \
     extern int semicolonHack_
 
 /*!

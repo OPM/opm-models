@@ -195,12 +195,6 @@ public:
     /*!
      * \brief Return the grid view for which the simulation is done
      */
-    GridView& gridView()
-    { return gridManager_->gridView(); }
-
-    /*!
-     * \brief Return the grid view for which the simulation is done
-     */
     const GridView& gridView() const
     { return gridManager_->gridView(); }
 

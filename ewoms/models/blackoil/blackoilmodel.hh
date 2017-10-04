@@ -256,7 +256,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::primaryVarName
      */
-    std::string primaryVarName(unsigned pvIdx) const
+    std::string primaryVarName(int pvIdx) const
     {
         std::ostringstream oss;
 
@@ -279,7 +279,7 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqName
      */
-    std::string eqName(unsigned eqIdx) const
+    std::string eqName(int eqIdx) const
     {
         std::ostringstream oss;
 
