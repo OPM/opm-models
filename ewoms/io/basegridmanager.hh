@@ -136,6 +136,7 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
+protected:
     Simulator& simulator_;
     std::unique_ptr<GridView> gridView_;
 #if HAVE_DUNE_FEM
