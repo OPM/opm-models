@@ -292,13 +292,6 @@ NEW_PROP_TAG(ExtensiveStorageTerm);
 //! \brief Specify whether to use volumetric residuals or not
 NEW_PROP_TAG(UseVolumetricResidual);
 
-/*!
- * \brief Structure which stores externally passed runtime parameters for the simulator.
- *
- * BEWARE: This property is deprecated
- */
-NEW_PROP_TAG(SimulatorParameter);
-
 }} // namespace Properties, Ewoms
 
 #endif

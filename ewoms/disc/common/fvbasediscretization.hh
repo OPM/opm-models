@@ -82,10 +82,6 @@ namespace Ewoms {
 template<class TypeTag>
 class FvBaseDiscretization;
 
-//! \deprecated please remove ASAP!
-struct EmptySimulationParameters
-{};
-
 namespace Properties {
 //! Set the default type for the time manager
 SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
@@ -258,8 +254,6 @@ SET_BOOL_PROP(FvBaseDiscretization, ExtensiveStorageTerm, false);
 // use volumetric residuals is default
 SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
 
-//! The DEPRECATED structure to pass external runtime parameters to the simulator.
-SET_TYPE_PROP(FvBaseDiscretization, SimulatorParameter, EmptySimulationParameters);
 } // namespace Properties
 
 /*!
