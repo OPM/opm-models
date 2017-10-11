@@ -241,7 +241,7 @@ SET_BOOL_PROP(EclBaseProblem, EnableDebuggingChecks, true);
 // ebos handles the SWATINIT keyword by default
 SET_BOOL_PROP(EclBaseProblem, EnableSwatinit, true);
 
-//! Set the ParameterMetaData property
+//! Set the SimulatorParameter property. THIS IS A DEPRECATED HACK, PLEASE REMOVE ASAP!
 SET_TYPE_PROP(EclBaseProblem, SimulatorParameter, std::pair< std::shared_ptr<Opm::Deck>, std::shared_ptr<Opm::EclipseState> > );
 
 } // namespace Properties

@@ -35,6 +35,7 @@
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
@@ -44,9 +45,11 @@
 #include <vector>
 #include <string>
 #include <memory>
-
+#include <type_traits>
 
 namespace Ewoms {
+struct EmptySimulationParameters; //< \deprecated, please remove ASAP!
+
 namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(GridManager);
@@ -57,6 +60,7 @@ NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PredeterminedTimeStepsFile);
+NEW_PROP_TAG(SimulatorParameter);
 }
 
 /*!
@@ -79,27 +83,27 @@ class Simulator
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-
-    typedef typename GET_PROP_TYPE(TypeTag, SimulatorParameter)  SimulatorParameter;
-
+    typedef typename GET_PROP_TYPE(TypeTag, SimulatorParameter) SimulatorParameter;
 
 public:
     // do not allow to copy simulators around
-    Simulator(const Simulator& ) = delete;
+    Simulator(const Simulator&) = delete;
 
     Simulator(bool verbose = true)
-        : simulatorParameter_()
     {
-        init( verbose );
+        init_(verbose);
     }
 
-    Simulator(const SimulatorParameter& parameter, bool verbose = true)
-        : simulatorParameter_( parameter )
+    Simulator(SimulatorParameter& param,
+              bool verbose = true)
+        DUNE_DEPRECATED_MSG("Use static attributes/global variables in the target classes to pass external parameters to the instead of SimulatorParameter")
+        : simulatorParameter_(param)
     {
-        init( verbose );
+        init_(verbose);
     }
 
-    void init( bool verbose )
+private:
+    void init_(bool verbose = true)
     {
         Ewoms::TimerGuard setupTimerGuard(setupTimer_);
 
@@ -160,6 +164,7 @@ public:
             std::cout << "Construction of simulation done\n" << std::flush;
     }
 
+public:
     /*!
      * \brief Registers all runtime parameters used by the simulation.
      */
@@ -861,8 +866,22 @@ public:
         restarter.deserializeSectionEnd();
     }
 
-    const SimulatorParameter& simulatorParameter() const { return simulatorParameter_; }
-    SimulatorParameter& simulatorParameter() { return simulatorParameter_; }
+    // returns the deprecated SimulatorParameter object. The template-foo ensures that if
+    // the simulator parameters are non-empty, a deprecation warning is produced.
+    template <class SimParam = SimulatorParameter>
+    DUNE_DEPRECATED_MSG("Use static attributes/global variables in the target classes to pass external parameters to the instead of SimulatorParameter")
+    const
+    typename std::enable_if<!std::is_same<SimParam, EmptySimulationParameters>::value,
+                            SimParam>::type&
+    simulatorParameter() const
+    { return simulatorParameter_; }
+
+    template <class SimParam = SimulatorParameter>
+    const
+    typename std::enable_if<std::is_same<SimParam, EmptySimulationParameters>::value,
+                            SimParam>::type&
+    simulatorParameter() const
+    { return simulatorParameter_; }
 
 private:
     SimulatorParameter simulatorParameter_;

@@ -39,6 +39,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
+#include <dune/common/deprecated.hh>
+
 #if HAVE_MPI
 #include <mpi.h>
 #endif // HAVE_MPI
@@ -46,10 +48,13 @@
 #include <vector>
 #include <unordered_set>
 #include <array>
+#include <type_traits>
 
 namespace Ewoms {
 template <class TypeTag>
 class EclBaseGridManager;
+
+struct EmptySimulationParameters; //< \deprecated, please remove ASAP!
 
 namespace Properties {
 NEW_TYPE_TAG(EclBaseGridManager);
@@ -58,9 +63,13 @@ NEW_TYPE_TAG(EclBaseGridManager);
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(EquilGrid);
 NEW_PROP_TAG(Scalar);
+
 NEW_PROP_TAG(EclDeckFileName);
 
+NEW_PROP_TAG(SimulatorParameter); //< \deprecated, please remove ASAP!
+
 SET_STRING_PROP(EclBaseGridManager, EclDeckFileName, "ECLDECK.DATA");
+
 } // namespace Properties
 
 /*!
@@ -91,6 +100,22 @@ public:
     {
         EWOMS_REGISTER_PARAM(TypeTag, std::string, EclDeckFileName,
                              "The name of the file which contains the ECL deck to be simulated");
+    }
+
+    /*!
+     * \brief Set the Opm::EclipseState and the Opm::Deck object which ought to be used
+     *        when the grid manager is instantiated.
+     *
+     * This is basically an optimization: In cases where the ECL input deck must be
+     * examined to decide which simulator ought to be used, this avoids having to parse
+     * the input twice. When this method is used, the caller is responsible for lifetime
+     * management of these two objects, i.e., they are not allowed to be deleted as long
+     * as the grid manager object is alive.
+     */
+    static void setExternalDeck(Opm::Deck* deck, Opm::EclipseState* eclState)
+    {
+        externalDeck_ = deck;
+        externalEclState_ = eclState;
     }
 
     /*!
@@ -131,29 +156,37 @@ public:
         caseName_ = rawCaseName;
         std::transform(caseName_.begin(), caseName_.end(), caseName_.begin(), ::toupper);
 
-        if (myRank == 0)
-            std::cout << "Reading the deck file '" << fileName << "'" << std::endl;
+        if (!getDeckFromSimulatorParameter_()) {
+            if (!externalDeck_) {
+                if (myRank == 0)
+                    std::cout << "Reading the deck file '" << fileName << "'" << std::endl;
 
-        if( ! simulator.simulatorParameter().first )
-        {
-            Opm::Parser parser;
-            typedef std::pair<std::string, Opm::InputError::Action> ParseModePair;
-            typedef std::vector<ParseModePair> ParseModePairs;
-            ParseModePairs tmp;
-            tmp.push_back(ParseModePair(Opm::ParseContext::PARSE_RANDOM_SLASH, Opm::InputError::IGNORE));
-            tmp.push_back(ParseModePair(Opm::ParseContext::PARSE_MISSING_DIMS_KEYWORD, Opm::InputError::WARN));
-            tmp.push_back(ParseModePair(Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputError::WARN));
-            tmp.push_back(ParseModePair(Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputError::WARN));
-            Opm::ParseContext parseContext(tmp);
+                Opm::Parser parser;
+                typedef std::pair<std::string, Opm::InputError::Action> ParseModePair;
+                typedef std::vector<ParseModePair> ParseModePairs;
 
-            deck_.reset( new Opm::Deck(parser.parseFile(fileName , parseContext)) );
-            eclState_.reset(new Opm::EclipseState(deck(), parseContext));
-        }
-        else
-        {
-            deck_ = simulator.simulatorParameter().first;
-            assert( simulator.simulatorParameter().second );
-            eclState_ = simulator.simulatorParameter().second;
+                ParseModePairs tmp;
+                tmp.emplace_back(Opm::ParseContext::PARSE_RANDOM_SLASH, Opm::InputError::IGNORE);
+                tmp.emplace_back(Opm::ParseContext::PARSE_MISSING_DIMS_KEYWORD, Opm::InputError::WARN);
+                tmp.emplace_back(Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputError::WARN);
+                tmp.emplace_back(Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputError::WARN);
+                Opm::ParseContext parseContext(tmp);
+
+                internalDeck_.reset(new Opm::Deck(parser.parseFile(fileName , parseContext)));
+                internalEclState_.reset(new Opm::EclipseState(*internalDeck_, parseContext));
+
+                deck_ = &(*internalDeck_);
+                eclState_ = &(*internalEclState_);
+            }
+            // check if the deprecated SimulatorParameter mechanism is used to pass external
+            // parameters.
+            else {
+                assert(externalDeck_);
+                assert(externalEclState_);
+
+                deck_ = externalDeck_;
+                eclState_ = externalEclState_;
+            }
         }
 
         asImp_().createGrids_();
@@ -268,10 +301,54 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
+    // set the deck via the deprecated SimulatorParameter mechanism. The template-foo
+    // ensures that if the simulator parameters are non-empty, a deprecation warning is
+    // produced.
+    typedef typename GET_PROP_TYPE(TypeTag, SimulatorParameter) SimulatorParameter;
+    template <class SimParam = SimulatorParameter>
+    DUNE_DEPRECATED_MSG("Use static setExternalDeck() to pass external parameters to the instead of SimulatorParameter mechanism")
+    typename std::enable_if<!std::is_same<SimParam, Ewoms::EmptySimulationParameters>::value,
+                            bool>::type
+    getDeckFromSimulatorParameter_()
+    {
+        const auto& simParam = this->simulator_.simulatorParameter();
+        if (simParam.first) {
+            externalDeck_ = &(*simParam.first);
+            externalEclState_ = &(*simParam.second);
+
+            deck_ = externalDeck_;
+            eclState_ = externalEclState_;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    template <class SimParam = SimulatorParameter>
+    typename std::enable_if<std::is_same<SimParam, Ewoms::EmptySimulationParameters>::value,
+                            bool>::type
+    getDeckFromSimulatorParameter_()
+    { return false; }
+
     std::string caseName_;
-    std::shared_ptr<Opm::Deck>         deck_;
-    std::shared_ptr<Opm::EclipseState> eclState_;
+
+    static Opm::Deck* externalDeck_;
+    static Opm::EclipseState* externalEclState_;
+    std::unique_ptr<Opm::Deck> internalDeck_;
+    std::unique_ptr<Opm::EclipseState> internalEclState_;
+
+    // these two attributes point either to the internal or to the external version of the
+    // Deck and EclipsState objects.
+    Opm::Deck* deck_;
+    Opm::EclipseState* eclState_;
 };
+
+template <class TypeTag>
+Opm::Deck* EclBaseGridManager<TypeTag>::externalDeck_ = nullptr;
+
+template <class TypeTag>
+Opm::EclipseState* EclBaseGridManager<TypeTag>::externalEclState_;
 
 } // namespace Ewoms
 
