@@ -1,3 +1,11 @@
+# This enables parallel builds using one build process for each core
+# available on your computer. Note that this includes logical
+# ("hyperthreaded") cores. BE CAREFUL: You need to have enough RAM for
+# this, where "enough" currently means "about 2 Gb per logical core"!
+
+#NUM_CORES="$(grep "processor" /proc/cpuinfo | wc -l)"
+#export MAKE_FLAGS="-j$NUM_CORES"
+
 CXX_WARNING_OPTS=" \
     -Wall \
     -Wunused \
@@ -12,8 +20,11 @@ CXX_OPTS=" \
     -march=native \
     -DNDEBUG=1"
 
-# cmake flags
+# arguments passed to the cmake command. note that the SIBLING_SEARCH
+# option is set to OFF because the paths to all directories are
+# explicitly specified when using dunecontrol
 CMAKE_FLAGS=" \
+  -DSIBLING_SEARCH=OFF \
   -DBUILD_TESTING=OFF \
   -DCMAKE_C_FLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
   -DCMAKE_CXX_FLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \

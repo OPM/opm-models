@@ -34,7 +34,6 @@
 
 #include "parametersystem.hh"
 
-#include <ewoms/version.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/simulator.hh>
@@ -252,11 +251,17 @@ static inline int start(int argc, char **argv)
         }
 
 
-        if (myRank == 0)
-            std::cout << "eWoms " << Ewoms::versionString()
+        if (myRank == 0) {
+#ifdef EWOMS_VERSION
+            std::string versionString = EWOMS_VERSION;
+#else
+            std::string versionString = "2018.04-pre";
+#endif
+            std::cout << "eWoms " << versionString
                       << " will now start the trip. "
                       << "Please sit back, relax and enjoy the ride.\n"
                       << std::flush;
+        }
 
         // print the parameters if requested
         int printParams = EWOMS_GET_PARAM(TypeTag, int, PrintParameters);
