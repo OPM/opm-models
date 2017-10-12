@@ -103,7 +103,7 @@ public:
     {
 #if HAVE_DUNE_FEM
         typedef Dune::Fem::DofManager< Grid > FemDofManager;
-        return FemDofManager::instance( gridPart().grid() ).sequence();
+        return FemDofManager::instance( asImp_().grid() ).sequence();
 #else
         return 0; // return the same sequence number >= 0 means the grid never changes
 #endif
@@ -115,15 +115,24 @@ public:
      *        processes.
      */
     void loadBalance()
-    { asImp_().grid().loadBalance(); }
+    {
+        asImp_().grid().loadBalance();
+        updateGridView_();
+    }
 
 protected:
     // this method should be called after the grid has been allocated
     void finalizeInit_()
     {
+        updateGridView_();
+    }
+
+    void updateGridView_()
+    {
 #if HAVE_DUNE_FEM
         gridPart_.reset(new GridPart(asImp_().grid()));
-        gridView_.reset(new GridView(static_cast<GridView> (*gridPart_)));
+        gridView_.reset(new GridView(static_cast<GridView>(*gridPart_)));
+        assert(gridView_->size(0) == asImp_().grid().leafGridView().size(0));
 #else
         gridView_.reset(new GridView(asImp_().grid().leafGridView()));
 #endif
@@ -137,10 +146,10 @@ private:
     { return *static_cast<const Implementation*>(this); }
 
     Simulator& simulator_;
-    std::unique_ptr<GridView> gridView_;
 #if HAVE_DUNE_FEM
     std::unique_ptr<GridPart> gridPart_;
 #endif
+    std::unique_ptr<GridView> gridView_;
 };
 
 } // namespace Ewoms
