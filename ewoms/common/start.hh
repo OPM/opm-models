@@ -34,7 +34,6 @@
 
 #include "parametersystem.hh"
 
-#include <ewoms/version.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/simulator.hh>
@@ -253,7 +252,7 @@ static inline int start(int argc, char **argv)
 
 
         if (myRank == 0)
-            std::cout << "eWoms " << Ewoms::versionString()
+            std::cout << "eWoms " << EWOMS_VERSION
                       << " will now start the trip. "
                       << "Please sit back, relax and enjoy the ride.\n"
                       << std::flush;

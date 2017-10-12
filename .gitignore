@@ -1,7 +1,7 @@
 # build system clutter
 Makefile
 .dirstamp
-config.*
+config.h
 
 # auto-generated doxygen files
 Doxyfile
