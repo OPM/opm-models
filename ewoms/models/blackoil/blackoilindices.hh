@@ -41,6 +41,11 @@ struct BlackOilIndices
     //! Number of phases active at all times
     static const int numPhases = 3;
 
+    //! All phases are enabled
+    static const bool oilEnabled = true;
+    static const bool waterEnabled = true;
+    static const bool gasEnabled = true;
+
     //! Number of solvent components considered
     static const int numSolvents = numSolventsV;
 
@@ -49,6 +54,10 @@ struct BlackOilIndices
 
     //! The number of equations
     static const int numEq = numPhases + numSolvents + numPolymers;
+
+    //! \brief returns the index of "active" component
+    static constexpr unsigned canonicalToActiveComponentIndex(unsigned compIdx)
+    { return compIdx; }
 
     ////////
     // Primary variable indices

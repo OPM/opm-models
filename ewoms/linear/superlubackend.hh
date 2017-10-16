@@ -137,7 +137,7 @@ public:
 // quadruple precision math on Dune 2.4. this is because the most which SuperLU can
 // handle is double precision (i.e., the linear systems of equations are always solved
 // with at most double precision if chosing SuperLU as the linear solver...)
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4) && HAVE_QUAD
+#if HAVE_QUAD
 template <class TypeTag, class Matrix, class Vector>
 class SuperLUSolve_<__float128, TypeTag, Matrix, Vector>
 {

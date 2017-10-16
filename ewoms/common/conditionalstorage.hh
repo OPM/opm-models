@@ -28,6 +28,11 @@
 #ifndef EWOMS_CONDITIONAL_STORAGE_HH
 #define EWOMS_CONDITIONAL_STORAGE_HH
 
+#include <opm/common/ErrorMacros.hpp>
+#include <opm/common/Exceptions.hpp>
+
+#include <utility>
+
 namespace Ewoms {
 /*!
  * \ingroup Common

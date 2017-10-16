@@ -82,11 +82,7 @@ public:
         size_t idx;
         if (codim_ == 0) {
             // cells. map element to the index
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             idx = static_cast<size_t>(mapper_.index(e));
-#else
-            idx = static_cast<size_t>(mapper_.map(e));
-#endif
         }
         else if (codim_ == dim) {
             // find vertex which is closest to xi in local
@@ -94,11 +90,7 @@ public:
             double min = 1e100;
             int imin = -1;
             Dune::GeometryType gt = e.type();
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             int n = static_cast<int>(e.subEntities(dim));
-#else
-            int n = static_cast<int>(e.template count<dim>());
-#endif
             for (int i = 0; i < n; ++i) {
                 Dune::FieldVector<ctype, dim> local =
                     Dune::ReferenceElements<ctype, dim>::general(gt).position(i, dim);
@@ -111,11 +103,7 @@ public:
             }
 
             // map vertex to an index
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             idx = static_cast<size_t>(mapper_.subIndex(e, imin, codim_));
-#else
-            idx = static_cast<size_t>(mapper_.map(e, imin, codim_));
-#endif
         }
         else
             OPM_THROW(std::logic_error,

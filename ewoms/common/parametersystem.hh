@@ -173,7 +173,6 @@ NEW_PROP_TAG(ParameterMetaData);
 NEW_PROP_TAG(ParameterGroupPrefix);
 NEW_PROP_TAG(Description);
 
-NEW_PROP_TAG(SimulatorParameter);
 
 //! Set the ParameterMetaData property
 SET_PROP(ParameterSystem, ParameterMetaData)
@@ -216,11 +215,6 @@ private:
     }
 };
 
-struct EmptyParameters {};
-
-//! Set the ParameterMetaData property
-SET_TYPE_PROP(ParameterSystem, SimulatorParameter, EmptyParameters );
-
 SET_STRING_PROP(ParameterSystem, ParameterGroupPrefix, "");
 SET_STRING_PROP(ParameterSystem, Description, "");
 
@@ -234,7 +228,7 @@ void getFlattenedKeyList_(std::list<std::string>& dest,
                           const std::string& prefix = "");
 
 
-void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
+inline void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
 {
     std::string paramMessage, paramType, paramDescription;
 
@@ -288,9 +282,9 @@ void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
     os << paramMessage;
 }
 
-void getFlattenedKeyList_(std::list<std::string>& dest,
-                          const Dune::ParameterTree& tree,
-                          const std::string& prefix)
+inline void getFlattenedKeyList_(std::list<std::string>& dest,
+                                 const Dune::ParameterTree& tree,
+                                 const std::string& prefix)
 {
     // add the keys of the current sub-structure
     auto keyIt = tree.getValueKeys().begin();

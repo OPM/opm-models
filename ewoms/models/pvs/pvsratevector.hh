@@ -88,8 +88,8 @@ public:
     {
         // convert to molar rates
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            (*this)[compIdx] = value[compIdx];
-            (*this)[compIdx] /= FluidSystem::molarMass(compIdx);
+            (*this)[conti0EqIdx + compIdx] = value[conti0EqIdx + compIdx];
+            (*this)[conti0EqIdx + compIdx] /= FluidSystem::molarMass(compIdx);
         }
     }
 

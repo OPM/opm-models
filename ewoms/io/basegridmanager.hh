@@ -76,12 +76,6 @@ public:
     /*!
      * \brief Returns a reference to the grid view to be used.
      */
-    GridView& gridView()
-    { return *gridView_; }
-
-    /*!
-     * \brief Returns a reference to the grid view to be used.
-     */
     const GridView& gridView() const
     { return *gridView_; }
 

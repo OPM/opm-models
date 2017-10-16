@@ -56,12 +56,8 @@ namespace Linear {
 template <class Vector>
 class ConvergenceCriterion
 {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
     //! \brief The real type of the field type (is the same if using real numbers, but differs for std::complex)
     typedef typename Dune::FieldTraits<typename Vector::field_type>::real_type real_type;
-#else
-    typedef typename Vector::field_type real_type;
-#endif
 
     typedef real_type Scalar;
 

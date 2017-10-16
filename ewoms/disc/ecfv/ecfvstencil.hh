@@ -61,9 +61,6 @@ class EcfvStencil
     typedef typename GridView::ctype CoordScalar;
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::template Codim<0>::Entity Element;
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
-    typedef typename GridView::template Codim<0>::EntityPointer ElementPointer;
-#endif
 
     typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
                                                       Dune::MCMGElementLayout> ElementMapper;
@@ -94,30 +91,16 @@ public:
         SubControlVolume()
         {}
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         SubControlVolume(const Element& element)
             : element_(element)
-#else
-        SubControlVolume(const ElementPointer& elementPtr)
-            : elementPtr_(elementPtr)
-#endif
         { update(); }
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         void update(const Element& element)
         { element_ = element; }
-#else
-        void update(const ElementPointer& elementPtr)
-        { elementPtr_ = elementPtr; }
-#endif
 
         void update()
         {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
             const auto& geometry = element_.geometry();
-#else
-            const auto& geometry = elementPtr_->geometry();
-#endif
             centerPos_ = geometry.center();
             volume_ = geometry.volume();
         }
@@ -143,23 +126,13 @@ public:
         /*!
          * \brief The geometry of the sub-control volume.
          */
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         const LocalGeometry geometry() const
         { return element_.geometry(); }
-#else
-        const LocalGeometry geometry() const
-        { return elementPtr_->geometry(); }
-#endif
 
     private:
         GlobalPosition centerPos_;
         Scalar volume_;
-
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         Element element_;
-#else
-        ElementPointer elementPtr_;
-#endif
     };
 
     /*!
@@ -246,20 +219,11 @@ public:
         auto isIt = gridView_.ibegin(element);
         const auto& endIsIt = gridView_.iend(element);
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
         subControlVolumes_.clear();
         subControlVolumes_.emplace_back(/*SubControlVolume(*/element/*)*/);
         elements_.clear();
         elements_.emplace_back(element);
-#else
-        // add the "center" element of the stencil
-        ElementPointer ePtr(element);
-        subControlVolumes_.clear();
-        subControlVolumes_.emplace_back(/*SubControlVolume(*/ePtr/*)*/);
-        elements_.clear();
-        elements_.emplace_back(ePtr);
-#endif
 
         interiorFaces_.clear();
         boundaryFaces_.clear();
@@ -282,20 +246,11 @@ public:
 
     void updatePrimaryTopology(const Element& element)
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         // add the "center" element of the stencil
         subControlVolumes_.clear();
         subControlVolumes_.emplace_back(/*SubControlVolume(*/element/*)*/);
         elements_.clear();
         elements_.emplace_back(element);
-#else
-        // add the "center" element of the stencil
-        ElementPointer ePtr(element);
-        subControlVolumes_.clear();
-        subControlVolumes_.emplace_back(/*SubControlVolume(*/ePtr/*)*/);
-        elements_.clear();
-        elements_.emplace_back(ePtr);
-#endif
     }
 
     void update(const Element& element)
@@ -348,11 +303,7 @@ public:
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         return static_cast<unsigned>(elementMapper_.index(element(dofIdx)));
-#else
-        return static_cast<unsigned>(elementMapper_.map(element(dofIdx)));
-#endif
     }
 
     /*!
@@ -372,11 +323,7 @@ public:
     {
         assert(0 <= dofIdx && dofIdx < numDof());
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         return elements_[dofIdx];
-#else
-        return *elements_[dofIdx];
-#endif
     }
 
     /*!
@@ -425,12 +372,7 @@ protected:
     const GridView&       gridView_;
     const ElementMapper&  elementMapper_;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
     std::vector<Element> elements_;
-#else
-    std::vector<ElementPointer> elements_;
-#endif
-
     std::vector<SubControlVolume>      subControlVolumes_;
     std::vector<SubControlVolumeFace>  interiorFaces_;
     std::vector<SubControlVolumeFace>  boundaryFaces_;

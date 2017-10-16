@@ -82,7 +82,6 @@ class BlackOilPolymerModule
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned contiPolymerEqIdx = Indices::contiPolymerEqIdx;
-    static constexpr unsigned contiWaterEqIdx = Indices::conti0EqIdx + FluidSystem::waterCompIdx ;
     static constexpr unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
 
 
@@ -477,6 +476,8 @@ public:
         unsigned upIdx = extQuants.upstreamIndex(FluidSystem::waterPhaseIdx);
         unsigned inIdx = extQuants.interiorIndex();
         const auto& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
+        const unsigned contiWaterEqIdx = Indices::conti0EqIdx + Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
+
 
         if (upIdx == inIdx) {
             flux[contiPolymerEqIdx] =
@@ -557,12 +558,7 @@ public:
         if (!enablePolymer)
             return;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         unsigned dofIdx = model.dofMapper().index(dof);
-#else
-        unsigned dofIdx = model.dofMapper().map(dof);
-#endif
-
         const PrimaryVariables& priVars = model.solution(/*timeIdx=*/0)[dofIdx];
         outstream << priVars[polymerConcentrationIdx];
     }
@@ -573,12 +569,7 @@ public:
         if (!enablePolymer)
             return;
 
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         unsigned dofIdx = model.dofMapper().index(dof);
-#else
-        unsigned dofIdx = model.dofMapper().map(dof);
-#endif
-
         PrimaryVariables& priVars0 = model.solution(/*timeIdx=*/0)[dofIdx];
         PrimaryVariables& priVars1 = model.solution(/*timeIdx=*/1)[dofIdx];
 

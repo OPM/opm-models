@@ -116,11 +116,7 @@ public:
             return;
 
         const auto& elementMapper = elemCtx.model().elementMapper();
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 4)
         unsigned elemIdx = static_cast<unsigned>(elementMapper.index(elemCtx.element()));
-#else
-        unsigned elemIdx = static_cast<unsigned>(elementMapper .map(elemCtx.element()));
-#endif
         if (processRankOutput_() && !processRank_.empty())
             processRank_[elemIdx] = static_cast<unsigned>(this->simulator_.gridView().comm().rank());
 

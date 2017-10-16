@@ -75,11 +75,7 @@ public:
         for (; elemIt != elemEndIt; ++elemIt) {
             // set the DOF data pointer for the current element
             const auto& elem = *elemIt;
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
             unsigned elemIdx = elementMapper_.index(elem);
-#else
-            unsigned elemIdx = elementMapper_.map(elem);
-#endif
             elemData_[elemIdx] = curElemDataPtr;
 
             stencil.update(elem);
@@ -95,11 +91,7 @@ public:
 
     void prefetch(const Element& elem) const
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         unsigned elemIdx = elementMapper_.index(elem);
-#else
-        unsigned elemIdx = elementMapper_.map(elem);
-#endif
 
         // we use 0 as the temporal locality, because it is reasonable to assume that an
         // entry will only be accessed once.
@@ -108,12 +100,7 @@ public:
 
     const Data& get(const Element& elem, unsigned localDofIdx) const
     {
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2,4)
         unsigned elemIdx = elementMapper_.index(elem);
-#else
-        unsigned elemIdx = elementMapper_.map(elem);
-#endif
-
         return elemData_[elemIdx][localDofIdx];
     }
 
