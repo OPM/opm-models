@@ -123,15 +123,13 @@ public:
         fluidState_.setPvtRegionIndex(pvtRegionIdx);
 
         // extract the water and the gas saturations for convenience
-<<<<<<< HEAD
+
         // time index here is only used to deside if one crate a iday or not timeIdx==1 will
         // give a scalar.
-        Evaluation Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
-=======
         Evaluation Sw = 0.0;
         if (waterEnabled)
             Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx);
->>>>>>> master
+
 
         Evaluation Sg = 0.0;
         if (compositionSwitchEnabled)
