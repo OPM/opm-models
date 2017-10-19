@@ -3,8 +3,8 @@
 # and by the CMake build scripts.
 ################################
 Module: ewoms
-Version: 2017.10-pre
-Codename: Buddy Holly
+Version: 2018.04-pre
+Codename: Winston
 Description: The eWoms simulation framework for flow  and transport in porous media
 Url: http://opm-project.org
 MaintainerName: The Open Porous Media Project
