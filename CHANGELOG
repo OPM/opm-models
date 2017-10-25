@@ -1,3 +1,26 @@
+Changes in eWoms 2017.10
+========================
+
+- Many improvements to the black-oil flow model and to ebos, the Ecl
+  Black-Oil Simulator:
+  - Fixes for several parallelization issues
+  - Improved performance for two-phase runs
+  - Possibility to simulate gas-oil cases in addition to oil-water
+    cases
+  - Overhauled primary variable switching logic
+  - Implementation of solvent and polymer extensions
+  - Option to conserve surface volume of the fluids instead of
+    component mass
+- The vertex centered finite volume discretization now works with
+  automatic differentiation
+- The model for the Stokes equations has been removed: This model
+  never worked well and was very prone to breakdowns and numerical
+  oscillations
+- The minimum version of DUNE is now 2.4
+- The C++ compiler is now assumed to be fully C++-2011 compliant. GCC
+  >= 4.8.2 and clang > 3.3 should work
+- Many smaller bug fixes and cleanups
+
 Changes in eWoms 2017.04
 ========================
 
