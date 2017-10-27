@@ -111,7 +111,7 @@ public:
         else
             addPresentSummaryKeywords_(deck);
 
-        addVariables_(simulator.gridManager().eclState());
+        addVariables_(simulator.gridManager().eclState(), simulator.gridManager().schedule());
     }
 
     ~EclSummaryWriter()
@@ -334,9 +334,9 @@ private:
     bool writeWopt_() const
     { return summaryKeywords_.count("WOPT") > 0; }
 
-    void addVariables_(const Opm::EclipseState& eclState)
+    void addVariables_(const Opm::EclipseState& eclState, const Opm::Schedule& schedule)
     {
-        const auto& wellsVector = eclState.getSchedule().getWells();
+        const auto& wellsVector = schedule.getWells();
         for (size_t wellIdx = 0; wellIdx < wellsVector.size(); ++ wellIdx) {
             const auto& eclWell = wellsVector[wellIdx];
             auto& wellInfo = ertWellInfo_[eclWell->name()];
