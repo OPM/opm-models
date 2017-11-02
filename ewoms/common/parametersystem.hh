@@ -398,7 +398,7 @@ void printUsage(const std::string& progName, const std::string& errorMsg = "",
  *         not be read.
  */
 template <class TypeTag>
-std::string parseCommandLineOptions(int argc, char **argv, bool handleHelp = true)
+std::string parseCommandLineOptions(int argc, const char **argv, bool handleHelp = true)
 {
     Dune::ParameterTree& paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
 

@@ -91,7 +91,7 @@ namespace Ewoms {
  * \param argv Array with the command line argument strings
  */
 template <class TypeTag>
-static inline int setupParameters_(int argc, char **argv)
+static inline int setupParameters_(int argc, const char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
@@ -225,7 +225,7 @@ static inline int start(int argc, char **argv)
 
     try
     {
-        int paramStatus = setupParameters_<TypeTag>(argc, argv);
+        int paramStatus = setupParameters_<TypeTag>(argc, const_cast<const char**>(argv));
         if (paramStatus == 1)
             return 1;
         if (paramStatus == 2)
