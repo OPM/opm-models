@@ -546,7 +546,7 @@ public:
             if (verbose_)
                 std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
             this->deserialize(res);
-            problem_->deserialize(res);
+            problem_->deserialize(res, true);// to things for restart
             model_->deserialize(res);
             res.deserializeEnd();
             if (verbose_)
@@ -804,6 +804,16 @@ public:
         res.serializeEnd();
     }
 
+    void deserializeAll(Scalar t)
+    {
+        typedef Ewoms::Restart Restarter;
+        Restarter res;
+        res.deserializeBegin(*this, t);
+        this->deserialize(res);
+        problem_->deserialize(res, false);
+        model_->deserialize(res);
+        res.deserializeEnd();
+    }
     /*!
      * \brief Write the time manager's state to a restart file.
      *
