@@ -622,11 +622,14 @@ public:
      * \param res The deserializer object
      */
     template <class Restarter>
-    void deserialize(Restarter& res)
+    void deserialize(Restarter& res, bool isOnRestart)
     {
         // reload the current episode/report step from the deck
-        beginEpisode(/*isOnRestart=*/true);
-
+        //beginEpisode(/*isOnRestart=*/true);
+        // should probably be removed
+        if(isOnRestart){
+            beginEpisode(/*isOnRestart=*/true);
+        }
         // deserialize the wells
         wellModel_.deserialize(res);
     }

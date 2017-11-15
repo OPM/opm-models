@@ -46,7 +46,7 @@ class Restart
     template <class GridView>
     static const std::string magicRestartCookie_(const GridView& gridView)
     {
-        static const std::string gridName = "blubb"; // gridView.grid().name();
+        static const std::string gridName = gridView.grid().name();
         static const int dim = GridView::dimension;
 
         int numVertices = gridView.size(dim);
@@ -105,7 +105,6 @@ public:
                                      simulator.problem().outputDir(),
                                      simulator.problem().name(),
                                      simulator.time());
-
         // open output file and write magic cookie
         outStream_.open(fileName_.c_str());
         outStream_.precision(20);
@@ -164,10 +163,12 @@ public:
     void serializeEnd()
     { outStream_.close(); }
 
-    /*!
+
+   /*!
      * \brief Start reading a restart file at a certain simulated
      *        time.
      */
+
     template <class Simulator, class Scalar>
     void deserializeBegin(Simulator& simulator, Scalar t)
     {
