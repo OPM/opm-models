@@ -217,7 +217,7 @@ public:
                              "Write the convergence behaviour of the Newton "
                              "method to a VTK file");
         EWOMS_REGISTER_PARAM(TypeTag, int, NewtonTargetIterations,
-                             "The 'optimimum' number of Newton iterations per "
+                             "The 'optimum' number of Newton iterations per "
                              "time step");
         EWOMS_REGISTER_PARAM(TypeTag, int, NewtonMaxIterations,
                              "The maximum number of Newton iterations per time "

@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 9), cmake,
  libboost-test-dev, libsuperlu3-dev (>= 3.0) | libsuperlu-dev (>= 4.3),
  gfortran, libsuitesparse-dev, libecl-dev, libopm-output-dev, zlib1g-dev,
  libopm-parser-dev, libboost-iostreams-dev, libopm-common-dev, libopm-grid-dev,
- mpi-default-dev, mpi-default-bin
+ mpi-default-dev, mpi-default-bin, libtrilinos-zoltan-dev
 Standards-Version: 3.9.3
 Homepage: http://opm-project.org/ewoms
 Vcs-Git: git://github.com/OPM/ewoms.git

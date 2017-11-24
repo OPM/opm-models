@@ -342,8 +342,7 @@ public:
     void writeHeader(const Simulator& simulator, unsigned reportStepIdx)
     {
         const auto& eclGrid = simulator.gridManager().eclState().getInputGrid();
-        const auto& eclState = simulator.gridManager().eclState();
-        const auto& eclSchedule = eclState.getSchedule();
+        const auto& eclSchedule = simulator.gridManager().schedule();
 
         double secondsElapsed = simulator.time() + simulator.timeStepSize();
         double daysElapsed = secondsElapsed/(24*60*60);
@@ -564,7 +563,7 @@ public:
     {
         const auto& gridManager = simulator.gridManager();
         const auto& eclGrid = gridManager.eclState().getInputGrid();
-        const auto& timeMap = gridManager.eclState().getSchedule().getTimeMap();
+        const auto& timeMap = gridManager.schedule().getTimeMap();
 
         std::string caseName = gridManager.caseName();
 

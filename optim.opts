@@ -1,10 +1,3 @@
-# USE_CMAKE is quite a misnomer here: although eWoms and the other OPM
-# modules always use cmake, using dunecontrol for them currently
-# requires to use the autotools compatibility mode, i.e. building the
-# Dune modules using the Dune cmake build system is not yet
-# supported...
-USE_CMAKE=no
-
 CXX_WARNING_OPTS=" \
     -Wall \
     -Wunused \
@@ -15,17 +8,13 @@ CXX_OPTS=" \
     -fstrict-overflow \
     -ffast-math \
     -fno-finite-math-only \
-    --param inline-unit-growth=7000 \
     -O3 \
     -march=native \
     -DNDEBUG=1"
 
-# configure flags 
-CONFIGURE_FLAGS=" \
-  CXXFLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
-  --enable-fieldvector-size-is-method \
-  --enable-experimental-grid-extensions \
-  --disable-documentation \
-  --enable-parallel \
-  --disable-mpiruntest"
-
+# cmake flags
+CMAKE_FLAGS=" \
+  -DBUILD_TESTING=OFF \
+  -DCMAKE_C_FLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
+  -DCMAKE_CXX_FLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
+  "

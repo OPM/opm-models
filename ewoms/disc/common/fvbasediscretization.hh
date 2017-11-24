@@ -1596,9 +1596,12 @@ public:
                     elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
                 }
 
-                modIt = outputModules_.begin();
-                for (; modIt != modEndIt; ++modIt)
-                    (*modIt)->processElement(elemCtx);
+                // we cannot reuse the "modIt" variable here because the code here might
+                // be threaded and "modIt" is is the same for all threads, i.e., if a
+                // given thread modifies it, the changes affect all threads.
+                auto modIt2 = outputModules_.begin();
+                for (; modIt2 != modEndIt; ++modIt2)
+                    (*modIt2)->processElement(elemCtx);
             }
         }
     }

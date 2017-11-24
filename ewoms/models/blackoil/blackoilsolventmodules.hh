@@ -895,7 +895,7 @@ class BlackOilSolventIntensiveQuantities
     static constexpr int oilPhaseIdx = FluidSystem::oilPhaseIdx;
     static constexpr int gasPhaseIdx = FluidSystem::gasPhaseIdx;
     static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
-    static constexpr double cutOff = 1e-16;
+    static constexpr double cutOff = 1e-12;
 
 
 public:
@@ -1115,9 +1115,12 @@ private:
         const auto& sorwmis = SolventModule::sorwmis(elemCtx, scvIdx, timeIdx);
         const auto& sgcwmis = SolventModule::sgcwmis(elemCtx, scvIdx, timeIdx);
         const Evaluation& sw = fs.saturation(waterPhaseIdx);
-        const Evaluation oilEffSat = fs.saturation(oilPhaseIdx) - sorwmis.eval(sw,  /*extrapolate=*/true);
-        const Evaluation gasEffSat = fs.saturation(gasPhaseIdx) - sgcwmis.eval(sw,  /*extrapolate=*/true);
-        const Evaluation solventEffSat = solventSaturation() - sgcwmis.eval(sw,  /*extrapolate=*/true);
+
+        const Evaluation zero = 0.0;
+        const Evaluation oilEffSat = std::max(fs.saturation(oilPhaseIdx) - sorwmis.eval(sw,  /*extrapolate=*/true),zero);
+        const Evaluation gasEffSat = std::max(fs.saturation(gasPhaseIdx) - sgcwmis.eval(sw,  /*extrapolate=*/true),zero);
+        const Evaluation solventEffSat = std::max(solventSaturation() - sgcwmis.eval(sw,  /*extrapolate=*/true),zero);
+
         const Evaluation oilGasSolventEffSat =  oilEffSat + gasEffSat + solventEffSat;
         const Evaluation oilSolventEffSat = oilEffSat + solventEffSat;
         const Evaluation solventGasEffSat = solventEffSat + gasEffSat;
@@ -1132,14 +1135,14 @@ private:
         const Evaluation muSolventPow = pow(muSolvent, 0.25);
 
         Evaluation muMixOilSolvent = muOil;
-        if ( std::abs(oilSolventEffSat.value()) > cutOff)
+        if (oilSolventEffSat > cutOff)
             muMixOilSolvent *= muSolvent / pow( ( (oilEffSat / oilSolventEffSat) * muSolventPow) + ( (solventEffSat / oilSolventEffSat) * muOilPow) , 4.0);
         Evaluation muMixSolventGas = muGas;
-        if ( std::abs(solventGasEffSat.value()) > cutOff)
+        if (solventGasEffSat > cutOff)
             muMixSolventGas *= muSolvent / pow( ( (gasEffSat / solventGasEffSat) * muSolventPow) + ( (solventEffSat / solventGasEffSat) * muGasPow) , 4.0);
 
         Evaluation muMixSolventGasOil = muOil;
-        if (std::abs(oilGasSolventEffSat.value()) > cutOff)
+        if (oilGasSolventEffSat > cutOff)
             muMixSolventGasOil *= muSolvent * muGas / pow( ( (oilEffSat / oilGasSolventEffSat) * muSolventPow *  muGasPow)
                   + ( (solventEffSat / oilGasSolventEffSat) * muOilPow *  muGasPow) + ( (gasEffSat / oilGasSolventEffSat) * muSolventPow * muOilPow), 4.0);
 

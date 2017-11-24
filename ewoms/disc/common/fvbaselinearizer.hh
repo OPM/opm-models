@@ -347,7 +347,6 @@ private:
             // constraints are not explictly enabled, so we don't need to consider them!
             return;
 
-        unsigned threadId = ThreadManager::threadId();
         constraintsMap_.clear();
 
         // loop over all elements...
@@ -356,6 +355,7 @@ private:
 #pragma omp parallel
 #endif
         {
+            unsigned threadId = ThreadManager::threadId();
             ElementIterator elemIt = threadedElemIt.beginParallel();
             for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 // create an element context (the solution-based quantities are not
