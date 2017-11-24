@@ -479,16 +479,24 @@ public:
             Scalar initialDt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
             dt = std::min(dt, initialDt);
         }
+        //NB pudateCell values is called before dt is updated to since it is based on the prevois step.
+        // this put the model state set values which should be form the
+        // prevois step
+        ElementContext elemCtx(this->simulator());
+        this->model().updateCellValues(elemCtx, this->simulator().gridManager().gridView() );
 
         if (nextEpisodeIdx < numReportSteps) {
             simulator.startNextEpisode(episodeLength);
             simulator.setTimeStepSize(dt);
         }
 
+
+
         if (updateHysteresis_())
             this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
-
-        this->model().updateMaxOilSaturations();
+        // NB update MaxOilSaturation is called here instead of endEpisode to get correct output for the lagged evalauation
+        // used in eclipse
+        this->model().updateMaxOilSaturations();// this should be removed when cellValues is properly functions
 
         if (GET_PROP_VALUE(TypeTag, EnablePolymer))
             updateMaxPolymerAdsorption_();
@@ -567,6 +575,8 @@ public:
         const auto& schedule = simulator.gridManager().schedule();
 
         int episodeIdx = simulator.episodeIndex();
+        // NB hysteresis variable is not updated  here since the lagged evaluation of this quantities are used
+
 
         const auto& timeMap = schedule.getTimeMap();
         int numReportSteps = timeMap.size() - 1;
