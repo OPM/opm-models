@@ -335,7 +335,8 @@ public:
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
-    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx,const ElementContext& elemCtx,Scalar eps = 0.0)
+    //bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx,const ElementContext& elemCtx,Scalar eps = 0.0)
+    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx, Scalar eps = 0.0)//,const ElementContext& elemCtx,Scalar eps = 0.0)
     {
         static const Scalar thresholdWaterFilledCell = 1.0 - eps;
 
@@ -392,14 +393,13 @@ public:
 
                 if(FluidSystem::enableRateLimmitedDissolvedGas()>Opm::FluidSystems::None){
                     //assert(false);
-                    using Model = typename std::decay
-                        <decltype(elemCtx.model())>::type;
+
                     //unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, 0);
                     unsigned globalSpaceIdx  = globalDofIdx;
-                    Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::rsPrev);
-                    Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::soPrev);
+                    Scalar Rs0 = problem.model().cellValues(globalSpaceIdx,Model::rsPrev);
+                    Scalar So0 = problem.model().cellValues(globalSpaceIdx,Model::soPrev);
                     Scalar So_tmp=std::min(So,1.0);
-                    const double dt = elemCtx.simulator().timeStepSize();//.currentStepLength();
+                    const double dt = problem.simulator().timeStepSize();//.currentStepLength();
                     Rs = FluidSystem::rateLimmitedUpdate(So_tmp,So0,Rs,Rs0,dt);
                     //Rs = Rs0;// try
                 }
@@ -409,7 +409,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, elemCtx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -446,7 +446,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, elemCtx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx,  eps);
 
                 return true;
             }
@@ -469,7 +469,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, elemCtx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -490,17 +490,11 @@ public:
 
             // Rs updates is only immited in the case off all
             if(FluidSystem::enableRateLimmitedDissolvedGas()>Opm::FluidSystems::Free){
-                // this calculation is also done in intensive quantites need to be in sync
-                //assert(false);
-                // this are values which is not updated in the nonlinear loop
-                //HACK
-                using Model = typename std::decay
-                    <decltype(elemCtx.model())>::type;
                 //unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, 0);
                 unsigned globalSpaceIdx  = globalDofIdx;
-                Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::rsPrev);
-                Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::soPrev);
-                const double dt = elemCtx.simulator().timeStepSize();//.currentStepLength();
+                Scalar Rs0 = problem.model().cellValues(globalSpaceIdx,Model::rsPrev);
+                Scalar So0 = problem.model().cellValues(globalSpaceIdx,Model::soPrev);
+                const double dt = problem.simulator().timeStepSize();//.currentStepLength();
                 Scalar RsMax_tmp = RsMax;
                 RsMax = FluidSystem::rateLimmitedUpdate(So,So0,RsMax,Rs0,dt);
                 assert(RsMax_tmp>=RsMax);
@@ -514,7 +508,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, elemCtx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -552,7 +546,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, elemCtx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -591,7 +585,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, elemCtx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
