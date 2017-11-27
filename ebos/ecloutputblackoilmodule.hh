@@ -80,6 +80,7 @@ class EclOutputBlackOilModule : public BaseOutputModule<TypeTag>
     typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) Discretization;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -201,13 +202,15 @@ public:
                 }
             }
             if (gasDissolutionFactorOutput_()) {
-                Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
+                //Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = elemCtx.model().cellValues(globalDofIdx, Model::soMax);
                 gasDissolutionFactor_[globalDofIdx] =
                     FluidSystem::template saturatedDissolutionFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx, SoMax);
                 Opm::Valgrind::CheckDefined(gasDissolutionFactor_[globalDofIdx]);
             }
             if (oilVaporizationFactorOutput_()) {
-                Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
+                //Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = elemCtx.model().cellValues(globalDofIdx, Model::soMax);
                 gasDissolutionFactor_[globalDofIdx] =
                     FluidSystem::template saturatedDissolutionFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx, SoMax);
                 Opm::Valgrind::CheckDefined(gasDissolutionFactor_[globalDofIdx]);

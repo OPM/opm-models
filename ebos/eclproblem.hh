@@ -496,7 +496,8 @@ public:
             this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
         // NB update MaxOilSaturation is called here instead of endEpisode to get correct output for the lagged evalauation
         // used in eclipse
-        this->model().updateMaxOilSaturations();// this should be removed when cellValues is properly functions
+        //this->model().updateMaxOilSaturations();// this should be removed when cellValues is properly functions
+
 
         if (GET_PROP_VALUE(TypeTag, EnablePolymer))
             updateMaxPolymerAdsorption_();

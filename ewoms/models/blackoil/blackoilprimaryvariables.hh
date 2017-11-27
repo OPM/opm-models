@@ -59,6 +59,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
     typedef FvBasePrimaryVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext)    ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
@@ -380,7 +381,8 @@ public:
                 // PVT objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                //Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.model().cellValues(globalDofIdx,Model::soMax);
                 //Scalar RsSat= 0.0;
                 Scalar Rs = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
@@ -394,8 +396,8 @@ public:
                         <decltype(elemCtx.model())>::type;
                     //unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, 0);
                     unsigned globalSpaceIdx  = globalDofIdx;
-                    Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevRs);
-                    Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevSo);
+                    Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::rsPrev);
+                    Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::soPrev);
                     Scalar So_tmp=std::min(So,1.0);
                     const double dt = elemCtx.simulator().timeStepSize();//.currentStepLength();
                     Rs = FluidSystem::rateLimmitedUpdate(So_tmp,So0,Rs,Rs0,dt);
@@ -428,7 +430,8 @@ public:
                 // we start at the Rv value that corresponds to that of oil-saturated
                 // hydrocarbon gas
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                //Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.model(). cellValues(globalDofIdx, Model::soMax);
                 Scalar RvSat =
                     FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                          T,
@@ -477,7 +480,9 @@ public:
             Scalar T = asImp_().temperature_();
             Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1.0 - Sw - solventSaturation();
-            Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            //Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            Scalar SoMax_prev = problem.model().cellValues(globalDofIdx,Model::soMax);
+            Scalar SoMax = std::max(So, SoMax_prev);
             Scalar RsSat =
                 FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
             Scalar RsMax = RsSat;
@@ -493,8 +498,8 @@ public:
                     <decltype(elemCtx.model())>::type;
                 //unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, 0);
                 unsigned globalSpaceIdx  = globalDofIdx;
-                Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevRs);
-                Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevSo);
+                Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::rsPrev);
+                Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::soPrev);
                 const double dt = elemCtx.simulator().timeStepSize();//.currentStepLength();
                 Scalar RsMax_tmp = RsMax;
                 RsMax = FluidSystem::rateLimmitedUpdate(So,So0,RsMax,Rs0,dt);
@@ -557,7 +562,8 @@ public:
             // than what saturated gas contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
-            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            //Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            Scalar SoMax = problem.model().cellValues(globalDofIdx, Model::soMax);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,

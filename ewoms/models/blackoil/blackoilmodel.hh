@@ -226,9 +226,9 @@ public:
         : ParentType(simulator)
     {}
     enum CellValuesName : unsigned {
-        prevSo = 0,
-        prevRs = 1,
-        maxOil = 2,
+        soPrev = 0,
+        rsPrev = 1,
+        soMax = 2,
         numCellValues,
     };
     /*!
@@ -251,7 +251,7 @@ public:
      */
     void finishInit()
     {
-        maxOilSaturation_.resize(this->numGridDof(), 0.0);
+        //maxOilSaturation_.resize(this->numGridDof(), 0.0);
         cellValues_.resize(numCellValues);
         cellValues_.resize(this->numGridDof());
         for(unsigned i=0; i < cellValues_.size() ; ++i){
@@ -406,8 +406,8 @@ public:
                 }
             }
         }
-        if (maxOilSaturation_.size() > 0)
-            outstream << maxOilSaturation_[dofIdx] << " ";
+//        if (maxOilSaturation_.size() > 0)
+//            outstream << maxOilSaturation_[dofIdx] << " ";
 
 
         SolventModule::serializeEntity(*this, outstream, dof);
@@ -452,8 +452,8 @@ public:
                 }
             }
         }
-        if (maxOilSaturation_.size() > 0)
-            instream >> maxOilSaturation_[dofIdx];
+        //if (maxOilSaturation_.size() > 0)
+        //    instream >> maxOilSaturation_[dofIdx];
 
 
 
@@ -508,18 +508,18 @@ public:
      * This is a bit of a hack from the conceptional point of view, but it is required to
      * match the results of the 'flow' and ECLIPSE 100 simulators.
      */
-    Scalar maxOilSaturation(unsigned globalDofIdx) const
-    {
-        assert(maxOilSaturation_[globalDofIdx] == cellValues_[globalDofIdx][maxOil]);
-        return maxOilSaturation_[globalDofIdx];
-    }
+//    Scalar maxOilSaturation(unsigned globalDofIdx) const
+//    {
+//        assert(maxOilSaturation_[globalDofIdx] == cellValues_[globalDofIdx][maxOil]);
+//        return maxOilSaturation_[globalDofIdx];
+//    }
 
     /*!
      * \brief Sets an elements maximum oil phase saturation observed during the
      *        simulation (used for restarting from UNRST-files).
      */
-    void setMaxOilSaturation(const Scalar value, unsigned globalDofIdx)
-    { maxOilSaturation_[globalDofIdx] = value; }
+//    void setMaxOilSaturation(const Scalar value, unsigned globalDofIdx)
+//    { maxOilSaturation_[globalDofIdx] = value; }
 
     /*!
      * \brief Update the maximum oil saturation observed during the simulation for all
@@ -529,36 +529,40 @@ public:
      * simulation it sometimes needs to be called after a time step or before an episode
      * starts.
      */
-    void updateMaxOilSaturations()
-    {
-        if (maxOilSaturation_.size() > 0) {
-            unsigned nGridDofs = this->numGridDof();
-            assert(maxOilSaturation_.size() == nGridDofs);
-            for (unsigned dofIdx = 0; dofIdx < nGridDofs; ++dofIdx) {
-                const PrimaryVariables& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
-                Scalar So = 0.0;
-                switch (priVars.primaryVarsMeaning()) {
-                case PrimaryVariables::Sw_po_Sg:
-                    So = 1.0;
-                    if( waterEnabled)
-                        So -= priVars[Indices::waterSaturationIdx];
-                    if( compositionSwitchEnabled )
-                        So -= priVars[Indices::compositionSwitchIdx];
-                    break;
-                case PrimaryVariables::Sw_pg_Rv:
-                    So = 0.0;
-                    break;
-                case PrimaryVariables::Sw_po_Rs:
-                    So = 1.0;
-                    if (waterEnabled)
-                        So -= priVars[Indices::waterSaturationIdx];
-                    break;
-                }
 
-                maxOilSaturation_[dofIdx] = std::max(maxOilSaturation_[dofIdx], So);
-            }
-        }
-    }
+
+
+//    void updateMaxOilSaturations()
+//    {
+//        if (maxOilSaturation_.size() > 0) {
+//            unsigned nGridDofs = this->numGridDof();
+//            assert(maxOilSaturation_.size() == nGridDofs);
+//            for (unsigned dofIdx = 0; dofIdx < nGridDofs; ++dofIdx) {
+//                const PrimaryVariables& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
+//                Scalar So = 0.0;
+//                switch (priVars.primaryVarsMeaning()) {
+//                case PrimaryVariables::Sw_po_Sg:
+//                    So = 1.0;
+//                    if( waterEnabled)
+//                        So -= priVars[Indices::waterSaturationIdx];
+//                    if( compositionSwitchEnabled )
+//                        So -= priVars[Indices::compositionSwitchIdx];
+//                    break;
+//                case PrimaryVariables::Sw_pg_Rv:
+//                    So = 0.0;
+//                    break;
+//                case PrimaryVariables::Sw_po_Rs:
+//                    So = 1.0;
+//                    if (waterEnabled)
+//                        So -= priVars[Indices::waterSaturationIdx];
+//                    break;
+//                }
+
+//                maxOilSaturation_[dofIdx] = std::max(maxOilSaturation_[dofIdx], So);
+//                cellValues_[dofIdx][] = std::max(cellValues_[dofIdx][], So);
+//            }
+//        }
+//    }
 
 
 
@@ -569,8 +573,8 @@ public:
      * \brief Sets an elements maximum oil phase saturation observed during the
      *        simulation (used for restarting from UNRST-files).
      */
-    void setCellValues(const Scalar value, unsigned globalDofIdx)
-    { cellValues_[globalDofIdx] = value; }
+    void setCellValue(const Scalar value, unsigned globalDofIdx, CellValuesName cv)
+    { cellValues_[globalDofIdx][cv] = value; }
 
     /*!
      * \brief Update the maximum oil saturation observed during the simulation for all
@@ -580,14 +584,12 @@ public:
      * simulation it sometimes needs to be called after a time step or before an episode
      * starts.
      */
-    //void updateCellValues(ElementContext& elemCtx,& gridManager)
     void updateCellValues(ElementContext& elemCtx,const GridView& gridView)
     {
 
-        //ElementContext elemCtx(this->simulator());
-        //const auto& gridManager = this->simulator().gridManager();
-        //auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
-        //const auto& elemEndIt = gridManage.gridView().template end</*codim=*/0>();
+        //ElementContext elemCtx(simulator);
+        //const auto& gridManager = simulator.gridManager();
+        //const auto& gridView = gridManager.gridView();
         auto elemIt = gridView.template begin</*codim=*/0>();
         const auto& elemEndIt = gridView.template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -602,9 +604,12 @@ public:
             const auto So = Toolbox::value(intQuants.fluidState().saturation(FluidSystem::oilPhaseIdx ));//remove derivaitves may be a problem when adjoint is implemented
             //const auto maxSo = Toolbox::value(intQuants.fluidState().saturationMax(FluidSystem::oilPhaseIdx));
             // suppolse compressedDofIdx is global elment number
-            cellValues_[dofIdx][prevRs] = Rs;
-            cellValues_[dofIdx][prevSo] = So;
-            cellValues_[dofIdx][maxOil]  = std::max( cellValues_[dofIdx][maxOil], So);
+            cellValues_[dofIdx][rsPrev] = Rs;
+            cellValues_[dofIdx][soPrev] = So;
+            Scalar so_tmp = oilSaturation(dofIdx);
+            assert(so_tmp == So);
+            Scalar so_max = std::max( cellValues_[dofIdx][soMax], So);
+            cellValues_[dofIdx][soMax]  = std::max( cellValues_[dofIdx][soMax], So);
         }
 
     }
@@ -635,7 +640,31 @@ protected:
         this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
     }
 
+    Scalar oilSaturation(unsigned dofIdx) const{
+        const PrimaryVariables& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
+        Scalar So = 0.0;
+        switch (priVars.primaryVarsMeaning()) {
+        case PrimaryVariables::Sw_po_Sg:
+            So = 1.0;
+            if( waterEnabled)
+                So -= priVars[Indices::waterSaturationIdx];
+            if( compositionSwitchEnabled )
+                So -= priVars[Indices::compositionSwitchIdx];
+            break;
+        case PrimaryVariables::Sw_pg_Rv:
+            So = 0.0;
+            break;
+        case PrimaryVariables::Sw_po_Rs:
+            So = 1.0;
+            if (waterEnabled)
+                So -= priVars[Indices::waterSaturationIdx];
+            break;
+        }
+        return So;
+
+    }
 private:
+
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
     const Implementation& asImp_() const
@@ -651,7 +680,7 @@ private:
         priVars.setPvtRegionIndex(regionIdx);
     }
 
-    std::vector<Scalar> maxOilSaturation_;
+    //std::vector<Scalar> maxOilSaturation_;
     std::vector< std::array<Scalar,numCellValues> > cellValues_;//Rs value of the prevois time stem used for ratelimmited dissolution
 };
 } // namespace Ewoms

@@ -62,6 +62,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -194,7 +195,9 @@ public:
         // update the Saturation functions for the blackoil solvent module.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
-        Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
+        //Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
+        Scalar SoMax = elemCtx.model().cellValues(globalSpaceIdx, Model::soMax);
+
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
@@ -208,7 +211,7 @@ public:
                                                             oilPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
-                Evaluation Rs_tmp = RsSat;
+
                 //if(FluidSystem::enableDRSDT()){
                 if(FluidSystem::enableRateLimmitedDissolvedGas() > Opm::FluidSystems::None){
                     // immit the updated Rs value by a given rate pr volume
@@ -240,10 +243,9 @@ public:
             // if the switching variable is the mole fraction of the gas component in the
             // oil phase, we can directly set the composition of the oil phase
             auto Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-// this should be handled by variable switching Gas should appear
-//            if(FluidSystem::enableRateLimmitedDissolvedGas() == Opm::FluidSystems::All){
-//                Rs = rateLimmitedDissolvedGasUpdate(Rs,So,elemCtx,dofIdx,timeIdx);
-//            }
+            //if(FluidSystem::enableRateLimmitedDissolvedGas() == Opm::FluidSystems::All){
+            //       Rs = rateLimmitedDissolvedGasUpdate(Rs, So, elemCtx,dofIdx,timeIdx);
+            //}
             fluidState_.setRs(Rs);
 
             if (FluidSystem::enableVaporizedOil()) {
@@ -373,14 +375,11 @@ public:
      */
     Evaluation rateLimmitedDissolvedGasUpdate(const Evaluation& RsE,const Evaluation& So, const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
     {
-        using Model = typename std::decay
-            <decltype(elemCtx.model())>::type;
-
         assert(timeIdx==0);
         //const auto intQuants0 = elemCtx.intensiveQuantities(dofIdx, 1);// do not understand why this do not work
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
-        Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevRs);
-        Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::prevSo);
+        Scalar Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::rsPrev);
+        Scalar So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::soPrev);
         //const auto RsSat0_tmp = Toolbox::value(intQuants0.fluidState().Rs());//remove derivatives
         //const auto Rs0_tmp = intQuants0.fluidState().Rs();//remove derivatives
         //const auto Rs0 = Toolbox::value(RsSat0_tmp);
