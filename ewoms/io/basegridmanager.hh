@@ -130,6 +130,9 @@ protected:
     void updateGridView_()
     {
 #if HAVE_DUNE_FEM
+        // first delete old grid part
+        // this is due to a bug in dune-fem (dangling reference)
+        gridPart_.reset();
         gridPart_.reset(new GridPart(asImp_().grid()));
         gridView_.reset(new GridView(static_cast<GridView>(*gridPart_)));
         assert(gridView_->size(0) == asImp_().grid().leafGridView().size(0));
