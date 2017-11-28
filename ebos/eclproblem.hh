@@ -479,7 +479,7 @@ public:
             Scalar initialDt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
             dt = std::min(dt, initialDt);
         }
-        //NB pudateCell values is called before dt is updated to since it is based on the prevois step.
+        //NB!!!! updateCell values is called before dt is updated to since it is based on the prevois step.
         // this put the model state set values which should be form the
         // prevois step
         ElementContext elemCtx(this->simulator());
