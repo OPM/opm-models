@@ -606,10 +606,10 @@ public:
             // suppolse compressedDofIdx is global elment number
             cellValues_[dofIdx][rsPrev] = Rs;
             cellValues_[dofIdx][soPrev] = So;
-            Scalar so_tmp = oilSaturation(dofIdx);
-            assert(so_tmp == So);
+            //Scalar so_tmp = oilSaturation(dofIdx);//removed to have one version of getting so
+            //assert(so_tmp == So);
             Scalar so_max = std::max( cellValues_[dofIdx][soMax], So);
-            cellValues_[dofIdx][soMax]  = std::max( cellValues_[dofIdx][soMax], So);
+            cellValues_[dofIdx][soMax]  = so_max;
         }
 
     }
@@ -640,29 +640,29 @@ protected:
         this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
     }
 
-    Scalar oilSaturation(unsigned dofIdx) const{
-        const PrimaryVariables& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
-        Scalar So = 0.0;
-        switch (priVars.primaryVarsMeaning()) {
-        case PrimaryVariables::Sw_po_Sg:
-            So = 1.0;
-            if( waterEnabled)
-                So -= priVars[Indices::waterSaturationIdx];
-            if( compositionSwitchEnabled )
-                So -= priVars[Indices::compositionSwitchIdx];
-            break;
-        case PrimaryVariables::Sw_pg_Rv:
-            So = 0.0;
-            break;
-        case PrimaryVariables::Sw_po_Rs:
-            So = 1.0;
-            if (waterEnabled)
-                So -= priVars[Indices::waterSaturationIdx];
-            break;
-        }
-        return So;
+//    Scalar oilSaturation(unsigned dofIdx) const{
+//        const PrimaryVariables& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
+//        Scalar So = 0.0;
+//        switch (priVars.primaryVarsMeaning()) {
+//        case PrimaryVariables::Sw_po_Sg:
+//            So = 1.0;
+//            if( waterEnabled)
+//                So -= priVars[Indices::waterSaturationIdx];
+//            if( compositionSwitchEnabled )
+//                So -= priVars[Indices::compositionSwitchIdx];
+//            break;
+//        case PrimaryVariables::Sw_pg_Rv:
+//            So = 0.0;
+//            break;
+//        case PrimaryVariables::Sw_po_Rs:
+//            So = 1.0;
+//            if (waterEnabled)
+//                So -= priVars[Indices::waterSaturationIdx];
+//            break;
+//        }
+//        return So;
 
-    }
+//    }
 private:
 
     Implementation& asImp_()
