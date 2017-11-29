@@ -418,7 +418,7 @@ public:
                     FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                          T,
                                                                          pg,
-                                                                         0.0,
+                                                                         Scalar(0),
                                                                          SoMax);
 
                 setPrimaryVarsMeaning(Sw_pg_Rv);
