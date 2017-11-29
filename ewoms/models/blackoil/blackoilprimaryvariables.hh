@@ -480,9 +480,8 @@ public:
             Scalar T = asImp_().temperature_();
             Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1.0 - Sw - solventSaturation();
-            //Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
-            Scalar SoMax_prev = problem.model().cellValues(globalDofIdx,Model::soMax);
-            Scalar SoMax = std::max(So, SoMax_prev);
+            Scalar SoMax = problem.model().cellValues(globalDofIdx,Model::soMax);
+            //Scalar SoMax = std::max(So, SoMax_prev);
             Scalar RsSat =
                 FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
             Scalar RsMax = RsSat;
