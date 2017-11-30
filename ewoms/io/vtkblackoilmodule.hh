@@ -91,6 +91,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
     typedef BaseOutputModule<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
@@ -216,7 +217,8 @@ public:
             const auto& primaryVars = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0);
 
             unsigned pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
-            Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
+            //Scalar SoMax = elemCtx.model().maxOilSaturation(globalDofIdx);
+            Scalar SoMax = elemCtx.model().cellValues(globalDofIdx, Model::soMax);
             Scalar x_oG = Toolbox::value(fs.moleFraction(oilPhaseIdx, gasCompIdx));
             Scalar x_gO = Toolbox::value(fs.moleFraction(gasPhaseIdx, oilCompIdx));
             Scalar X_oG = Toolbox::value(fs.massFraction(oilPhaseIdx, gasCompIdx));

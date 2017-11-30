@@ -59,7 +59,8 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
     typedef FvBasePrimaryVariables<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) Implementation;
-
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
+    typedef typename GET_PROP_TYPE(TypeTag, ElementContext)    ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
@@ -334,7 +335,8 @@ public:
      *
      * \return true Iff the interpretation of one of the switching variables was changed
      */
-    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx, Scalar eps = 0.0)
+    //bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx,const ElementContext& elemCtx,Scalar eps = 0.0)
+    bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx, Scalar eps = 0.0)//,const ElementContext& elemCtx,Scalar eps = 0.0)
     {
         static const Scalar thresholdWaterFilledCell = 1.0 - eps;
 
@@ -380,15 +382,30 @@ public:
                 // PVT objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
-                Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
+                //Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.model().cellValues(globalDofIdx,Model::soMax);
+                //Scalar RsSat= 0.0;
+                Scalar Rs = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
                                                                                    po,
                                                                                    So2,
                                                                                    SoMax);
+
+                if(FluidSystem::enableRateLimmitedDissolvedGas()>Opm::FluidSystems::None){
+                    //assert(false);
+
+                    //unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, 0);
+                    unsigned globalSpaceIdx  = globalDofIdx;
+                    Scalar Rs0 = problem.model().cellValues(globalSpaceIdx,Model::rsPrev);
+                    Scalar So0 = problem.model().cellValues(globalSpaceIdx,Model::soPrev);
+                    Scalar So_tmp=std::min(So,1.0);
+                    const double dt = problem.simulator().timeStepSize();//.currentStepLength();
+                    Rs = FluidSystem::rateLimmitedUpdate(So_tmp,So0,Rs,Rs0,dt);
+                    //Rs = Rs0;// try
+                }
                 setPrimaryVarsMeaning(Sw_po_Rs);
                 if (compositionSwitchEnabled)
-                    (*this)[Indices::compositionSwitchIdx] = RsSat;
+                    (*this)[Indices::compositionSwitchIdx] = Rs;
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
@@ -413,7 +430,8 @@ public:
                 // we start at the Rv value that corresponds to that of oil-saturated
                 // hydrocarbon gas
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                //Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.model(). cellValues(globalDofIdx, Model::soMax);
                 Scalar RvSat =
                     FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                          T,
@@ -428,7 +446,7 @@ public:
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
+                asImp_().adaptPrimaryVariables(problem, globalDofIdx,  eps);
 
                 return true;
             }
@@ -462,15 +480,30 @@ public:
             Scalar T = asImp_().temperature_();
             Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1.0 - Sw - solventSaturation();
-            Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            Scalar SoMax = problem.model().cellValues(globalDofIdx,Model::soMax);
+            //Scalar SoMax = std::max(So, SoMax_prev);
             Scalar RsSat =
                 FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
+            Scalar RsMax = RsSat;
             Scalar Rs = (*this)[Indices::compositionSwitchIdx];
-            if (Rs > RsSat*(1.0 + eps)) {
+
+            // Rs updates is only immited in the case off all
+            if(FluidSystem::enableRateLimmitedDissolvedGas()>Opm::FluidSystems::Free){
+                //unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, 0);
+                unsigned globalSpaceIdx  = globalDofIdx;
+                Scalar Rs0 = problem.model().cellValues(globalSpaceIdx,Model::rsPrev);
+                Scalar So0 = problem.model().cellValues(globalSpaceIdx,Model::soPrev);
+                const double dt = problem.simulator().timeStepSize();//.currentStepLength();
+                Scalar RsMax_tmp = RsMax;
+                RsMax = FluidSystem::rateLimmitedUpdate(So,So0,RsMax,Rs0,dt);
+                assert(RsMax_tmp>=RsMax);
+
+            }
+            if (Rs > RsMax*(1.0 + eps)) {
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
+                (*this)[Indices::compositionSwitchIdx] = eps; // hydrocarbon gas saturation
 
                 // because more than one primary variable switch can occur at a time,
                 // call this method recursively
@@ -478,6 +511,7 @@ public:
 
                 return true;
             }
+
 
             return false;
         }
@@ -521,7 +555,8 @@ public:
             // than what saturated gas contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
-            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            //Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            Scalar SoMax = problem.model().cellValues(globalDofIdx, Model::soMax);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,
