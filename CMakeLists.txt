@@ -148,9 +148,6 @@ opm_add_test(art2dgf
   DRIVER_ARGS --plain
   TEST_ARGS "data/fracture-raw.art")
 
-opm_add_test(test_blackoilfluidstate
-  DRIVER_ARGS --plain)
-
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
 # them as long for parallel test runs

@@ -29,12 +29,10 @@
 #define EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
 
 #include "blackoilproperties.hh"
-#include "blackoilfluidstate.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
 
-
-#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/common/Valgrind.hpp>
 
 #include <dune/common/fmatrix.hh>
@@ -91,7 +89,7 @@ class BlackOilIntensiveQuantities
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Ewoms::BlackOilFluidState<TypeTag> FluidState;
+    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
 
 public:
     BlackOilIntensiveQuantities()
