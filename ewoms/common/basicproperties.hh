@@ -106,6 +106,13 @@ NEW_PROP_TAG(PrintProperties);
  */
 NEW_PROP_TAG(PrintParameters);
 
+/*!
+ * \brief Verbosity during simulation
+ *
+ * true means 'yes', false means 'no'. The default is true.
+ */
+NEW_PROP_TAG(Verbosity);
+
 //! The default value for the simulation's end time
 NEW_PROP_TAG(EndTime);
 
@@ -174,6 +181,9 @@ SET_INT_PROP(NumericModel, PrintProperties, 2);
 
 //! By default, print the values of the run-time parameters on startup
 SET_INT_PROP(NumericModel, PrintParameters, 2);
+
+//! By default, print time step info in simulator
+SET_BOOL_PROP(NumericModel, Verbosity, true);
 
 //! The default value for the simulation's end time
 SET_SCALAR_PROP(NumericModel, EndTime, -1e35);

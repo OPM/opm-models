@@ -77,6 +77,8 @@ NEW_PROP_TAG(ThreadManager);
 NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
+NEW_PROP_TAG(Verbosity);
+
 } // namespace Properties
 } // namespace Ewoms
 //! \cond SKIP_THIS
@@ -114,6 +116,9 @@ static inline int setupParameters_(int argc, const char **argv)
     EWOMS_REGISTER_PARAM(TypeTag, int, PrintParameters,
                          "Print the values of the run-time parameters at the "
                          "start of the simulation");
+
+    EWOMS_REGISTER_PARAM(TypeTag, bool, Verbosity,
+                         "Print time step info during simulation runs");
 
     Simulator::registerParameters();
     ThreadManager::registerParameters();
@@ -258,6 +263,7 @@ static inline int start(int argc, char **argv)
             std::string versionString = "2018.04-pre";
 #endif
             std::cout << "eWoms " << versionString
+
                       << " will now start the trip. "
                       << "Please sit back, relax and enjoy the ride.\n"
                       << std::flush;
@@ -297,7 +303,8 @@ static inline int start(int argc, char **argv)
         // instantiate and run the concrete problem. make sure to
         // deallocate the problem and before the time manager and the
         // grid
-        Simulator simulator;
+        bool verbose = EWOMS_GET_PARAM(TypeTag, bool, Verbosity);
+        Simulator simulator( verbose );
         simulator.run();
 
         if (myRank == 0) {
