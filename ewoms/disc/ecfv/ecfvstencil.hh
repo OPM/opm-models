@@ -28,8 +28,9 @@
 #ifndef EWOMS_ECFV_STENCIL_HH
 #define EWOMS_ECFV_STENCIL_HH
 
-#include <ewoms/common/conditionalstorage.hh>
 #include <ewoms/common/quadraturegeometries.hh>
+
+#include <opm/common/ConditionalStorage.hpp>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/intersectioniterator.hh>
@@ -200,8 +201,8 @@ public:
         { return area_; }
 
     private:
-        ConditionalStorage<needIntegrationPos, GlobalPosition> integrationPos_;
-        ConditionalStorage<needNormal, WorldVector> normal_;
+        Opm::ConditionalStorage<needIntegrationPos, GlobalPosition> integrationPos_;
+        Opm::ConditionalStorage<needNormal, WorldVector> normal_;
         Scalar area_;
 
         unsigned short exteriorIdx_;
