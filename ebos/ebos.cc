@@ -27,6 +27,10 @@
  */
 #include "config.h"
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/misc/double.hh>
+#endif
+
 #include <opm/material/common/quad.hpp>
 #include <ewoms/common/start.hh>
 

@@ -31,6 +31,10 @@
 //#define DISABLE_ALUGRID_SFC_ORDERING 1
 //#define EBOS_USE_ALUGRID 1
 
+#if HAVE_DUNE_FEM
+#include <dune/fem/misc/double.hh>
+#endif
+
 // make sure that the EBOS_USE_ALUGRID macro. using the preprocessor for this is slightly
 // hacky...
 #if EBOS_USE_ALUGRID
@@ -83,6 +87,8 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
+#include <dune/fem/misc/double.hh>
+
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -118,6 +124,14 @@ NEW_PROP_TAG(DisableWells);
 // macro undefined). Next to a slightly better performance, this also eliminates some
 // print statements in debug mode.
 NEW_PROP_TAG(EnableDebuggingChecks);
+
+// If this property is set to false, the SWATINIT keyword will not be handled by ebos.
+NEW_PROP_TAG(EnableSwatinit);
+
+#ifdef COUNT_FLOPS
+//! Set the default type of scalar values to double
+SET_TYPE_PROP(EclBaseProblem, Scalar, Dune::Fem::Double);
+#endif
 
 // Set the problem property
 SET_TYPE_PROP(EclBaseProblem, Problem, Ewoms::EclProblem<TypeTag>);
@@ -235,6 +249,8 @@ SET_BOOL_PROP(EclBaseProblem, DisableWells, false);
 // By default, we enable the debugging checks if we're compiled in debug mode
 SET_BOOL_PROP(EclBaseProblem, EnableDebuggingChecks, true);
 
+// ebos handles the SWATINIT keyword by default
+SET_BOOL_PROP(EclBaseProblem, EnableSwatinit, true);
 } // namespace Properties
 
 /*!
