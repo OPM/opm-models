@@ -58,8 +58,6 @@ NEW_PROP_TAG(VtkWriteGasSaturationPressure);
 NEW_PROP_TAG(VtkWriteSaturationRatios);
 NEW_PROP_TAG(VtkWriteSaturatedOilGasDissolutionFactor);
 NEW_PROP_TAG(VtkWriteSaturatedGasOilVaporizationFactor);
-NEW_PROP_TAG(VtkWriteSaturatedOilFormationVolumeFactor);
-NEW_PROP_TAG(VtkWriteSaturatedGasFormationVolumeFactor);
 NEW_PROP_TAG(VtkWritePrimaryVarsMeaning);
 
 // set default values for what quantities to output
@@ -73,8 +71,6 @@ SET_BOOL_PROP(VtkBlackOil, VtkWriteGasSaturationPressure, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturationRatios, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedOilGasDissolutionFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedGasOilVaporizationFactor, false);
-SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedOilFormationVolumeFactor, false);
-SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedGasFormationVolumeFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWritePrimaryVarsMeaning, false);
 } // namespace Properties
 } // namespace Ewoms
@@ -129,8 +125,8 @@ public:
                              "Include the oil vaporization factor (R_v) of the observed gas "
                              "in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor,
-                             "Include the oil formation volume factor (B_o) of gas saturated "
-                             "oil in the VTK output files");
+                             "Include the oil formation volume factor (B_o) in the "
+                             "VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor,
                              "Include the gas formation volume factor (B_g) in the "
                              "VTK output files");
@@ -152,12 +148,6 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturationRatios,
                              "Write the ratio of the actually and maximum dissolved component of "
                              "the mixtures");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturatedOilFormationVolumeFactor,
-                             "Include the formation volume factor (B_o,sat) of saturated oil in the "
-                             "VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSaturatedGasFormationVolumeFactor,
-                             "Include the formation volume factor (B_g,sat) of saturated gas in the "
-                             "VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWritePrimaryVarsMeaning,
                              "Include how the primary variables should be interpreted to the "
                              "VTK output files");
@@ -191,8 +181,6 @@ public:
             this->resizeScalarBuffer_(oilSaturationRatio_);
             this->resizeScalarBuffer_(gasSaturationRatio_);
         }
-        if (saturatedGasFormationVolumeFactorOutput_())
-            this->resizeScalarBuffer_(saturatedGasFormationVolumeFactor_);
         if (primaryVarsMeaningOutput_())
             this->resizeScalarBuffer_(primaryVarsMeaning_);
     }
@@ -274,12 +262,6 @@ public:
                 else
                     gasSaturationRatio_[globalDofIdx] = x_gO / x_gO_sat;
             }
-            if (saturatedOilFormationVolumeFactorOutput_())
-                saturatedOilFormationVolumeFactor_[globalDofIdx] =
-                    1.0/FluidSystem::template saturatedInverseFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
-            if (saturatedGasFormationVolumeFactorOutput_())
-                saturatedGasFormationVolumeFactor_[globalDofIdx] =
-                    1.0/FluidSystem::template saturatedInverseFormationVolumeFactor<FluidState, Scalar>(fs, gasPhaseIdx, pvtRegionIdx);
 
             if (primaryVarsMeaningOutput_())
                 primaryVarsMeaning_[globalDofIdx] =
@@ -318,10 +300,6 @@ public:
             this->commitScalarBuffer_(baseWriter, "saturation ratio_oil", oilSaturationRatio_);
             this->commitScalarBuffer_(baseWriter, "saturation ratio_gas", gasSaturationRatio_);
         }
-        if (saturatedOilFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(baseWriter, "B_o,sat", saturatedOilFormationVolumeFactor_);
-        if (saturatedGasFormationVolumeFactorOutput_())
-            this->commitScalarBuffer_(baseWriter, "B_g,sat", saturatedGasFormationVolumeFactor_);
 
         if (primaryVarsMeaningOutput_())
             this->commitScalarBuffer_(baseWriter, "primary vars meaning", primaryVarsMeaning_);
@@ -358,12 +336,6 @@ private:
     static bool saturationRatiosOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturationRatios); }
 
-    static bool saturatedOilFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedOilFormationVolumeFactor); }
-
-    static bool saturatedGasFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedGasFormationVolumeFactor); }
-
     static bool primaryVarsMeaningOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVarsMeaning); }
 
@@ -379,8 +351,6 @@ private:
     ScalarBuffer saturatedGasOilVaporizationFactor_;
     ScalarBuffer oilSaturationRatio_;
     ScalarBuffer gasSaturationRatio_;
-    ScalarBuffer saturatedOilFormationVolumeFactor_;
-    ScalarBuffer saturatedGasFormationVolumeFactor_;
 
     ScalarBuffer primaryVarsMeaning_;
 };
