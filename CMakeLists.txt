@@ -511,7 +511,7 @@ opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
 
 # a test which ensures that black-oil specific fluid state used by the
 # black-oil model conforms to the generic fluid state API.
-opm_add_test(test_blackoilfluidstate DRIVER_ARGS --plain)
+#opm_add_test(test_blackoilfluidstate DRIVER_ARGS --plain)
 
 opm_add_test(fracture_discretefracture
              CONDITION dune-alugrid_FOUND
