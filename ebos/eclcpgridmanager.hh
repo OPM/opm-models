@@ -197,8 +197,6 @@ public:
 #endif
 
         cartesianIndexMapper_ = new CartesianIndexMapper(*grid_);
-
-        this->updateGridView_();
     }
 
     /*!

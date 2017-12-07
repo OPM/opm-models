@@ -115,27 +115,15 @@ public:
      *        processes.
      */
     void loadBalance()
-    {
-        asImp_().grid().loadBalance();
-        updateGridView_();
-    }
+    { asImp_().grid().loadBalance(); }
 
 protected:
     // this method should be called after the grid has been allocated
     void finalizeInit_()
     {
-        updateGridView_();
-    }
-
-    void updateGridView_()
-    {
 #if HAVE_DUNE_FEM
-        // first delete old grid part
-        // this is due to a bug in dune-fem (dangling reference)
-        gridPart_.reset();
         gridPart_.reset(new GridPart(asImp_().grid()));
-        gridView_.reset(new GridView(static_cast<GridView>(*gridPart_)));
-        assert(gridView_->size(0) == asImp_().grid().leafGridView().size(0));
+        gridView_.reset(new GridView(static_cast<GridView> (*gridPart_)));
 #else
         gridView_.reset(new GridView(asImp_().grid().leafGridView()));
 #endif
@@ -149,10 +137,10 @@ private:
     { return *static_cast<const Implementation*>(this); }
 
     Simulator& simulator_;
+    std::unique_ptr<GridView> gridView_;
 #if HAVE_DUNE_FEM
     std::unique_ptr<GridPart> gridPart_;
 #endif
-    std::unique_ptr<GridView> gridView_;
 };
 
 } // namespace Ewoms
