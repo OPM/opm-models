@@ -103,7 +103,7 @@ public:
     {
 #if HAVE_DUNE_FEM
         typedef Dune::Fem::DofManager< Grid > FemDofManager;
-        return FemDofManager::instance( gridPart().grid() ).sequence();
+        return FemDofManager::instance( asImp_().grid() ).sequence();
 #else
         return 0; // return the same sequence number >= 0 means the grid never changes
 #endif

@@ -71,9 +71,16 @@ fi
 TEST_BINARY=$(find -type f -executable -name "$TEST_NAME")
 NUM_BINARIES=$(echo "$TEST_BINARY" | wc -w)
 
+if test "$NUM_BINARIES" == "0"; then
+    echo "No binary file found skipping test (is: $TEST_BINARY)"
+    echo
+    usage
+    exit 77
+fi
 
+    
 if test "$NUM_BINARIES" != "1"; then
-    echo "No binary file found or binary file is non-unique (is: $TEST_BINARY)"
+    echo "The name of the binary file is non-unique (is: $TEST_BINARY). I'm confused; bailing out."
     echo
     usage
     exit 1
@@ -81,7 +88,7 @@ fi
 
 # make sure the binary is of the test is present
 if ! test -x "$TEST_BINARY"; then
-    echo "$TEST_NAME does not exist or is not executable"
+    echo "The program for test '$TEST_NAME' does not exist or is not executable"
     echo
     usage
     exit 1
