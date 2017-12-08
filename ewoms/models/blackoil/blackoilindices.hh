@@ -59,6 +59,9 @@ struct BlackOilIndices
     static constexpr unsigned canonicalToActiveComponentIndex(unsigned compIdx)
     { return compIdx; }
 
+    static constexpr unsigned activeToCanonicalComponentIndex(unsigned compIdx)
+    { return compIdx; }
+
     ////////
     // Primary variable indices
     ////////
