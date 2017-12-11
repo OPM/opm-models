@@ -48,6 +48,10 @@ NEW_PROP_TAG(Indices);
 NEW_PROP_TAG(MaterialLaw);
 //! The context material law (extracted from the spatial parameters)
 NEW_PROP_TAG(MaterialLawParams);
+//! The material law for the energy stored in the solid matrix
+NEW_PROP_TAG(SolidEnergyLaw);
+//! The parameters of the material law for heat conduction
+NEW_PROP_TAG(SolidEnergyLawParams);
 //! The material law for heat conduction
 NEW_PROP_TAG(HeatConductionLaw);
 //! The parameters of the material law for heat conduction
