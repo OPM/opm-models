@@ -1,3 +1,25 @@
+# This enables parallel builds using one build process for each core
+# available on your computer. Note that this includes logical
+# ("hyperthreaded") cores. BE CAREFUL: You need to have enough RAM for
+# this, where "enough" currently means "about 2 Gb per logical core"!
+
+#NUM_CORES="$(grep "processor" /proc/cpuinfo | wc -l)"
+#export MAKE_FLAGS="-j$NUM_CORES"
+
+# guess the location of the opm-dune-builld repository based on the
+# location of the dunecontrol options file. you might want to change
+# this if you have an uncommon build setup!
+TMP="$(dirname $DUNE_OPTS_FILE)"
+if test -x "$TMP/bin/cmake-wrapper.sh"; then
+   OPM_DUNE_CMAKE_DIR="$TMP"
+elif test -x "$TMP/opm-dune-cmake/bin/cmake-wrapper.sh"; then
+   OPM_DUNE_CMAKE_DIR="$TMP/opm-dune-cmake"
+elif test -x "$TMP/../opm-dune-cmake/bin/cmake-wrapper.sh"; then
+   OPM_DUNE_CMAKE_DIR="$TMP/../opm-dune-cmake"
+fi
+
+CMAKE="$OPM_DUNE_CMAKE_DIR"/bin/cmake-wrapper.sh
+
 CXX_WARNING_OPTS=" \
     -Wall \
     -Wunused \
@@ -9,7 +31,7 @@ CXX_OPTS=" \
     -g \
     -DDEBUG=1"
 
-# cmake flags
+# arguments passed to the cmake command.
 CMAKE_FLAGS=" \
   -DBUILD_TESTING=OFF \
   -DCMAKE_C_COMPILER=\"gcc\" \
