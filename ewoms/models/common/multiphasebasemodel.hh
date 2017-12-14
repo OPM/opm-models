@@ -39,7 +39,8 @@
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
-#include <opm/material/heatconduction/DummyHeatConductionLaw.hpp>
+#include <opm/material/thermal/NullHeatConductionLaw.hpp>
+#include <opm/material/thermal/NullSolidEnergyLaw.hpp>
 #include <opm/common/Unused.hpp>
 
 namespace Ewoms {
@@ -95,10 +96,22 @@ SET_TYPE_PROP(MultiPhaseBaseModel,
               MaterialLawParams,
               typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params);
 
+//! set the heat storage law for the solid to the one which assumes zero heat
+//! capacity by default
+SET_TYPE_PROP(MultiPhaseBaseModel,
+              SolidEnergyLaw,
+              Opm::NullSolidEnergyLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+
+//! extract the type parameter objects for the solid energy storage law from the law
+//! itself
+SET_TYPE_PROP(MultiPhaseBaseModel,
+              SolidEnergyLawParams,
+              typename GET_PROP_TYPE(TypeTag, SolidEnergyLaw)::Params);
+
 //! set the heat conduction law to a dummy one by default
 SET_TYPE_PROP(MultiPhaseBaseModel,
               HeatConductionLaw,
-              Opm::DummyHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
+              Opm::NullHeatConductionLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 //! extract the type parameter objects for the heat conduction law
 //! from the law itself

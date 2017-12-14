@@ -41,7 +41,7 @@ namespace Properties {
 NEW_TYPE_TAG(VtkEnergy);
 
 // create the property tags needed for the energy module
-NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
+NEW_PROP_TAG(VtkWriteSolidInternalEnergy);
 NEW_PROP_TAG(VtkWriteHeatConductivity);
 NEW_PROP_TAG(VtkWriteInternalEnergies);
 NEW_PROP_TAG(VtkWriteEnthalpies);
@@ -49,7 +49,7 @@ NEW_PROP_TAG(VtkOutputFormat);
 NEW_PROP_TAG(EnableVtkOutput);
 
 // set default values for what quantities to output
-SET_BOOL_PROP(VtkEnergy, VtkWriteSolidHeatCapacity, false);
+SET_BOOL_PROP(VtkEnergy, VtkWriteSolidInternalEnergy, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteHeatConductivity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteInternalEnergies, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
@@ -100,8 +100,8 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity,
-                             "Include the specific heat capacities of rock "
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidInternalEnergy,
+                             "Include the volumetric internal energy of solid"
                              "matrix in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity,
                              "Include the lumped heat conductivity of the "
@@ -125,8 +125,8 @@ public:
         if (internalEnergyOutput_())
             this->resizePhaseBuffer_(internalEnergy_);
 
-        if (solidHeatCapacityOutput_())
-            this->resizeScalarBuffer_(solidHeatCapacity_);
+        if (solidInternalEnergyOutput_())
+            this->resizeScalarBuffer_(solidInternalEnergy_);
         if (heatConductivityOutput_())
             this->resizeScalarBuffer_(heatConductivity_);
     }
@@ -145,8 +145,8 @@ public:
             const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto& fs = intQuants.fluidState();
 
-            if (solidHeatCapacityOutput_())
-                solidHeatCapacity_[I] = Toolbox::value(intQuants.heatCapacitySolid());
+            if (solidInternalEnergyOutput_())
+                solidInternalEnergy_[I] = Toolbox::value(intQuants.solidInternalEnergy());
             if (heatConductivityOutput_())
                 heatConductivity_[I] = Toolbox::value(intQuants.heatConductivity());
 
@@ -169,8 +169,8 @@ public:
             return;
         }
 
-        if (solidHeatCapacityOutput_())
-            this->commitScalarBuffer_(baseWriter, "heatCapacitySolid", solidHeatCapacity_);
+        if (solidInternalEnergyOutput_())
+            this->commitScalarBuffer_(baseWriter, "internalEnergySolid", solidInternalEnergy_);
         if (heatConductivityOutput_())
             this->commitScalarBuffer_(baseWriter, "heatConductivity", heatConductivity_);
 
@@ -181,8 +181,8 @@ public:
     }
 
 private:
-    static bool solidHeatCapacityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity); }
+    static bool solidInternalEnergyOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidInternalEnergy); }
 
     static bool heatConductivityOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteHeatConductivity); }
@@ -197,7 +197,7 @@ private:
     PhaseBuffer internalEnergy_;
 
     ScalarBuffer heatConductivity_;
-    ScalarBuffer solidHeatCapacity_;
+    ScalarBuffer solidInternalEnergy_;
 };
 
 } // namespace Ewoms

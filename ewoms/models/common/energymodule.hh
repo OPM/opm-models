@@ -404,8 +404,7 @@ public:
                                     const IntensiveQuantities& intQuants)
     {
         storage[energyEqIdx] +=
-            Toolbox::template decay<LhsEval>(intQuants.heatCapacitySolid())
-            * Toolbox::template decay<LhsEval>(intQuants.fluidState().temperature(/*phaseIdx=*/0));
+            Toolbox::template decay<LhsEval>(intQuants.solidInternalEnergy());
     }
 
     /*!
@@ -557,9 +556,9 @@ public:
      * rock matrix in
      *        the sub-control volume.
      */
-    Evaluation heatCapacitySolid() const
+    Evaluation solidInternalEnergy() const
     {
-        OPM_THROW(std::logic_error, "Method heatCapacitySolid() does not make "
+        OPM_THROW(std::logic_error, "Method solidInternalEnergy() does not make "
                                     "sense for isothermal models");
     }
 
@@ -612,6 +611,7 @@ class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, SolidEnergyLaw) SolidEnergyLaw;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numPhases = FluidSystem::numPhases };
@@ -662,35 +662,35 @@ protected:
 
         // compute and set the heat capacity of the solid phase
         const auto& problem = elemCtx.problem();
-        const auto& heatCondParams = problem.heatConductionParams(elemCtx, dofIdx, timeIdx);
+        const auto& solidHeatParams = problem.solidHeatLawParams(elemCtx, dofIdx, timeIdx);
+        const auto& heatCondParams = problem.heatConductionLawParams(elemCtx, dofIdx, timeIdx);
 
-        heatCapacitySolid_ = problem.heatCapacitySolid(elemCtx, dofIdx, timeIdx);
+        solidInternalEnergy_ =
+            SolidEnergyLaw::solidInternalEnergy(solidHeatParams, fs);
         heatConductivity_ =
-            HeatConductionLaw::template heatConductivity<FluidState, Evaluation>(heatCondParams, fs);
+            HeatConductionLaw::heatConductivity(heatCondParams, fs);
 
-        Opm::Valgrind::CheckDefined(heatCapacitySolid_);
+        Opm::Valgrind::CheckDefined(solidInternalEnergy_);
         Opm::Valgrind::CheckDefined(heatConductivity_);
     }
 
 public:
     /*!
-     * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the
-     * rock matrix in
-     *        the sub-control volume.
+     * \brief Returns the volumetric internal energy \f$\mathrm{[J/m^3]}\f$ of the
+     *        solid matrix in the sub-control volume.
      */
-    const Evaluation& heatCapacitySolid() const
-    { return heatCapacitySolid_; }
+    const Evaluation& solidInternalEnergy() const
+    { return solidInternalEnergy_; }
 
     /*!
-     * \brief Returns the total conductivity capacity
-     *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
-     *        sub-control volume.
+     * \brief Returns the total conductivity capacity \f$\mathrm{[W/m^2 / (K/m)]}\f$ of
+     *        the solid matrix in the sub-control volume.
      */
     const Evaluation& heatConductivity() const
     { return heatConductivity_; }
 
 private:
-    Evaluation heatCapacitySolid_;
+    Evaluation solidInternalEnergy_;
     Evaluation heatConductivity_;
 };
 
