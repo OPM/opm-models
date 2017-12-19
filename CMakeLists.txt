@@ -15,7 +15,7 @@
 ###########################################################################
 
 # Mandatory call to project
-project(ewoms CXX)
+project(ewoms C CXX)
 
 cmake_minimum_required (VERSION 2.8)
 
