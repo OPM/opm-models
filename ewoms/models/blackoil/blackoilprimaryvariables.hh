@@ -390,10 +390,6 @@ public:
                 if (compositionSwitchEnabled)
                     (*this)[Indices::compositionSwitchIdx] = RsSat;
 
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
                 return true;
             }
 
@@ -426,10 +422,6 @@ public:
                 if (compositionSwitchEnabled)
                     (*this)[Indices::compositionSwitchIdx] = RvSat;
 
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
                 return true;
             }
 
@@ -449,10 +441,6 @@ public:
 
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
                 return true;
             }
 
@@ -471,10 +459,6 @@ public:
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
-
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -509,10 +493,6 @@ public:
                 (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
                 return true;
             }
 
@@ -546,10 +526,6 @@ public:
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = Sg; // hydrocarbon gas saturation
-
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
