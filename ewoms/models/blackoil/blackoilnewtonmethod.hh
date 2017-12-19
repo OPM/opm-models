@@ -158,25 +158,27 @@ protected:
             Scalar delta = update[eqIdx];
 
             // limit changes in water saturation to 20%
-            if (eqIdx == Indices::waterSaturationIdx
-                && std::abs(delta) > 0.2)
-            {
-                delta = Ewoms::signum(delta)*0.2;
+            if (eqIdx == Indices::waterSaturationIdx) {
+                if (std::abs(delta) > 0.2)
+                    delta = Ewoms::signum(delta)*0.2;
+                nextValue[eqIdx] = currentValue[eqIdx] - delta;
             }
             else if (eqIdx == Indices::compositionSwitchIdx) {
                 // the switching primary variable for composition is tricky because the
                 // "reasonable" value ranges it exhibits vary widely depending on its
-                // interpretation (it can represent Sg, Rs or Rv).  so far, we only limit
-                // changes in gas saturation to 20%
+                // interpretation (it can represent Sg, Rs or Rv).  we limit changes in
+                // gas saturation to 20%
                 if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg
                     && std::abs(delta) > 0.2)
                 {
                     delta = Ewoms::signum(delta)*0.2;
+                    nextValue[eqIdx] = currentValue[eqIdx] - delta;
                 }
+                else
+                    nextValue[eqIdx] = currentValue[eqIdx] - delta;
             }
-
-            // do the actual update
-            nextValue[eqIdx] = currentValue[eqIdx] - delta;
+            else
+                nextValue[eqIdx] = currentValue[eqIdx] - delta;
         }
 
         // switch the new primary variables to something which is physically meaningful

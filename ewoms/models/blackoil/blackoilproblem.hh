@@ -60,6 +60,20 @@ public:
     {}
 
     /*!
+     * \brief Returns the maximum value of the gas dissolution factor at the current time
+     *        for a given degree of freedom.
+     */
+    Scalar maxGasDissolutionFactor(unsigned globalDofIdx OPM_UNUSED) const
+    { return std::numeric_limits<Scalar>::max()/2; }
+
+    /*!
+     * \brief Returns the maximum value of the oil vaporization factor at the current
+     *        time for a given degree of freedom.
+     */
+    Scalar maxOilVaporizationFactor(unsigned globalDofIdx OPM_UNUSED) const
+    { return std::numeric_limits<Scalar>::max()/2; }
+
+    /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
     template <class Context>

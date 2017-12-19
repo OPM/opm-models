@@ -381,15 +381,17 @@ public:
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
                 Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
                 Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
                                                                                    po,
                                                                                    So2,
                                                                                    SoMax);
+
                 setPrimaryVarsMeaning(Sw_po_Rs);
                 if (compositionSwitchEnabled)
-                    (*this)[Indices::compositionSwitchIdx] = RsSat;
-
+                    (*this)[Indices::compositionSwitchIdx] =
+                        std::min(RsMax, RsSat);
                 return true;
             }
 
@@ -410,17 +412,17 @@ public:
                 // hydrocarbon gas
                 Scalar T = asImp_().temperature_();
                 Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar RvMax = problem.maxOilVaporizationFactor(globalDofIdx);
                 Scalar RvSat =
                     FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                          T,
                                                                          pg,
                                                                          Scalar(0),
                                                                          SoMax);
-
                 setPrimaryVarsMeaning(Sw_pg_Rv);
                 (*this)[Indices::pressureSwitchIdx] = pg;
                 if (compositionSwitchEnabled)
-                    (*this)[Indices::compositionSwitchIdx] = RvSat;
+                    (*this)[Indices::compositionSwitchIdx] = std::min(RvMax, RvSat);
 
                 return true;
             }
@@ -428,7 +430,6 @@ public:
             return false;
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-
             assert(compositionSwitchEnabled);
 
             // special case for cells with almost only water
@@ -451,10 +452,16 @@ public:
             Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1.0 - Sw - solventSaturation();
             Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
             Scalar RsSat =
-                FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
+                FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
+                                                                    T,
+                                                                    po,
+                                                                    So,
+                                                                    SoMax);
+
             Scalar Rs = (*this)[Indices::compositionSwitchIdx];
-            if (Rs > RsSat*(1.0 + eps)) {
+            if (Rs > RsMax || Rs > RsSat) {
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
@@ -502,15 +509,17 @@ public:
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
             Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            Scalar RvMax = problem.maxOilVaporizationFactor(globalDofIdx);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,
                                                                      pg,
                                                                      /*So=*/Scalar(0.0),
                                                                      SoMax);
+            RvSat = std::min(RvMax, RvSat);
 
             Scalar Rv = (*this)[Indices::compositionSwitchIdx];
-            if (Rv > RvSat*(1.0 + eps)) {
+            if (Rv > RvSat) {
                 // switch to phase equilibrium mode because the oil phase appears. here
                 // we also need the capillary pressures to calculate the oil phase
                 // pressure using the gas phase pressure
