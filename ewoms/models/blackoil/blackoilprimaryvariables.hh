@@ -380,7 +380,7 @@ public:
                 // PVT objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
                 Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
                 Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
@@ -411,7 +411,7 @@ public:
                 // we start at the Rv value that corresponds to that of oil-saturated
                 // hydrocarbon gas
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
                 Scalar RvMax = problem.maxOilVaporizationFactor(globalDofIdx);
                 Scalar RvSat =
                     FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
@@ -451,7 +451,7 @@ public:
             Scalar T = asImp_().temperature_();
             Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1.0 - Sw - solventSaturation();
-            Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            Scalar SoMax = std::max(So, problem.maxOilSaturation(globalDofIdx));
             Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
             Scalar RsSat =
                 FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
@@ -508,7 +508,7 @@ public:
             // than what saturated gas contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
-            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
             Scalar RvMax = problem.maxOilVaporizationFactor(globalDofIdx);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
