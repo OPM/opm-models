@@ -83,28 +83,14 @@ NEW_PROP_TAG(ParameterFile);
 
 namespace Ewoms {
 /*!
- * \brief Register all runtime parameters, parse the command line
- *        arguments and the parameter file.
- *
- * \param argc The number of command line arguments
- * \param argv Array with the command line argument strings
+ * \brief Announce all runtime parameters to the registry but do not specify them yet.
  */
 template <class TypeTag>
-static inline int setupParameters_(int argc, const char **argv)
+static inline void registerAllParameters_()
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
-    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
 
-    // first, get the MPI rank of the current process
-    int myRank = 0;
-#if HAVE_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-#endif
-
-    ////////////////////////////////////////////////////////////
-    // Register all parameters
-    ////////////////////////////////////////////////////////////
     EWOMS_REGISTER_PARAM(TypeTag, std::string, ParameterFile,
                          "An .ini file which contains a set of run-time "
                          "parameters");
@@ -117,6 +103,33 @@ static inline int setupParameters_(int argc, const char **argv)
 
     Simulator::registerParameters();
     ThreadManager::registerParameters();
+
+    EWOMS_END_PARAM_REGISTRATION(TypeTag);
+}
+
+/*!
+ * \brief Register all runtime parameters, parse the command line
+ *        arguments and the parameter file.
+ *
+ * \param argc The number of command line arguments
+ * \param argv Array with the command line argument strings
+ */
+template <class TypeTag>
+static inline int setupParameters_(int argc, const char **argv, bool registerParams = true)
+{
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
+
+    // first, get the MPI rank of the current process
+    int myRank = 0;
+#if HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+#endif
+
+    ////////////////////////////////////////////////////////////
+    // Register all parameters
+    ////////////////////////////////////////////////////////////
+    if (registerParams)
+        registerAllParameters_<TypeTag>();
 
     ////////////////////////////////////////////////////////////
     // set the parameter values
@@ -152,8 +165,6 @@ static inline int setupParameters_(int argc, const char **argv)
                                                ParameterMetaData::tree(),
                                                /*overwrite=*/false);
     }
-
-    EWOMS_END_PARAM_REGISTRATION(TypeTag);
 
     return /*status=*/0;
 }
