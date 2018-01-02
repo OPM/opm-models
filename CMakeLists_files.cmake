@@ -44,23 +44,23 @@ list(APPEND TEST_DATA_FILES
 	${TMP_GRIDS}
 	${TMP_VTPS}
 	${TMP_VTUS}
-  tests/capillary.DATA
-  tests/capillarySwatinit.DATA
-  tests/capillary_overlap.DATA
-  tests/deadfluids.DATA
-  tests/equil_livegas.DATA
-  tests/equil_liveoil.DATA
-  tests/equil_rsvd_and_rvvd.DATA)
+	tests/data/equil_rsvd_and_rvvd.DATA
+	tests/data/equil_capillary_overlap.DATA
+	tests/data/equil_deadfluids.DATA
+	tests/data/equil_capillary.DATA
+	tests/data/equil_capillary_swatinit.DATA
+	tests/data/equil_base.DATA
+	tests/data/equil_livegas.DATA
+	tests/data/equil_liveoil.DATA
+	)
 
-list(APPEND TEST_SOURCE_FILES
-  tests/test_regionmapping.cpp
-  tests/test_equil.cpp
-  )
+list(APPEND TEST_SOURCE_FILES)
+
+list(APPEND TEST_SOURCE_FILES)
 
 # originally generated with the command:
 # find tutorials examples -name '*.c*' -printf '\t%p\n' | sort
 list(APPEND EXAMPLE_SOURCE_FILES
-  examples/compute_initial_state.cpp
 	)
 
 # programs listed here will not only be compiled, but also marked for
