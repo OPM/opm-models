@@ -1253,15 +1253,21 @@ public:
 
                 // if the grid has potentially changed, we need to re-create the
                 // supporting data structures.
+                elementMapper_.update();
+                vertexMapper_.update();
                 resetLinearizer();
+
+                // this is a bit hacky because it supposes that Problem::finishInit()
+                // works fine multiple times in a row.
+                //
+                // TODO: move this to Problem::gridChanged()
                 finishInit();
 
                 // notify the problem that the grid has changed
+                //
+                // TODO: come up with a mechanism to access the unadapted data structures
+                // outside of the problem (i.e., grid, mappers, solutions)
                 simulator_.problem().gridChanged();
-
-                // update the entity mappers
-                elementMapper_.update();
-                vertexMapper_.update();
 
                 // notify the modules for visualization output
                 auto outIt = outputModules_.begin();
