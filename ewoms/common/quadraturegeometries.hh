@@ -45,7 +45,7 @@ public:
     typedef Dune::FieldVector<Scalar, dim> GlobalPosition;
 
     Dune::GeometryType type() const
-    { return Dune::GeometryType(Dune::GeometryType::cube, dim); }
+    { return Dune::GeometryType(/*topologyId=*/(1 << dim) - 1, dim); }
 
     template <class CornerContainer>
     void setCorners(const CornerContainer& corners, unsigned numCorners)

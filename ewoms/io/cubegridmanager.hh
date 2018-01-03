@@ -107,7 +107,7 @@ public:
     CubeGridManager(Simulator& simulator)
         : ParentType(simulator)
     {
-        Dune::array<unsigned int, dimWorld> cellRes;
+        std::array<unsigned int, dimWorld> cellRes;
         GlobalPosition upperRight(0.0);
         GlobalPosition lowerLeft(0.0);
 

@@ -64,8 +64,13 @@ class VtkMultiWriter : public BaseOutputWriter
 {
     enum { dim = GridView::dimension };
 
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> VertexMapper;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> VertexMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> ElementMapper;
+#else
     typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> VertexMapper;
+#endif
 
 public:
     typedef BaseOutputWriter::Scalar Scalar;
@@ -86,8 +91,13 @@ public:
                    const std::string& simName = "",
                    std::string multiFileName = "")
         : gridView_(gridView)
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        , elementMapper_(gridView, Dune::mcmgElementLayout())
+        , vertexMapper_(gridView, Dune::mcmgVertexLayout())
+#else
         , elementMapper_(gridView)
         , vertexMapper_(gridView)
+#endif
     {
         simName_ = (simName.empty()) ? "sim" : simName;
         multiFileName_ = multiFileName;

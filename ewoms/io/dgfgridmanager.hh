@@ -144,7 +144,6 @@ protected:
     void addFractures_(Dune::GridPtr<Grid>& dgfPointer)
     {
         typedef typename Grid::LevelGridView GridView;
-        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> ElementMapper;
 
         // check if fractures are available (only 2d currently)
         if (dgfPointer.nofParameters(static_cast<int>(Grid::dimension)) == 0)
@@ -153,8 +152,15 @@ protected:
         GridView gridView = dgfPointer->levelGridView(/*level=*/0);
         const unsigned edgeCodim = Grid::dimension - 1;
 
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> VertexMapper;
+        VertexMapper vertexMapper(gridView, Dune::mcmgVertexLayout());
+#else
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> VertexMapper;
+        VertexMapper vertexMapper(gridView);
+#endif
+
         // first create a map of the dune to ART vertex indices
-        ElementMapper elementMapper(gridView);
         auto eIt = gridView.template begin</*codim=*/0>();
         const auto eEndIt = gridView.template end</*codim=*/0>();
         for (; eIt != eEndIt; ++eIt) {
@@ -177,9 +183,9 @@ protected:
                     // if vertex has parameter 1 insert as a fracture vertex
                     if (dgfPointer.parameters( vertex )[ 0 ] > 0)
                         vertexIndices.push_back(
-                            static_cast<unsigned>(elementMapper.subIndex(element,
-                                                                         static_cast<int>(localVx),
-                                                                         Grid::dimension)));
+                            static_cast<unsigned>(vertexMapper.subIndex(element,
+                                                                        static_cast<int>(localVx),
+                                                                        Grid::dimension)));
                 }
                 // if 2 vertices have been found with flag 1 insert a fracture edge
                 if (static_cast<int>(vertexIndices.size()) == Grid::dimension)

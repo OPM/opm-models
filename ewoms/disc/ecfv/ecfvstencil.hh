@@ -63,8 +63,11 @@ class EcfvStencil
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                      Dune::MCMGElementLayout> ElementMapper;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> ElementMapper;
+#else
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
+#endif
 
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
@@ -213,7 +216,10 @@ public:
     EcfvStencil(const GridView& gridView, const Mapper& mapper)
         : gridView_(gridView)
         , elementMapper_(mapper)
-    { }
+    {
+        // try to ensure that the mapper passed indeed maps elements
+        assert(gridView.size(/*codim=*/0) == elementMapper_.size());
+    }
 
     void updateTopology(const Element& element)
     {
