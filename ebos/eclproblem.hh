@@ -48,7 +48,7 @@
 #if EBOS_USE_ALUGRID
 #include "eclalugridmanager.hh"
 #else
-#include "eclpolyhedralgridmanager.hh"
+//#include "eclpolyhedralgridmanager.hh"
 #include "eclcpgridmanager.hh"
 #endif
 #include "eclwellmanager.hh"
@@ -390,8 +390,6 @@ public:
             int numElements = gridView.size(/*codim=*/0);
             maxPolymerAdsorption_.resize(numElements, 0.0);
         }
-
-
     }
 
     void prefetch(const Element& elem) const

@@ -367,6 +367,9 @@ public:
         , space_( asImp_().numGridDof() )
 #endif
         , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
+        , enableIntensiveQuantityCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache))
+        , enableStorageCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache))
+        , enableThermodynamicHints_(EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints))
     {
 #if HAVE_DUNE_FEM
         if (enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
@@ -600,7 +603,7 @@ public:
      */
     const IntensiveQuantities* thermodynamicHint(unsigned globalIdx, unsigned timeIdx) const
     {
-        if (!enableThermodynamicHints_())
+        if (!enableThermodynamicHints_)
             return 0;
 
         // the intensive quantities cache doubles as thermodynamic hint
@@ -620,7 +623,7 @@ public:
      */
     const IntensiveQuantities* cachedIntensiveQuantities(unsigned globalIdx, unsigned timeIdx) const
     {
-        if (!enableIntensiveQuantitiesCache_() ||
+        if (!enableIntensiveQuantityCache_ ||
             !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
@@ -1689,8 +1692,8 @@ public:
     /*!
      * \brief Returns true if the cache for intensive quantities is enabled
      */
-    static bool storeIntensiveQuantities()
-    { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
+    bool storeIntensiveQuantities() const
+    { return enableIntensiveQuantityCache_ || enableThermodynamicHints_; }
 
 #if HAVE_DUNE_FEM
     AdaptationManager& adaptationManager()
@@ -1747,12 +1750,6 @@ protected:
                                     unsigned dofIdx OPM_UNUSED,
                                     unsigned timeIdx OPM_UNUSED)
     { }
-
-    static bool enableIntensiveQuantitiesCache_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache); }
-
-    static bool enableThermodynamicHints_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints); }
 
     /*!
      * \brief Register all output modules which make sense for the model.
@@ -1832,9 +1829,12 @@ protected:
     std::vector<Scalar> dofTotalVolume_;
     std::vector<bool> isLocalDof_;
 
-    bool enableGridAdaptation_;
     mutable GlobalEqVector storageCache_[historySize];
+
+    bool enableGridAdaptation_;
+    bool enableIntensiveQuantityCache_;
     bool enableStorageCache_;
+    bool enableThermodynamicHints_;
 };
 } // namespace Ewoms
 

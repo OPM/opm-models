@@ -130,9 +130,9 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 EwomsAddApplication(ebos
                     SOURCES ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION OPM_GRID_FOUND AND OPM_PARSER_FOUND AND OPM_CORE_FOUND)
+                    CONDITION OPM_GRID_FOUND AND OPM_PARSER_FOUND)
 
-if(OPM_GRID_FOUND AND OPM_CORE_FOUND AND OPM_PARSER_FOUND)
+if(OPM_GRID_FOUND AND OPM_PARSER_FOUND)
   install(TARGETS ebos DESTINATION bin)
 endif()
 
@@ -147,6 +147,11 @@ opm_add_test(art2dgf
   NO_COMPILE
   DRIVER_ARGS --plain
   TEST_ARGS "data/fracture-raw.art")
+
+# EQUIL init tests
+opm_add_test(test_equil
+             DRIVER_ARGS --plain
+             CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND)
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for

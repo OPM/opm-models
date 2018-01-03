@@ -20,6 +20,9 @@ set (ewoms_CONFIG_VAR
 set (ewoms_DEPS
   # compile with C++0x/11 support if available
   "CXX11Features REQUIRED"
+  # Need boost::test
+  "Boost 1.44.0
+    COMPONENTS unit_test_framework REQUIRED"
   # DUNE prerequisites
   "dune-common REQUIRED"
   "dune-geometry REQUIRED"

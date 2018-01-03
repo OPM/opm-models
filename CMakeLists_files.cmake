@@ -43,7 +43,20 @@ file(GLOB_RECURSE TMP_VTPS RELATIVE "${CMAKE_SOURCE_DIR}" "tests/*.vtp")
 list(APPEND TEST_DATA_FILES
 	${TMP_GRIDS}
 	${TMP_VTPS}
-	${TMP_VTUS})
+	${TMP_VTUS}
+	tests/data/equil_rsvd_and_rvvd.DATA
+	tests/data/equil_capillary_overlap.DATA
+	tests/data/equil_deadfluids.DATA
+	tests/data/equil_capillary.DATA
+	tests/data/equil_capillary_swatinit.DATA
+	tests/data/equil_base.DATA
+	tests/data/equil_livegas.DATA
+	tests/data/equil_liveoil.DATA
+	)
+
+list(APPEND TEST_SOURCE_FILES)
+
+list(APPEND TEST_SOURCE_FILES)
 
 # originally generated with the command:
 # find tutorials examples -name '*.c*' -printf '\t%p\n' | sort
@@ -57,5 +70,5 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 # for eWoms we do not list all headers explicitly. instead we
 # glob through the source tree...
-file(GLOB_RECURSE TMP RELATIVE "${CMAKE_SOURCE_DIR}" "ewoms/*.hh" "ebos/*.hh")
+file(GLOB_RECURSE TMP RELATIVE "${CMAKE_SOURCE_DIR}" "ewoms/*.hh" "ebos/*.hh" "opm/*.hpp")
 list (APPEND PUBLIC_HEADER_FILES ${TMP})
