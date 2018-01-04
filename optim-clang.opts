@@ -38,6 +38,7 @@ CXX_OPTS=" \
 # arguments passed to the cmake command.
 CMAKE_FLAGS=" \
   -DBUILD_TESTING=OFF \
+  -DDUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS=ON \
   -DCMAKE_C_COMPILER=\"clang\" \
   -DCMAKE_CXX_COMPILER=\"clang++\" \
   -DCMAKE_C_FLAGS=\"$CXX_WARNING_OPTS $CXX_OPTS\" \
