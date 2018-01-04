@@ -12,13 +12,14 @@
 TMP="$(dirname $DUNE_OPTS_FILE)"
 if test -x "$TMP/bin/cmake-wrapper.sh"; then
    OPM_DUNE_CMAKE_DIR="$TMP"
+   CMAKE="$OPM_DUNE_CMAKE_DIR"/bin/cmake-wrapper.sh
 elif test -x "$TMP/opm-dune-cmake/bin/cmake-wrapper.sh"; then
    OPM_DUNE_CMAKE_DIR="$TMP/opm-dune-cmake"
+   CMAKE="$OPM_DUNE_CMAKE_DIR"/bin/cmake-wrapper.sh
 elif test -x "$TMP/../opm-dune-cmake/bin/cmake-wrapper.sh"; then
    OPM_DUNE_CMAKE_DIR="$TMP/../opm-dune-cmake"
+   CMAKE="$OPM_DUNE_CMAKE_DIR"/bin/cmake-wrapper.sh
 fi
-
-CMAKE="$OPM_DUNE_CMAKE_DIR"/bin/cmake-wrapper.sh
 
 CXX_WARNING_OPTS=" \
     -Wall \
