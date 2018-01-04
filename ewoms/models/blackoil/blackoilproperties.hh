@@ -36,10 +36,14 @@ namespace Properties {
 //! Specifies if the simulation should write output files that are
 //! compatible with those produced by the commercial Eclipse simulator
 NEW_PROP_TAG(EnableEclipseOutput);
-//! The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLaw);
-//! The parameters of the material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams);
+//! The material law for thermal conduction
+NEW_PROP_TAG(ThermalConductionLaw);
+//! The parameters of the material law for thermal conduction
+NEW_PROP_TAG(ThermalConductionLawParams);
+//! The material law for energy storage of the rock
+NEW_PROP_TAG(SolidEnergyLaw);
+//! The parameters for material law for energy storage of the rock
+NEW_PROP_TAG(SolidEnergyLawParams);
 //! Enable the ECL-blackoil extension for solvents. ("Second gas")
 NEW_PROP_TAG(EnableSolvent);
 //! Enable the ECL-blackoil extension for polymer.

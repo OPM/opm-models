@@ -215,7 +215,6 @@ class BlackOilModel
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
 
-
 public:
     BlackOilModel(Simulator& simulator)
         : ParentType(simulator)
