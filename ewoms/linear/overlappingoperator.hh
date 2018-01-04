@@ -28,6 +28,7 @@
 #define EWOMS_OVERLAPPING_OPERATOR_HH
 
 #include <dune/istl/operators.hh>
+#include <dune/common/version.hh>
 
 namespace Ewoms {
 namespace Linear {
@@ -46,11 +47,17 @@ public:
     typedef DomainVector domain_type;
     typedef typename domain_type::field_type field_type;
 
-    // redefine the category, that is the only difference
-    enum { category = Dune::SolverCategory::overlapping };
-
     OverlappingOperator(const OverlappingMatrix& A) : A_(A)
     {}
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2,6)
+    //! the kind of computations supported by the operator. Either overlapping or non-overlapping
+    Dune::SolverCategory::Category category() const override
+    { return Dune::SolverCategory::overlapping; }
+#else
+    // redefine the category
+    enum { category = Dune::SolverCategory::overlapping };
+#endif
 
     //! apply operator to x:  \f$ y = A(x) \f$
     virtual void apply(const DomainVector& x, RangeVector& y) const

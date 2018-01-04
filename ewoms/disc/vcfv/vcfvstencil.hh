@@ -63,7 +63,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>
 {
     enum { dim = 1 };
     enum { numScv = 2 };
-    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -103,7 +103,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
 {
     enum { dim = 1 };
     enum { numScv = 2 };
-    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -123,7 +123,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>
 {
     enum { dim = 2 };
     enum { numScv = 3 };
-    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -176,7 +176,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>
 {
     enum { dim = 2 };
     enum { numScv = 4 };
-    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -238,7 +238,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>
 {
     enum { dim = 3 };
     enum { numScv = 4 };
-    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
+    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -318,7 +318,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>
 {
     enum { dim = 3 };
     enum { numScv = 8 };
-    static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
+    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -724,10 +724,12 @@ private:
     }
 
 public:
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                      Dune::MCMGVertexLayout > VertexMapper;
     //! exported Mapper type
-    typedef VertexMapper  Mapper;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> Mapper;
+#else
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> Mapper;
+#endif
 
     class ScvGeometry
     {
@@ -813,11 +815,14 @@ public:
     //! compatibility typedef
     typedef SubControlVolumeFace BoundaryFace;
 
-    VcfvStencil(const GridView& gridView, const VertexMapper& vertexMapper)
+    VcfvStencil(const GridView& gridView, const Mapper& mapper)
         : gridView_(gridView)
-        , vertexMapper_( vertexMapper )
+        , vertexMapper_(mapper )
         , element_(*gridView.template begin</*codim=*/0>())
     {
+        // try to check if the mapper really maps the vertices
+        assert(static_cast<int>(gridView.size(/*codim=*/dimWorld)) == static_cast<int>(mapper.size()));
+
         static bool localGeometriesInitialized = false;
         if (!localGeometriesInitialized) {
             localGeometriesInitialized = true;
@@ -848,8 +853,7 @@ public:
         // compute the local and global coordinates of the element
         const Geometry& geometry = e.geometry();
         geometryType_ = geometry.type();
-        const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
-            referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
+        const auto& referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
         for (unsigned vertexIdx = 0; vertexIdx < numVertices; vertexIdx++) {
             subContVol[vertexIdx].local = referenceElement.position(static_cast<int>(vertexIdx), dim);
             subContVol[vertexIdx].global = geometry.corner(static_cast<int>(vertexIdx));
@@ -871,8 +875,7 @@ public:
         const Geometry& geometry = e.geometry();
         geometryType_ = geometry.type();
 
-        const typename Dune::ReferenceElementContainer<CoordScalar,dim>::value_type&
-            referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
+        const auto& referenceElement = Dune::ReferenceElements<CoordScalar,dim>::general(geometryType_);
 
         elementVolume = geometry.volume();
         elementLocal = referenceElement.position(0,0);
@@ -1351,7 +1354,7 @@ private:
 #endif
 
     const GridView&     gridView_;
-    const VertexMapper& vertexMapper_;
+    const Mapper& vertexMapper_;
 
     Element element_;
 
