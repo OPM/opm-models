@@ -60,7 +60,7 @@ public:
 #endif
 
     //! apply operator to x:  \f$ y = A(x) \f$
-    virtual void apply(const DomainVector& x, RangeVector& y) const
+    virtual void apply(const DomainVector& x, RangeVector& y) const override
     {
         A_.mv(x, y);
         y.sync();
@@ -68,14 +68,14 @@ public:
 
     //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
     virtual void applyscaleadd(field_type alpha, const DomainVector& x,
-                               RangeVector& y) const
+                               RangeVector& y) const override
     {
         A_.usmv(alpha, x, y);
         y.sync();
     }
 
     //! returns the matrix
-    virtual const OverlappingMatrix& getmat() const
+    virtual const OverlappingMatrix& getmat() const override
     { return A_; }
 
     const Overlap& overlap() const

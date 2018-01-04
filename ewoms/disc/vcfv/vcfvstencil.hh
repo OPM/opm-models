@@ -50,6 +50,16 @@
 namespace Ewoms {
 
 /*!
+ * \brief The types of reference elements available.
+ */
+enum ElementType
+{
+    none,
+    simplex,
+    cube,
+};
+
+/*!
  * \cond SKIP_THIS
  */
 template <class Scalar, unsigned dim, unsigned basicGeomType>
@@ -59,11 +69,10 @@ class VcfvScvGeometries;
 // local geometries for 1D elements
 ////////////////////
 template <class Scalar>
-class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>
+class VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::cube>
 {
     enum { dim = 1 };
     enum { numScv = 2 };
-    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -94,16 +103,15 @@ private:
 };
 
 template <class Scalar>
-typename VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::ScvLocalGeometry
-VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::scvGeoms_[
-    VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::numScv];
+typename VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::cube>::ScvLocalGeometry
+VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::cube>::scvGeoms_[
+    VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::cube>::numScv];
 
 template <class Scalar>
-class VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::simplex>
+class VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::simplex>
 {
     enum { dim = 1 };
     enum { numScv = 2 };
-    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -111,7 +119,7 @@ public:
     static const ScvLocalGeometry& get(unsigned scvIdx OPM_UNUSED)
     {
         OPM_THROW(std::logic_error,
-                "Not implemented: VcfvScvGeometries<Scalar, 1, Dune::GeometryType::simplex>");
+                "Not implemented: VcfvScvGeometries<Scalar, 1, ElementType::simplex>");
     }
 };
 
@@ -119,11 +127,10 @@ public:
 // local geometries for 2D elements
 ////////////////////
 template <class Scalar>
-class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>
+class VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::simplex>
 {
     enum { dim = 2 };
     enum { numScv = 3 };
-    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -167,16 +174,15 @@ private:
 };
 
 template <class Scalar>
-typename VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::ScvLocalGeometry
-VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::scvGeoms_[
-    VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::numScv];
+typename VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::simplex>::ScvLocalGeometry
+VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::simplex>::scvGeoms_[
+    VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::simplex>::numScv];
 
 template <class Scalar>
-class VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>
+class VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::cube>
 {
     enum { dim = 2 };
     enum { numScv = 4 };
-    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -226,19 +232,18 @@ public:
 };
 
 template <class Scalar>
-typename VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::ScvLocalGeometry
-VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::scvGeoms_[
-    VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::numScv];
+typename VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::cube>::ScvLocalGeometry
+VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::cube>::scvGeoms_[
+    VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::cube>::numScv];
 
 ////////////////////
 // local geometries for 3D elements
 ////////////////////
 template <class Scalar>
-class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>
+class VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::simplex>
 {
     enum { dim = 3 };
     enum { numScv = 4 };
-    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::simplex;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -309,16 +314,15 @@ private:
 };
 
 template <class Scalar>
-typename VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::ScvLocalGeometry
-VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::scvGeoms_[
-    VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::numScv];
+typename VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::simplex>::ScvLocalGeometry
+VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::simplex>::scvGeoms_[
+    VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::simplex>::numScv];
 
 template <class Scalar>
-class VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>
+class VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::cube>
 {
     enum { dim = 3 };
     enum { numScv = 8 };
-    //static const Dune::GeometryType::BasicType basicType = Dune::GeometryType::cube;
 
 public:
     typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
@@ -436,9 +440,9 @@ private:
 };
 
 template <class Scalar>
-typename VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::ScvLocalGeometry
-VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::scvGeoms_[
-    VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::numScv];
+typename VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::cube>::ScvLocalGeometry
+VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::cube>::scvGeoms_[
+    VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::cube>::numScv];
 
 /*!
  * \endcond
@@ -827,11 +831,11 @@ public:
         if (!localGeometriesInitialized) {
             localGeometriesInitialized = true;
 
-            VcfvScvGeometries<Scalar, /*dim=*/1, Dune::GeometryType::cube>::init();
-            VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::cube>::init();
-            VcfvScvGeometries<Scalar, /*dim=*/2, Dune::GeometryType::simplex>::init();
-            VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::cube>::init();
-            VcfvScvGeometries<Scalar, /*dim=*/3, Dune::GeometryType::simplex>::init();
+            VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::cube>::init();
+            VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::cube>::init();
+            VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::simplex>::init();
+            VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::cube>::init();
+            VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::simplex>::init();
         }
     }
 
@@ -1029,14 +1033,14 @@ public:
             for (unsigned vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
                 subContVol[vertIdx].geometry_.element_ = &element;
                 subContVol[vertIdx].geometry_.localGeometry_ =
-                    &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::simplex>::get(vertIdx);
+                    &VcfvScvGeometries<Scalar, dim, ElementType::simplex>::get(vertIdx);
             }
         }
         else if (geomType.isLine() || geomType.isQuadrilateral() || geomType.isHexahedron()) {
             for (unsigned vertIdx = 0; vertIdx < numVertices; ++vertIdx) {
                 subContVol[vertIdx].geometry_.element_ = &element;
                 subContVol[vertIdx].geometry_.localGeometry_ =
-                    &VcfvScvGeometries<Scalar, dim, Dune::GeometryType::cube>::get(vertIdx);
+                    &VcfvScvGeometries<Scalar, dim, ElementType::cube>::get(vertIdx);
             }
         }
         else

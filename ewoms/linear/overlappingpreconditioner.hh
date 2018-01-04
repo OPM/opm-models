@@ -64,7 +64,7 @@ public:
         : seqPreCond_(seqPreCond), overlap_(&overlap)
     {}
 
-    void pre(domain_type& x, range_type& y)
+    void pre(domain_type& x, range_type& y) override
     {
 #if HAVE_MPI
         short success;
@@ -105,7 +105,7 @@ public:
         y.sync();
     }
 
-    void apply(domain_type& x, const range_type& d)
+    void apply(domain_type& x, const range_type& d) override
     {
 #if HAVE_MPI
         if (overlap_->peerSet().size() > 0) {
@@ -148,7 +148,7 @@ public:
             seqPreCond_.apply(x, d);
     }
 
-    void post(domain_type& x)
+    void post(domain_type& x) override
     {
 #if HAVE_MPI
         short success;
