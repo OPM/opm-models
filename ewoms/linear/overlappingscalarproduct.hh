@@ -65,7 +65,7 @@ public:
     {}
 
     field_type dot(const OverlappingBlockVector& x,
-                   const OverlappingBlockVector& y)
+                   const OverlappingBlockVector& y) override
     {
         field_type sum = 0;
         size_t numLocal = overlap_.numLocal();
@@ -78,7 +78,7 @@ public:
         return comm_.sum( sum );
     }
 
-    real_type norm(const OverlappingBlockVector& x)
+    real_type norm(const OverlappingBlockVector& x) override
     { return std::sqrt(dot(x, x)); }
 
 private:
