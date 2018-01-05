@@ -45,8 +45,8 @@ namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Indices);
 NEW_PROP_TAG(EnableEnergy);
-NEW_PROP_TAG(HeatConductionLaw);
-NEW_PROP_TAG(HeatConductionLawParams);
+NEW_PROP_TAG(ThermalConductionLaw);
+NEW_PROP_TAG(ThermalConductionLawParams);
 NEW_PROP_TAG(SolidEnergyLaw);
 NEW_PROP_TAG(SolidEnergyLawParams);
 }}
@@ -153,9 +153,9 @@ public:
     {}
 
     /*!
-     * \brief Add the rate of the conductive heat flux to a rate vector.
+     * \brief Add the rate of the conductive energy flux to a rate vector.
      */
-    static Scalar heatConductionRate(const ExtensiveQuantities& extQuants OPM_UNUSED)
+    static Scalar thermalConductionRate(const ExtensiveQuantities& extQuants OPM_UNUSED)
     { return 0.0; }
 
     /*!
@@ -184,7 +184,7 @@ public:
      *        equation vector
      */
     template <class LhsEval>
-    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq>& storage OPM_UNUSED,
+    static void addSolidEnergyStorage(Dune::FieldVector<LhsEval, numEq>& storage OPM_UNUSED,
                                     const IntensiveQuantities& intQuants OPM_UNUSED)
     {}
 
@@ -214,8 +214,8 @@ public:
     {}
 
     /*!
-     * \brief Adds the diffusive heat flux to the flux vector over
-     *        the face of a sub-control volume.
+     * \brief Adds the diffusive energy flux to the flux vector over the face of a
+     *        sub-control volume.
      *
      * This method is called by compute flux (base class)
      */
@@ -306,12 +306,13 @@ public:
         if (eqIdx != energyEqIdx)
             return -1;
 
-        // approximate heat capacity of 1kg of air
-        return 1.0 / 1.0035e3;
+        // approximate change of internal energy of 1kg of liquid water for a temperature
+        // change of 30K
+        return 1.0 / (4.184e3 * 30.0);
     }
 
     /*!
-     * \brief Add the rate of the enthalpy flux to a rate vector.
+     * \brief Set the rate of energy flux of a rate vector.
      */
     static void setEnthalpyRate(RateVector& rateVec, const Evaluation& rate)
     { rateVec[energyEqIdx] = rate; }
@@ -323,11 +324,10 @@ public:
     { rateVec[energyEqIdx] += rate; }
 
     /*!
-     * \brief Returns the rate of the conductive heat flux for a given flux
-     *        integration point.
+     * \brief Returns the conductive energy flux for a given flux integration point.
      */
-    static Evaluation heatConductionRate(const ExtensiveQuantities& extQuants)
-    { return -extQuants.temperatureGradNormal() * extQuants.heatConductivity(); }
+    static Evaluation thermalConductionRate(const ExtensiveQuantities& extQuants)
+    { return -extQuants.temperatureGradNormal() * extQuants.thermalConductivity(); }
 
     /*!
      * \brief Given a fluid state, set the enthalpy rate which emerges
@@ -399,15 +399,12 @@ public:
 
     /*!
      * \brief Add the energy storage term for a fluid phase to an equation
-     * vector
+     *        vector
      */
     template <class LhsEval>
-    static void addSolidHeatStorage(Dune::FieldVector<LhsEval, numEq>& storage,
+    static void addSolidEnergyStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                                     const IntensiveQuantities& intQuants)
-    {
-        storage[energyEqIdx] +=
-            Toolbox::template decay<LhsEval>(intQuants.solidInternalEnergy());
-    }
+    { storage[energyEqIdx] += Opm::decay<LhsEval>(intQuants.solidInternalEnergy()); }
 
     /*!
      * \brief Evaluates the advective energy fluxes for a flux integration point and adds
@@ -423,7 +420,7 @@ public:
     {
         const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
-        // advective heat flux in all phases
+        // advective energy flux in all phases
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!context.model().phaseIsConsidered(phaseIdx))
                 continue;
@@ -453,12 +450,12 @@ public:
         const auto& scvf = context.stencil(timeIdx).interiorFace(spaceIdx);
         const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
-        // reduce the heat flux in the matrix by the half the width
-        // occupied by the fracture
+        // reduce the energy flux in the matrix by the half the width occupied by the
+        // fracture
         flux[energyEqIdx] *=
             1 - extQuants.fractureWidth()/(2*scvf.area());
 
-        // advective heat flux in all phases
+        // advective energy flux in all phases
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!context.model().phaseIsConsidered(phaseIdx))
                 continue;
@@ -475,8 +472,8 @@ public:
     }
 
     /*!
-     * \brief Adds the diffusive heat flux to the flux vector over
-     *        the face of a sub-control volume.
+     * \brief Adds the diffusive energy flux to the flux vector over the face of a
+     *        sub-control volume.
      *
      * This method is called by compute flux (base class)
      */
@@ -488,10 +485,10 @@ public:
     {
         const auto& extQuants = context.extensiveQuantities(spaceIdx, timeIdx);
 
-        // diffusive heat flux
+        // diffusive energy flux
         flux[energyEqIdx] +=
             - extQuants.temperatureGradNormal()
-            * extQuants.heatConductivity();
+            * extQuants.thermalConductivity();
     }
 };
 
@@ -554,25 +551,23 @@ class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/false>
 
 public:
     /*!
-     * \brief Returns the total heat capacity \f$\mathrm{[J/(K*m^3]}\f$ of the
-     * rock matrix in
-     *        the sub-control volume.
+     * \brief Returns the volumetric internal energy \f$\mathrm{[J/(m^3]}\f$ of the
+     *        solid matrix in the sub-control volume.
      */
     Evaluation solidInternalEnergy() const
     {
-        OPM_THROW(std::logic_error, "Method solidInternalEnergy() does not make "
-                                    "sense for isothermal models");
+        OPM_THROW(std::logic_error,
+                  "solidInternalEnergy() does not make sense for isothermal models");
     }
 
     /*!
-     * \brief Returns the total conductivity capacity
-     *        \f$\mathrm{[W/m^2 / (K/m)]}\f$ of the rock matrix in the
-     *        sub-control volume.
+     * \brief Returns the total thermal conductivity \f$\mathrm{[W/m^2 / (K/m)]}\f$ of
+     *        the solid matrix in the sub-control volume.
      */
-    Evaluation heatConductivity() const
+    Evaluation thermalConductivity() const
     {
-        OPM_THROW(std::logic_error, "Method heatConductivity() does not make "
-                                    "sense for isothermal models");
+        OPM_THROW(std::logic_error,
+                  "thermalConductivity() does not make sense for isothermal models");
     }
 
 protected:
@@ -612,7 +607,7 @@ class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
-    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLaw) HeatConductionLaw;
+    typedef typename GET_PROP_TYPE(TypeTag, ThermalConductionLaw) ThermalConductionLaw;
     typedef typename GET_PROP_TYPE(TypeTag, SolidEnergyLaw) SolidEnergyLaw;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
@@ -662,18 +657,16 @@ protected:
                            FluidSystem::enthalpy(fs, paramCache, phaseIdx));
         }
 
-        // compute and set the heat capacity of the solid phase
+        // compute and set the volumetric internal energy of the solid phase
         const auto& problem = elemCtx.problem();
-        const auto& solidHeatParams = problem.solidHeatLawParams(elemCtx, dofIdx, timeIdx);
-        const auto& heatCondParams = problem.heatConductionLawParams(elemCtx, dofIdx, timeIdx);
+        const auto& solidEnergyParams = problem.solidEnergyLawParams(elemCtx, dofIdx, timeIdx);
+        const auto& thermalCondParams = problem.thermalConductionLawParams(elemCtx, dofIdx, timeIdx);
 
-        solidInternalEnergy_ =
-            SolidEnergyLaw::solidInternalEnergy(solidHeatParams, fs);
-        heatConductivity_ =
-            HeatConductionLaw::heatConductivity(heatCondParams, fs);
+        solidInternalEnergy_ = SolidEnergyLaw::solidInternalEnergy(solidEnergyParams, fs);
+        thermalConductivity_ = ThermalConductionLaw::thermalConductivity(thermalCondParams, fs);
 
         Opm::Valgrind::CheckDefined(solidInternalEnergy_);
-        Opm::Valgrind::CheckDefined(heatConductivity_);
+        Opm::Valgrind::CheckDefined(thermalConductivity_);
     }
 
 public:
@@ -688,12 +681,12 @@ public:
      * \brief Returns the total conductivity capacity \f$\mathrm{[W/m^2 / (K/m)]}\f$ of
      *        the solid matrix in the sub-control volume.
      */
-    const Evaluation& heatConductivity() const
-    { return heatConductivity_; }
+    const Evaluation& thermalConductivity() const
+    { return thermalConductivity_; }
 
 private:
     Evaluation solidInternalEnergy_;
-    Evaluation heatConductivity_;
+    Evaluation thermalConductivity_;
 };
 
 /*!
@@ -737,18 +730,17 @@ public:
      */
     Scalar temperatureGradNormal() const
     {
-        OPM_THROW(std::logic_error, "Method temperatureGradNormal() does not "
-                                    "make sense for isothermal models");
+        OPM_THROW(std::logic_error,
+                  "Calling temperatureGradNormal() does not make sense for isothermal models");
     }
 
     /*!
-     * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 /
-     * (K/m)]}\f$
+     * \brief The total thermal conductivity at the face \f$\mathrm{[W/m^2 / (K/m)]}\f$
      */
-    Scalar heatConductivity() const
+    Scalar thermalConductivity() const
     {
-        OPM_THROW(std::logic_error, "Method heatConductivity() does not make "
-                                    "sense for isothermal models");
+        OPM_THROW(std::logic_error,
+                  "Calling thermalConductivity() does not make sense for isothermal models");
     }
 };
 
@@ -795,9 +787,9 @@ protected:
         const auto& intQuantsOutside = elemCtx.intensiveQuantities(extQuants.exteriorIndex(), timeIdx);
 
         // arithmetic mean
-        heatConductivity_ =
-            0.5 * (intQuantsInside.heatConductivity() + intQuantsOutside.heatConductivity());
-        Opm::Valgrind::CheckDefined(heatConductivity_);
+        thermalConductivity_ =
+            0.5 * (intQuantsInside.thermalConductivity() + intQuantsOutside.thermalConductivity());
+        Opm::Valgrind::CheckDefined(thermalConductivity_);
     }
 
     template <class Context, class FluidState>
@@ -831,8 +823,8 @@ protected:
         temperatureGradNormal_ =
             (fs.temperature(/*phaseIdx=*/0) - fsInside.temperature(/*phaseIdx=*/0)) / dist;
 
-        // take the value for heat conductivity from the interior finite volume
-        heatConductivity_ = intQuantsInside.heatConductivity();
+        // take the value for thermal conductivity from the interior finite volume
+        thermalConductivity_ = intQuantsInside.thermalConductivity();
     }
 
 public:
@@ -843,15 +835,15 @@ public:
     { return temperatureGradNormal_; }
 
     /*!
-     * \brief The total heat conductivity at the face \f$\mathrm{[W/m^2 /
+     * \brief The total thermal conductivity at the face \f$\mathrm{[W/m^2 /
      * (K/m)]}\f$
      */
-    const Evaluation& heatConductivity() const
-    { return heatConductivity_; }
+    const Evaluation& thermalConductivity() const
+    { return thermalConductivity_; }
 
 private:
     Evaluation temperatureGradNormal_;
-    Evaluation heatConductivity_;
+    Evaluation thermalConductivity_;
 };
 
 } // namespace Ewoms

@@ -44,10 +44,10 @@ NEW_PROP_TAG(FlashSolver);
 //! The maximum accepted error of the flash solver
 NEW_PROP_TAG(FlashTolerance);
 
-//! The heat conduction law which ought to be used
-NEW_PROP_TAG(HeatConductionLaw);
-//! The parameters of the heat conduction law
-NEW_PROP_TAG(HeatConductionLawParams);
+//! The thermal conduction law which ought to be used
+NEW_PROP_TAG(ThermalConductionLaw);
+//! The parameters of the thermal conduction law
+NEW_PROP_TAG(ThermalConductionLawParams);
 
 //! Specifies whether energy should be considered as a conservation quantity or not
 NEW_PROP_TAG(EnableEnergy);

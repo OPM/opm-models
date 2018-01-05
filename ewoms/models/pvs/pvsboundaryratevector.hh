@@ -129,13 +129,13 @@ public:
                 else
                     specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
 
-                // currently we neglect heat conduction!
                 Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
 
-        EnergyModule::addToEnthalpyRate(*this, EnergyModule::heatConductionRate(extQuants));
+        // thermal conduction
+        EnergyModule::addToEnthalpyRate(*this, EnergyModule::thermalConductionRate(extQuants));
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < numEq; ++i)

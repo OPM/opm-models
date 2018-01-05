@@ -50,12 +50,12 @@ NEW_PROP_TAG(MaterialLaw);
 NEW_PROP_TAG(MaterialLawParams);
 //! The material law for the energy stored in the solid matrix
 NEW_PROP_TAG(SolidEnergyLaw);
-//! The parameters of the material law for heat conduction
+//! The parameters of the material law for energy storage of the solid
 NEW_PROP_TAG(SolidEnergyLawParams);
-//! The material law for heat conduction
-NEW_PROP_TAG(HeatConductionLaw);
-//! The parameters of the material law for heat conduction
-NEW_PROP_TAG(HeatConductionLawParams);
+//! The material law for thermal conduction
+NEW_PROP_TAG(ThermalConductionLaw);
+//! The parameters of the material law for thermal conduction
+NEW_PROP_TAG(ThermalConductionLawParams);
 //!The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidSystem);
 //! Specifies the relation used for velocity

@@ -44,7 +44,8 @@
 
 namespace Ewoms {
 namespace Properties {
-NEW_PROP_TAG(HeatConductionLawParams);
+NEW_PROP_TAG(SolidEnergyLawParams);
+NEW_PROP_TAG(ThermalConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(FluxModule);
 }
@@ -69,7 +70,8 @@ class MultiPhaseBaseProblem
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, SolidEnergyLawParams) SolidEnergyLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, ThermalConductionLawParams) ThermalConductionLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw)::Params MaterialLawParams;
 
     enum { dimWorld = GridView::dimensionworld };
@@ -165,8 +167,8 @@ public:
     }
 
     /*!
-     * \brief Returns the heat capacity [J/(K m^3)] of the solid phase
-     *        with no pores in the sub-control volume.
+     * \brief Returns the parameter object for the energy storage law of the solid in a
+     *        sub-control volume.
      *
      * \param context Reference to the object which represents the
      *                current execution context.
@@ -174,17 +176,18 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context& context OPM_UNUSED,
-                             unsigned spaceIdx OPM_UNUSED,
-                             unsigned timeIdx OPM_UNUSED) const
+    const SolidEnergyLawParams&
+    solidEnergyParams(const Context& context OPM_UNUSED,
+                      unsigned spaceIdx OPM_UNUSED,
+                      unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
-                  "Not implemented: Problem::heatCapacitySolid()");
+                   "Not implemented: Problem::solidEnergyParams()");
     }
 
     /*!
-     * \brief Returns the parameter object for the heat conductivity law in
-     *        a sub-control volume.
+     * \brief Returns the parameter object for the thermal conductivity law in a
+     *        sub-control volume.
      *
      * \param context Reference to the object which represents the
      *                current execution context.
@@ -192,13 +195,13 @@ public:
      * \param timeIdx The index used by the time discretization.
      */
     template <class Context>
-    const HeatConductionLawParams&
-    heatConductionParams(const Context& context OPM_UNUSED,
+    const ThermalConductionLawParams&
+    thermalConductionParams(const Context& context OPM_UNUSED,
                          unsigned spaceIdx OPM_UNUSED,
                          unsigned timeIdx OPM_UNUSED) const
     {
         OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::heatConductionParams()");
+                   "Not implemented: Problem::thermalConductionParams()");
     }
 
     /*!
