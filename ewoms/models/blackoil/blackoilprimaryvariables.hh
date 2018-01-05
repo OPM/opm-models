@@ -461,7 +461,7 @@ public:
                                                                     SoMax);
 
             Scalar Rs = (*this)[Indices::compositionSwitchIdx];
-            if (Rs > RsMax || Rs > RsSat) {
+            if (Rs > std::min(RsMax, RsSat)) {
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
@@ -516,10 +516,9 @@ public:
                                                                      pg,
                                                                      /*So=*/Scalar(0.0),
                                                                      SoMax);
-            RvSat = std::min(RvMax, RvSat);
 
             Scalar Rv = (*this)[Indices::compositionSwitchIdx];
-            if (Rv > RvSat) {
+            if (Rv > std::min(RvMax, RvSat)) {
                 // switch to phase equilibrium mode because the oil phase appears. here
                 // we also need the capillary pressures to calculate the oil phase
                 // pressure using the gas phase pressure
