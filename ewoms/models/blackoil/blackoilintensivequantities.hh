@@ -59,6 +59,7 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
@@ -199,7 +200,13 @@ public:
                                                             oilPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
-                fluidState_.setRs(RsSat);
+                if(FluidSystem::enableRateLimitedDissolvedGas() > Opm::FluidSystems::None){
+                    // limit the updated Rs value by a given rate pr volume
+                    const Evaluation& RsLimited = rateLimitedDissolvedGasUpdate(RsSat, So, elemCtx, dofIdx, timeIdx);
+                    fluidState_.setRs(RsLimited);
+                }else{
+                  fluidState_.setRs(RsSat);
+                }
             }
             else
                 fluidState_.setRs(0.0);
@@ -219,7 +226,12 @@ public:
             // if the switching variable is the mole fraction of the gas component in the
             // oil phase, we can directly set the composition of the oil phase
             const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-            fluidState_.setRs(Rs);
+            //if(FluidSystem::enableRateLimitedDissolvedGas() == Opm::FluidSystems::All){
+            //    const auto& RsLimited = rateLimitedDissolvedGasUpdate(Rs, So, elemCtx,dofIdx,timeIdx);
+            //    fluidState_.setRs(RsLimited);
+            //} else {
+                fluidState_.setRs(Rs);
+            //}
 
             if (FluidSystem::enableVaporizedOil()) {
                 // the gas phase is not present, but we need to compute its "composition"
@@ -344,6 +356,18 @@ public:
 #endif
     }
 
+    /*! function to update Rs with rate limmitation this is used if keyword DRSDT is present in configuration file
+     */
+    Evaluation rateLimitedDissolvedGasUpdate(const Evaluation& RsE,const Evaluation& So, const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    {
+        assert(timeIdx==0);
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+        const Scalar& Rs0 = elemCtx.model().cellValues(globalSpaceIdx,Model::rsPrev);
+        const Scalar& So0 = elemCtx.model().cellValues(globalSpaceIdx,Model::soPrev);
+        const double dt = elemCtx.simulator().timeStepSize();
+        return FluidSystem::rateLimitedUpdate(So, So0, RsE, Rs0, dt);;
+
+    }
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */

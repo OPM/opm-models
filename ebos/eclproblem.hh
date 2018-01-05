@@ -475,6 +475,9 @@ public:
             Scalar initialDt = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
             dt = std::min(dt, initialDt);
         }
+        // The updateCell values is called before dt is updated to since it is based on the prevois step.
+        // this put the model state set values which should be from the previous step
+        this->model().updateCellValues();
 
         if (nextEpisodeIdx < numReportSteps) {
             simulator.startNextEpisode(episodeLength);
@@ -483,8 +486,6 @@ public:
 
         if (updateHysteresis_())
             this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
-
-        this->model().updateMaxOilSaturations();
 
         if (GET_PROP_VALUE(TypeTag, EnablePolymer))
             updateMaxPolymerAdsorption_();
