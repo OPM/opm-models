@@ -216,8 +216,11 @@ public:
     {
 #if HAVE_ERT
         typedef typename Grid::LeafGridView GridView;
-        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout>
-            ElementMapper;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> ElementMapper;
+#else
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
+#endif
 
         std::vector<double> mapaxesData;
         std::vector<double> coordData;
@@ -238,7 +241,12 @@ public:
         // keyword), but at least the number of cells is correct, so all values are
         // hopefully displayed at approximately the correct location.
         actnumData.resize(nx*ny*nz, 0);
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        ElementMapper elemMapper(grid.leafGridView(), Dune::mcmgElementLayout());
+#else
         ElementMapper elemMapper(grid.leafGridView());
+#endif
+
         auto elemIt = grid.leafGridView().template begin<0>();
         const auto& elemEndIt = grid.leafGridView().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
