@@ -71,7 +71,9 @@ class EclSummaryWriter
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     typedef Ewoms::EclWellManager<TypeTag> WellManager;
+#ifdef HAVE_ERT
     typedef Ewoms::ErtSummary<TypeTag> ErtSummary;
+#endif
 
 
     struct ErtWellInfo {
@@ -129,6 +131,7 @@ public:
             reportIdx += 1;
         }
 
+#ifdef HAVE_ERT
         ErtSummaryTimeStep<TypeTag> ertSumTimeStep(ertSummary_, t, reportIdx);
 
         typedef EclDeckUnits<TypeTag> DeckUnits;
@@ -270,6 +273,7 @@ public:
 
         // write the _complete_ summary file!
         ecl_sum_fwrite(ertSummary_.ertHandle());
+#endif
     }
 
 private:
@@ -336,6 +340,7 @@ private:
 
     void addVariables_(const Opm::EclipseState& eclState, const Opm::Schedule& schedule)
     {
+#ifdef HAVE_ERT
         const auto& wellsVector = schedule.getWells();
         for (size_t wellIdx = 0; wellIdx < wellsVector.size(); ++ wellIdx) {
             const auto& eclWell = wellsVector[wellIdx];
@@ -482,6 +487,7 @@ private:
                                     /*unit=*/"SM3/DAY",
                                     /*defaultValue=*/0.0);
         }
+#endif
     }
 
     // add all quantities which are implied by the ALL summary keyword
