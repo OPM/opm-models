@@ -628,6 +628,9 @@ public:
      */
     void writeOutput(bool verbose = true)
     {
+        if (!enableVtkOutput_())
+            return;
+
         if (verbose && gridView().comm().rank() == 0)
             std::cout << "Writing visualization results for the current time step.\n"
                       << std::flush;
@@ -635,15 +638,11 @@ public:
         // calculate the time _after_ the time was updated
         Scalar t = simulator().time() + simulator().timeStepSize();
 
-        if (enableVtkOutput_())
-            defaultVtkWriter_->beginWrite(t);
-
+        defaultVtkWriter_->beginWrite(t);
         model().prepareOutputFields();
+        model().appendOutputFields(*defaultVtkWriter_);
+        defaultVtkWriter_->endWrite();
 
-        if (enableVtkOutput_()) {
-            model().appendOutputFields(*defaultVtkWriter_);
-            defaultVtkWriter_->endWrite();
-        }
     }
 
     /*!
