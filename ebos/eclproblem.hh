@@ -92,6 +92,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace Ewoms {
 template <class TypeTag>
@@ -358,6 +359,51 @@ public:
         if (!deck.hasKeyword("NOGRAV") && EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             this->gravity_[dim - 1] = 9.80665;
 
+        // this is actually not fully correct: the latest occurence of VAPPARS and DRSDT
+        // or DRVDT up to the current time step in the schedule section counts, presence
+        // of VAPPARS alone is not sufficient to disable DR[SV]DT. TODO: implment support
+        // for this in opm-parser's Schedule object"
+        drsdtActive_ = false;
+        drvdtActive_ = false;
+        vapparsActive_ = false;
+
+        if (deck.hasKeyword("VAPPARS")) {
+            vapparsActive_ = true;
+
+            size_t numDof = this->model().numGridDof();
+            maxOilSaturation_.resize(numDof, 0.0);
+
+            // TODO: update the PVT objects. this is only required if VAPPARS becomes a
+            // fully dynamic keyword.
+        }
+
+        // deal with DRSDT
+        maxDRsDt_ = 0.0;
+        maxDRs_ = -1.0;
+        if (!vapparsActive_ && deck.hasKeyword("DRSDT")) {
+            drsdtActive_ = !vapparsActive_;
+            const auto& drsdtKeyword = deck.getKeyword("DRSDT");
+            maxDRsDt_ = drsdtKeyword.getRecord(0).getItem("DRSDT_MAX").getSIDouble(0);
+            size_t numDof = this->model().numGridDof();
+            lastRs_.resize(numDof, 0.0);
+
+            std::string drsdtFlag =
+                drsdtKeyword.getRecord(0).getItem("Option").getTrimmedString(0);
+            std::transform(drsdtFlag.begin(), drsdtFlag.end(), drsdtFlag.begin(), ::toupper);
+
+            dRsDtOnlyFreeGas_ = (drsdtFlag == "FREE");
+        }
+
+        // deal with DRVDT
+        maxDRvDt_ = 0.0;
+        maxDRv_ = -1.0;
+        if (!vapparsActive_ && deck.hasKeyword("DRVDT")) {
+            const auto& drvdtKeyword = deck.getKeyword("DVSDT");
+            maxDRvDt_ = drvdtKeyword.getRecord(0).getItem("DRVDT_MAX").getSIDouble(0);
+            size_t numDof = this->model().numGridDof();
+            lastRv_.resize(numDof, 0.0);
+        }
+
         initFluidSystem_();
         updateElementDepths_();
         readRockParameters_();
@@ -476,10 +522,8 @@ public:
             simulator.setTimeStepSize(dt);
         }
 
-        if (updateHysteresis_())
-            this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
-
-        this->model().updateMaxOilSaturations();
+        bool doInvalidate = updateHysteresis_();
+        doInvalidate = doInvalidate || updateMaxOilSaturation_();
 
         if (GET_PROP_VALUE(TypeTag, EnablePolymer))
             updateMaxPolymerAdsorption_();
@@ -488,6 +532,9 @@ public:
             // set up the wells
             wellManager_.beginEpisode(this->simulator().gridManager().eclState(),
                                       this->simulator().gridManager().schedule(), isOnRestart);
+
+        if (doInvalidate)
+            this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
     }
 
     /*!
@@ -495,6 +542,14 @@ public:
      */
     void beginTimeStep()
     {
+        if (drsdtActive_)
+            // DRSDT is enabled
+            maxDRs_ = maxDRsDt_*this->simulator().timeStepSize();
+
+        if (drvdtActive_)
+            // DRVDT is enabled
+            maxDRv_ = maxDRvDt_*this->simulator().timeStepSize();
+
         if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
             wellManager_.beginTimeStep();
         }
@@ -540,6 +595,8 @@ public:
         // we no longer need the initial soluiton
         if (this->simulator().episodeIndex() == 0)
             initialFluidStates_.clear();
+
+        updateCompositionChangeLimits_();
     }
 
     /*!
@@ -985,6 +1042,8 @@ public:
 
         // release the memory of the EQUIL grid since it's no longer needed after this point
         this->simulator().gridManager().releaseEquilGrid();
+
+        updateCompositionChangeLimits_();
     }
 
     /*!
@@ -1009,6 +1068,62 @@ public:
             for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 rate[eqIdx] /= this->model().dofTotalVolume(globalDofIdx);
         }
+    }
+
+    /*!
+     * \brief Returns the maximum value of the gas dissolution factor at the current time
+     *        for a given degree of freedom.
+     */
+    Scalar maxGasDissolutionFactor(unsigned globalDofIdx) const
+    {
+        if (!drsdtActive_ || maxDRs_ < 0.0)
+            return std::numeric_limits<Scalar>::max()/2;
+
+        return lastRs_[globalDofIdx] + maxDRs_;
+    }
+
+    /*!
+     * \brief Returns the maximum value of the oil vaporization factor at the current
+     *        time for a given degree of freedom.
+     */
+    Scalar maxOilVaporizationFactor(unsigned globalDofIdx) const
+    {
+        if (!drvdtActive_ || maxDRv_ < 0.0)
+            return std::numeric_limits<Scalar>::max()/2;
+
+        return lastRv_[globalDofIdx] + maxDRv_;
+    }
+
+    /*!
+     * \brief Returns an element's maximum oil phase saturation observed during the
+     *        simulation.
+     *
+     * This is a bit of a hack from the conceptional point of view, but it is required to
+     * match the results of the 'flow' and ECLIPSE 100 simulators.
+     */
+    Scalar maxOilSaturation(unsigned globalDofIdx) const
+    {
+        if (!vapparsActive_)
+            return 0.0;
+
+        return maxOilSaturation_[globalDofIdx];
+    }
+
+    /*!
+     * \brief Sets an element's maximum oil phase saturation observed during the
+     *        simulation.
+     *
+     * This a hack on top of the maxOilSaturation() hack but it is currently required to
+     * do restart externally. i.e. from the flow code.
+     *
+     * TODO: move the restart-from-ECL-restart-files functionality to EclProblem!
+     */
+    void setMaxOilSaturation(unsigned globalDofIdx, Scalar value)
+    {
+        if (!vapparsActive_)
+            return;
+
+        maxOilSaturation_[globalDofIdx] = value;
     }
 
     /*!
@@ -1065,6 +1180,98 @@ private:
 
             elementCenterDepth_[elemIdx] = cellCenterDepth( element );
         }
+    }
+
+    // update the parameters needed for DRSDT and DRVDT
+    void updateCompositionChangeLimits_()
+    {
+        // update the "last Rs" values for all elements, including the ones in the ghost
+        // and overlap regions
+        if (drsdtActive_) {
+            ElementContext elemCtx(this->simulator());
+            const auto& gridManager = this->simulator().gridManager();
+            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+
+                elemCtx.updatePrimaryStencil(elem);
+                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                unsigned compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& iq = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& fs = iq.fluidState();
+
+                typedef typename std::decay<decltype(fs) >::type FluidState;
+
+                if (!dRsDtOnlyFreeGas_ || fs.saturation(gasPhaseIdx) > freeGasMinSaturation_)
+                    lastRs_[compressedDofIdx] =
+                        Opm::BlackOil::template getRs_<FluidSystem,
+                                                       Scalar,
+                                                       FluidState>(fs,
+                                                                   iq.pvtRegionIndex());
+                else
+                    lastRs_[compressedDofIdx] = std::numeric_limits<Scalar>::infinity();
+            }
+        }
+
+        // update the "last Rv" values for all elements, including the ones in the ghost
+        // and overlap regions
+        if (drvdtActive_) {
+            ElementContext elemCtx(this->simulator());
+            const auto& gridManager = this->simulator().gridManager();
+            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+
+                elemCtx.updatePrimaryStencil(elem);
+                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                unsigned compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& iq = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& fs = iq.fluidState();
+
+                typedef typename std::decay<decltype(fs) >::type FluidState;
+
+                lastRv_[compressedDofIdx] =
+                    Opm::BlackOil::template getRv_<FluidSystem,
+                                                   Scalar,
+                                                   FluidState>(fs,
+                                                               iq.pvtRegionIndex());
+            }
+        }
+    }
+
+    bool updateMaxOilSaturation_()
+    {
+        // we use VAPPARS
+        if (vapparsActive_) {
+            ElementContext elemCtx(this->simulator());
+            const auto& gridManager = this->simulator().gridManager();
+            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+
+                elemCtx.updatePrimaryStencil(elem);
+                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                unsigned compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& iq = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& fs = iq.fluidState();
+
+                Scalar So = Opm::decay<Scalar>(fs.saturation(oilPhaseIdx));
+
+                maxOilSaturation_[compressedDofIdx] = std::max(maxOilSaturation_[compressedDofIdx], So);
+            }
+
+            // we need to invalidate the intensive quantities cache here because the
+            // derivatives of Rs and Rv will most likely have changed
+            return true;
+        }
+
+        return false;
     }
 
     void readRockParameters_()
@@ -1415,6 +1622,7 @@ private:
 
         }
     }
+
     void readBlackoilExtentionsInitialConditions_()
     {
         const auto& gridManager = this->simulator().gridManager();
@@ -1617,6 +1825,20 @@ private:
     std::vector<Scalar> polymerConcentration_;
     std::vector<Scalar> solventSaturation_;
 
+    bool drsdtActive_; // if no, VAPPARS *might* be active
+    bool dRsDtOnlyFreeGas_; // apply the DRSDT rate limit only to cells that exhibit free gas
+    std::vector<Scalar> lastRs_;
+    Scalar maxDRsDt_;
+    Scalar maxDRs_;
+
+    bool drvdtActive_; // if no, VAPPARS *might* be active
+    std::vector<Scalar> lastRv_;
+    Scalar maxDRvDt_;
+    Scalar maxDRv_;
+    constexpr static Scalar freeGasMinSaturation_ = 1e-7;
+
+    bool vapparsActive_; // if no, DRSDT and/or DRVDT *might* be active
+    std::vector<Scalar> maxOilSaturation_;
 
     EclWellManager<TypeTag> wellManager_;
 
