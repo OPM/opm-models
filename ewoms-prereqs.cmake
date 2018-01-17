@@ -37,7 +37,6 @@ set (ewoms_DEPS
   "opm-parser"
   "opm-output"
   "opm-grid"
-  "opm-core"
   # valgrind client requests
   "Valgrind"
   # quadruple precision floating point calculations
