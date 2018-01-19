@@ -300,7 +300,7 @@ public:
                 (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-            const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
+            const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, FluidState, Scalar>(fluidState, pvtRegionIdx_);
 
             if (waterEnabled)
                 (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
@@ -311,7 +311,7 @@ public:
         else {
             assert(primaryVarsMeaning() == Sw_pg_Rv);
 
-            const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
+            const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, FluidState, Scalar>(fluidState, pvtRegionIdx_);
             if (waterEnabled)
                 (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
 
