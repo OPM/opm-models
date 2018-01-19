@@ -125,6 +125,7 @@ opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
 opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
+add_custom_target(ewoms_prepare)
 
 # the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
 EwomsAddApplication(ebos
