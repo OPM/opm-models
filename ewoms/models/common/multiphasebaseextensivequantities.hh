@@ -116,16 +116,14 @@ public:
     void updateBoundary(const Context& context,
                         unsigned bfIdx,
                         unsigned timeIdx,
-                        const FluidState& fluidState,
-                        typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
+                        const FluidState& fluidState)
     {
-        ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        ParentType::updateBoundary(context, bfIdx, timeIdx, fluidState);
 
         FluxExtensiveQuantities::calculateBoundaryGradients_(context.elementContext(),
                                                              bfIdx,
                                                              timeIdx,
-                                                             fluidState,
-                                                             paramCache);
+                                                             fluidState);
         FluxExtensiveQuantities::calculateBoundaryFluxes_(context.elementContext(),
                                                           bfIdx,
                                                           timeIdx);

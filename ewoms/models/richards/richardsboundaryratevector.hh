@@ -81,12 +81,11 @@ public:
     template <class Context, class FluidState>
     void setFreeFlow(const Context& context, unsigned bfIdx, unsigned timeIdx, const FluidState& fluidState)
     {
-        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> paramCache;
-        paramCache.updateAll(fluidState);
-
         ExtensiveQuantities extQuants;
-        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState);
         const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        unsigned focusDofIdx = context.focusDofIndex();
+        unsigned interiorDofIdx = context.interiorScvIndex(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
@@ -95,10 +94,16 @@ public:
 
         unsigned phaseIdx = liquidPhaseIdx;
         Evaluation density;
-        if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-            density = FluidSystem::density(fluidState, paramCache, phaseIdx);
-        else
+        if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx)) {
+            if (focusDofIdx == interiorDofIdx)
+                density = fluidState.density(phaseIdx);
+            else
+                density = Opm::getValue(fluidState.density(phaseIdx));
+        }
+        else if (focusDofIdx == interiorDofIdx)
             density = insideIntQuants.fluidState().density(phaseIdx);
+        else
+            density = Opm::getValue(insideIntQuants.fluidState().density(phaseIdx));
 
         // add advective flux of current component in current
         // phase

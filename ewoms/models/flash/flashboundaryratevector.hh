@@ -88,35 +88,41 @@ public:
                      unsigned timeIdx,
                      const FluidState& fluidState)
     {
-        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> paramCache;
-        paramCache.updateAll(fluidState);
-
         ExtensiveQuantities extQuants;
-        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState);
         const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        unsigned focusDofIdx = context.focusDofIndex();
+        unsigned interiorDofIdx = context.interiorScvIndex(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
         (*this) = Evaluation(0.0);
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Evaluation meanMBoundary = 0;
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-                meanMBoundary +=
-                    fluidState.moleFraction(phaseIdx, compIdx)*FluidSystem::molarMass(compIdx);
-
             Evaluation density;
-            if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                density = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            else
+            if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx)) {
+                if (focusDofIdx == interiorDofIdx)
+                    density = fluidState.density(phaseIdx);
+                else
+                    density = Opm::getValue(fluidState.density(phaseIdx));
+            }
+            else if (focusDofIdx == interiorDofIdx)
                 density = insideIntQuants.fluidState().density(phaseIdx);
+            else
+                density = Opm::getValue(insideIntQuants.fluidState().density(phaseIdx));
 
             for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
                 Evaluation molarity;
-                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                    molarity = fluidState.moleFraction(phaseIdx, compIdx)*density/meanMBoundary;
-                else
+                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx)) {
+                    if (focusDofIdx == interiorDofIdx)
+                        molarity = fluidState.molarity(phaseIdx, compIdx);
+                    else
+                        molarity = Opm::getValue(fluidState.molarity(phaseIdx, compIdx));
+                }
+                else if (focusDofIdx == interiorDofIdx)
                     molarity = insideIntQuants.fluidState().molarity(phaseIdx, compIdx);
+                else
+                    molarity = Opm::getValue(insideIntQuants.fluidState().molarity(phaseIdx, compIdx));
 
                 // add advective flux of current component in current
                 // phase
@@ -125,10 +131,16 @@ public:
 
             if (enableEnergy) {
                 Evaluation specificEnthalpy;
-                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                    specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
-                else
+                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx)) {
+                    if (focusDofIdx == interiorDofIdx)
+                        specificEnthalpy = fluidState.enthalpy(phaseIdx);
+                    else
+                        specificEnthalpy = Opm::getValue(fluidState.enthalpy(phaseIdx));
+                }
+                else if (focusDofIdx == interiorDofIdx)
                     specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
+                else
+                    specificEnthalpy = Opm::getValue(insideIntQuants.fluidState().enthalpy(phaseIdx));
 
                 Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);

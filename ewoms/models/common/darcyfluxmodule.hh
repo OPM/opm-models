@@ -337,8 +337,7 @@ protected:
     void calculateBoundaryGradients_(const ElementContext& elemCtx,
                                      unsigned boundaryFaceIdx,
                                      unsigned timeIdx,
-                                     const FluidState& fluidState,
-                                     const typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
+                                     const FluidState& fluidState)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::BoundaryPressureCallback<TypeTag, FluidState> pressureCallback(elemCtx, fluidState);
@@ -443,9 +442,15 @@ protected:
             }
 
             // take the phase mobility from the DOF in upstream direction
-            if (upstreamDofIdx_[phaseIdx] < 0)
-                mobility_[phaseIdx] =
-                    kr[phaseIdx] / FluidSystem::viscosity(fluidState, paramCache, phaseIdx);
+            if (upstreamDofIdx_[phaseIdx] < 0) {
+                if (interiorDofIdx_ == focusDofIdx)
+                    mobility_[phaseIdx] =
+                        kr[phaseIdx] / fluidState.viscosity(phaseIdx);
+                else
+                    mobility_[phaseIdx] =
+                        Toolbox::value(kr[phaseIdx])
+                        / Toolbox::value(fluidState.viscosity(phaseIdx));
+            }
             else if (upstreamDofIdx_[phaseIdx] != focusDofIdx)
                 mobility_[phaseIdx] = Toolbox::value(intQuantsIn.mobility(phaseIdx));
             else
