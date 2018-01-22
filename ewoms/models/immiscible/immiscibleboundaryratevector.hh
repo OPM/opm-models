@@ -97,39 +97,51 @@ public:
     template <class Context, class FluidState>
     void setFreeFlow(const Context& context, unsigned bfIdx, unsigned timeIdx, const FluidState& fluidState)
     {
-        typename FluidSystem::template ParameterCache<typename FluidState::Scalar> paramCache;
-        paramCache.updateAll(fluidState);
-
         ExtensiveQuantities extQuants;
-        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState);
         const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        unsigned focusDofIdx = context.focusDofIndex();
+        unsigned interiorDofIdx = context.interiorScvIndex(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
         (*this) = Evaluation(0.0);
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
+            const auto& pBoundary = fluidState.pressure(phaseIdx);
+            const Evaluation& pInside = insideIntQuants.fluidState().pressure(phaseIdx);
+
+            // mass conservation
             Evaluation density;
-            if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                density = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            else
+            if  (pBoundary > pInside) {
+                if (focusDofIdx == interiorDofIdx)
+                    density = fluidState.density(phaseIdx);
+                else
+                    density = Opm::getValue(fluidState.density(phaseIdx));
+            }
+            else if (focusDofIdx == interiorDofIdx)
                 density = insideIntQuants.fluidState().density(phaseIdx);
+            else
+                density = Opm::getValue(insideIntQuants.fluidState().density(phaseIdx));
 
             Opm::Valgrind::CheckDefined(density);
             Opm::Valgrind::CheckDefined(extQuants.volumeFlux(phaseIdx));
 
-            // add advective flux of current component in current
-            // phase
             (*this)[conti0EqIdx + phaseIdx] += extQuants.volumeFlux(phaseIdx)*density;
 
+            // energy conservation
             if (enableEnergy) {
                 Evaluation specificEnthalpy;
-                Scalar pBoundary = fluidState.pressure(phaseIdx);
-                const Evaluation& pElement = insideIntQuants.fluidState().pressure(phaseIdx);
-                if (pBoundary > pElement)
-                    specificEnthalpy = FluidSystem::enthalpy(fluidState, paramCache, phaseIdx);
-                else
+                if (pBoundary > pInside) {
+                    if (focusDofIdx == interiorDofIdx)
+                        specificEnthalpy = fluidState.enthalpy(phaseIdx);
+                    else
+                        specificEnthalpy = Opm::getValue(fluidState.enthalpy(phaseIdx));
+                }
+                else if (focusDofIdx == interiorDofIdx)
                     specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
+                else
+                    specificEnthalpy = Opm::getValue(insideIntQuants.fluidState().enthalpy(phaseIdx));
 
                 Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);

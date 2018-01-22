@@ -278,16 +278,16 @@ protected:
         if (focusDofIdx == i) {
             ergunCoefficient_ =
                 (intQuantsIn.ergunCoefficient() +
-                 Toolbox::value(intQuantsEx.ergunCoefficient()))/2;
+                 Opm::getValue(intQuantsEx.ergunCoefficient()))/2;
         }
         else if (focusDofIdx == j)
             ergunCoefficient_ =
-                (Toolbox::value(intQuantsIn.ergunCoefficient()) +
+                (Opm::getValue(intQuantsIn.ergunCoefficient()) +
                  intQuantsEx.ergunCoefficient())/2;
         else
             ergunCoefficient_ =
-                (Toolbox::value(intQuantsIn.ergunCoefficient()) +
-                 Toolbox::value(intQuantsEx.ergunCoefficient()))/2;
+                (Opm::getValue(intQuantsIn.ergunCoefficient()) +
+                 Opm::getValue(intQuantsEx.ergunCoefficient()))/2;
 
         // obtain the mobility to passability ratio for each phase.
         for (unsigned phaseIdx=0; phaseIdx < numPhases; phaseIdx++) {
@@ -305,9 +305,9 @@ protected:
             }
             else {
                 density_[phaseIdx] =
-                    Toolbox::value(up.fluidState().density(phaseIdx));
+                    Opm::getValue(up.fluidState().density(phaseIdx));
                 mobilityPassabilityRatio_[phaseIdx] =
-                    Toolbox::value(up.mobilityPassabilityRatio(phaseIdx));
+                    Opm::getValue(up.mobilityPassabilityRatio(phaseIdx));
             }
         }
     }
@@ -316,14 +316,12 @@ protected:
     void calculateBoundaryGradients_(const ElementContext& elemCtx,
                                      unsigned boundaryFaceIdx,
                                      unsigned timeIdx,
-                                     const FluidState& fluidState,
-                                     const typename FluidSystem::template ParameterCache<typename FluidState::Scalar>& paramCache)
+                                     const FluidState& fluidState)
     {
         DarcyExtQuants::calculateBoundaryGradients_(elemCtx,
                                                     boundaryFaceIdx,
                                                     timeIdx,
-                                                    fluidState,
-                                                    paramCache);
+                                                    fluidState);
 
         auto focusDofIdx = elemCtx.focusDofIndex();
         unsigned i = static_cast<unsigned>(this->interiorDofIdx_);
@@ -334,7 +332,7 @@ protected:
         if (focusDofIdx == i)
             ergunCoefficient_ = intQuantsIn.ergunCoefficient();
         else
-            ergunCoefficient_ = Toolbox::value(intQuantsIn.ergunCoefficient());
+            ergunCoefficient_ = Opm::getValue(intQuantsIn.ergunCoefficient());
 
         // calculate the square root of the intrinsic permeability
         assert(isDiagonal_(this->K_));
@@ -352,9 +350,9 @@ protected:
             }
             else {
                 density_[phaseIdx] =
-                    Toolbox::value(intQuantsIn.fluidState().density(phaseIdx));
+                    Opm::getValue(intQuantsIn.fluidState().density(phaseIdx));
                 mobilityPassabilityRatio_[phaseIdx] =
-                    Toolbox::value(intQuantsIn.mobilityPassabilityRatio(phaseIdx));
+                    Opm::getValue(intQuantsIn.mobilityPassabilityRatio(phaseIdx));
             }
         }
     }
@@ -382,15 +380,15 @@ protected:
         if (focusDofIdx == i)
             ergunCoefficient_ =
                 (intQuantsI.ergunCoefficient() +
-                 Toolbox::value(intQuantsJ.ergunCoefficient())) / 2;
+                 Opm::getValue(intQuantsJ.ergunCoefficient())) / 2;
         else if (focusDofIdx == j)
             ergunCoefficient_ =
-                (Toolbox::value(intQuantsI.ergunCoefficient()) +
+                (Opm::getValue(intQuantsI.ergunCoefficient()) +
                  intQuantsJ.ergunCoefficient()) / 2;
         else
             ergunCoefficient_ =
-                (Toolbox::value(intQuantsI.ergunCoefficient()) +
-                 Toolbox::value(intQuantsJ.ergunCoefficient())) / 2;
+                (Opm::getValue(intQuantsI.ergunCoefficient()) +
+                 Opm::getValue(intQuantsJ.ergunCoefficient())) / 2;
 
         ///////////////
         // calculate the weights of the upstream and the downstream control volumes
