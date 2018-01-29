@@ -36,9 +36,9 @@
 
 # originally generated with the command:
 # find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
-file(GLOB_RECURSE TMP_GRIDS RELATIVE "${CMAKE_SOURCE_DIR}" "tests/*.dgf")
-file(GLOB_RECURSE TMP_VTUS RELATIVE "${CMAKE_SOURCE_DIR}" "*tests/*.vtu")
-file(GLOB_RECURSE TMP_VTPS RELATIVE "${CMAKE_SOURCE_DIR}" "tests/*.vtp")
+file(GLOB_RECURSE TMP_GRIDS RELATIVE "${PROJECT_SOURCE_DIR}" "tests/*.dgf")
+file(GLOB_RECURSE TMP_VTUS RELATIVE "${PROJECT_SOURCE_DIR}" "*tests/*.vtu")
+file(GLOB_RECURSE TMP_VTPS RELATIVE "${PROJECT_SOURCE_DIR}" "tests/*.vtp")
 
 list(APPEND TEST_DATA_FILES
 	${TMP_GRIDS}
