@@ -369,9 +369,9 @@ public:
             if (compositionSwitchEnabled)
                 Sg = (*this)[Indices::compositionSwitchIdx];
 
-            Scalar So = 1.0 - Sw - Sg - solventSaturation();
+            Scalar So = 1.0 - Sw - Sg - solventSaturation_();
 
-            Scalar So2 = 1.0 - Sw - solventSaturation();
+            Scalar So2 = 1.0 - Sw - solventSaturation_();
             if (Sg < -eps && So2 > 0.0 && FluidSystem::enableDissolvedGas()) {
                 // the hydrocarbon gas phase disappeared and some oil phase is left,
                 // i.e., switch the primary variables to { Sw, po, Rs }.
@@ -397,7 +397,7 @@ public:
                 return true;
             }
 
-            Scalar Sg2 = 1.0 - Sw - solventSaturation();
+            Scalar Sg2 = 1.0 - Sw - solventSaturation_();
             if (So < -eps && Sg2 > 0.0 && FluidSystem::enableVaporizedOil()) {
                 // the oil phase disappeared and some hydrocarbon gas phase is still
                 // present, i.e., switch the primary variables to { Sw, pg, Rv }.
@@ -407,7 +407,7 @@ public:
                 // pressure, i.e. we must determine capillary pressure
                 Scalar pC[numPhases] = { 0.0 };
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
-                computeCapillaryPressures_(pC, /*So=*/0.0, Sg2 + solventSaturation(), Sw, matParams);
+                computeCapillaryPressures_(pC, /*So=*/0.0, Sg2 + solventSaturation_(), Sw, matParams);
                 Scalar pg = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
 
                 // we start at the Rv value that corresponds to that of oil-saturated
@@ -452,7 +452,7 @@ public:
             // than what saturated oil can hold.
             Scalar T = asImp_().temperature_();
             Scalar po = (*this)[Indices::pressureSwitchIdx];
-            Scalar So = 1.0 - Sw - solventSaturation();
+            Scalar So = 1.0 - Sw - solventSaturation_();
             Scalar SoMax = std::max(So, problem.maxOilSaturation(globalDofIdx));
             Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
             Scalar RsSat =
@@ -479,7 +479,7 @@ public:
             assert(compositionSwitchEnabled);
 
             Scalar pg = (*this)[Indices::pressureSwitchIdx];
-            Scalar Sg = 1.0 - Sw - solventSaturation();
+            Scalar Sg = 1.0 - Sw - solventSaturation_();
 
             // special case for cells with almost only water
             if (Sw >= thresholdWaterFilledCell) {
@@ -490,7 +490,7 @@ public:
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
                 computeCapillaryPressures_(pC,
                                            /*So=*/0.0,
-                                           /*Sg=*/Sg + solventSaturation(),
+                                           /*Sg=*/Sg + solventSaturation_(),
                                            Sw,
                                            matParams);
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
@@ -528,7 +528,7 @@ public:
                 const MaterialLawParams& matParams = problem.materialLawParams(globalDofIdx);
                 computeCapillaryPressures_(pC,
                                            /*So=*/0.0,
-                                           /*Sg=*/Sg + solventSaturation(),
+                                           /*Sg=*/Sg + solventSaturation_(),
                                            Sw,
                                            matParams);
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
@@ -563,7 +563,7 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 
-    Scalar solventSaturation() const
+    Scalar solventSaturation_() const
     {
         if (!enableSolvent)
             return 0.0;
@@ -571,7 +571,7 @@ private:
         return (*this)[Indices::solventSaturationIdx];
     }
 
-    Scalar polymerConcentration() const
+    Scalar polymerConcentration_() const
     {
         if (!enablePolymer)
             return 0.0;
