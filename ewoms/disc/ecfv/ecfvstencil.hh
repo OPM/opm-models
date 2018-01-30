@@ -142,7 +142,7 @@ public:
     /*!
      * \brief Represents a face of a sub-control volume.
      */
-    template <bool needNormal, bool needIntegrationPos>
+    template <bool needIntegrationPos, bool needNormal>
     class EcfvSubControlVolumeFace
     {
     public:
