@@ -107,7 +107,10 @@ SET_TYPE_PROP(BlackOilModel, FluxModule, Ewoms::BlackOilDarcyFluxModule<TypeTag>
 
 //! The indices required by the model
 SET_TYPE_PROP(BlackOilModel, Indices,
-              Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent)?1:0, GET_PROP_VALUE(TypeTag, EnablePolymer)?1:0, /*PVOffset=*/0>);
+              Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent),
+                                     GET_PROP_VALUE(TypeTag, EnablePolymer),
+                                     GET_PROP_VALUE(TypeTag, EnableEnergy),
+                                     /*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
 SET_PROP(BlackOilModel, FluidSystem)
