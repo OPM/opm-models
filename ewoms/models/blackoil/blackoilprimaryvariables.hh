@@ -321,6 +321,8 @@ public:
             if( compositionSwitchEnabled )
                 (*this)[compositionSwitchIdx] = Rv;
         }
+
+        checkDefined();
     }
 
     /*!
@@ -554,6 +556,26 @@ public:
             (*this)[i] = value;
 
         return *this;
+    }
+
+    /*!
+     * \brief Instruct valgrind to check the definedness of all attributes of this class.
+     *
+     * We cannot simply check the definedness of the whole object because there might be
+     * "alignedness holes" in the memory layout which are caused by the pseudo primary
+     * variables.
+     */
+    void checkDefined() const
+    {
+#ifndef NDEBUG
+        // check the "real" primary variables
+        for (unsigned i = 0; i < this->size(); ++i)
+            Opm::Valgrind::CheckDefined((*this)[i]);
+
+        // check the "pseudo" primary variables
+        Opm::Valgrind::CheckDefined(primaryVarsMeaning_);
+        Opm::Valgrind::CheckDefined(pvtRegionIdx_);
+#endif // NDEBUG
     }
 
 private:
