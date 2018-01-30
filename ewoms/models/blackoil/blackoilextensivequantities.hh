@@ -79,6 +79,17 @@ public:
         asImp_().updateEnergy(elemCtx, scvfIdx, timeIdx);
     }
 
+    template <class Context, class FluidState>
+    void updateBoundary(const Context& ctx,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& fluidState)
+    {
+        MultiPhaseParent::updateBoundary(ctx, bfIdx, timeIdx, fluidState);
+
+        asImp_().updateEnergyBoundary(ctx, bfIdx, timeIdx, fluidState);
+    }
+
 protected:
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }

@@ -89,26 +89,42 @@ public:
     /*!
      * \copydoc ImmiscibleRateVector::setMassRate
      */
-    void setMassRate(const ParentType& value)
+    void setMassRate(const ParentType& value, unsigned pvtRegionIdx = 0)
     {
         ParentType::operator=(value);
 
-        if (enableEnergy)
-            (*this)[contiEnergyEqIdx] *=
-                GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+        // convert to "surface volume" if requested
+        if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
+            (*this)[FluidSystem::gasCompIdx] /=
+                FluidSystem::referenceDensity(FluidSystem::gasPhaseIdx, pvtRegionIdx);
+            (*this)[FluidSystem::oilCompIdx] /=
+                FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx, pvtRegionIdx);
+            (*this)[FluidSystem::waterCompIdx] /=
+                FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
+        }
     }
 
     /*!
      * \copydoc ImmiscibleRateVector::setMolarRate
      */
-    void setMolarRate(const ParentType& value)
+    void setMolarRate(const ParentType& value, unsigned pvtRegionIdx = 0)
     {
         // first, assign molar rates
         ParentType::operator=(value);
 
         // then, convert them to mass rates
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-            (*this)[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx);
+            (*this)[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx, pvtRegionIdx);
+
+        // convert to "surface volume" if requested
+        if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
+            (*this)[FluidSystem::gasCompIdx] /=
+                FluidSystem::referenceDensity(FluidSystem::gasPhaseIdx, pvtRegionIdx);
+            (*this)[FluidSystem::oilCompIdx] /=
+                FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx, pvtRegionIdx);
+            (*this)[FluidSystem::waterCompIdx] /=
+                FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
+        }
     }
 
     /*!

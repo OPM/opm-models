@@ -546,6 +546,50 @@ public:
         energyFlux_ = deltaT * (-H);
     }
 
+    template <class Context, class BoundaryFluidState>
+    void updateEnergyBoundary(const Context& ctx,
+                              unsigned scvfIdx,
+                              unsigned timeIdx,
+                              const BoundaryFluidState& boundaryFs)
+    {
+        const auto& stencil = ctx.stencil(timeIdx);
+        const auto& scvf = stencil.boundaryFace(scvfIdx);
+
+        unsigned inIdx = scvf.interiorIndex();
+        const auto& inIq = ctx.intensiveQuantities(inIdx, timeIdx);
+        const auto& inFs = inIq.fluidState();
+
+        Evaluation deltaT;
+        if (ctx.focusDofIndex() == inIdx)
+            deltaT =
+                boundaryFs.temperature(/*phaseIdx=*/0)
+                - inFs.temperature(/*phaseIdx=*/0);
+        else
+            deltaT =
+                Opm::decay<Scalar>(boundaryFs.temperature(/*phaseIdx=*/0))
+                - Opm::decay<Scalar>(inFs.temperature(/*phaseIdx=*/0));
+
+        Evaluation lambda;
+        if (ctx.focusDofIndex() == inIdx)
+            lambda = inIq.totalThermalConductivity();
+        else
+            lambda = Opm::decay<Scalar>(inIq.totalThermalConductivity());
+
+        auto distVec = scvf.integrationPos();
+        distVec -= ctx.pos(inIdx, timeIdx);
+
+        if (lambda > 0.0) {
+            // compute the "thermal transmissibility". In contrast to the normal
+            // transmissibility this cannot be done as a preprocessing step because the
+            // average thermal conductivity is analogous to the permeability but depends
+            // on the solution.
+            Scalar alpha = ctx.problem().thermalHalfTransmissibilityBoundary(ctx, scvfIdx);
+            energyFlux_ = deltaT*lambda*(-alpha);
+        }
+        else
+            energyFlux_ = 0.0;
+    }
+
     const Evaluation& energyFlux()  const
     { return energyFlux_; }
 
@@ -566,6 +610,13 @@ public:
     void updateEnergy(const ElementContext& elemCtx OPM_UNUSED,
                       unsigned scvfIdx OPM_UNUSED,
                       unsigned timeIdx OPM_UNUSED)
+    {}
+
+    template <class Context, class BoundaryFluidState>
+    void updateEnergyBoundary(const Context& ctx OPM_UNUSED,
+                              unsigned scvfIdx OPM_UNUSED,
+                              unsigned timeIdx OPM_UNUSED,
+                              const BoundaryFluidState& boundaryFs OPM_UNUSED)
     {}
 
     const Evaluation& energyFlux()  const
