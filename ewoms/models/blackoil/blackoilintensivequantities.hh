@@ -71,6 +71,8 @@ class BlackOilIntensiveQuantities
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -89,7 +91,7 @@ class BlackOilIntensiveQuantities
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
+    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy> FluidState;
 
 public:
     BlackOilIntensiveQuantities()
