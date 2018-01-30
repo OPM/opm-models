@@ -120,10 +120,16 @@ public:
     typedef Opm::FluidSystems::BlackOil<Scalar> type;
 };
 
-// by default, the ECL solvent module is disabled
+// by default, all ECL extension modules are disabled
 SET_BOOL_PROP(BlackOilModel, EnableSolvent, false);
 SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
-// by default, ebos formulates the conservation equations in terms of mass not surface volumes
+
+//! By default, the blackoil model is isothermal and does not conserve energy
+SET_BOOL_PROP(BlackOilModel, EnableTemperature, false);
+SET_BOOL_PROP(BlackOilModel, EnableEnergy, false);
+
+// by default, ebos formulates the conservation equations in terms of mass not surface
+// volumes
 SET_BOOL_PROP(BlackOilModel, BlackoilConserveSurfaceVolume, false);
 } // namespace Properties
 

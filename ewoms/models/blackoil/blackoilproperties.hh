@@ -50,6 +50,16 @@ NEW_PROP_TAG(EnableSolvent);
 NEW_PROP_TAG(EnablePolymer);
 //! Enable surface volume scaling
 NEW_PROP_TAG(BlackoilConserveSurfaceVolume);
+
+//! Allow the spatial and temporal domains to exhibit non-constant temperature
+//! in the black-oil model
+NEW_PROP_TAG(EnableTemperature);
+
+//! Enable the ECL-blackoil extension for energy conservation
+//!
+//! Setting this property to true implies EnableTemperature.
+NEW_PROP_TAG(EnableEnergy);
+
 }} // namespace Properties, Ewoms
 
 #endif
