@@ -31,6 +31,7 @@
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
+#include "blackoilenergymodules.hh"
 
 #include <ewoms/disc/common/fvbaseprimaryvariables.hh>
 
@@ -89,6 +90,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
@@ -97,7 +99,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef BlackOilSolventModule<TypeTag, enableSolvent> SolventModule;
     typedef BlackOilPolymerModule<TypeTag, enablePolymer> PolymerModule;
-
+    typedef BlackOilEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     static_assert(numPhases == 3, "The black-oil model assumes three phases!");
     static_assert(numComponents == 3, "The black-oil model assumes three components!");
@@ -253,6 +255,9 @@ public:
 
         // set the primary variables of the polymer module
         PolymerModule::assignPrimaryVars(*this, solSat);
+
+        // set the primary variables of the energy module
+        EnergyModule::assignPrimaryVars(*this, solSat);
     }
 
     /*!
@@ -269,6 +274,9 @@ public:
         bool oilPresent = (fluidState.saturation(oilPhaseIdx) > 0.0);
         static const Scalar thresholdWaterFilledCell = 1.0 - 1e-6;
         bool onlyWater = (fluidState.saturation(waterPhaseIdx) > thresholdWaterFilledCell);
+
+        // deal with the primary variables for the energy extension
+        EnergyModule::assignPrimaryVars(*this, fluidState);
 
         // determine the meaning of the primary variables
         if ((gasPresent && oilPresent) || onlyWater)
@@ -601,6 +609,14 @@ private:
         return (*this)[Indices::polymerConcentrationIdx];
     }
 
+    Scalar temperature_() const
+    {
+        if (!enableEnergy)
+            return FluidSystem::reservoirTemperature();
+
+        return (*this)[Indices::temperatureIdx];
+    }
+
     template <class Container>
     void computeCapillaryPressures_(Container& result,
                                     Scalar So,
@@ -627,10 +643,6 @@ private:
 
         MaterialLaw::capillaryPressures(result, matParams, fluidState);
     }
-
-    // the standard blackoil model is isothermal
-    Scalar temperature_() const
-    { return FluidSystem::surfaceTemperature; }
 
     PrimaryVarsMeaning primaryVarsMeaning_;
     unsigned short pvtRegionIdx_;

@@ -59,6 +59,8 @@ class BlackOilRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { contiEnergyEqIdx = Indices::contiEnergyEqIdx };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Evaluation, numEq> ParentType;
@@ -88,7 +90,13 @@ public:
      * \copydoc ImmiscibleRateVector::setMassRate
      */
     void setMassRate(const ParentType& value)
-    { ParentType::operator=(value); }
+    {
+        ParentType::operator=(value);
+
+        if (enableEnergy)
+            (*this)[contiEnergyEqIdx] *=
+                GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+    }
 
     /*!
      * \copydoc ImmiscibleRateVector::setMolarRate

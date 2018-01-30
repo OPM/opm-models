@@ -140,6 +140,15 @@ public:
                                  unsigned timeIdx OPM_UNUSED) const
     { return 1e5; }
 
+    /*!
+     * \brief Returns the reference temperature
+     *
+     * This is only relevant for temperature dependent quantities, in particular those
+     * needed by the module for energy conservation.
+     */
+    Scalar referenceTemperature() const
+    { return 273.15 + 15.56; /* [K] */ }
+
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)
     Implementation& asImp_()

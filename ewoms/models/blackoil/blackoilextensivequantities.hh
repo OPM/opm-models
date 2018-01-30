@@ -31,7 +31,7 @@
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
-
+#include "blackoilenergymodules.hh"
 
 #include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 
@@ -53,14 +53,13 @@ class BlackOilExtensiveQuantities
     : public MultiPhaseBaseExtensiveQuantities<TypeTag>
     , public BlackOilSolventExtensiveQuantities<TypeTag>
     , public BlackOilPolymerExtensiveQuantities<TypeTag>
+    , public BlackOilEnergyExtensiveQuantities<TypeTag>
 {
     typedef MultiPhaseBaseExtensiveQuantities<TypeTag> MultiPhaseParent;
-    typedef BlackOilSolventExtensiveQuantities<TypeTag> SolventParent;
-    typedef BlackOilPolymerExtensiveQuantities<TypeTag> PolymerParent;
-
 
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
 public:
     /*!
@@ -77,6 +76,7 @@ public:
 
         asImp_().updateSolvent(elemCtx, scvfIdx, timeIdx);
         asImp_().updatePolymer(elemCtx, scvfIdx, timeIdx);
+        asImp_().updateEnergy(elemCtx, scvfIdx, timeIdx);
     }
 
 protected:

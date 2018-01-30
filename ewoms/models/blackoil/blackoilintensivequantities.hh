@@ -31,7 +31,7 @@
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
-
+#include "blackoilenergymodules.hh"
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
@@ -54,6 +54,7 @@ class BlackOilIntensiveQuantities
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
     , public BlackOilSolventIntensiveQuantities<TypeTag>
     , public BlackOilPolymerIntensiveQuantities<TypeTag>
+    , public BlackOilEnergyIntensiveQuantities<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
@@ -111,10 +112,10 @@ public:
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);
 
-        //fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
-
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+
+        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx);
 
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
@@ -329,7 +330,7 @@ public:
 
         asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
         asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
-
+        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
 
         // update the quantities which are required by the chosen
         // velocity model
@@ -399,7 +400,7 @@ public:
 private:
     friend BlackOilSolventIntensiveQuantities<TypeTag>;
     friend BlackOilPolymerIntensiveQuantities<TypeTag>;
-
+    friend BlackOilEnergyIntensiveQuantities<TypeTag>;
 
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }

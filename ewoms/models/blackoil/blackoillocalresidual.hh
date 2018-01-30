@@ -31,7 +31,9 @@
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
+#include "blackoilenergymodules.hh"
 
+#include <opm/material/fluidstates/BlackOilFluidState.hpp>
 
 namespace Ewoms {
 /*!
@@ -70,11 +72,12 @@ class BlackOilLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     static const bool waterEnabled = Indices::waterEnabled;
 
     static constexpr bool blackoilConserveSurfaceVolume = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume);
+    static constexpr bool enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy);
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
-
+    typedef BlackOilEnergyModule<TypeTag> EnergyModule;
 
 public:
     /*!
@@ -138,12 +141,15 @@ public:
             storage[conti0EqIdx + activeOilCompIdx] *=
                     FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
         }
+
         // deal with solvents (if present)
         SolventModule::addStorage(storage, intQuants);
 
         // deal with polymer (if present)
         PolymerModule::addStorage(storage, intQuants);
 
+        // deal with energy (if present)
+        EnergyModule::addStorage(storage, intQuants);
     }
 
     /*!
@@ -188,6 +194,9 @@ public:
 
         // deal with polymer (if present)
         PolymerModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
+
+        // deal with energy (if present)
+        EnergyModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 
     /*!
@@ -200,6 +209,12 @@ public:
     {
         // retrieve the source term intrinsic to the problem
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
+
+        // scale the source term of the energy equation
+        if (enableEnergy) {
+            static const Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+            source[Indices::contiEnergyEqIdx] *= alpha;
+        }
     }
 
 protected:

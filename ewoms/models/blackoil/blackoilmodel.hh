@@ -131,6 +131,10 @@ SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
 SET_BOOL_PROP(BlackOilModel, EnableTemperature, false);
 SET_BOOL_PROP(BlackOilModel, EnableEnergy, false);
 
+//! by default, don't scale the energy equation, i.e. assume that a reasonable linear
+//! solver is used. (Not scaling it makes debugging quite a bit easier.)
+SET_SCALAR_PROP(BlackOilModel, BlackOilEnergyScalingFactor, 1.0);
+
 // by default, ebos formulates the conservation equations in terms of mass not surface
 // volumes
 SET_BOOL_PROP(BlackOilModel, BlackoilConserveSurfaceVolume, false);
@@ -222,7 +226,7 @@ class BlackOilModel
 
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
-
+    typedef BlackOilEnergyModule<TypeTag> EnergyModule;
 public:
     BlackOilModel(Simulator& simulator)
         : ParentType(simulator)
@@ -237,6 +241,7 @@ public:
 
         SolventModule::registerParameters();
         PolymerModule::registerParameters();
+        EnergyModule::registerParameters();
 
         // register runtime parameters of the VTK output modules
         Ewoms::VtkBlackOilModule<TypeTag>::registerParameters();
@@ -266,6 +271,8 @@ public:
             return SolventModule::primaryVarName(pvIdx);
         else if (PolymerModule::primaryVarApplies(pvIdx))
             return PolymerModule::primaryVarName(pvIdx);
+        else if (EnergyModule::primaryVarApplies(pvIdx))
+            return EnergyModule::primaryVarName(pvIdx);
         else
             assert(false);
 
@@ -285,6 +292,8 @@ public:
             return SolventModule::eqName(eqIdx);
         else if (PolymerModule::eqApplies(eqIdx))
             return PolymerModule::eqName(eqIdx);
+        else if (EnergyModule::eqApplies(eqIdx))
+            return EnergyModule::eqName(eqIdx);
         else
             assert(false);
 
@@ -318,6 +327,10 @@ public:
         else if (PolymerModule::primaryVarApplies(pvIdx))
             return PolymerModule::primaryVarWeight(pvIdx);
 
+        // deal with primary variables stemming from the energy module
+        else if (EnergyModule::primaryVarApplies(pvIdx))
+            return EnergyModule::primaryVarWeight(pvIdx);
+
         // if the primary variable is either the gas saturation, Rs or Rv
         assert(Indices::compositionSwitchIdx == pvIdx);
 
@@ -348,6 +361,9 @@ public:
 
         else if (PolymerModule::eqApplies(eqIdx))
             return PolymerModule::eqWeight(eqIdx);
+
+        else if (EnergyModule::eqApplies(eqIdx))
+            return EnergyModule::eqWeight(eqIdx);
 
         // it is said that all kilograms are equal!
         return 1.0;
@@ -381,7 +397,7 @@ public:
 
         SolventModule::serializeEntity(*this, outstream, dof);
         PolymerModule::serializeEntity(*this, outstream, dof);
-
+        EnergyModule::serializeEntity(*this, outstream, dof);
     }
 
     /*!
@@ -418,6 +434,7 @@ public:
 
         SolventModule::deserializeEntity(*this, instream, dof);
         PolymerModule::deserializeEntity(*this, instream, dof);
+        EnergyModule::deserializeEntity(*this, instream, dof);
 
         typedef typename PrimaryVariables::PrimaryVarsMeaning PVM;
         priVars.setPrimaryVarsMeaning(static_cast<PVM>(primaryVarsMeaning));
@@ -477,6 +494,7 @@ protected:
         // add the VTK output modules which make sense for the blackoil model
         SolventModule::registerOutputModules(*this, this->simulator_);
         PolymerModule::registerOutputModules(*this, this->simulator_);
+        EnergyModule::registerOutputModules(*this, this->simulator_);
 
         this->addOutputModule(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
         this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));

@@ -60,6 +60,15 @@ NEW_PROP_TAG(EnableTemperature);
 //! Setting this property to true implies EnableTemperature.
 NEW_PROP_TAG(EnableEnergy);
 
+//! The relative weight of the residual of the energy equation compared to the mass
+//! residuals
+//!
+//! this is basically a hack to work around the limitation that the convergence criterion
+//! of unmodified dune-istl linear solvers cannot weight the individual equations. if the
+//! energy equation is not scaled, its absolute value is normally several orders of
+//! magnitude larger than that of the mass balance equations
+NEW_PROP_TAG(BlackOilEnergyScalingFactor);
+
 }} // namespace Properties, Ewoms
 
 #endif
