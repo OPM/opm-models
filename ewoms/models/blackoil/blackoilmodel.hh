@@ -71,6 +71,7 @@ NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
                                           VtkBlackOil,
                                           VtkBlackOilSolvent,
                                           VtkBlackOilPolymer,
+                                          VtkBlackOilEnergy,
                                           VtkComposition));
 
 //! Set the local residual function

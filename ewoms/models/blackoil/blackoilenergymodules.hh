@@ -29,6 +29,7 @@
 #define EWOMS_BLACK_OIL_ENERGY_MODULE_HH
 
 #include "blackoilproperties.hh"
+#include <ewoms/io/vtkblackoilenergymodule.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
@@ -79,6 +80,8 @@ public:
         if (!enableEnergy)
             // energys have been disabled at compile time
             return;
+
+        Ewoms::VtkBlackOilEnergyModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -90,6 +93,8 @@ public:
         if (!enableEnergy)
             // energys have been disabled at compile time
             return;
+
+        model.addOutputModule(new Ewoms::VtkBlackOilEnergyModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
