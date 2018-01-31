@@ -41,7 +41,7 @@
 
 #include <opm/common/Valgrind.hpp>
 
-#include <opm/common/ResetLocale.hpp>
+#include <opm/common/utility/ResetLocale.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/common/version.hh>
