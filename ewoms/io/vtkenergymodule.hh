@@ -41,16 +41,16 @@ namespace Properties {
 NEW_TYPE_TAG(VtkEnergy);
 
 // create the property tags needed for the energy module
-NEW_PROP_TAG(VtkWriteSolidHeatCapacity);
-NEW_PROP_TAG(VtkWriteHeatConductivity);
+NEW_PROP_TAG(VtkWriteSolidInternalEnergy);
+NEW_PROP_TAG(VtkWriteThermalConductivity);
 NEW_PROP_TAG(VtkWriteInternalEnergies);
 NEW_PROP_TAG(VtkWriteEnthalpies);
 NEW_PROP_TAG(VtkOutputFormat);
 NEW_PROP_TAG(EnableVtkOutput);
 
 // set default values for what quantities to output
-SET_BOOL_PROP(VtkEnergy, VtkWriteSolidHeatCapacity, false);
-SET_BOOL_PROP(VtkEnergy, VtkWriteHeatConductivity, false);
+SET_BOOL_PROP(VtkEnergy, VtkWriteSolidInternalEnergy, false);
+SET_BOOL_PROP(VtkEnergy, VtkWriteThermalConductivity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteInternalEnergies, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
 } // namespace Properties
@@ -66,8 +66,9 @@ namespace Ewoms {
  * This module deals with the following quantities:
  * - Specific enthalpy of all fluid phases
  * - Specific internal energy of all fluid phases
- * - Specific heat capacity of the solid phase
- * - Lumped heat conductivity (solid phase plus all fluid phases)
+ * - Volumetric internal energy of the solid phase
+ * - Total thermal conductivity, i.e. the conductivity of the solid and all fluid phases
+ *   combined
  */
 template <class TypeTag>
 class VtkEnergyModule : public BaseOutputModule<TypeTag>
@@ -100,11 +101,11 @@ public:
      */
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity,
-                             "Include the specific heat capacities of rock "
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteSolidInternalEnergy,
+                             "Include the volumetric internal energy of solid"
                              "matrix in the VTK output files");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteHeatConductivity,
-                             "Include the lumped heat conductivity of the "
+        EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteThermalConductivity,
+                             "Include the total thermal conductivity of the"
                              "medium in the VTK output files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, VtkWriteEnthalpies,
                              "Include the specific enthalpy of the phases in "
@@ -125,10 +126,10 @@ public:
         if (internalEnergyOutput_())
             this->resizePhaseBuffer_(internalEnergy_);
 
-        if (solidHeatCapacityOutput_())
-            this->resizeScalarBuffer_(solidHeatCapacity_);
-        if (heatConductivityOutput_())
-            this->resizeScalarBuffer_(heatConductivity_);
+        if (solidInternalEnergyOutput_())
+            this->resizeScalarBuffer_(solidInternalEnergy_);
+        if (thermalConductivityOutput_())
+            this->resizeScalarBuffer_(thermalConductivity_);
     }
 
     /*!
@@ -145,10 +146,10 @@ public:
             const auto& intQuants = elemCtx.intensiveQuantities(i, /*timeIdx=*/0);
             const auto& fs = intQuants.fluidState();
 
-            if (solidHeatCapacityOutput_())
-                solidHeatCapacity_[I] = Toolbox::value(intQuants.heatCapacitySolid());
-            if (heatConductivityOutput_())
-                heatConductivity_[I] = Toolbox::value(intQuants.heatConductivity());
+            if (solidInternalEnergyOutput_())
+                solidInternalEnergy_[I] = Toolbox::value(intQuants.solidInternalEnergy());
+            if (thermalConductivityOutput_())
+                thermalConductivity_[I] = Toolbox::value(intQuants.thermalConductivity());
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (enthalpyOutput_())
@@ -169,10 +170,10 @@ public:
             return;
         }
 
-        if (solidHeatCapacityOutput_())
-            this->commitScalarBuffer_(baseWriter, "heatCapacitySolid", solidHeatCapacity_);
-        if (heatConductivityOutput_())
-            this->commitScalarBuffer_(baseWriter, "heatConductivity", heatConductivity_);
+        if (solidInternalEnergyOutput_())
+            this->commitScalarBuffer_(baseWriter, "internalEnergySolid", solidInternalEnergy_);
+        if (thermalConductivityOutput_())
+            this->commitScalarBuffer_(baseWriter, "thermalConductivity", thermalConductivity_);
 
         if (enthalpyOutput_())
             this->commitPhaseBuffer_(baseWriter, "enthalpy_%s", enthalpy_);
@@ -181,11 +182,11 @@ public:
     }
 
 private:
-    static bool solidHeatCapacityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidHeatCapacity); }
+    static bool solidInternalEnergyOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidInternalEnergy); }
 
-    static bool heatConductivityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteHeatConductivity); }
+    static bool thermalConductivityOutput_()
+    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteThermalConductivity); }
 
     static bool enthalpyOutput_()
     { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEnthalpies); }
@@ -196,8 +197,8 @@ private:
     PhaseBuffer enthalpy_;
     PhaseBuffer internalEnergy_;
 
-    ScalarBuffer heatConductivity_;
-    ScalarBuffer solidHeatCapacity_;
+    ScalarBuffer thermalConductivity_;
+    ScalarBuffer solidInternalEnergy_;
 };
 
 } // namespace Ewoms

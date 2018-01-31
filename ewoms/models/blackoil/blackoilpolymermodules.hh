@@ -206,8 +206,8 @@ public:
                 const auto& plyshlogTable = plyshlogTables.template getTable<Opm::PlyshlogTable>(pvtRegionIdx);
 
                 Scalar plyshlogRefPolymerConcentration = plyshlogTable.getRefPolymerConcentration();
-                std::vector<Scalar> waterVelocity = plyshlogTable.getWaterVelocityColumn().vectorCopy();
-                std::vector<Scalar> shearMultiplier = plyshlogTable.getShearMultiplierColumn().vectorCopy();
+                auto waterVelocity = plyshlogTable.getWaterVelocityColumn().vectorCopy();
+                auto shearMultiplier = plyshlogTable.getShearMultiplierColumn().vectorCopy();
 
                 // do the unit version here for the waterVelocity
                 Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();

@@ -105,7 +105,7 @@ public:
         for (int phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             asImp_().addPhaseStorage(storage, elemCtx, dofIdx, timeIdx, phaseIdx);
 
-        EnergyModule::addSolidHeatStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
+        EnergyModule::addSolidEnergyStorage(storage, elemCtx.intensiveQuantities(dofIdx, timeIdx));
     }
 
     /*!
@@ -157,9 +157,8 @@ public:
     /*!
      * \brief Adds the diffusive flux at a given flux integration point.
      *
-     * For the immiscible model, this is a no-op for mass fluxes. For
-     * energy it adds the contribution of heat conduction to the
-     * enthalpy flux.
+     * For the immiscible model, this is a no-op for mass fluxes. For energy it adds the
+     * contribution of thermal conduction to the enthalpy flux.
      *
      * \copydetails computeFlux
      */
@@ -170,7 +169,7 @@ public:
     {
         // no diffusive mass fluxes for the immiscible model
 
-        // heat conduction
+        // thermal conduction
         EnergyModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
     }
 

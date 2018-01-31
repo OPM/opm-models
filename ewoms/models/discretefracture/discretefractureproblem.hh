@@ -42,7 +42,7 @@
 
 namespace Ewoms {
 namespace Properties {
-NEW_PROP_TAG(HeatConductionLawParams);
+NEW_PROP_TAG(ThermalConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(FluxModule);
 }

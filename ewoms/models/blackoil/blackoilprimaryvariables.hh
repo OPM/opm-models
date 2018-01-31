@@ -300,7 +300,7 @@ public:
                 (*this)[compositionSwitchIdx] = FsToolbox::value(fluidState.saturation(gasPhaseIdx));
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-            const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
+            const auto& Rs = Opm::BlackOil::getRs_<FluidSystem, FluidState, Scalar>(fluidState, pvtRegionIdx_);
 
             if (waterEnabled)
                 (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
@@ -311,7 +311,7 @@ public:
         else {
             assert(primaryVarsMeaning() == Sw_pg_Rv);
 
-            const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, Scalar, FluidState>(fluidState, pvtRegionIdx_);
+            const auto& Rv = Opm::BlackOil::getRv_<FluidSystem, FluidState, Scalar>(fluidState, pvtRegionIdx_);
             if (waterEnabled)
                 (*this)[waterSaturationIdx] = FsToolbox::value(fluidState.saturation(waterPhaseIdx));
 
@@ -380,20 +380,18 @@ public:
                 // PVT objects to calculate the mole fraction of gas saturated oil.
                 Scalar po = (*this)[Indices::pressureSwitchIdx];
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
+                Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
                 Scalar RsSat = FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
                                                                                    T,
                                                                                    po,
                                                                                    So2,
                                                                                    SoMax);
+
                 setPrimaryVarsMeaning(Sw_po_Rs);
                 if (compositionSwitchEnabled)
-                    (*this)[Indices::compositionSwitchIdx] = RsSat;
-
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
+                    (*this)[Indices::compositionSwitchIdx] =
+                        std::min(RsMax, RsSat);
                 return true;
             }
 
@@ -413,22 +411,18 @@ public:
                 // we start at the Rv value that corresponds to that of oil-saturated
                 // hydrocarbon gas
                 Scalar T = asImp_().temperature_();
-                Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+                Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
+                Scalar RvMax = problem.maxOilVaporizationFactor(globalDofIdx);
                 Scalar RvSat =
                     FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                          T,
                                                                          pg,
-                                                                         0.0,
+                                                                         Scalar(0),
                                                                          SoMax);
-
                 setPrimaryVarsMeaning(Sw_pg_Rv);
                 (*this)[Indices::pressureSwitchIdx] = pg;
                 if (compositionSwitchEnabled)
-                    (*this)[Indices::compositionSwitchIdx] = RvSat;
-
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
+                    (*this)[Indices::compositionSwitchIdx] = std::min(RvMax, RvSat);
 
                 return true;
             }
@@ -436,7 +430,6 @@ public:
             return false;
         }
         else if (primaryVarsMeaning() == Sw_po_Rs) {
-
             assert(compositionSwitchEnabled);
 
             // special case for cells with almost only water
@@ -449,10 +442,6 @@ public:
 
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
                 return true;
             }
 
@@ -462,19 +451,21 @@ public:
             Scalar T = asImp_().temperature_();
             Scalar po = (*this)[Indices::pressureSwitchIdx];
             Scalar So = 1.0 - Sw - solventSaturation();
-            Scalar SoMax = std::max(So, problem.model().maxOilSaturation(globalDofIdx));
+            Scalar SoMax = std::max(So, problem.maxOilSaturation(globalDofIdx));
+            Scalar RsMax = problem.maxGasDissolutionFactor(globalDofIdx);
             Scalar RsSat =
-                FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_, T, po, So, SoMax);
+                FluidSystem::oilPvt().saturatedGasDissolutionFactor(pvtRegionIdx_,
+                                                                    T,
+                                                                    po,
+                                                                    So,
+                                                                    SoMax);
+
             Scalar Rs = (*this)[Indices::compositionSwitchIdx];
-            if (Rs > RsSat*(1.0 + eps)) {
+            if (Rs > std::min(RsMax, RsSat*(1.0 + eps))) {
                 // the gas phase appears, i.e., switch the primary variables to { Sw, po,
                 // Sg }.
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
-
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }
@@ -509,10 +500,6 @@ public:
                 (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
-
                 return true;
             }
 
@@ -521,7 +508,8 @@ public:
             // than what saturated gas contains. Note that we use the blackoil specific
             // low-level PVT objects here for performance reasons.
             Scalar T = asImp_().temperature_();
-            Scalar SoMax = problem.model().maxOilSaturation(globalDofIdx);
+            Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
+            Scalar RvMax = problem.maxOilVaporizationFactor(globalDofIdx);
             Scalar RvSat =
                 FluidSystem::gasPvt().saturatedOilVaporizationFactor(pvtRegionIdx_,
                                                                      T,
@@ -530,7 +518,7 @@ public:
                                                                      SoMax);
 
             Scalar Rv = (*this)[Indices::compositionSwitchIdx];
-            if (Rv > RvSat*(1.0 + eps)) {
+            if (Rv > std::min(RvMax, RvSat*(1.0 + eps))) {
                 // switch to phase equilibrium mode because the oil phase appears. here
                 // we also need the capillary pressures to calculate the oil phase
                 // pressure using the gas phase pressure
@@ -546,10 +534,6 @@ public:
                 setPrimaryVarsMeaning(Sw_po_Sg);
                 (*this)[Indices::pressureSwitchIdx] = po;
                 (*this)[Indices::compositionSwitchIdx] = Sg; // hydrocarbon gas saturation
-
-                // because more than one primary variable switch can occur at a time,
-                // call this method recursively
-                asImp_().adaptPrimaryVariables(problem, globalDofIdx, eps);
 
                 return true;
             }

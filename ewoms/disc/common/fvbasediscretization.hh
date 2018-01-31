@@ -66,7 +66,11 @@
 #include <dune/istl/bvector.hh>
 
 #if HAVE_DUNE_FEM
+#if DUNE_VERSION_NEWER(DUNE_FEM, 2,6)
+#include <dune/fem/space/common/adaptationmanager.hh>
+#else
 #include <dune/fem/space/common/adaptmanager.hh>
+#endif
 #include <dune/fem/space/common/restrictprolongtuple.hh>
 #include <dune/fem/function/blockvectorfunction.hh>
 #include <dune/fem/misc/capabilities.hh>
@@ -87,14 +91,22 @@ namespace Properties {
 SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
 
 //! Mapper for the grid view's vertices.
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
 SET_TYPE_PROP(FvBaseDiscretization, VertexMapper,
-              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView),
-                                                        Dune::MCMGVertexLayout>);
+              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView)>);
+#else
+SET_TYPE_PROP(FvBaseDiscretization, VertexMapper,
+              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView), Dune::MCMGVertexLayout>);
+#endif
 
 //! Mapper for the grid view's elements.
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
 SET_TYPE_PROP(FvBaseDiscretization, ElementMapper,
-              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView),
-                                                        Dune::MCMGElementLayout>);
+              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView)>);
+#else
+SET_TYPE_PROP(FvBaseDiscretization, ElementMapper,
+              Dune::MultipleCodimMultipleGeomTypeMapper<typename GET_PROP_TYPE(TypeTag, GridView), Dune::MCMGElementLayout>);
+#endif
 
 //! marks the border indices (required for the algebraic overlap stuff)
 SET_PROP(FvBaseDiscretization, BorderListCreator)
@@ -356,8 +368,13 @@ public:
     FvBaseDiscretization(Simulator& simulator)
         : simulator_(simulator)
         , gridView_(simulator.gridView())
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        , elementMapper_(gridView_, Dune::mcmgElementLayout())
+        , vertexMapper_(gridView_, Dune::mcmgVertexLayout())
+#else
         , elementMapper_(gridView_)
         , vertexMapper_(gridView_)
+#endif
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
@@ -367,6 +384,9 @@ public:
         , space_( asImp_().numGridDof() )
 #endif
         , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
+        , enableIntensiveQuantityCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache))
+        , enableStorageCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache))
+        , enableThermodynamicHints_(EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints))
     {
 #if HAVE_DUNE_FEM
         if (enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
@@ -600,7 +620,7 @@ public:
      */
     const IntensiveQuantities* thermodynamicHint(unsigned globalIdx, unsigned timeIdx) const
     {
-        if (!enableThermodynamicHints_())
+        if (!enableThermodynamicHints_)
             return 0;
 
         // the intensive quantities cache doubles as thermodynamic hint
@@ -620,7 +640,7 @@ public:
      */
     const IntensiveQuantities* cachedIntensiveQuantities(unsigned globalIdx, unsigned timeIdx) const
     {
-        if (!enableIntensiveQuantitiesCache_() ||
+        if (!enableIntensiveQuantityCache_ ||
             !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
@@ -1250,15 +1270,21 @@ public:
 
                 // if the grid has potentially changed, we need to re-create the
                 // supporting data structures.
+                elementMapper_.update();
+                vertexMapper_.update();
                 resetLinearizer();
+
+                // this is a bit hacky because it supposes that Problem::finishInit()
+                // works fine multiple times in a row.
+                //
+                // TODO: move this to Problem::gridChanged()
                 finishInit();
 
                 // notify the problem that the grid has changed
+                //
+                // TODO: come up with a mechanism to access the unadapted data structures
+                // outside of the problem (i.e., grid, mappers, solutions)
                 simulator_.problem().gridChanged();
-
-                // update the entity mappers
-                elementMapper_.update();
-                vertexMapper_.update();
 
                 // notify the modules for visualization output
                 auto outIt = outputModules_.begin();
@@ -1689,8 +1715,8 @@ public:
     /*!
      * \brief Returns true if the cache for intensive quantities is enabled
      */
-    static bool storeIntensiveQuantities()
-    { return enableIntensiveQuantitiesCache_() || enableThermodynamicHints_(); }
+    bool storeIntensiveQuantities() const
+    { return enableIntensiveQuantityCache_ || enableThermodynamicHints_; }
 
 #if HAVE_DUNE_FEM
     AdaptationManager& adaptationManager()
@@ -1747,12 +1773,6 @@ protected:
                                     unsigned dofIdx OPM_UNUSED,
                                     unsigned timeIdx OPM_UNUSED)
     { }
-
-    static bool enableIntensiveQuantitiesCache_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache); }
-
-    static bool enableThermodynamicHints_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints); }
 
     /*!
      * \brief Register all output modules which make sense for the model.
@@ -1832,9 +1852,12 @@ protected:
     std::vector<Scalar> dofTotalVolume_;
     std::vector<bool> isLocalDof_;
 
-    bool enableGridAdaptation_;
     mutable GlobalEqVector storageCache_[historySize];
+
+    bool enableGridAdaptation_;
+    bool enableIntensiveQuantityCache_;
     bool enableStorageCache_;
+    bool enableThermodynamicHints_;
 };
 } // namespace Ewoms
 

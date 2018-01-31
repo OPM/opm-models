@@ -48,19 +48,17 @@
 #if EBOS_USE_ALUGRID
 #include "eclalugridmanager.hh"
 #else
-#include "eclpolyhedralgridmanager.hh"
+//#include "eclpolyhedralgridmanager.hh"
 #include "eclcpgridmanager.hh"
 #endif
 #include "eclwellmanager.hh"
 #include "eclequilinitializer.hh"
 #include "eclwriter.hh"
-#include "eclsummarywriter.hh"
 #include "ecloutputblackoilmodule.hh"
 #include "ecltransmissibility.hh"
 #include "eclthresholdpressure.hh"
 #include "ecldummygradientcalculator.hh"
 #include "eclfluxmodule.hh"
-#include "ecldeckunits.hh"
 
 #include <ewoms/common/pffgridvector.hh>
 #include <ewoms/models/blackoil/blackoilmodel.hh>
@@ -80,6 +78,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/common/Exceptions.hpp>
 
@@ -87,10 +86,13 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
+#include <opm/output/eclipse/EclipseIO.hpp>
+
 #include <boost/date_time.hpp>
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace Ewoms {
 template <class TypeTag>
@@ -118,9 +120,6 @@ NEW_PROP_TAG(DisableWells);
 // macro undefined). Next to a slightly better performance, this also eliminates some
 // print statements in debug mode.
 NEW_PROP_TAG(EnableDebuggingChecks);
-
-// If this property is set to false, the SWATINIT keyword will not be handled by ebos.
-NEW_PROP_TAG(EnableSwatinit);
 
 // Set the problem property
 SET_TYPE_PROP(EclBaseProblem, Problem, Ewoms::EclProblem<TypeTag>);
@@ -208,9 +207,6 @@ SET_BOOL_PROP(EclBaseProblem, EnableVtkOutput, false);
 // ... but enable the ECL output by default
 SET_BOOL_PROP(EclBaseProblem, EnableEclOutput, true);
 
-// also enable the summary output.
-SET_BOOL_PROP(EclBaseProblem, EnableEclSummaryOutput, true);
-
 // the cache for intensive quantities can be used for ECL problems and also yields a
 // decent speedup...
 SET_BOOL_PROP(EclBaseProblem, EnableIntensiveQuantityCache, true);
@@ -238,8 +234,6 @@ SET_BOOL_PROP(EclBaseProblem, DisableWells, false);
 // By default, we enable the debugging checks if we're compiled in debug mode
 SET_BOOL_PROP(EclBaseProblem, EnableDebuggingChecks, true);
 
-// ebos handles the SWATINIT keyword by default
-SET_BOOL_PROP(EclBaseProblem, EnableSwatinit, true);
 } // namespace Properties
 
 /*!
@@ -292,12 +286,17 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
 
-    typedef Opm::CompositionalFluidState<Scalar, FluidSystem> ScalarFluidState;
+    typedef Opm::BlackOilFluidState<Scalar,
+            FluidSystem,
+            /*enableTemperature=*/true> InitialFluidState;
+
     typedef Opm::MathToolbox<Evaluation> Toolbox;
-    typedef Ewoms::EclSummaryWriter<TypeTag> EclSummaryWriter;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef EclWriter<TypeTag> EclWriterType;
+
+    typedef typename GridView::template Codim<0>::Iterator ElementIterator;
+
 
     struct RockParams {
         Scalar referencePressure;
@@ -311,8 +310,6 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
-
-        Ewoms::EclOutputBlackOilModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableWriteAllSolutions,
                              "Write all solutions to disk instead of only the ones for the "
@@ -332,20 +329,17 @@ public:
         , transmissibilities_(simulator.gridManager())
         , thresholdPressures_(simulator)
         , wellManager_(simulator)
-        , deckUnits_(simulator)
         , eclWriter_( EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput)
                         ? new EclWriterType(simulator) : nullptr )
-        , summaryWriter_(simulator)
         , pffDofData_(simulator.gridView(), this->elementMapper())
     {
-        // add the output module for the Ecl binary output
-        simulator.model().addOutputModule(new Ewoms::EclOutputBlackOilModule<TypeTag>(simulator));
-
-        // Tell the solvent module to initialize its internal data structures
+        // Tell the extra modules to initialize its internal data structures
         const auto& gridManager = simulator.gridManager();
         SolventModule::initFromDeck(gridManager.deck(), gridManager.eclState());
         PolymerModule::initFromDeck(gridManager.deck(), gridManager.eclState());
 
+        // Hack to compute the initial thpressure values for restarts
+        restartApplied = false;
     }
 
     /*!
@@ -364,6 +358,51 @@ public:
         const auto& deck = simulator.gridManager().deck();
         if (!deck.hasKeyword("NOGRAV") && EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             this->gravity_[dim - 1] = 9.80665;
+
+        // this is actually not fully correct: the latest occurence of VAPPARS and DRSDT
+        // or DRVDT up to the current time step in the schedule section counts, presence
+        // of VAPPARS alone is not sufficient to disable DR[SV]DT. TODO: implment support
+        // for this in opm-parser's Schedule object"
+        drsdtActive_ = false;
+        drvdtActive_ = false;
+        vapparsActive_ = false;
+
+        if (deck.hasKeyword("VAPPARS")) {
+            vapparsActive_ = true;
+
+            size_t numDof = this->model().numGridDof();
+            maxOilSaturation_.resize(numDof, 0.0);
+
+            // TODO: update the PVT objects. this is only required if VAPPARS becomes a
+            // fully dynamic keyword.
+        }
+
+        // deal with DRSDT
+        maxDRsDt_ = 0.0;
+        maxDRs_ = -1.0;
+        if (!vapparsActive_ && deck.hasKeyword("DRSDT")) {
+            drsdtActive_ = !vapparsActive_;
+            const auto& drsdtKeyword = deck.getKeyword("DRSDT");
+            maxDRsDt_ = drsdtKeyword.getRecord(0).getItem("DRSDT_MAX").getSIDouble(0);
+            size_t numDof = this->model().numGridDof();
+            lastRs_.resize(numDof, 0.0);
+
+            std::string drsdtFlag =
+                drsdtKeyword.getRecord(0).getItem("Option").getTrimmedString(0);
+            std::transform(drsdtFlag.begin(), drsdtFlag.end(), drsdtFlag.begin(), ::toupper);
+
+            dRsDtOnlyFreeGas_ = (drsdtFlag == "FREE");
+        }
+
+        // deal with DRVDT
+        maxDRvDt_ = 0.0;
+        maxDRv_ = -1.0;
+        if (!vapparsActive_ && deck.hasKeyword("DRVDT")) {
+            const auto& drvdtKeyword = deck.getKeyword("DVSDT");
+            maxDRvDt_ = drvdtKeyword.getRecord(0).getItem("DRVDT_MAX").getSIDouble(0);
+            size_t numDof = this->model().numGridDof();
+            lastRv_.resize(numDof, 0.0);
+        }
 
         initFluidSystem_();
         updateElementDepths_();
@@ -392,8 +431,6 @@ public:
             int numElements = gridView.size(/*codim=*/0);
             maxPolymerAdsorption_.resize(numElements, 0.0);
         }
-
-
     }
 
     void prefetch(const Element& elem) const
@@ -488,10 +525,8 @@ public:
             simulator.setTimeStepSize(dt);
         }
 
-        if (updateHysteresis_())
-            this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
-
-        this->model().updateMaxOilSaturations();
+        bool doInvalidate = updateHysteresis_();
+        doInvalidate = doInvalidate || updateMaxOilSaturation_();
 
         if (GET_PROP_VALUE(TypeTag, EnablePolymer))
             updateMaxPolymerAdsorption_();
@@ -500,6 +535,9 @@ public:
             // set up the wells
             wellManager_.beginEpisode(this->simulator().gridManager().eclState(),
                                       this->simulator().gridManager().schedule(), isOnRestart);
+
+        if (doInvalidate)
+            this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
     }
 
     /*!
@@ -507,16 +545,16 @@ public:
      */
     void beginTimeStep()
     {
+        if (drsdtActive_)
+            // DRSDT is enabled
+            maxDRs_ = maxDRsDt_*this->simulator().timeStepSize();
+
+        if (drvdtActive_)
+            // DRVDT is enabled
+            maxDRv_ = maxDRvDt_*this->simulator().timeStepSize();
+
         if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
             wellManager_.beginTimeStep();
-
-            // this is a little hack to write the initial condition, which we need to do
-            // before the first time step has finished.
-            static bool initialWritten = false;
-            if (this->simulator().episodeIndex() == 0 && !initialWritten) {
-                summaryWriter_.write(wellManager_, /*isInitial=*/true);
-                initialWritten = true;
-            }
         }
     }
 
@@ -555,10 +593,13 @@ public:
 
         if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
             wellManager_.endTimeStep();
-
-            // write the summary information after each time step
-            summaryWriter_.write(wellManager_);
         }
+
+        // we no longer need the initial soluiton
+        if (this->simulator().episodeIndex() == 0)
+            initialFluidStates_.clear();
+
+        updateCompositionChangeLimits_();
     }
 
     /*!
@@ -616,28 +657,41 @@ public:
      */
     void writeOutput(bool verbose = true)
     {
-        // calculate the time _after_ the time was updated
         Scalar t = this->simulator().time() + this->simulator().timeStepSize();
 
-        // prepare the ECL and the VTK writers
-        if ( eclWriter_ )
-            eclWriter_->beginWrite(t);
+        Opm::data::Wells dw;
+        if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
+            using rt = Opm::data::Rates::opt;
+            for (unsigned wellIdx = 0; wellIdx < wellManager_.numWells(); ++wellIdx) {
+                const auto& well = wellManager_.well(wellIdx);
+                auto& wellOut = dw[ well->name() ];
 
+                wellOut.bhp = well->bottomHolePressure();
+                wellOut.thp = well->tubingHeadPressure();
+                wellOut.temperature = 0;
+                wellOut.rates.set( rt::wat, well->surfaceRate(waterPhaseIdx) );
+                wellOut.rates.set( rt::oil, well->surfaceRate(oilPhaseIdx) );
+                wellOut.rates.set( rt::gas, well->surfaceRate(gasPhaseIdx) );
+            }
+        }
+        Scalar totalSolverTime = 0.0;
+        Scalar nextstep = this->simulator().timeStepSize();
+        Opm::data::Solution fip;
+        writeOutput(dw, t, false, totalSolverTime, nextstep, fip, verbose);
+    }
+
+    void writeOutput(const Opm::data::Wells& dw, Scalar t, bool substep, Scalar totalSolverTime, Scalar nextstep, const Opm::data::Solution& fip, bool verbose = true)
+    {
         // use the generic code to prepare the output fields and to
         // write the desired VTK files.
         ParentType::writeOutput(verbose);
 
+        // output using eclWriter if enabled
         if ( eclWriter_ ) {
-            this->model().appendOutputFields(*eclWriter_);
-            eclWriter_->endWrite();
+            eclWriter_->writeOutput(dw, t, substep, totalSolverTime, nextstep, fip);
         }
-    }
 
-    /*!
-     * \brief Returns the object which converts between SI and deck units.
-     */
-    const EclDeckUnits<TypeTag>& deckUnits() const
-    { return deckUnits_; }
+    }
 
     /*!
      * \copydoc FvBaseMultiPhaseProblem::intrinsicPermeability
@@ -963,6 +1017,7 @@ public:
      */
     void initialSolutionApplied()
     {
+
         if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
             // initialize the wells. Note that this needs to be done after initializing the
             // intrinsic permeabilities and the after applying the initial solution because
@@ -970,31 +1025,28 @@ public:
             wellManager_.init(this->simulator().gridManager().eclState(), this->simulator().gridManager().schedule());
         }
 
+        // the initialSolutionApplied is called recursively by readEclRestartSolution_()
+        // in order to setup the inital threshold pressures correctly
+        if (restartApplied)
+            return;
+
         // let the object for threshold pressures initialize itself. this is done only at
         // this point, because determining the threshold pressures may require to access
         // the initial solution.
         thresholdPressures_.finishInit();
 
-        // apply SWATINIT if requested by the programmer. this is only necessary if
-        // SWATINIT has not yet been considered at the first time the EquilInitializer
-        // was used, i.e., only if threshold pressures are enabled in addition to
-        // SWATINIT.
-        const auto& deck = this->simulator().gridManager().deck();
         const auto& eclState = this->simulator().gridManager().eclState();
-        int numEquilRegions = eclState.getTableManager().getEqldims().getNumEquilRegions();
-        bool useThpres = deck.hasKeyword("THPRES") && numEquilRegions > 1;
-        bool useSwatinit =
-            GET_PROP_VALUE(TypeTag, EnableSwatinit) &&
-            eclState.get3DProperties().hasDeckDoubleGridProperty("SWATINIT");
-
-        if (useThpres && useSwatinit)
-            applySwatinit();
+        const auto& initconfig = eclState.getInitConfig();
+        if(initconfig.restartRequested()) {
+            restartApplied = true;
+            this->simulator().setEpisodeIndex(initconfig.getRestartStep());
+            readEclRestartSolution_();
+        }
 
         // release the memory of the EQUIL grid since it's no longer needed after this point
         this->simulator().gridManager().releaseEquilGrid();
 
-        // the fluid states specifying the initial condition are also no longer required.
-        initialFluidStates_.clear();
+        updateCompositionChangeLimits_();
     }
 
     /*!
@@ -1022,6 +1074,62 @@ public:
     }
 
     /*!
+     * \brief Returns the maximum value of the gas dissolution factor at the current time
+     *        for a given degree of freedom.
+     */
+    Scalar maxGasDissolutionFactor(unsigned globalDofIdx) const
+    {
+        if (!drsdtActive_ || maxDRs_ < 0.0)
+            return std::numeric_limits<Scalar>::max()/2;
+
+        return lastRs_[globalDofIdx] + maxDRs_;
+    }
+
+    /*!
+     * \brief Returns the maximum value of the oil vaporization factor at the current
+     *        time for a given degree of freedom.
+     */
+    Scalar maxOilVaporizationFactor(unsigned globalDofIdx) const
+    {
+        if (!drvdtActive_ || maxDRv_ < 0.0)
+            return std::numeric_limits<Scalar>::max()/2;
+
+        return lastRv_[globalDofIdx] + maxDRv_;
+    }
+
+    /*!
+     * \brief Returns an element's maximum oil phase saturation observed during the
+     *        simulation.
+     *
+     * This is a bit of a hack from the conceptional point of view, but it is required to
+     * match the results of the 'flow' and ECLIPSE 100 simulators.
+     */
+    Scalar maxOilSaturation(unsigned globalDofIdx) const
+    {
+        if (!vapparsActive_)
+            return 0.0;
+
+        return maxOilSaturation_[globalDofIdx];
+    }
+
+    /*!
+     * \brief Sets an element's maximum oil phase saturation observed during the
+     *        simulation.
+     *
+     * This a hack on top of the maxOilSaturation() hack but it is currently required to
+     * do restart externally. i.e. from the flow code.
+     *
+     * TODO: move the restart-from-ECL-restart-files functionality to EclProblem!
+     */
+    void setMaxOilSaturation(unsigned globalDofIdx, Scalar value)
+    {
+        if (!vapparsActive_)
+            return;
+
+        maxOilSaturation_[globalDofIdx] = value;
+    }
+
+    /*!
      * \brief Returns a reference to the ECL well manager used by the problem.
      *
      * This can be used for inspecting wells outside of the problem.
@@ -1029,49 +1137,17 @@ public:
     const EclWellManager<TypeTag>& wellManager() const
     { return wellManager_; }
 
-    /*!
-     * \brief Apply the necessary measures mandated by the SWATINIT keyword the the
-     *        material law parameters.
-     *
-     * If SWATINIT is not used or if the method has already been called, this method is a
-     * no-op.
-     */
-    void applySwatinit()
-    {
-        const auto& deck = this->simulator().gridManager().deck();
-        const auto& eclState = this->simulator().gridManager().eclState();
-        const auto& deckProps = eclState.get3DProperties();
-
-        if (!deckProps.hasDeckDoubleGridProperty("SWATINIT"))
-            return; // SWATINIT is not in the deck
-        else if (!deck.hasKeyword("EQUIL"))
-            // SWATINIT only applies if the initial solution is specified using the EQUIL
-            // keyword.
-            return;
-
-        // SWATINIT applies. We have to do a complete re-initialization here. this is a
-        // kludge, but to calculate the threshold pressures the initial solution without
-        // SWATINIT is required!
-
-        typedef Ewoms::EclEquilInitializer<TypeTag> EquilInitializer;
-        EquilInitializer equilInitializer(this->simulator(),
-                                          *materialLawManager_,
-                                          /*enableSwatinit=*/true);
-        auto& model = this->model();
-        size_t numElems = model.numGridDof();
-        for (size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            const auto& fs = equilInitializer.initialFluidState(elemIdx);
-            auto& priVars0 = model.solution(/*timeIdx=*/0)[elemIdx];
-            auto& priVars1 = model.solution(/*timeIdx=*/1)[elemIdx];
-
-            priVars1.assignNaive(fs);
-            priVars0 = priVars1;
-        }
-
-        // the solution (most likely) has changed, so we need to invalidate the cache for
-        // intensive quantities
-        this->simulator().model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
+    // temporary solution to facilitate output of initial state from flow
+    const InitialFluidState& initialFluidState(unsigned globalDofIdx ) const {
+        return initialFluidStates_[globalDofIdx];
     }
+
+    void setEclIO(std::unique_ptr<Opm::EclipseIO>&& eclIO) {
+        eclWriter_->setEclIO(std::move(eclIO));
+    }
+
+    const Opm::EclipseIO& eclIO() const
+    {return eclWriter_->eclIO();}
 
 private:
     Scalar cellCenterDepth( const Element& element ) const
@@ -1107,6 +1183,96 @@ private:
 
             elementCenterDepth_[elemIdx] = cellCenterDepth( element );
         }
+    }
+
+    // update the parameters needed for DRSDT and DRVDT
+    void updateCompositionChangeLimits_()
+    {
+        // update the "last Rs" values for all elements, including the ones in the ghost
+        // and overlap regions
+        if (drsdtActive_) {
+            ElementContext elemCtx(this->simulator());
+            const auto& gridManager = this->simulator().gridManager();
+            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+
+                elemCtx.updatePrimaryStencil(elem);
+                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                unsigned compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& iq = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& fs = iq.fluidState();
+
+                typedef typename std::decay<decltype(fs) >::type FluidState;
+
+                if (!dRsDtOnlyFreeGas_ || fs.saturation(gasPhaseIdx) > freeGasMinSaturation_)
+                    lastRs_[compressedDofIdx] =
+                        Opm::BlackOil::template getRs_<FluidSystem,
+                                                       FluidState,
+                                                       Scalar>(fs, iq.pvtRegionIndex());
+                else
+                    lastRs_[compressedDofIdx] = std::numeric_limits<Scalar>::infinity();
+            }
+        }
+
+        // update the "last Rv" values for all elements, including the ones in the ghost
+        // and overlap regions
+        if (drvdtActive_) {
+            ElementContext elemCtx(this->simulator());
+            const auto& gridManager = this->simulator().gridManager();
+            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+
+                elemCtx.updatePrimaryStencil(elem);
+                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                unsigned compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& iq = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& fs = iq.fluidState();
+
+                typedef typename std::decay<decltype(fs) >::type FluidState;
+
+                lastRv_[compressedDofIdx] =
+                    Opm::BlackOil::template getRv_<FluidSystem,
+                                                   FluidState,
+                                                   Scalar>(fs, iq.pvtRegionIndex());
+            }
+        }
+    }
+
+    bool updateMaxOilSaturation_()
+    {
+        // we use VAPPARS
+        if (vapparsActive_) {
+            ElementContext elemCtx(this->simulator());
+            const auto& gridManager = this->simulator().gridManager();
+            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
+                const Element& elem = *elemIt;
+
+                elemCtx.updatePrimaryStencil(elem);
+                elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
+
+                unsigned compressedDofIdx = elemCtx.globalSpaceIndex(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& iq = elemCtx.intensiveQuantities(/*spaceIdx=*/0, /*timeIdx=*/0);
+                const auto& fs = iq.fluidState();
+
+                Scalar So = Opm::decay<Scalar>(fs.saturation(oilPhaseIdx));
+
+                maxOilSaturation_[compressedDofIdx] = std::max(maxOilSaturation_[compressedDofIdx], So);
+            }
+
+            // we need to invalidate the intensive quantities cache here because the
+            // derivatives of Rs and Rv will most likely have changed
+            return true;
+        }
+
+        return false;
     }
 
     void readRockParameters_()
@@ -1265,33 +1431,23 @@ private:
     void readInitialCondition_()
     {
         const auto& gridManager = this->simulator().gridManager();
-        const auto& deck = gridManager.deck();
 
+        const auto& deck = gridManager.deck();
         if (!deck.hasKeyword("EQUIL"))
             readExplicitInitialCondition_();
         else
             readEquilInitialCondition_();
 
         readBlackoilExtentionsInitialConditions_();
+
     }
 
 
     void readEquilInitialCondition_()
     {
-        const auto& deck = this->simulator().gridManager().deck();
-        const auto& eclState = this->simulator().gridManager().eclState();
-        int numEquilRegions = eclState.getTableManager().getEqldims().getNumEquilRegions();
-        bool useThpres = deck.hasKeyword("THPRES") && numEquilRegions > 1;
-        bool useSwatinit =
-            GET_PROP_VALUE(TypeTag, EnableSwatinit) &&
-            eclState.get3DProperties().hasDeckDoubleGridProperty("SWATINIT");
-
-        // initial condition corresponds to hydrostatic conditions. The SWATINIT keyword
-        // can be considered here directly if threshold pressures are disabled.
+        // initial condition corresponds to hydrostatic conditions.
         typedef Ewoms::EclEquilInitializer<TypeTag> EquilInitializer;
-        EquilInitializer equilInitializer(this->simulator(),
-                                          *materialLawManager_,
-                                          /*enableSwatinit=*/useThpres && useSwatinit);
+        EquilInitializer equilInitializer(this->simulator(), *materialLawManager_);
 
         // since the EquilInitializer provides fluid states that are consistent with the
         // black-oil model, we can use naive instead of mass conservative determination
@@ -1304,6 +1460,35 @@ private:
             auto& elemFluidState = initialFluidStates_[elemIdx];
             elemFluidState.assign(equilInitializer.initialFluidState(elemIdx));
         }
+    }
+
+    void readEclRestartSolution_()
+    {
+        // since the EquilInitializer provides fluid states that are consistent with the
+        // black-oil model, we can use naive instead of mass conservative determination
+        // of the primary variables.
+        useMassConservativeInitialCondition_ = false;
+
+        eclWriter_->restartBegin();
+
+        size_t numElems = this->model().numGridDof();
+        initialFluidStates_.resize(numElems);
+        if (enableSolvent)
+            solventSaturation_.resize(numElems,0.0);
+
+        if (enablePolymer)
+            polymerConcentration_.resize(numElems,0.0);
+
+        for (size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
+            auto& elemFluidState = initialFluidStates_[elemIdx];
+            eclWriter_->eclOutputModule().initHysteresisParams(this->simulator(), elemIdx);
+            eclWriter_->eclOutputModule().assignToFluidState(elemFluidState, elemIdx);
+            if (enableSolvent)
+                 solventSaturation_[elemIdx] = eclWriter_->eclOutputModule().getSolventSaturation(elemIdx);
+            if (enablePolymer)
+                 polymerConcentration_[elemIdx] = eclWriter_->eclOutputModule().getPolymerConcentration(elemIdx);
+        }
+        this->model().applyInitialSolution();
     }
 
     void readExplicitInitialCondition_()
@@ -1386,7 +1571,7 @@ private:
         for (size_t dofIdx = 0; dofIdx < numDof; ++dofIdx) {
             auto& dofFluidState = initialFluidStates_[dofIdx];
 
-            int pvtRegionIdx = pvtRegionIndex(dofIdx);
+            dofFluidState.setPvtRegionIndex(pvtRegionIndex(dofIdx));
             size_t cartesianDofIdx = gridManager.cartesianIndex(dofIdx);
             assert(0 <= cartesianDofIdx);
             assert(cartesianDofIdx <= numCartesianCells);
@@ -1426,71 +1611,19 @@ private:
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                 dofFluidState.setPressure(phaseIdx, oilPressure + (pc[phaseIdx] - pc[oilPhaseIdx]));
 
-            //////
-            // set compositions
-            //////
+            if (FluidSystem::enableDissolvedGas())
+                dofFluidState.setRs(rsData[cartesianDofIdx]);
+            else
+                dofFluidState.setRs(0.0);
 
-            // reset all mole fractions to 0
-            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-                    dofFluidState.setMoleFraction(phaseIdx, compIdx, 0.0);
+            if (FluidSystem::enableVaporizedOil())
+                dofFluidState.setRv(rvData[cartesianDofIdx]);
+            else
+                dofFluidState.setRv(0.0);
 
-            // by default, assume immiscibility for all phases
-            dofFluidState.setMoleFraction(waterPhaseIdx, waterCompIdx, 1.0);
-            dofFluidState.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0);
-            dofFluidState.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0);
-
-            if (FluidSystem::enableDissolvedGas()) {
-                Scalar RsSat = FluidSystem::saturatedDissolutionFactor(dofFluidState, oilPhaseIdx, pvtRegionIdx);
-                Scalar RsReal = rsData[cartesianDofIdx];
-
-                if (RsReal > RsSat) {
-                    std::array<int, 3> ijk;
-                    gridManager.cartesianCoordinate(dofIdx, ijk);
-                    std::cerr << "Warning: The specified amount gas (R_s = " << RsReal << ") is more"
-                              << " than the maximium\n"
-                              << "         amount which can be dissolved in oil"
-                              << " (R_s,max=" << RsSat << ")"
-                              << " for cell (" << ijk[0] << ", " << ijk[1] << ", " << ijk[2] << ")."
-                              << " Using maximimum.\n";
-                    RsReal = RsSat;
-                }
-
-                // calculate the initial oil phase composition in terms of mole fractions
-                Scalar XoGReal = FluidSystem::convertRsToXoG(RsReal, pvtRegionIdx);
-                Scalar xoGReal = FluidSystem::convertXoGToxoG(XoGReal, pvtRegionIdx);
-
-                // finally, set the oil-phase composition
-                dofFluidState.setMoleFraction(oilPhaseIdx, gasCompIdx, xoGReal);
-                dofFluidState.setMoleFraction(oilPhaseIdx, oilCompIdx, 1.0 - xoGReal);
-            }
-
-            if (FluidSystem::enableVaporizedOil()) {
-                Scalar RvSat = FluidSystem::saturatedDissolutionFactor(dofFluidState, gasPhaseIdx, pvtRegionIdx);
-                Scalar RvReal = rvData[cartesianDofIdx];
-
-                if (RvReal > RvSat) {
-                    std::array<int, 3> ijk;
-                    gridManager.cartesianCoordinate(dofIdx, ijk);
-                    std::cerr << "Warning: The specified amount oil (R_v = " << RvReal << ") is more"
-                              << " than the maximium\n"
-                              << "         amount which can be dissolved in gas"
-                              << " (R_v,max=" << RvSat << ")"
-                              << " for cell (" << ijk[0] << ", " << ijk[1] << ", " << ijk[2] << ")."
-                              << " Using maximimum.\n";
-                    RvReal = RvSat;
-                }
-
-                // calculate the initial gas phase composition in terms of mole fractions
-                Scalar XgOReal = FluidSystem::convertRvToXgO(RvReal, pvtRegionIdx);
-                Scalar xgOReal = FluidSystem::convertXgOToxgO(XgOReal, pvtRegionIdx);
-
-                // finally, set the gas-phase composition
-                dofFluidState.setMoleFraction(gasPhaseIdx, oilCompIdx, xgOReal);
-                dofFluidState.setMoleFraction(gasPhaseIdx, gasCompIdx, 1.0 - xgOReal);
-            }
         }
     }
+
     void readBlackoilExtentionsInitialConditions_()
     {
         const auto& gridManager = this->simulator().gridManager();
@@ -1688,20 +1821,34 @@ private:
     std::vector<Scalar> maxPolymerAdsorption_;
 
     bool useMassConservativeInitialCondition_;
-    std::vector<ScalarFluidState> initialFluidStates_;
+    std::vector<InitialFluidState> initialFluidStates_;
 
     std::vector<Scalar> polymerConcentration_;
     std::vector<Scalar> solventSaturation_;
 
+    bool drsdtActive_; // if no, VAPPARS *might* be active
+    bool dRsDtOnlyFreeGas_; // apply the DRSDT rate limit only to cells that exhibit free gas
+    std::vector<Scalar> lastRs_;
+    Scalar maxDRsDt_;
+    Scalar maxDRs_;
+
+    bool drvdtActive_; // if no, VAPPARS *might* be active
+    std::vector<Scalar> lastRv_;
+    Scalar maxDRvDt_;
+    Scalar maxDRv_;
+    constexpr static Scalar freeGasMinSaturation_ = 1e-7;
+
+    bool vapparsActive_; // if no, DRSDT and/or DRVDT *might* be active
+    std::vector<Scalar> maxOilSaturation_;
 
     EclWellManager<TypeTag> wellManager_;
 
-    EclDeckUnits<TypeTag> deckUnits_;
-
     std::unique_ptr< EclWriterType > eclWriter_;
-    EclSummaryWriter summaryWriter_;
 
     PffGridVector<GridView, Stencil, PffDofData_, DofMapper> pffDofData_;
+
+    bool restartApplied;
+
 };
 } // namespace Ewoms
 

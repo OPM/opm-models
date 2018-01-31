@@ -29,12 +29,10 @@
 #define EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
 
 #include "blackoilproperties.hh"
-#include "blackoilfluidstate.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
 
-
-#include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/common/Valgrind.hpp>
 
 #include <dune/common/fmatrix.hh>
@@ -91,7 +89,7 @@ class BlackOilIntensiveQuantities
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Ewoms::BlackOilFluidState<TypeTag> FluidState;
+    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
 
 public:
     BlackOilIntensiveQuantities()
@@ -188,7 +186,7 @@ public:
         // update the Saturation functions for the blackoil solvent module.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
-        Scalar SoMax = elemCtx.model().maxOilSaturation(globalSpaceIdx);
+        Scalar SoMax = elemCtx.problem().maxOilSaturation(globalSpaceIdx);
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
@@ -196,43 +194,48 @@ public:
             // in the threephase case, gas and oil phases are potentially present, i.e.,
             // we use the compositions of the gas-saturated oil and oil-saturated gas.
             if (FluidSystem::enableDissolvedGas()) {
+                Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
                 const Evaluation& RsSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             oilPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
-                fluidState_.setRs(RsSat);
+                fluidState_.setRs(Opm::min(RsMax, RsSat));
             }
             else
                 fluidState_.setRs(0.0);
 
             if (FluidSystem::enableVaporizedOil()) {
+                Scalar RvMax = elemCtx.problem().maxOilVaporizationFactor(globalSpaceIdx);
                 const Evaluation& RvSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             gasPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
-                fluidState_.setRv(RvSat);
+                fluidState_.setRv(Opm::min(RvMax, RvSat));
             }
             else
                 fluidState_.setRv(0.0);
         }
         else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs) {
             // if the switching variable is the mole fraction of the gas component in the
+            Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
+
             // oil phase, we can directly set the composition of the oil phase
             const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
-            fluidState_.setRs(Rs);
+            fluidState_.setRs(Opm::min(RsMax, Rs));
 
             if (FluidSystem::enableVaporizedOil()) {
                 // the gas phase is not present, but we need to compute its "composition"
                 // for the gravity correction anyway
+                Scalar RvMax = elemCtx.problem().maxOilVaporizationFactor(globalSpaceIdx);
                 const auto& RvSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             gasPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
 
-                fluidState_.setRv(RvSat);
+                fluidState_.setRv(Opm::min(RvMax, RvSat));
             }
             else
                 fluidState_.setRv(0.0);
@@ -246,13 +249,14 @@ public:
             if (FluidSystem::enableDissolvedGas()) {
                 // the oil phase is not present, but we need to compute its "composition" for
                 // the gravity correction anyway
+                Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
                 const auto& RsSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             oilPhaseIdx,
                                                             pvtRegionIdx,
                                                             SoMax);
 
-                fluidState_.setRs(RsSat);
+                fluidState_.setRs(Opm::min(RsMax, RsSat));
             }
             else
                 fluidState_.setRs(0.0);

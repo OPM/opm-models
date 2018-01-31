@@ -28,8 +28,9 @@
 #ifndef EWOMS_ECFV_STENCIL_HH
 #define EWOMS_ECFV_STENCIL_HH
 
-#include <ewoms/common/conditionalstorage.hh>
 #include <ewoms/common/quadraturegeometries.hh>
+
+#include <opm/common/utility/ConditionalStorage.hpp>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/intersectioniterator.hh>
@@ -62,8 +63,11 @@ class EcfvStencil
     typedef typename GridView::Intersection Intersection;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                      Dune::MCMGElementLayout> ElementMapper;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> ElementMapper;
+#else
+    typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
+#endif
 
     typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
@@ -200,8 +204,8 @@ public:
         { return area_; }
 
     private:
-        ConditionalStorage<needIntegrationPos, GlobalPosition> integrationPos_;
-        ConditionalStorage<needNormal, WorldVector> normal_;
+        Opm::ConditionalStorage<needIntegrationPos, GlobalPosition> integrationPos_;
+        Opm::ConditionalStorage<needNormal, WorldVector> normal_;
         Scalar area_;
 
         unsigned short exteriorIdx_;
@@ -212,7 +216,10 @@ public:
     EcfvStencil(const GridView& gridView, const Mapper& mapper)
         : gridView_(gridView)
         , elementMapper_(mapper)
-    { }
+    {
+        // try to ensure that the mapper passed indeed maps elements
+        assert(gridView.size(/*codim=*/0) == elementMapper_.size());
+    }
 
     void updateTopology(const Element& element)
     {

@@ -131,8 +131,8 @@ struct ParamInfo
 
 // forward declaration
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType& get(const char *propTagName, const char *paramName,
-                     bool errorIfNotRegistered = true);
+const ParamType get(const char *propTagName, const char *paramName,
+                    bool errorIfNotRegistered = true);
 
 class ParamRegFinalizerBase_
 {
@@ -650,14 +650,12 @@ class Param
 
 public:
     template <class ParamType, class PropTag>
-    static const ParamType& get(const char *propTagName, const char *paramName,
-                                bool errorIfNotRegistered = true)
+    static const ParamType get(const char *propTagName, const char *paramName,
+                               bool errorIfNotRegistered = true)
     {
-        static const ParamType& value =
-            retrieve_<ParamType, PropTag>(propTagName,
-                                          paramName,
-                                          errorIfNotRegistered);
-        return value;
+        return retrieve_<ParamType, PropTag>(propTagName,
+                                             paramName,
+                                             errorIfNotRegistered);
     }
 
 private:
@@ -710,9 +708,9 @@ private:
     }
 
     template <class ParamType, class PropTag>
-    static const ParamType& retrieve_(const char OPM_OPTIM_UNUSED *propTagName,
-                                      const char *paramName,
-                                      bool errorIfNotRegistered = true)
+    static const ParamType retrieve_(const char OPM_OPTIM_UNUSED *propTagName, 
+                                     const char *paramName,
+                                     bool errorIfNotRegistered = true)
     {
 #ifndef NDEBUG
         // make sure that the parameter is used consistently. since
@@ -752,16 +750,13 @@ private:
         // retrieve actual parameter from the parameter tree
         const ParamType defaultValue =
             GET_PROP_VALUE_(TypeTag, PropTag);
-        static ParamType value =
-            ParamsMeta::tree().template get<ParamType>(canonicalName, defaultValue);
-
-        return value;
+        return ParamsMeta::tree().template get<ParamType>(canonicalName, defaultValue  );
     }
 };
 
 template <class TypeTag, class ParamType, class PropTag>
-const ParamType& get(const char *propTagName, const char *paramName,
-                     bool errorIfNotRegistered)
+const ParamType get(const char *propTagName, const char *paramName,
+                    bool errorIfNotRegistered)
 {
     return Param<TypeTag>::template get<ParamType, PropTag>(propTagName,
                                                             paramName,

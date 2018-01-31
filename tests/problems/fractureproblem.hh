@@ -45,7 +45,8 @@
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/EffToAbsLaw.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
-#include <opm/material/heatconduction/Somerton.hpp>
+#include <opm/material/thermal/SomertonThermalConductionLaw.hpp>
+#include <opm/material/thermal/ConstantSolidHeatCapLaw.hpp>
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/Dnapl.hpp>
@@ -126,8 +127,8 @@ public:
 // Enable the energy equation
 SET_BOOL_PROP(FractureProblem, EnableEnergy, true);
 
-// Set the heat conduction law
-SET_PROP(FractureProblem, HeatConductionLaw)
+// Set the thermal conduction law
+SET_PROP(FractureProblem, ThermalConductionLaw)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -135,8 +136,12 @@ private:
 
 public:
     // define the material law parameterized by absolute saturations
-    typedef Opm::Somerton<FluidSystem, Scalar> type;
+    typedef Opm::SomertonThermalConductionLaw<FluidSystem, Scalar> type;
 };
+
+// set the energy storage law for the solid phase
+SET_TYPE_PROP(FractureProblem, SolidEnergyLaw,
+              Opm::ConstantSolidHeatCapLaw<typename GET_PROP_TYPE(TypeTag, Scalar)>);
 
 // Disable gravity
 SET_BOOL_PROP(FractureProblem, EnableGravity, false);
@@ -185,7 +190,8 @@ class FractureProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
-    typedef typename GET_PROP_TYPE(TypeTag, HeatConductionLawParams) HeatConductionLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, ThermalConductionLawParams) ThermalConductionLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, SolidEnergyLawParams) SolidEnergyLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
 
     enum {
@@ -272,8 +278,8 @@ public:
         fracturePorosity_ = 0.25;
         fractureWidth_ = 1e-3; // [m]
 
-        // parameters for the somerton law of heat conduction
-        computeHeatCondParams_(heatCondParams_, matrixPorosity_);
+        // initialize the energy-related parameters
+        initEnergyParams_(thermalConductionParams_, matrixPorosity_);
     }
 
     /*!
@@ -414,28 +420,26 @@ public:
     { return fractureWidth_; }
 
     /*!
-     * \copydoc FvBaseMultiPhaseProblem::heatConductionParams
+     * \copydoc FvBaseMultiPhaseProblem::thermalConductionParams
      */
     template <class Context>
-    const HeatConductionLawParams &
-    heatConductionParams(const Context& context OPM_UNUSED,
-                         unsigned spaceIdx OPM_UNUSED,
-                         unsigned timeIdx OPM_UNUSED) const
-    { return heatCondParams_; }
+    const ThermalConductionLawParams&
+    thermalConductionLawParams(const Context& context OPM_UNUSED,
+                               unsigned spaceIdx OPM_UNUSED,
+                               unsigned timeIdx OPM_UNUSED) const
+    { return thermalConductionParams_; }
 
     /*!
-     * \copydoc FvBaseMultiPhaseProblem::heatCapacitySolid
+     * \brief Return the parameters for the energy storage law of the rock
      *
      * In this case, we assume the rock-matrix to be granite.
      */
     template <class Context>
-    Scalar heatCapacitySolid(const Context& context OPM_UNUSED,
-                             unsigned spaceIdx OPM_UNUSED,
-                             unsigned timeIdx OPM_UNUSED) const
-    {
-        return 790     // specific heat capacity of granite [J / (kg K)]
-               * 2700; // density of granite [kg/m^3]
-    }
+    const SolidEnergyLawParams&
+    solidEnergyLawParams(const Context& context OPM_UNUSED,
+                         unsigned spaceIdx OPM_UNUSED,
+                         unsigned timeIdx OPM_UNUSED) const
+    { return solidEnergyParams_; }
 
     // \}
 
@@ -465,6 +469,15 @@ public:
 
             fluidState.setPressure(wettingPhaseIdx, 1e5);
             fluidState.setPressure(nonWettingPhaseIdx, fluidState.pressure(wettingPhaseIdx));
+
+            typename FluidSystem::template ParameterCache<Scalar> paramCache;
+            paramCache.updateAll(fluidState);
+            for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
+                fluidState.setDensity(phaseIdx,
+                                      FluidSystem::density(fluidState, paramCache, phaseIdx));
+                fluidState.setViscosity(phaseIdx,
+                                        FluidSystem::viscosity(fluidState, paramCache, phaseIdx));
+            }
 
             // set a free flow (i.e. Dirichlet) boundary
             values.setFreeFlow(context, spaceIdx, timeIdx, fluidState);
@@ -577,8 +590,13 @@ private:
     bool onUpperBoundary_(const GlobalPosition& pos) const
     { return pos[1] > this->boundingBoxMax()[1] - eps_; }
 
-    void computeHeatCondParams_(HeatConductionLawParams& params, Scalar poro)
+    void initEnergyParams_(ThermalConductionLawParams& params, Scalar poro)
     {
+        // assume the volumetric heat capacity of granite
+        solidEnergyParams_.setSolidHeatCapacity(790.0 // specific heat capacity of granite [J / (kg K)]
+                                                * 2700.0); // density of granite [kg/m^3]
+        solidEnergyParams_.finalize();
+
         Scalar lambdaGranite = 2.8; // [W / (K m)]
 
         // create a Fluid state which has all phases present
@@ -624,7 +642,8 @@ private:
     MaterialLawParams fractureMaterialParams_;
     MaterialLawParams matrixMaterialParams_;
 
-    HeatConductionLawParams heatCondParams_;
+    ThermalConductionLawParams thermalConductionParams_;
+    SolidEnergyLawParams solidEnergyParams_;
 
     Scalar temperature_;
     Scalar eps_;

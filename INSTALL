@@ -1,62 +1,141 @@
 Installation Instructions
 =========================
 
-This file describes how to compile and install eWoms. eWoms is
-implemented as an DUNE module within the umbrella of the Open Porous
-Media (OPM) project.
+This file describes how to compile and install eWoms. In this context
+it is useful to keep in mind that eWoms is implemented as a DUNE
+module, i.e., the generic build instructions for DUNE modules
+apply [4].
+
+Prerequisites
+-------------
+
+The OPM software stack -- and by extension eWoms -- is firmly target
+at the Linux platform and requires a relatively recent C++
+compiler. Thus, be aware that even though you are encouraged to try to
+build and run the software on other platforms, your mileage may vary
+considerably in that case.
+
+In order to compile eWoms, you first need to install the following OPM
+and DUNE modules:
+
+  - opm-common          from [2]
+  - opm-material        from [2]
+  - dune-common         from [0]
+  - dune-geometry       from [0]
+  - dune-grid           from [0]
+  - dune-istl           from [0]
+
+To use the ECL Black-Oil Simulator (ebos), the following OPM modules
+are also required:
+
+  - libecl             from [6]
+  - opm-parser         from [2]
+  - opm-grid           from [2]
+
+For vertex-centered finite volume discretization schemes, the
+dune-localfunctions DUNE module is needed in addition [0].
+
+If you want to use the latest eWoms development version, the newest
+release of the DUNE prerequisites usually works best, for the OPM
+prerequisites, current revisions of the master branches need to be
+used.
+
+Note: Many Linux distributions ship DUNE packages. For reasonably
+current distributions, these packages can be used as an alternative to
+installing DUNE manually [1].
+
+Building
+--------
+
+Instructions for building eWoms using the common OPM build system can
+be found on the OPM web page [1]. If you encounter problems, please
+report them on github [0], or try to build eWoms using the alternative
+mechanism described below.
+
+Installing
+----------
+
+If you are not interested in modifying eWoms, you can optionally
+install it globally on your system. This can be done using
+
+  cd $EWOMS_SOURCE_DIR/build-cmake
+  sudo make install
+
+You can specify the target directory for the installation process by
+adding -DCMAKE_INSTALL_PREFIX=$TARGET_DIR to the flags passed to the
+`cmake` command.
+
 
 Getting started
----------------
+===============
 
-In order to compile eWoms, you first have to install the following
-DUNE and OPM modules by following their installation instructions:
+Once the compilation is done, the produced executables can be found in
+the directory $EWOMS_SOURCE_DIR/build-cmake/bin. To use them, it is
+usually sufficient to simply run the binary of interest from the
+command line without any arguments. For example, to run the simulator
+for the two-dimensional 'lens' problem that utilizes a multi-phase
+model which assumes immiscibility of the fluid phases in conjunction
+with the element-centered finite volume discretization and automatic
+differentiation, type
 
-  - opm-material       from [3]
-  - opm-common         from [3]
-  - dune-common        from [0]
-  - dune-geometry      from [0]
-  - dune-grid          from [0]
-  - dune-istl          from [0]
-  - dune-localfuctions from [0]
+  cd $EWOMS_SOURCE_DIR/build-cmake
+  ./bin/lens_immiscible_ecfv_ad
 
-If you like to use the ECL Black-Oil simulator (ebos), you also need
-the following modules:
+This produces a sequence of VTK files which can be visualized using,
+for example, ParaView [5]:
 
-  - opm-parser         from [3]
-  - opm-core           from [3]
-  - dune-grid          from [3]
+  paraview --data=lens_immiscible_ecfv_ad.pvd
 
-For eWoms, the latest release or development branch version of the
-prerequisite software usually works fine.
+You may also specify command line parameters to alter the behavior of
+the simulation. The list of recognized parameters and their
+descriptions can usually be obtained via the '--help' command line
+argument, e.g.,
 
-To compile eWoms, it is recommended the dunecontrol script from the
-dune-common module. This allows to conveniently specify the compiler
-which ought to be used to compile eWoms and its dependencies, set the
-compiler's flags and to define the paths to (optional) external
-libraries. In this context, it is advisable to adapt the option files
-$EWOMS_DIR/optim.opts or $EWOMS_DIR/debug.opts to your particular
-needs.
+  cd $EWOMS_SOURCE_DIR/build-cmake
+  ./bin/lens_immiscible_ecfv_ad --help
 
-After you've obtained the required modules, you can compile eWoms using
+Alternative build system
+========================
 
-  $PATH_TO_DUNECONTROL/dunecontrol --opts=$(EWOMS_ROOT)/optim.opts --module=ewoms all
+An experimental way to build eWoms using the DUNE build system is
+provided via the opm-dune-cmake module [3]. In the following, it is
+assumed that the clone of opm-dune-cmake is located next to the source
+directories of all OPM and DUNE modules.
 
-Testing
--------
+Using opm-dune-cmake, eWoms can be compiled by following the generic
+installation procedure for DUNE modules [4]. For your convenience, the
+eWoms source tree ships with a few ready-made option files for
+dunecontrol. These files can be found on the topmost directory of the
+eWoms clone and exhibit the '.opts' extension. It is advisable to
+adapt these to your particular needs before you start the build.
 
-eWoms uses CTest for regression testing [1]. We encourage you to
-participate - it's easy: If you set up an build directory for eWoms
-with the examples enabled as described above, just run
+After the prerequisites have been dealt with, you can compile eWoms
+using
 
-   ctest -D Experimental -j$NUM_CORES
+  cd $EWOMS_SOURCE_DIR/..
+  $PATH_TO_DUNECONTROL/dunecontrol --opts=$EWOMS_SOURCE_DIR/optim.opts --module=ewoms all
 
-After a while, your results will appear on the eWoms CDash 
-dashboard [2].
+Depending on the dunecontrol option file used, the test simulators are
+not compiled by default in order to speed up the build process. If you
+want to force a given test simulator to be compiled, use e.g.,
+
+  cd $EWOMS_SOURCE_DIR/build-cmake
+  make lens_immiscible_ecfv_ad
+
+to compile the `lens_immiscible_ecfv_ad` executable. Compiling all
+available tests can be achieved via
+
+  cd $EWOMS_SOURCE_DIR/build-cmake
+  make build_tests
+
 
 Links
------
+=====
 
-[0] http://dune-project.org/download.html
-[1] http://cmake.org/Wiki/CMake/Testing_With_CTest
-[2] http://cdash.opm-project.org/index.php?project=eWoms
-[3] http://opm-project.org/?page_id=36
+[0] https://dune-project.org/releases/
+[1] http://opm-project.org/?page_id=36
+[2] https://github.com/OPM
+[3] https://github.com/dr-robertk/opm-dune-cmake
+[4] https://dune-project.org/doc/installation/
+[5] https://paraview.org/
+[6] https://github.com/Statoil/libecl

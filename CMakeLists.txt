@@ -15,7 +15,7 @@
 ###########################################################################
 
 # Mandatory call to project
-project(ewoms CXX)
+project(ewoms C CXX)
 
 cmake_minimum_required (VERSION 2.8)
 
@@ -125,14 +125,15 @@ opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
 opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
+add_custom_target(ewoms_prepare)
 
 # the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
 EwomsAddApplication(ebos
                     SOURCES ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION ${OPM_GRID_FOUND} AND ${OPM_PARSER_FOUND} AND ${OPM_CORE_FOUND})
+                    CONDITION OPM_GRID_FOUND AND OPM_PARSER_FOUND)
 
-if(OPM_GRID_FOUND AND OPM_CORE_FOUND AND OPM_PARSER_FOUND)
+if(OPM_GRID_FOUND AND OPM_PARSER_FOUND)
   install(TARGETS ebos DESTINATION bin)
 endif()
 
@@ -148,8 +149,10 @@ opm_add_test(art2dgf
   DRIVER_ARGS --plain
   TEST_ARGS "data/fracture-raw.art")
 
-opm_add_test(test_blackoilfluidstate
-  DRIVER_ARGS --plain)
+# EQUIL init tests
+opm_add_test(test_equil
+             DRIVER_ARGS --plain
+             CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND)
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
