@@ -212,7 +212,7 @@ SET_BOOL_PROP(EclBaseProblem, EnableEclOutput, true);
 SET_BOOL_PROP(EclBaseProblem, EnableIntensiveQuantityCache, true);
 
 // the cache for the storage term can also be used and also yields a decent speedup
-SET_BOOL_PROP(EclBaseProblem, EnableStorageCache, false);
+SET_BOOL_PROP(EclBaseProblem, EnableStorageCache, true);
 
 // Use the "velocity module" which uses the Eclipse "NEWTRAN" transmissibilities
 SET_TYPE_PROP(EclBaseProblem, FluxModule, Ewoms::EclTransFluxModule<TypeTag>);
