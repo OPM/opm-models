@@ -33,8 +33,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <string>
 #include <limits>
@@ -106,8 +105,7 @@ public:
             idx = static_cast<size_t>(mapper_.subIndex(e, imin, codim_));
         }
         else
-            OPM_THROW(std::logic_error,
-                      "Only element and vertex based tensor fields are supported so far.");
+            throw std::logic_error("Only element and vertex based tensor fields are supported so far.");
 
         unsigned i = static_cast<unsigned>(mycomp);
         unsigned j = static_cast<unsigned>(matrixColumnIdx_);

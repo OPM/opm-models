@@ -34,9 +34,8 @@
 #include <ewoms/io/restart.hh>
 #include <ewoms/disc/common/restrictprolong.hh>
 
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -203,7 +202,7 @@ public:
                   const Context& context OPM_UNUSED,
                   unsigned spaceIdx OPM_UNUSED,
                   unsigned timeIdx OPM_UNUSED) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a boundary() method"); }
+    { throw std::logic_error("Problem does not provide a boundary() method"); }
 
     /*!
      * \brief Evaluate the constraints for a control volume.
@@ -220,7 +219,7 @@ public:
                      const Context& context OPM_UNUSED,
                      unsigned spaceIdx OPM_UNUSED,
                      unsigned timeIdx OPM_UNUSED) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a constraints() method"); }
+    { throw std::logic_error("Problem does not provide a constraints() method"); }
 
     /*!
      * \brief Evaluate the source term for all phases within a given
@@ -239,7 +238,7 @@ public:
                 const Context& context OPM_UNUSED,
                 unsigned spaceIdx OPM_UNUSED,
                 unsigned timeIdx OPM_UNUSED) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a source() method"); }
+    { throw std::logic_error("Problem does not provide a source() method"); }
 
     /*!
      * \brief Evaluate the initial value for a control volume.
@@ -256,7 +255,7 @@ public:
                  const Context& context OPM_UNUSED,
                  unsigned spaceIdx OPM_UNUSED,
                  unsigned timeIdx OPM_UNUSED) const
-    { OPM_THROW(std::logic_error, "Problem does not provide a initial() method"); }
+    { throw std::logic_error("Problem does not provide a initial() method"); }
 
     /*!
      * \brief Return how much the domain is extruded at a given sub-control volume.
@@ -425,10 +424,9 @@ public:
                           << nextDt << " seconds\n" << std::flush;
         }
 
-        OPM_THROW(std::runtime_error,
-                   "Newton solver didn't converge after "
-                   << maxFails << " time-step divisions. dt="
-                   << simulator().timeStepSize());
+        throw std::runtime_error("Newton solver didn't converge after "
+                                 +std::to_string(maxFails)+" time-step divisions. dt="
+                                 +std::to_string(double(simulator().timeStepSize())));
     }
 
     /*!

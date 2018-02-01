@@ -29,7 +29,7 @@
 
 #include "convergencecriterion.hh"
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/istl/scalarproducts.hh>
 

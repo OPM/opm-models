@@ -56,10 +56,9 @@
 #include <ewoms/common/timerguard.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -390,18 +389,18 @@ public:
     {
 #if HAVE_DUNE_FEM
         if (enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
-            OPM_THROW(Opm::NotImplemented,
-                      "Grid adaptation enabled, but chosen Grid is not capable of adaptivity");
+            throw std::invalid_argument("Grid adaptation enabled, but chosen Grid is not capable"
+                                        " of adaptivity");
 #else
         if (enableGridAdaptation_)
-            OPM_THROW(Opm::NotImplemented,
-                      "Grid adaptation currently requires the presence of the dune-fem module");
+            throw std::invalid_argument("Grid adaptation currently requires the presence of the "
+                                        "dune-fem module");
 #endif
         bool isEcfv = std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value;
         if (enableGridAdaptation_ && !isEcfv)
-            OPM_THROW(Opm::NotImplemented,
-                      "Grid adaptation currently only works for the element-centered finite "
-                      "volume discretization (is: " << Dune::className<Discretization>() << ")");
+            throw std::invalid_argument("Grid adaptation currently only works for the "
+                                        "element-centered finite volume discretization (is: "
+                                        +Dune::className<Discretization>()+")");
 
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
 
@@ -1340,9 +1339,8 @@ public:
     template <class Restarter>
     void serialize(Restarter& res OPM_UNUSED)
     {
-        OPM_THROW(std::runtime_error,
-                  "Not implemented: The discretization chosen for this problem does not support"
-                  " restart files. (serialize() method unimplemented)");
+        throw std::runtime_error("Not implemented: The discretization chosen for this problem "
+                                 "does not support restart files. (serialize() method unimplemented)");
     }
 
     /*!
@@ -1355,9 +1353,8 @@ public:
     template <class Restarter>
     void deserialize(Restarter& res OPM_UNUSED)
     {
-        OPM_THROW(std::runtime_error,
-                  "Not implemented: The discretization chosen for this problem does not support"
-                  " restart files. (deserialize() method unimplemented)");
+        throw std::runtime_error("Not implemented: The discretization chosen for this problem "
+                                 "does not support restart files. (deserialize() method unimplemented)");
     }
 
     /*!
@@ -1376,7 +1373,8 @@ public:
 
         // write phase state
         if (!outstream.good()) {
-            OPM_THROW(std::runtime_error, "Could not serialize degree of freedom " << dofIdx);
+            throw std::runtime_error("Could not serialize degree of freedom "
+                                     +std::to_string(dofIdx));
         }
 
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
@@ -1400,8 +1398,8 @@ public:
 
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
-                OPM_THROW(std::runtime_error,
-                          "Could not deserialize degree of freedom " << dofIdx);
+                throw std::runtime_error("Could not deserialize degree of freedom "
+                                         +std::to_string(dofIdx));
             instream >> solution(/*timeIdx=*/0)[dofIdx][eqIdx];
         }
     }
@@ -1410,8 +1408,7 @@ public:
      * \brief Returns the number of degrees of freedom (DOFs) for the computational grid
      */
     size_t numGridDof() const
-    { OPM_THROW(std::logic_error,
-                "The discretization class must implement the numGridDof() method!"); }
+    { throw std::logic_error("The discretization class must implement the numGridDof() method!"); }
 
     /*!
      * \brief Returns the number of degrees of freedom (DOFs) of the auxiliary equations
@@ -1438,8 +1435,7 @@ public:
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper& dofMapper() const
-    { OPM_THROW(std::logic_error,
-                "The discretization class must implement the dofMapper() method!"); }
+    { throw std::logic_error("The discretization class must implement the dofMapper() method!"); }
 
     /*!
      * \brief Returns the mapper for vertices to indices.
@@ -1670,9 +1666,8 @@ public:
         if (enableGridAdaptation_
             && !std::is_same<DiscreteFunction, BlockVectorWrapper>::value)
         {
-            OPM_THROW(Opm::NotImplemented,
-                      "Problems which require auxiliary modules cannot be used in conjunction "
-                      "with dune-fem");
+            throw std::invalid_argument("Problems which require auxiliary modules cannot be used in"
+                                      " conjunction with dune-fem");
         }
 
         size_t numDof = numTotalDof();

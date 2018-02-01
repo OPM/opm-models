@@ -35,10 +35,9 @@
 #include <ewoms/common/timerguard.hh>
 
 #include <opm/material/densead/Math.hpp>
+#include <opm/material/common/Unused.hpp>
 
-#include <opm/common/Unused.hpp>
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/istl/istlexception.hh>
 #include <dune/common/classname.hh>
@@ -448,7 +447,7 @@ public:
 
             return false;
         }
-        catch (const Opm::NumericalProblem& e)
+        catch (const Opm::NumericalIssue& e)
         {
             if (asImp_().verbose_())
                 std::cout << "Newton method caught exception: \""
@@ -610,6 +609,7 @@ protected:
     {
         const auto& constraintsMap = model().linearizer().constraintsMap();
         lastError_ = error_;
+        Scalar newtonMaxError = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError);
 
         // calculate the error as the maximum weighted tolerance of
         // the solution's residual
@@ -635,11 +635,10 @@ protected:
 
         // make sure that the error never grows beyond the maximum
         // allowed one
-        if (error_ > EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError))
-            OPM_THROW(Opm::NumericalProblem,
-                      "Newton: Error " << error_
-                      << " is larger than maximum allowed error of "
-                      << EWOMS_GET_PARAM(TypeTag, Scalar, NewtonMaxError));
+        if (error_ > newtonMaxError)
+            throw Opm::NumericalIssue("Newton: Error "+std::to_string(double(error_))
+                                        +" is larger than maximum allowed error of "
+                                        +std::to_string(double(newtonMaxError)));
     }
 
     /*!
@@ -688,7 +687,7 @@ protected:
 
         // make sure not to swallow non-finite values at this point
         if (!std::isfinite(solutionUpdate.one_norm()))
-            OPM_THROW(Opm::NumericalProblem, "Non-finite update!");
+            throw Opm::NumericalIssue("Non-finite update!");
 
         size_t numGridDof = model().numGridDof();
         for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {

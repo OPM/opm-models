@@ -36,9 +36,8 @@
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -299,8 +298,7 @@ public:
 
         // some phase must be present
         if (phasePresence_ == 0)
-            OPM_THROW(Opm::NumericalProblem,
-                      "Phase state was 0, i.e., no fluid is present");
+            throw Opm::NumericalIssue("Phase state was 0, i.e., no fluid is present");
 
         // set the primary variables which correspond to mole
         // fractions of the present phase which has the lowest index.

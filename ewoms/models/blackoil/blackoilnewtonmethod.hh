@@ -32,7 +32,7 @@
 
 #include <ewoms/common/signum.hh>
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 namespace Ewoms {
 
@@ -135,8 +135,7 @@ protected:
         succeeded = comm.min(succeeded);
 
         if (!succeeded)
-            OPM_THROW(Opm::NumericalProblem,
-                      "A process did not succeed in adapting the primary variables");
+            throw Opm::NumericalIssue("A process did not succeed in adapting the primary variables");
 
         numPriVarsSwitched_ = comm.sum(numPriVarsSwitched_);
     }

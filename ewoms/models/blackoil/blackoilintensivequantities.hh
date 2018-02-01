@@ -33,7 +33,7 @@
 #include "blackoilpolymermodules.hh"
 
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fmatrix.hh>
 

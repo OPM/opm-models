@@ -369,7 +369,7 @@ protected:
         // ranks.
         preconditionerIsReady = simulator_.gridView().comm().min(preconditionerIsReady);
         if (!preconditionerIsReady)
-            OPM_THROW(Opm::NumericalProblem, "Creating the preconditioner failed");
+            throw Opm::NumericalIssue("Creating the preconditioner failed");
 
         // create the parallel preconditioner
         return std::make_shared<ParallelPreconditioner>(precWrapper_.get(), overlappingMatrix_->overlap());

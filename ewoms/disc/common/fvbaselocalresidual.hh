@@ -33,10 +33,9 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/alignedallocator.hh>
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/grid/common/geometry.hh>
@@ -362,9 +361,8 @@ public:
                         unsigned dofIdx OPM_UNUSED,
                         unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: The local residual " << Dune::className<Implementation>()
-                   << " does not implement the required method 'computeStorage()'");
+        throw std::logic_error("Not implemented: The local residual "+Dune::className<Implementation>()
+                               +" does not implement the required method 'computeStorage()'");
     }
 
     /*!
@@ -379,9 +377,8 @@ public:
                      unsigned scvfIdx OPM_UNUSED,
                      unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Dune::className<Implementation>()
-                  << " does not implement the required method 'computeFlux()'");
+        throw std::logic_error("Not implemented: The local residual "+Dune::className<Implementation>()
+                               +" does not implement the required method 'computeFlux()'");
     }
 
     /*!
@@ -395,9 +392,8 @@ public:
                        unsigned dofIdx OPM_UNUSED,
                        unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: The local residual " << Dune::className<Implementation>()
-                  << " does not implement the required method 'computeSource()'");
+        throw std::logic_error("Not implemented: The local residual "+Dune::className<Implementation>()
+                               +" does not implement the required method 'computeSource()'");
     }
 
 protected:

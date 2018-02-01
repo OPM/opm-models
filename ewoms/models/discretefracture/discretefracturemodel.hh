@@ -40,8 +40,7 @@
 #include <ewoms/models/immiscible/immisciblemodel.hh>
 #include <ewoms/io/vtkdiscretefracturemodule.hh>
 
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <string>
 
@@ -120,9 +119,8 @@ public:
         : ParentType(simulator)
     {
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache)) {
-            OPM_THROW(std::runtime_error,
-                      "The discrete fracture model does not work in conjunction "
-                      "with intensive quantities caching");
+            throw std::runtime_error("The discrete fracture model does not work in conjunction "
+                                     "with intensive quantities caching");
         }
     }
 

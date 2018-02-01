@@ -41,7 +41,7 @@
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/thermal/NullThermalConductionLaw.hpp>
 #include <opm/material/thermal/NullSolidEnergyLaw.hpp>
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 namespace Ewoms {
 template <class TypeTag>

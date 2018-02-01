@@ -30,7 +30,7 @@
 
 #include <dune/common/fvector.hh>
 
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include "immiscibleintensivequantities.hh"

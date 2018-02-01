@@ -30,11 +30,9 @@
 #include "baseoutputwriter.hh"
 
 #include <ewoms/common/parametersystem.hh>
-
 #include <ewoms/common/propertysystem.hh>
 
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
@@ -178,7 +176,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = simulator_.model().numGridDof();
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
 
         buffer.resize(n);
         std::fill(buffer.begin(), buffer.end(), 0.0);
@@ -198,7 +196,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = simulator_.model().numGridDof();
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
 
         buffer.resize(n);
         Tensor nullMatrix(dimWorld, dimWorld, 0.0);
@@ -220,7 +218,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = simulator_.model().numGridDof();
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
 
         for (unsigned i = 0; i < numEq; ++i) {
             buffer[i].resize(n);
@@ -243,7 +241,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = simulator_.model().numGridDof();
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
 
         for (unsigned i = 0; i < numPhases; ++i) {
             buffer[i].resize(n);
@@ -266,7 +264,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = simulator_.model().numGridDof();
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
 
         for (unsigned i = 0; i < numComponents; ++i) {
             buffer[i].resize(n);
@@ -289,7 +287,7 @@ protected:
         else if (bufferType == DofBuffer)
             n = simulator_.model().numGridDof();
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
 
         for (unsigned i = 0; i < numPhases; ++i) {
             for (unsigned j = 0; j < numComponents; ++j) {
@@ -314,7 +312,7 @@ protected:
         else if (bufferType == ElementBuffer)
             attachScalarElementData_(baseWriter, buffer, name);
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
     }
 
     /*!
@@ -332,7 +330,7 @@ protected:
         else if (bufferType == ElementBuffer)
             attachVectorElementData_(baseWriter, buffer, name);
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
     }
 
     /*!
@@ -350,7 +348,7 @@ protected:
         else if (bufferType == ElementBuffer)
             attachTensorElementData_(baseWriter, buffer, name);
         else
-            OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+            throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
     }
 
     /*!
@@ -373,7 +371,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachScalarElementData_(baseWriter, buffer[i], name);
             else
-                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+                throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -398,7 +396,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachScalarElementData_(baseWriter, buffer[i], name);
             else
-                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+                throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -421,7 +419,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachScalarElementData_(baseWriter, buffer[i], name);
             else
-                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+                throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -444,7 +442,7 @@ protected:
             else if (bufferType == ElementBuffer)
                 attachScalarElementData_(baseWriter, buffer[i], name);
             else
-                OPM_THROW(std::logic_error, "bufferType must be one of Dof, Vertex or Element");
+                throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
         }
     }
 
@@ -470,8 +468,7 @@ protected:
                 else if (bufferType == ElementBuffer)
                     attachScalarElementData_(baseWriter, buffer[i][j], name);
                 else
-                    OPM_THROW(std::logic_error,
-                              "bufferType must be one of Dof, Vertex or Element");
+                    throw std::logic_error("bufferType must be one of Dof, Vertex or Element");
             }
         }
     }
