@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::BaseGridManager
+ * \copydoc Ewoms::BaseVanguard
  */
-#ifndef EWOMS_BASE_GRID_MANAGER_HH
-#define EWOMS_BASE_GRID_MANAGER_HH
+#ifndef EWOMS_BASE_VANGUARD_HH
+#define EWOMS_BASE_VANGUARD_HH
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
@@ -42,7 +42,7 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Grid);
-NEW_PROP_TAG(GridManager);
+NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(GridPart);
 NEW_PROP_TAG(GridViewLevel);
@@ -52,26 +52,26 @@ NEW_PROP_TAG(Simulator);
 } // namespace Properties
 
 /*!
- * \brief Provides the base class for most (all?) grid managers.
+ * \brief Provides the base class for most (all?) simulator vanguards.
  */
 template <class TypeTag>
-class BaseGridManager
+class BaseVanguard
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, GridManager) Implementation;
+    typedef typename GET_PROP_TYPE(TypeTag, Vanguard) Implementation;
 
 #if HAVE_DUNE_FEM
     typedef typename GET_PROP_TYPE(TypeTag, GridPart) GridPart;
 #endif
 
 public:
-    BaseGridManager(Simulator& simulator)
+    BaseVanguard(Simulator& simulator)
         : simulator_(simulator)
     {}
 
-    BaseGridManager(const BaseGridManager&) = delete;
+    BaseVanguard(const BaseVanguard&) = delete;
 
     /*!
      * \brief Returns a reference to the grid view to be used.

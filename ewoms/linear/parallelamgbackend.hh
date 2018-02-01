@@ -240,7 +240,7 @@ protected:
             amg_.reset();
 
         int verbosity = 0;
-        if (this->simulator_.gridManager().gridView().comm().rank() == 0)
+        if (this->simulator_.vanguard().gridView().comm().rank() == 0)
             verbosity = EWOMS_GET_PARAM(TypeTag, int, LinearSolverVerbosity);
 
         typedef typename Dune::Amg::SmootherTraits<ParallelSmoother>::Arguments SmootherArgs;

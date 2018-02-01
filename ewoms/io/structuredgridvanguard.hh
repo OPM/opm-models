@@ -22,12 +22,12 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::StructuredGridManager
+ * \copydoc Ewoms::StructuredGridVanguard
  */
-#ifndef EWOMS_STRUCTURED_GRID_MANAGER_HH
-#define EWOMS_STRUCTURED_GRID_MANAGER_HH
+#ifndef EWOMS_STRUCTURED_GRID_VANGUARD_HH
+#define EWOMS_STRUCTURED_GRID_VANGUARD_HH
 
-#include <ewoms/io/basegridmanager.hh>
+#include <ewoms/io/basevanguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
@@ -48,12 +48,12 @@
 namespace Ewoms {
 
 template <class TypeTag>
-class StructuredGridManager;
+class StructuredGridVanguard;
 
 namespace Properties {
-NEW_TYPE_TAG(StructuredGridManager);
+NEW_TYPE_TAG(StructuredGridVanguard);
 
-// declare the properties required by the for the lens grid manager
+// declare the properties required by the for the structured grid simulator vanguard
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
 
@@ -74,14 +74,14 @@ static const int dim = 2;
 static const int dim = GRIDDIM;
 #endif
 
-// set the Grid and GridManager properties
+// set the Grid and Vanguard properties
 #if HAVE_DUNE_ALUGRID
-SET_TYPE_PROP(StructuredGridManager, Grid, Dune::ALUGrid< dim, dim, Dune::cube, Dune::nonconforming >);
+SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::ALUGrid< dim, dim, Dune::cube, Dune::nonconforming >);
 #else
-SET_TYPE_PROP(StructuredGridManager, Grid, Dune::YaspGrid< dim >);
+SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::YaspGrid< dim >);
 #endif
 
-SET_TYPE_PROP(StructuredGridManager, GridManager, Ewoms::StructuredGridManager<TypeTag>);
+SET_TYPE_PROP(StructuredGridVanguard, Vanguard, Ewoms::StructuredGridVanguard<TypeTag>);
 } // namespace Properties
 
 /*!
@@ -90,9 +90,9 @@ SET_TYPE_PROP(StructuredGridManager, GridManager, Ewoms::StructuredGridManager<T
  * \brief Helper class for grid instantiation of the lens problem.
  */
 template <class TypeTag>
-class StructuredGridManager : public BaseGridManager<TypeTag>
+class StructuredGridVanguard : public BaseVanguard<TypeTag>
 {
-    typedef BaseGridManager<TypeTag> ParentType;
+    typedef BaseVanguard<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
@@ -103,7 +103,7 @@ class StructuredGridManager : public BaseGridManager<TypeTag>
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid manager.
+     * \brief Register all run-time parameters for the structured grid simulator vanguard.
      */
     static void registerParameters()
     {
@@ -131,7 +131,7 @@ public:
     /*!
      * \brief Create the grid for the lens problem
      */
-    StructuredGridManager(Simulator& simulator)
+    StructuredGridVanguard(Simulator& simulator)
         : ParentType(simulator)
     {
         Dune::FieldVector<int, dim> cellRes;
