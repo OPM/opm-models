@@ -113,6 +113,9 @@ NEW_PROP_TAG(EnableWriteAllSolutions);
 // The number of time steps skipped between writing two consequtive restart files
 NEW_PROP_TAG(RestartWritingInterval);
 
+// The default location for the ECL output files
+NEW_PROP_TAG(EclOutputDir);
+
 // Disable well treatment (for users which do this externally)
 NEW_PROP_TAG(DisableWells);
 
@@ -207,6 +210,10 @@ SET_BOOL_PROP(EclBaseProblem, EnableVtkOutput, false);
 // ... but enable the ECL output by default
 SET_BOOL_PROP(EclBaseProblem, EnableEclOutput, true);
 
+// Output single precision is default
+SET_BOOL_PROP(EclBaseProblem, EclOutputDoublePrecision, false);
+
+
 // the cache for intensive quantities can be used for ECL problems and also yields a
 // decent speedup...
 SET_BOOL_PROP(EclBaseProblem, EnableIntensiveQuantityCache, true);
@@ -220,8 +227,8 @@ SET_TYPE_PROP(EclBaseProblem, FluxModule, Ewoms::EclTransFluxModule<TypeTag>);
 // Use the dummy gradient calculator in order not to do unnecessary work.
 SET_TYPE_PROP(EclBaseProblem, GradientCalculator, Ewoms::EclDummyGradientCalculator<TypeTag>);
 
-// The default name of the data file to load
-SET_STRING_PROP(EclBaseProblem, GridFile, "data/ecl.DATA");
+// The default location for the ECL output files
+SET_STRING_PROP(EclBaseProblem, EclOutputDir, ".");
 
 // The frequency of writing restart (*.ers) files. This is the number of time steps
 // between writing restart files
@@ -317,6 +324,10 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableEclOutput,
                              "Write binary output which is compatible with the commercial "
                              "Eclipse simulator");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, EclOutputDir,
+                             "The directory to which the ECL result files are written");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputDoublePrecision,
+                             "Tell the output writer to use double precision. Useful for 'perfect' restarts");
         EWOMS_REGISTER_PARAM(TypeTag, unsigned, RestartWritingInterval,
                              "The frequencies of which time steps are serialized to disk");
     }
@@ -329,14 +340,38 @@ public:
         , transmissibilities_(simulator.gridManager())
         , thresholdPressures_(simulator)
         , wellManager_(simulator)
-        , eclWriter_( EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput)
-                        ? new EclWriterType(simulator) : nullptr )
         , pffDofData_(simulator.gridView(), this->elementMapper())
     {
         // Tell the extra modules to initialize its internal data structures
         const auto& gridManager = simulator.gridManager();
         SolventModule::initFromDeck(gridManager.deck(), gridManager.eclState());
         PolymerModule::initFromDeck(gridManager.deck(), gridManager.eclState());
+
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput)) {
+            // retrieve the location where the output is supposed to go
+            const auto& outputDir = EWOMS_GET_PARAM(TypeTag, std::string, EclOutputDir);
+
+            // ensure that the output directory exists and that it is a directory
+            if (outputDir != ".") { // Do not try to create the current directory.
+                if (!boost::filesystem::is_directory(outputDir)) {
+                    try {
+                        boost::filesystem::create_directories(outputDir);
+                    }
+                    catch (...) {
+                        OPM_THROW(std::runtime_error, "Creation of output directory '"<<outputDir<<"' failed\n");
+                    }
+                }
+            }
+
+            // specify the directory output. This is not a very nice mechanism because
+            // the eclState is supposed to be immutable here, IMO.
+            auto& eclState = this->simulator().gridManager().eclState();
+            auto& ioConfig = eclState.getIOConfig();
+            ioConfig.setOutputDir(outputDir);
+
+            // create the actual ECL writer
+            eclWriter_.reset(new EclWriterType(simulator));
+        }
 
         // Hack to compute the initial thpressure values for restarts
         restartApplied = false;
@@ -431,6 +466,8 @@ public:
             int numElements = gridView.size(/*codim=*/0);
             maxPolymerAdsorption_.resize(numElements, 0.0);
         }
+
+        eclWriter_->writeInit();
     }
 
     void prefetch(const Element& elem) const
@@ -673,21 +710,18 @@ public:
         }
         Scalar totalSolverTime = 0.0;
         Scalar nextstep = this->simulator().timeStepSize();
-        Opm::data::Solution fip;
-        writeOutput(dw, t, false, totalSolverTime, nextstep, fip, verbose);
+        writeOutput(dw, t, false, totalSolverTime, nextstep, verbose);
     }
 
-    void writeOutput(const Opm::data::Wells& dw, Scalar t, bool substep, Scalar totalSolverTime, Scalar nextstep, const Opm::data::Solution& fip, bool verbose = true)
+    void writeOutput(const Opm::data::Wells& dw, Scalar t, bool substep, Scalar totalSolverTime, Scalar nextstep, bool verbose = true)
     {
         // use the generic code to prepare the output fields and to
         // write the desired VTK files.
         ParentType::writeOutput(verbose);
 
         // output using eclWriter if enabled
-        if ( eclWriter_ ) {
-            eclWriter_->writeOutput(dw, t, substep, totalSolverTime, nextstep, fip);
-        }
-
+        if (eclWriter_)
+            eclWriter_->writeOutput(dw, t, substep, totalSolverTime, nextstep);
     }
 
     /*!
@@ -1139,12 +1173,13 @@ public:
         return initialFluidStates_[globalDofIdx];
     }
 
-    void setEclIO(std::unique_ptr<Opm::EclipseIO>&& eclIO) {
-        eclWriter_->setEclIO(std::move(eclIO));
-    }
-
     const Opm::EclipseIO& eclIO() const
-    {return eclWriter_->eclIO();}
+    { return eclWriter_->eclIO(); }
+
+    bool vapparsActive() const
+    {
+        return vapparsActive_;
+    }
 
 private:
     Scalar cellCenterDepth( const Element& element ) const
@@ -1494,10 +1529,9 @@ private:
         const auto& eclState = gridManager.eclState();
         const auto& eclProps = eclState.get3DProperties();
 
-        // since the values specified in the deck do not need to be consistent, we use an
-        // initial condition that conserves the total mass specified by these values, but
-        // for this to work all three phases must be active.
-        useMassConservativeInitialCondition_ = (FluidSystem::numActivePhases() == 3);
+        // the values specified in the deck do not need to be consistent,
+        // we still don't try to make the consistent.
+        useMassConservativeInitialCondition_ = false;
 
         // make sure all required quantities are enables
         if (FluidSystem::phaseIsActive(waterPhaseIdx) && !eclProps.hasDeckDoubleGridProperty("SWAT"))
@@ -1840,7 +1874,7 @@ private:
 
     EclWellManager<TypeTag> wellManager_;
 
-    std::unique_ptr< EclWriterType > eclWriter_;
+    std::unique_ptr<EclWriterType> eclWriter_;
 
     PffGridVector<GridView, Stencil, PffDofData_, DofMapper> pffDofData_;
 
