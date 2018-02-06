@@ -45,7 +45,7 @@ list(APPEND TEST_DATA_FILES
 	${TMP_VTPS}
 	${TMP_VTUS}
 	tests/data/equil_rsvd_and_rvvd.DATA
-        tests/data/equil_pbvd_and_pdvd.DATA
+  tests/data/equil_pbvd_and_pdvd.DATA
 	tests/data/equil_capillary_overlap.DATA
 	tests/data/equil_deadfluids.DATA
 	tests/data/equil_capillary.DATA
