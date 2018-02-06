@@ -491,7 +491,8 @@ protected:
                           const ElementContext& elemCtx) const
     {
         EvalVector tmp;
-        EqVector tmp2;
+        //EqVector tmp2;
+        EvalVector tmp2;
         RateVector sourceRate;
 
         tmp = 0.0;
@@ -566,6 +567,11 @@ protected:
 
             // Use the implicit Euler time discretization
             for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                if(elemCtx.focusTimeIndex()==0){
+                    tmp2[eqIdx] .clearDerivatives();// remove derivatives for the time index
+                }else{
+                    tmp[eqIdx] .clearDerivatives();
+                }
                 tmp[eqIdx] -= tmp2[eqIdx];
                 tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
 

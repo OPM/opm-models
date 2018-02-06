@@ -163,10 +163,10 @@ public:
      *
      * This means the spatial domain plus all auxiliary equations.
      */
-    void linearize()
+    void linearize(unsigned focustimeIndex)
     {
-        linearizeDomain();
-        linearizeAuxiliaryEquations();
+        linearizeDomain(focustimeIndex);
+        linearizeAuxiliaryEquations(focustimeIndex);
     }
 
     /*!
@@ -179,7 +179,7 @@ public:
      * The current state of affairs (esp. the previous and the current solutions) is
      * represented by the model object.
      */
-    void linearizeDomain()
+    void linearizeDomain(unsigned focustimeIndex)
     {
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
@@ -189,7 +189,7 @@ public:
 
         int succeeded;
         try {
-            linearize_();
+            linearize_(focustimeIndex);
             succeeded = 1;
         }
         catch (const std::exception& e)
@@ -225,7 +225,7 @@ public:
      * \brief Linearize the part of the non-linear system of equations that is associated
      *        with the spatial domain.
      */
-    void linearizeAuxiliaryEquations()
+    void linearizeAuxiliaryEquations(OPM_UNUSED unsigned focustimeIndex)
     {
         auto& model = model_();
         const auto& comm = simulator_().gridView().comm();
@@ -434,7 +434,7 @@ private:
     }
 
     // linearize the whole system
-    void linearize_()
+    void linearize_(unsigned focustimeindex)
     {
         resetSystem_();
 
@@ -474,7 +474,7 @@ private:
                 if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                     continue;
 
-                linearizeElement_(elem);
+                linearizeElement_(elem, focustimeindex);
             }
         }
 
@@ -482,7 +482,7 @@ private:
     }
 
     // linearize an element in the interior of the process' grid partition
-    void linearizeElement_(const Element& elem)
+    void linearizeElement_(const Element& elem, unsigned focustimeindex)
     {
         unsigned threadId = ThreadManager::threadId();
 
@@ -490,6 +490,7 @@ private:
         auto& localLinearizer = model_().localLinearizer(threadId);
 
         // the actual work of linearization is done by the local linearizer class
+        elementCtx->setFocusTimeIndex(focustimeindex);
         localLinearizer.linearize(*elementCtx, elem);
 
         // update the right hand side and the Jacobian matrix
