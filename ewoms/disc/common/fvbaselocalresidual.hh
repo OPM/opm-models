@@ -473,7 +473,8 @@ protected:
                           const ElementContext& elemCtx) const
     {
         EvalVector tmp;
-        EqVector tmp2;
+        //EqVector tmp2;
+        EvalVector tmp2;
         RateVector sourceRate;
 
         tmp = 0.0;
@@ -491,53 +492,64 @@ protected:
             // if the model uses extensive quantities in its storage term, and we use
             // automatic differention and current DOF is also not the one we currently
             // focus on, the storage term does not need any derivatives!
-            if (!extensiveStorageTerm &&
-                !std::is_same<Scalar, Evaluation>::value &&
-                dofIdx != elemCtx.focusDofIndex())
-            {
-                asImp_().computeStorage(tmp2, elemCtx, dofIdx, /*timeIdx=*/0);
-                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                    tmp[eqIdx] = tmp2[eqIdx];
-            }
-            else
-                asImp_().computeStorage(tmp, elemCtx, dofIdx, /*timeIdx=*/0);
+//            if (!extensiveStorageTerm &&
+//                !std::is_same<Scalar, Evaluation>::value &&
+//                dofIdx != elemCtx.focusDofIndex())
+//            {
+//                asImp_().computeStorage(tmp2, elemCtx, dofIdx, /*timeIdx=*/0);
+//                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+//                    tmp[eqIdx] = tmp2[eqIdx];
+//            }
+//            else
+            tmp=0.0;
+            asImp_().computeStorage(tmp, elemCtx, dofIdx, /*timeIdx=*/0);
             Opm::Valgrind::CheckDefined(tmp);
+            tmp2 = 0.0;
+            asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
+            Opm::Valgrind::CheckDefined(tmp2);
 
-            if (elemCtx.enableStorageCache()) {
-                const auto& model = elemCtx.model();
-                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
-                if (model.newtonMethod().numIterations() == 0 &&
-                    !elemCtx.haveStashedIntensiveQuantities())
-                {
-                    // if the storage term is cached and we're in the first iteration of
-                    // the time step, update the cache of the storage term (this assumes
-                    // that the initial guess for the solution at the end of the time
-                    // step is the same as the solution at the beginning of the time
-                    // step. This is usually true, but some fancy preprocessing scheme
-                    // might invalidate that assumption.)
-                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
-                        tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
-                    Opm::Valgrind::CheckDefined(tmp2);
 
-                    model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
-                }
-                else {
-                    // if the storage term is cached and we're not looking at the first
-                    // iteration of the time step, we take the cached data.
-                    tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
-                    Opm::Valgrind::CheckDefined(tmp2);
-                }
-            }
-            else {
-                // if the mass storage at the beginning of the time step is not cached,
-                // we re-calculate it from scratch.
-                tmp2 = 0.0;
-                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
-                Opm::Valgrind::CheckDefined(tmp2);
-            }
+
+//            if (elemCtx.enableStorageCache()) {
+//                const auto& model = elemCtx.model();
+//                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+//                if (model.newtonMethod().numIterations() == 0 &&
+//                    !elemCtx.haveStashedIntensiveQuantities())
+//                {
+//                    // if the storage term is cached and we're in the first iteration of
+//                    // the time step, update the cache of the storage term (this assumes
+//                    // that the initial guess for the solution at the end of the time
+//                    // step is the same as the solution at the beginning of the time
+//                    // step. This is usually true, but some fancy preprocessing scheme
+//                    // might invalidate that assumption.)
+//                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+//                        tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
+//                    Opm::Valgrind::CheckDefined(tmp2);
+
+//                    model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
+//                }
+//                else {
+//                    // if the storage term is cached and we're not looking at the first
+//                    // iteration of the time step, we take the cached data.
+//                    //tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
+//                    //Opm::Valgrind::CheckDefined(tmp2);
+//                }
+//            }
+//            else {
+//                // if the mass storage at the beginning of the time step is not cached,
+//                // we re-calculate it from scratch.
+//                tmp2 = 0.0;
+//                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
+//                Opm::Valgrind::CheckDefined(tmp2);
+//            }
 
             // Use the implicit Euler time discretization
             for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                if(elemCtx.focusTimeIndex()==0){
+                    tmp2[eqIdx] .clearDerivatives();// remove derivatives for the time index
+                }else{
+                    tmp[eqIdx] .clearDerivatives();
+                }
                 tmp[eqIdx] -= tmp2[eqIdx];
                 tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
 
