@@ -22,16 +22,18 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::SimplexGridManager
+ * \copydoc Ewoms::CubeGridVanguard
  */
-#ifndef EWOMS_SIMPLEX_GRID_MANAGER_HH
-#define EWOMS_SIMPLEX_GRID_MANAGER_HH
+#ifndef EWOMS_CUBE_GRID_VANGUARD_HH
+#define EWOMS_CUBE_GRID_VANGUARD_HH
 
+#include <ewoms/io/basevanguard.hh>
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <dune/grid/utility/structuredgridfactory.hh>
+
 #include <dune/common/fvector.hh>
 
 #include <memory>
@@ -53,13 +55,16 @@ NEW_PROP_TAG(GridGlobalRefinements);
 } // namespace Properties
 
 /*!
- * \brief Provides a grid manager which a regular grid made of
- *        simplices.
+ * \brief Provides a simulator vanguad which creates a regular grid made of
+ *        quadrilaterals.
+ *
+ * A quadrilateral is a line segment in 1D, a rectangle in 2D and a
+ * cube in 3D.
  */
 template <class TypeTag>
-class SimplexGridManager
+class CubeGridVanguard : public BaseVanguard<TypeTag>
 {
-    typedef BaseGridManager<TypeTag> ParentType;
+    typedef BaseVanguard<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
@@ -71,7 +76,7 @@ class SimplexGridManager
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid manager.
+     * \brief Register all run-time parameters for the simulator vanguad.
      */
     static void registerParameters()
     {
@@ -97,35 +102,32 @@ public:
     }
 
     /*!
-     * \brief Create the Grid
+     * \brief Create the grid
      */
-    SimplexGridManager(Simulator& simulator)
+    CubeGridVanguard(Simulator& simulator)
         : ParentType(simulator)
     {
-        Dune::array<unsigned, dimWorld> cellRes;
-        GlobalPosition upperRight;
-        GlobalPosition lowerLeft;
+        std::array<unsigned int, dimWorld> cellRes;
+        GlobalPosition upperRight(0.0);
+        GlobalPosition lowerLeft(0.0);
 
-        lowerLeft[0] = 0.0;
+        for (unsigned i = 0; i < dimWorld; ++i)
+            cellRes[i] = 0;
+
         upperRight[0] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeX);
         cellRes[0] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX);
         if (dimWorld > 1) {
-            lowerLeft[1] = 0.0;
             upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
             cellRes[1] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsY);
         }
         if (dimWorld > 2) {
-            lowerLeft[2] = 0.0;
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsZ);
         }
 
-        simplexGrid_ = Dune::StructuredGridFactory<Grid>::createSimplexGrid(lowerLeft,
-                                                                            upperRight,
-                                                                            cellRes);
-
-        unsigned numRefinments = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
-        simplexGrid_->globalRefine(numRefinments);
+        unsigned numRefinements = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
+        cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
+        cubeGrid_->globalRefine(static_cast<int>(numRefinements));
 
         this->finalizeInit_();
     }
@@ -134,17 +136,18 @@ public:
      * \brief Returns a reference to the grid.
      */
     Grid& grid()
-    { return simplexGrid_; }
+    { return *cubeGrid_; }
 
     /*!
      * \brief Returns a reference to the grid.
      */
     const Grid& grid() const
-    { return *simplexGrid_; }
+    { return *cubeGrid_; }
 
-private:
-    GridPointer simplexGrid_;
+protected:
+    GridPointer cubeGrid_;
 };
+
 } // namespace Ewoms
 
 #endif

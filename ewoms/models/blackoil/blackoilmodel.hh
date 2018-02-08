@@ -61,7 +61,7 @@ template <class TypeTag>
 class BlackOilModel;
 
 template <class TypeTag>
-class EclGridManager;
+class EclVanguard;
 }
 
 namespace Ewoms {

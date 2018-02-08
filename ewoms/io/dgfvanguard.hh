@@ -22,16 +22,16 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::DgfGridManager
+ * \copydoc Ewoms::DgfVanguard
  */
-#ifndef EWOMS_DGF_GRID_MANAGER_HH
-#define EWOMS_DGF_GRID_MANAGER_HH
+#ifndef EWOMS_DGF_GRID_VANGUARD_HH
+#define EWOMS_DGF_GRID_VANGUARD_HH
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/grid/common/mcmgmapper.hh>
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 
-#include <ewoms/io/basegridmanager.hh>
+#include <ewoms/io/basevanguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
@@ -43,19 +43,20 @@ namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridFile);
-NEW_PROP_TAG(GridManager);
+NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Simulator);
 } // namespace Properties
 
 /*!
- * \brief Provides a grid manager which reads Dune Grid Format (DGF) files
+ * \brief Provides a simulator vanguard which creates a grid by parsing a Dune Grid
+ *        Format (DGF) file.
  */
 template <class TypeTag>
-class DgfGridManager : public BaseGridManager<TypeTag>
+class DgfVanguard : public BaseVanguard<TypeTag>
 {
-    typedef BaseGridManager<TypeTag> ParentType;
+    typedef BaseVanguard<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
@@ -65,7 +66,7 @@ class DgfGridManager : public BaseGridManager<TypeTag>
 
 public:
     /*!
-     * \brief Register all run-time parameters for the grid manager.
+     * \brief Register all run-time parameters for the DGF simulator vanguard.
      */
     static void registerParameters()
     {
@@ -79,7 +80,7 @@ public:
     /*!
      * \brief Load the grid from the file.
      */
-    DgfGridManager(Simulator& simulator)
+    DgfVanguard(Simulator& simulator)
         : ParentType(simulator)
     {
         const std::string dgfFileName = EWOMS_GET_PARAM(TypeTag, std::string, GridFile);

@@ -291,7 +291,7 @@ protected:
     void prepare_(const Matrix& M)
     {
         // if grid has changed the sequence number has changed too
-        int curSeqNum = simulator_.gridManager().gridSequenceNumber();
+        int curSeqNum = simulator_.vanguard().gridSequenceNumber();
         if( gridSequenceNumber_ == curSeqNum && overlappingMatrix_)
             // the grid has not changed since the overlappingMatrix_has been created, so
             // there's noting to do

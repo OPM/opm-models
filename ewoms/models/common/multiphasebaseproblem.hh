@@ -316,8 +316,8 @@ public:
 
         unsigned numMarked = 0;
         ElementContext elemCtx( this->simulator() );
-        auto gridView = this->simulator().gridManager().gridView();
-        auto& grid = this->simulator().gridManager().grid();
+        auto gridView = this->simulator().vanguard().gridView();
+        auto& grid = this->simulator().vanguard().grid();
         auto elemIt = gridView.template begin</*codim=*/0, Dune::Interior_Partition>();
         auto elemEndIt = gridView.template end</*codim=*/0, Dune::Interior_Partition>();
         for (; elemIt != elemEndIt; ++elemIt)
@@ -357,7 +357,7 @@ public:
         }
 
         // get global sum so that every proc is on the same page
-        numMarked = this->simulator().gridManager().grid().comm().sum( numMarked );
+        numMarked = this->simulator().vanguard().grid().comm().sum( numMarked );
 
         return numMarked;
     }

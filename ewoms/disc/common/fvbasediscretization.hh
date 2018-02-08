@@ -378,7 +378,7 @@ public:
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
 #if HAVE_DUNE_FEM
-        , space_( simulator.gridManager().gridPart() )
+        , space_( simulator.vanguard().gridPart() )
 #else
         , space_( asImp_().numGridDof() )
 #endif
@@ -1723,7 +1723,7 @@ public:
             restrictProlong_.reset(
                 new RestrictProlong( DiscreteFunctionRestrictProlong(*(solution_[/*timeIdx=*/ 0] )),
                                      simulator_.problem().restrictProlongOperator() ) );
-            adaptationManager_.reset( new AdaptationManager( simulator_.gridManager().grid(), *restrictProlong_ ) );
+            adaptationManager_.reset( new AdaptationManager( simulator_.vanguard().grid(), *restrictProlong_ ) );
         }
         return *adaptationManager_;
     }

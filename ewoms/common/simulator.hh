@@ -45,11 +45,10 @@
 #include <string>
 #include <memory>
 
-
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(GridManager);
+NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(Model);
 NEW_PROP_TAG(Problem);
@@ -75,7 +74,7 @@ template <class TypeTag>
 class Simulator
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
@@ -116,12 +115,12 @@ public:
         finished_ = false;
 
         if (verbose_)
-            std::cout << "Allocating the grid\n" << std::flush;
-        gridManager_.reset(new GridManager(*this));
+            std::cout << "Instantiating the vanguard\n" << std::flush;
+        vanguard_.reset(new Vanguard(*this));
 
         if (verbose_)
-            std::cout << "Distributing the grid\n" << std::flush;
-        gridManager_->loadBalance();
+            std::cout << "Distributing the vanguard data\n" << std::flush;
+        vanguard_->loadBalance();
 
         if (verbose_)
             std::cout << "Allocating the model\n" << std::flush;
@@ -160,7 +159,7 @@ public:
                              "A file with a list of predetermined time step sizes (one "
                              "time step per line)");
 
-        GridManager::registerParameters();
+        Vanguard::registerParameters();
         Model::registerParameters();
         Problem::registerParameters();
     }
@@ -168,20 +167,20 @@ public:
     /*!
      * \brief Return a reference to the grid manager of simulation
      */
-    GridManager& gridManager()
-    { return *gridManager_; }
+    Vanguard& vanguard()
+    { return *vanguard_; }
 
     /*!
      * \brief Return a reference to the grid manager of simulation
      */
-    const GridManager& gridManager() const
-    { return *gridManager_; }
+    const Vanguard& vanguard() const
+    { return *vanguard_; }
 
     /*!
      * \brief Return the grid view for which the simulation is done
      */
     const GridView& gridView() const
-    { return gridManager_->gridView(); }
+    { return vanguard_->gridView(); }
 
     /*!
      * \brief Return the physical model used in the simulation
@@ -847,7 +846,7 @@ public:
     }
 
 private:
-    std::unique_ptr<GridManager> gridManager_;
+    std::unique_ptr<Vanguard> vanguard_;
     std::unique_ptr<Model> model_;
     std::unique_ptr<Problem> problem_;
 
