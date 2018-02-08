@@ -31,7 +31,7 @@
 
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/istl/superlu.hh>
 #include <dune/common/fmatrix.hh>

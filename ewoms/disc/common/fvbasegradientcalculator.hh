@@ -30,7 +30,7 @@
 
 #include "fvbaseproperties.hh"
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/fvector.hh>
 

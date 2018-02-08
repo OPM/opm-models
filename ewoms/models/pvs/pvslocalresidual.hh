@@ -33,7 +33,7 @@
 #include <ewoms/models/common/diffusionmodule.hh>
 #include <ewoms/models/common/energymodule.hh>
 
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 namespace Ewoms {
 

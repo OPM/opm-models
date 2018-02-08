@@ -32,7 +32,7 @@
 
 #include <ewoms/models/common/energymodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include "flashintensivequantities.hh"
 

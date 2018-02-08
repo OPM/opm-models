@@ -29,7 +29,7 @@
 #define EWOMS_FV_BASE_CONSTRAINTS_HH
 
 #include <ewoms/common/propertysystem.hh>
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 namespace Ewoms {
 namespace Properties {

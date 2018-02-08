@@ -34,8 +34,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <string>
 #include <limits>
@@ -106,8 +105,8 @@ public:
             idx = static_cast<unsigned>(mapper_.subIndex(e, imin, codim_));
         }
         else
-            OPM_THROW(std::logic_error, "Only element and vertex based vector "
-                                        " fields are supported so far.");
+            throw std::logic_error("Only element and vertex based vector fields are "
+                                   "supported so far.");
 
         return static_cast<double>(static_cast<float>(buf_[idx][static_cast<unsigned>(mycomp)]));
     }

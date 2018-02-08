@@ -31,10 +31,9 @@
 #include <ewoms/disc/common/fvbaseproperties.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -162,8 +161,8 @@ public:
      */
     Scalar tortuosity(unsigned phaseIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error, "Method tortuosity() does not make sense "
-                                    "if diffusion is disabled");
+        throw std::logic_error("Method tortuosity() does not make sense "
+                               "if diffusion is disabled");
     }
 
     /*!
@@ -172,8 +171,8 @@ public:
      */
     Scalar diffusionCoefficient(unsigned phaseIdx OPM_UNUSED, unsigned compIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error, "Method diffusionCoefficient() does not "
-                                    "make sense if diffusion is disabled");
+        throw std::logic_error("Method diffusionCoefficient() does not "
+                               "make sense if diffusion is disabled");
     }
 
     /*!
@@ -182,9 +181,8 @@ public:
      */
     Scalar effectiveDiffusionCoefficient(unsigned phaseIdx OPM_UNUSED, unsigned compIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error, "Method effectiveDiffusionCoefficient() "
-                                    "does not make sense if diffusion is "
-                                    "disabled");
+        throw std::logic_error("Method effectiveDiffusionCoefficient() "
+                               "does not make sense if diffusion is disabled");
     }
 
 protected:
@@ -328,9 +326,8 @@ public:
     const Evaluation& moleFractionGradientNormal(unsigned phaseIdx OPM_UNUSED,
                                                  unsigned compIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "The method moleFractionGradient() does not "
-                  "make sense if diffusion is disabled.");
+        throw std::logic_error("The method moleFractionGradient() does not "
+                               "make sense if diffusion is disabled.");
     }
 
     /*!
@@ -343,9 +340,8 @@ public:
     const Evaluation& effectiveDiffusionCoefficient(unsigned phaseIdx OPM_UNUSED,
                                                     unsigned compIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "The method effectiveDiffusionCoefficient() "
-                  "does not make sense if diffusion is disabled.");
+        throw std::logic_error("The method effectiveDiffusionCoefficient() "
+                               "does not make sense if diffusion is disabled.");
     }
 };
 

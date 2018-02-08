@@ -30,10 +30,8 @@
 
 #include <ewoms/common/quadraturegeometries.hh>
 
-#include <opm/common/Unused.hpp>
-
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/grid/common/intersectioniterator.hh>
 #include <dune/grid/common/mcmgmapper.hh>
@@ -118,8 +116,7 @@ public:
 
     static const ScvLocalGeometry& get(unsigned scvIdx OPM_UNUSED)
     {
-        OPM_THROW(std::logic_error,
-                "Not implemented: VcfvScvGeometries<Scalar, 1, ElementType::simplex>");
+        throw std::logic_error("Not implemented: VcfvScvGeometries<Scalar, 1, ElementType::simplex>");
     }
 };
 
@@ -636,9 +633,8 @@ private:
             rightFace = edgeToFaceHex[1][k];
             break;
         default:
-            OPM_THROW(std::logic_error,
-                      "Not implemented: VcfvStencil::getFaceIndices for "
-                      << numElemVertices << " vertices");
+            throw std::logic_error("Not implemented: VcfvStencil::getFaceIndices for "
+                                   +std::to_string(numElemVertices)+" vertices");
             break;
         }
     }
@@ -720,9 +716,8 @@ private:
             rightEdge = static_cast<unsigned>(faceAndVertexToRightEdgeHex[face][vert]);
             break;
         default:
-            OPM_THROW(std::logic_error,
-                      "Not implemented: VcfvStencil::getFaceIndices for "
-                      << numElemVertices << " vertices");
+            throw std::logic_error("Not implemented: VcfvStencil::getFaceIndices for "
+                                   +std::to_string(numElemVertices)+" vertices");
             break;
         }
     }
@@ -1010,7 +1005,7 @@ public:
                                             edgeCoord[leftEdge]);
                 }
                 else
-                    OPM_THROW(std::logic_error, "Not implemented:VcfvStencil for dim = " << dim);
+                    throw std::logic_error("Not implemented:VcfvStencil for dim = "+std::to_string(dim));
 
                 boundaryFace_[bfIdx].ipGlobal_ = geometry.global(boundaryFace_[bfIdx].ipLocal_);
                 boundaryFace_[bfIdx].i = vertInElement;
@@ -1044,8 +1039,7 @@ public:
             }
         }
         else
-            OPM_THROW(std::logic_error,
-                      "Not implemented: SCV geometries for non hexahedron elements");
+            throw std::logic_error("Not implemented: SCV geometries for non hexahedron elements");
     }
 
 #if HAVE_DUNE_LOCALFUNCTIONS
@@ -1160,9 +1154,8 @@ private:
                                       edgeCoord[1]);
                 break;
             default:
-                OPM_THROW(std::logic_error,
-                          "Not implemented:VcfvStencil dim = " << dim
-                          << ", numVertices = " << numVertices);
+                throw std::logic_error("Not implemented:VcfvStencil dim = "+std::to_string(dim)
+                                       +", numVertices = "+std::to_string(numVertices));
             }
         }
         else if (dim == 3) {
@@ -1345,13 +1338,12 @@ private:
                                      edgeCoord[9]);
                 break;
             default:
-                OPM_THROW(std::logic_error,
-                          "Not implemented:VcfvStencil for dim = " << dim
-                          << ", numVertices = " << numVertices);
+                throw std::logic_error("Not implemented:VcfvStencil for dim = "+std::to_string(dim)
+                                       +", numVertices = "+std::to_string(numVertices));
             }
         }
         else
-            OPM_THROW(std::logic_error, "Not implemented:VcfvStencil for dim = " << dim);
+            throw std::logic_error("Not implemented:VcfvStencil for dim = "+std::to_string(dim));
     }
 #if __GNUC__ || __clang__
 #pragma GCC diagnostic pop

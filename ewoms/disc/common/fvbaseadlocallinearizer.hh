@@ -31,8 +31,8 @@
 #include "fvbaseproperties.hh"
 
 #include <opm/material/densead/Math.hpp>
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/istl/matrix.hh>

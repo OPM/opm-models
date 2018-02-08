@@ -27,9 +27,6 @@
 #ifndef EWOMS_RESTART_HH
 #define EWOMS_RESTART_HH
 
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/ErrorMacros.hpp>
-
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -171,16 +168,14 @@ public:
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
         if (!inStream_.good()) {
-            OPM_THROW(std::runtime_error, "Restart file '" << fileName_
-                                          << "' could not be opened properly");
+            throw std::runtime_error("Restart file '"+fileName_+"' could not be opened properly");
         }
 
         // make sure that we don't open an empty file
         inStream_.seekg(0, std::ios::end);
         auto pos = inStream_.tellg();
         if (pos == 0) {
-            OPM_THROW(std::runtime_error,
-                      "Restart file '" << fileName_ << "' is empty");
+            throw std::runtime_error("Restart file '"+fileName_+"' is empty");
         }
         inStream_.seekg(0, std::ios::beg);
 
@@ -203,13 +198,11 @@ public:
     void deserializeSectionBegin(const std::string& cookie)
     {
         if (!inStream_.good())
-            OPM_THROW(std::runtime_error,
-                      "Encountered unexpected EOF in restart file.");
+            throw std::runtime_error("Encountered unexpected EOF in restart file.");
         std::string buf;
         std::getline(inStream_, buf);
         if (buf != cookie)
-            OPM_THROW(std::runtime_error,
-                      "Could not start section '" << cookie << "'");
+            throw std::runtime_error("Could not start section '"+cookie+"'");
     }
 
     /*!
@@ -221,8 +214,7 @@ public:
         std::getline(inStream_, dummy);
         for (unsigned i = 0; i < dummy.length(); ++i) {
             if (!std::isspace(dummy[i])) {
-                OPM_THROW(std::logic_error,
-                          "Encountered unread values while deserializing");
+                throw std::logic_error("Encountered unread values while deserializing");
             }
         }
     }
@@ -248,7 +240,7 @@ public:
         const Iterator& endIt = gridView.template end<codim>();
         for (; it != endIt; ++it) {
             if (!inStream_.good()) {
-                OPM_THROW(std::runtime_error, "Restart file is corrupted");
+                throw std::runtime_error("Restart file is corrupted");
             }
 
             std::getline(inStream_, curLine);

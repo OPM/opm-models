@@ -48,10 +48,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #endif
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -101,16 +100,12 @@ public:
     {
         // some sanity checks: if solvents are enabled, the SOLVENT keyword must be
         // present, if solvents are disabled the keyword must not be present.
-        if (enableSolvent && !deck.hasKeyword("SOLVENT")) {
-            OPM_THROW(std::runtime_error,
-                      "Non-trivial solvent treatment requested at compile time, but "
-                      "the deck does not contain the SOLVENT keyword");
-        }
-        else if (!enableSolvent && deck.hasKeyword("SOLVENT")) {
-            OPM_THROW(std::runtime_error,
-                      "Solvent treatment disabled at compile time, but the deck "
-                      "contains the SOLVENT keyword");
-        }
+        if (enableSolvent && !deck.hasKeyword("SOLVENT"))
+            throw std::runtime_error("Non-trivial solvent treatment requested at compile "
+                                     "time, but the deck does not contain the SOLVENT keyword");
+        else if (!enableSolvent && deck.hasKeyword("SOLVENT"))
+            throw std::runtime_error("Solvent treatment disabled at compile time, but the deck "
+                                     "contains the SOLVENT keyword");
 
         if (!deck.hasKeyword("SOLVENT"))
             return; // solvent treatment is supposed to be disabled
@@ -153,9 +148,9 @@ public:
                                                        /*sortInput=*/true);
                 }
 
-            } else {
-                OPM_THROW(std::runtime_error, "SOF2 must be specified in MISCIBLE (SOLVENT) runs\n");
             }
+            else
+                throw std::runtime_error("SOF2 must be specified in MISCIBLE (SOLVENT) runs\n");
 
             const auto& miscTables = tableManager.getMiscTables();
             if (!miscTables.empty()) {
@@ -173,9 +168,9 @@ public:
                     misc_[miscRegionIdx].setXYContainers(solventFraction, misc);
 
                 }
-            } else {
-                OPM_THROW(std::runtime_error, "MISC must be specified in MISCIBLE (SOLVENT) runs\n");
             }
+            else
+                throw std::runtime_error("MISC must be specified in MISCIBLE (SOLVENT) runs\n");
 
             // resize the attributes of the object
             pmisc_.resize(numMiscRegions);
@@ -282,9 +277,8 @@ public:
                 std::vector<double> x = {0.0,1.0};
                 std::vector<double> y = {0.0,0.0};
                 TabulatedFunction zero = TabulatedFunction(2, x, y);
-                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx)
                     setSgcmis(regionIdx, zero);
-                }
             }
 
 
@@ -301,17 +295,16 @@ public:
                     tlMixParamViscosity_[regionIdx] = mix_params_viscosity[0];
                     const auto& mix_params_density = tlmixparRecord.getItem("TL_DENSITY_PARAMETER").getSIDoubleData();
                     const int numDensityItems = mix_params_density.size();
-                    if (numDensityItems == 0) {
+                    if (numDensityItems == 0)
                         tlMixParamDensity_[regionIdx] = tlMixParamViscosity_[regionIdx];
-                    } else if (numDensityItems == 1) {
+                    else if (numDensityItems == 1)
                         tlMixParamDensity_[regionIdx] = mix_params_density[0];
-                    } else {
-                        OPM_THROW(std::runtime_error, "Only one value can be entered for the TL parameter pr MISC region.");
-                    }
+                    else
+                        throw std::runtime_error("Only one value can be entered for the TL parameter pr MISC region.");
                 }
-            } else {
-                OPM_THROW(std::runtime_error, "TLMIXPAR must be specified in MISCIBLE (SOLVENT) runs\n");
             }
+            else
+                throw std::runtime_error("TLMIXPAR must be specified in MISCIBLE (SOLVENT) runs\n");
 
             // resize the attributes of the object
             tlPMixTable_.resize(numMiscRegions);
@@ -330,29 +323,26 @@ public:
                         tlPMixTable_[regionIdx].setXYContainers(po, tlpmixpa);
 
                     }
-                } else {
-                    // if empty keyword. Try to use the pmisc table as default.
-                    if (pmisc_.size() > 0) {
-                        tlPMixTable_ = pmisc_;
-                    } else {
-                        OPM_THROW(std::invalid_argument, "If the pressure dependent TL values in TLPMIXPA is defaulted (no entries), then the PMISC tables must be specified.");
-                    }
                 }
-            } else {
+                else {
+                    // if empty keyword. Try to use the pmisc table as default.
+                    if (pmisc_.size() > 0)
+                        tlPMixTable_ = pmisc_;
+                    else
+                        throw std::invalid_argument("If the pressure dependent TL values in "
+                                                    "TLPMIXPA is defaulted (no entries), then "
+                                                    "the PMISC tables must be specified.");
+                }
+            }
+            else {
                 // default
                 std::vector<double> x = {0.0,1.0e20};
                 std::vector<double> y = {1.0,1.0};
                 TabulatedFunction ones = TabulatedFunction(2, x, y);
-                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx) {
+                for (unsigned regionIdx = 0; regionIdx < numMiscRegions; ++regionIdx)
                     setTlpmixpa(regionIdx, ones);
-                }
             }
-
-
         }
-
-
-
     }
 #endif
 
@@ -560,12 +550,14 @@ public:
     {
         if (!enableSolvent)
             return;
+
         if (blackoilConserveSurfaceVolume) {
             storage[contiSolventEqIdx] +=
                     Toolbox::template decay<LhsEval>(intQuants.porosity())
                     * Toolbox::template decay<LhsEval>(intQuants.solventSaturation())
                     * Toolbox::template decay<LhsEval>(intQuants.solventInverseFormationVolumeFactor());
-        } else {
+        }
+        else {
             storage[contiSolventEqIdx] +=
                     Toolbox::template decay<LhsEval>(intQuants.porosity())
                     * Toolbox::template decay<LhsEval>(intQuants.solventSaturation())
@@ -597,7 +589,8 @@ public:
                 flux[contiSolventEqIdx] =
                         extQuants.solventVolumeFlux()
                         *Opm::decay<Scalar>(up.solventInverseFormationVolumeFactor());
-        } else {
+        }
+        else {
             if (upIdx == inIdx)
                 flux[contiSolventEqIdx] =
                         extQuants.solventVolumeFlux()
@@ -915,9 +908,8 @@ public:
         hydrocarbonSaturation_ = fs.saturation(gasPhaseIdx);
 
         // apply a cut-off. Don't waste calculations if no solvent
-        if (std::abs(solventSaturation().value()) < cutOff) {
+        if (std::abs(solventSaturation().value()) < cutOff)
             return;
-        }
 
         // make the saturation of the gas phase which is used by the saturation functions
         // the sum of the solvent "saturation" and the saturation the hydrocarbon gas.
@@ -943,13 +935,11 @@ public:
         solventMobility_ = 0.0;
 
         // apply a cut-off. Don't waste calculations if no solvent
-        if (std::abs(solventSaturation().value()) < cutOff) {
+        if (std::abs(solventSaturation().value()) < cutOff)
             return;
-        }
 
         // Pressure effects on capillary pressure miscibility
-        if(SolventModule::isMiscible()) {
-
+        if (SolventModule::isMiscible()) {
             const Evaluation& p = fs.pressure(oilPhaseIdx); // or gas pressure?
             const Evaluation pmisc = SolventModule::pmisc(elemCtx, dofIdx, timeIdx).eval(p, /*extrapolate=*/true);
             const Evaluation& pgImisc = fs.pressure(gasPhaseIdx);
@@ -963,9 +953,9 @@ public:
             MaterialLaw::capillaryPressures(pC, materialParams, fs);
 
             //oil is the reference phase for pressure
-            if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
+            if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
                 pgMisc = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
-            } else {
+            else {
                 const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
                 pgMisc = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
             }
@@ -976,15 +966,14 @@ public:
 
         Evaluation gasSolventSat = hydrocarbonSaturation_ + solventSaturation_;
 
-        if (std::abs(gasSolventSat.value()) < cutOff) { // avoid division by zero
+        if (std::abs(gasSolventSat.value()) < cutOff) // avoid division by zero
             return;
-        }
 
         Evaluation Fhydgas = hydrocarbonSaturation_/gasSolventSat;
         Evaluation Fsolgas = solventSaturation_/gasSolventSat;
 
         // account for miscibility of oil and solvent
-        if(SolventModule::isMiscible()) {
+        if (SolventModule::isMiscible()) {
             const auto& misc = SolventModule::misc(elemCtx, dofIdx, timeIdx);
             const auto& pmisc = SolventModule::pmisc(elemCtx, dofIdx, timeIdx);
             const Evaluation& p = fs.pressure(oilPhaseIdx); // or gas pressure?
@@ -1099,15 +1088,13 @@ private:
                              unsigned scvIdx,
                              unsigned timeIdx)
     {
-        if (!SolventModule::isMiscible()) {
+        if (!SolventModule::isMiscible())
             return;
-        }
 
         // Don't waste calculations if no solvent
         // Apply a cut-off for small and negative solvent saturations
-        if ( solventSaturation() < cutOff) { //
+        if (solventSaturation() < cutOff)
             return;
-        }
 
         auto& fs = asImp_().fluidState_;
 
@@ -1188,25 +1175,25 @@ private:
             rhoMixSolventGasOil = (rhoOil * oilEffSat / oilGasSolventEffSat) + (rhoGas * gasEffSat / oilGasSolventEffSat) + (rhoSolvent * solventEffSat / oilGasSolventEffSat);
 
         Evaluation rhoGasEff = 0.0;
-        if ( std::abs(muSolvent.value() - muGas.value()) < cutOff ) {
+        if ( std::abs(muSolvent.value() - muGas.value()) < cutOff )
             rhoGasEff = ( (1.0 - tlMixParamRho) * rhoGas) + (tlMixParamRho * rhoMixSolventGasOil);
-        } else {
+        else {
             const Evaluation solventGasEffFraction = (muGasPow * (muSolventPow - muGasEffPow)) / (muGasEffPow * (muSolventPow - muGasPow));
             rhoGasEff = (rhoGas * solventGasEffFraction) + (rhoSolvent * (1.0 - solventGasEffFraction));
         }
 
         Evaluation rhoOilEff = 0.0;
-        if ( std::abs(muGas.value() - muOil.value()) < cutOff ) {
+        if ( std::abs(muGas.value() - muOil.value()) < cutOff )
             rhoOilEff = ( (1.0 - tlMixParamRho) * rhoOil) + (tlMixParamRho * rhoMixSolventGasOil);
-        } else {
+        else {
             const Evaluation solventOilEffFraction = (muOilPow * (muOilEffPow - muSolventPow)) / (muOilEffPow * (muOilPow - muSolventPow));
             rhoOilEff = (rhoOil * solventOilEffFraction) + (rhoSolvent * (1.0 - solventOilEffFraction));
         }
 
         Evaluation rhoSolventEff = 0.0;
-        if ( std::abs( ( muSolventOilGasPow.value() - (muOilPow.value() * muGasPow.value()))) < cutOff ) {
+        if ( std::abs( ( muSolventOilGasPow.value() - (muOilPow.value() * muGasPow.value()))) < cutOff )
             rhoSolventEff = ( (1.0 - tlMixParamRho) * rhoSolvent) + (tlMixParamRho * rhoMixSolventGasOil);
-        } else {
+        else {
             const Evaluation sfraction_se = (muSolventOilGasPow - ( muOilPow * muGasPow * muSolventPow / muSolventEffPow) ) / ( muSolventOilGasPow - (muOilPow * muGasPow));
             rhoSolventEff = (rhoSolvent * sfraction_se) + (rhoGas * sgf * (1.0 - sfraction_se)) + (rhoOil * sof * (1.0 - sfraction_se));
         }
@@ -1291,22 +1278,22 @@ public:
     { }
 
     const Evaluation& solventSaturation() const
-    { OPM_THROW(std::runtime_error, "solventSaturation() called but solvents are disabled"); }
+    { throw std::runtime_error("solventSaturation() called but solvents are disabled"); }
 
     const Evaluation& solventDensity() const
-    { OPM_THROW(std::runtime_error, "solventDensity() called but solvents are disabled"); }
+    { throw std::runtime_error("solventDensity() called but solvents are disabled"); }
 
     const Evaluation& solventViscosity() const
-    { OPM_THROW(std::runtime_error, "solventViscosity() called but solvents are disabled"); }
+    { throw std::runtime_error("solventViscosity() called but solvents are disabled"); }
 
     const Evaluation& solventMobility() const
-    { OPM_THROW(std::runtime_error, "solventMobility() called but solvents are disabled"); }
+    { throw std::runtime_error("solventMobility() called but solvents are disabled"); }
 
     const Evaluation& solventInverseFormationVolumeFactor() const
-     { OPM_THROW(std::runtime_error, "solventInverseFormationVolumeFactor() called but solvents are disabled"); }
+     { throw std::runtime_error("solventInverseFormationVolumeFactor() called but solvents are disabled"); }
 
     const Scalar& solventRefDensity() const
-     { OPM_THROW(std::runtime_error, "solventRefDensity() called but solvents are disabled"); }
+     { throw std::runtime_error("solventRefDensity() called but solvents are disabled"); }
 };
 
 /*!
@@ -1410,10 +1397,8 @@ public:
             for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
                 solventPGrad[dimIdx] += f[dimIdx];
 
-                if (!Opm::isfinite(solventPGrad[dimIdx])) {
-                    OPM_THROW(Opm::NumericalProblem,
-                              "Non-finite potential gradient for solvent 'phase'");
-                }
+                if (!Opm::isfinite(solventPGrad[dimIdx]))
+                    throw Opm::NumericalIssue("Non-finite potential gradient for solvent 'phase'");
             }
         }
 
@@ -1559,13 +1544,13 @@ public:
     { }
 
     unsigned solventUpstreamIndex() const
-    { OPM_THROW(std::runtime_error, "solventUpstreamIndex() called but solvents are disabled"); }
+    { throw std::runtime_error("solventUpstreamIndex() called but solvents are disabled"); }
 
     unsigned solventDownstreamIndex() const
-    { OPM_THROW(std::runtime_error, "solventDownstreamIndex() called but solvents are disabled"); }
+    { throw std::runtime_error("solventDownstreamIndex() called but solvents are disabled"); }
 
     const Evaluation& solventVolumeFlux() const
-    { OPM_THROW(std::runtime_error, "solventVolumeFlux() called but solvents are disabled"); }
+    { throw std::runtime_error("solventVolumeFlux() called but solvents are disabled"); }
 };
 
 } // namespace Ewoms

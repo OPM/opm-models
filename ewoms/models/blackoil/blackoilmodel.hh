@@ -50,9 +50,8 @@
 #include <ewoms/io/vtkblackoilmodule.hh>
 
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <sstream>
 #include <string>
@@ -369,9 +368,8 @@ public:
         unsigned dofIdx = static_cast<unsigned>(asImp_().dofMapper().index(dof));
 
         // write phase state
-        if (!outstream.good()) {
-            OPM_THROW(std::runtime_error, "Could not serialize degree of freedom " << dofIdx);
-        }
+        if (!outstream.good())
+            throw std::runtime_error("Could not serialize degree of freedom "+std::to_string(dofIdx));
 
         // write the primary variables
         const auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
@@ -405,8 +403,7 @@ public:
         auto& priVars = this->solution(/*timeIdx=*/0)[dofIdx];
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
             if (!instream.good())
-                OPM_THROW(std::runtime_error,
-                          "Could not deserialize degree of freedom " << dofIdx);
+                throw std::runtime_error("Could not deserialize degree of freedom "+std::to_string(dofIdx));
             instream >> priVars[eqIdx];
         }
 
@@ -418,8 +415,7 @@ public:
         instream >> pvtRegionIdx;
 
         if (!instream.good())
-            OPM_THROW(std::runtime_error,
-                      "Could not deserialize degree of freedom " << dofIdx);
+            throw std::runtime_error("Could not deserialize degree of freedom "+std::to_string(dofIdx));
 
         SolventModule::deserializeEntity(*this, instream, dof);
         PolymerModule::deserializeEntity(*this, instream, dof);

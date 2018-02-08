@@ -33,9 +33,8 @@
 #include <ewoms/models/common/multiphasebaseproblem.hh>
 
 #include <opm/material/common/Means.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -114,8 +113,7 @@ public:
                                                    unsigned spaceIdx OPM_UNUSED,
                                                    unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::fractureIntrinsicPermeability()");
+        throw std::logic_error("Not implemented: Problem::fractureIntrinsicPermeability()");
     }
 
     /*!
@@ -131,8 +129,7 @@ public:
                             unsigned spaceIdx OPM_UNUSED,
                             unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::fracturePorosity()");
+        throw std::logic_error("Not implemented: Problem::fracturePorosity()");
     }
 
 private:

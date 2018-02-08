@@ -39,9 +39,9 @@
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/timer.hh>
 
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
-#include <opm/common/utility/ResetLocale.hpp>
+#include <opm/material/common/ResetLocale.hpp>
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/common/version.hh>

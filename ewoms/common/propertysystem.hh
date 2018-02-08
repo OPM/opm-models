@@ -42,13 +42,12 @@
 #ifndef EWOMS_PROPERTIES_HH
 #define EWOMS_PROPERTIES_HH
 
+#include <opm/material/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
+
 #include <dune/common/classname.hh>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/Unused.hpp>
 
 #include <type_traits> // required for 'is_base_of<A, B>'
-
 #include <map>
 #include <set>
 #include <list>
@@ -57,6 +56,7 @@
 #include <sstream>
 #include <cstring>
 #include <tuple>
+#include <memory>
 
 //! \cond SKIP_THIS
 
@@ -715,8 +715,7 @@ public:
         const auto& keyIt = keys_().find(typeTagName);
         const auto& keyEndIt = keys_().end();
         if (keyIt == keyEndIt)
-            OPM_THROW(std::runtime_error,
-                      "Unknown type tag key '" << typeTagName << "'");
+            throw std::runtime_error("Unknown type tag key '"+typeTagName+"'");
 
         // check whether the propery is directly defined for the type tag currently
         // checked, ...

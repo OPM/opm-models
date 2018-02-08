@@ -30,7 +30,7 @@
 #include "overlaptypes.hh"
 
 #include <ewoms/parallel/mpibuffer.hh>
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>

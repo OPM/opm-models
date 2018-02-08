@@ -102,8 +102,8 @@ public:
         if (GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients)) {
 #if !HAVE_DUNE_LOCALFUNCTIONS
             // The dune-localfunctions module is required for P1 finite element gradients
-            OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
-                      " finite element gradients");
+            throw std::logic_error("The dune-localfunctions module is required in oder to use"
+                                   " finite element gradients");
 #else
             const auto& stencil = elemCtx.stencil(timeIdx);
 
@@ -164,8 +164,8 @@ public:
         if (GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients)) {
 #if !HAVE_DUNE_LOCALFUNCTIONS
             // The dune-localfunctions module is required for P1 finite element gradients
-            OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
-                      " finite element gradients");
+            throw std::logic_error("The dune-localfunctions module is required in oder to use"
+                                   " finite element gradients");
 #else
             typedef typename std::remove_reference<typename QuantityCallback::ResultType>::type QuantityConstType;
             typedef typename std::remove_const<QuantityConstType>::type QuantityType;
@@ -209,8 +209,8 @@ public:
         if (GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients)) {
 #if !HAVE_DUNE_LOCALFUNCTIONS
             // The dune-localfunctions module is required for P1 finite element gradients
-            OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
-                      " finite element gradients");
+            throw std::logic_error("The dune-localfunctions module is required in oder to use"
+                                   " finite element gradients");
 #else
             typedef typename std::remove_reference<typename QuantityCallback::ResultType>::type QuantityConstType;
             typedef typename std::remove_const<QuantityConstType>::type QuantityType;
@@ -265,8 +265,8 @@ public:
         if (GET_PROP_VALUE(TypeTag, UseP1FiniteElementGradients)) {
 #if !HAVE_DUNE_LOCALFUNCTIONS
             // The dune-localfunctions module is required for P1 finite element gradients
-            OPM_THROW(std::logic_error, "The dune-localfunctions module is required in oder to use"
-                      " finite element gradients");
+            throw std::logic_error("The dune-localfunctions module is required in oder to use"
+                                   " finite element gradients");
 #else
             typedef typename std::remove_reference<typename QuantityCallback::ResultType>::type QuantityConstType;
             typedef typename std::remove_const<QuantityConstType>::type QuantityType;

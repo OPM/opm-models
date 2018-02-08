@@ -32,7 +32,7 @@
 
 #include <ewoms/parallel/mpibuffer.hh>
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/istl/bcrsmatrix.hh>
