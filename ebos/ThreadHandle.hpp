@@ -109,7 +109,7 @@ namespace Opm
             // if object is end marker terminate thread
             if( obj->isEndMarker() ){
                 if( ! objQueue_.empty() ) {
-                    OPM_THROW(std::logic_error,"ThreadHandleQueue: not all queued objects were executed");
+                    throw std::logic_error("ThreadHandleQueue: not all queued objects were executed");
                 }
                 return;
             }
