@@ -18,7 +18,6 @@ considerably in that case.
 In order to compile eWoms, you first need to install the following OPM
 and DUNE modules:
 
-  - opm-common          from [2]
   - opm-material        from [2]
   - dune-common         from [0]
   - dune-geometry       from [0]
@@ -28,9 +27,10 @@ and DUNE modules:
 To use the ECL Black-Oil Simulator (ebos), the following OPM modules
 are also required:
 
-  - libecl             from [6]
-  - opm-parser         from [2]
-  - opm-grid           from [2]
+  - opm-common          from [2]
+  - libecl              from [6]
+  - opm-parser          from [2]
+  - opm-grid            from [2]
 
 For vertex-centered finite volume discretization schemes, the
 dune-localfunctions DUNE module is needed in addition [0].

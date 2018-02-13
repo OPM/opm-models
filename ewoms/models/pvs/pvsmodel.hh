@@ -49,8 +49,7 @@
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -427,7 +426,7 @@ public:
 
         unsigned dofIdx = static_cast<unsigned>(this->dofMapper().index(dofEntity));
         if (!outstream.good())
-            OPM_THROW(std::runtime_error, "Could not serialize DOF " << dofIdx);
+            throw std::runtime_error("Could not serialize DOF "+std::to_string(dofIdx));
 
         outstream << this->solution(/*timeIdx=*/0)[dofIdx].phasePresence() << " ";
     }
@@ -444,8 +443,7 @@ public:
         // read phase presence
         unsigned dofIdx = static_cast<unsigned>(this->dofMapper().index(dofEntity));
         if (!instream.good())
-            OPM_THROW(std::runtime_error,
-                       "Could not deserialize DOF " << dofIdx);
+            throw std::runtime_error("Could not deserialize DOF "+std::to_string(dofIdx));
 
         short tmp;
         instream >> tmp;
@@ -520,10 +518,8 @@ public:
         }
         succeeded = this->simulator_.gridView().comm().min(succeeded);
 
-        if (!succeeded) {
-            OPM_THROW(Opm::NumericalProblem,
-                       "A process did not succeed in adapting the primary variables");
-        }
+        if (!succeeded)
+            throw Opm::NumericalIssue("A process did not succeed in adapting the primary variables");
 
         // make sure that if there was a variable switch in an
         // other partition we will also set the switch flag

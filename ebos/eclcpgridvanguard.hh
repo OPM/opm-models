@@ -22,15 +22,16 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::EclCpGridManager
+ * \copydoc Ewoms::EclCpGridVanguard
  */
-#ifndef EWOMS_ECL_CP_GRID_MANAGER_HH
-#define EWOMS_ECL_CP_GRID_MANAGER_HH
+#ifndef EWOMS_ECL_CP_GRID_VANGUARD_HH
+#define EWOMS_ECL_CP_GRID_VANGUARD_HH
 
-#include "eclbasegridmanager.hh"
+#include "eclbasevanguard.hh"
 #include "ecltransmissibility.hh"
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
+#include <opm/grid/cpgrid/GridHelpers.hpp>
 
 #include <dune/grid/common/mcmgmapper.hh>
 
@@ -38,18 +39,18 @@
 
 namespace Ewoms {
 template <class TypeTag>
-class EclCpGridManager;
+class EclCpGridVanguard;
 
 namespace Properties {
-NEW_TYPE_TAG(EclCpGridManager, INHERITS_FROM(EclBaseGridManager));
+NEW_TYPE_TAG(EclCpGridVanguard, INHERITS_FROM(EclBaseVanguard));
 
 NEW_PROP_TAG(ExportGlobalTransmissibility);
 
 // declare the properties
-SET_TYPE_PROP(EclCpGridManager, GridManager, Ewoms::EclCpGridManager<TypeTag>);
-SET_TYPE_PROP(EclCpGridManager, Grid, Dune::CpGrid);
-SET_TYPE_PROP(EclCpGridManager, EquilGrid, typename GET_PROP_TYPE(TypeTag, Grid));
-SET_BOOL_PROP(EclCpGridManager, ExportGlobalTransmissibility, false);
+SET_TYPE_PROP(EclCpGridVanguard, Vanguard, Ewoms::EclCpGridVanguard<TypeTag>);
+SET_TYPE_PROP(EclCpGridVanguard, Grid, Dune::CpGrid);
+SET_TYPE_PROP(EclCpGridVanguard, EquilGrid, typename GET_PROP_TYPE(TypeTag, Grid));
+SET_BOOL_PROP(EclCpGridVanguard, ExportGlobalTransmissibility, false);
 } // namespace Properties
 
 /*!
@@ -60,10 +61,10 @@ SET_BOOL_PROP(EclCpGridManager, ExportGlobalTransmissibility, false);
  * This class uses Dune::CpGrid as the simulation grid.
  */
 template <class TypeTag>
-class EclCpGridManager : public EclBaseGridManager<TypeTag>
+class EclCpGridVanguard : public EclBaseVanguard<TypeTag>
 {
-    friend class EclBaseGridManager<TypeTag>;
-    typedef EclBaseGridManager<TypeTag> ParentType;
+    friend class EclBaseVanguard<TypeTag>;
+    typedef EclBaseVanguard<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
@@ -80,9 +81,9 @@ public:
     /*!
      * \brief Inherit the constructors from the base class.
      */
-    using EclBaseGridManager<TypeTag>::EclBaseGridManager;
+    using EclBaseVanguard<TypeTag>::EclBaseVanguard;
 
-    ~EclCpGridManager()
+    ~EclCpGridVanguard()
     {
         delete cartesianIndexMapper_;
         delete equilCartesianIndexMapper_;
@@ -255,6 +256,16 @@ protected:
         equilCartesianIndexMapper_ = new CartesianIndexMapper(*equilGrid_);
 
         globalTrans_ = nullptr;
+    }
+
+    // removing some completions located in inactive grid cells
+    void filterCompletions_()
+    {
+        assert(grid_);
+        Grid grid = *grid_;
+        grid.switchToGlobalView();
+        const auto eclipseGrid = Opm::UgGridHelpers::createEclipseGrid(grid, this->eclState().getInputGrid());
+        this->schedule().filterCompletions(eclipseGrid);
     }
 
     Grid* grid_;

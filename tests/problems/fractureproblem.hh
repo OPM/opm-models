@@ -38,7 +38,7 @@
 #endif
 
 #include <ewoms/models/discretefracture/discretefracturemodel.hh>
-#include <ewoms/io/dgfgridmanager.hh>
+#include <ewoms/io/dgfvanguard.hh>
 
 #include <opm/material/fluidmatrixinteractions/RegularizedBrooksCorey.hpp>
 #include <opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp>
@@ -50,7 +50,7 @@
 #include <opm/material/fluidsystems/TwoPhaseImmiscibleFluidSystem.hpp>
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/Dnapl.hpp>
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fmatrix.hh>
@@ -75,8 +75,8 @@ SET_TYPE_PROP(
     FractureProblem, Grid,
     Dune::ALUGrid</*dim=*/2, /*dimWorld=*/2, Dune::simplex, Dune::nonconforming>);
 
-// Set the GridManager property
-SET_TYPE_PROP(FractureProblem, GridManager, Ewoms::DgfGridManager<TypeTag>);
+// Set the Vanguard property
+SET_TYPE_PROP(FractureProblem, Vanguard, Ewoms::DgfVanguard<TypeTag>);
 
 // Set the problem property
 SET_TYPE_PROP(FractureProblem, Problem, Ewoms::FractureProblem<TypeTag>);
@@ -398,7 +398,7 @@ public:
      * \brief Returns the object representating the fracture topology.
      */
     const FractureMapper& fractureMapper() const
-    { return this->simulator().gridManager().fractureMapper(); }
+    { return this->simulator().vanguard().fractureMapper(); }
 
     /*!
      * \brief Returns the width of the fracture.

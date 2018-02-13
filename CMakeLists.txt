@@ -42,7 +42,7 @@ if(SIBLING_SEARCH AND NOT opm-common_DIR)
       set(opm-common_DIR ${_parent_full_dir}/${_opm_common_leaf})
     elseif(IS_DIRECTORY ${_parent_full_dir}/opm-common)
       # All modules are in a common build dir
-      set(opm-common_DIR "${_parent_full_dir}/opm-common}")
+      set(opm-common_DIR "${_parent_full_dir}/opm-common")
     endif()
   endif()
 endif()
@@ -153,6 +153,11 @@ opm_add_test(art2dgf
 opm_add_test(test_equil
              DRIVER_ARGS --plain
              CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND)
+
+# Output ECL tests
+opm_add_test(test_ecl_output
+             DRIVER_ARGS --plain
+             CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND AND OPM_OUTPUT_FOUND)
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for

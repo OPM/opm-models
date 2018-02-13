@@ -36,10 +36,9 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/grid/common/mcmgmapper.hh>
 
@@ -54,7 +53,7 @@
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
-NEW_PROP_TAG(GridManager);
+NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(ElementMapper);
@@ -72,7 +71,7 @@ class EclTransmissibility
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
     typedef typename GridView::Intersection Intersection;
 
@@ -83,8 +82,8 @@ class EclTransmissibility
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
-    EclTransmissibility(const GridManager& gridManager)
-        : gridManager_(gridManager)
+    EclTransmissibility(const Vanguard& vanguard)
+        : vanguard_(vanguard)
     {}
 
     /*!
@@ -107,9 +106,9 @@ public:
 
     void update()
     {
-        const auto& gridView = gridManager_.gridView();
-        const auto& cartMapper = gridManager_.cartesianIndexMapper();
-        const auto& eclState = gridManager_.eclState();
+        const auto& gridView = vanguard_.gridView();
+        const auto& cartMapper = vanguard_.cartesianIndexMapper();
+        const auto& eclState = vanguard_.eclState();
         const auto& eclGrid = eclState.getInputGrid();
         auto& transMult = eclState.getTransMult();
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
@@ -255,7 +254,7 @@ public:
                     break;
 
                 default:
-                    OPM_THROW(std::logic_error, "Could not determine a face direction");
+                    throw std::logic_error("Could not determine a face direction");
                 }
 
                 trans *= transMult.getRegionMultiplier(insideCartElemIdx,
@@ -306,16 +305,16 @@ private:
                                 std::true_type ) const
     {
         int faceIdx = intersection.id();
-        faceCenterInside = gridManager_.grid().faceCenterEcl(insideElemIdx,insideFaceIdx);
-        faceCenterOutside = gridManager_.grid().faceCenterEcl(outsideElemIdx,outsideFaceIdx);
-        faceAreaNormal = gridManager_.grid().faceAreaNormalEcl(faceIdx);
+        faceCenterInside = vanguard_.grid().faceCenterEcl(insideElemIdx,insideFaceIdx);
+        faceCenterOutside = vanguard_.grid().faceCenterEcl(outsideElemIdx,outsideFaceIdx);
+        faceAreaNormal = vanguard_.grid().faceAreaNormalEcl(faceIdx);
     }
 
     void extractPermeability_()
     {
-        const auto& props = gridManager_.eclState().get3DProperties();
+        const auto& props = vanguard_.eclState().get3DProperties();
 
-        unsigned numElem = gridManager_.gridView().size(/*codim=*/0);
+        unsigned numElem = vanguard_.gridView().size(/*codim=*/0);
         permeability_.resize(numElem);
 
         // read the intrinsic permeabilities from the eclState. Note that all arrays
@@ -333,7 +332,7 @@ private:
                 permzData = props.getDoubleGridProperty("PERMZ").getData();
 
             for (size_t dofIdx = 0; dofIdx < numElem; ++ dofIdx) {
-                unsigned cartesianElemIdx = gridManager_.cartesianIndex(dofIdx);
+                unsigned cartesianElemIdx = vanguard_.cartesianIndex(dofIdx);
                 permeability_[dofIdx] = 0.0;
                 permeability_[dofIdx][0][0] = permxData[cartesianElemIdx];
                 permeability_[dofIdx][1][1] = permyData[cartesianElemIdx];
@@ -343,9 +342,8 @@ private:
             // for now we don't care about non-diagonal entries
         }
         else
-            OPM_THROW(std::logic_error,
-                      "Can't read the intrinsic permeability from the ecl state. "
-                      "(The PERM{X,Y,Z} keywords are missing)");
+            throw std::logic_error("Can't read the intrinsic permeability from the ecl state. "
+                                   "(The PERM{X,Y,Z} keywords are missing)");
     }
 
     std::uint64_t isId_(unsigned elemIdx1, unsigned elemIdx2) const
@@ -448,14 +446,14 @@ private:
 
         // compute volume weighted arithmetic average of NTG for
         // cells merged as an result of minpv.
-        const auto& eclState = gridManager_.eclState();
+        const auto& eclState = vanguard_.eclState();
         const auto& eclGrid = eclState.getInputGrid();
         const auto& porv = eclState.get3DProperties().getDoubleGridProperty("PORV").getData();
         const auto& actnum = eclState.get3DProperties().getIntGridProperty("ACTNUM").getData();
         const std::vector<double>& ntg =
             eclState.get3DProperties().getDoubleGridProperty("NTG").getData();
 
-        const auto& cartMapper = gridManager_.cartesianIndexMapper();
+        const auto& cartMapper = vanguard_.cartesianIndexMapper();
         const auto& cartDims = cartMapper.cartesianDimensions();
         assert(dimWorld > 1);
         const size_t nxny = cartDims[0] * cartDims[1];
@@ -492,7 +490,7 @@ private:
 
 
 
-    const GridManager& gridManager_;
+    const Vanguard& vanguard_;
     std::vector<DimMatrix> permeability_;
     std::unordered_map<std::uint64_t, Scalar> trans_;
 };

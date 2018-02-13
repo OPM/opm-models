@@ -33,10 +33,9 @@
 #include "multiphasebaseproperties.hh"
 #include <ewoms/models/common/quantitycallbacks.hh>
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -285,9 +284,8 @@ protected:
 
                 for (unsigned dimIdx = 0; dimIdx < potentialGrad_[phaseIdx].size(); ++dimIdx) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][dimIdx]))) {
-                        OPM_THROW(Opm::NumericalProblem,
-                                  "Non-finite potential gradient for phase '"
-                                  << FluidSystem::phaseName(phaseIdx) << "'");
+                        throw Opm::NumericalIssue("Non-finite potential gradient for phase '"
+                                                    +std::string(FluidSystem::phaseName(phaseIdx))+"'");
                     }
                 }
             }
@@ -407,9 +405,8 @@ protected:
                 Opm::Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 for (unsigned dimIdx = 0; dimIdx < potentialGrad_[phaseIdx].size(); ++dimIdx) {
                     if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][dimIdx]))) {
-                        OPM_THROW(Opm::NumericalProblem,
-                                  "Non finite potential gradient for phase '"
-                                  << FluidSystem::phaseName(phaseIdx) << "'");
+                        throw Opm::NumericalIssue("Non finite potential gradient for phase '"
+                                                    +std::string(FluidSystem::phaseName(phaseIdx))+"'");
                     }
                 }
             }

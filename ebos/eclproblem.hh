@@ -46,10 +46,10 @@
 #endif
 
 #if EBOS_USE_ALUGRID
-#include "eclalugridmanager.hh"
+#include "eclalugridvanguard.hh"
 #else
-//#include "eclpolyhedralgridmanager.hh"
-#include "eclcpgridmanager.hh"
+//#include "eclpolyhedralgridvanguard.hh"
+#include "eclcpgridvanguard.hh"
 #endif
 #include "eclwellmanager.hh"
 #include "eclequilinitializer.hh"
@@ -73,14 +73,13 @@
 #include <opm/material/fluidsystems/blackoilpvt/DeadOilPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityOilPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/ConstantCompressibilityWaterPvt.hpp>
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
@@ -100,10 +99,10 @@ class EclProblem;
 
 namespace Properties {
 #if EBOS_USE_ALUGRID
-NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclAluGridManager, EclOutputBlackOil));
+NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclAluGridVanguard, EclOutputBlackOil));
 #else
-NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclCpGridManager, EclOutputBlackOil));
-//NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclPolyhedralGridManager, EclOutputBlackOil));
+NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclCpGridVanguard, EclOutputBlackOil));
+//NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclPolyhedralGridVanguard, EclOutputBlackOil));
 #endif
 
 // Write all solutions for visualization, not just the ones for the
@@ -112,6 +111,9 @@ NEW_PROP_TAG(EnableWriteAllSolutions);
 
 // The number of time steps skipped between writing two consequtive restart files
 NEW_PROP_TAG(RestartWritingInterval);
+
+// The default location for the ECL output files
+NEW_PROP_TAG(EclOutputDir);
 
 // Disable well treatment (for users which do this externally)
 NEW_PROP_TAG(DisableWells);
@@ -207,6 +209,10 @@ SET_BOOL_PROP(EclBaseProblem, EnableVtkOutput, false);
 // ... but enable the ECL output by default
 SET_BOOL_PROP(EclBaseProblem, EnableEclOutput, true);
 
+// Output single precision is default
+SET_BOOL_PROP(EclBaseProblem, EclOutputDoublePrecision, false);
+
+
 // the cache for intensive quantities can be used for ECL problems and also yields a
 // decent speedup...
 SET_BOOL_PROP(EclBaseProblem, EnableIntensiveQuantityCache, true);
@@ -220,8 +226,8 @@ SET_TYPE_PROP(EclBaseProblem, FluxModule, Ewoms::EclTransFluxModule<TypeTag>);
 // Use the dummy gradient calculator in order not to do unnecessary work.
 SET_TYPE_PROP(EclBaseProblem, GradientCalculator, Ewoms::EclDummyGradientCalculator<TypeTag>);
 
-// The default name of the data file to load
-SET_STRING_PROP(EclBaseProblem, GridFile, "data/ecl.DATA");
+// The default location for the ECL output files
+SET_STRING_PROP(EclBaseProblem, EclOutputDir, ".");
 
 // The frequency of writing restart (*.ers) files. This is the number of time steps
 // between writing restart files
@@ -317,6 +323,10 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableEclOutput,
                              "Write binary output which is compatible with the commercial "
                              "Eclipse simulator");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, EclOutputDir,
+                             "The directory to which the ECL result files are written");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclOutputDoublePrecision,
+                             "Tell the output writer to use double precision. Useful for 'perfect' restarts");
         EWOMS_REGISTER_PARAM(TypeTag, unsigned, RestartWritingInterval,
                              "The frequencies of which time steps are serialized to disk");
     }
@@ -326,17 +336,41 @@ public:
      */
     EclProblem(Simulator& simulator)
         : ParentType(simulator)
-        , transmissibilities_(simulator.gridManager())
+        , transmissibilities_(simulator.vanguard())
         , thresholdPressures_(simulator)
         , wellManager_(simulator)
-        , eclWriter_( EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput)
-                        ? new EclWriterType(simulator) : nullptr )
         , pffDofData_(simulator.gridView(), this->elementMapper())
     {
         // Tell the extra modules to initialize its internal data structures
-        const auto& gridManager = simulator.gridManager();
-        SolventModule::initFromDeck(gridManager.deck(), gridManager.eclState());
-        PolymerModule::initFromDeck(gridManager.deck(), gridManager.eclState());
+        const auto& vanguard = simulator.vanguard();
+        SolventModule::initFromDeck(vanguard.deck(), vanguard.eclState());
+        PolymerModule::initFromDeck(vanguard.deck(), vanguard.eclState());
+
+        if (EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput)) {
+            // retrieve the location where the output is supposed to go
+            const auto& outputDir = EWOMS_GET_PARAM(TypeTag, std::string, EclOutputDir);
+
+            // ensure that the output directory exists and that it is a directory
+            if (outputDir != ".") { // Do not try to create the current directory.
+                if (!boost::filesystem::is_directory(outputDir)) {
+                    try {
+                        boost::filesystem::create_directories(outputDir);
+                    }
+                    catch (...) {
+                        throw std::runtime_error("Creation of output directory '"+outputDir+"' failed\n");
+                    }
+                }
+            }
+
+            // specify the directory output. This is not a very nice mechanism because
+            // the eclState is supposed to be immutable here, IMO.
+            auto& eclState = this->simulator().vanguard().eclState();
+            auto& ioConfig = eclState.getIOConfig();
+            ioConfig.setOutputDir(outputDir);
+
+            // create the actual ECL writer
+            eclWriter_.reset(new EclWriterType(simulator));
+        }
 
         // Hack to compute the initial thpressure values for restarts
         restartApplied = false;
@@ -355,7 +389,7 @@ public:
         this->gravity_ = 0.0;
 
         // the "NOGRAV" keyword from Frontsim disables gravity...
-        const auto& deck = simulator.gridManager().deck();
+        const auto& deck = simulator.vanguard().deck();
         if (!deck.hasKeyword("NOGRAV") && EWOMS_GET_PARAM(TypeTag, bool, EnableGravity))
             this->gravity_[dim - 1] = 9.80665;
 
@@ -412,7 +446,7 @@ public:
         readInitialCondition_();
 
         // Set the start time of the simulation
-        const auto& timeMap = simulator.gridManager().schedule().getTimeMap();
+        const auto& timeMap = simulator.vanguard().schedule().getTimeMap();
         simulator.setStartTime( timeMap.getStartTime(/*timeStepIdx=*/0) );
 
         // We want the episode index to be the same as the report step index to make
@@ -426,11 +460,13 @@ public:
         updatePffDofData_();
 
         if (GET_PROP_VALUE(TypeTag, EnablePolymer)) {
-            const auto& gridManager = this->simulator().gridManager();
-            const auto& gridView = gridManager.gridView();
+            const auto& vanguard = this->simulator().vanguard();
+            const auto& gridView = vanguard.gridView();
             int numElements = gridView.size(/*codim=*/0);
             maxPolymerAdsorption_.resize(numElements, 0.0);
         }
+
+        eclWriter_->writeInit();
     }
 
     void prefetch(const Element& elem) const
@@ -474,8 +510,8 @@ public:
     {
         // Proceed to the next report step
         Simulator& simulator = this->simulator();
-        auto& eclState = this->simulator().gridManager().eclState();
-        const auto& schedule = this->simulator().gridManager().schedule();
+        auto& eclState = this->simulator().vanguard().eclState();
+        const auto& schedule = this->simulator().vanguard().schedule();
         const auto& events = schedule.getEvents();
         const auto& timeMap = schedule.getTimeMap();
 
@@ -533,8 +569,8 @@ public:
 
         if (!GET_PROP_VALUE(TypeTag, DisableWells))
             // set up the wells
-            wellManager_.beginEpisode(this->simulator().gridManager().eclState(),
-                                      this->simulator().gridManager().schedule(), isOnRestart);
+            wellManager_.beginEpisode(this->simulator().vanguard().eclState(),
+                                      this->simulator().vanguard().schedule(), isOnRestart);
 
         if (doInvalidate)
             this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
@@ -608,7 +644,7 @@ public:
     void endEpisode()
     {
         auto& simulator = this->simulator();
-        const auto& schedule = simulator.gridManager().schedule();
+        const auto& schedule = simulator.vanguard().schedule();
 
         int episodeIdx = simulator.episodeIndex();
 
@@ -676,21 +712,18 @@ public:
         }
         Scalar totalSolverTime = 0.0;
         Scalar nextstep = this->simulator().timeStepSize();
-        Opm::data::Solution fip;
-        writeOutput(dw, t, false, totalSolverTime, nextstep, fip, verbose);
+        writeOutput(dw, t, false, totalSolverTime, nextstep, verbose);
     }
 
-    void writeOutput(const Opm::data::Wells& dw, Scalar t, bool substep, Scalar totalSolverTime, Scalar nextstep, const Opm::data::Solution& fip, bool verbose = true)
+    void writeOutput(const Opm::data::Wells& dw, Scalar t, bool substep, Scalar totalSolverTime, Scalar nextstep, bool verbose = true)
     {
         // use the generic code to prepare the output fields and to
         // write the desired VTK files.
         ParentType::writeOutput(verbose);
 
         // output using eclWriter if enabled
-        if ( eclWriter_ ) {
-            eclWriter_->writeOutput(dw, t, substep, totalSolverTime, nextstep, fip);
-        }
-
+        if (eclWriter_)
+            eclWriter_->writeOutput(dw, t, substep, totalSolverTime, nextstep);
     }
 
     /*!
@@ -959,7 +992,7 @@ public:
      * \copydoc FvBaseProblem::name
      */
     std::string name() const
-    { return this->simulator().gridManager().caseName(); }
+    { return this->simulator().vanguard().caseName(); }
 
     /*!
      * \copydoc FvBaseMultiPhaseProblem::temperature
@@ -1022,7 +1055,7 @@ public:
             // initialize the wells. Note that this needs to be done after initializing the
             // intrinsic permeabilities and the after applying the initial solution because
             // the well model uses these...
-            wellManager_.init(this->simulator().gridManager().eclState(), this->simulator().gridManager().schedule());
+            wellManager_.init(this->simulator().vanguard().eclState(), this->simulator().vanguard().schedule());
         }
 
         // the initialSolutionApplied is called recursively by readEclRestartSolution_()
@@ -1035,7 +1068,7 @@ public:
         // the initial solution.
         thresholdPressures_.finishInit();
 
-        const auto& eclState = this->simulator().gridManager().eclState();
+        const auto& eclState = this->simulator().vanguard().eclState();
         const auto& initconfig = eclState.getInitConfig();
         if(initconfig.restartRequested()) {
             restartApplied = true;
@@ -1044,7 +1077,7 @@ public:
         }
 
         // release the memory of the EQUIL grid since it's no longer needed after this point
-        this->simulator().gridManager().releaseEquilGrid();
+        this->simulator().vanguard().releaseEquilGrid();
 
         updateCompositionChangeLimits_();
     }
@@ -1142,12 +1175,13 @@ public:
         return initialFluidStates_[globalDofIdx];
     }
 
-    void setEclIO(std::unique_ptr<Opm::EclipseIO>&& eclIO) {
-        eclWriter_->setEclIO(std::move(eclIO));
-    }
-
     const Opm::EclipseIO& eclIO() const
-    {return eclWriter_->eclIO();}
+    { return eclWriter_->eclIO(); }
+
+    bool vapparsActive() const
+    {
+        return vapparsActive_;
+    }
 
 private:
     Scalar cellCenterDepth( const Element& element ) const
@@ -1168,8 +1202,8 @@ private:
 
     void updateElementDepths_()
     {
-        const auto& gridManager = this->simulator().gridManager();
-        const auto& gridView = gridManager.gridView();
+        const auto& vanguard = this->simulator().vanguard();
+        const auto& gridView = vanguard.gridView();
         const auto& elemMapper = this->elementMapper();;
 
         int numElements = gridView.size(/*codim=*/0);
@@ -1192,9 +1226,9 @@ private:
         // and overlap regions
         if (drsdtActive_) {
             ElementContext elemCtx(this->simulator());
-            const auto& gridManager = this->simulator().gridManager();
-            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
-            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            const auto& vanguard = this->simulator().vanguard();
+            auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = vanguard.gridView().template end</*codim=*/0>();
             for (; elemIt != elemEndIt; ++elemIt) {
                 const Element& elem = *elemIt;
 
@@ -1221,9 +1255,9 @@ private:
         // and overlap regions
         if (drvdtActive_) {
             ElementContext elemCtx(this->simulator());
-            const auto& gridManager = this->simulator().gridManager();
-            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
-            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            const auto& vanguard = this->simulator().vanguard();
+            auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = vanguard.gridView().template end</*codim=*/0>();
             for (; elemIt != elemEndIt; ++elemIt) {
                 const Element& elem = *elemIt;
 
@@ -1249,9 +1283,9 @@ private:
         // we use VAPPARS
         if (vapparsActive_) {
             ElementContext elemCtx(this->simulator());
-            const auto& gridManager = this->simulator().gridManager();
-            auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
-            const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+            const auto& vanguard = this->simulator().vanguard();
+            auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
+            const auto& elemEndIt = vanguard.gridView().template end</*codim=*/0>();
             for (; elemIt != elemEndIt; ++elemIt) {
                 const Element& elem = *elemIt;
 
@@ -1277,9 +1311,9 @@ private:
 
     void readRockParameters_()
     {
-        const auto& deck = this->simulator().gridManager().deck();
-        const auto& eclState = this->simulator().gridManager().eclState();
-        const auto& gridManager = this->simulator().gridManager();
+        const auto& deck = this->simulator().vanguard().deck();
+        const auto& eclState = this->simulator().vanguard().eclState();
+        const auto& vanguard = this->simulator().vanguard();
 
         // the ROCK keyword has not been specified, so we don't need
         // to read rock parameters
@@ -1311,9 +1345,8 @@ private:
             else if (rockTableType == "ROCKNUM")
                 propName = "ROCKNUM";
             else {
-                OPM_THROW(std::runtime_error,
-                          "Unknown table type '" << rockTableType
-                          << " for the ROCKOPTS keyword given");
+                throw std::runtime_error("Unknown table type '"+rockTableType
+                                         +" for the ROCKOPTS keyword given");
             }
         }
 
@@ -1324,10 +1357,10 @@ private:
 
         const std::vector<int>& tablenumData =
             eclState.get3DProperties().getIntGridProperty(propName).getData();
-        unsigned numElem = gridManager.gridView().size(0);
+        unsigned numElem = vanguard.gridView().size(0);
         rockTableIdx_.resize(numElem);
         for (size_t elemIdx = 0; elemIdx < numElem; ++ elemIdx) {
-            unsigned cartElemIdx = gridManager.cartesianIndex(elemIdx);
+            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
 
             // reminder: Eclipse uses FORTRAN-style indices
             rockTableIdx_[elemIdx] = tablenumData[cartElemIdx] - 1;
@@ -1336,9 +1369,9 @@ private:
 
     void readMaterialParameters_()
     {
-        const auto& gridManager = this->simulator().gridManager();
-        const auto& deck = gridManager.deck();
-        const auto& eclState = gridManager.eclState();
+        const auto& vanguard = this->simulator().vanguard();
+        const auto& deck = vanguard.deck();
+        const auto& eclState = vanguard.eclState();
 
         // the PVT and saturation region numbers
         updatePvtnum_();
@@ -1359,7 +1392,7 @@ private:
         size_t numDof = this->model().numGridDof();
         std::vector<int> compressedToCartesianElemIdx(numDof);
         for (unsigned elemIdx = 0; elemIdx < numDof; ++elemIdx)
-            compressedToCartesianElemIdx[elemIdx] = gridManager.cartesianIndex(elemIdx);
+            compressedToCartesianElemIdx[elemIdx] = vanguard.cartesianIndex(elemIdx);
 
         materialLawManager_ = std::make_shared<EclMaterialLawManager>();
         materialLawManager_->initFromDeck(deck, eclState, compressedToCartesianElemIdx);
@@ -1368,8 +1401,8 @@ private:
 
     void updatePorosity_()
     {
-        const auto& gridManager = this->simulator().gridManager();
-        const auto& eclState = gridManager.eclState();
+        const auto& vanguard = this->simulator().vanguard();
+        const auto& eclState = vanguard.eclState();
         const auto& eclGrid = eclState.getInputGrid();
         const auto& props = eclState.get3DProperties();
 
@@ -1385,7 +1418,7 @@ private:
         int nx = eclGrid.getNX();
         int ny = eclGrid.getNY();
         for (size_t dofIdx = 0; dofIdx < numDof; ++ dofIdx) {
-            unsigned cartElemIdx = gridManager.cartesianIndex(dofIdx);
+            unsigned cartElemIdx = vanguard.cartesianIndex(dofIdx);
             Scalar poreVolume = porvData[cartElemIdx];
 
             // sum up the pore volume of the active cell and all inactive ones above it
@@ -1422,17 +1455,17 @@ private:
 
     void initFluidSystem_()
     {
-        const auto& deck = this->simulator().gridManager().deck();
-        const auto& eclState = this->simulator().gridManager().eclState();
+        const auto& deck = this->simulator().vanguard().deck();
+        const auto& eclState = this->simulator().vanguard().eclState();
 
         FluidSystem::initFromDeck(deck, eclState);
    }
 
     void readInitialCondition_()
     {
-        const auto& gridManager = this->simulator().gridManager();
+        const auto& vanguard = this->simulator().vanguard();
 
-        const auto& deck = gridManager.deck();
+        const auto& deck = vanguard.deck();
         if (!deck.hasKeyword("EQUIL"))
             readExplicitInitialCondition_();
         else
@@ -1493,43 +1526,37 @@ private:
 
     void readExplicitInitialCondition_()
     {
-        const auto& gridManager = this->simulator().gridManager();
-        const auto& eclState = gridManager.eclState();
+        const auto& vanguard = this->simulator().vanguard();
+        const auto& eclState = vanguard.eclState();
         const auto& eclProps = eclState.get3DProperties();
 
-        // since the values specified in the deck do not need to be consistent, we use an
-        // initial condition that conserves the total mass specified by these values, but
-        // for this to work all three phases must be active.
-        useMassConservativeInitialCondition_ = (FluidSystem::numActivePhases() == 3);
+        // the values specified in the deck do not need to be consistent,
+        // we still don't try to make the consistent.
+        useMassConservativeInitialCondition_ = false;
 
         // make sure all required quantities are enables
         if (FluidSystem::phaseIsActive(waterPhaseIdx) && !eclProps.hasDeckDoubleGridProperty("SWAT"))
-            OPM_THROW(std::runtime_error,
-                      "The ECL input file requires the presence of the SWAT keyword if "
-                      "the water phase is active");
+            throw std::runtime_error("The ECL input file requires the presence of the SWAT keyword if "
+                                     "the water phase is active");
         if (FluidSystem::phaseIsActive(gasPhaseIdx) && !eclProps.hasDeckDoubleGridProperty("SGAS"))
-            OPM_THROW(std::runtime_error,
-                      "The ECL input file requires the presence of the SGAS keyword if "
-                      "the gas phase is active");
+            throw std::runtime_error("The ECL input file requires the presence of the SGAS keyword if "
+                                     "the gas phase is active");
 
         if (!eclProps.hasDeckDoubleGridProperty("PRESSURE"))
-             OPM_THROW(std::runtime_error,
-                      "The ECL input file requires the presence of the PRESSURE "
-                      "keyword if the model is initialized explicitly");
+             throw std::runtime_error("The ECL input file requires the presence of the PRESSURE "
+                                      "keyword if the model is initialized explicitly");
         if (FluidSystem::enableDissolvedGas() && !eclProps.hasDeckDoubleGridProperty("RS"))
-            OPM_THROW(std::runtime_error,
-                      "The ECL input file requires the RS keyword to be present if"
-                      " dissolved gas is enabled");
+            throw std::runtime_error("The ECL input file requires the RS keyword to be present if"
+                                     " dissolved gas is enabled");
         if (FluidSystem::enableVaporizedOil() && !eclProps.hasDeckDoubleGridProperty("RV"))
-            OPM_THROW(std::runtime_error,
-                      "The ECL input file requires the RV keyword to be present if"
-                      " vaporized oil is enabled");
+            throw std::runtime_error("The ECL input file requires the RV keyword to be present if"
+                                     " vaporized oil is enabled");
 
         size_t numDof = this->model().numGridDof();
 
         initialFluidStates_.resize(numDof);
 
-        const auto& cartSize = this->simulator().gridManager().cartesianDimensions();
+        const auto& cartSize = this->simulator().vanguard().cartesianDimensions();
         size_t numCartesianCells = cartSize[0] * cartSize[1] * cartSize[2];
 
         std::vector<double> waterSaturationData;
@@ -1572,7 +1599,7 @@ private:
             auto& dofFluidState = initialFluidStates_[dofIdx];
 
             dofFluidState.setPvtRegionIndex(pvtRegionIndex(dofIdx));
-            size_t cartesianDofIdx = gridManager.cartesianIndex(dofIdx);
+            size_t cartesianDofIdx = vanguard.cartesianIndex(dofIdx);
             assert(0 <= cartesianDofIdx);
             assert(cartesianDofIdx <= numCartesianCells);
 
@@ -1626,15 +1653,15 @@ private:
 
     void readBlackoilExtentionsInitialConditions_()
     {
-        const auto& gridManager = this->simulator().gridManager();
-        const auto& eclState = gridManager.eclState();
+        const auto& vanguard = this->simulator().vanguard();
+        const auto& eclState = vanguard.eclState();
         size_t numDof = this->model().numGridDof();
 
         if (enableSolvent) {
             const std::vector<double>& solventSaturationData = eclState.get3DProperties().getDoubleGridProperty("SSOL").getData();
             solventSaturation_.resize(numDof,0.0);
             for (size_t dofIdx = 0; dofIdx < numDof; ++dofIdx) {
-                size_t cartesianDofIdx = gridManager.cartesianIndex(dofIdx);
+                size_t cartesianDofIdx = vanguard.cartesianIndex(dofIdx);
                 assert(0 <= cartesianDofIdx);
                 assert(cartesianDofIdx <= solventSaturationData.size());
                 solventSaturation_[dofIdx] = solventSaturationData[cartesianDofIdx];
@@ -1645,7 +1672,7 @@ private:
             const std::vector<double>& polyConcentrationData = eclState.get3DProperties().getDoubleGridProperty("SPOLY").getData();
             polymerConcentration_.resize(numDof,0.0);
             for (size_t dofIdx = 0; dofIdx < numDof; ++dofIdx) {
-                size_t cartesianDofIdx = gridManager.cartesianIndex(dofIdx);
+                size_t cartesianDofIdx = vanguard.cartesianIndex(dofIdx);
                 assert(0 <= cartesianDofIdx);
                 assert(cartesianDofIdx <= polyConcentrationData.size());
                 polymerConcentration_[dofIdx] = polyConcentrationData[cartesianDofIdx];
@@ -1664,9 +1691,9 @@ private:
         // we need to update the hysteresis data for _all_ elements (i.e., not just the
         // interior ones) to avoid desynchronization of the processes in the parallel case!
         ElementContext elemCtx(this->simulator());
-        const auto& gridManager = this->simulator().gridManager();
-        auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
-        const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+        const auto& vanguard = this->simulator().vanguard();
+        auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
+        const auto& elemEndIt = vanguard.gridView().template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             const Element& elem = *elemIt;
 
@@ -1684,9 +1711,9 @@ private:
     {
         // we need to update the max polymer adsoption data for all elements
         ElementContext elemCtx(this->simulator());
-        const auto& gridManager = this->simulator().gridManager();
-        auto elemIt = gridManager.gridView().template begin</*codim=*/0>();
-        const auto& elemEndIt = gridManager.gridView().template end</*codim=*/0>();
+        const auto& vanguard = this->simulator().vanguard();
+        auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
+        const auto& elemEndIt = vanguard.gridView().template end</*codim=*/0>();
         for (; elemIt != elemEndIt; ++elemIt) {
             const Element& elem = *elemIt;
 
@@ -1702,76 +1729,76 @@ private:
 
     void updatePvtnum_()
     {
-        const auto& eclState = this->simulator().gridManager().eclState();
+        const auto& eclState = this->simulator().vanguard().eclState();
         const auto& eclProps = eclState.get3DProperties();
 
         if (!eclProps.hasDeckIntGridProperty("PVTNUM"))
             return;
 
         const auto& pvtnumData = eclProps.getIntGridProperty("PVTNUM").getData();
-        const auto& gridManager = this->simulator().gridManager();
+        const auto& vanguard = this->simulator().vanguard();
 
-        unsigned numElems = gridManager.gridView().size(/*codim=*/0);
+        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
         pvtnum_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = gridManager.cartesianIndex(elemIdx);
+            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
             pvtnum_[elemIdx] = pvtnumData[cartElemIdx] - 1;
         }
     }
 
     void updateSatnum_()
     {
-        const auto& eclState = this->simulator().gridManager().eclState();
+        const auto& eclState = this->simulator().vanguard().eclState();
         const auto& eclProps = eclState.get3DProperties();
 
         if (!eclProps.hasDeckIntGridProperty("SATNUM"))
             return;
 
         const auto& satnumData = eclProps.getIntGridProperty("SATNUM").getData();
-        const auto& gridManager = this->simulator().gridManager();
+        const auto& vanguard = this->simulator().vanguard();
 
-        unsigned numElems = gridManager.gridView().size(/*codim=*/0);
+        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
         satnum_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = gridManager.cartesianIndex(elemIdx);
+            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
             satnum_[elemIdx] = satnumData[cartElemIdx] - 1;
         }
     }
 
     void updateMiscnum_()
     {
-        const auto& eclState = this->simulator().gridManager().eclState();
+        const auto& eclState = this->simulator().vanguard().eclState();
         const auto& eclProps = eclState.get3DProperties();
 
         if (!eclProps.hasDeckIntGridProperty("MISCNUM"))
             return;
 
         const auto& miscnumData = eclProps.getIntGridProperty("MISCNUM").getData();
-        const auto& gridManager = this->simulator().gridManager();
+        const auto& vanguard = this->simulator().vanguard();
 
-        unsigned numElems = gridManager.gridView().size(/*codim=*/0);
+        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
         miscnum_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = gridManager.cartesianIndex(elemIdx);
+            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
             miscnum_[elemIdx] = miscnumData[cartElemIdx] - 1;
         }
     }
 
     void updatePlmixnum_()
     {
-        const auto& eclState = this->simulator().gridManager().eclState();
+        const auto& eclState = this->simulator().vanguard().eclState();
         const auto& eclProps = eclState.get3DProperties();
 
         if (!eclProps.hasDeckIntGridProperty("PLMIXNUM"))
             return;
 
         const auto& plmixnumData = eclProps.getIntGridProperty("PLMIXNUM").getData();
-        const auto& gridManager = this->simulator().gridManager();
+        const auto& vanguard = this->simulator().vanguard();
 
-        unsigned numElems = gridManager.gridView().size(/*codim=*/0);
+        unsigned numElems = vanguard.gridView().size(/*codim=*/0);
         plmixnum_.resize(numElems);
         for (unsigned elemIdx = 0; elemIdx < numElems; ++elemIdx) {
-            unsigned cartElemIdx = gridManager.cartesianIndex(elemIdx);
+            unsigned cartElemIdx = vanguard.cartesianIndex(elemIdx);
             plmixnum_[elemIdx] = plmixnumData[cartElemIdx] - 1;
         }
     }
@@ -1843,7 +1870,7 @@ private:
 
     EclWellManager<TypeTag> wellManager_;
 
-    std::unique_ptr< EclWriterType > eclWriter_;
+    std::unique_ptr<EclWriterType> eclWriter_;
 
     PffGridVector<GridView, Stencil, PffDofData_, DofMapper> pffDofData_;
 

@@ -30,7 +30,7 @@
 
 #include <ewoms/common/quadraturegeometries.hh>
 
-#include <opm/common/utility/ConditionalStorage.hpp>
+#include <opm/material/common/ConditionalStorage.hpp>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/grid/common/intersectioniterator.hh>

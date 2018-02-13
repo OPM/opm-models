@@ -30,10 +30,9 @@
 
 #include "fvbaseproperties.hh"
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -107,8 +106,8 @@ public:
     template <class FluidState>
     void assignNaive(const FluidState& fluidState OPM_UNUSED)
     {
-        OPM_THROW(std::runtime_error,
-                  "The PrimaryVariables class does not define a assignNaive() method");
+        throw std::runtime_error("The PrimaryVariables class does not define "
+                                 "an assignNaive() method");
     }
     /*!
      * \brief Instruct valgrind to check the definedness of all

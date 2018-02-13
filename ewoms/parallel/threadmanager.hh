@@ -35,8 +35,7 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/version.hh>
 
@@ -78,23 +77,20 @@ public:
         // some safety checks. This is pretty ugly macro-magic, but so what?
 #if !defined(_OPENMP)
         if (numThreads_ != 1 && numThreads_ != -1)
-            OPM_THROW(std::invalid_argument,
-                      "OpenMP is not available. The only valid values for "
-                      "threads-per-process is 1 and -1 but it is " << numThreads_ << "!");
+            throw std::invalid_argument("OpenMP is not available. The only valid values for "
+                                        "threads-per-process is 1 and -1 but it is "+std::to_string(numThreads_)+"!");
         numThreads_ = 1;
 #elif !defined NDEBUG && defined DUNE_INTERFACECHECK
         if (numThreads_ != 1)
-            OPM_THROW(std::invalid_argument,
-                      "You explicitly enabled Barton-Nackman interface checking in Dune. "
-                      "The Dune implementation of this is currently incompatible with "
-                      "thread parallelism!");
+            throw std::invalid_argument("You explicitly enabled Barton-Nackman interface checking in Dune. "
+                                        "The Dune implementation of this is currently incompatible with "
+                                        "thread parallelism!");
         numThreads_ = 1;
 #else
 
         if (numThreads_ == 0)
-            OPM_THROW(std::invalid_argument,
-                      "Zero threads per process are not possible: It must be at least 1, "
-                      "(or -1 for 'automatic')!");
+            throw std::invalid_argument("Zero threads per process are not possible: It must be at least 1, "
+                                        "(or -1 for 'automatic')!");
 #endif
 
 #ifdef _OPENMP

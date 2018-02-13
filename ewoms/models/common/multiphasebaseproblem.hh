@@ -35,9 +35,8 @@
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>
 #include <opm/material/common/Means.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -144,8 +143,7 @@ public:
                                            unsigned spaceIdx OPM_UNUSED,
                                            unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::intrinsicPermeability()");
+        throw std::logic_error("Not implemented: Problem::intrinsicPermeability()");
     }
 
     /*!
@@ -162,8 +160,7 @@ public:
                     unsigned spaceIdx OPM_UNUSED,
                     unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::porosity()");
+        throw std::logic_error("Not implemented: Problem::porosity()");
     }
 
     /*!
@@ -181,8 +178,7 @@ public:
                       unsigned spaceIdx OPM_UNUSED,
                       unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::solidEnergyParams()");
+        throw std::logic_error("Not implemented: Problem::solidEnergyParams()");
     }
 
     /*!
@@ -200,8 +196,7 @@ public:
                          unsigned spaceIdx OPM_UNUSED,
                          unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                   "Not implemented: Problem::thermalConductionParams()");
+        throw std::logic_error("Not implemented: Problem::thermalConductionParams()");
     }
 
     /*!
@@ -217,8 +212,7 @@ public:
                       unsigned spaceIdx OPM_UNUSED,
                       unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: Problem::tortuosity()");
+        throw std::logic_error("Not implemented: Problem::tortuosity()");
     }
 
     /*!
@@ -234,8 +228,7 @@ public:
                         unsigned spaceIdx OPM_UNUSED,
                         unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: Problem::dispersivity()");
+        throw std::logic_error("Not implemented: Problem::dispersivity()");
     }
 
     /*!
@@ -283,8 +276,7 @@ public:
      * no energy equation is to be used.
      */
     Scalar temperature() const
-    { OPM_THROW(std::logic_error,
-                "Not implemented:temperature() method not implemented by the actual problem"); }
+    { throw std::logic_error("Not implemented:temperature() method not implemented by the actual problem"); }
 
 
     /*!
@@ -324,8 +316,8 @@ public:
 
         unsigned numMarked = 0;
         ElementContext elemCtx( this->simulator() );
-        auto gridView = this->simulator().gridManager().gridView();
-        auto& grid = this->simulator().gridManager().grid();
+        auto gridView = this->simulator().vanguard().gridView();
+        auto& grid = this->simulator().vanguard().grid();
         auto elemIt = gridView.template begin</*codim=*/0, Dune::Interior_Partition>();
         auto elemEndIt = gridView.template end</*codim=*/0, Dune::Interior_Partition>();
         for (; elemIt != elemEndIt; ++elemIt)
@@ -365,7 +357,7 @@ public:
         }
 
         // get global sum so that every proc is on the same page
-        numMarked = this->simulator().gridManager().grid().comm().sum( numMarked );
+        numMarked = this->simulator().vanguard().grid().comm().sum( numMarked );
 
         return numMarked;
     }

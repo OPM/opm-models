@@ -23,7 +23,7 @@
 #ifndef EWOMS_COPYRESTRICTPROLONG_HH
 #define EWOMS_COPYRESTRICTPROLONG_HH
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/space/common/restrictprolonginterface.hh>

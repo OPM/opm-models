@@ -29,7 +29,7 @@
 #define EWOMS_POWER_INJECTION_PROBLEM_HH
 
 #include <ewoms/models/immiscible/immisciblemodel.hh>
-#include <ewoms/io/cubegridmanager.hh>
+#include <ewoms/io/cubegridvanguard.hh>
 
 #include <opm/material/fluidmatrixinteractions/RegularizedVanGenuchten.hpp>
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
@@ -39,7 +39,7 @@
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 #include <opm/material/components/SimpleH2O.hpp>
 #include <opm/material/components/Air.hpp>
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/grid/yaspgrid.hh>
 
@@ -64,9 +64,9 @@ NEW_TYPE_TAG(PowerInjectionBaseProblem);
 // Set the grid implementation to be used
 SET_TYPE_PROP(PowerInjectionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 
-// set the GridManager property
-SET_TYPE_PROP(PowerInjectionBaseProblem, GridManager,
-              Ewoms::CubeGridManager<TypeTag>);
+// set the Vanguard property
+SET_TYPE_PROP(PowerInjectionBaseProblem, Vanguard,
+              Ewoms::CubeGridVanguard<TypeTag>);
 
 // Set the problem property
 SET_TYPE_PROP(PowerInjectionBaseProblem, Problem,

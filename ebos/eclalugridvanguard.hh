@@ -22,29 +22,29 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::EclAluGridManager
+ * \copydoc Ewoms::EclAluGridVanguard
  */
-#ifndef EWOMS_ECL_ALU_GRID_MANAGER_HH
-#define EWOMS_ECL_ALU_GRID_MANAGER_HH
+#ifndef EWOMS_ECL_ALU_GRID_VANGUARD_HH
+#define EWOMS_ECL_ALU_GRID_VANGUARD_HH
 
-#include "eclbasegridmanager.hh"
+#include "eclbasevanguard.hh"
 #include "alucartesianindexmapper.hh"
 
 #include <dune/alugrid/grid.hh>
 #include <dune/alugrid/common/fromtogridfactory.hh>
-#include <dune/grid/CpGrid.hpp>
+#include <opm/grid/CpGrid.hpp>
 
 namespace Ewoms {
 template <class TypeTag>
-class EclAluGridManager;
+class EclAluGridVanguard;
 
 namespace Properties {
-NEW_TYPE_TAG(EclAluGridManager, INHERITS_FROM(EclBaseGridManager));
+NEW_TYPE_TAG(EclAluGridVanguard, INHERITS_FROM(EclBaseVanguard));
 
 // declare the properties
-SET_TYPE_PROP(EclAluGridManager, GridManager, Ewoms::EclAluGridManager<TypeTag>);
-SET_TYPE_PROP(EclAluGridManager, Grid,  Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming>);
-SET_TYPE_PROP(EclAluGridManager, EquilGrid, Dune::CpGrid);
+SET_TYPE_PROP(EclAluGridVanguard, Vanguard, Ewoms::EclAluGridVanguard<TypeTag>);
+SET_TYPE_PROP(EclAluGridVanguard, Grid,  Dune::ALUGrid<3, 3, Dune::cube, Dune::nonconforming>);
+SET_TYPE_PROP(EclAluGridVanguard, EquilGrid, Dune::CpGrid);
 } // namespace Properties
 
 /*!
@@ -55,10 +55,10 @@ SET_TYPE_PROP(EclAluGridManager, EquilGrid, Dune::CpGrid);
  * This class uses Dune::ALUGrid as the simulation grid.
  */
 template <class TypeTag>
-class EclAluGridManager : public EclBaseGridManager<TypeTag>
+class EclAluGridVanguard : public EclBaseVanguard<TypeTag>
 {
-    friend class EclBaseGridManager<TypeTag>;
-    typedef EclBaseGridManager<TypeTag> ParentType;
+    friend class EclBaseVanguard<TypeTag>;
+    typedef EclBaseVanguard<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
@@ -78,9 +78,9 @@ public:
     /*!
      * \brief Inherit the constructors from the base class.
      */
-    using EclBaseGridManager<TypeTag>::EclBaseGridManager;
+    using EclBaseVanguard<TypeTag>::EclBaseVanguard;
 
-    ~EclAluGridManager()
+    ~EclAluGridVanguard()
     {
         delete cartesianIndexMapper_;
         delete equilCartesianIndexMapper_;
@@ -194,6 +194,11 @@ protected:
 
         cartesianIndexMapper_ =
             new CartesianIndexMapper(*grid_, cartesianDimension_, cartesianCellId_);
+    }
+
+    void filterCompletions_()
+    {
+        // not handling the removal of completions for this type of grid yet.
     }
 
     Grid* grid_;

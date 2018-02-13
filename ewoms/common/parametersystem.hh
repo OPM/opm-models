@@ -34,9 +34,8 @@
 
 #include <ewoms/common/propertysystem.hh>
 
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/common/classname.hh>
 #include <dune/common/parametertree.hh>
@@ -693,22 +692,20 @@ private:
             b = &(it->second);
 
         if (b->propertyName != propertyName) {
-            OPM_THROW(std::logic_error,
-                      "GET_*_PARAM for parameter '" << paramName
-                      << "' called for at least two different properties ('"
-                      << b->propertyName << "' and '" << propertyName << "')");
+            throw std::logic_error("GET_*_PARAM for parameter '"+std::string(paramName)
+                                   +"' called for at least two different properties ('"
+                                   +b->propertyName+"' and '"+propertyName+"')");
         }
 
         if (b->paramTypeName != paramTypeName) {
-            OPM_THROW(std::logic_error,
-                      "GET_*_PARAM for parameter '" << paramName
-                      << "' called with at least two different types ("
-                      << b->paramTypeName << " and " << paramTypeName << ")");
+            throw std::logic_error("GET_*_PARAM for parameter '"+std::string(paramName)
+                                   +"' called with at least two different types ("
+                                   +b->paramTypeName+" and "+paramTypeName+")");
         }
     }
 
     template <class ParamType, class PropTag>
-    static const ParamType retrieve_(const char OPM_OPTIM_UNUSED *propTagName, 
+    static const ParamType retrieve_(const char OPM_OPTIM_UNUSED *propTagName,
                                      const char *paramName,
                                      bool errorIfNotRegistered = true)
     {
@@ -722,14 +719,12 @@ private:
         typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
             if (ParamsMeta::registrationOpen())
-                OPM_THROW(std::runtime_error, "Parameters can only retieved "
-                                              "after _all_ of them have been "
-                                              "registered.");
+                throw std::runtime_error("Parameters can only retieved after _all_ of them have "
+                                         "been registered.");
 
             if (ParamsMeta::registry().find(paramName) == ParamsMeta::registry().end())
-                OPM_THROW(std::runtime_error,
-                          "Accessing parameter " << paramName
-                          << " without prior registration is not allowed.");
+                throw std::runtime_error("Accessing parameter "+std::string(paramName)
+                                         +" without prior registration is not allowed.");
         }
 
         // prefix the parameter name by the model's GroupName. E.g. If
@@ -768,9 +763,8 @@ void registerParam(const char *paramName, const char *propertyName, const char *
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())
-        OPM_THROW(std::logic_error,
-                  "Parameter registration was already closed before "
-                  "the parameter '" << paramName << "' was registered.");
+        throw std::logic_error("Parameter registration was already closed before "
+                               "the parameter '"+std::string(paramName)+"' was registered.");
 
     ParamsMeta::registrationFinalizers().push_back(
         new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
@@ -790,9 +784,8 @@ void registerParam(const char *paramName, const char *propertyName, const char *
         // parameter name, type and usage string are exactly the same.
         if (ParamsMeta::registry().at(paramName) == paramInfo)
             return;
-        OPM_THROW(std::logic_error,
-                  "Parameter " << paramName
-                  << " registered twice with non-matching characteristics.");
+        throw std::logic_error("Parameter "+std::string(paramName)
+                               +" registered twice with non-matching characteristics.");
     }
 
     ParamsMeta::mutableRegistry()[paramName] = paramInfo;
@@ -803,10 +796,8 @@ void endParamRegistration()
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())
-        OPM_THROW(std::logic_error,
-                  "Parameter registration was already "
-                  "closed. It is only possible to close it "
-                  "once.");
+        throw std::logic_error("Parameter registration was already closed. It is only possible "
+                               "to close it once.");
 
     ParamsMeta::registrationOpen() = false;
 

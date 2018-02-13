@@ -35,8 +35,7 @@
 #include <ewoms/parallel/threadedentityiterator.hh>
 #include <ewoms/aux/baseauxiliarymodule.hh>
 
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
@@ -205,10 +204,8 @@ public:
         }
         succeeded = gridView_().comm().min(succeeded);
 
-        if (!succeeded) {
-            OPM_THROW(Opm::NumericalProblem,
-                       "A process did not succeed in linearizing the system");
-        }
+        if (!succeeded)
+            throw Opm::NumericalIssue("A process did not succeed in linearizing the system");
     }
 
     /*!

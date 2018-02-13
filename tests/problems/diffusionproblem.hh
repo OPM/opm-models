@@ -30,14 +30,14 @@
 
 #include <ewoms/models/ncp/ncpproperties.hh>
 
-#include <ewoms/io/cubegridmanager.hh>
+#include <ewoms/io/cubegridvanguard.hh>
 
 #include <opm/material/fluidmatrixinteractions/LinearMaterial.hpp>
 #include <opm/material/fluidmatrixinteractions/MaterialTraits.hpp>
 #include <opm/material/fluidsystems/H2ON2FluidSystem.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 #include <dune/grid/yaspgrid.hh>
 #include <dune/common/version.hh>
@@ -60,8 +60,8 @@ NEW_TYPE_TAG(DiffusionBaseProblem);
 // Set the grid implementation to be used
 SET_TYPE_PROP(DiffusionBaseProblem, Grid, Dune::YaspGrid</*dim=*/1>);
 
-// set the GridManager property
-SET_TYPE_PROP(DiffusionBaseProblem, GridManager, Ewoms::CubeGridManager<TypeTag>);
+// set the Vanguard property
+SET_TYPE_PROP(DiffusionBaseProblem, Vanguard, Ewoms::CubeGridVanguard<TypeTag>);
 
 // Set the problem property
 SET_TYPE_PROP(DiffusionBaseProblem, Problem, Ewoms::DiffusionProblem<TypeTag>);

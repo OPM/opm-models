@@ -33,7 +33,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/common/Valgrind.hpp>
+#include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -45,7 +45,7 @@ namespace Properties {
 NEW_TYPE_TAG(VtkDiscreteFracture);
 
 // create the property tags needed for the multi phase module
-NEW_PROP_TAG(GridManager);
+NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(VtkWriteFractureSaturations);
 NEW_PROP_TAG(VtkWriteFractureMobilities);
 NEW_PROP_TAG(VtkWriteFractureRelativePermeabilities);
@@ -89,7 +89,7 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
-    typedef typename GET_PROP_TYPE(TypeTag, GridManager) GridManager;
+    typedef typename GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
@@ -177,7 +177,7 @@ public:
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
-        const auto& fractureMapper = elemCtx.simulator().gridManager().fractureMapper();
+        const auto& fractureMapper = elemCtx.simulator().vanguard().fractureMapper();
 
         for (unsigned i = 0; i < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++i) {
             unsigned I = elemCtx.globalSpaceIndex(i, /*timeIdx=*/0);

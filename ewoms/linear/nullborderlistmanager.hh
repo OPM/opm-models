@@ -29,9 +29,8 @@
 
 #include "overlaptypes.hh"
 
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
@@ -57,8 +56,7 @@ public:
                           const DofMapper& map OPM_UNUSED)
     {
         if (gridView.comm().size() > 1)
-            OPM_THROW(std::runtime_error,
-                      "The used model is not usable for parallel computations");
+            throw std::runtime_error("The used model is not usable for parallel computations");
     }
 
     // Access to the border list.

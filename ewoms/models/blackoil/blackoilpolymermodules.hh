@@ -45,10 +45,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #endif
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -101,14 +100,12 @@ public:
         // some sanity checks: if polymers are enabled, the POLYMER keyword must be
         // present, if polymers are disabled the keyword must not be present.
         if (enablePolymer && !deck.hasKeyword("POLYMER")) {
-            OPM_THROW(std::runtime_error,
-                      "Non-trivial polymer treatment requested at compile time, but "
-                      "the deck does not contain the POLYMER keyword");
+            throw std::runtime_error("Non-trivial polymer treatment requested at compile time, but "
+                                     "the deck does not contain the POLYMER keyword");
         }
         else if (!enablePolymer && deck.hasKeyword("POLYMER")) {
-            OPM_THROW(std::runtime_error,
-                      "Polymer treatment disabled at compile time, but the deck "
-                      "contains the POLYMER keyword");
+            throw std::runtime_error("Polymer treatment disabled at compile time, but the deck "
+                                     "contains the POLYMER keyword");
         }
 
         if (!deck.hasKeyword("POLYMER"))
@@ -133,7 +130,7 @@ public:
                            plyrockTable.getMaxAdsorbtionColumn()[satRegionIdx]);
             }
         } else {
-            OPM_THROW(std::runtime_error, "PLYROCK must be specified in POLYMER runs\n");
+            throw std::runtime_error("PLYROCK must be specified in POLYMER runs\n");
         }
 
         // initialize the objects which deal with the PLYADS keyword
@@ -148,7 +145,7 @@ public:
                 plyadsAdsorbedPolymer_[satRegionIdx].setXYContainers(c, ads);
             }
         } else {
-            OPM_THROW(std::runtime_error, "PLYADS must be specified in POLYMER runs\n");
+            throw std::runtime_error("PLYADS must be specified in POLYMER runs\n");
         }
 
 
@@ -168,7 +165,7 @@ public:
                 plyviscViscosityMultiplierTable_[pvtRegionIdx].setXYContainers(c, visc);
             }
         } else {
-            OPM_THROW(std::runtime_error, "PLYVISC must be specified in POLYMER runs\n");
+            throw std::runtime_error("PLYVISC must be specified in POLYMER runs\n");
         }
 
         // initialize the objects which deal with the PLYMAX keyword
@@ -181,7 +178,7 @@ public:
                 setPlymax(mixRegionIdx, plymaxTable.getPolymerConcentrationColumn()[mixRegionIdx]);
             }
         } else {
-            OPM_THROW(std::runtime_error, "PLYMAX must be specified in POLYMER runs\n");
+            throw std::runtime_error("PLYMAX must be specified in POLYMER runs\n");
         }
 
         if (deck.hasKeyword("PLMIXPAR")) {
@@ -191,7 +188,7 @@ public:
                 setPlmixpar(mixRegionIdx, plmixparRecord.getItem("TODD_LONGSTAFF").getSIDouble(0));
             }
         } else {
-            OPM_THROW(std::runtime_error, "PLMIXPAR must be specified in POLYMER runs\n");
+            throw std::runtime_error("PLMIXPAR must be specified in POLYMER runs\n");
         }
 
         hasPlyshlog_ = deck.hasKeyword("PLYSHLOG");
@@ -239,7 +236,7 @@ public:
 
         if (hasShrate_) {
             if(!hasPlyshlog_) {
-                OPM_THROW(std::runtime_error, "PLYSHLOG must be specified if SHRATE is used in POLYMER runs\n");
+                throw std::runtime_error("PLYSHLOG must be specified if SHRATE is used in POLYMER runs\n");
             }
             const auto& shrateKeyword = deck.getKeyword("SHRATE");
             const std::vector<double>& shrateFromDeck = shrateKeyword.getSIDoubleData();
@@ -250,7 +247,7 @@ public:
                 } else if (shrateFromDeck.size() == numPvtRegions) {
                     shrate_[pvtRegionIdx] = shrateKeyword.getSIDoubleData()[pvtRegionIdx];
                 } else {
-                    OPM_THROW(std::runtime_error, "SHRATE must either have 0 or number of NUMPVT entries\n");
+                    throw std::runtime_error("SHRATE must either have 0 or number of NUMPVT entries\n");
                 }
             }
         }
@@ -741,7 +738,7 @@ public:
             }
         }
         if (!converged) {
-            OPM_THROW(std::runtime_error, "Not able to compute shear velocity. \n");
+            throw std::runtime_error("Not able to compute shear velocity. \n");
         }
 
         // return the shear factor
@@ -959,24 +956,22 @@ public:
     { }
 
     const Evaluation& polymerConcentration() const
-    { OPM_THROW(std::runtime_error, "polymerConcentration() called but polymers are disabled"); }
+    { throw std::runtime_error("polymerConcentration() called but polymers are disabled"); }
 
     const Evaluation& polymerDeadPoreVolume() const
-    { OPM_THROW(std::runtime_error, "polymerDeadPoreVolume() called but polymers are disabled"); }
+    { throw std::runtime_error("polymerDeadPoreVolume() called but polymers are disabled"); }
 
     const Evaluation& polymerAdsorption() const
-    { OPM_THROW(std::runtime_error, "polymerAdsorption() called but polymers are disabled"); }
+    { throw std::runtime_error("polymerAdsorption() called but polymers are disabled"); }
 
     const Evaluation& polymerRockDensity() const
-    { OPM_THROW(std::runtime_error, "polymerRockDensity() called but polymers are disabled"); }
+    { throw std::runtime_error("polymerRockDensity() called but polymers are disabled"); }
 
     const Evaluation& polymerViscosityCorrection() const
-    { OPM_THROW(std::runtime_error, "polymerViscosityCorrection() called but polymers are disabled"); }
+    { throw std::runtime_error("polymerViscosityCorrection() called but polymers are disabled"); }
 
     const Evaluation& waterViscosityCorrection() const
-    { OPM_THROW(std::runtime_error, "waterViscosityCorrection() called but polymers are disabled"); }
-
-
+    { throw std::runtime_error("waterViscosityCorrection() called but polymers are disabled"); }
 };
 
 
@@ -1025,9 +1020,8 @@ public:
                                     unsigned scvfIdx OPM_UNUSED,
                                     unsigned timeIdx OPM_UNUSED)
     {
-        OPM_THROW(std::runtime_error,
-                  "The extension of the blackoil model for polymers is not yet "
-                  "implemented for problems specified using permeabilities.");
+        throw std::runtime_error("The extension of the blackoil model for polymers is not yet "
+                                 "implemented for problems specified using permeabilities.");
     }
 
     /*!
@@ -1125,10 +1119,10 @@ public:
     { }
 
     const Evaluation& polymerShearFactor() const
-    { OPM_THROW(std::runtime_error, "polymerShearFactor() called but polymers are disabled"); }
+    { throw std::runtime_error("polymerShearFactor() called but polymers are disabled"); }
 
     const Evaluation& waterShearFactor() const
-    { OPM_THROW(std::runtime_error, "waterShearFactor() called but polymers are disabled"); }
+    { throw std::runtime_error("waterShearFactor() called but polymers are disabled"); }
 };
 
 

@@ -32,10 +32,9 @@
 #include <ewoms/disc/common/fvbaseproperties.hh>
 #include <ewoms/models/common/quantitycallbacks.hh>
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -556,8 +555,7 @@ public:
      */
     Evaluation solidInternalEnergy() const
     {
-        OPM_THROW(std::logic_error,
-                  "solidInternalEnergy() does not make sense for isothermal models");
+        throw std::logic_error("solidInternalEnergy() does not make sense for isothermal models");
     }
 
     /*!
@@ -566,8 +564,7 @@ public:
      */
     Evaluation thermalConductivity() const
     {
-        OPM_THROW(std::logic_error,
-                  "thermalConductivity() does not make sense for isothermal models");
+        throw std::logic_error("thermalConductivity() does not make sense for isothermal models");
     }
 
 protected:
@@ -730,8 +727,8 @@ public:
      */
     Scalar temperatureGradNormal() const
     {
-        OPM_THROW(std::logic_error,
-                  "Calling temperatureGradNormal() does not make sense for isothermal models");
+        throw std::logic_error("Calling temperatureGradNormal() does not make sense "
+                               "for isothermal models");
     }
 
     /*!
@@ -739,8 +736,8 @@ public:
      */
     Scalar thermalConductivity() const
     {
-        OPM_THROW(std::logic_error,
-                  "Calling thermalConductivity() does not make sense for isothermal models");
+        throw std::logic_error("Calling thermalConductivity() does not make sense for "
+                               "isothermal models");
     }
 };
 

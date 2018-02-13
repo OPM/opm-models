@@ -34,10 +34,9 @@
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
-#include <opm/common/Valgrind.hpp>
-#include <opm/common/Unused.hpp>
-#include <opm/common/ErrorMacros.hpp>
-#include <opm/common/Exceptions.hpp>
+#include <opm/material/common/Valgrind.hpp>
+#include <opm/material/common/Unused.hpp>
+#include <opm/material/common/Exceptions.hpp>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
@@ -103,8 +102,7 @@ public:
                             unsigned spaceIdx OPM_UNUSED,
                             unsigned timeIdx OPM_UNUSED) const
     {
-        OPM_THROW(std::logic_error,
-                  "Not implemented: Problem::ergunCoefficient()");
+        throw std::logic_error("Not implemented: Problem::ergunCoefficient()");
     }
 
     /*!
@@ -456,9 +454,8 @@ protected:
         unsigned newtonIter = 0;
         while (deltaV.one_norm() > 1e-11) {
             if (newtonIter >= 50)
-                OPM_THROW(Opm::NumericalProblem,
-                          "Could not determine Forchheimer velocity within "
-                          << newtonIter << " iterations");
+                throw Opm::NumericalIssue("Could not determine Forchheimer velocity within "
+                                            +std::to_string(newtonIter)+" iterations");
             ++newtonIter;
 
             // calculate the residual and its Jacobian matrix

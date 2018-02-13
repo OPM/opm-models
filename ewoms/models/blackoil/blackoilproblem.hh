@@ -32,7 +32,7 @@
 
 #include <ewoms/models/common/multiphasebaseproblem.hh>
 
-#include <opm/common/Unused.hpp>
+#include <opm/material/common/Unused.hpp>
 
 namespace Ewoms {
 
