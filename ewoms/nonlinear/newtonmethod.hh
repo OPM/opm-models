@@ -643,10 +643,10 @@ protected:
      *        spatial domain.
      */
     void linearizeDomain_()
-    { model().linearizer().linearizeDomain(); }
+    { model().linearizer().linearizeDomain(/*focus time*/ 0); }
 
     void linearizeAuxiliaryEquations_()
-    { model().linearizer().linearizeAuxiliaryEquations(); }
+    { model().linearizer().linearizeAuxiliaryEquations(/*focus time*/ 0); }
 
     void preSolve_(const SolutionVector& currentSolution  OPM_UNUSED,
                    const GlobalEqVector& currentResidual)
