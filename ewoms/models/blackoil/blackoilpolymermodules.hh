@@ -861,10 +861,11 @@ public:
      */
     void polymerPropertiesUpdate_(const ElementContext& elemCtx,
                                   unsigned dofIdx,
-                                  unsigned timeIdx)
+                                  unsigned timeIdx,
+                                  unsigned focustime)
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-        polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
+        polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx, focustime);
         const Scalar cmax = PolymerModule::plymaxMaxConcentration(elemCtx, dofIdx, timeIdx);
 
         // permeability reduction due to polymer
@@ -952,7 +953,9 @@ class BlackOilPolymerIntensiveQuantities<TypeTag, false>
 public:
     void polymerPropertiesUpdate_(const ElementContext& elemCtx OPM_UNUSED,
                                   unsigned scvIdx OPM_UNUSED,
-                                  unsigned timeIdx OPM_UNUSED)
+                                  unsigned timeIdx OPM_UNUSED,
+                                  unsigned focustimeIdx OPM_UNUSED)
+
     { }
 
     const Evaluation& polymerConcentration() const
