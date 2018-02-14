@@ -160,7 +160,7 @@ public:
         fluidState_.setSaturation(gasPhaseIdx, Sg);
         fluidState_.setSaturation(oilPhaseIdx, So);
 
-        asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
 
         // now we compute all phase pressures
         Evaluation pC[numPhases];
@@ -186,7 +186,7 @@ public:
         Opm::Valgrind::CheckDefined(mobility_);
 
         // update the Saturation functions for the blackoil solvent module.
-        asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
 
         Scalar SoMax = elemCtx.problem().maxOilSaturation(globalSpaceIdx);
 
@@ -327,12 +327,13 @@ public:
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
 
-        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
+        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);// strictly do not need focus time since no makeEvaluation is done
+        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
+        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache, focustimeidx);
 
         // update the quantities which are required by the chosen
         // velocity model
+        // TODO: use the focus time here
         FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
 
 #ifndef NDEBUG
