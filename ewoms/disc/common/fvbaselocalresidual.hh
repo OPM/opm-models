@@ -491,8 +491,8 @@ protected:
                           const ElementContext& elemCtx) const
     {
         EvalVector tmp;
-        //EqVector tmp2;
-        EvalVector tmp2;
+        EqVector tmp2;
+        EvalVector tmp2_der;// this is added to support calculation of storage term derivative focusTime!=0 for need for adjoint: always used if cachedStororage term si false
         RateVector sourceRate;
 
         tmp = 0.0;
@@ -565,18 +565,61 @@ protected:
                 Opm::Valgrind::CheckDefined(tmp2);
             }
 
-            // Use the implicit Euler time discretization
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                if(elemCtx.focusTimeIndex()==0){
-                    tmp2[eqIdx] .clearDerivatives();// remove derivatives for the time index
-                }else{
-                    tmp[eqIdx] .clearDerivatives();
-                }
-                tmp[eqIdx] -= tmp2[eqIdx];
-                tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+            if (elemCtx.enableStorageCache()) {
+                const auto& model = elemCtx.model();
+                unsigned globalDofIdx = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
+                if (model.newtonMethod().numIterations() == 0 &&
+                    !elemCtx.haveStashedIntensiveQuantities())
+                {
+                    // if the storage term is cached and we're in the first iteration of
+                    // the time step, update the cache of the storage term (this assumes
+                    // that the initial guess for the solution at the end of the time
+                    // step is the same as the solution at the beginning of the time
+                    // step. This is usually true, but some fancy preprocessing scheme
+                    // might invalidate that assumption.)
+                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                        tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
+                    Opm::Valgrind::CheckDefined(tmp2);
 
-                residual[dofIdx][eqIdx] += tmp[eqIdx];
+                    model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
+                }
+                else {
+                    // if the storage term is cached and we're not looking at the first
+                    // iteration of the time step, we take the cached data.
+                    tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
+                    Opm::Valgrind::CheckDefined(tmp2);
+                }
+            } else {
+                // if the mass storage at the beginning of the time step is not cached,
+                // we re-calculate it from scratch.
+                // if storage cache not enables we always use derivatives
+                tmp2_der = 0.0;
+                asImp_().computeStorage(tmp2_der, elemCtx,  dofIdx, /*timeIdx=*/1);
+                Opm::Valgrind::CheckDefined(tmp2_der);
             }
+
+            if( !elemCtx.enableStorageCache() ){
+                // Use the implicit Euler time discretization
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    if(elemCtx.focusTimeIndex()==0){
+                        tmp2_der[eqIdx] .clearDerivatives();// remove derivatives for the time index
+                    }else{
+                        tmp[eqIdx] .clearDerivatives();
+                    }
+                    tmp[eqIdx] -= tmp2_der[eqIdx];
+                    tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+                    residual[dofIdx][eqIdx] += tmp[eqIdx];
+                }
+            }else{
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    // cached storage should only be used in forward mode
+                    assert(elemCtx.focusTimeIndex()==0);
+                    tmp[eqIdx] -= tmp2[eqIdx];
+                    tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+                    residual[dofIdx][eqIdx] += tmp[eqIdx];
+                }
+            }
+
 
             Opm::Valgrind::CheckDefined(residual[dofIdx]);
 
