@@ -812,6 +812,10 @@ public:
         typedef Ewoms::Restart Restarter;
         Restarter res;
         res.deserializeBegin(*this, t);
+        if (gridView().comm().rank() == 0)
+            std::cout << "Deserialize file '" << res.fileName() << "'"
+                      << ", next time step size: " << timeStepSize()
+                      << "\n" << std::flush;
         this->deserialize(res);
         problem_->deserialize(res, false);
         model_->deserialize(res);
