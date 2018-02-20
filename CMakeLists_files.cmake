@@ -53,7 +53,7 @@ list(APPEND TEST_DATA_FILES
 	tests/data/equil_base.DATA
 	tests/data/equil_livegas.DATA
 	tests/data/equil_liveoil.DATA
-	tests/data/summary_deck_non_constant_porosity.DATA
+	tests/data/SUMMARY_DECK_NON_CONSTANT_POROSITY.DATA
 	)
 
 list(APPEND TEST_SOURCE_FILES)
