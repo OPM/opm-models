@@ -267,9 +267,11 @@ public:
 
         bool gasPresent = (fluidState.saturation(gasPhaseIdx) > 0.0);
         bool oilPresent = (fluidState.saturation(oilPhaseIdx) > 0.0);
+        static const Scalar thresholdWaterFilledCell = 1.0 - 1e-6;
+        bool onlyWater = (fluidState.saturation(waterPhaseIdx) > thresholdWaterFilledCell);
 
         // determine the meaning of the primary variables
-        if ((gasPresent && oilPresent) || (!gasPresent && !oilPresent))
+        if ((gasPresent && oilPresent) || onlyWater)
             // gas and oil: both hydrocarbon phases are in equilibrium (i.e., saturated
             // with the "protagonist" component of the other phase.)
             primaryVarsMeaning_ = Sw_po_Sg;
