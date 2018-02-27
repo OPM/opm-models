@@ -80,7 +80,7 @@ struct BlackOilTwoPhaseIndices
     static const int solventSaturationIdx  = PVOffset + numPhases;
 
     //! Index of the primary variable for the first polymer
-    static const int polymerConcentrationIdx  = solventSaturationIdx + numPolymers;
+    static const int polymerConcentrationIdx  = solventSaturationIdx + numSolvents;
 
     // numSolvents-1 primary variables follow
 
