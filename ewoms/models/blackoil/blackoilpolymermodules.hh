@@ -34,7 +34,7 @@
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_OPM_PARSER
+#if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
@@ -91,7 +91,7 @@ class BlackOilPolymerModule
 public:
     enum AdsorptionBehaviour { Desorption = 1, NoDesorption = 2 };
 
-#if HAVE_OPM_PARSER
+#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize all internal data structures needed by the polymer module
      */

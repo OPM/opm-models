@@ -11,7 +11,7 @@ Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: dune-common-devel openmpi environment-modules valgrind
 BuildRequires: make pkgconfig openmpi-devel dune-grid-devel opm-common-devel
-BuildRequires: opm-material-devel opm-grid-devel opm-output-devel
+BuildRequires: opm-material-devel opm-grid-devel
 BuildRequires: dune-istl-devel dune-localfunctions-devel doxygen zlib-devel
 BuildRequires: devtoolset-6-toolchain
 Requires:      ewoms-devel
