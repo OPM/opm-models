@@ -13,7 +13,8 @@ set (ewoms_CONFIG_VAR
   HAVE_DUNE_ISTL
   HAVE_DUNE_ALUGRID
   HAVE_DUNE_FEM
-  HAVE_OPM_OUTPUT
+  HAVE_ECL_INPUT
+  HAVE_ECL_OUTPUT
   DUNE_AVOID_CAPABILITIES_IS_PARALLEL_DEPRECATION_WARNING
   )
 
@@ -34,8 +35,6 @@ set (ewoms_DEPS
   "dune-localfunctions"
   "dune-alugrid"
   "dune-fem"
-  "opm-parser"
-  "opm-output"
   "opm-grid"
   # valgrind client requests
   "Valgrind"
