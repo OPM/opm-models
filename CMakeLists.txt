@@ -131,9 +131,9 @@ add_custom_target(ewoms_prepare)
 EwomsAddApplication(ebos
                     SOURCES ebos/ebos.cc
                     EXE_NAME ebos
-                    CONDITION OPM_GRID_FOUND AND OPM_PARSER_FOUND)
+                    CONDITION OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
 
-if(OPM_GRID_FOUND AND OPM_PARSER_FOUND)
+if(OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
   install(TARGETS ebos DESTINATION bin)
 endif()
 
@@ -152,12 +152,12 @@ opm_add_test(art2dgf
 # EQUIL init tests
 opm_add_test(test_equil
              DRIVER_ARGS --plain
-             CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND)
+             CONDITION HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT AND OPM_GRID_FOUND)
 
 # Output ECL tests
 opm_add_test(test_ecl_output
              DRIVER_ARGS --plain
-             CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND AND OPM_OUTPUT_FOUND)
+             CONDITION HAVE_ECL_INPUT AND OPM_GRID_FOUND AND HAVE_ECL_OUTPUT)
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
