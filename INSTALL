@@ -24,12 +24,11 @@ and DUNE modules:
   - dune-grid           from [0]
   - dune-istl           from [0]
 
-To use the ECL Black-Oil Simulator (ebos), the following OPM modules
+To use the ECL Black-Oil Simulator (ebos), the following dependencies
 are also required:
 
-  - opm-common          from [2]
   - libecl              from [6]
-  - opm-parser          from [2]
+  - opm-common          from [2]
   - opm-grid            from [2]
 
 For vertex-centered finite volume discretization schemes, the
