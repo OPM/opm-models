@@ -443,9 +443,6 @@ public:
                 * Toolbox::template decay<LhsEval>(fs.invB(waterPhaseIdx))
                 * Toolbox::template decay<LhsEval>(intQuants.porosity());
 
-        // avoid singular matrix if no water is present.
-        surfaceVolumeWater = Opm::max(surfaceVolumeWater, 1e-10);
-
         // polymer in water phase
         storage[contiPolymerEqIdx] += surfaceVolumeWater
                 * Toolbox::template decay<LhsEval>(intQuants.polymerConcentration())

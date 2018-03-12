@@ -235,16 +235,6 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::finishInit
-     */
-    void finishInit()
-    {
-        ParentType::finishInit();
-
-        Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
-    }
-
-    /*!
      * \copydoc FvBaseDiscretization::name
      */
     static std::string name()

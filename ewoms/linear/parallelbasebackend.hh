@@ -482,9 +482,15 @@ SET_PROP(ParallelBaseLinearSolver, OverlappingLinearOperator)
                                                OverlappingVector> type;
 };
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2,7)
+SET_TYPE_PROP(ParallelBaseLinearSolver,
+              PreconditionerWrapper,
+              Ewoms::Linear::PreconditionerWrapperILU<TypeTag>);
+#else
 SET_TYPE_PROP(ParallelBaseLinearSolver,
               PreconditionerWrapper,
               Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
+#endif
 
 //! set the default overlap size to 2
 SET_INT_PROP(ParallelBaseLinearSolver, LinearSolverOverlapSize, 2);

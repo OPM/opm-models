@@ -89,6 +89,13 @@ public:
         build_(nativeMatrix);
     }
 
+    // this constructor is required to make the class compatible with the SeqILU class of
+    // Dune >= 2.7.
+    OverlappingBCRSMatrix(size_t numRows,
+                          size_t numCols,
+                          typename BCRSMatrix::BuildMode buildMode)
+    { throw std::logic_error("OverlappingBCRSMatrix objects cannot be build from scratch!"); }
+
     ~OverlappingBCRSMatrix()
     {
         if (overlap_.use_count() == 0)
