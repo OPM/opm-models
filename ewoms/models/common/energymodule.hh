@@ -506,6 +506,12 @@ struct EnergyIndices;
 template <unsigned PVOffset>
 struct EnergyIndices<PVOffset, /*enableEnergy=*/false>
 {
+    //! The index of the primary variable representing temperature
+    enum { temperatureIdx = -1000 };
+
+    //! The index of the equation representing the conservation of energy
+    enum { energyEqIdx = -1000 };
+
 protected:
     enum { numEq_ = 0 };
 };
