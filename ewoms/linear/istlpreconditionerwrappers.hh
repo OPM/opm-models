@@ -48,6 +48,8 @@
 
 #include <dune/istl/preconditioners.hh>
 
+#include <dune/common/version.hh>
+
 namespace Ewoms {
 namespace Properties {
 NEW_PROP_TAG(Scalar);
@@ -146,8 +148,55 @@ EWOMS_WRAP_ISTL_PRECONDITIONER(Jacobi, Dune::SeqJac)
 EWOMS_WRAP_ISTL_PRECONDITIONER(GaussSeidel, Dune::SeqGS)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SOR, Dune::SeqSOR)
 EWOMS_WRAP_ISTL_PRECONDITIONER(SSOR, Dune::SeqSSOR)
+
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2,7)
+
+// we need a custom preconditioner wrapper for ILU because the Dune::SeqILU class uses a
+// non-standard extra template parameter to specify its order.
+template <class TypeTag>
+class PreconditionerWrapperILU
+{
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, OverlappingMatrix) OverlappingMatrix;
+    typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector;
+
+    static constexpr int order = GET_PROP_VALUE(TypeTag, PreconditionerOrder);
+
+public:
+    typedef Dune::SeqILU<OverlappingMatrix, OverlappingVector, OverlappingVector, order>
+           SequentialPreconditioner;
+
+    PreconditionerWrapperILU()
+    {}
+
+    static void registerParameters()
+    {
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation,
+                             "The relaxation factor of the preconditioner");
+    }
+
+    void prepare(OverlappingMatrix& matrix)
+    {
+        Scalar relaxationFactor = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);
+
+        // create the sequential preconditioner.
+        seqPreCond_ = new SequentialPreconditioner(matrix, relaxationFactor);
+    }
+
+    SequentialPreconditioner& get()
+    { return *seqPreCond_; }
+
+    void cleanup()
+    { delete seqPreCond_; }
+
+private:
+    SequentialPreconditioner *seqPreCond_;
+};
+
+#else
 EWOMS_WRAP_ISTL_SIMPLE_PRECONDITIONER(ILU0, Dune::SeqILU0)
 EWOMS_WRAP_ISTL_PRECONDITIONER(ILUn, Dune::SeqILUn)
+#endif
 
 #undef EWOMS_WRAP_ISTL_PRECONDITIONER
 }} // namespace Linear, Ewoms
