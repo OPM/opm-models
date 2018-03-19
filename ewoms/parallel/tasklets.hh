@@ -138,7 +138,7 @@ public:
         runnerMutex_.lock();
 
         threads_.resize(numWorkers);
-        for (int i = 0; i < numWorkers; ++i)
+        for (unsigned i = 0; i < numWorkers; ++i)
             // create a worker thread
             threads_[i].reset(new std::thread(startWorkerThread_, this));
     }
