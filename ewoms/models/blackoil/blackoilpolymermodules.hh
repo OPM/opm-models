@@ -109,6 +109,8 @@ public:
     // TODO: the structure of the following function remains to be optimized
     // TODO: basically, there are three parts. Common ones, ones for POLYMER, ones for POLYMH
     // TODO: we need to re-organize them to improve the readability of this function
+    // TODO: to save space, maybe some resize will not be necessary depending the keywords setp
+    // enablePolymer and enablePolymerMW
     static void initFromDeck(const Opm::Deck& deck, const Opm::EclipseState& eclState)
     {
         // some sanity checks: if polymers are enabled, the POLYMER keyword must be
@@ -220,7 +222,7 @@ public:
                     setPlmixpar(mixRegionIdx, plmixparRecord.getItem("TODD_LONGSTAFF").getSIDouble(0));
                 }
             }
-        } else {
+        } else if ( !enablePolymerMW ) {
             throw std::runtime_error("PLMIXPAR must be specified in POLYMER runs\n");
         }
 
@@ -373,6 +375,10 @@ public:
     {
         plymaxMaxConcentration_.resize(numRegions);
         plymixparToddLongstaff_.resize(numRegions);
+
+        if ( enablePolymerMW ) {
+            plyvmhCoefficients_.resize(numRegions);
+        }
     }
 
     /*!
@@ -696,6 +702,14 @@ public:
         return plymixparToddLongstaff_[polymerMixRegionIdx];
     }
 
+    static const PlyvmhCoefficients& plyvmhCoefficients(const ElementContext& elemCtx,
+                                                        const unsigned scvIdx,
+                                                        const unsigned timeIdx)
+    {
+        const unsigned polymerMixRegionIdx = elemCtx.problem().plmixnumRegionIndex(elemCtx, scvIdx, timeIdx);
+        return plyvmhCoefficients_[polymerMixRegionIdx];
+    }
+
     static bool hasPlyshlog()
     {
         return hasPlyshlog_;
@@ -899,6 +913,7 @@ class BlackOilPolymerIntensiveQuantities
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     static constexpr int polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
+    static constexpr bool enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
 
 
 public:
@@ -930,7 +945,9 @@ public:
         const Evaluation resistanceFactor = 1.0 + (residualResistanceFactor - 1.0) * polymerAdsorption_ / maxAdsorbtion;
 
         // compute effective viscosities
-        auto& fs = asImp_().fluidState_;
+        if ( !enablePolymerMW ) {
+            // TODO: put the following to a function
+        const auto& fs = asImp_().fluidState_;
         const Evaluation& muWater = fs.viscosity(waterPhaseIdx);
         const auto& viscosityMultiplier = PolymerModule::plyviscViscosityMultiplierTable(elemCtx, dofIdx, timeIdx);
         Evaluation viscosityMixture = viscosityMultiplier.eval(polymerConcentration_, /*extrapolate=*/true) * muWater;
@@ -944,12 +961,30 @@ public:
         Evaluation cbar = polymerConcentration_ / cmax;
         // waterViscosity / effectiveWaterViscosity
         waterViscosityCorrection_ = muWater * ( (1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective );
+        // effectiveWaterViscosity / effectivePolymerViscosity
+        polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
+        } else { // based on PLYVMH
+            const auto& plyvmhCoefficients = PolymerModule::plyvmhCoefficients(elemCtx, dofIdx, timeIdx);
+            const Scalar k_mh = plyvmhCoefficients.k_mh;
+            const Scalar a_mh = plyvmhCoefficients.a_mh;
+            const Scalar gamma = plyvmhCoefficients.gamma;
+            const Scalar kappa = plyvmhCoefficients.kappa;
+
+            // TODO: later, the polymer molecular weight should be changed to Evaluation
+            const Scalar polymerMolecularWeight = 20.;
+            // TODO: the following pow function should have a version for Evaluation type
+            const Scalar intrinsicViscosity = k_mh * std::pow(polymerMolecularWeight * 1000., a_mh) * 1000.;
+            // the meaning of this variable is not very clear, while it is x in the formulation employed
+            // in the formulation, the concentration unit is mg/l, here the concentation is kg/m^3, 1000 is used to
+            // convert the unit
+            const Evaluation x = 1.e-6 * 1000. * polymerConcentration_ * intrinsicViscosity;
+            // TODO: the viscosity correction is used for mobility, so it is a division correction
+            waterViscosityCorrection_ = 1.0 / ( 1.0 + gamma * (x + kappa * x * x) );
+            polymerViscosityCorrection_ = waterViscosityCorrection_;
+        }
 
         // adjust water mobility
         asImp_().mobility_[waterPhaseIdx] *= waterViscosityCorrection_ / resistanceFactor;
-
-        // effectiveWaterViscosity / effectivePolymerViscosity
-        polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
 
         // update rock properties
         polymerDeadPoreVolume_ = PolymerModule::plyrockDeadPoreVolume(elemCtx, dofIdx, timeIdx);
