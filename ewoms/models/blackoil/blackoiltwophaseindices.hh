@@ -97,6 +97,10 @@ public:
     static const int polymerConcentrationIdx =
         enablePolymer ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ : -1000;
 
+    //! Index of the primary variable for the second polymer primary variable (molecular weight)
+    static const int polymerMoleWeightIdx =
+        numPolymers_ > 1 ? polymerConcentrationIdx + 1 : -1000;
+
     //! Index of the primary variable for temperature
     static const int temperatureIdx  =
         enableEnergy ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ + numEnergy_ : - 1000;
@@ -153,6 +157,10 @@ public:
     //! Index of the continuity equation for the first polymer component
     static const int contiPolymerEqIdx =
         enablePolymer > 0 ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ : -1000;
+
+    //! Index of the continuity equation for the second polymer component (molecular weight)
+    static const int contiPolymerMWEqIdx =
+        numPolymers_ > 1 ? contiPolymerEqIdx + 1 : -1000;
 
     //! Index of the continuity equation for energy
     static const int contiEnergyEqIdx =
