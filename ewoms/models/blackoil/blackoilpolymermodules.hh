@@ -42,7 +42,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #endif
 
 #include <opm/material/common/Valgrind.hpp>
@@ -85,16 +84,31 @@ class BlackOilPolymerModule
 
 
     static constexpr unsigned enablePolymer = enablePolymerV;
+    static constexpr bool enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
+
     static constexpr unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
     static constexpr unsigned numPhases = FluidSystem::numPhases;
 
 public:
     enum AdsorptionBehaviour { Desorption = 1, NoDesorption = 2 };
 
+    // a struct containing the constants to calculate polymer viscosity
+    // based on Mark-Houwink equation and Huggins equation, the constants are provided
+    // by the keyword PLYVMH
+    struct PlyvmhCoefficients {
+        Scalar k_mh;
+        Scalar a_mh;
+        Scalar gamma;
+        Scalar kappa;
+    };
+
 #if HAVE_ECL_INPUT
     /*!
      * \brief Initialize all internal data structures needed by the polymer module
      */
+    // TODO: the structure of the following function remains to be optimized
+    // TODO: basically, there are three parts. Common ones, ones for POLYMER, ones for POLYMH
+    // TODO: we need to re-organize them to improve the readability of this function
     static void initFromDeck(const Opm::Deck& deck, const Opm::EclipseState& eclState)
     {
         // some sanity checks: if polymers are enabled, the POLYMER keyword must be
@@ -106,6 +120,15 @@ public:
         else if (!enablePolymer && deck.hasKeyword("POLYMER")) {
             throw std::runtime_error("Polymer treatment disabled at compile time, but the deck "
                                      "contains the POLYMER keyword");
+        }
+
+        if (enablePolymerMW && !deck.hasKeyword("POLYMW")) {
+            throw std::runtime_error("Polymer molecular weight tracking is enabled at compile time, but "
+                                     "the deck does not contain the POLYMW keyword");
+        }
+        else if (!enablePolymerMW && deck.hasKeyword("POLYMW")) {
+            throw std::runtime_error("Polymer molecular weight tracking is disabled at compile time, but the deck "
+                                     "contains the POLYMW keyword");
         }
 
         if (!deck.hasKeyword("POLYMER"))
@@ -155,16 +178,22 @@ public:
         // initialize the objects which deal with the PLYVISC keyword
         const auto& plyviscTables = tableManager.getPlyviscTables();
         if (!plyviscTables.empty()) {
+            // different viscosity model is used for POLYMW
+            if (enablePolymerMW) {
+                Opm::OpmLog::warning("PLYVISC should not be used in POLYMW runs, "
+                                     "they will not take effects. Different viscosity model based on PLYVMH is used \n");
+            } else {
 
-            assert(numPvtRegions == plyviscTables.size());
-            for (unsigned pvtRegionIdx = 0; pvtRegionIdx < numPvtRegions; ++ pvtRegionIdx) {
-                const auto& plyadsTable = plyviscTables.template getTable<Opm::PlyviscTable>(pvtRegionIdx);
-                // Copy data
-                const auto& c = plyadsTable.getPolymerConcentrationColumn();
-                const auto& visc = plyadsTable.getViscosityMultiplierColumn();
-                plyviscViscosityMultiplierTable_[pvtRegionIdx].setXYContainers(c, visc);
+                assert(numPvtRegions == plyviscTables.size());
+                for (unsigned pvtRegionIdx = 0; pvtRegionIdx < numPvtRegions; ++ pvtRegionIdx) {
+                    const auto& plyadsTable = plyviscTables.template getTable<Opm::PlyviscTable>(pvtRegionIdx);
+                    // Copy data
+                    const auto& c = plyadsTable.getPolymerConcentrationColumn();
+                    const auto& visc = plyadsTable.getViscosityMultiplierColumn();
+                    plyviscViscosityMultiplierTable_[pvtRegionIdx].setXYContainers(c, visc);
+                }
             }
-        } else {
+        } else if ( !enablePolymerMW ) {
             throw std::runtime_error("PLYVISC must be specified in POLYMER runs\n");
         }
 
@@ -182,10 +211,14 @@ public:
         }
 
         if (deck.hasKeyword("PLMIXPAR")) {
-            // initialize the objects which deal with the PLMIXPAR keyword
-            for (unsigned mixRegionIdx = 0; mixRegionIdx < numMixRegions; ++ mixRegionIdx) {
-                const auto& plmixparRecord = deck.getKeyword("PLMIXPAR").getRecord(mixRegionIdx);
-                setPlmixpar(mixRegionIdx, plmixparRecord.getItem("TODD_LONGSTAFF").getSIDouble(0));
+            if (enablePolymerMW) {
+                Opm::OpmLog::warning("PLMIXPAR should not be used in POLYMW runs, it will take no effects \n");
+            } else {
+                // initialize the objects which deal with the PLMIXPAR keyword
+                for (unsigned mixRegionIdx = 0; mixRegionIdx < numMixRegions; ++ mixRegionIdx) {
+                    const auto& plmixparRecord = deck.getKeyword("PLMIXPAR").getRecord(mixRegionIdx);
+                    setPlmixpar(mixRegionIdx, plmixparRecord.getItem("TODD_LONGSTAFF").getSIDouble(0));
+                }
             }
         } else {
             throw std::runtime_error("PLMIXPAR must be specified in POLYMER runs\n");
@@ -194,7 +227,11 @@ public:
         hasPlyshlog_ = deck.hasKeyword("PLYSHLOG");
         hasShrate_ = deck.hasKeyword("SHRATE");
 
-        if (hasPlyshlog_) {
+        if ( (hasPlyshlog_ || hasShrate_) && enablePolymerMW) {
+            Opm::OpmLog::warning("PLYSHLOG and SHRATE should not be used in POLYMW runs, they will take no effects \n");
+        }
+
+        if (hasPlyshlog_ && !enablePolymerMW) {
             const auto& plyshlogTables = tableManager.getPlyshlogTables();
             assert(numPvtRegions == plyshlogTables.size());
             plyshlogShearEffectRefMultiplier_.resize(numPvtRegions);
@@ -234,7 +271,7 @@ public:
             }
         }
 
-        if (hasShrate_) {
+        if (hasShrate_ && !enablePolymerMW) {
             if(!hasPlyshlog_) {
                 throw std::runtime_error("PLYSHLOG must be specified if SHRATE is used in POLYMER runs\n");
             }
@@ -252,6 +289,23 @@ public:
             }
         }
 
+        // TODO: for now, we use the mixing region first for keyword PLYVMH
+        // initialize the PLYVMH related
+        if (enablePolymerMW) {
+            const Opm::DeckKeyword& plyvmhKeyword = deck.getKeyword("PLYVMH");
+            assert(plyvmhKeyword.size() == numMixRegions);
+            if (plyvmhKeyword.size() > 0) {
+                for (size_t region_idx = 0; region_idx < plyvmhKeyword.size(); ++region_idx) {
+                    const Opm::DeckRecord& record = plyvmhKeyword.getRecord(region_idx);
+                    plyvmhCoefficients_[region_idx].k_mh = record.getItem("K_MH").getSIDouble(0);
+                    plyvmhCoefficients_[region_idx].a_mh = record.getItem("A_MH").getSIDouble(0);
+                    plyvmhCoefficients_[region_idx].gamma = record.getItem("GAMMA").getSIDouble(0);
+                    plyvmhCoefficients_[region_idx].kappa = record.getItem("KAPPA").getSIDouble(0);
+                }
+            } else {
+                throw std::runtime_error("PLYVMH keyword must be specified in POLYMW rus \n");
+            }
+        }
     }
 #endif
 
@@ -287,17 +341,6 @@ public:
         plyrockRockDensityFactor_[satRegionIdx] = plyrockRockDensityFactor;
         plyrockAdsorbtionIndex_[satRegionIdx] = plyrockAdsorbtionIndex;
         plyrockMaxAdsorbtion_[satRegionIdx] = plyrockMaxAdsorbtion;
-    }
-
-    /*!
-     * \brief Specify the polymer rock properties a single region.
-     *
-     * The index of specified here must be in range [0, numSatRegions)
-     */
-    static void setAdsrock(unsigned satRegionIdx,
-                           const TabulatedFunction& plyadsAdsorbedPolymer)
-    {
-        plyadsAdsorbedPolymer_[satRegionIdx] = plyadsAdsorbedPolymer;
     }
 
     /*!
@@ -765,6 +808,8 @@ private:
     static bool hasShrate_;
     static bool hasPlyshlog_;
 
+    static std::vector<PlyvmhCoefficients> plyvmhCoefficients_;
+
 };
 
 
@@ -824,6 +869,10 @@ BlackOilPolymerModule<TypeTag, enablePolymerV>::hasShrate_;
 template <class TypeTag, bool enablePolymerV>
 bool
 BlackOilPolymerModule<TypeTag, enablePolymerV>::hasPlyshlog_;
+
+template <class TypeTag, bool enablePolymerV>
+std::vector<typename BlackOilPolymerModule<TypeTag, enablePolymerV>::PlyvmhCoefficients>
+BlackOilPolymerModule<TypeTag, enablePolymerV>::plyvmhCoefficients_;
 
 /*!
  * \ingroup BlackOil

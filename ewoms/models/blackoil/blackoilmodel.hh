@@ -127,6 +127,8 @@ public:
 // by default, all ECL extension modules are disabled
 SET_BOOL_PROP(BlackOilModel, EnableSolvent, false);
 SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
+SET_BOOL_PROP(BlackOilModel, EnablePolymerMW, false);
+
 
 //! By default, the blackoil model is isothermal and does not conserve energy
 SET_BOOL_PROP(BlackOilModel, EnableTemperature, false);
