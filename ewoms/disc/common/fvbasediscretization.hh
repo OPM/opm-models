@@ -230,6 +230,11 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableGridAdaptation, false);
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 
+//! By default, write the VTK output to asynchronously to disk
+//!
+//! This has only an effect if EnableVtkOutput is true
+SET_BOOL_PROP(FvBaseDiscretization, EnableAsyncVtkOutput, true);
+
 //! Set the format of the VTK output to ASCII by default
 SET_INT_PROP(FvBaseDiscretization, VtkOutputFormat, Dune::VTK::ascii);
 

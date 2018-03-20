@@ -33,6 +33,7 @@
 #include "vtktensorfunction.hh"
 
 #include <ewoms/io/baseoutputwriter.hh>
+#include <ewoms/parallel/tasklets.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>
@@ -62,6 +63,31 @@ namespace Ewoms {
 template <class GridView, int vtkFormat>
 class VtkMultiWriter : public BaseOutputWriter
 {
+    class WriteDataTasklet : public TaskletInterface
+    {
+    public:
+        WriteDataTasklet(VtkMultiWriter& multiWriter)
+            : multiWriter_(multiWriter)
+        { }
+
+        void run() final
+        {
+            std::string fileName;
+            // write the actual data as vtu or vtp (plus the pieces file in the parallel case)
+            fileName = multiWriter_.curWriter_->write(/*name=*/multiWriter_.curOutFileName_.c_str(),
+                                                      static_cast<Dune::VTK::OutputType>(vtkFormat));
+
+            // determine name to write into the multi-file for the
+            // current time step
+            multiWriter_.multiFile_.precision(16);
+            multiWriter_.multiFile_ << "   <DataSet timestep=\"" << multiWriter_.curTime_ << "\" file=\""
+                                    << fileName << "\"/>\n";
+        }
+
+    private:
+        VtkMultiWriter& multiWriter_;
+    };
+
     enum { dim = GridView::dimension };
 
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
@@ -87,7 +113,8 @@ public:
     typedef typename VtkWriter::VTKFunctionPtr FunctionPtr;
 #endif
 
-    VtkMultiWriter(const GridView& gridView,
+    VtkMultiWriter(bool asyncWriting,
+                   const GridView& gridView,
                    const std::string& simName = "",
                    std::string multiFileName = "")
         : gridView_(gridView)
@@ -98,6 +125,9 @@ public:
         , elementMapper_(gridView)
         , vertexMapper_(gridView)
 #endif
+        , curWriter_(nullptr)
+        , curWriterNum_(0)
+        , taskletRunner_(/*numThreads=*/asyncWriting?1:0)
     {
         simName_ = (simName.empty()) ? "sim" : simName;
         multiFileName_ = multiFileName;
@@ -106,14 +136,14 @@ public:
             multiFileName_ += ".pvd";
         }
 
-        curWriterNum_ = 0;
-
         commRank_ = gridView.comm().rank();
         commSize_ = gridView.comm().size();
     }
 
     ~VtkMultiWriter()
     {
+        taskletRunner_.barrier();
+        releaseBuffers_();
         finishMultiFile_();
 
         if (commRank_ == 0)
@@ -147,6 +177,11 @@ public:
         if (!multiFile_.is_open()) {
             startMultiFile_(multiFileName_);
         }
+
+        // make sure that all previous output has been written and no other thread
+        // accesses the memory used as the target for the extracted quantities
+        taskletRunner_.barrier();
+        releaseBuffers_();
 
         curTime_ = t;
         curOutFileName_ = fileName_();
@@ -350,30 +385,11 @@ public:
     void endWrite(bool onlyDiscard = false)
     {
         if (!onlyDiscard) {
-            std::string fileName;
-            // write the actual data as vtu or vtp (plus the pieces file in the parallel case)
-            fileName = curWriter_->write(/*name=*/curOutFileName_.c_str(),
-                                         static_cast<Dune::VTK::OutputType>(vtkFormat));
-
-            // determine name to write into the multi-file for the
-            // current time step
-            multiFile_.precision(16);
-            multiFile_ << "   <DataSet timestep=\"" << curTime_ << "\" file=\""
-                       << fileName << "\"/>\n";
+            auto tasklet = std::make_shared<WriteDataTasklet>(*this);
+            taskletRunner_.dispatch(tasklet);
         }
         else
             --curWriterNum_;
-
-        // discard managed objects and the current VTK writer
-        delete curWriter_;
-        while (managedScalarBuffers_.begin() != managedScalarBuffers_.end()) {
-            delete managedScalarBuffers_.front();
-            managedScalarBuffers_.pop_front();
-        }
-        while (managedVectorBuffers_.begin() != managedVectorBuffers_.end()) {
-            delete managedVectorBuffers_.front();
-            managedVectorBuffers_.pop_front();
-        }
 
         // temporarily write the closing XML mumbo-jumbo to the mashup
         // file so that the data set can be loaded even if the
@@ -507,6 +523,22 @@ private:
         // nothing to do: this is done by VtkVectorFunction
     }
 
+    // release the memory occupied by all buffer objects managed by the multi-writer
+    void releaseBuffers_()
+    {
+        // discard managed objects and the current VTK writer
+        delete curWriter_;
+        curWriter_ = nullptr;
+        while (managedScalarBuffers_.begin() != managedScalarBuffers_.end()) {
+            delete managedScalarBuffers_.front();
+            managedScalarBuffers_.pop_front();
+        }
+        while (managedVectorBuffers_.begin() != managedVectorBuffers_.end()) {
+            delete managedVectorBuffers_.front();
+            managedVectorBuffers_.pop_front();
+        }
+    }
+
     const GridView gridView_;
     ElementMapper elementMapper_;
     VertexMapper vertexMapper_;
@@ -525,6 +557,8 @@ private:
 
     std::list<ScalarBuffer *> managedScalarBuffers_;
     std::list<VectorBuffer *> managedVectorBuffers_;
+
+    TaskletRunner taskletRunner_;
 };
 } // namespace Ewoms
 

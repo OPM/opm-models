@@ -94,7 +94,7 @@ public:
         ++ iteration_;
         if (!vtkMultiWriter_)
             vtkMultiWriter_ =
-                new VtkMultiWriter(newtonMethod_.problem().gridView(), "convergence");
+                new VtkMultiWriter(/*async=*/false, newtonMethod_.problem().gridView(), "convergence");
         vtkMultiWriter_->beginWrite(timeStepIdx_ + iteration_ / 100.0);
     }
 
