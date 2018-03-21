@@ -79,7 +79,9 @@ class BlackOilPolymerModule
     typedef typename Opm::Tabulated1DFunction<Scalar> TabulatedFunction;
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
+    static constexpr unsigned polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
     static constexpr unsigned contiPolymerEqIdx = Indices::contiPolymerEqIdx;
+    static constexpr unsigned contiPolymerMWEqIdx = Indices::contiPolymerMWEqIdx;
     static constexpr unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
 
 
@@ -131,6 +133,11 @@ public:
         else if (!enablePolymerMW && deck.hasKeyword("POLYMW")) {
             throw std::runtime_error("Polymer molecular weight tracking is disabled at compile time, but the deck "
                                      "contains the POLYMW keyword");
+        }
+
+        if (enablePolymerMW && !enablePolymer) {
+            throw std::runtime_error("Polymer molecular weight tracking is enabled while polymer treatment "
+                                     "is disabled at compile time");
         }
 
         if (!deck.hasKeyword("POLYMER"))
@@ -436,14 +443,22 @@ public:
             // polymers have been disabled at compile time
             return false;
 
-        return pvIdx == polymerConcentrationIdx;
+        if (!enablePolymerMW)
+           return pvIdx == polymerConcentrationIdx;
+
+        // both enablePolymer and enablePolymerMW are true here
+        return pvIdx == polymerConcentrationIdx || pvIdx == polymerMoleWeightIdx;
     }
 
     static std::string primaryVarName(unsigned pvIdx OPM_OPTIM_UNUSED)
     {
         assert(primaryVarApplies(pvIdx));
 
-        return "polymer_waterconcentration";
+        if (pvIdx == polymerConcentrationIdx) {
+            return "polymer_waterconcentration";
+        } else {
+            return "polymer_molecularweight";
+        }
     }
 
     static Scalar primaryVarWeight(unsigned pvIdx OPM_OPTIM_UNUSED)
@@ -459,14 +474,22 @@ public:
         if (!enablePolymer)
             return false;
 
-        return eqIdx == contiPolymerEqIdx;
+        if (!enablePolymerMW)
+            return eqIdx == contiPolymerEqIdx;
+
+        // both enablePolymer and enablePolymerMW are true here
+        return eqIdx == contiPolymerEqIdx || eqIdx == contiPolymerMWEqIdx;
     }
 
     static std::string eqName(unsigned eqIdx OPM_OPTIM_UNUSED)
     {
         assert(eqApplies(eqIdx));
 
-        return "conti^polymer";
+        if (eqIdx == contiPolymerEqIdx) {
+            return "conti^polymer";
+        } else {
+            return "conti^polymer_molecularwegiht";
+        }
     }
 
     static Scalar eqWeight(unsigned eqIdx OPM_OPTIM_UNUSED)
@@ -487,7 +510,7 @@ public:
 
         const auto& fs = intQuants.fluidState();
 
-        LhsEval surfaceVolumeWater =
+        const LhsEval surfaceVolumeWater =
                 Toolbox::template decay<LhsEval>(fs.saturation(waterPhaseIdx))
                 * Toolbox::template decay<LhsEval>(fs.invB(waterPhaseIdx))
                 * Toolbox::template decay<LhsEval>(intQuants.porosity());
@@ -496,16 +519,30 @@ public:
         surfaceVolumeWater = Opm::max(surfaceVolumeWater, 1e-10);
 
         // polymer in water phase
-        storage[contiPolymerEqIdx] += surfaceVolumeWater
+        // TODO: different name for this term?
+        const LhsEval massPolymer = surfaceVolumeWater
                 * Toolbox::template decay<LhsEval>(intQuants.polymerConcentration())
                 * (1.0 - Toolbox::template decay<LhsEval>(intQuants.polymerDeadPoreVolume()));
 
         // polymer in solid phase
-        storage[contiPolymerEqIdx] +=
+        const LhsEval adsorptionPolymer =
                 Toolbox::template decay<LhsEval>(1.0 - intQuants.porosity())
                 * Toolbox::template decay<LhsEval>(intQuants.polymerRockDensity())
                 * Toolbox::template decay<LhsEval>(intQuants.polymerAdsorption());
 
+        const LhsEval accumulationPolymer = massPolymer + adsorptionPolymer;
+
+        storage[contiPolymerEqIdx] += accumulationPolymer;
+
+        // tracking the polymer molecular weight
+        if (enablePolymerMW) {
+            // TODO: it possible to have problems related to the zero polymer concentration
+            // TODO: for the water, there is something like a minimum water saturation there
+            // TODO: basically, it is multiplying the accumulation term of polymer equation by the molecular weight
+            // TODO: needs to check later whether this is the good way
+            storage[contiPolymerMWEqIdx]  += accumulationPolymer
+                                         * Toolbox::template decay<LhsEval> (intQuants.polymerMoleWeight() );
+        }
     }
 
     static void computeFlux(RateVector& flux,
@@ -519,8 +556,8 @@ public:
 
         const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
 
-        unsigned upIdx = extQuants.upstreamIndex(FluidSystem::waterPhaseIdx);
-        unsigned inIdx = extQuants.interiorIndex();
+        const unsigned upIdx = extQuants.upstreamIndex(FluidSystem::waterPhaseIdx);
+        const unsigned inIdx = extQuants.interiorIndex();
         const auto& up = elemCtx.intensiveQuantities(upIdx, timeIdx);
         const unsigned contiWaterEqIdx = Indices::conti0EqIdx + Indices::canonicalToActiveComponentIndex(FluidSystem::waterCompIdx);
 
@@ -549,6 +586,16 @@ public:
                     Opm::decay<Scalar>(extQuants.waterShearFactor());
         }
 
+        // flux related to transport of polymer molecular weight
+        if (enablePolymerMW) {
+            if (upIdx == inIdx) {
+                flux[contiPolymerMWEqIdx] = flux[contiPolymerEqIdx] * up.polymerMoleWeight();
+            } else {
+                flux[contiPolymerMWEqIdx] = flux[contiPolymerEqIdx]
+                                          * Opm::decay<Scalar>(up.polymerMoleWeight() );
+            }
+        }
+
     }
 
     /*!
@@ -559,7 +606,7 @@ public:
     {
         if (!enablePolymer)
             return;
-
+        // TODO: not called
         priVars[polymerConcentrationIdx] = polymerConcentration;
     }
 
@@ -573,6 +620,7 @@ public:
         if (!enablePolymer)
             return;
 
+        // TODO: not called
         // do a plain unchopped Newton update
         newPv[polymerConcentrationIdx] = oldPv[polymerConcentrationIdx] - delta[polymerConcentrationIdx];
     }
@@ -594,6 +642,7 @@ public:
      */
     static Scalar computeResidualError(const EqVector& resid)
     {
+        // TODO: not called
         // do not weight the residual of polymers when it comes to convergence
         return std::abs(Toolbox::scalarValue(resid[contiPolymerEqIdx]));
     }
@@ -607,6 +656,7 @@ public:
         unsigned dofIdx = model.dofMapper().index(dof);
         const PrimaryVariables& priVars = model.solution(/*timeIdx=*/0)[dofIdx];
         outstream << priVars[polymerConcentrationIdx];
+        outstream << priVars[polymerMoleWeightIdx];
     }
 
     template <class DofEntity>
@@ -619,10 +669,12 @@ public:
         PrimaryVariables& priVars0 = model.solution(/*timeIdx=*/0)[dofIdx];
         PrimaryVariables& priVars1 = model.solution(/*timeIdx=*/1)[dofIdx];
 
+        // TODO: not sure how to handle here for polymer molecular weight
         instream >> priVars0[polymerConcentrationIdx];
+        instream >> priVars0[polymerMoleWeightIdx];
 
         // set the primary variables for the beginning of the current time step.
-        priVars1 = priVars0[polymerConcentrationIdx];
+        priVars1 = priVars0; // [polymerConcentrationIdx];
     }
 
     static const Scalar plyrockDeadPoreVolume(const ElementContext& elemCtx,
@@ -914,6 +966,7 @@ class BlackOilPolymerIntensiveQuantities
     static constexpr int polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
     static constexpr bool enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
+    static constexpr int polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
 
 
 public:
@@ -929,6 +982,7 @@ public:
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
+        polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx);
         const Scalar cmax = PolymerModule::plymaxMaxConcentration(elemCtx, dofIdx, timeIdx);
 
         // permeability reduction due to polymer
@@ -948,17 +1002,18 @@ public:
         if ( !enablePolymerMW ) {
             // TODO: put the following to a function
         const auto& fs = asImp_().fluidState_;
+            // TODO: not sure muWater is needed here, if not used, we should remove it
         const Evaluation& muWater = fs.viscosity(waterPhaseIdx);
         const auto& viscosityMultiplier = PolymerModule::plyviscViscosityMultiplierTable(elemCtx, dofIdx, timeIdx);
-        Evaluation viscosityMixture = viscosityMultiplier.eval(polymerConcentration_, /*extrapolate=*/true) * muWater;
+        const Evaluation viscosityMixture = viscosityMultiplier.eval(polymerConcentration_, /*extrapolate=*/true) * muWater;
 
         // Do the Todd-Longstaff mixing
         const Scalar plymixparToddLongstaff = PolymerModule::plymixparToddLongstaff(elemCtx, dofIdx, timeIdx);
-        Evaluation viscosityPolymer = viscosityMultiplier.eval(cmax, /*extrapolate=*/true) * muWater;
-        Evaluation viscosityPolymerEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(viscosityPolymer, 1.0 - plymixparToddLongstaff);
-        Evaluation viscosityWaterEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(muWater, 1.0 - plymixparToddLongstaff);
+        const Evaluation viscosityPolymer = viscosityMultiplier.eval(cmax, /*extrapolate=*/true) * muWater;
+        const Evaluation viscosityPolymerEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(viscosityPolymer, 1.0 - plymixparToddLongstaff);
+        const Evaluation viscosityWaterEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(muWater, 1.0 - plymixparToddLongstaff);
 
-        Evaluation cbar = polymerConcentration_ / cmax;
+        const Evaluation cbar = polymerConcentration_ / cmax;
         // waterViscosity / effectiveWaterViscosity
         waterViscosityCorrection_ = muWater * ( (1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective );
         // effectiveWaterViscosity / effectivePolymerViscosity
@@ -970,12 +1025,10 @@ public:
             const Scalar gamma = plyvmhCoefficients.gamma;
             const Scalar kappa = plyvmhCoefficients.kappa;
 
-            // TODO: later, the polymer molecular weight should be changed to Evaluation
-            const Scalar polymerMolecularWeight = 20.;
             // TODO: the following pow function should have a version for Evaluation type
-            const Scalar intrinsicViscosity = k_mh * std::pow(polymerMolecularWeight * 1000., a_mh) * 1000.;
+            const Evaluation intrinsicViscosity = k_mh * pow(polymerMoleWeight_ * 1000., a_mh) * 1000.;
             // the meaning of this variable is not very clear, while it is x in the formulation employed
-            // in the formulation, the concentration unit is mg/l, here the concentation is kg/m^3, 1000 is used to
+            // in the formulation, the concentration unit is mg/l, here the concentration is kg/m^3, 1000 is used to
             // convert the unit
             const Evaluation x = 1.e-6 * 1000. * polymerConcentration_ * intrinsicViscosity;
             // TODO: the viscosity correction is used for mobility, so it is a division correction
@@ -993,6 +1046,14 @@ public:
 
     const Evaluation& polymerConcentration() const
     { return polymerConcentration_; }
+
+    const Evaluation& polymerMoleWeight() const
+    {
+        if ( !enablePolymerMW )
+            throw std::runtime_error("polymerMoleWeight() called by polymers are disabled");
+
+        return polymerMoleWeight_;
+    }
 
     const Scalar& polymerDeadPoreVolume() const
     { return polymerDeadPoreVolume_; }
@@ -1017,6 +1078,8 @@ protected:
     { return *static_cast<Implementation*>(this); }
 
     Evaluation polymerConcentration_;
+    // polymer molecular weight
+    Evaluation polymerMoleWeight_;
     Scalar polymerDeadPoreVolume_;
     Scalar polymerRockDensity_;
     Evaluation polymerAdsorption_;
@@ -1038,6 +1101,9 @@ public:
                                   unsigned scvIdx OPM_UNUSED,
                                   unsigned timeIdx OPM_UNUSED)
     { }
+
+    const Evaluation& polymerMoleWeight() const
+    { throw std::runtime_error("polymerMoleWeight() called by polymers are disabled"); }
 
     const Evaluation& polymerConcentration() const
     { throw std::runtime_error("polymerConcentration() called but polymers are disabled"); }
