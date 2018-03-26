@@ -360,8 +360,8 @@ public:
      * \brief Returns the face object belonging to a given face index
      *        in the interior of the domain.
      */
-    const SubControlVolumeFace& interiorFace(unsigned bfIdx) const
-    { return interiorFaces_[bfIdx]; }
+    const SubControlVolumeFace& interiorFace(unsigned faceIdx) const
+    { return interiorFaces_[faceIdx]; }
 
     /*!
      * \brief Returns the number of boundary faces of the stencil.

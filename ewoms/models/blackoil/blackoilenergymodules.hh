@@ -493,6 +493,7 @@ public:
         const auto& stencil = elemCtx.stencil(timeIdx);
         const auto& scvf = stencil.interiorFace(scvfIdx);
 
+        Scalar faceArea = scvf.area();
         unsigned inIdx = scvf.interiorIndex();
         unsigned exIdx = scvf.exteriorIndex();
         const auto& inIq = elemCtx.intensiveQuantities(inIdx, timeIdx);
@@ -533,9 +534,9 @@ public:
         if (inLambda > 0.0 && exLambda > 0.0) {
             // compute the "thermal transmissibility". In contrast to the normal
             // transmissibility this cannot be done as a preprocessing step because the
-            // average thermal thermal conductivity is analogous to the permeability but depends
-            // on the solution.
-            Scalar alpha = elemCtx.problem().thermalHalfTransmissibility(elemCtx, inIdx, exIdx);
+            // average thermal thermal conductivity is analogous to the permeability but
+            // depends on the solution.
+            Scalar alpha = elemCtx.problem().thermalHalfTransmissibility(elemCtx, scvfIdx, timeIdx);
             const Evaluation& inH = inLambda*alpha;
             const Evaluation& exH = exLambda*alpha;
             H = 1.0/(1.0/inH + 1.0/exH);
@@ -543,7 +544,7 @@ public:
         else
             H = 0.0;
 
-        energyFlux_ = deltaT * (-H);
+        energyFlux_ = deltaT * (-H/faceArea);
     }
 
     template <class Context, class BoundaryFluidState>
