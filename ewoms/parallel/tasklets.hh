@@ -85,18 +85,18 @@ class TaskletRunner
 
         void wait()
         {
-            numWaitingMutex_.lock();
-            numWaiting_ += 1;
-            if (numWaiting_ >= numWorkers_ + 1)
-                barrierCondition_.notify_all();
-            numWaitingMutex_.unlock();
+            std::unique_lock<std::mutex> lock(barrierMutex_);
 
-            if (numWaiting_ < numWorkers_ + 1) {
+            numWaiting_ += 1;
+            if (numWaiting_ >= numWorkers_ + 1) {
+                lock.unlock();
+                barrierCondition_.notify_all();
+            }
+            else {
                 const auto& areAllWaiting =
                     [this]() -> bool
                     { return this->numWaiting_ >= this->numWorkers_ + 1; };
 
-                std::unique_lock<std::mutex> lock(barrierMutex_);
                 barrierCondition_.wait(lock, /*predicate=*/areAllWaiting);
             }
         }
@@ -106,7 +106,6 @@ class TaskletRunner
         unsigned numWaiting_;
 
         std::condition_variable barrierCondition_;
-        std::mutex numWaitingMutex_;
         std::mutex barrierMutex_;
     };
 
