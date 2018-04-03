@@ -43,7 +43,7 @@ printHeader ewoms
 # Setup opm-data
 if grep -q "with downstreams" <<< $ghprbCommentBody
 then
-  source $WORKSPACE/deps/opm-common/jenkins/setup-opm-data.sh
+  source $WORKSPACE/deps/opm-common/jenkins/setup-opm-tests.sh
 fi
 
 build_module_full ewoms
