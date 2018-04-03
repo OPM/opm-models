@@ -132,9 +132,21 @@ SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
 SET_BOOL_PROP(BlackOilModel, EnableTemperature, false);
 SET_BOOL_PROP(BlackOilModel, EnableEnergy, false);
 
+//! by default, scale the energy equation by the inverse of the energy required to heat
+//! up one kg of water by 30 Kelvin. If we conserve surface volumes, this must be divided
+//! by the weight of one cubic meter of water. This is required to make the "dumb" linear
+//! solvers that do not weight the components of the solutions do the right thing.
 //! by default, don't scale the energy equation, i.e. assume that a reasonable linear
 //! solver is used. (Not scaling it makes debugging quite a bit easier.)
-SET_SCALAR_PROP(BlackOilModel, BlackOilEnergyScalingFactor, 1.0);
+SET_PROP(BlackOilModel, BlackOilEnergyScalingFactor)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume) ? 1000.0 : 1.0;
+
+public:
+    static constexpr Scalar value = 1.0/(30*4184.0*alpha);
+};
 
 // by default, ebos formulates the conservation equations in terms of mass not surface
 // volumes

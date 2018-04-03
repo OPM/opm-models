@@ -188,7 +188,7 @@ public:
 
         // scale the source term of the energy equation
         if (enableEnergy) {
-            static const Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+            static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
             source[Indices::contiEnergyEqIdx] *= alpha;
         }
     }

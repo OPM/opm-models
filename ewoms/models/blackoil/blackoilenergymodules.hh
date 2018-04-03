@@ -140,12 +140,7 @@ public:
     {
         assert(eqApplies(eqIdx));
 
-        // Inverse of the energy required to heat up one kg of water by 30 Kelvin. If we
-        // conserve surface volumes, this must be divided by the weight of one cubic
-        // meter of water.
-        static const Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
-        static const Scalar beta = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume) ? 1000.0 : 1.0;
-        return static_cast<Scalar>(1.0/(30*4184.0*alpha*beta));
+        return 1.0;
     }
 
     // must be called after water storage is computed
@@ -175,7 +170,8 @@ public:
         const auto& uRock = Opm::decay<LhsEval>(intQuants.rockInternalEnergy());
         storage[contiEnergyEqIdx] += (1.0 - poro)*uRock;
 
-        storage[contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+        static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+        storage[contiEnergyEqIdx] *= alpha;
     }
 
     static void computeFlux(RateVector& flux,
@@ -204,7 +200,8 @@ public:
         // diffusive energy flux
         flux[contiEnergyEqIdx] += extQuants.energyFlux();
 
-        flux[contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+        static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+        flux[contiEnergyEqIdx] *= alpha;
     }
 
     template <class UpstreamEval>
