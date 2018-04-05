@@ -283,7 +283,7 @@ protected:
                     potentialGrad_[phaseIdx][dimIdx] += f[dimIdx];
 
                 for (unsigned dimIdx = 0; dimIdx < potentialGrad_[phaseIdx].size(); ++dimIdx) {
-                    if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][dimIdx]))) {
+                    if (!Opm::isfinite(potentialGrad_[phaseIdx][dimIdx])) {
                         throw Opm::NumericalIssue("Non-finite potential gradient for phase '"
                                                     +std::string(FluidSystem::phaseName(phaseIdx))+"'");
                     }
@@ -404,7 +404,7 @@ protected:
 
                 Opm::Valgrind::CheckDefined(potentialGrad_[phaseIdx]);
                 for (unsigned dimIdx = 0; dimIdx < potentialGrad_[phaseIdx].size(); ++dimIdx) {
-                    if (!std::isfinite(Toolbox::value(potentialGrad_[phaseIdx][dimIdx]))) {
+                    if (!Opm::isfinite(potentialGrad_[phaseIdx][dimIdx])) {
                         throw Opm::NumericalIssue("Non finite potential gradient for phase '"
                                                     +std::string(FluidSystem::phaseName(phaseIdx))+"'");
                     }
@@ -515,7 +515,7 @@ protected:
     void calculateFilterVelocity_(unsigned phaseIdx)
     {
 #ifndef NDEBUG
-        assert(std::isfinite(Toolbox::value(mobility_[phaseIdx])));
+        assert(Opm::isfinite(mobility_[phaseIdx]));
         for (unsigned i = 0; i < K_.M(); ++ i)
             for (unsigned j = 0; j < K_.N(); ++ j)
                 assert(std::isfinite(K_[i][j]));
@@ -526,7 +526,7 @@ protected:
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < filterVelocity_[phaseIdx].size(); ++ i)
-            assert(std::isfinite(Toolbox::value(filterVelocity_[phaseIdx][i])));
+            assert(Opm::isfinite(filterVelocity_[phaseIdx][i]));
 #endif
     }
 
