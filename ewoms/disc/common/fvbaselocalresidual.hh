@@ -425,7 +425,7 @@ protected:
         size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                assert(Opm::isfinite(residual[i][j]));
                 Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }

@@ -339,14 +339,14 @@ public:
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
 
-            assert(std::isfinite(Toolbox::value(fluidState_.density(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.saturation(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.temperature(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.pressure(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.invB(phaseIdx))));
+            assert(Opm::isfinite(fluidState_.density(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.saturation(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.temperature(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.pressure(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.invB(phaseIdx)));
         }
-        assert(std::isfinite(Toolbox::value(fluidState_.Rs())));
-        assert(std::isfinite(Toolbox::value(fluidState_.Rv())));
+        assert(Opm::isfinite(fluidState_.Rs()));
+        assert(Opm::isfinite(fluidState_.Rv()));
 #endif
     }
 
