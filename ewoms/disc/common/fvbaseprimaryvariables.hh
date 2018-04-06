@@ -109,9 +109,9 @@ public:
         throw std::runtime_error("The PrimaryVariables class does not define "
                                  "an assignNaive() method");
     }
+
     /*!
-     * \brief Instruct valgrind to check the definedness of all
-     *        attributes of this class.
+     * \brief Instruct valgrind to check the definedness of all attributes of this class.
      */
     void checkDefined() const
     {

@@ -50,6 +50,25 @@ NEW_PROP_TAG(EnableSolvent);
 NEW_PROP_TAG(EnablePolymer);
 //! Enable surface volume scaling
 NEW_PROP_TAG(BlackoilConserveSurfaceVolume);
+
+//! Allow the spatial and temporal domains to exhibit non-constant temperature
+//! in the black-oil model
+NEW_PROP_TAG(EnableTemperature);
+
+//! Enable the ECL-blackoil extension for energy conservation
+//!
+//! Setting this property to true implies EnableTemperature.
+NEW_PROP_TAG(EnableEnergy);
+
+//! The relative weight of the residual of the energy equation compared to the mass
+//! residuals
+//!
+//! this is basically a hack to work around the limitation that the convergence criterion
+//! of unmodified dune-istl linear solvers cannot weight the individual equations. if the
+//! energy equation is not scaled, its absolute value is normally several orders of
+//! magnitude larger than that of the mass balance equations
+NEW_PROP_TAG(BlackOilEnergyScalingFactor);
+
 }} // namespace Properties, Ewoms
 
 #endif

@@ -142,7 +142,7 @@ public:
     /*!
      * \brief Represents a face of a sub-control volume.
      */
-    template <bool needNormal, bool needIntegrationPos>
+    template <bool needIntegrationPos, bool needNormal>
     class EcfvSubControlVolumeFace
     {
     public:
@@ -212,6 +212,7 @@ public:
     };
 
     typedef EcfvSubControlVolumeFace<needFaceIntegrationPos, needFaceNormal> SubControlVolumeFace;
+    typedef EcfvSubControlVolumeFace</*needFaceIntegrationPos=*/true, needFaceNormal> BoundaryFace;
 
     EcfvStencil(const GridView& gridView, const Mapper& mapper)
         : gridView_(gridView)
@@ -359,8 +360,8 @@ public:
      * \brief Returns the face object belonging to a given face index
      *        in the interior of the domain.
      */
-    const SubControlVolumeFace& interiorFace(unsigned bfIdx) const
-    { return interiorFaces_[bfIdx]; }
+    const SubControlVolumeFace& interiorFace(unsigned faceIdx) const
+    { return interiorFaces_[faceIdx]; }
 
     /*!
      * \brief Returns the number of boundary faces of the stencil.
@@ -372,7 +373,7 @@ public:
      * \brief Returns the boundary face object belonging to a given
      *        boundary face index.
      */
-    const SubControlVolumeFace& boundaryFace(unsigned bfIdx) const
+    const BoundaryFace& boundaryFace(unsigned bfIdx) const
     { return boundaryFaces_[bfIdx]; }
 
 protected:
@@ -382,7 +383,7 @@ protected:
     std::vector<Element> elements_;
     std::vector<SubControlVolume>      subControlVolumes_;
     std::vector<SubControlVolumeFace>  interiorFaces_;
-    std::vector<SubControlVolumeFace>  boundaryFaces_;
+    std::vector<BoundaryFace>  boundaryFaces_;
 };
 
 } // namespace Ewoms

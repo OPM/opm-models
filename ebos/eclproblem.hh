@@ -65,6 +65,8 @@
 #include <ewoms/disc/ecfv/ecfvdiscretization.hh>
 
 #include <opm/material/fluidmatrixinteractions/EclMaterialLawManager.hpp>
+#include <opm/material/thermal/EclThermalLawManager.hpp>
+
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
@@ -80,6 +82,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/material/common/Exceptions.hpp>
+#include <opm/material/common/ConditionalStorage.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
@@ -120,6 +123,10 @@ NEW_PROP_TAG(DisableWells);
 // print statements in debug mode.
 NEW_PROP_TAG(EnableDebuggingChecks);
 
+// if thermal flux boundaries are enabled an effort is made to preserve the initial
+// thermal gradient specified via the TEMPVD keyword
+NEW_PROP_TAG(EnableThermalFluxBoundaries);
+
 // Set the problem property
 SET_TYPE_PROP(EclBaseProblem, Problem, Ewoms::EclProblem<TypeTag>);
 
@@ -129,7 +136,7 @@ SET_TAG_PROP(EclBaseProblem, SpatialDiscretizationSplice, EcfvDiscretization);
 //! for ebos, use automatic differentiation to linearize the system of PDEs
 SET_TAG_PROP(EclBaseProblem, LocalLinearizerSplice, AutoDiffLocalLinearizer);
 
-// Set the material Law
+// Set the material law for fluid fluxes
 SET_PROP(EclBaseProblem, MaterialLaw)
 {
 private:
@@ -145,6 +152,32 @@ public:
     typedef Opm::EclMaterialLawManager<Traits> EclMaterialLawManager;
 
     typedef typename EclMaterialLawManager::MaterialLaw type;
+};
+
+// Set the material law for energy storage in rock
+SET_PROP(EclBaseProblem, SolidEnergyLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    typedef Opm::EclThermalLawManager<Scalar, FluidSystem> EclThermalLawManager;
+
+    typedef typename EclThermalLawManager::SolidEnergyLaw type;
+};
+
+// Set the material law for thermal conduction
+SET_PROP(EclBaseProblem, ThermalConductionLaw)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+
+public:
+    typedef Opm::EclThermalLawManager<Scalar, FluidSystem> EclThermalLawManager;
+
+    typedef typename EclThermalLawManager::ThermalConductionLaw type;
 };
 
 // ebos can use a slightly faster stencil class because it does not need the normals and
@@ -239,6 +272,17 @@ SET_BOOL_PROP(EclBaseProblem, DisableWells, false);
 // By default, we enable the debugging checks if we're compiled in debug mode
 SET_BOOL_PROP(EclBaseProblem, EnableDebuggingChecks, true);
 
+// store temperature (but do not conserve energy, as long as EnableEnergy is false)
+SET_BOOL_PROP(EclBaseProblem, EnableTemperature, true);
+
+// disable all extensions supported by black oil model. this should not really be
+// necessary but it makes things a bit more explicit
+SET_BOOL_PROP(EclBaseProblem, EnablePolymer, false);
+SET_BOOL_PROP(EclBaseProblem, EnableSolvent, false);
+SET_BOOL_PROP(EclBaseProblem, EnableEnergy, false);
+
+// disable thermal flux boundaries by default
+SET_BOOL_PROP(EclBaseProblem, EnableThermalFluxBoundaries, false);
 } // namespace Properties
 
 /*!
@@ -267,6 +311,9 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     enum { numComponents = FluidSystem::numComponents };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableThermalFluxBoundaries = GET_PROP_VALUE(TypeTag, EnableThermalFluxBoundaries) };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
@@ -281,19 +328,22 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
     typedef typename GET_PROP(TypeTag, MaterialLaw)::EclMaterialLawManager EclMaterialLawManager;
-    typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
+    typedef typename GET_PROP(TypeTag, SolidEnergyLaw)::EclThermalLawManager EclThermalLawManager;
+    typedef typename EclMaterialLawManager::MaterialLawParams MaterialLawParams;
+    typedef typename EclThermalLawManager::SolidEnergyLawParams SolidEnergyLawParams;
+    typedef typename EclThermalLawManager::ThermalConductionLawParams ThermalConductionLawParams;
     typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
-    typedef typename GET_PROP_TYPE(TypeTag, MaterialLawParams) MaterialLawParams;
+    typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
-
 
     typedef BlackOilSolventModule<TypeTag> SolventModule;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
 
     typedef Opm::BlackOilFluidState<Scalar,
-            FluidSystem,
-            /*enableTemperature=*/true> InitialFluidState;
+                                    FluidSystem,
+                                    enableTemperature,
+                                    enableEnergy> InitialFluidState;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
@@ -337,13 +387,14 @@ public:
         , transmissibilities_(simulator.vanguard())
         , thresholdPressures_(simulator)
         , wellManager_(simulator)
+        , eclWriter_(EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput)
+                     ? new EclWriterType(simulator) : nullptr)
         , pffDofData_(simulator.gridView(), this->elementMapper())
     {
         // Tell the black-oil extensions to initialize their internal data structures
         const auto& vanguard = simulator.vanguard();
         SolventModule::initFromDeck(vanguard.deck(), vanguard.eclState());
         PolymerModule::initFromDeck(vanguard.deck(), vanguard.eclState());
-
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableEclOutput))
             // create the ECL writer
             eclWriter_.reset(new EclWriterType(simulator));
@@ -418,6 +469,7 @@ public:
         updateElementDepths_();
         readRockParameters_();
         readMaterialParameters_();
+        readThermalParameters_();
         transmissibilities_.finishInit();
         readInitialCondition_();
 
@@ -723,7 +775,7 @@ public:
     { return transmissibilities_.permeability(globalElemIdx); }
 
     /*!
-     * \copydoc BlackOilBaseProblem::transmissibility
+     * \copydoc EclTransmissiblity::transmissibility
      */
     template <class Context>
     Scalar transmissibility(const Context& context,
@@ -732,6 +784,41 @@ public:
     {
         assert(fromDofLocalIdx == 0);
         return pffDofData_.get(context.element(), toDofLocalIdx).transmissibility;
+    }
+
+    /*!
+     * \copydoc EclTransmissiblity::transmissibilityBoundary
+     */
+    template <class Context>
+    Scalar transmissibilityBoundary(const Context& elemCtx,
+                                    unsigned boundaryFaceIdx) const
+    {
+        unsigned elemIdx = elemCtx.globalSpaceIndex(/*dofIdx=*/0, /*timeIdx=*/0);
+        return transmissibilities_.transmissibilityBoundary(elemIdx, boundaryFaceIdx);
+    }
+
+    /*!
+     * \copydoc EclTransmissiblity::thermalHalfTransmissibility
+     */
+    template <class Context>
+    Scalar thermalHalfTransmissibility(const Context& context,
+                                       unsigned faceIdx,
+                                       unsigned timeIdx) const
+    {
+        const auto& face = context.stencil(timeIdx).interiorFace(faceIdx);
+        unsigned toDofLocalIdx = face.exteriorIndex();
+        return *pffDofData_.get(context.element(), toDofLocalIdx).thermalHalfTrans;
+    }
+
+    /*!
+     * \copydoc EclTransmissiblity::thermalHalfTransmissibility
+     */
+    template <class Context>
+    Scalar thermalHalfTransmissibilityBoundary(const Context& elemCtx,
+                                               unsigned boundaryFaceIdx) const
+    {
+        unsigned elemIdx = elemCtx.globalSpaceIndex(/*dofIdx=*/0, /*timeIdx=*/0);
+        return transmissibilities_.thermalHalfTransBoundary(elemIdx, boundaryFaceIdx);
     }
 
     /*!
@@ -830,6 +917,31 @@ public:
     { return materialLawManager_->materialLawParams(globalDofIdx); }
 
     /*!
+     * \brief Return the parameters for the energy storage law of the rock
+     */
+    template <class Context>
+    const SolidEnergyLawParams&
+    solidEnergyLawParams(const Context& context OPM_UNUSED,
+                         unsigned spaceIdx OPM_UNUSED,
+                         unsigned timeIdx OPM_UNUSED) const
+    {
+        unsigned globalSpaceIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
+        return thermalLawManager_->solidEnergyLawParams(globalSpaceIdx);
+    }
+
+
+    /*!
+     * \copydoc FvBaseMultiPhaseProblem::thermalConductionParams
+     */
+    template <class Context>
+    const ThermalConductionLawParams &
+    thermalConductionLawParams(const Context& context, unsigned spaceIdx, unsigned timeIdx) const
+    {
+        unsigned globalSpaceIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
+        return thermalLawManager_->thermalConductionLawParams(globalSpaceIdx);
+    }
+
+    /*!
      * \brief Returns the ECL material law manager
      *
      * Note that this method is *not* part of the generic eWoms problem API because it
@@ -843,8 +955,6 @@ public:
      */
     std::shared_ptr<EclMaterialLawManager> materialLawManager()
     { return materialLawManager_; }
-
-
 
     /*!
      * \brief Returns the initial solvent saturation for a given a cell index
@@ -988,10 +1098,23 @@ public:
      */
     template <class Context>
     void boundary(BoundaryRateVector& values,
-                  const Context& context OPM_UNUSED,
-                  unsigned spaceIdx OPM_UNUSED,
-                  unsigned timeIdx OPM_UNUSED) const
-    { values.setNoFlow(); }
+                  const Context& context,
+                  unsigned spaceIdx,
+                  unsigned timeIdx) const
+    {
+        if (!enableEnergy || !enableThermalFluxBoundaries)
+            values.setNoFlow();
+        else {
+            // in the energy case we need to specify a non-trivial boundary condition
+            // because the geothermal gradient needs to be maintained. for this, we
+            // simply assume the initial temperature at the boundary and specify the
+            // thermal flow accordingly. in this context, "thermal flow" means energy
+            // flow due to a temerature gradient while assuming no-flow for mass
+            unsigned interiorDofIdx = context.interiorScvIndex(spaceIdx, timeIdx);
+            unsigned globalDofIdx = context.globalSpaceIndex(interiorDofIdx, timeIdx);
+            values.setThermalFlow(context, spaceIdx, timeIdx, initialFluidStates_[globalDofIdx]);
+        }
+    }
 
     /*!
      * \copydoc FvBaseProblem::initial
@@ -1018,6 +1141,8 @@ public:
 
         if (enablePolymer)
              values[Indices::polymerConcentrationIdx] = polymerConcentration_[globalDofIdx];
+
+        values.checkDefined();
     }
 
     /*!
@@ -1076,8 +1201,12 @@ public:
             // convert the source term from the total mass rate of the
             // cell to the one per unit of volume as used by the model.
             unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
                 rate[eqIdx] /= this->model().dofTotalVolume(globalDofIdx);
+
+                Opm::Valgrind::CheckDefined(rate[eqIdx]);
+                assert(Opm::isfinite(rate[eqIdx]));
+            }
         }
     }
 
@@ -1374,6 +1503,25 @@ private:
         ////////////////////////////////
     }
 
+    void readThermalParameters_()
+    {
+        if (!enableEnergy)
+            return;
+
+        const auto& vanguard = this->simulator().vanguard();
+        const auto& deck = vanguard.deck();
+        const auto& eclState = vanguard.eclState();
+
+        // fluid-matrix interactions (saturation functions; relperm/capillary pressure)
+        size_t numDof = this->model().numGridDof();
+        std::vector<int> compressedToCartesianElemIdx(numDof);
+        for (unsigned elemIdx = 0; elemIdx < numDof; ++elemIdx)
+            compressedToCartesianElemIdx[elemIdx] = vanguard.cartesianIndex(elemIdx);
+
+        thermalLawManager_ = std::make_shared<EclThermalLawManager>();
+        thermalLawManager_->initFromDeck(deck, eclState, compressedToCartesianElemIdx);
+    }
+
     void updatePorosity_()
     {
         const auto& vanguard = this->simulator().vanguard();
@@ -1397,8 +1545,10 @@ private:
             Scalar poreVolume = porvData[cartElemIdx];
 
             // sum up the pore volume of the active cell and all inactive ones above it
-            // which were disabled due to their pore volume being too small
-            if (eclGrid.getMinpvMode() == Opm::MinpvMode::ModeEnum::OpmFIL) {
+            // which were disabled due to their pore volume being too small. If energy is
+            // conserved, cells are not disabled due to a too small pore volume because
+            // such cells still store and conduct energy.
+            if (!enableEnergy && eclGrid.getMinpvMode() == Opm::MinpvMode::ModeEnum::OpmFIL) {
                 Scalar minPvValue = eclGrid.getMinpvValue();
                 for (int aboveElemCartIdx = static_cast<int>(cartElemIdx) - nx*ny;
                      aboveElemCartIdx >= 0;
@@ -1780,6 +1930,7 @@ private:
 
     struct PffDofData_
     {
+        Opm::ConditionalStorage<enableEnergy, Scalar> thermalHalfTrans;
         Scalar transmissibility;
     };
 
@@ -1798,6 +1949,9 @@ private:
             if (localDofIdx != 0) {
                 unsigned globalCenterElemIdx = elementMapper.index(stencil.entity(/*dofIdx=*/0));
                 dofData.transmissibility = transmissibilities_.transmissibility(globalCenterElemIdx, globalElemIdx);
+
+                if (enableEnergy)
+                    *dofData.thermalHalfTrans = transmissibilities_.thermalHalfTrans(globalCenterElemIdx, globalElemIdx);
             }
         };
 
@@ -1809,6 +1963,7 @@ private:
     EclTransmissibility<TypeTag> transmissibilities_;
 
     std::shared_ptr<EclMaterialLawManager> materialLawManager_;
+    std::shared_ptr<EclThermalLawManager> thermalLawManager_;
 
     EclThresholdPressure<TypeTag> thresholdPressures_;
 
@@ -1833,7 +1988,6 @@ private:
     std::vector<Scalar> lastRs_;
     Scalar maxDRsDt_;
     Scalar maxDRs_;
-
     bool drvdtActive_; // if no, VAPPARS *might* be active
     std::vector<Scalar> lastRv_;
     Scalar maxDRvDt_;
