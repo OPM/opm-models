@@ -33,6 +33,7 @@
 #include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
+#include <opm/material/common/UniformXTabulated2DFunction.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -77,6 +78,11 @@ class BlackOilPolymerModule
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     typedef typename Opm::Tabulated1DFunction<Scalar> TabulatedFunction;
+    // the tables related to polymer injectivity are sampled in both direction,
+    // it is possible to implement a UniformXYTabulated2DFunction table for that, possible
+    // simpler or more efficient
+    // At the moment, we use UniformXTabulated2DFunction.
+    typedef typename Opm::UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
@@ -208,7 +214,8 @@ public:
 
         // initialize the objects which deal with the PLYMAX keyword
         const auto& plymaxTables = tableManager.getPlymaxTables();
-        unsigned numMixRegions = plymaxTables.size();
+        // TODO: maybe we should get it directly from NPLMIX of REGDIMS?
+        const unsigned numMixRegions = plymaxTables.size();
         setNumMixRegions(numMixRegions);
         if (!plymaxTables.empty()) {
             for (unsigned mixRegionIdx = 0; mixRegionIdx < numMixRegions; ++ mixRegionIdx) {
@@ -314,6 +321,25 @@ public:
             } else {
                 throw std::runtime_error("PLYVMH keyword must be specified in POLYMW rus \n");
             }
+
+            // handling PLYMWINJ keyword
+            // TODO: this 2D table can be simpler, while using this to test first.
+            const auto& plymwinjTables = tableManager.getPlymwinjTables();
+            for (const auto& table : plymwinjTables) {
+                const int table_number = table.first;
+                const auto& plymwinjtable = table.second;
+                const std::vector<double>& throughput = plymwinjtable.getXSamplingPoints();
+                const std::vector<double>& watervelocity = plymwinjtable.getYSamplingPoints();
+                const std::vector<std::vector<double>>& molecularweight = plymwinjtable.getTableData();
+                TabulatedTwoDFunction tablefunc;
+                for (size_t tp_idx = 0; tp_idx < throughput.size(); ++tp_idx) {
+                    tablefunc.appendXPos(throughput[tp_idx]);
+                    for (size_t wv_idx = 0; wv_idx < watervelocity.size(); ++wv_idx) {
+                        tablefunc.appendSamplePoint(tp_idx, watervelocity[wv_idx], molecularweight[tp_idx][wv_idx]);
+                    }
+                }
+                plymwinjTables_[table_number] = std::move(tablefunc);
+            }
         }
     }
 #endif
@@ -408,6 +434,19 @@ public:
                             const Scalar& plymixparToddLongstaff)
     {
         plymixparToddLongstaff_[mixRegionIdx] = plymixparToddLongstaff;
+    }
+
+    /*!
+    * \brief get the PLYMWINJ table
+    */
+    static TabulatedTwoDFunction& getPlymwinjTable(const int numTable)
+    {
+        const auto iterTable = plymwinjTables_.find(numTable);
+        if (iterTable != plymwinjTables_.end()) {
+            return iterTable->second;
+        } else {
+            throw std::runtime_error(" the PLYMWINJ table " + std::to_string(numTable) + " does not exist\n");
+        }
     }
 
 
@@ -875,6 +914,7 @@ private:
     static bool hasPlyshlog_;
 
     static std::vector<PlyvmhCoefficients> plyvmhCoefficients_;
+    static std::map<int, TabulatedTwoDFunction> plymwinjTables_;
 
 };
 
@@ -939,6 +979,10 @@ BlackOilPolymerModule<TypeTag, enablePolymerV>::hasPlyshlog_;
 template <class TypeTag, bool enablePolymerV>
 std::vector<typename BlackOilPolymerModule<TypeTag, enablePolymerV>::PlyvmhCoefficients>
 BlackOilPolymerModule<TypeTag, enablePolymerV>::plyvmhCoefficients_;
+
+template <class TypeTag, bool enablePolymerV>
+std::map<int, typename BlackOilPolymerModule<TypeTag, enablePolymerV>::TabulatedTwoDFunction>
+BlackOilPolymerModule<TypeTag, enablePolymerV>::plymwinjTables_;
 
 /*!
  * \ingroup BlackOil
