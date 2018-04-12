@@ -169,9 +169,7 @@ public:
         // add the internal energy of the rock
         const auto& uRock = Opm::decay<LhsEval>(intQuants.rockInternalEnergy());
         storage[contiEnergyEqIdx] += (1.0 - poro)*uRock;
-
-        static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
-        storage[contiEnergyEqIdx] *= alpha;
+        storage[contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
     }
 
     static void computeFlux(RateVector& flux,
@@ -199,9 +197,7 @@ public:
 
         // diffusive energy flux
         flux[contiEnergyEqIdx] += extQuants.energyFlux();
-
-        static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
-        flux[contiEnergyEqIdx] *= alpha;
+        flux[contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
     }
 
     template <class UpstreamEval>

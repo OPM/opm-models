@@ -385,6 +385,30 @@ namespace Properties {
 
 /*!
  * \ingroup Properties
+ * \brief This macro provides the boiler plate code to declare a static constant member
+ *        outside of a property definition.
+ *
+ * This macro is fairly low-level and there should rarely be a need to use it.
+ */
+#define PROP_STATIC_CONST_MEMBER_DEFINITION_PREFIX_(EffTypeTagName, PropTagName) \
+    template <class TypeTag>                                            \
+    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type \
+    Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>
+
+/*!
+ * \ingroup Properties
+ * \brief This macro provides the boiler plate code to declare a static member outside of
+ *        a property definition.
+ *
+ * This macro is fairly low-level and there should rarely be a need to use it.
+ */
+#define PROP_STATIC_MEMBER_DEFINITION_PREFIX_(EffTypeTagName, PropTagName) \
+    template <class TypeTag>                                            \
+    typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type \
+    Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>
+
+/*!
+ * \ingroup Properties
  * \brief Set a property to a simple constant scalar value.
  *
  * The constant can be accessed by the \c value attribute. In order to
@@ -402,9 +426,7 @@ namespace Properties {
         typedef Scalar type;                                            \
         static const Scalar value;                                      \
     };                                                                  \
-    template <class TypeTag>                                            \
-    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type \
-    Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
+    PROP_STATIC_CONST_MEMBER_DEFINITION_PREFIX_(EffTypeTagName, PropTagName)::value(__VA_ARGS__)
 
 /*!
  * \ingroup Properties
@@ -423,9 +445,7 @@ namespace Properties {
         typedef std::string type;                                       \
         static const std::string value;                                 \
     };                                                                  \
-    template <class TypeTag>                                            \
-    const typename Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::type \
-    Property<TypeTag, TTAG(EffTypeTagName), PTAG(PropTagName)>::value(__VA_ARGS__)
+    PROP_STATIC_CONST_MEMBER_DEFINITION_PREFIX_(EffTypeTagName, PropTagName)::value(__VA_ARGS__)
 
 /*!
  * \ingroup Properties

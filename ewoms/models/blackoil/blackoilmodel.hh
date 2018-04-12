@@ -145,8 +145,12 @@ private:
     static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume) ? 1000.0 : 1.0;
 
 public:
-    static constexpr Scalar value = 1.0/(30*4184.0*alpha);
+    typedef Scalar type;
+    static const Scalar value;
 };
+
+PROP_STATIC_CONST_MEMBER_DEFINITION_PREFIX_(BlackOilModel, BlackOilEnergyScalingFactor)
+    ::value = 1.0/(30*4184.0*alpha);
 
 // by default, ebos formulates the conservation equations in terms of mass not surface
 // volumes
