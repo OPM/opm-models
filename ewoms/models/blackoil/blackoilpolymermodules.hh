@@ -33,7 +33,7 @@
 #include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/UniformXTabulated2DFunction.hpp>
+#include <opm/material/common/XYTabulated2DFunction.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -82,7 +82,7 @@ class BlackOilPolymerModule
     // it is possible to implement a UniformXYTabulated2DFunction table for that, possible
     // simpler or more efficient
     // At the moment, we use UniformXTabulated2DFunction.
-    typedef typename Opm::UniformXTabulated2DFunction<Scalar> TabulatedTwoDFunction;
+    typedef typename Opm::XYTabulated2DFunction<Scalar> TabulatedTwoDFunction;
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
@@ -331,14 +331,34 @@ public:
                 const std::vector<double>& throughput = plymwinjtable.getXSamplingPoints();
                 const std::vector<double>& watervelocity = plymwinjtable.getYSamplingPoints();
                 const std::vector<std::vector<double>>& molecularweight = plymwinjtable.getTableData();
-                TabulatedTwoDFunction tablefunc;
-                for (size_t tp_idx = 0; tp_idx < throughput.size(); ++tp_idx) {
-                    tablefunc.appendXPos(throughput[tp_idx]);
-                    for (size_t wv_idx = 0; wv_idx < watervelocity.size(); ++wv_idx) {
-                        tablefunc.appendSamplePoint(tp_idx, watervelocity[wv_idx], molecularweight[tp_idx][wv_idx]);
-                    }
-                }
+                TabulatedTwoDFunction tablefunc(throughput, watervelocity, molecularweight, true, false);
                 plymwinjTables_[table_number] = std::move(tablefunc);
+            }
+
+            // handling SKPRWAT keyword
+            const auto& skprwatTables = tableManager.getSkprwatTables();
+            for (const auto& table : skprwatTables) {
+                const int table_number = table.first;
+                const auto& skprwattable = table.second;
+                const std::vector<double>& throughput = skprwattable.getXSamplingPoints();
+                const std::vector<double>& watervelocity = skprwattable.getYSamplingPoints();
+                const std::vector<std::vector<double>>& skinpressure = skprwattable.getTableData();
+                TabulatedTwoDFunction tablefunc(throughput, watervelocity, skinpressure, true, false);
+                skprwatTables_[table_number] = std::move(tablefunc);
+            }
+
+            // handling SKPRPOLY keyword
+            const auto& skprpolyTables = tableManager.getSkprpolyTables();
+            for (const auto& table : skprpolyTables) {
+                const int table_number = table.first;
+                const auto& skprpolytable = table.second;
+                const std::vector<double>& throughput = skprpolytable.getXSamplingPoints();
+                const std::vector<double>& watervelocity = skprpolytable.getYSamplingPoints();
+                const std::vector<std::vector<double>>& skinpressure = skprpolytable.getTableData();
+                const double ref_polymer_concentration = skprpolytable.referenceConcentration();
+                SkprpolyTable tablefunc = {ref_polymer_concentration,
+                                           TabulatedTwoDFunction(throughput, watervelocity, skinpressure, true, false)};
+                skprpolyTables_[table_number] = std::move(tablefunc);
             }
         }
     }
@@ -915,7 +935,13 @@ private:
 
     static std::vector<PlyvmhCoefficients> plyvmhCoefficients_;
     static std::map<int, TabulatedTwoDFunction> plymwinjTables_;
+    static std::map<int, TabulatedTwoDFunction> skprwatTables_;
 
+    struct SkprpolyTable {
+        double refConcentration;
+        TabulatedTwoDFunction table;
+    };
+    static std::map<int, SkprpolyTable> skprpolyTables_;
 };
 
 
@@ -983,6 +1009,14 @@ BlackOilPolymerModule<TypeTag, enablePolymerV>::plyvmhCoefficients_;
 template <class TypeTag, bool enablePolymerV>
 std::map<int, typename BlackOilPolymerModule<TypeTag, enablePolymerV>::TabulatedTwoDFunction>
 BlackOilPolymerModule<TypeTag, enablePolymerV>::plymwinjTables_;
+
+template <class TypeTag, bool enablePolymerV>
+std::map<int, typename BlackOilPolymerModule<TypeTag, enablePolymerV>::TabulatedTwoDFunction>
+BlackOilPolymerModule<TypeTag, enablePolymerV>::skprwatTables_;
+
+template <class TypeTag, bool enablePolymerV>
+std::map<int, typename BlackOilPolymerModule<TypeTag, enablePolymerV>::SkprpolyTable>
+BlackOilPolymerModule<TypeTag, enablePolymerV>::skprpolyTables_;
 
 /*!
  * \ingroup BlackOil
