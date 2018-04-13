@@ -12,20 +12,20 @@ Changes in eWoms 2018.10
   - The code for computing hydrostatic equilibrium for the initial
     condition has been moved in from opm-core and cleaned up.
 - The "GridManager" classes have been renamed to "Vanguard".
-- "Tasklets", an asynchronous work exceution mechanism have been added
+- "Tasklets", an asynchronous work execution mechanism, have been added
   and are used to write VTK and ECL output without blocking the main
   thread.
 - The boundary condition handling has been refactored: Instead of
   assuming a "minimal" fluid state with only fluid pressures,
   temperatures and saturations defined, the boundary code now assumes
   that all quantities of the passed fluid state are defined. In
-  particular this means that fluid viscosities, densities and
+  particular, this means that fluid viscosities, densities and
   enthalpies can no longer be left undefined for boundary fluid
   states.
 - Handling thermal conduction and heat capacity of the solid matrix
-  has been overhauled.
+  has been overhauled in step with opm-material.
 - eWoms is now compatible with DUNE 2.6 and the latest DUNE
-  development version 2.7. The minimum required DUNE version stays
+  development version of 2.7. The minimum required DUNE version stays
   DUNE 2.4.
 - Building eWoms without the opm-common module is now possible if the
   alternative build system as described in the INSTALL file is
