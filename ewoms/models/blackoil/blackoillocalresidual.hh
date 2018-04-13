@@ -187,10 +187,8 @@ public:
         elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx);
 
         // scale the source term of the energy equation
-        if (enableEnergy) {
-            static constexpr Scalar alpha = GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
-            source[Indices::contiEnergyEqIdx] *= alpha;
-        }
+        if (enableEnergy)
+            source[Indices::contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
     }
 
     /*!
