@@ -110,206 +110,204 @@ if (NOT MY_BUILD_TESTING)
   set(BUILD_TESTING "${MY_BUILD_TESTING}" CACHE BOOL "Build the tests" FORCE)
 endif()
 
+# copy the data files (i.e., grid files, etc) needed to run the unit
+# tests from the source to the build directory
+file(GLOB datafiles "tests/data/*")
+foreach(file ${datafiles})
+  file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
+endforeach()
 
-  # copy the data files (i.e., grid files, etc) needed to run the unit
-  # tests from the source to the build directory
-  file(GLOB datafiles "tests/data/*")
-  foreach(file ${datafiles})
-    file(COPY ${file} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/data)
-  endforeach()
+# include the macros required to build the tests and applications
+# shipped as part of the eWoms distribution
+include(EwomsAddApplication)
 
-  # include the macros required to build the tests and applications
-  # shipped as part of the eWoms distribution
-  include(EwomsAddApplication)
+opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
+opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
 
-  opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
-  opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
+set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
+add_custom_target(ewoms_prepare)
 
-  set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
-  add_custom_target(ewoms_prepare)
+# the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
+EwomsAddApplication(ebos
+                    SOURCES ebos/ebos.cc
+                    EXE_NAME ebos
+                    CONDITION OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
 
-  # the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
-  EwomsAddApplication(ebos
-    SOURCES ebos/ebos.cc
-    EXE_NAME ebos
-    CONDITION OPM_GRID_FOUND AND OPM_PARSER_FOUND)
-
-  if(OPM_GRID_FOUND AND OPM_PARSER_FOUND)
-    install(TARGETS ebos DESTINATION bin)
-  endif()
-if(NOT DEV_BUILD)
-  # the ART to DGF file format conversion utility
-  EwomsAddApplication(art2dgf
-    SOURCES art2dgf/art2dgf.cc
-    EXE_NAME art2dgf)
-
-  add_dependencies(test-suite art2dgf)
-
-  opm_add_test(art2dgf
-    NO_COMPILE
-    DRIVER_ARGS --plain
-    TEST_ARGS "data/fracture-raw.art")
-
-  # EQUIL init tests
-  opm_add_test(test_equil
-    DRIVER_ARGS --plain
-    CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND)
-
-  # Output ECL tests
-  opm_add_test(test_ecl_output
-    DRIVER_ARGS --plain
-    CONDITION OPM_PARSER_FOUND AND OPM_GRID_FOUND AND OPM_OUTPUT_FOUND)
-
-  # add targets for all tests of the models. we add the water-air test
-  # first because it take longest and so that we don't have to wait for
-  # them as long for parallel test runs
-  opm_add_test(waterair_pvs_ni
-    TEST_ARGS --grid-global-refinements=1)
-
-  opm_add_test(lens_immiscible_vcfv_ad
-    TEST_ARGS --end-time=3000)
-
-  opm_add_test(lens_immiscible_vcfv_fd
-    TEST_ARGS --end-time=3000)
-
-  opm_add_test(lens_immiscible_ecfv_ad
-    TEST_ARGS --end-time=3000)
-
-  # this test is identical to the simulation of the lens problem that
-  # uses the element centered finite volume discretization in
-  # conjunction with automatic differentiation
-  # (lens_immiscible_ecfv_ad). The only difference is that it uses
-  # multiple compile units in order to ensure that eWoms code can be
-  # used within libraries that use the same type tag within multiple
-  # compile units.
-  opm_add_test(lens_immiscible_ecfv_ad_mcu
-    ONLY_COMPILE
-    SOURCES
-    tests/lens_immiscible_ecfv_ad_cu1.cc
-    tests/lens_immiscible_ecfv_ad_cu2.cc
-    tests/lens_immiscible_ecfv_ad_main.cc)
-
-  opm_add_test(finger_immiscible_ecfv
-    CONDITION ${DUNE_ALUGRID_FOUND})
-
-  opm_add_test(finger_immiscible_vcfv
-    CONDITION ${DUNE_ALUGRID_FOUND})
-
-  opm_add_test(finger_immiscible_ecfv_adaptive
-    EXE_NAME finger_immiscible_ecfv
-    CONDITION ${DUNE_ALUGRID_FOUND} AND ${DUNE_FEM_FOUND}
-    NO_COMPILE
-    TEST_ARGS --enable-grid-adaptation=true --end-time=25e3)
-
-  foreach(tapp co2injection_flash_ni_vcfv
-      co2injection_flash_ni_ecfv
-      co2injection_flash_vcfv
-      co2injection_flash_ecfv
-      co2injection_ncp_ni_vcfv
-      co2injection_pvs_ni_vcfv
-      co2injection_ncp_vcfv
-      co2injection_pvs_vcfv
-      co2injection_immiscible_ni_vcfv
-      co2injection_immiscible_vcfv
-      co2injection_immiscible_ecfv
-      co2injection_ncp_ecfv
-      co2injection_pvs_ecfv
-      co2injection_immiscible_ni_ecfv
-      co2injection_ncp_ni_ecfv
-      co2injection_pvs_ni_ecfv
-      powerinjection_forchheimer_fd
-      powerinjection_forchheimer_ad
-      powerinjection_darcy_fd
-      powerinjection_darcy_ad
-      cuvette_pvs
-      infiltration_pvs
-      lens_richards_vcfv
-      lens_richards_ecfv
-      obstacle_immiscible
-      obstacle_ncp
-      obstacle_pvs
-      outflow_pvs
-      diffusion_flash
-      diffusion_ncp
-      diffusion_pvs
-      groundwater_immiscible)
-    opm_add_test(${tapp})
-  endforeach()
-
-  opm_add_test(reservoir_blackoil_vcfv TEST_ARGS --end-time=8750000)
-  opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000)
-  opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
-  opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
-
-  opm_add_test(fracture_discretefracture
-    CONDITION ${DUNE_ALUGRID_FOUND}
-    TEST_ARGS --end-time=400)
-
-  opm_add_test(test_propertysystem
-    DRIVER_ARGS --plain)
-
-  opm_add_test(test_quadrature
-    DRIVER_ARGS --plain)
-
-  # test for the parallelization of the element centered finite volume
-  # discretization (using the non-isothermal NCP model and the parallel
-  # AMG linear solver)
-  opm_add_test(co2injection_ncp_ni_ecfv_parallel
-    EXE_NAME co2injection_ncp_ni_ecfv
-    NO_COMPILE
-    PROCESSORS 4
-    CONDITION ${MPI_FOUND}
-    DRIVER_ARGS --parallel-simulation=4)
-
-  # test for the parallelization of the vertex centered finite volume
-  # discretization (using BiCGSTAB + ILU0)
-  opm_add_test(obstacle_immiscible_parallel
-    EXE_NAME obstacle_immiscible
-    NO_COMPILE
-    PROCESSORS 4
-    CONDITION ${MPI_FOUND}
-    DRIVER_ARGS --parallel-simulation=4
-    TEST_ARGS --end-time=1 --initial-time-step-size=1)
-
-  # test for the parallel AMG linear solver using the vertex centered
-  # finite volume discretization
-  opm_add_test(lens_immiscible_vcfv_fd_parallel
-    EXE_NAME lens_immiscible_vcfv_fd
-    NO_COMPILE
-    PROCESSORS 4
-    CONDITION ${MPI_FOUND}
-    DRIVER_ARGS --parallel-simulation=4
-    TEST_ARGS --end-time=250 --initial-time-step-size=250)
-
-  opm_add_test(lens_immiscible_vcfv_ad_parallel
-    EXE_NAME lens_immiscible_vcfv_ad
-    NO_COMPILE
-    PROCESSORS 4
-    CONDITION ${MPI_FOUND}
-    DRIVER_ARGS --parallel-simulation=4
-    TEST_ARGS --end-time=250 --initial-time-step-size=250)
-
-  opm_add_test(lens_immiscible_ecfv_ad_parallel
-    EXE_NAME lens_immiscible_ecfv_ad
-    NO_COMPILE
-    PROCESSORS 4
-    CONDITION ${MPI_FOUND}
-    DRIVER_ARGS --parallel-simulation=4
-    TEST_ARGS --end-time=250 --initial-time-step-size=250)
-
-  opm_add_test(obstacle_immiscible_parameters
-    EXE_NAME obstacle_immiscible
-    NO_COMPILE
-    DEPENDS obstacle_immiscible
-    DRIVER_ARGS --parameters)
-
-  opm_add_test(obstacle_pvs_restart
-    EXE_NAME obstacle_pvs
-    NO_COMPILE
-    DEPENDS obstacle_pvs
-    DRIVER_ARGS --restart
-    TEST_ARGS --pvs-verbosity=2 --end-time=30000)
-
-  opm_add_test(tutorial1
-    SOURCES tutorial/tutorial1.cc)
+if(OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
+  install(TARGETS ebos DESTINATION bin)
 endif()
+
+# the ART to DGF file format conversion utility
+EwomsAddApplication(art2dgf
+                    SOURCES art2dgf/art2dgf.cc
+                    EXE_NAME art2dgf)
+
+add_dependencies(test-suite art2dgf)
+
+opm_add_test(art2dgf
+  NO_COMPILE
+  DRIVER_ARGS --plain
+  TEST_ARGS "data/fracture-raw.art")
+
+# EQUIL init tests
+opm_add_test(test_equil
+             DRIVER_ARGS --plain
+             CONDITION HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT AND OPM_GRID_FOUND)
+
+# Output ECL tests
+opm_add_test(test_ecl_output
+             DRIVER_ARGS --plain
+             CONDITION HAVE_ECL_INPUT AND OPM_GRID_FOUND AND HAVE_ECL_OUTPUT)
+
+# add targets for all tests of the models. we add the water-air test
+# first because it take longest and so that we don't have to wait for
+# them as long for parallel test runs
+opm_add_test(waterair_pvs_ni
+             TEST_ARGS --grid-global-refinements=1)
+
+opm_add_test(lens_immiscible_vcfv_ad
+             TEST_ARGS --end-time=3000)
+
+opm_add_test(lens_immiscible_vcfv_fd
+             TEST_ARGS --end-time=3000)
+
+opm_add_test(lens_immiscible_ecfv_ad
+             TEST_ARGS --end-time=3000)
+
+# this test is identical to the simulation of the lens problem that
+# uses the element centered finite volume discretization in
+# conjunction with automatic differentiation
+# (lens_immiscible_ecfv_ad). The only difference is that it uses
+# multiple compile units in order to ensure that eWoms code can be
+# used within libraries that use the same type tag within multiple
+# compile units.
+opm_add_test(lens_immiscible_ecfv_ad_mcu
+             ONLY_COMPILE
+             SOURCES
+                tests/lens_immiscible_ecfv_ad_cu1.cc
+                tests/lens_immiscible_ecfv_ad_cu2.cc
+                tests/lens_immiscible_ecfv_ad_main.cc)
+
+opm_add_test(finger_immiscible_ecfv
+             CONDITION ${DUNE_ALUGRID_FOUND})
+
+opm_add_test(finger_immiscible_vcfv
+             CONDITION ${DUNE_ALUGRID_FOUND})
+
+opm_add_test(finger_immiscible_ecfv_adaptive
+             EXE_NAME finger_immiscible_ecfv
+             CONDITION ${DUNE_ALUGRID_FOUND} AND ${DUNE_FEM_FOUND}
+             NO_COMPILE
+             TEST_ARGS --enable-grid-adaptation=true --end-time=25e3)
+
+foreach(tapp co2injection_flash_ni_vcfv
+             co2injection_flash_ni_ecfv
+             co2injection_flash_vcfv
+             co2injection_flash_ecfv
+             co2injection_ncp_ni_vcfv
+             co2injection_pvs_ni_vcfv
+             co2injection_ncp_vcfv
+             co2injection_pvs_vcfv
+             co2injection_immiscible_ni_vcfv
+             co2injection_immiscible_vcfv
+             co2injection_immiscible_ecfv
+             co2injection_ncp_ecfv
+             co2injection_pvs_ecfv
+             co2injection_immiscible_ni_ecfv
+             co2injection_ncp_ni_ecfv
+             co2injection_pvs_ni_ecfv
+             powerinjection_forchheimer_fd
+             powerinjection_forchheimer_ad
+             powerinjection_darcy_fd
+             powerinjection_darcy_ad
+             cuvette_pvs
+             infiltration_pvs
+             lens_richards_vcfv
+             lens_richards_ecfv
+             obstacle_immiscible
+             obstacle_ncp
+             obstacle_pvs
+             outflow_pvs
+             diffusion_flash
+             diffusion_ncp
+             diffusion_pvs
+             groundwater_immiscible)
+  opm_add_test(${tapp})
+endforeach()
+
+opm_add_test(reservoir_blackoil_vcfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000)
+
+opm_add_test(fracture_discretefracture
+             CONDITION ${DUNE_ALUGRID_FOUND}
+             TEST_ARGS --end-time=400)
+
+opm_add_test(test_propertysystem
+             DRIVER_ARGS --plain)
+
+opm_add_test(test_quadrature
+             DRIVER_ARGS --plain)
+
+# test for the parallelization of the element centered finite volume
+# discretization (using the non-isothermal NCP model and the parallel
+# AMG linear solver)
+opm_add_test(co2injection_ncp_ni_ecfv_parallel
+             EXE_NAME co2injection_ncp_ni_ecfv
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION ${MPI_FOUND}
+             DRIVER_ARGS --parallel-simulation=4)
+
+# test for the parallelization of the vertex centered finite volume
+# discretization (using BiCGSTAB + ILU0)
+opm_add_test(obstacle_immiscible_parallel
+             EXE_NAME obstacle_immiscible
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION ${MPI_FOUND}
+             DRIVER_ARGS --parallel-simulation=4
+             TEST_ARGS --end-time=1 --initial-time-step-size=1)
+
+# test for the parallel AMG linear solver using the vertex centered
+# finite volume discretization
+opm_add_test(lens_immiscible_vcfv_fd_parallel
+             EXE_NAME lens_immiscible_vcfv_fd
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION ${MPI_FOUND}
+             DRIVER_ARGS --parallel-simulation=4
+             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+
+opm_add_test(lens_immiscible_vcfv_ad_parallel
+             EXE_NAME lens_immiscible_vcfv_ad
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION ${MPI_FOUND}
+             DRIVER_ARGS --parallel-simulation=4
+             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+
+opm_add_test(lens_immiscible_ecfv_ad_parallel
+             EXE_NAME lens_immiscible_ecfv_ad
+             NO_COMPILE
+             PROCESSORS 4
+             CONDITION ${MPI_FOUND}
+             DRIVER_ARGS --parallel-simulation=4
+             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+
+opm_add_test(obstacle_immiscible_parameters
+             EXE_NAME obstacle_immiscible
+             NO_COMPILE
+             DEPENDS obstacle_immiscible
+             DRIVER_ARGS --parameters)
+
+opm_add_test(obstacle_pvs_restart
+             EXE_NAME obstacle_pvs
+             NO_COMPILE
+             DEPENDS obstacle_pvs
+             DRIVER_ARGS --restart
+             TEST_ARGS --pvs-verbosity=2 --end-time=30000)
+
+opm_add_test(tutorial1
+             SOURCES tutorial/tutorial1.cc)
