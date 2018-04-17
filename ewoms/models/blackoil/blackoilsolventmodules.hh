@@ -35,7 +35,7 @@
 #include <opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_OPM_PARSER
+#if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
@@ -92,7 +92,7 @@ class BlackOilSolventModule
 
 
 public:
-#if HAVE_OPM_PARSER
+#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize all internal data structures needed by the solvent module
      */

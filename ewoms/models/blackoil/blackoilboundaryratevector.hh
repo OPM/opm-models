@@ -32,6 +32,7 @@
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 
 #include "blackoilintensivequantities.hh"
+#include "blackoilenergymodules.hh"
 
 namespace Ewoms {
 
@@ -46,14 +47,20 @@ class BlackOilBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, ExtensiveQuantities) ExtensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+    typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+    typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { contiEnergyEqIdx = Indices::contiEnergyEqIdx };
+
+    typedef Ewoms::BlackOilEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -83,44 +90,75 @@ public:
                      unsigned timeIdx,
                      const FluidState& fluidState)
     {
-        typename FluidSystem::ParameterCache paramCache;
-        paramCache.updateAll(fluidState);
-
         ExtensiveQuantities extQuants;
-        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState, paramCache);
+        extQuants.updateBoundary(context, bfIdx, timeIdx, fluidState);
         const auto& insideIntQuants = context.intensiveQuantities(bfIdx, timeIdx);
+        unsigned focusDofIdx = context.focusDofIndex();
+        unsigned interiorDofIdx = context.interiorScvIndex(bfIdx, timeIdx);
 
         ////////
         // advective fluxes of all components in all phases
         ////////
         (*this) = 0.0;
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            Scalar meanMBoundary = 0;
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
-                meanMBoundary += fluidState.moleFraction(phaseIdx, compIdx)
-                                 * FluidSystem::molarMass(compIdx);
+            const auto& pBoundary = fluidState.pressure(phaseIdx);
+            const Evaluation& pInside = insideIntQuants.fluidState().pressure(phaseIdx);
 
-            Scalar density;
-            if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                density = FluidSystem::density(fluidState, paramCache, phaseIdx);
-            else
-                density = insideIntQuants.fluidState().density(phaseIdx);
+            RateVector tmp;
 
-            for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-                Scalar molarity;
-                if (fluidState.pressure(phaseIdx) > insideIntQuants.fluidState().pressure(phaseIdx))
-                    molarity =
-                        fluidState.moleFraction(phaseIdx, compIdx)
-                        * density
-                        / meanMBoundary;
-                else
-                    molarity = insideIntQuants.fluidState().molarity(phaseIdx, compIdx);
+            // mass conservation
+            if (pBoundary < pInside)
+                // outflux
+                LocalResidual::template evalPhaseFluxes_<Evaluation>(tmp,
+                                                                     phaseIdx,
+                                                                     insideIntQuants.pvtRegionIndex(),
+                                                                     extQuants,
+                                                                     insideIntQuants.fluidState());
+            else if (pBoundary > pInside)
+                // influx
+                LocalResidual::template evalPhaseFluxes_<Evaluation>(tmp,
+                                                                     phaseIdx,
+                                                                     insideIntQuants.pvtRegionIndex(),
+                                                                     extQuants,
+                                                                     fluidState);
 
-                // add advective flux of current component in current
-                // phase
-                (*this)[conti0EqIdx + compIdx] += extQuants.volumeFlux(phaseIdx) * molarity;
+            for (unsigned i = 0; i < tmp.size(); ++i)
+                (*this)[i] += tmp[i];
+
+            // energy conservation
+            if (enableEnergy) {
+                Evaluation density;
+                Evaluation specificEnthalpy;
+                if (pBoundary > pInside) {
+                    if (focusDofIdx == interiorDofIdx) {
+                        density = fluidState.density(phaseIdx);
+                        specificEnthalpy = fluidState.enthalpy(phaseIdx);
+                    }
+                    else {
+                        density = Opm::getValue(fluidState.density(phaseIdx));
+                        specificEnthalpy = Opm::getValue(fluidState.enthalpy(phaseIdx));
+                    }
+                }
+                else if (focusDofIdx == interiorDofIdx) {
+                    density = insideIntQuants.fluidState().density(phaseIdx);
+                    specificEnthalpy = insideIntQuants.fluidState().enthalpy(phaseIdx);
+                }
+                else {
+                    density = Opm::getValue(insideIntQuants.fluidState().density(phaseIdx));
+                    specificEnthalpy = Opm::getValue(insideIntQuants.fluidState().enthalpy(phaseIdx));
+                }
+
+                Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
+                EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
         }
+
+        // make sure that the right mass conservation quantities are used
+        LocalResidual::adaptMassConservationQuantities_(*this, insideIntQuants.pvtRegionIndex());
+
+        // heat conduction
+        if (enableEnergy)
+            EnergyModule::addToEnthalpyRate(*this, extQuants.energyFlux());
 
 #ifndef NDEBUG
         for (unsigned i = 0; i < numEq; ++i) {
@@ -173,6 +211,38 @@ public:
      */
     void setNoFlow()
     { (*this) = Scalar(0); }
+
+    /*!
+     * \copydoc Specify an energy flux that corresponds to the thermal conduction from
+     *          the domain boundary
+     *
+     * This means that a "thermal flow" boundary is a no-flow condition for mass and thermal
+     * conduction for energy.
+     */
+    template <class Context, class FluidState>
+    void setThermalFlow(const Context& context,
+                        unsigned bfIdx,
+                        unsigned timeIdx,
+                        const FluidState& boundaryFluidState)
+    {
+        // set the mass no-flow condition
+        setNoFlow();
+
+        if (!enableEnergy)
+            // if we do not conserve energy there is nothing we should do in addition
+            return;
+
+        ExtensiveQuantities extQuants;
+        extQuants.updateBoundary(context, bfIdx, timeIdx, boundaryFluidState);
+
+        (*this)[contiEnergyEqIdx] += extQuants.energyFlux();
+
+#ifndef NDEBUG
+        for (unsigned i = 0; i < numEq; ++i)
+            Opm::Valgrind::CheckDefined((*this)[i]);
+        Opm::Valgrind::CheckDefined(*this);
+#endif
+    }
 };
 
 } // namespace Ewoms

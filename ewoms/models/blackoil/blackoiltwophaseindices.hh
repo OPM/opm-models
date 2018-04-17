@@ -37,36 +37,49 @@ namespace Ewoms {
  *
  * \brief The primary variable and equation indices for the black-oil model.
  */
-template <unsigned numSolventsV, unsigned numPolymersV, unsigned PVOffset, unsigned disabledCanonicalCompIdx>
+template <bool enableSolventV, bool enablePolymerV, bool enableEnergyV, unsigned PVOffset, unsigned disabledCanonicalCompIdx>
 struct BlackOilTwoPhaseIndices
 {
-
     //! Is phase enabled or not
-    static const bool oilEnabled = disabledCanonicalCompIdx==0? false:true;
-    static const bool waterEnabled = disabledCanonicalCompIdx==1? false:true;
-    static const bool gasEnabled = disabledCanonicalCompIdx==2? false:true;
+    static const bool oilEnabled = (disabledCanonicalCompIdx != 0);
+    static const bool waterEnabled = (disabledCanonicalCompIdx != 1);
+    static const bool gasEnabled = (disabledCanonicalCompIdx != 2);
 
-    //! Number of phases active at all times
+    //! Are solvents involved?
+    static const bool enableSolvent = enableSolventV;
+
+    //! Are polymers involved?
+    static const bool enablePolymer = enablePolymerV;
+
+    //! Shall energy be conserved?
+    static const bool enableEnergy = enableEnergyV;
+
+private:
+    //! Number of solvent components to be considered
+    static const int numSolvents_ = enableSolvent ? 1 : 0;
+
+    //! Number of polymer components to be considered
+    static const int numPolymers_ = enablePolymer ? 1 : 0;
+
+    //! Number of energy equations to be considered
+    static const int numEnergy_ = enableEnergy ? 1 : 0;
+
+public:
+    //! The number of fluid phases
     static const int numPhases = 2;
 
-    //! Number of solvent components considered
-    static const int numSolvents = numSolventsV;
-
-    //! Number of polymer components considered
-    static const int numPolymers = numPolymersV;
-
     //! The number of equations
-    static const int numEq = numPhases + numSolvents + numPolymers;
+    static const int numEq = numPhases + numSolvents_ + numPolymers_ + numEnergy_;
 
     //////////////////////////////
     // Primary variable indices
     //////////////////////////////
 
     //! The index of the water saturation. For two-phase oil gas models this is disabled.
-    static const int waterSaturationIdx  = waterEnabled ? PVOffset + 0: -10000;
+    static const int waterSaturationIdx  = waterEnabled ? PVOffset + 0 : -10000;
 
     //! Index of the oil pressure in a vector of primary variables
-    static const int pressureSwitchIdx  = PVOffset + 1;
+    static const int pressureSwitchIdx  = waterEnabled ? PVOffset + 1 : PVOffset + 0;
 
     /*!
      * \brief Index of the switching variable which determines the composition of the
@@ -74,20 +87,24 @@ struct BlackOilTwoPhaseIndices
      *
      * \note For two-phase water oil models this is disabled.
      */
-    static const int compositionSwitchIdx = gasEnabled ? PVOffset + 0: -10000;
+    static const int compositionSwitchIdx = gasEnabled ? PVOffset + 1 : -10000;
 
     //! Index of the primary variable for the first solvent
-    static const int solventSaturationIdx  = PVOffset + numPhases;
+    static const int solventSaturationIdx =
+        enableSolvent ? PVOffset + (numPhases-1) + numSolvents_ : -1000;
 
     //! Index of the primary variable for the first polymer
-    static const int polymerConcentrationIdx  = solventSaturationIdx + numPolymers;
+    static const int polymerConcentrationIdx =
+        enablePolymer ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ : -1000;
 
-    // numSolvents-1 primary variables follow
-
+    //! Index of the primary variable for temperature
+    static const int temperatureIdx  =
+        enableEnergy ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ + numEnergy_ : - 1000;
 
     //////////////////////
     // Equation indices
     //////////////////////
+
     //! \brief returns the index of "active" component
     static unsigned canonicalToActiveComponentIndex(unsigned compIdx)
     {
@@ -127,15 +144,19 @@ struct BlackOilTwoPhaseIndices
 
     //! Index of the continuity equation of the first phase
     static const int conti0EqIdx = PVOffset + 0;
-    // two continuity equations follow
+    // one continuity equation follows
 
     //! Index of the continuity equation for the first solvent component
-    static const int contiSolventEqIdx = PVOffset + numPhases - 1 + numSolvents;
+    static const int contiSolventEqIdx =
+        enableSolvent ? PVOffset + (numPhases-1) + numSolvents_ : -1000;
 
     //! Index of the continuity equation for the first polymer component
-    static const int contiPolymerEqIdx = contiSolventEqIdx + numPolymers;
-    // numSolvents-1 continuity equations follow
+    static const int contiPolymerEqIdx =
+        enablePolymer > 0 ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ : -1000;
 
+    //! Index of the continuity equation for energy
+    static const int contiEnergyEqIdx =
+        enableEnergy ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ + numEnergy_ : -1000;
 };
 
 } // namespace Ewoms

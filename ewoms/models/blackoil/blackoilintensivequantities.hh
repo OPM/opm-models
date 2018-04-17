@@ -31,7 +31,7 @@
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
-
+#include "blackoilenergymodules.hh"
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
@@ -54,6 +54,7 @@ class BlackOilIntensiveQuantities
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxIntensiveQuantities
     , public BlackOilSolventIntensiveQuantities<TypeTag>
     , public BlackOilPolymerIntensiveQuantities<TypeTag>
+    , public BlackOilEnergyIntensiveQuantities<TypeTag>
 {
     typedef typename GET_PROP_TYPE(TypeTag, DiscIntensiveQuantities) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) Implementation;
@@ -71,6 +72,8 @@ class BlackOilIntensiveQuantities
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
+    enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -85,11 +88,10 @@ class BlackOilIntensiveQuantities
     static const bool compositionSwitchEnabled = Indices::gasEnabled;
     static const bool waterEnabled = Indices::waterEnabled;
 
-
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem> FluidState;
+    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy> FluidState;
 
 public:
     BlackOilIntensiveQuantities()
@@ -109,10 +111,10 @@ public:
     {
         ParentType::update(elemCtx, dofIdx, timeIdx);// this only gives extrusion factor
 
-        //fluidState_.setTemperature(elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx));
-
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+
+        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx);
 
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
@@ -328,7 +330,7 @@ public:
 
         asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);// strictly do not need focus time since no makeEvaluation is done
         asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
-
+        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
 
         // update the quantities which are required by the chosen
         // velocity model
@@ -341,14 +343,14 @@ public:
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
 
-            assert(std::isfinite(Toolbox::value(fluidState_.density(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.saturation(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.temperature(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.pressure(phaseIdx))));
-            assert(std::isfinite(Toolbox::value(fluidState_.invB(phaseIdx))));
+            assert(Opm::isfinite(fluidState_.density(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.saturation(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.temperature(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.pressure(phaseIdx)));
+            assert(Opm::isfinite(fluidState_.invB(phaseIdx)));
         }
-        assert(std::isfinite(Toolbox::value(fluidState_.Rs())));
-        assert(std::isfinite(Toolbox::value(fluidState_.Rv())));
+        assert(Opm::isfinite(fluidState_.Rs()));
+        assert(Opm::isfinite(fluidState_.Rv()));
 #endif
     }
 
@@ -399,7 +401,7 @@ public:
 private:
     friend BlackOilSolventIntensiveQuantities<TypeTag>;
     friend BlackOilPolymerIntensiveQuantities<TypeTag>;
-
+    friend BlackOilEnergyIntensiveQuantities<TypeTag>;
 
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }

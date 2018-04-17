@@ -279,6 +279,16 @@ public:
                 }
             }
         }
+
+#ifndef NDEBUG
+        size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
+        for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                Opm::Valgrind::CheckDefined(storage[dofIdx][eqIdx]);
+                assert(Opm::isfinite(storage[dofIdx][eqIdx]));
+            }
+        }
+#endif
     }
 
     /*!
@@ -305,10 +315,17 @@ public:
             Opm::Valgrind::SetUndefined(flux);
             asImp_().computeFlux(flux, /*context=*/elemCtx, scvfIdx, timeIdx);
             Opm::Valgrind::CheckDefined(flux);
+#ifndef NDEBUG
+            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+                assert(Opm::isfinite(flux[eqIdx]));
+#endif
 
             Scalar alpha = elemCtx.extensiveQuantities(scvfIdx, timeIdx).extrusionFactor();
             alpha *= face.area();
             Opm::Valgrind::CheckDefined(alpha);
+            assert(alpha > 0.0);
+            assert(Opm::isfinite(alpha));
+
             for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                 flux[eqIdx] *= alpha;
 
@@ -326,6 +343,7 @@ public:
             // volume i and into sub-control volume j, we need to add the flux to finite
             // volume i and subtract it from finite volume j
             for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                assert(Opm::isfinite(flux[eqIdx]));
                 residual[i][eqIdx] += flux[eqIdx];
                 residual[j][eqIdx] -= flux[eqIdx];
             }
@@ -336,7 +354,7 @@ public:
         size_t numDof = elemCtx.numDof(timeIdx);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                assert(Opm::isfinite(residual[i][j]));
                 Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }
@@ -425,7 +443,7 @@ protected:
         size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         for (unsigned i=0; i < numDof; i++) {
             for (unsigned j = 0; j < numEq; ++ j) {
-                assert(std::isfinite(Toolbox::value(residual[i][j])));
+                assert(Opm::isfinite(residual[i][j]));
                 Opm::Valgrind::CheckDefined(residual[i][j]);
             }
         }
@@ -451,10 +469,14 @@ protected:
         const auto& stencil = boundaryCtx.stencil(timeIdx);
         unsigned dofIdx = stencil.boundaryFace(boundaryFaceIdx).interiorIndex();
         const auto& insideIntQuants = boundaryCtx.elementContext().intensiveQuantities(dofIdx, timeIdx);
-        for (unsigned eqIdx = 0; eqIdx < values.size(); ++eqIdx)
+        for (unsigned eqIdx = 0; eqIdx < values.size(); ++eqIdx)  {
             values[eqIdx] *=
                 stencil.boundaryFace(boundaryFaceIdx).area()
                 * insideIntQuants.extrusionFactor();
+
+            Opm::Valgrind::CheckDefined(values[eqIdx]);
+            assert(Opm::isfinite(values[eqIdx]));
+        }
 
         for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
             residual[dofIdx][eqIdx] += values[eqIdx];
@@ -481,9 +503,14 @@ protected:
         for (unsigned dofIdx=0; dofIdx < numPrimaryDof; dofIdx++) {
             Scalar extrusionFactor =
                 elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).extrusionFactor();
+            Opm::Valgrind::CheckDefined(extrusionFactor);
+            assert(Opm::isfinite(extrusionFactor));
+            assert(extrusionFactor > 0.0);
             Scalar scvVolume =
                elemCtx.stencil(/*timeIdx=*/0).subControlVolume(dofIdx).volume() * extrusionFactor;
             Opm::Valgrind::CheckDefined(scvVolume);
+            assert(Opm::isfinite(scvVolume));
+            assert(scvVolume > 0.0);
 
             // if the model uses extensive quantities in its storage term, and we use
             // automatic differention and current DOF is also not the one we currently
@@ -498,7 +525,14 @@ protected:
             }else{
                 tmp=0.0;
                 asImp_().computeStorage(tmp, elemCtx, dofIdx, /*timeIdx=*/0);
+
                 Opm::Valgrind::CheckDefined(tmp);
+#ifndef NDEBUG
+		Opm::Valgrind::CheckDefined(tmp);
+		for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+			assert(Opm::isfinite(tmp[eqIdx]));
+#endif
+
             }
 
 //                tmp=0.0;
@@ -507,7 +541,6 @@ protected:
 //                tmp2 = 0.0;
 //                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
 //                Opm::Valgrind::CheckDefined(tmp2);
-
 
 
             if (elemCtx.enableStorageCache()) {

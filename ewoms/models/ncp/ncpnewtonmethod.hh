@@ -68,9 +68,7 @@ public:
      * \copydoc FvBaseNewtonMethod::FvBaseNewtonMethod(Problem& )
      */
     NcpNewtonMethod(Simulator& simulator) : ParentType(simulator)
-    {
-        Dune::FMatrixPrecision<Scalar>::set_singular_limit(1e-35);
-    }
+    {}
 
 protected:
     friend ParentType;

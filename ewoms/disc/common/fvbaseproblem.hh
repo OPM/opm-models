@@ -136,8 +136,12 @@ public:
             boundingBoxMax_[i] = gridView_.comm().max(boundingBoxMax_[i]);
         }
 
-        if (enableVtkOutput_())
-            defaultVtkWriter_ = new VtkMultiWriter(gridView_, asImp_().name());
+        if (enableVtkOutput_()) {
+            bool asyncVtkOutput =
+                simulator_.gridView().comm().size() == 1 &&
+                EWOMS_GET_PARAM(TypeTag, bool, EnableAsyncVtkOutput);
+            defaultVtkWriter_ = new VtkMultiWriter(asyncVtkOutput, gridView_, asImp_().name());
+        }
     }
 
     ~FvBaseProblem()
@@ -157,6 +161,8 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, unsigned, MaxTimeStepDivisions,
                              "The maximum number of divisions by two of the timestep size "
                              "before the simulation bails out");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableAsyncVtkOutput,
+                             "Dispatch a separate thread to write the VTK output");
     }
 
     /*!

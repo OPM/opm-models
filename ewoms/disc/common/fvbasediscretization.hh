@@ -45,12 +45,12 @@
 #include "fvbaseprimaryvariables.hh"
 #include "fvbaseintensivequantities.hh"
 #include "fvbaseextensivequantities.hh"
+#include "baseauxiliarymodule.hh"
 
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
-#include <ewoms/aux/baseauxiliarymodule.hh>
 #include <ewoms/common/alignedallocator.hh>
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
@@ -229,6 +229,11 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableGridAdaptation, false);
 
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
+
+//! By default, write the VTK output to asynchronously to disk
+//!
+//! This has only an effect if EnableVtkOutput is true
+SET_BOOL_PROP(FvBaseDiscretization, EnableAsyncVtkOutput, true);
 
 //! Set the format of the VTK output to ASCII by default
 SET_INT_PROP(FvBaseDiscretization, VtkOutputFormat, Dune::VTK::ascii);
@@ -573,12 +578,19 @@ public:
         // synchronize the ghost DOFs (if necessary)
         asImp_().syncOverlap();
 
-        // also set the solution of the "previous" time steps to the
-        // initial solution.
+        simulator_.problem().initialSolutionApplied();
+
+        // also set the solutions of the "previous" time steps to the initial solution.
         for (unsigned timeIdx = 1; timeIdx < historySize; ++timeIdx)
             solution(timeIdx) = solution(/*timeIdx=*/0);
 
-        simulator_.problem().initialSolutionApplied();
+#ifndef NDEBUG
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx)  {
+            const auto& sol = solution(timeIdx);
+            for (unsigned dofIdx = 0; dofIdx < sol.size(); ++dofIdx)
+                sol[dofIdx].checkDefined();
+        }
+#endif // NDEBUG
     }
 
     /*!
@@ -1053,26 +1065,20 @@ public:
      * \param timeIdx The index of the solution used by the time discretization.
      */
     const SolutionVector& solution(unsigned timeIdx) const
-    {
-        return solution_[timeIdx]->blockVector();
-    }
+    { return solution_[timeIdx]->blockVector(); }
 
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector& solution(unsigned timeIdx)
-    {
-        return solution_[timeIdx]->blockVector();
-    }
+    { return solution_[timeIdx]->blockVector(); }
 
   protected:
     /*!
      * \copydoc solution(int) const
      */
     SolutionVector& mutableSolution(unsigned timeIdx) const
-    {
-        return solution_[timeIdx]->blockVector();
-    }
+    { return solution_[timeIdx]->blockVector(); }
 
   public:
     /*!
@@ -1172,10 +1178,16 @@ public:
     {
         Ewoms::TimerGuard prePostProcessGuard(prePostProcessTimer_);
 
-#if HAVE_VALGRIND
-        for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i)
-            asImp_().solution(/*timeIdx=*/0)[i].checkDefined();
-#endif // HAVE_VALGRIND
+#ifndef NDEBUG
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            // Make sure that the primary variables are defined. Note that because of padding
+            // bytes, we can't just simply ask valgrind to check the whole solution vectors
+            // for definedness...
+            for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
+                asImp_().solution(timeIdx)[i].checkDefined();
+            }
+        }
+#endif // NDEBUG
 
         // make sure all timers are prestine
         prePostProcessTimer_.halt();
@@ -1201,6 +1213,17 @@ public:
             throw;
         }
 
+#ifndef NDEBUG
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            // Make sure that the primary variables are defined. Note that because of padding
+            // bytes, we can't just simply ask valgrind to check the whole solution vectors
+            // for definedness...
+            for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
+                asImp_().solution(timeIdx)[i].checkDefined();
+            }
+        }
+#endif // NDEBUG
+
         prePostProcessTimer_ += newtonMethod_.prePostProcessTimer();
         linearizeTimer_ += newtonMethod_.linearizeTimer();
         solveTimer_ += newtonMethod_.solveTimer();
@@ -1213,15 +1236,16 @@ public:
             asImp_().updateFailed();
         prePostProcessTimer_.stop();
 
-#if HAVE_VALGRIND
-        // make sure that the "non-pseudo" primary variables are defined. Note that
-        // because of the padding, we can't just simply ask valgrind to check the whole
-        // solution vectors for definedness...
-        for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
-            for (size_t eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                Opm::Valgrind::CheckDefined(asImp_().solution(/*timeIdx=*/0)[i][eqIdx]);
+#ifndef NDEBUG
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            // Make sure that the primary variables are defined. Note that because of padding
+            // bytes, we can't just simply ask valgrind to check the whole solution vectors
+            // for definedness...
+            for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i) {
+                asImp_().solution(timeIdx)[i].checkDefined();
+            }
         }
-#endif // HAVE_VALGRIND
+#endif // NDEBUG
 
         return converged;
     }
@@ -1307,6 +1331,16 @@ public:
         // update at a physically meaningful solution.
         solution(/*timeIdx=*/0) = solution(/*timeIdx=*/1);
         invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
+
+#ifndef NDEBUG
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            // Make sure that the primary variables are defined. Note that because of padding
+            // bytes, we can't just simply ask valgrind to check the whole solution vectors
+            // for definedness...
+            for (size_t i = 0; i < asImp_().solution(/*timeIdx=*/0).size(); ++i)
+                asImp_().solution(timeIdx)[i].checkDefined();
+        }
+#endif // NDEBUG
     }
 
     /*!

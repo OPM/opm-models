@@ -33,7 +33,7 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/parallel/threadedentityiterator.hh>
-#include <ewoms/aux/baseauxiliarymodule.hh>
+#include <ewoms/disc/common/baseauxiliarymodule.hh>
 
 #include <opm/material/common/Exceptions.hpp>
 

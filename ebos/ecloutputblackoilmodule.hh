@@ -29,15 +29,24 @@
 
 #include "eclwriter.hh"
 
+#include <ewoms/models/blackoil/blackoilproperties.hh>
+
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <opm/material/common/Valgrind.hpp>
+
+#if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#endif
+
+#if HAVE_ECL_OUTPUT
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
+#endif
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <dune/common/fvector.hh>
 
@@ -115,7 +124,7 @@ public:
             if (node.type() == ECL_SMSPEC_BLOCK_VAR) {
                 if(collectToIORank.isGlobalIdxOnThisRank(node.num() - 1)) {
                     std::pair<std::string, int> key = std::make_pair(node.keyword(), node.num());
-                    blockValues_[key] = 0.0;
+                    blockData_[key] = 0.0;
                 }
             }
         }
@@ -168,14 +177,36 @@ public:
             pressureTimesHydrocarbonVolume_.clear();
         }
 
-        // TODO: There seems to be an issue with mixing of RPTRST and RPTSCHED
-        // keywords in restartConfig.
-        // For now output basic fields for all ordinary steps
-        outputRestart_ = false;
-        if (substep)
-            return;
+        // Well RFT data
+        if (!substep) {
+            for ( const auto& well : simulator_.vanguard().schedule().getWells( reportStepNum )) {
 
-        outputRestart_ = true;
+                // don't bother with wells not on this process
+                const auto& defunct_well_names = simulator_.vanguard().defunctWellNames();
+                if ( defunct_well_names.find(well->name()) != defunct_well_names.end() ) {
+                    continue;
+                }
+
+                if( !( well->getRFTActive( reportStepNum )
+                       || well->getPLTActive( reportStepNum ) ) )
+                    continue;
+
+                for( const auto& completion : well->getCompletions( reportStepNum ) ) {
+                    const size_t i = size_t( completion.getI() );
+                    const size_t j = size_t( completion.getJ() );
+                    const size_t k = size_t( completion.getK() );
+                    const size_t index = simulator_.vanguard().eclState().getInputGrid().getGlobalIndex( i, j, k );
+
+                    oilCompletionPressures_.emplace(std::make_pair(index, 0.0));
+                    waterCompletionSaturations_.emplace(std::make_pair(index, 0.0));
+                    gasCompletionSaturations_.emplace(std::make_pair(index, 0.0));
+                }
+            }
+        }
+
+        // Only provide restart on restart steps
+        if (!restartConfig.getWriteRestartFile(reportStepNum) || substep)
+            return;
 
         // always output saturation of active phases
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
@@ -213,10 +244,6 @@ public:
             pcSwMdcGo_.resize(bufferSize,0.0);
             krnSwMdcGo_.resize(bufferSize,0.0);
         }
-
-        // Only provide restart on restart steps
-        if (!restartConfig.getWriteRestartFile(reportStepNum) || substep)
-            return;
 
         if (FluidSystem::enableDissolvedGas() && rstKeywords["RSSAT"] > 0) {
             rstKeywords["RSSAT"] = 0;
@@ -439,7 +466,7 @@ public:
                 try {
                     bubblePointPressure_[globalDofIdx] = Opm::getValue(FluidSystem::bubblePointPressure(fs, intQuants.pvtRegionIndex()));
                 }
-                catch (const Opm::NumericalIssue& e) {
+                catch (const Opm::NumericalIssue&) {
                     const auto globalIdx = elemCtx.simulator().vanguard().grid().globalCell()[globalDofIdx];
                     failedCellsPb_.push_back(globalIdx);
                 }
@@ -449,7 +476,7 @@ public:
                 try {
                     dewPointPressure_[globalDofIdx] = Opm::getValue(FluidSystem::dewPointPressure(fs, intQuants.pvtRegionIndex()));
                 }
-                catch (const Opm::NumericalIssue& e) {
+                catch (const Opm::NumericalIssue&) {
                     const auto globalIdx = elemCtx.simulator().vanguard().grid().globalCell()[globalDofIdx];
                     failedCellsPd_.push_back(globalIdx);
                 }
@@ -522,9 +549,9 @@ public:
             // Add fluid in Place values
             updateFluidInPlace_(elemCtx, dofIdx);
 
-            // Adding block values
+            // Adding block data
             const auto globalIdx = elemCtx.simulator().vanguard().grid().globalCell()[globalDofIdx];
-            for( auto& val : blockValues_ ) {
+            for( auto& val : blockData_ ) {
                 const auto& key = val.first;
                 int global_index = key.second - 1;
                 if (global_index == globalIdx) {
@@ -541,6 +568,17 @@ public:
                         Opm::OpmLog::warning("Unhandled output keyword", logstring);
                     }
                 }
+            }
+
+            // Adding Well RFT data
+            if (oilCompletionPressures_.count(globalIdx) > 0) {
+                oilCompletionPressures_[globalIdx] = Opm::getValue(fs.pressure(oilPhaseIdx));
+            }
+            if (waterCompletionSaturations_.count(globalIdx) > 0) {
+                waterCompletionSaturations_[globalIdx] = Opm::getValue(fs.saturation(waterPhaseIdx));
+            }
+            if (gasCompletionSaturations_.count(globalIdx) > 0) {
+                gasCompletionSaturations_[globalIdx] = Opm::getValue(fs.saturation(gasPhaseIdx));
             }
         }
     }
@@ -611,6 +649,55 @@ public:
             errlog << "]";
             Opm::OpmLog::warning("Dew point numerical problem", errlog.str());
         }
+    }
+
+    void addRftDataToWells(Opm::data::Wells& wellDatas, size_t reportStepNum)
+    {
+        for ( const auto& well : simulator_.vanguard().schedule().getWells( reportStepNum )) {
+
+            // don't bother with wells not on this process
+            const auto& defunct_well_names = simulator_.vanguard().defunctWellNames();
+            if ( defunct_well_names.find(well->name()) != defunct_well_names.end() ) {
+                continue;
+            }
+
+            //add data infrastructure for shut wells
+            if (!wellDatas.count(well->name())){
+                Opm::data::Well wellData;
+
+                if( !( well->getRFTActive( reportStepNum )
+                       || well->getPLTActive( reportStepNum ) ) )
+                    continue;
+                wellData.completions.resize(well->getCompletions( reportStepNum ).size());
+                size_t count = 0;
+                for( const auto& completion : well->getCompletions( reportStepNum ) ) {
+
+                    const size_t i = size_t( completion.getI() );
+                    const size_t j = size_t( completion.getJ() );
+                    const size_t k = size_t( completion.getK() );
+
+                    const size_t index = simulator_.vanguard().eclState().getInputGrid().getGlobalIndex( i, j, k );
+                    auto& completionData = wellData.completions[ count ];
+                    completionData.index = index;
+                    count++;
+                }
+                wellDatas.emplace( std::make_pair(well->name(),wellData) );
+            }
+
+            Opm::data::Well& wellData = wellDatas.at(well->name());
+            for (auto& completionData : wellData.completions) {
+                const auto index = completionData.index;
+                if (oilCompletionPressures_.count(index) > 0)
+                    completionData.cell_pressure = oilCompletionPressures_.at(index);
+                if (waterCompletionSaturations_.count(index) > 0)
+                    completionData.cell_saturation_water = waterCompletionSaturations_.at(index);
+                if (gasCompletionSaturations_.count(index) > 0)
+                    completionData.cell_saturation_gas = gasCompletionSaturations_.at(index);
+            }
+        }
+        oilCompletionPressures_.clear();
+        waterCompletionSaturations_.clear();
+        gasCompletionSaturations_.clear();
     }
 
     /*!
@@ -827,59 +914,60 @@ public:
     void setRestart(const Opm::data::Solution& sol, unsigned elemIdx, unsigned globalDofIndex) 
     {
         Scalar so = 1.0;
-        if( sol.has( "SWAT" ) ) {
+        if( saturation_[waterPhaseIdx].size() > 0 && sol.has( "SWAT" ) ) {
             saturation_[waterPhaseIdx][elemIdx] = sol.data("SWAT")[globalDofIndex];
             so -= sol.data("SWAT")[globalDofIndex];
         }
 
-        if( sol.has( "SGAS" ) ) {
+        if( saturation_[gasPhaseIdx].size() > 0 && sol.has( "SGAS" ) ) {
             saturation_[gasPhaseIdx][elemIdx] = sol.data("SGAS")[globalDofIndex];
             so -= sol.data("SGAS")[globalDofIndex];
         }
 
+        assert(saturation_[oilPhaseIdx].size() > 0);
         saturation_[oilPhaseIdx][elemIdx] = so;
 
-        if( sol.has( "PRESSURE" ) ) {
+        if( oilPressure_.size() > 0 && sol.has( "PRESSURE" ) ) {
             oilPressure_[elemIdx] = sol.data( "PRESSURE" )[globalDofIndex];
         }
 
-        if( sol.has( "TEMP" ) ) {
+        if( temperature_.size() > 0 && sol.has( "TEMP" ) ) {
             temperature_[elemIdx] = sol.data( "TEMP" )[globalDofIndex];
         }
 
-        if( sol.has( "RS" ) ) {
+        if( rs_.size() > 0 && sol.has( "RS" ) ) {
             rs_[elemIdx] = sol.data("RS")[globalDofIndex];
         }
 
-        if( sol.has( "RV" ) ) {
+        if( rv_.size() > 0 && sol.has( "RV" ) ) {
             rv_[elemIdx] = sol.data("RV")[globalDofIndex];
         }
 
-        if ( sol.has( "SSOL" ) ) {
+        if ( sSol_.size() > 0 && sol.has( "SSOL" ) ) {
             sSol_[elemIdx] = sol.data("SSOL")[globalDofIndex];
         }
 
-        if ( sol.has("POLYMER" ) ) {
+        if ( cPolymer_.size() > 0 && sol.has("POLYMER" ) ) {
             cPolymer_[elemIdx] = sol.data("POLYMER")[globalDofIndex];
         }
 
-        if ( sol.has("SOMAX" ) ) {
+        if ( soMax_.size() > 0 && sol.has("SOMAX" ) ) {
             soMax_[elemIdx] = sol.data("SOMAX")[globalDofIndex];
         }
 
-        if ( sol.has("PCSWM_OW" ) ) {
+        if ( pcSwMdcOw_.size() > 0 &&sol.has("PCSWM_OW" ) ) {
             pcSwMdcOw_[elemIdx] = sol.data("PCSWM_OW")[globalDofIndex];
         }
 
-        if ( sol.has("KRNSW_OW" ) ) {
+        if ( krnSwMdcOw_.size() > 0 && sol.has("KRNSW_OW" ) ) {
             krnSwMdcOw_[elemIdx] = sol.data("KRNSW_OW")[globalDofIndex];
         }
 
-        if ( sol.has("PCSWM_GO" ) ) {
+        if ( pcSwMdcGo_.size() > 0 && sol.has("PCSWM_GO" ) ) {
             pcSwMdcGo_[elemIdx] = sol.data("PCSWM_GO")[globalDofIndex];
         }
 
-        if ( sol.has("KRNSW_GO" ) ) {
+        if ( krnSwMdcGo_.size() > 0 && sol.has("KRNSW_GO" ) ) {
             krnSwMdcGo_[elemIdx] = sol.data("KRNSW_GO")[globalDofIndex];
         }
     }
@@ -930,7 +1018,7 @@ public:
     void initHysteresisParams(Simulator& simulator, unsigned elemIdx) const {
 
         if (soMax_.size() > 0)
-            simulator.problem().setMaxOilSaturation(soMax_[elemIdx], elemIdx);
+            simulator.problem().setMaxOilSaturation(elemIdx, soMax_[elemIdx]);
 
         if (simulator.problem().materialLawManager()->enableHysteresis()) {
             auto matLawManager = simulator.problem().materialLawManager();
@@ -965,14 +1053,9 @@ public:
         return 0;
     }
 
-    const std::map<std::pair<std::string, int>, double>& getBlockValues() {
-        return blockValues_;
+    const std::map<std::pair<std::string, int>, double>& getBlockData() {
+        return blockData_;
     }
-
-    const bool outputRestart() const {
-        return outputRestart_;
-    }
-
 
 private:
 
@@ -1232,7 +1315,6 @@ private:
 
     const Simulator& simulator_;
 
-    bool outputRestart_;
     bool outputFipRestart_;
     bool computeFip_;
 
@@ -1268,7 +1350,10 @@ private:
     ScalarBuffer hydrocarbonPoreVolume_;
     ScalarBuffer pressureTimesPoreVolume_;
     ScalarBuffer pressureTimesHydrocarbonVolume_;
-    std::map<std::pair<std::string, int>, double> blockValues_;
+    std::map<std::pair<std::string, int>, double> blockData_;
+    std::map<size_t, Scalar> oilCompletionPressures_;
+    std::map<size_t, Scalar> waterCompletionSaturations_;
+    std::map<size_t, Scalar> gasCompletionSaturations_;
 };
 } // namespace Ewoms
 

@@ -30,6 +30,8 @@
 #include "parallelbasebackend.hh"
 #include "istlsolverwrappers.hh"
 
+#include <dune/common/version.hh>
+
 namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(ParallelIstlLinearSolver, INHERITS_FROM(ParallelBaseLinearSolver));
@@ -149,9 +151,15 @@ SET_TYPE_PROP(ParallelIstlLinearSolver,
               LinearSolverWrapper,
               Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
 
+#if DUNE_VERSION_NEWER(DUNE_ISTL, 2,7)
+SET_TYPE_PROP(ParallelIstlLinearSolver,
+              PreconditionerWrapper,
+              Ewoms::Linear::PreconditionerWrapperILU<TypeTag>);
+#else
 SET_TYPE_PROP(ParallelIstlLinearSolver,
               PreconditionerWrapper,
               Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
+#endif
 
 //! set the GMRes restart parameter to 10 by default
 SET_INT_PROP(ParallelIstlLinearSolver, GMResRestart, 10);

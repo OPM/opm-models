@@ -79,6 +79,7 @@ namespace Ewoms {
 namespace Properties {
 NEW_TYPE_TAG(TestEclOutputTypeTag, INHERITS_FROM(BlackOilModel, EclBaseProblem));
 SET_BOOL_PROP(TestEclOutputTypeTag, EnableGravity, false);
+SET_BOOL_PROP(TestEclOutputTypeTag, EnableAsyncEclOutput, false);
 }}
 
 static const int day = 24 * 60 * 60;
@@ -111,8 +112,8 @@ ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > readsum( const std::string& ba
 void test_summary()
 {
     typedef typename TTAG(TestEclOutputTypeTag) TypeTag;
-    const std::string filename = "data/summary_deck_non_constant_porosity.DATA";
-    const std::string casename = "summary_deck_non_constant_porosity";
+    const std::string filename = "data/SUMMARY_DECK_NON_CONSTANT_POROSITY.DATA";
+    const std::string casename = "SUMMARY_DECK_NON_CONSTANT_POROSITY";
 
     auto simulator = initSimulator<TypeTag>(filename.data());
     typedef typename GET_PROP_TYPE(TypeTag, Vanguard) Vanguard;
@@ -174,6 +175,69 @@ void test_summary()
     CHECK_CLOSE(roip2, ecl_sum_get_general_var( resp, 1, "ROIP:2" ), 1e-3 );
 }
 
+void test_readWriteWells() {
+
+    using opt = Opm::data::Rates::opt;
+
+    Opm::data::Rates r1, r2, rc1, rc2, rc3;
+    r1.set( opt::wat, 5.67 );
+    r1.set( opt::oil, 6.78 );
+    r1.set( opt::gas, 7.89 );
+
+    r2.set( opt::wat, 8.90 );
+    r2.set( opt::oil, 9.01 );
+    r2.set( opt::gas, 10.12 );
+
+    rc1.set( opt::wat, 20.41 );
+    rc1.set( opt::oil, 21.19 );
+    rc1.set( opt::gas, 22.41 );
+
+    rc2.set( opt::wat, 23.19 );
+    rc2.set( opt::oil, 24.41 );
+    rc2.set( opt::gas, 25.19 );
+
+    rc3.set( opt::wat, 26.41 );
+    rc3.set( opt::oil, 27.19 );
+    rc3.set( opt::gas, 28.41 );
+
+    Opm::data::Well w1, w2;
+    w1.rates = r1;
+    w1.bhp = 1.23;
+    w1.temperature = 3.45;
+    w1.control = 1;
+
+    /*
+     *  the completion keys (active indices) and well names correspond to the
+     *  input deck. All other entries in the well structures are arbitrary.
+     */
+    w1.completions.push_back( { 88, rc1, 30.45, 123.45 } );
+    w1.completions.push_back( { 288, rc2, 33.19, 67.89 } );
+
+    w2.rates = r2;
+    w2.bhp = 2.34;
+    w2.temperature = 4.56;
+    w2.control = 2;
+    w2.completions.push_back( { 188, rc3, 36.22, 19.28 } );
+
+    Opm::data::Wells wellRates;
+
+    wellRates["OP_1"] = w1;
+    wellRates["OP_2"] = w2;
+
+    typedef Dune :: Point2PointCommunicator< Dune :: SimpleMessageBuffer > P2PCommunicatorType;
+    typedef typename P2PCommunicatorType :: MessageBufferType MessageBufferType;
+    MessageBufferType buffer;
+
+    wellRates.write(buffer);
+
+    Opm::data::Wells wellRatesCopy;
+    wellRatesCopy.read(buffer);
+
+    CHECK( wellRatesCopy.get( "OP_1" , opt::wat) , wellRates.get( "OP_1" , opt::wat));
+    CHECK( wellRatesCopy.get( "OP_2" , 188 , opt::wat) , wellRates.get( "OP_2" , 188 , opt::wat));
+}
+
+
 int main(int argc, char** argv)
 {
 #if HAVE_DUNE_FEM
@@ -185,6 +249,7 @@ int main(int argc, char** argv)
     typedef TTAG(TestEclOutputTypeTag) TypeTag;
     Ewoms::registerAllParameters_<TypeTag>();
     test_summary();
+    test_readWriteWells();
 
     return 0;
 }
