@@ -133,9 +133,6 @@ public:
      */
     TaskletRunner(unsigned numWorkers)
     {
-        // make sure that the worker threads block when the tasklet queue is empty
-        runnerMutex_.lock();
-
         threads_.resize(numWorkers);
         for (unsigned i = 0; i < numWorkers; ++i)
             // create a worker thread
@@ -182,10 +179,10 @@ public:
 
             // add the tasklet to the queue
             taskletQueue_.push(tasklet);
-            // fire up a worker thread
-            runnerMutex_.unlock();
 
             taskletQueueMutex_.unlock();
+
+            workAvailableCondition_.notify_all();
         }
     }
 
@@ -215,13 +212,15 @@ protected:
     void run_()
     {
         while (true) {
-            // wait until tasklets have been pushed to the queue.
-            //
-            // The unlocking is done in the thread that adds a task
-            runnerMutex_.lock();
+            // wait until tasklets have been pushed to the queue. first we need to lock
+            // mutex for access to taskletQueue_
+            std::unique_lock<std::mutex> lock(taskletQueueMutex_);
 
-            // lock mutex for access to taskletQueue_
-            taskletQueueMutex_.lock();
+            const auto& workIsAvailable =
+                [this]() -> bool
+                { return !taskletQueue_.empty(); };
+
+            workAvailableCondition_.wait(lock, /*predicate=*/workIsAvailable);
 
             // remove tasklet from queue
             std::shared_ptr<TaskletInterface> tasklet = taskletQueue_.front();
@@ -232,7 +231,6 @@ protected:
                 if(taskletQueue_.size() > 1)
                     throw std::logic_error("TaskletRunner: Not all queued tasklets were executed");
                 taskletQueueMutex_.unlock();
-                runnerMutex_.unlock();
                 return;
             }
 
@@ -242,13 +240,9 @@ protected:
                 // reaches zero, i.e. the tasklet has been run often enough.
                 taskletQueue_.pop();
 
-            // if the queue is not yet empty, make sure that we the next tasklet
-            // can be processed immediately.
-            if (!taskletQueue_.empty())
-                runnerMutex_.unlock();
-
-            // unlock mutex for access to taskletQueue_
-            taskletQueueMutex_.unlock();
+            lock.unlock();
+            if (workIsAvailable())
+                workAvailableCondition_.notify_one();
 
             // execute tasklet
             tasklet->run();
@@ -258,7 +252,7 @@ protected:
     std::vector<std::unique_ptr<std::thread> > threads_;
     std::queue<std::shared_ptr<TaskletInterface> > taskletQueue_;
     std::mutex taskletQueueMutex_;
-    std::mutex runnerMutex_;
+    std::condition_variable workAvailableCondition_;
 };
 
 } // end namespace Opm
