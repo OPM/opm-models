@@ -311,3 +311,5 @@ opm_add_test(obstacle_pvs_restart
 
 opm_add_test(tutorial1
              SOURCES tutorial/tutorial1.cc)
+
+opm_add_test(test_tasklets)
