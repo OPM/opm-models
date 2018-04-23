@@ -220,7 +220,8 @@ protected:
                 [this]() -> bool
                 { return !taskletQueue_.empty(); };
 
-            workAvailableCondition_.wait(lock, /*predicate=*/workIsAvailable);
+            if (!workIsAvailable())
+                workAvailableCondition_.wait(lock, /*predicate=*/workIsAvailable);
 
             // remove tasklet from queue
             std::shared_ptr<TaskletInterface> tasklet = taskletQueue_.front();
@@ -239,10 +240,7 @@ protected:
                 // remove tasklets from the queue as soon as their reference count
                 // reaches zero, i.e. the tasklet has been run often enough.
                 taskletQueue_.pop();
-
             lock.unlock();
-            if (workIsAvailable())
-                workAvailableCondition_.notify_one();
 
             // execute tasklet
             tasklet->run();
