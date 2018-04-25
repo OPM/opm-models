@@ -61,6 +61,25 @@ private:
     int referenceCount_;
 };
 
+class TaskletRunner;
+
+// this class stores the thread local static attributes for the TaskletRunner class. we
+// cannot put them directly into TaskletRunner because defining static members for
+// non-template classes in headers leads the linker to choke in case multiple compile
+// units are used.
+template <class Dummy = void>
+struct TaskletRunnerHelper_
+{
+    static thread_local TaskletRunner* taskletRunner_;
+    static thread_local int workerThreadIndex_;
+};
+
+template <class Dummy>
+thread_local TaskletRunner* TaskletRunnerHelper_<Dummy>::taskletRunner_ = nullptr;
+
+template <class Dummy>
+thread_local int TaskletRunnerHelper_<Dummy>::workerThreadIndex_ = -1;
+
 /*!
  * \brief Handles where a given tasklet is run.
  *
@@ -136,7 +155,7 @@ public:
         threads_.resize(numWorkers);
         for (unsigned i = 0; i < numWorkers; ++i)
             // create a worker thread
-            threads_[i].reset(new std::thread(startWorkerThread_, this));
+            threads_[i].reset(new std::thread(startWorkerThread_, this, i));
     }
 
     /*!
@@ -157,6 +176,24 @@ public:
                 thread->join();
         }
     }
+
+    /*!
+     * \brief Returns the index of the current worker thread.
+     *
+     * If the current thread is not a worker thread, -1 is returned.
+     */
+    int workerThreadIndex() const
+    {
+        if (TaskletRunnerHelper_<void>::taskletRunner_ != this)
+            return -1;
+        return TaskletRunnerHelper_<void>::workerThreadIndex_;
+    }
+
+    /*!
+     * \brief Returns the number of worker threads for the tasklet runner.
+     */
+    int numWorkerThreads() const
+    { return threads_.size(); }
 
     /*!
      * \brief Add a new tasklet.
@@ -205,8 +242,13 @@ public:
 
 protected:
     // main function of the worker thread
-    static void startWorkerThread_(TaskletRunner* taskletRunner)
-    { taskletRunner->run_(); }
+    static void startWorkerThread_(TaskletRunner* taskletRunner, int workerThreadIndex)
+    {
+        TaskletRunnerHelper_<void>::taskletRunner_ = taskletRunner;
+        TaskletRunnerHelper_<void>::workerThreadIndex_ = workerThreadIndex;
+
+        taskletRunner->run_();
+    }
 
     //! do the work until the queue received an end tasklet
     void run_()
@@ -220,7 +262,8 @@ protected:
                 [this]() -> bool
                 { return !taskletQueue_.empty(); };
 
-            workAvailableCondition_.wait(lock, /*predicate=*/workIsAvailable);
+            if (!workIsAvailable())
+                workAvailableCondition_.wait(lock, /*predicate=*/workIsAvailable);
 
             // remove tasklet from queue
             std::shared_ptr<TaskletInterface> tasklet = taskletQueue_.front();
@@ -239,10 +282,7 @@ protected:
                 // remove tasklets from the queue as soon as their reference count
                 // reaches zero, i.e. the tasklet has been run often enough.
                 taskletQueue_.pop();
-
             lock.unlock();
-            if (workIsAvailable())
-                workAvailableCondition_.notify_one();
 
             // execute tasklet
             tasklet->run();
