@@ -307,37 +307,70 @@ public:
 
 private:
     static bool gasDissolutionFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasDissolutionFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasDissolutionFactor);
+        return val;
+    }
 
     static bool oilVaporizationFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilVaporizationFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilVaporizationFactor);
+        return val;
+    }
 
     static bool oilFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilFormationVolumeFactor);
+        return val;
+    }
 
     static bool gasFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasFormationVolumeFactor);
+        return val;
+    }
 
     static bool waterFormationVolumeFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteWaterFormationVolumeFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteWaterFormationVolumeFactor);
+        return val;
+    }
 
     static bool oilSaturationPressureOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilSaturationPressure); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteOilSaturationPressure);
+        return val;
+    }
 
     static bool gasSaturationPressureOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasSaturationPressure); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteGasSaturationPressure);
+        return val;
+    }
 
     static bool saturatedOilGasDissolutionFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedOilGasDissolutionFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedOilGasDissolutionFactor);
+        return val;
+    }
 
     static bool saturatedGasOilVaporizationFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedGasOilVaporizationFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturatedGasOilVaporizationFactor);
+        return val;
+    }
 
     static bool saturationRatiosOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturationRatios); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturationRatios);
+        return val;
+    }
 
     static bool primaryVarsMeaningOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVarsMeaning); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVarsMeaning);
+        return val;
+    }
 
     ScalarBuffer gasDissolutionFactor_;
     ScalarBuffer oilVaporizationFactor_;

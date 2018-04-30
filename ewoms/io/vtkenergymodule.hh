@@ -183,16 +183,28 @@ public:
 
 private:
     static bool solidInternalEnergyOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidInternalEnergy); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolidInternalEnergy);
+        return val;
+    }
 
     static bool thermalConductivityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteThermalConductivity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteThermalConductivity);
+        return val;
+    }
 
     static bool enthalpyOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEnthalpies); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEnthalpies);
+        return val;
+    }
 
     static bool internalEnergyOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteInternalEnergies); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteInternalEnergies);
+        return val;
+    }
 
     PhaseBuffer enthalpy_;
     PhaseBuffer internalEnergy_;

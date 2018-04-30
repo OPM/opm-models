@@ -177,15 +177,21 @@ public:
 
 private:
     static bool tortuosityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTortuosities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTortuosities);
+        return val;
+    }
 
     static bool diffusionCoefficientOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDiffusionCoefficients);
+        return val;
+    }
 
     static bool effectiveDiffusionCoefficientOutput_()
     {
-        return EWOMS_GET_PARAM(TypeTag, bool,
-                               VtkWriteEffectiveDiffusionCoefficients);
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteEffectiveDiffusionCoefficients);
+        return val;
     }
 
     PhaseBuffer tortuosity_;

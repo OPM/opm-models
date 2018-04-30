@@ -197,16 +197,28 @@ public:
 
 private:
     static bool solventSaturationOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventSaturation); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventSaturation);
+        return val;
+    }
 
     static bool solventDensityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventDensity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventDensity);
+        return val;
+    }
 
     static bool solventViscosityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventViscosity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventViscosity);
+        return val;
+    }
 
     static bool solventMobilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventMobility); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSolventMobility);
+        return val;
+    }
 
     ScalarBuffer solventSaturation_;
     ScalarBuffer solventDensity_;

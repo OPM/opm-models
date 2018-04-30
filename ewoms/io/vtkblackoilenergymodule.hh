@@ -200,16 +200,28 @@ public:
 
 private:
     static bool rockInternalEnergyOutput_()
-    { return GET_PROP_VALUE(TypeTag, VtkWriteRockInternalEnergy); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteRockInternalEnergy);
+        return val;
+    }
 
     static bool totalThermalConductivityOutput_()
-    { return GET_PROP_VALUE(TypeTag, VtkWriteTotalThermalConductivity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalThermalConductivity);
+        return val;
+    }
 
     static bool fluidInternalEnergiesOutput_()
-    { return GET_PROP_VALUE(TypeTag, VtkWriteFluidInternalEnergies); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFluidInternalEnergies);
+        return val;
+    }
 
     static bool fluidEnthalpiesOutput_()
-    { return GET_PROP_VALUE(TypeTag, VtkWriteFluidEnthalpies); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFluidEnthalpies);
+        return val;
+    }
 
     ScalarBuffer rockInternalEnergy_;
     ScalarBuffer totalThermalConductivity_;
