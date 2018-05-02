@@ -30,8 +30,8 @@
 
 #include "fvbaseproperties.hh"
 
+#include <ewoms/parallel/tasklets.hh>
 #include <ewoms/parallel/gridcommhandles.hh>
-#include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/parallel/threadedentityiterator.hh>
 #include <ewoms/disc/common/baseauxiliarymodule.hh>
 
@@ -84,7 +84,6 @@ class FvBaseLinearizer
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
 
@@ -324,9 +323,12 @@ private:
         residual_.resize(model_().numTotalDof());
         resetSystem_();
 
-        // create the per-thread context objects
-        elementCtx_.resize(ThreadManager::maxThreads());
-        for (unsigned threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
+        // allocate the element context objects for all threads. we need to do this here,
+        // because the simulator is not yet fully allocated when this object is
+        // constructed
+        int numThreads = std::max(simulator_().taskletRunner().numWorkerThreads(), 1);
+        elementCtx_.resize(numThreads);
+        for (int threadId = 0; threadId != numThreads; ++ threadId)
             elementCtx_[threadId] = new ElementContext(simulator_());
     }
 
@@ -390,11 +392,10 @@ private:
 
         // loop over all elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+        auto updateConstraintsMapLambda =
+            [this, &threadedElemIt] () -> void
         {
-            unsigned threadId = ThreadManager::threadId();
+            unsigned threadId = std::max(0, simulator_().taskletRunner().workerThreadIndex());
             ElementIterator elemIt = threadedElemIt.beginParallel();
             for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
                 // create an element context (the solution-based quantities are not
@@ -421,7 +422,12 @@ private:
                     }
                 }
             }
-        }
+        };
+
+        auto& taskletRunner = simulator_().taskletRunner();
+        int numThreads = std::max(taskletRunner.numWorkerThreads(), 1);
+        taskletRunner.dispatchFunction(updateConstraintsMapLambda, /*numInvokations=*/numThreads);
+        taskletRunner.barrier();
     }
 
     // linearize the whole system
@@ -448,10 +454,10 @@ private:
 
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+        auto linearizeLambda =
+            [this, &exceptionLock, &exceptionPtr, &threadedElemIt] () -> void
         {
+            unsigned threadIdx = std::max(0, simulator_().taskletRunner().workerThreadIndex());
             ElementIterator elemIt = threadedElemIt.beginParallel();
             ElementIterator nextElemIt = elemIt;
             try {
@@ -472,8 +478,7 @@ private:
                     const Element& elem = *elemIt;
                     if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                         continue;
-
-                    linearizeElement_(elem);
+                    linearizeElement_(elem, threadIdx);
                 }
             }
             // If an exception occurs in the parallel block, it won't escape the
@@ -490,25 +495,27 @@ private:
                 exceptionPtr = std::current_exception();
                 threadedElemIt.setFinished();
             }
-        }  // parallel block
+        };
+
+        auto& taskletRunner = simulator_().taskletRunner();
+        int numThreads = std::max(taskletRunner.numWorkerThreads(), 1);
+        taskletRunner.dispatchFunction(linearizeLambda, /*numInvokations=*/numThreads);
+        taskletRunner.barrier();
 
         // after reduction from the parallel block, exceptionPtr will point to
         // a valid exception if one occurred in one of the threads; rethrow
         // it here to let the outer handler take care of it properly
-        if(exceptionPtr) {
+        if(exceptionPtr)
             std::rethrow_exception(exceptionPtr);
-        }
 
         applyConstraintsToLinearization_();
     }
 
     // linearize an element in the interior of the process' grid partition
-    void linearizeElement_(const Element& elem)
+    void linearizeElement_(const Element& elem, int threadIdx)
     {
-        unsigned threadId = ThreadManager::threadId();
-
-        ElementContext *elementCtx = elementCtx_[threadId];
-        auto& localLinearizer = model_().localLinearizer(threadId);
+        ElementContext *elementCtx = elementCtx_[threadIdx];
+        auto& localLinearizer = model_().localLinearizer(threadIdx);
 
         // the actual work of linearization is done by the local linearizer class
         localLinearizer.linearize(*elementCtx, elem);
@@ -591,7 +598,6 @@ private:
 
     // the right-hand side
     GlobalEqVector residual_;
-
 
     std::mutex globalMatrixMutex_;
 };

@@ -34,6 +34,7 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
+#include <ewoms/parallel/tasklets.hh>
 
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -56,6 +57,7 @@ NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PredeterminedTimeStepsFile);
+NEW_PROP_TAG(ThreadsPerProcess);
 
 END_PROPERTIES
 
@@ -99,6 +101,15 @@ public:
         time_ = 0.0;
         endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
+
+        // set up the multi-threading infrastructure
+        int numWorkerThreads = EWOMS_GET_PARAM(TypeTag, int, ThreadsPerProcess);
+        if (numWorkerThreads < 2)
+            // instead of just a single worker thread, use synchronous mode, i.e., do all
+            // work in the main thread.
+            numWorkerThreads = 0;
+
+        taskletRunner_.reset(new TaskletRunner(numWorkerThreads));
 
         const std::string& predetTimeStepFile =
             EWOMS_GET_PARAM(TypeTag, std::string, PredeterminedTimeStepsFile);
@@ -526,6 +537,15 @@ public:
      */
 
     /*!
+     * \brief Returns the object that herds the flock of worker threads.
+     *
+     * Note that the returned object is always non-const, i.e., tasklets can be
+     * dispatched even if the model object which it belongs to is constant.
+     */
+    TaskletRunner& taskletRunner() const
+    { return *taskletRunner_; }
+
+    /*!
      * \brief Runs the simulation using a given problem class.
      *
      * This method makes sure that time steps sizes are aligned to
@@ -868,6 +888,9 @@ private:
     Ewoms::Timer writeTimer_;
 
     std::vector<Scalar> forcedTimeSteps_;
+
+    mutable std::unique_ptr<TaskletRunner> taskletRunner_;
+
     Scalar startTime_;
     Scalar time_;
     Scalar endTime_;

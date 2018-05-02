@@ -138,7 +138,6 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -192,13 +191,13 @@ public:
 
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(this->gridView());
         std::mutex mutex;
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
+
+        auto globalPhaseStorageLambda = [this, &mutex, &threadedElemIt, &storage, phaseIdx]() -> void
         {
             // Attention: the variables below are thread specific and thus cannot be
             // moved in front of the #pragma!
-            unsigned threadId = ThreadManager::threadId();
+            auto& taskletRunner = this->simulator_.taskletRunner();
+            int threadIdx = std::max(taskletRunner.workerThreadIndex(), 0);
             ElementContext elemCtx(this->simulator_);
             ElementIterator elemIt = threadedElemIt.beginParallel();
             EqVector tmp;
@@ -218,11 +217,11 @@ public:
                     const auto& intQuants = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0);
 
                     tmp = 0;
-                    this->localResidual(threadId).addPhaseStorage(tmp,
-                                                                  elemCtx,
-                                                                  dofIdx,
-                                                                  /*timeIdx=*/0,
-                                                                  phaseIdx);
+                    this->localResidual(threadIdx).addPhaseStorage(tmp,
+                                                                   elemCtx,
+                                                                   dofIdx,
+                                                                   /*timeIdx=*/0,
+                                                                   phaseIdx);
                     tmp *= scv.volume()*intQuants.extrusionFactor();
 
                     mutex.lock();
@@ -230,7 +229,12 @@ public:
                     mutex.unlock();
                 }
             }
-        }
+        };
+
+        auto& taskletRunner = this->simulator_.taskletRunner();
+        unsigned numThreads = std::max(1, taskletRunner.numWorkerThreads());
+        taskletRunner.dispatchFunction(globalPhaseStorageLambda, /*numInvokations=*/numThreads);
+        taskletRunner.barrier();
 
         storage = this->gridView_.comm().sum(storage);
     }

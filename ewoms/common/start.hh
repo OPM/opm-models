@@ -91,7 +91,6 @@ template <class TypeTag>
 static inline void registerAllParameters_(bool finalizeRegistration = true)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     EWOMS_REGISTER_PARAM(TypeTag, std::string, ParameterFile,
                          "An .ini file which contains a set of run-time "
@@ -104,7 +103,6 @@ static inline void registerAllParameters_(bool finalizeRegistration = true)
                          "start of the simulation");
 
     Simulator::registerParameters();
-    ThreadManager::registerParameters();
 
     if (finalizeRegistration)
         EWOMS_END_PARAM_REGISTRATION(TypeTag);
@@ -250,7 +248,6 @@ static inline int start(int argc, char **argv)
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     // set the signal handlers to reset the TTY to a well defined state on unexpected
     // program aborts
@@ -274,8 +271,6 @@ static inline int start(int argc, char **argv)
             return 1;
         if (paramStatus == 2)
             return 0;
-
-        ThreadManager::init();
 
         // initialize MPI, finalize is done automatically on exit
 #if HAVE_DUNE_FEM
