@@ -301,25 +301,46 @@ public:
 
 private:
     static bool saturationOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureSaturations); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureSaturations);
+        return val;
+    }
 
     static bool mobilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureMobilities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureMobilities);
+        return val;
+    }
 
     static bool relativePermeabilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureRelativePermeabilities);
+        return val;
+    }
 
     static bool porosityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFracturePorosity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFracturePorosity);
+        return val;
+    }
 
     static bool intrinsicPermeabilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureIntrinsicPermeabilities);
+        return val;
+    }
 
     static bool volumeFractionOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureVolumeFraction);
+        return val;
+    }
 
     static bool velocityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFractureFilterVelocities);
+        return val;
+    }
 
     PhaseBuffer fractureSaturation_;
     PhaseBuffer fractureMobility_;

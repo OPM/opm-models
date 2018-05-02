@@ -390,40 +390,76 @@ public:
 
 private:
     static bool extrusionFactorOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteExtrusionFactor); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteExtrusionFactor);
+        return val;
+    }
 
     static bool pressureOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePressures); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePressures);
+        return val;
+    }
 
     static bool densityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDensities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDensities);
+        return val;
+    }
 
     static bool saturationOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturations); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteSaturations);
+        return val;
+    }
 
     static bool mobilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMobilities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMobilities);
+        return val;
+    }
 
     static bool relativePermeabilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteRelativePermeabilities);
+        return val;
+    }
 
     static bool viscosityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteViscosities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteViscosities);
+        return val;
+    }
 
     static bool averageMolarMassOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteAverageMolarMasses);
+        return val;
+    }
 
     static bool porosityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePorosity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePorosity);
+        return val;
+    }
 
     static bool intrinsicPermeabilityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteIntrinsicPermeabilities);
+        return val;
+    }
 
     static bool velocityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFilterVelocities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFilterVelocities);
+        return val;
+    }
 
     static bool potentialGradientOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePotentialGradients); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePotentialGradients);
+        return val;
+    }
 
     ScalarBuffer extrusionFactor_;
     PhaseBuffer pressure_;

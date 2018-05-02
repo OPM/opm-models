@@ -215,12 +215,8 @@ SET_BOOL_PROP(FvBaseDiscretization, UseLinearizationLock, true);
 SET_TYPE_PROP(FvBaseDiscretization, Linearizer, Ewoms::FvBaseLinearizer<TypeTag>);
 
 //! use an unlimited time step size by default
-#if 0
-// requires GCC 4.6 or later to be able call the constexpr function here
 SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, std::numeric_limits<Scalar>::infinity());
-#else
-SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, 1e100);
-#endif
+
 //! By default, accept any time step larger than zero
 SET_SCALAR_PROP(FvBaseDiscretization, MinTimeStepSize, 0.0);
 

@@ -236,25 +236,46 @@ public:
 
 private:
     static bool massFracOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMassFractions); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMassFractions);
+        return val;
+    }
 
     static bool moleFracOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMoleFractions); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMoleFractions);
+        return val;
+    }
 
     static bool totalMassFracOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalMassFractions); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalMassFractions);
+        return val;
+    }
 
     static bool totalMoleFracOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTotalMoleFractions);
+        return val;
+    }
 
     static bool molarityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMolarities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteMolarities);
+        return val;
+    }
 
     static bool fugacityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFugacities); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFugacities);
+        return val;
+    }
 
     static bool fugacityCoeffOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteFugacityCoeffs);
+        return val;
+    }
 
     PhaseComponentBuffer moleFrac_;
     PhaseComponentBuffer massFrac_;

@@ -128,7 +128,10 @@ public:
 
 private:
     static bool phasePresenceOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePhasePresence); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePhasePresence);
+        return val;
+    }
 
     ScalarBuffer phasePresence_;
 };

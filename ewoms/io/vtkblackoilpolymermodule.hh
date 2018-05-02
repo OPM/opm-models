@@ -224,22 +224,40 @@ public:
 
 private:
     static bool polymerConcentrationOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerConcentration); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerConcentration);
+        return val;
+    }
 
     static bool polymerDeadPoreVolumeOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerDeadPoreVolume); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerDeadPoreVolume);
+        return val;
+    }
 
     static bool polymerRockDensityOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerRockDensity); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerRockDensity);
+        return val;
+    }
 
     static bool polymerAdsorptionOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerAdsorption); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerAdsorption);
+        return val;
+    }
 
     static bool polymerViscosityCorrectionOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerViscosityCorrection); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerViscosityCorrection);
+        return val;
+    }
 
     static bool waterViscosityCorrectionOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerViscosityCorrection); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePolymerViscosityCorrection);
+        return val;
+    }
 
     ScalarBuffer polymerConcentration_;
     ScalarBuffer polymerDeadPoreVolume_;

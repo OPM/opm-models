@@ -131,7 +131,10 @@ public:
 
 private:
     static bool temperatureOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTemperature); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteTemperature);
+        return val;
+    }
 
     ScalarBuffer temperature_;
 };

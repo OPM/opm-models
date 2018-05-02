@@ -157,11 +157,20 @@ public:
 
 private:
     static bool primaryVarsOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVars); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWritePrimaryVars);
+        return val;
+    }
     static bool processRankOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteProcessRank); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteProcessRank);
+        return val;
+    }
     static bool dofIndexOutput_()
-    { return EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDofIndex); }
+    {
+        static bool val = EWOMS_GET_PARAM(TypeTag, bool, VtkWriteDofIndex);
+        return val;
+    }
 
     EqBuffer primaryVars_;
     ScalarBuffer processRank_;
