@@ -1,8 +1,8 @@
-%define tag rc1
+%define tag final
 
 Name: ewoms
 Summary: OPM - Fully implicit models for flow and transport in porous media
-Version: 2017.10
+Version: 2018.04
 Release: 0
 License: GPL-3.0+
 Group:   Development/Libraries/C and C++
@@ -12,10 +12,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: dune-common-devel openmpi environment-modules valgrind
 BuildRequires: make pkgconfig openmpi-devel dune-grid-devel opm-common-devel
 BuildRequires: opm-material-devel opm-grid-devel
+BuildRequires: opm-material-openmpi-devel opm-grid-openmpi-devel
 BuildRequires: dune-istl-devel dune-localfunctions-devel doxygen zlib-devel
-BuildRequires: devtoolset-6-toolchain
+BuildRequires: devtoolset-6-toolchain ecl-devel opm-common-openmpi-devel
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel
-Requires:      ewoms-devel
+Requires:      ewoms-openmpi-devel
 %{?el6:BuildRequires: cmake3 boost148-devel}
 %{!?el6:BuildRequires: cmake boost-devel}
 
@@ -41,6 +42,20 @@ framework which is capable of capturing all macro-scale scenarios
 relevant for academic research and industrial applications involving
 flow and transport processes in porous media.
 
+%package openmpi-devel
+License:        GPL
+Requires:      %name = %version
+Summary:     	ewoms development files
+Group:          Development/Libraries/C and C++
+
+%description openmpi-devel
+eWoms is an simulation framework which is primary focused on fully implicit
+models for flow and transport in porous media. Its main objectives
+are to provide a easily usable, well maintainable, high performance
+framework which is capable of capturing all macro-scale scenarios
+relevant for academic research and industrial applications involving
+flow and transport processes in porous media.
+
 %package -n ebos
 Summary:        ebos is an ECL simulator.
 Group:          Scientific
@@ -48,23 +63,43 @@ Group:          Scientific
 %description -n ebos
 ebos is an ECL simulator.
 
+%package -n ebos-openmpi
+Summary:        ebos is an ECL simulator.
+Group:          Scientific
+
+%description -n ebos-openmpi
+ebos is an ECL simulator.
+
 %prep
 %setup -q -n %{name}-release-%{version}-%{tag}
 
 %build
 scl enable devtoolset-6 bash
+mkdir serial
+cd serial
+%{?el6:cmake3} %{!?el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+make
+cd ..
+
+mkdir openmpi
+cd openmpi
 %{?el6:module load openmpi-x86_64}
 %{?!el6:module load mpi/openmpi-x86_64}
-%{?el6:cmake3} %{!?el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} -DZOLTAN_ROOT=/usr/lib64/openmpi -DCMAKE_CXX_FLAGS=-I/usr/include/openmpi-x86_64/trilinos -DZOLTAN_INCLUDE_DIRS=/usr/include/openmpi-x86_64/trilinos -DPTSCOTCH_ROOT=/usr/lib64/openmpi -DPTSCOTCH_INCLUDE_DIR=/usr/include/openmpi-x86_64
-
-%__make %{?jobs:-j%{jobs}}
+%{?el6:cmake3} %{!?el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} -DZOLTAN_ROOT=/usr/lib64/openmpi -DCMAKE_CXX_FLAGS=-I/usr/include/openmpi-x86_64/trilinos -DZOLTAN_INCLUDE_DIRS=/usr/include/openmpi-x86_64/trilinos -DPTSCOTCH_ROOT=/usr/lib64/openmpi -DPTSCOTCH_INCLUDE_DIR=/usr/include/openmpi-x86_64 ..
+make
 
 # No symbols in a template-only library
 %global debug_package %{nil}
 
 %install
+cd serial
 make install DESTDIR=${RPM_BUILD_ROOT}
+cd ..
+cd openmpi
 %{!?el6:make doc}
+make install DESTDIR=${RPM_BUILD_ROOT}
+mkdir -p ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
+mv ${RPM_BUILD_ROOT}/usr/lib64/openmpi/include/* ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
 
 %clean
 rm -fr %buildroot
@@ -73,7 +108,7 @@ rm -fr %buildroot
 %defattr(-,root,root)
 %{!?el6:
 %doc README
-%doc doc/doxygen/html}
+%doc openmpi/doc/doxygen/html}
 
 %files devel
 %defattr(-,root,root)
@@ -82,5 +117,15 @@ rm -fr %buildroot
 /usr/lib/pkgconfig/*
 %{_datadir}/*
 
+%files openmpi-devel
+%defattr(-,root,root)
+%{_includedir}/openmpi-x86_64/*
+%{_libdir}/openmpi/lib/dunecontrol/*
+%{_libdir}/openmpi/lib/pkgconfig/*
+%{_libdir}/openmpi/share/*
+
 %files -n ebos
 %{_bindir}/ebos
+
+%files -n ebos-openmpi
+%{_libdir}/openmpi/bin/ebos
