@@ -922,6 +922,7 @@ public:
             else if (sol.has("SSOLVENT"))
                 sSol_[elemIdx] = sol.data("SSOLVENT")[globalDofIndex];
         }
+
         if (cPolymer_.size() > 0 && sol.has("POLYMER"))
             cPolymer_[elemIdx] = sol.data("POLYMER")[globalDofIndex];
         if (soMax_.size() > 0 && sol.has("SOMAX"))
