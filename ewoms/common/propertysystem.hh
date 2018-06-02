@@ -130,6 +130,18 @@ namespace Properties {
 
 /*!
  * \ingroup Properties
+ * \brief Indicates that property definitions follow
+ */
+#define BEGIN_PROPERTIES namespace Ewoms { namespace Properties {
+
+/*!
+ * \ingroup Properties
+ * \brief Indicates that all properties have been specified (for now)
+ */
+#define END_PROPERTIES }}
+
+/*!
+ * \ingroup Properties
  * \brief Convert a type tag name to a type
  *
  * The main advantage of the type of a \c TypeTag is that it can be
