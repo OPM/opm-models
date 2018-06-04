@@ -569,7 +569,7 @@ public:
 
         const auto& fs = intQuants.fluidState();
 
-        const LhsEval surfaceVolumeWater =
+        LhsEval surfaceVolumeWater =
                 Toolbox::template decay<LhsEval>(fs.saturation(waterPhaseIdx))
                 * Toolbox::template decay<LhsEval>(fs.invB(waterPhaseIdx))
                 * Toolbox::template decay<LhsEval>(intQuants.porosity());
