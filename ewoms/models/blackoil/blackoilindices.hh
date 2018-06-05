@@ -35,7 +35,7 @@ namespace Ewoms {
  *
  * \brief The primary variable and equation indices for the black-oil model.
  */
-template <bool enableSolventV, bool enablePolymerV, bool enableEnergyV, unsigned PVOffset>
+template <unsigned numSolventsV, unsigned numPolymersV, unsigned numEnergyV, unsigned PVOffset>
 struct BlackOilIndices
 {
     //! Number of phases active at all times
@@ -47,23 +47,23 @@ struct BlackOilIndices
     static const bool gasEnabled = true;
 
     //! Are solvents involved?
-    static const bool enableSolvent = enableSolventV;
+    static const bool enableSolvent = numSolventsV > 0;
 
     //! Are polymers involved?
-    static const bool enablePolymer = enablePolymerV;
+    static const bool enablePolymer = numPolymersV > 0;
 
     //! Shall energy be conserved?
-    static const bool enableEnergy = enableEnergyV;
+    static const bool enableEnergy = numEnergyV > 0;
 
 private:
     //! Number of solvent components to be considered
-    static const int numSolvents_ = enableSolvent ? 1 : 0;
+    static const int numSolvents_ = enableSolvent ? numSolventsV : 0;
 
     //! Number of polymer components to be considered
-    static const int numPolymers_ = enablePolymer ? 1 : 0;
+    static const int numPolymers_ = enablePolymer ? numPolymersV : 0;
 
     //! Number of energy equations to be considered
-    static const int numEnergy_ = enableEnergy ? 1 : 0;
+    static const int numEnergy_ = enableEnergy ? numEnergyV : 0;
 
 public:
     //! The number of equations
