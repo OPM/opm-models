@@ -96,13 +96,14 @@ public:
      */
     static const int compositionSwitchIdx = PVOffset + 2;
 
+    // TODO: the following -1 thing only applies to the num*** is 1
     //! Index of the primary variable for the first solvent
     static const int solventSaturationIdx =
         enableSolvent ? PVOffset + (numPhases-1) + numSolvents_ : -1000;
 
     //! Index of the primary variable for the first polymer
     static const int polymerConcentrationIdx =
-        enablePolymer ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ : -1000;
+        enablePolymer ? PVOffset + numPhases + numSolvents_ : -1000;
 
     //! Index of the primary variable for the second polymer primary variable (molecular weight)
     static const int polymerMoleWeightIdx =
@@ -126,7 +127,7 @@ public:
 
     //! Index of the continuity equation for the first polymer component
     static const int contiPolymerEqIdx =
-        enablePolymer > 0 ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ : -1000;
+        enablePolymer > 0 ? PVOffset + numPhases + numSolvents_ : -1000;
 
     //! Index of the continuity equation for the second polymer component (molecular weight)
     static const int contiPolymerMWEqIdx =
