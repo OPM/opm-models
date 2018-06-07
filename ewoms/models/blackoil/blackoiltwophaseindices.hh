@@ -54,22 +54,20 @@ struct BlackOilTwoPhaseIndices
     //! Shall energy be conserved?
     static const bool enableEnergy = numEnergyV > 0;
 
-private:
     //! Number of solvent components to be considered
-    static const int numSolvents_ = enableSolvent ? numSolventsV : 0;
+    static const int numSolvents = enableSolvent ? numSolventsV : 0;
 
     //! Number of polymer components to be considered
-    static const int numPolymers_ = enablePolymer ? numPolymersV : 0;
+    static const int numPolymers = enablePolymer ? numPolymersV : 0;
 
     //! Number of energy equations to be considered
-    static const int numEnergy_ = enableEnergy ? numEnergyV : 0;
+    static const int numEnergy = enableEnergy ? numEnergyV : 0;
 
-public:
     //! The number of fluid phases
     static const int numPhases = 2;
 
     //! The number of equations
-    static const int numEq = numPhases + numSolvents_ + numPolymers_ + numEnergy_;
+    static const int numEq = numPhases + numSolvents + numPolymers + numEnergy;
 
     //////////////////////////////
     // Primary variable indices
@@ -92,19 +90,19 @@ public:
 
     //! Index of the primary variable for the first solvent
     static const int solventSaturationIdx =
-        enableSolvent ? PVOffset + (numPhases-1) + numSolvents_ : -1000;
+        enableSolvent ? PVOffset + (numPhases-1) + numSolvents : -1000;
 
     //! Index of the primary variable for the first polymer
     static const int polymerConcentrationIdx =
-        enablePolymer ? PVOffset + numPhases + numSolvents_ : -1000;
+        enablePolymer ? PVOffset + numPhases + numSolvents : -1000;
 
     //! Index of the primary variable for the second polymer primary variable (molecular weight)
     static const int polymerMoleWeightIdx =
-        numPolymers_ > 1 ? polymerConcentrationIdx + 1 : -1000;
+        numPolymers > 1 ? polymerConcentrationIdx + 1 : -1000;
 
     //! Index of the primary variable for temperature
     static const int temperatureIdx  =
-        enableEnergy ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ + numEnergy_ : - 1000;
+        enableEnergy ? PVOffset + (numPhases-1) + numSolvents + numPolymers + numEnergy : - 1000;
 
     //////////////////////
     // Equation indices
@@ -153,19 +151,19 @@ public:
 
     //! Index of the continuity equation for the first solvent component
     static const int contiSolventEqIdx =
-        enableSolvent ? PVOffset + (numPhases-1) + numSolvents_ : -1000;
+        enableSolvent ? PVOffset + (numPhases-1) + numSolvents : -1000;
 
     //! Index of the continuity equation for the first polymer component
     static const int contiPolymerEqIdx =
-        enablePolymer > 0 ? PVOffset + numPhases + numSolvents_ : -1000;
+        enablePolymer > 0 ? PVOffset + numPhases + numSolvents : -1000;
 
     //! Index of the continuity equation for the second polymer component (molecular weight)
     static const int contiPolymerMWEqIdx =
-        numPolymers_ > 1 ? contiPolymerEqIdx + 1 : -1000;
+        numPolymers > 1 ? contiPolymerEqIdx + 1 : -1000;
 
     //! Index of the continuity equation for energy
     static const int contiEnergyEqIdx =
-        enableEnergy ? PVOffset + (numPhases-1) + numSolvents_ + numPolymers_ + numEnergy_ : -1000;
+        enableEnergy ? PVOffset + (numPhases-1) + numSolvents + numPolymers + numEnergy : -1000;
 };
 
 } // namespace Ewoms

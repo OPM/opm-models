@@ -589,7 +589,7 @@ public:
                 * Toolbox::template decay<LhsEval>(intQuants.polymerRockDensity())
                 * Toolbox::template decay<LhsEval>(intQuants.polymerAdsorption());
 
-        const LhsEval accumulationPolymer = massPolymer + adsorptionPolymer;
+        LhsEval accumulationPolymer = massPolymer + adsorptionPolymer;
 
         storage[contiPolymerEqIdx] += accumulationPolymer;
 
@@ -599,6 +599,8 @@ public:
             // TODO: for the water, there is something like a minimum water saturation there
             // TODO: basically, it is multiplying the accumulation term of polymer equation by the molecular weight
             // TODO: needs to check later whether this is the good way
+            accumulationPolymer = Opm::max(accumulationPolymer, 1e-10);
+
             storage[contiPolymerMWEqIdx]  += accumulationPolymer
                                          * Toolbox::template decay<LhsEval> (intQuants.polymerMoleWeight() );
         }
