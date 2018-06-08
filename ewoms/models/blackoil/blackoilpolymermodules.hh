@@ -469,7 +469,31 @@ public:
         }
     }
 
+    /*!
+    * \brief get the SKPRWAT table
+    */
+    static TabulatedTwoDFunction& getSkprwatTable(const int numTable)
+    {
+        const auto iterTable = skprwatTables_.find(numTable);
+        if (iterTable != plymwinjTables_.end()) {
+            return iterTable->second;
+        } else {
+            throw std::runtime_error(" the SKPRWAT table " + std::to_string(numTable) + " does not exist\n");
+        }
+    }
 
+    /*!
+    * \brief get the SKPRWAT table
+    */
+    static TabulatedTwoDFunction& getSkprpolyTable(const int numTable)
+    {
+        const auto iterTable = skprpolyTables_.find(numTable);
+        if (iterTable != skprpolyTables_.end()) {
+            return iterTable->second;
+        } else {
+            throw std::runtime_error(" the SKPRPOLY table " + std::to_string(numTable) + " does not exist\n");
+        }
+    }
 
     /*!
      * \brief Register all run-time parameters for the black-oil polymer module.
