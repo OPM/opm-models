@@ -97,6 +97,11 @@ class BlackOilPolymerModule
     static constexpr unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
     static constexpr unsigned numPhases = FluidSystem::numPhases;
 
+    struct SkprpolyTable {
+        double refConcentration;
+        TabulatedTwoDFunction table_func;
+    };
+
 public:
     enum AdsorptionBehaviour { Desorption = 1, NoDesorption = 2 };
 
@@ -485,7 +490,7 @@ public:
     /*!
     * \brief get the SKPRWAT table
     */
-    static TabulatedTwoDFunction& getSkprpolyTable(const int numTable)
+    static SkprpolyTable& getSkprpolyTable(const int numTable)
     {
         const auto iterTable = skprpolyTables_.find(numTable);
         if (iterTable != skprpolyTables_.end()) {
@@ -963,10 +968,6 @@ private:
     static std::map<int, TabulatedTwoDFunction> plymwinjTables_;
     static std::map<int, TabulatedTwoDFunction> skprwatTables_;
 
-    struct SkprpolyTable {
-        double refConcentration;
-        TabulatedTwoDFunction table;
-    };
     static std::map<int, SkprpolyTable> skprpolyTables_;
 };
 
@@ -1086,7 +1087,9 @@ public:
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
-        polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx);
+        if (enablePolymerMW) {
+            polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx);
+        }
         const Scalar cmax = PolymerModule::plymaxMaxConcentration(elemCtx, dofIdx, timeIdx);
 
         // permeability reduction due to polymer
