@@ -166,6 +166,60 @@ public:
     }
 
     /*!
+     * \brief Returns the string that is printed before the list of command line
+     *        parameters in the help message.
+     *
+     * If the returned string is empty, no help message will be generated.
+     */
+    static std::string helpPreamble(int argc OPM_UNUSED,
+                                    const char **argv)
+    {
+        std::string desc = Implementation::briefDescription();
+        if (!desc.empty())
+            desc = desc + "\n";
+
+        return
+            "Usage: "+std::string(argv[0]) + " [OPTIONS]\n"
+            + desc;
+    }
+
+    /*!
+     * \brief Returns a human readable description of the problem for the help message
+     *
+     * The problem description is printed as part of the --help message. It is optional
+     * and should not exceed one or two lines of text.
+     */
+    static std::string briefDescription()
+    { return ""; }
+
+    // TODO (?): detailedDescription()
+
+    /*!
+     * \brief Handles positional command line parameters.
+     *
+     * Positional parameters are parameters that are not prefixed by any parameter name.
+     *
+     * \param errorMsg If the positional argument cannot be handled, this is the reason why
+     * \param argc The total number of command line parameters
+     * \param argv The string value of the command line parameters
+     * \param paramIdx The index of the positional parameter in the array of all parameters
+     * \param posParamIdx The number of the positional parameter encountered so far
+     *
+     * \return The number of array entries which ought to be skipped before processing
+     *         the next regular parameter. If this is less than 1, it indicated that the
+     *         positional parameter was invalid.
+     */
+    static int handlePositionalParameter(std::string& errorMsg,
+                                         int argc OPM_UNUSED,
+                                         const char** argv,
+                                         int paramIdx,
+                                         int posParamIdx OPM_UNUSED)
+    {
+        errorMsg = std::string("Illegal parameter \"")+argv[paramIdx]+"\".";
+        return 0;
+    }
+
+    /*!
      * \brief Called by the Ewoms::Simulator in order to initialize the problem.
      *
      * If you overload this method don't forget to call ParentType::finishInit()
