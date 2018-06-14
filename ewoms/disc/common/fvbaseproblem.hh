@@ -67,12 +67,9 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
-
     typedef typename GET_PROP_TYPE(TypeTag, RateVector) RateVector;
     typedef typename GET_PROP_TYPE(TypeTag, BoundaryRateVector) BoundaryRateVector;
     typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
@@ -356,7 +353,7 @@ public:
         Scalar solveTime = simulator().solveTimer().realTimeElapsed();
         Scalar updateTime = simulator().updateTimer().realTimeElapsed();
         unsigned numProcesses = static_cast<unsigned>(this->gridView().comm().size());
-        unsigned threadsPerProcess = ThreadManager::maxThreads();
+        unsigned threadsPerProcess = 1;
         if (gridView().comm().rank() == 0) {
             std::cout << std::setprecision(3)
                       << "Simulation of problem '" << asImp_().name() << "' finished.\n"

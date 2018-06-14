@@ -63,7 +63,6 @@ class FlashIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     // primary variable indices
     enum { cTot0Idx = Indices::cTot0Idx };
@@ -194,9 +193,7 @@ public:
      * \copydoc ImmiscibleIntensiveQuantities::mobility
      */
     const Evaluation& mobility(unsigned phaseIdx) const
-    {
-        return mobility_[phaseIdx];
-    }
+    { return mobility_[phaseIdx]; }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::porosity

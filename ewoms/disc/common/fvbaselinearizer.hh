@@ -31,8 +31,6 @@
 #include "fvbaseproperties.hh"
 
 #include <ewoms/parallel/gridcommhandles.hh>
-#include <ewoms/parallel/threadmanager.hh>
-#include <ewoms/parallel/threadedentityiterator.hh>
 #include <ewoms/disc/common/baseauxiliarymodule.hh>
 
 #include <opm/material/common/Exceptions.hpp>
@@ -81,7 +79,6 @@ class FvBaseLinearizer
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
 
@@ -270,8 +267,8 @@ private:
         residual_ = 0;
 
         // create the per-thread context objects
-        elementCtx_.resize(ThreadManager::maxThreads());
-        for (unsigned threadId = 0; threadId != ThreadManager::maxThreads(); ++ threadId)
+        elementCtx_.resize(1);
+        for (unsigned threadId = 0; threadId != 1; ++ threadId)
             elementCtx_[threadId] = new ElementContext(simulator_());
     }
 
@@ -347,14 +344,11 @@ private:
         constraintsMap_.clear();
 
         // loop over all elements...
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
-            unsigned threadId = ThreadManager::threadId();
-            ElementIterator elemIt = threadedElemIt.beginParallel();
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+            unsigned threadId = 0;
+            ElementIterator elemIt = gridView_().template begin<0>();
+            const ElementIterator& elemEndIt = gridView_().template end<0>();
+            for (; elemIt != elemEndIt; ++ elemIt) {
                 // create an element context (the solution-based quantities are not
                 // available here!)
                 const Element& elem = *elemIt;
@@ -398,18 +392,16 @@ private:
         *matrix_ = 0.0;
 
         // relinearize the elements...
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
-            ElementIterator elemIt = threadedElemIt.beginParallel();
+            ElementIterator elemIt = gridView_().template begin<0>();
+            ElementIterator elemEndIt = gridView_().template end<0>();
             ElementIterator nextElemIt = elemIt;
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
+            for (; elemIt != elemEndIt; ++ elemIt) {
                 // give the model and the problem a chance to prefetch the data required
                 // to linearize the next element, but only if we need to consider it
-                nextElemIt = threadedElemIt.increment();
-                if (!threadedElemIt.isFinished(nextElemIt)) {
+                nextElemIt = elemIt;
+                ++ nextElemIt;
+                if (nextElemIt != elemEndIt) {
                     const auto& nextElem = *nextElemIt;
                     if (linearizeNonLocalElements
                         || nextElem.partitionType() == Dune::InteriorEntity)
@@ -435,7 +427,7 @@ private:
     // linearize an element in the interior of the process' grid partition
     void linearizeElement_(const Element& elem)
     {
-        unsigned threadId = ThreadManager::threadId();
+        unsigned threadId = 0;
 
         ElementContext *elementCtx = elementCtx_[threadId];
         auto& localLinearizer = model_().localLinearizer(threadId);
@@ -444,9 +436,6 @@ private:
         localLinearizer.linearize(*elementCtx, elem);
 
         // update the right hand side and the Jacobian matrix
-        if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))
-            globalMatrixMutex_.lock();
-
         size_t numPrimaryDof = elementCtx->numPrimaryDof(/*timeIdx=*/0);
         for (unsigned primaryDofIdx = 0; primaryDofIdx < numPrimaryDof; ++ primaryDofIdx) {
             unsigned globI = elementCtx->globalSpaceIndex(/*spaceIdx=*/primaryDofIdx, /*timeIdx=*/0);
@@ -461,9 +450,6 @@ private:
                 (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
             }
         }
-
-        if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))
-            globalMatrixMutex_.unlock();
     }
 
     void linearizeAuxiliaryEquations_()
@@ -536,9 +522,6 @@ private:
     Matrix *matrix_;
     // the right-hand side
     GlobalEqVector residual_;
-
-
-    OmpMutex globalMatrixMutex_;
 };
 
 } // namespace Ewoms

@@ -42,7 +42,6 @@
 #include <opm/material/common/Exceptions.hpp>
 
 #include <ewoms/common/propertysystem.hh>
-#include <ewoms/parallel/threadedentityiterator.hh>
 
 #include <dune/grid/common/gridenums.hh>
 
@@ -400,14 +399,11 @@ public:
             wells_[wellIdx]->beginIterationPreProcess();
 
         // call the accumulation routines
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(simulator_.vanguard().gridView());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
             ElementContext elemCtx(simulator_);
-            auto elemIt = threadedElemIt.beginParallel();
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+            auto elemIt = elemCtx.gridView().template begin<0>();
+            const auto& elemEndIt = elemCtx.gridView().template end<0>();
+            for (; elemIt != elemEndIt; ++ elemIt) {
                 const Element& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     continue;
