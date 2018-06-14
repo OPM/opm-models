@@ -48,7 +48,6 @@
 #include "baseauxiliarymodule.hh"
 
 #include <ewoms/parallel/gridcommhandles.hh>
-#include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>
@@ -203,13 +202,6 @@ SET_TYPE_PROP(FvBaseDiscretization, BoundaryContext, Ewoms::FvBaseBoundaryContex
 SET_TYPE_PROP(FvBaseDiscretization, ConstraintsContext, Ewoms::FvBaseConstraintsContext<TypeTag>);
 
 /*!
- * \brief The OpenMP threads manager
- */
-SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Ewoms::ThreadManager<TypeTag>);
-SET_INT_PROP(FvBaseDiscretization, ThreadsPerProcess, 1);
-SET_BOOL_PROP(FvBaseDiscretization, UseLinearizationLock, true);
-
-/*!
  * \brief Linearizer for the global system of equations.
  */
 SET_TYPE_PROP(FvBaseDiscretization, Linearizer, Ewoms::FvBaseLinearizer<TypeTag>);
@@ -302,7 +294,6 @@ class FvBaseDiscretization
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     typedef typename GET_PROP_TYPE(TypeTag, LocalLinearizer) LocalLinearizer;
     typedef typename GET_PROP_TYPE(TypeTag, LocalResidual) LocalResidual;
@@ -376,7 +367,7 @@ public:
         , vertexMapper_(gridView_)
 #endif
         , newtonMethod_(simulator)
-        , localLinearizer_(ThreadManager::maxThreads())
+        , localLinearizer_(/*numThreads=*/1)
         , linearizer_(new Linearizer())
 #if HAVE_DUNE_FEM
         , space_( simulator.vanguard().gridPart() )
@@ -515,7 +506,7 @@ public:
         gridTotalVolume_ = gridView_.comm().sum(gridTotalVolume_);
 
         linearizer_->init(simulator_);
-        for (unsigned threadId = 0; threadId < ThreadManager::maxThreads(); ++threadId)
+        for (unsigned threadId = 0; threadId < 1; ++threadId)
             localLinearizer_[threadId].init(simulator_);
 
         resizeAndResetIntensiveQuantitiesCache_();
@@ -810,20 +801,16 @@ public:
     {
         dest = 0;
 
-        OmpMutex mutex;
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
             // Attention: the variables below are thread specific and thus cannot be
             // moved in front of the #pragma!
-            unsigned threadId = ThreadManager::threadId();
+            unsigned threadId = 0;
             ElementContext elemCtx(simulator_);
-            ElementIterator elemIt = threadedElemIt.beginParallel();
+            ElementIterator elemIt = elemCtx.gridView().template begin<0>();
+            const ElementIterator& elemEndIt = elemCtx.gridView().template end<0>();
             LocalEvalBlockVector residual, storageTerm;
 
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+            for (; elemIt != elemEndIt; ++elemIt) {
                 const Element& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     continue;
@@ -834,13 +821,11 @@ public:
                 asImp_().localResidual(threadId).eval(residual, elemCtx);
 
                 size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-                ScopedLock addLock(mutex);
                 for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
                     unsigned globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                         dest[globalI][eqIdx] += Toolbox::value(residual[dofIdx][eqIdx]);
                 }
-                addLock.unlock();
             }
         }
 
@@ -871,24 +856,18 @@ public:
     {
         storage = 0;
 
-        OmpMutex mutex;
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
-            // Attention: the variables below are thread specific and thus cannot be
-            // moved in front of the #pragma!
-            unsigned threadId = ThreadManager::threadId();
+            unsigned threadId = 0;
             ElementContext elemCtx(simulator_);
-            ElementIterator elemIt = threadedElemIt.beginParallel();
+            ElementIterator elemIt = simulator_.gridView().template begin<0>();
+            const ElementIterator elemEndIt = simulator_.gridView().template end<0>();
             LocalEvalBlockVector elemStorage;
 
             // in this method, we need to disable the storage cache because we want to
             // evaluate the storage term for other time indices than the most recent one
             elemCtx.setEnableStorageCache(false);
 
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+            for (; elemIt != elemEndIt; ++ elemIt) {
                 const Element& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
@@ -901,11 +880,9 @@ public:
 
                 localResidual(threadId).evalStorage(elemStorage, elemCtx, timeIdx);
 
-                ScopedLock addLock(mutex);
                 for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
                         storage[eqIdx] += Toolbox::value(elemStorage[dofIdx][eqIdx]);
-                addLock.unlock();
             }
         }
 
@@ -1099,24 +1076,24 @@ public:
      * the jacobian linearizer to produce a global linerization of the
      * problem.
      */
-    const LocalLinearizer& localLinearizer(unsigned openMpThreadId) const
-    { return localLinearizer_[openMpThreadId]; }
+    const LocalLinearizer& localLinearizer(unsigned threadId) const
+    { return localLinearizer_[threadId]; }
     /*!
      * \copydoc localLinearizer() const
      */
-    LocalLinearizer& localLinearizer(unsigned openMpThreadId)
-    { return localLinearizer_[openMpThreadId]; }
+    LocalLinearizer& localLinearizer(unsigned threadId)
+    { return localLinearizer_[threadId]; }
 
     /*!
      * \brief Returns the object to calculate the local residual function.
      */
-    const LocalResidual& localResidual(unsigned openMpThreadId) const
-    { return asImp_().localLinearizer(openMpThreadId).localResidual(); }
+    const LocalResidual& localResidual(unsigned threadId) const
+    { return asImp_().localLinearizer(threadId).localResidual(); }
     /*!
      * \copydoc localResidual() const
      */
-    LocalResidual& localResidual(unsigned openMpThreadId)
-    { return asImp_().localLinearizer(openMpThreadId).localResidual(); }
+    LocalResidual& localResidual(unsigned threadId)
+    { return asImp_().localLinearizer(threadId).localResidual(); }
 
     /*!
      * \brief Returns the relative weight of a primary variable for
@@ -1628,14 +1605,11 @@ public:
         }
 
         // iterate over grid
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
             ElementContext elemCtx(simulator_);
-            ElementIterator elemIt = threadedElemIt.beginParallel();
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+            ElementIterator elemIt = simulator_.gridView().template begin<0>();
+            const ElementIterator& elemEndIt = simulator_.gridView().template end<0>();
+            for (; elemIt != elemEndIt; ++elemIt) {
                 const auto& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     // ignore non-interior entities

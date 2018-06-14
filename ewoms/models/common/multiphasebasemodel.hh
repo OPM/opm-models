@@ -135,7 +135,6 @@ class MultiPhaseBaseModel : public GET_PROP_TYPE(TypeTag, Discretization)
     typedef typename GET_PROP_TYPE(TypeTag, Discretization) ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
@@ -208,20 +207,14 @@ public:
 
         storage = 0;
 
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(this->gridView());
-        OmpMutex addMutex;
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
         {
-            // Attention: the variables below are thread specific and thus cannot be
-            // moved in front of the #pragma!
-            unsigned threadId = ThreadManager::threadId();
+            unsigned threadId = 0;
             ElementContext elemCtx(this->simulator_);
-            ElementIterator elemIt = threadedElemIt.beginParallel();
+            ElementIterator elemIt = this->simulator_.gridView().template begin<0>();
+            const ElementIterator& elemEndIt = this->simulator_.gridView().template end<0>();
             EqVector tmp;
 
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = threadedElemIt.increment()) {
+            for (; elemIt != elemEndIt; ++ elemIt) {
                 const Element& elem = *elemIt;
                 if (elem.partitionType() != Dune::InteriorEntity)
                     continue; // ignore ghost and overlap elements
@@ -243,9 +236,7 @@ public:
                                                                   phaseIdx);
                     tmp *= scv.volume()*intQuants.extrusionFactor();
 
-                    OmpMutex addLock(addMutex);
                     storage += tmp;
-                    addLock.unlock();
                 }
             }
         }
