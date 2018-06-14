@@ -48,8 +48,8 @@
 
 #include <dune/istl/solvers.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(JacobianMatrix);
 NEW_PROP_TAG(OverlappingMatrix);
@@ -58,7 +58,10 @@ NEW_PROP_TAG(GMResRestart);
 NEW_PROP_TAG(LinearSolverTolerance);
 NEW_PROP_TAG(LinearSolverMaxIterations);
 NEW_PROP_TAG(LinearSolverVerbosity);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 namespace Linear {
 

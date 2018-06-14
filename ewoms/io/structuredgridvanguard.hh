@@ -50,7 +50,10 @@ namespace Ewoms {
 template <class TypeTag>
 class StructuredGridVanguard;
 
-namespace Properties {
+} // namespace Ewoms
+
+BEGIN_PROPERTIES
+
 NEW_TYPE_TAG(StructuredGridVanguard);
 
 // declare the properties required by the for the structured grid simulator vanguard
@@ -82,7 +85,10 @@ SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::YaspGrid< dim >);
 #endif
 
 SET_TYPE_PROP(StructuredGridVanguard, Vanguard, Ewoms::StructuredGridVanguard<TypeTag>);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup TestProblems

@@ -39,8 +39,8 @@
 #include <type_traits>
 #include <memory>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(GridView);
@@ -49,7 +49,10 @@ NEW_PROP_TAG(GridViewLevel);
 NEW_PROP_TAG(GridFile);
 NEW_PROP_TAG(GridGlobalRefinements);
 NEW_PROP_TAG(Simulator);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \brief Provides the base class for most (all?) simulator vanguards.

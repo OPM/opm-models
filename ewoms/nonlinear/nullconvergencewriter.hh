@@ -32,14 +32,14 @@
 
 #include <opm/material/common/Unused.hpp>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(NewtonMethod);
 
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
-}
-}
+
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

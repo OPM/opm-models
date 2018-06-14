@@ -32,16 +32,16 @@
 
 #include <dune/common/version.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_TYPE_TAG(ParallelIstlLinearSolver, INHERITS_FROM(ParallelBaseLinearSolver));
 
 NEW_PROP_TAG(LinearSolverWrapper);
 
 //! number of iterations between solver restarts for the GMRES solver
 NEW_PROP_TAG(GMResRestart);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 namespace Linear {
@@ -141,8 +141,8 @@ protected:
 
 }} // namespace Linear, Ewoms
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 SET_TYPE_PROP(ParallelIstlLinearSolver,
               LinearSolverBackend,
               Ewoms::Linear::ParallelIstlSolverBackend<TypeTag>);
@@ -163,6 +163,7 @@ SET_TYPE_PROP(ParallelIstlLinearSolver,
 
 //! set the GMRes restart parameter to 10 by default
 SET_INT_PROP(ParallelIstlLinearSolver, GMResRestart, 10);
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 #endif

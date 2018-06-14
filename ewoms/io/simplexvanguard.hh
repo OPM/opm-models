@@ -36,8 +36,8 @@
 
 #include <memory>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Grid);
 
@@ -50,8 +50,10 @@ NEW_PROP_TAG(CellsY);
 NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
-} // namespace Properties
 
+END_PROPERTIES
+
+namespace Ewoms {
 /*!
  * \brief Provides a simulator vanguard which a creates regular grid made of simplices.
  */

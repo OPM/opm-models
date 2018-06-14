@@ -50,16 +50,16 @@
 
 #include <dune/common/version.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(JacobianMatrix);
 NEW_PROP_TAG(OverlappingMatrix);
 NEW_PROP_TAG(OverlappingVector);
 NEW_PROP_TAG(PreconditionerOrder);
 NEW_PROP_TAG(PreconditionerRelaxation);
-} // namespace Properties
+END_PROPERTIES
 
+namespace Ewoms {
 namespace Linear {
 #define EWOMS_WRAP_ISTL_PRECONDITIONER(PREC_NAME, ISTL_PREC_TYPE)               \
     template <class TypeTag>                                                    \

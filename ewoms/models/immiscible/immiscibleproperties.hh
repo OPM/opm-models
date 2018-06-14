@@ -33,8 +33,8 @@
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //!The fluid systems including the information about the phases
 NEW_PROP_TAG(FluidSystem);
 //! Specify whether energy should be considered as a conservation quantity or not
@@ -52,7 +52,7 @@ NEW_PROP_TAG(NonwettingPhase);
 //! The fluid used by the model
 NEW_PROP_TAG(Fluid);
 
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif

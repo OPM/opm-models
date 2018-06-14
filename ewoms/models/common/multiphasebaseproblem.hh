@@ -41,13 +41,16 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(SolidEnergyLawParams);
 NEW_PROP_TAG(ThermalConductionLawParams);
 NEW_PROP_TAG(EnableGravity);
 NEW_PROP_TAG(FluxModule);
-}
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup Discretization

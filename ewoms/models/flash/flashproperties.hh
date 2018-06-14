@@ -35,8 +35,8 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! Provides the thermodynamic relations
 NEW_PROP_TAG(FluidSystem);
 //! The type of the flash constraint solver
@@ -53,6 +53,7 @@ NEW_PROP_TAG(ThermalConductionLawParams);
 NEW_PROP_TAG(EnableEnergy);
 //! Enable diffusive fluxes?
 NEW_PROP_TAG(EnableDiffusion);
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 #endif

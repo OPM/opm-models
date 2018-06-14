@@ -165,7 +165,10 @@ private:
 };
 } // namespace Parameters
 
-namespace Properties {
+} // namespace Ewoms
+
+BEGIN_PROPERTIES
+
 // type tag which is supposed to spliced in or inherited from if the
 // parameter system is to be used
 NEW_TYPE_TAG(ParameterSystem);
@@ -214,7 +217,10 @@ private:
     }
 };
 
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 namespace Parameters {
 // function prototype declarations

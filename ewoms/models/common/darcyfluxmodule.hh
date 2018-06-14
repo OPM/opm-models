@@ -42,10 +42,13 @@
 
 #include <cmath>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(MaterialLaw);
-}
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 template <class TypeTag>
 class DarcyIntensiveQuantities;

@@ -33,14 +33,15 @@
 
 #include <ewoms/common/propertysystem.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The type tag for models based on the VCFV-scheme
 NEW_TYPE_TAG(VcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
 
 //! Use P1 finite-elements gradients instead of two-point gradients. Note that setting
 //! this property to true requires the dune-localfunctions module to be available.
 NEW_PROP_TAG(UseP1FiniteElementGradients);
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 #endif

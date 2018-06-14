@@ -64,8 +64,8 @@ template <class TypeTag>
 class EclVanguard;
 }
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The type tag for the black-oil problems
 NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
                                           VtkBlackOil,
@@ -155,7 +155,10 @@ PROP_STATIC_CONST_MEMBER_DEFINITION_PREFIX_(BlackOilModel, BlackOilEnergyScaling
 // by default, ebos formulates the conservation equations in terms of mass not surface
 // volumes
 SET_BOOL_PROP(BlackOilModel, BlackoilConserveSurfaceVolume, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup BlackOilModel

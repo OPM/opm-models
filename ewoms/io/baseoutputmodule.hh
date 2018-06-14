@@ -44,8 +44,8 @@
 
 #include <cstdio>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // forward definition of property tags
 NEW_PROP_TAG(NumPhases);
 NEW_PROP_TAG(NumComponents);
@@ -59,7 +59,10 @@ NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(ElementContext);
 NEW_PROP_TAG(FluidSystem);
 NEW_PROP_TAG(DiscBaseOutputModule);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 #if __GNUC__ || __clang__
 #pragma GCC diagnostic push

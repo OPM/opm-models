@@ -42,8 +42,8 @@ template <class TypeTag>
 class FvBaseNewtonConvergenceWriter;
 } // namespace Ewoms
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! create a type tag for the Newton method of the finite-volume discretization
 NEW_TYPE_TAG(FvBaseNewtonMethod, INHERITS_FROM(NewtonMethod));
 
@@ -73,7 +73,10 @@ SET_TYPE_PROP(FvBaseNewtonMethod, NewtonMethod,
               typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod));
 SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
               Ewoms::FvBaseNewtonConvergenceWriter<TypeTag>);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations

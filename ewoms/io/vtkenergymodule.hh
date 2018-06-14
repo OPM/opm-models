@@ -35,8 +35,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK energy output
 NEW_TYPE_TAG(VtkEnergy);
 
@@ -53,8 +53,8 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteSolidInternalEnergy, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteThermalConductivity, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteInternalEnergies, false);
 SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

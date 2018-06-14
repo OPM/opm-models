@@ -34,8 +34,8 @@
 #include <ewoms/io/vtkmultiphasemodule.hh>
 #include <ewoms/io/vtktemperaturemodule.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The splice to be used for the spatial discretization
 NEW_PROP_TAG(SpatialDiscretizationSplice);
 //! Number of fluid phases in the system
@@ -63,7 +63,7 @@ NEW_PROP_TAG(FluxModule);
 
 //! Returns whether gravity is considered in the problem
 NEW_PROP_TAG(EnableGravity);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif

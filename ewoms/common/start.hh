@@ -68,9 +68,9 @@
 #include <mpi.h>
 #endif
 
-namespace Ewoms {
+BEGIN_PROPERTIES
+
 // forward declaration of property tags
-namespace Properties {
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(ThreadManager);
@@ -78,8 +78,9 @@ NEW_PROP_TAG(PrintProperties);
 NEW_PROP_TAG(PrintParameters);
 NEW_PROP_TAG(ParameterFile);
 NEW_PROP_TAG(Problem);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
+
 //! \cond SKIP_THIS
 
 namespace Ewoms {

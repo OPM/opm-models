@@ -48,7 +48,10 @@ namespace Ewoms {
 template <class TypeTag>
 class VcfvDiscretization;
 
-namespace Properties {
+} // namespace Ewoms
+
+BEGIN_PROPERTIES
+
 //! Set the stencil
 SET_PROP(VcfvDiscretization, Stencil)
 {
@@ -114,7 +117,10 @@ public:
 //! of the local process' grid partition
 SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
 
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup VcfvDiscretization
