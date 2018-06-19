@@ -1140,7 +1140,8 @@ public:
             const Evaluation x = 1.e-6 * 1000. * polymerConcentration_ * intrinsicViscosity;
             // TODO: the viscosity correction is used for mobility, so it is a division correction
             waterViscosityCorrection_ = 1.0 / ( 1.0 + gamma * (x + kappa * x * x) );
-            polymerViscosityCorrection_ = waterViscosityCorrection_;
+            // In this model, the mixing parameter is not considered. We assume fully mixing always.
+            polymerViscosityCorrection_ = 1.0;
         }
 
         // adjust water mobility
