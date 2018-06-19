@@ -37,8 +37,8 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // forward declaration of the required property tags
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
@@ -48,8 +48,8 @@ NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(LinearSolverVerbosity);
 NEW_PROP_TAG(LinearSolverBackend);
 NEW_TYPE_TAG(SuperLULinearSolver);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 namespace Linear {
@@ -173,13 +173,13 @@ public:
 } // namespace Linear
 } // namespace Ewoms
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 SET_INT_PROP(SuperLULinearSolver, LinearSolverVerbosity, 0);
 SET_TYPE_PROP(SuperLULinearSolver, LinearSolverBackend,
               Ewoms::Linear::SuperLUBackend<TypeTag>);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif // HAVE_SUPERLU
 

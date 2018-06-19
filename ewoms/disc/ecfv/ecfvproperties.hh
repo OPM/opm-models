@@ -33,10 +33,11 @@
 
 #include <ewoms/common/propertysystem.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The type tag for models based on the ECFV-scheme
 NEW_TYPE_TAG(EcfvDiscretization, INHERITS_FROM(FvBaseDiscretization));
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 #endif

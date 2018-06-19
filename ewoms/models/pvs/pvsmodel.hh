@@ -61,8 +61,8 @@ template <class TypeTag>
 class PvsModel;
 }
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The type tag for the isothermal single phase problems
 NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel,
                                      VtkPhasePresence,
@@ -116,7 +116,10 @@ SET_SCALAR_PROP(PvsModel, PvsSaturationsBaseWeight, 1.0);
 
 //! The basis value for the weight of the mole fraction primary variables
 SET_SCALAR_PROP(PvsModel, PvsMoleFractionsBaseWeight, 1.0);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup PvsModel

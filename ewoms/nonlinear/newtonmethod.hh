@@ -57,7 +57,10 @@ class NewtonMethod;
 
 namespace Ewoms {
 // forward declaration of property tags
-namespace Properties {
+} // namespace Ewoms
+
+BEGIN_PROPERTIES
+
 //! The type tag on which the default properties for the Newton method
 //! are attached
 NEW_TYPE_TAG(NewtonMethod);
@@ -154,8 +157,8 @@ SET_SCALAR_PROP(NewtonMethod, NewtonRawTolerance, 1e-8);
 SET_SCALAR_PROP(NewtonMethod, NewtonMaxError, 1e100);
 SET_INT_PROP(NewtonMethod, NewtonTargetIterations, 10);
 SET_INT_PROP(NewtonMethod, NewtonMaxIterations, 18);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

@@ -33,8 +33,8 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK primary variables output
 NEW_TYPE_TAG(VtkPhasePresence);
 
@@ -44,8 +44,8 @@ NEW_PROP_TAG(VtkOutputFormat);
 NEW_PROP_TAG(EnableVtkOutput);
 
 SET_BOOL_PROP(VtkPhasePresence, VtkWritePhasePresence, false);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

@@ -56,8 +56,8 @@ template <class TypeTag>
 class FlashModel;
 }
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The type tag for the isothermal single phase problems
 NEW_TYPE_TAG(FlashModel, INHERITS_FROM(MultiPhaseBaseModel,
                                        VtkComposition,
@@ -111,7 +111,10 @@ SET_BOOL_PROP(FlashModel, EnableDiffusion, false);
 
 //! Disable the energy equation by default
 SET_BOOL_PROP(FlashModel, EnableEnergy, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup FlashModel

@@ -35,8 +35,8 @@
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! Enable the energy equation?
 NEW_PROP_TAG(EnableEnergy);
 
@@ -53,7 +53,7 @@ NEW_PROP_TAG(NcpFugacitiesBaseWeight);
 //! The themodynamic constraint solver which calculates the
 //! composition of any phase given all component fugacities.
 NEW_PROP_TAG(NcpCompositionFromFugacitiesSolver);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif

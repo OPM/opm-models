@@ -31,10 +31,13 @@
 #include <ewoms/common/propertysystem.hh>
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(PrimaryVariables);
-}
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations

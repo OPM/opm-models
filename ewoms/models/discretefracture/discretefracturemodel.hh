@@ -49,8 +49,8 @@ template <class TypeTag>
 class DiscreteFractureModel;
 }
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(DiscreteFractureModel, INHERITS_FROM(ImmiscibleTwoPhaseModel, VtkDiscreteFracture));
 
@@ -89,7 +89,10 @@ SET_BOOL_PROP(DiscreteFractureModel, UseTwoPointGradients, true);
 // of freedom. This is because the fracture properties (volume, permeability, etc) are
 // specific for each...
 SET_BOOL_PROP(DiscreteFractureModel, EnableIntensiveQuantityCache, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup DiscreteFractureModel

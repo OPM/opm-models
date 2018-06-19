@@ -33,8 +33,8 @@
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK primary variables output
 NEW_PROP_TAG(EnableVtkOutput);
 NEW_TYPE_TAG(VtkPrimaryVars);
@@ -49,7 +49,10 @@ NEW_PROP_TAG(EnableVtkOutput);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWritePrimaryVars, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteProcessRank, false);
 SET_BOOL_PROP(VtkPrimaryVars, VtkWriteDofIndex, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup Vtk

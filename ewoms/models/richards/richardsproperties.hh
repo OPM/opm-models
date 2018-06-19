@@ -32,8 +32,8 @@
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 
 // \{
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The fluid system used for the problem
 NEW_PROP_TAG(FluidSystem);
 
@@ -58,6 +58,7 @@ NEW_PROP_TAG(LiquidComponentIndex);
 NEW_PROP_TAG(GasComponentIndex);
 
 // \}
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 #endif

@@ -40,8 +40,8 @@
 
 #include <cstdio>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkMultiPhase);
 
@@ -75,7 +75,10 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWritePorosity, true);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWritePotentialGradients, false);
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup Vtk

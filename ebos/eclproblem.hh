@@ -99,8 +99,10 @@
 namespace Ewoms {
 template <class TypeTag>
 class EclProblem;
+}
 
-namespace Properties {
+BEGIN_PROPERTIES
+
 #if EBOS_USE_ALUGRID
 NEW_TYPE_TAG(EclBaseProblem, INHERITS_FROM(EclAluGridVanguard, EclOutputBlackOil));
 #else
@@ -283,7 +285,10 @@ SET_BOOL_PROP(EclBaseProblem, EnableEnergy, false);
 
 // disable thermal flux boundaries by default
 SET_BOOL_PROP(EclBaseProblem, EnableThermalFluxBoundaries, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup EclBlackOilSimulator
@@ -295,6 +300,7 @@ template <class TypeTag>
 class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 {
     typedef typename GET_PROP_TYPE(TypeTag, BaseProblem) ParentType;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -352,7 +358,6 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
 
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-
     struct RockParams {
         Scalar referencePressure;
         Scalar compressibility;
@@ -378,6 +383,48 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, unsigned, RestartWritingInterval,
                              "The frequencies of which time steps are serialized to disk");
     }
+
+    /*!
+     * \copydoc FvBaseProblem::handlePositionalParameter
+     */
+    static int handlePositionalParameter(std::string& errorMsg,
+                                         int argc OPM_UNUSED,
+                                         const char** argv,
+                                         int paramIdx,
+                                         int posParamIdx OPM_UNUSED)
+    {
+        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+        Dune::ParameterTree& tree = ParamsMeta::tree();
+
+        if (tree.hasKey("EclDeckFileName")) {
+            errorMsg = "File name of ECL specified multiple times";
+            return 0;
+        }
+
+        tree["EclDeckFileName"] = argv[paramIdx];
+        return 1;
+    }
+
+    /*!
+     * \copydoc FvBaseProblem::helpPreamble
+     */
+    static std::string helpPreamble(int argc OPM_UNUSED,
+                                    const char **argv)
+    {
+        std::string desc = Implementation::briefDescription();
+        if (!desc.empty())
+            desc = desc + "\n";
+
+        return
+            "Usage: "+std::string(argv[0]) + " [OPTIONS] [ECL_DECK_FILENAME]\n"
+            + desc;
+    }
+
+    /*!
+     * \copydoc FvBaseProblem::briefDescription
+     */
+    static std::string briefDescription()
+    { return "ebos, the Ecl Black-Oil reservoir Simulator. A program to process ECL input files."; }
 
     /*!
      * \copydoc Doxygen::defaultProblemConstructor

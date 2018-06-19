@@ -37,8 +37,8 @@
 #include <opm/material/densead/Evaluation.hpp>
 #include <opm/material/densead/Math.hpp>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK output of the quantities for molecular
 // diffusion
 NEW_TYPE_TAG(VtkDiffusion);
@@ -54,8 +54,8 @@ NEW_PROP_TAG(EnableVtkOutput);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteTortuosities, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteDiffusionCoefficients, false);
 SET_BOOL_PROP(VtkDiffusion, VtkWriteEffectiveDiffusionCoefficients, false);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

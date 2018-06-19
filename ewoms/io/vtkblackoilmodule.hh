@@ -40,8 +40,8 @@
 
 #include <cstdio>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkBlackOil);
 
@@ -72,8 +72,7 @@ SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturationRatios, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedOilGasDissolutionFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedGasOilVaporizationFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWritePrimaryVarsMeaning, false);
-} // namespace Properties
-} // namespace Ewoms
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

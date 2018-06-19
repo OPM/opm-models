@@ -47,8 +47,7 @@
 #include <memory>
 #include <iostream>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
 NEW_TYPE_TAG(ParallelBaseLinearSolver);
 
 // forward declaration of the required property tags
@@ -108,7 +107,7 @@ NEW_PROP_TAG(PreconditionerOrder);
 
 //! The relaxation factor of the preconditioner
 NEW_PROP_TAG(PreconditionerRelaxation);
-}} // namespace Properties, Ewoms
+END_PROPERTIES
 
 namespace Ewoms {
 namespace Linear {
@@ -428,8 +427,8 @@ protected:
 };
 }} // namespace Linear, Ewoms
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! make the linear solver shut up by default
 SET_INT_PROP(ParallelBaseLinearSolver, LinearSolverVerbosity, 0);
 
@@ -497,7 +496,7 @@ SET_INT_PROP(ParallelBaseLinearSolver, LinearSolverOverlapSize, 2);
 
 //! set the default number of maximum iterations for the linear solver
 SET_INT_PROP(ParallelBaseLinearSolver, LinearSolverMaxIterations, 1000);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif

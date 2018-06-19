@@ -38,8 +38,8 @@
 #include <ewoms/io/vtkdiffusionmodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! Specifies whether energy is considered as a conservation quantity or not
 NEW_PROP_TAG(EnableEnergy);
 //! Enable diffusive fluxes?
@@ -53,7 +53,7 @@ NEW_PROP_TAG(PvsPressureBaseWeight);
 NEW_PROP_TAG(PvsSaturationsBaseWeight);
 //! The basis value for the weight of the mole fraction primary variables
 NEW_PROP_TAG(PvsMoleFractionsBaseWeight);
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif

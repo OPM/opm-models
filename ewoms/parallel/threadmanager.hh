@@ -39,10 +39,13 @@
 
 #include <dune/common/version.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(ThreadsPerProcess);
-}
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \brief Simplifies multi-threaded capabilities.

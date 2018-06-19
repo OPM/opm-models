@@ -31,8 +31,8 @@
 
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! Specifies if the simulation should write output files that are
 //! compatible with those produced by the commercial Eclipse simulator
 NEW_PROP_TAG(EnableEclipseOutput);
@@ -69,6 +69,7 @@ NEW_PROP_TAG(EnableEnergy);
 //! magnitude larger than that of the mass balance equations
 NEW_PROP_TAG(BlackOilEnergyScalingFactor);
 
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 #endif

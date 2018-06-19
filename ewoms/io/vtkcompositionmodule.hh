@@ -35,8 +35,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK composition output
 NEW_TYPE_TAG(VtkComposition);
 
@@ -59,7 +59,10 @@ SET_BOOL_PROP(VtkComposition, VtkWriteTotalMoleFractions, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteMolarities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacities, false);
 SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup Vtk

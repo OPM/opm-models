@@ -85,7 +85,10 @@ namespace Ewoms {
 template<class TypeTag>
 class FvBaseDiscretization;
 
-namespace Properties {
+} // namespace Ewoms
+
+BEGIN_PROPERTIES
+
 //! Set the default type for the time manager
 SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
 
@@ -266,7 +269,10 @@ SET_BOOL_PROP(FvBaseDiscretization, ExtensiveStorageTerm, false);
 // use volumetric residuals is default
 SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
 
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations

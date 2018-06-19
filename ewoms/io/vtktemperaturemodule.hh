@@ -35,8 +35,8 @@
 
 #include <opm/material/common/MathToolbox.hpp>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK temperature output
 NEW_TYPE_TAG(VtkTemperature);
 
@@ -47,7 +47,10 @@ NEW_PROP_TAG(EnableVtkOutput);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup Vtk

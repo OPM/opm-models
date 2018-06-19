@@ -39,8 +39,8 @@ template <class TypeTag>
 class ParallelBiCGStabSolverBackend;
 }} // namespace Linear, Ewoms
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_TYPE_TAG(ParallelBiCGStabLinearSolver, INHERITS_FROM(ParallelBaseLinearSolver));
 
 NEW_PROP_TAG(LinearSolverMaxError);
@@ -50,7 +50,8 @@ SET_TYPE_PROP(ParallelBiCGStabLinearSolver,
               Ewoms::Linear::ParallelBiCGStabSolverBackend<TypeTag>);
 
 SET_SCALAR_PROP(ParallelBiCGStabLinearSolver, LinearSolverMaxError, 1e7);
-}} // namespace Properties, Ewoms
+
+END_PROPERTIES
 
 namespace Ewoms {
 namespace Linear {

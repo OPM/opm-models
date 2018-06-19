@@ -34,9 +34,10 @@
 
 #include <ewoms/io/vtkdiscretefracturemodule.hh>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(UseTwoPointGradients);
-}}
+
+END_PROPERTIES
 
 #endif

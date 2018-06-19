@@ -51,8 +51,10 @@
 namespace Ewoms {
 template <class TypeTag>
 class EclBaseVanguard;
+}
 
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_TYPE_TAG(EclBaseVanguard);
 
 // declare the properties required by the for the ecl simulator vanguard
@@ -61,10 +63,15 @@ NEW_PROP_TAG(EquilGrid);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(EclDeckFileName);
 NEW_PROP_TAG(EclOutputDir);
+NEW_PROP_TAG(EclOutputInterval);
 
 SET_STRING_PROP(EclBaseVanguard, EclDeckFileName, "ECLDECK.DATA");
 SET_STRING_PROP(EclBaseVanguard, EclOutputDir, ".");
-} // namespace Properties
+SET_INT_PROP(EclBaseVanguard, EclOutputInterval, -1); // use the deck-provided value
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup EclBlackOilSimulator
@@ -96,6 +103,8 @@ public:
                              "The name of the file which contains the ECL deck to be simulated");
         EWOMS_REGISTER_PARAM(TypeTag, std::string, EclOutputDir,
                              "The directory to which the ECL result files are written");
+        EWOMS_REGISTER_PARAM(TypeTag, int, EclOutputInterval,
+                             "The number of report steps that ought to be skipped between two writes of ECL results");
     }
 
     /*!
@@ -221,6 +230,12 @@ public:
         // specify the directory output. This is not a very nice mechanism because
         // the eclState is supposed to be immutable here, IMO.
         ioConfig.setOutputDir(outputDir);
+
+        // Possibly override IOConfig setting for how often RESTART files should get
+        // written to disk (every N report step)
+        int outputInterval = EWOMS_GET_PARAM(TypeTag, int, EclOutputInterval);
+        if (outputInterval >= 0)
+            eclState_->getRestartConfig().overrideRestartWriteInterval(outputInterval);
 
         asImp_().createGrids_();
         asImp_().filterCompletions_();

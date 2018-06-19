@@ -48,8 +48,8 @@ template <class TypeTag>
 class EcfvDiscretization;
 }
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! Set the stencil
 SET_PROP(EcfvDiscretization, Stencil)
 {
@@ -112,8 +112,7 @@ SET_BOOL_PROP(EcfvDiscretization, LinearizeNonLocalElements, true);
 //! conditions cannot occur since each matrix/vector entry is written exactly once
 SET_BOOL_PROP(EcfvDiscretization, UseLinearizationLock, false);
 
-} // namespace Properties
-} // namespace Ewoms
+END_PROPERTIES
 
 namespace Ewoms {
 /*!

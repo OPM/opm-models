@@ -55,8 +55,8 @@ template <class TypeTag>
 class ImmiscibleModel;
 }
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 //! The generic type tag for problems using the immiscible multi-phase model
 NEW_TYPE_TAG(ImmiscibleModel, INHERITS_FROM(MultiPhaseBaseModel, VtkEnergy));
 //! The type tag for single-phase immiscible problems
@@ -153,7 +153,10 @@ public:
                                               NonwettingPhase> type;
 };
 
-} // namespace Properties
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup ImmiscibleModel

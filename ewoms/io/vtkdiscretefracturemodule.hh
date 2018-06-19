@@ -39,8 +39,8 @@
 
 #include <cstdio>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 // create new type tag for the VTK multi-phase output
 NEW_TYPE_TAG(VtkDiscreteFracture);
 
@@ -65,8 +65,10 @@ SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFracturePorosity, true);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureIntrinsicPermeabilities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureFilterVelocities, false);
 SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureVolumeFraction, true);
-} // namespace Properties
 
+END_PROPERTIES
+
+namespace Ewoms {
 /*!
  * \ingroup Vtk
  *

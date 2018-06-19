@@ -33,18 +33,20 @@
 
 #include <iostream>
 
-namespace Ewoms {
 //! \cond SKIP_THIS
-namespace Properties {
+BEGIN_PROPERTIES
+
 // forward declaration of the required property tags
 NEW_PROP_TAG(GridView);
 NEW_PROP_TAG(NewtonMethod);
 NEW_PROP_TAG(SolutionVector);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(VtkOutputFormat);
-} // namespace Properties
+
+END_PROPERTIES
 //! \endcond
 
+namespace Ewoms {
 /*!
  * \ingroup FiniteVolumeDiscretizations
  *

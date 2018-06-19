@@ -45,8 +45,8 @@
 #include <string>
 #include <memory>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(Vanguard);
 NEW_PROP_TAG(GridView);
@@ -56,7 +56,10 @@ NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PredeterminedTimeStepsFile);
-}
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup Common

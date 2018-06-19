@@ -40,8 +40,8 @@
 
 #include <string>
 
-namespace Ewoms {
-namespace Properties {
+BEGIN_PROPERTIES
+
 ///////////////////////////////////
 // Type tag definitions:
 //
@@ -185,7 +185,7 @@ SET_SCALAR_PROP(NumericModel, RestartTime, -1e35);
 //! By default, do not force any time steps
 SET_STRING_PROP(NumericModel, PredeterminedTimeStepsFile, "");
 
-} // namespace Properties
-} // namespace Ewoms
+
+END_PROPERTIES
 
 #endif

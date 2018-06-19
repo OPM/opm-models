@@ -44,8 +44,10 @@ namespace Ewoms {
 // forward declaration
 template<class TypeTag>
 class FvBaseAdLocalLinearizer;
+}
 
-namespace Properties {
+BEGIN_PROPERTIES
+
 // declare the property tags required for the finite differences local linearizer
 NEW_TYPE_TAG(AutoDiffLocalLinearizer);
 
@@ -78,7 +80,9 @@ public:
     typedef Opm::DenseAd::Evaluation<Scalar, numEq> type;
 };
 
-} // namespace Properties
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations

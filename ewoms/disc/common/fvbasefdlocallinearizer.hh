@@ -47,7 +47,10 @@ namespace Ewoms {
 template<class TypeTag>
 class FvBaseFdLocalLinearizer;
 
-namespace Properties {
+} // namespace Ewoms
+
+BEGIN_PROPERTIES
+
 // declare the property tags required for the finite differences local linearizer
 NEW_TYPE_TAG(FiniteDifferenceLocalLinearizer);
 
@@ -87,7 +90,10 @@ SET_INT_PROP(FiniteDifferenceLocalLinearizer, NumericDifferenceMethod, +1);
 SET_SCALAR_PROP(FiniteDifferenceLocalLinearizer,
                 BaseEpsilon,
                 std::max<Scalar>(0.9123e-10, std::numeric_limits<Scalar>::epsilon()*1.23e3));
-}
+
+END_PROPERTIES
+
+namespace Ewoms {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
