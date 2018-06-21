@@ -15,7 +15,7 @@ BuildRequires: opm-material-devel opm-grid-devel
 BuildRequires: opm-material-openmpi-devel opm-grid-openmpi-devel
 BuildRequires: opm-material-mpich-devel opm-grid-mpich-devel
 BuildRequires: dune-istl-devel dune-localfunctions-devel doxygen zlib-devel
-BuildRequires: devtoolset-6-toolchain
+BuildRequires: devtoolset-6-toolchain ecl-devel
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel
 BuildRequires:  mpich-devel trilinos-mpich-devel ptscotch-mpich-devel
 Requires:      ewoms-openmpi-devel ewoms-mpich-devel
