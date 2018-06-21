@@ -816,7 +816,7 @@ public:
     {
         dest = 0;
 
-        OmpMutex mutex;
+        std::mutex mutex;
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);
 #ifdef _OPENMP
 #pragma omp parallel
@@ -840,13 +840,13 @@ public:
                 asImp_().localResidual(threadId).eval(residual, elemCtx);
 
                 size_t numPrimaryDof = elemCtx.numPrimaryDof(/*timeIdx=*/0);
-                ScopedLock addLock(mutex);
+                mutex.lock();
                 for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx) {
                     unsigned globalI = elemCtx.globalSpaceIndex(dofIdx, /*timeIdx=*/0);
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
                         dest[globalI][eqIdx] += Toolbox::value(residual[dofIdx][eqIdx]);
                 }
-                addLock.unlock();
+                mutex.unlock();
             }
         }
 
@@ -877,7 +877,7 @@ public:
     {
         storage = 0;
 
-        OmpMutex mutex;
+        std::mutex mutex;
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView());
 #ifdef _OPENMP
 #pragma omp parallel
@@ -907,11 +907,11 @@ public:
 
                 localResidual(threadId).evalStorage(elemStorage, elemCtx, timeIdx);
 
-                ScopedLock addLock(mutex);
+                mutex.lock();
                 for (unsigned dofIdx = 0; dofIdx < numPrimaryDof; ++dofIdx)
                     for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
                         storage[eqIdx] += Toolbox::value(elemStorage[dofIdx][eqIdx]);
-                addLock.unlock();
+                mutex.unlock();
             }
         }
 
