@@ -10,10 +10,10 @@ URL: 	 http://opm-project.org/ewoms
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: dune-common-devel openmpi environment-modules valgrind
-BuildRequires: make pkgconfig openmpi-devel dune-grid-devel opm-common-devel
-BuildRequires: opm-material-devel opm-grid-devel
-BuildRequires: opm-material-openmpi-devel opm-grid-openmpi-devel
-BuildRequires: opm-material-mpich-devel opm-grid-mpich-devel
+BuildRequires: make pkgconfig openmpi-devel dune-grid-devel
+BuildRequires: opm-material-devel opm-grid-devel opm-common-devel
+BuildRequires: opm-material-openmpi-devel opm-grid-openmpi-devel opm-common-openmpi-devel
+BuildRequires: opm-material-mpich-devel opm-grid-mpich-devel opm-common-mpich-devel
 BuildRequires: dune-istl-devel dune-localfunctions-devel doxygen zlib-devel
 BuildRequires: devtoolset-6-toolchain ecl-devel
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel
