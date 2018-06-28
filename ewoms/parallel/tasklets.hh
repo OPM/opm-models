@@ -61,6 +61,26 @@ private:
     int referenceCount_;
 };
 
+/*!
+ * \brief A simple tasklet that runs a function that returns void and does not take any
+ *        arguments a given number of times.
+ */
+template <class Fn>
+class FunctionRunnerTasklet : public TaskletInterface
+{
+public:
+    FunctionRunnerTasklet(const FunctionRunnerTasklet&) = default;
+    FunctionRunnerTasklet(int numInvocations, const Fn& fn)
+        : TaskletInterface(numInvocations)
+        , fn_(fn)
+    {}
+    void run() override
+    { fn_(); }
+
+private:
+    const Fn& fn_;
+};
+
 class TaskletRunner;
 
 // this class stores the thread local static attributes for the TaskletRunner class. we
@@ -221,6 +241,18 @@ public:
 
             workAvailableCondition_.notify_all();
         }
+    }
+
+    /*!
+     * \brief Convenience method to construct a new function runner tasklet and dispatch it immediately.
+     */
+    template <class Fn>
+    std::shared_ptr<FunctionRunnerTasklet<Fn> > dispatchFunction(Fn &fn, int numInvocations=1)
+    {
+        typedef FunctionRunnerTasklet<Fn> Tasklet;
+        auto tasklet = std::make_shared<Tasklet>(numInvocations, fn);
+        this->dispatch(tasklet);
+        return tasklet;
     }
 
     /*!
