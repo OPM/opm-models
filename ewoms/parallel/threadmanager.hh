@@ -31,7 +31,6 @@
 #include <omp.h>
 #endif
 
-#include <ewoms/parallel/locks.hh>
 #include <ewoms/common/parametersystem.hh>
 #include <ewoms/common/propertysystem.hh>
 

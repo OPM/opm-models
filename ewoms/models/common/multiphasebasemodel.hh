@@ -212,7 +212,7 @@ public:
         storage = 0;
 
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(this->gridView());
-        OmpMutex addMutex;
+        std::mutex mutex;
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -246,9 +246,9 @@ public:
                                                                   phaseIdx);
                     tmp *= scv.volume()*intQuants.extrusionFactor();
 
-                    OmpMutex addLock(addMutex);
+                    mutex.lock();
                     storage += tmp;
-                    addLock.unlock();
+                    mutex.unlock();
                 }
             }
         }

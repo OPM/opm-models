@@ -27,7 +27,7 @@
 #ifndef EWOMS_THREADED_ENTITY_ITERATOR_HH
 #define EWOMS_THREADED_ENTITY_ITERATOR_HH
 
-#include <ewoms/parallel/locks.hh>
+#include <thread>
 
 namespace Ewoms {
 
@@ -85,7 +85,7 @@ private:
     EntityIterator sequentialIt_;
     EntityIterator sequentialEnd_;
 
-    OmpMutex mutex_;
+    std::mutex mutex_;
 };
 } // namespace Ewoms
 
