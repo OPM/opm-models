@@ -70,8 +70,8 @@ class FunctionRunnerTasklet : public TaskletInterface
 {
 public:
     FunctionRunnerTasklet(const FunctionRunnerTasklet&) = default;
-    FunctionRunnerTasklet(int numInvokations, const Fn& fn)
-        : TaskletInterface(numInvokations)
+    FunctionRunnerTasklet(int numInvocations, const Fn& fn)
+        : TaskletInterface(numInvocations)
         , fn_(fn)
     {}
     void run() override
@@ -247,10 +247,10 @@ public:
      * \brief Convenience method to construct a new function runner tasklet and dispatch it immediately.
      */
     template <class Fn>
-    std::shared_ptr<FunctionRunnerTasklet<Fn> > dispatchFunction(Fn &fn, int numInvokations=1)
+    std::shared_ptr<FunctionRunnerTasklet<Fn> > dispatchFunction(Fn &fn, int numInvocations=1)
     {
         typedef FunctionRunnerTasklet<Fn> Tasklet;
-        auto tasklet = std::make_shared<Tasklet>(numInvokations, fn);
+        auto tasklet = std::make_shared<Tasklet>(numInvocations, fn);
         this->dispatch(tasklet);
         return tasklet;
     }
