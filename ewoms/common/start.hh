@@ -88,7 +88,7 @@ namespace Ewoms {
  * \brief Announce all runtime parameters to the registry but do not specify them yet.
  */
 template <class TypeTag>
-static inline void registerAllParameters_()
+static inline void registerAllParameters_(bool finalizeRegistration = true)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
@@ -106,7 +106,8 @@ static inline void registerAllParameters_()
     Simulator::registerParameters();
     ThreadManager::registerParameters();
 
-    EWOMS_END_PARAM_REGISTRATION(TypeTag);
+    if (finalizeRegistration)
+        EWOMS_END_PARAM_REGISTRATION(TypeTag);
 }
 
 /*!
