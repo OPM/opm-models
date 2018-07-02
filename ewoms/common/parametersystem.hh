@@ -71,6 +71,16 @@
 /*!
  * \ingroup Parameter
  *
+ * \brief Indicate that a given parameter should not be mentioned in the help message
+ *
+ * This allows to deal with unused parameters
+ */
+#define EWOMS_HIDE_PARAM(TypeTag, ParamName)                \
+    ::Ewoms::Parameters::hideParam<TypeTag, PTAG(ParamName)>(#ParamName)
+
+/*!
+ * \ingroup Parameter
+ *
  * \brief Indicate that all parameters are registered for a given type tag.
  *
  * If \c EWOMS_REGISTER_PARAM is called after the invokation of
@@ -116,6 +126,7 @@ struct ParamInfo
     std::string propertyName;
     std::string usageString;
     std::string compileTimeValue;
+    bool isHidden;
 
     bool operator==(const ParamInfo& other) const
     {
@@ -380,7 +391,8 @@ void printUsage(const std::string& helpPreamble,
     auto paramIt = ParamsMeta::registry().begin();
     const auto& paramEndIt = ParamsMeta::registry().end();
     for (; paramIt != paramEndIt; ++paramIt) {
-        printParamUsage_(os, paramIt->second);
+        if (!paramIt->second.isHidden)
+            printParamUsage_(os, paramIt->second);
     }
 }
 
@@ -795,6 +807,7 @@ void registerParam(const char *paramName, const char *propertyName, const char *
     std::ostringstream oss;
     oss << GET_PROP_VALUE_(TypeTag, PropTag);
     paramInfo.compileTimeValue = oss.str();
+    paramInfo.isHidden = false;
     if (ParamsMeta::registry().find(paramName) != ParamsMeta::registry().end()) {
         // allow to register a parameter twice, but only if the
         // parameter name, type and usage string are exactly the same.
@@ -805,6 +818,27 @@ void registerParam(const char *paramName, const char *propertyName, const char *
     }
 
     ParamsMeta::mutableRegistry()[paramName] = paramInfo;
+}
+
+template <class TypeTag, class PropTag>
+void hideParam(const char *paramName)
+{
+    // make sure that a property with the parameter name exists. we cannot check if a
+    // parameter exists at compile time, so this will only be caught at runtime
+    const auto& defaultValue OPM_UNUSED = GET_PROP_VALUE_(TypeTag, PropTag);
+
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+    if (!ParamsMeta::registrationOpen())
+        throw std::logic_error("Parameter '"+std::string(paramName)+"' declared as hidden"
+                               " when parameter registration was already closed.");
+
+    auto paramInfoIt = ParamsMeta::mutableRegistry().find(paramName);
+    if (paramInfoIt == ParamsMeta::mutableRegistry().end())
+        throw std::logic_error("Tried to declare unknown parameter '"
+                               +std::string(paramName)+"' hidden.");
+
+    auto& paramInfo = paramInfoIt->second;
+    paramInfo.isHidden = true;
 }
 
 template <class TypeTag>
