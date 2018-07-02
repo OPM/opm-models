@@ -275,7 +275,7 @@ public:
      * \param timeIdx The index used for the time discretization
      */
     template <class Context>
-    void constraints(Constraints& constraints OPM_UNUSED,
+    void constraints(Constraints& constrs OPM_UNUSED,
                      const Context& context OPM_UNUSED,
                      unsigned spaceIdx OPM_UNUSED,
                      unsigned timeIdx OPM_UNUSED) const
