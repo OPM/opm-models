@@ -825,7 +825,7 @@ void hideParam(const char *paramName)
 {
     // make sure that a property with the parameter name exists. we cannot check if a
     // parameter exists at compile time, so this will only be caught at runtime
-    const auto& defaultValue OPM_UNUSED = GET_PROP_VALUE_(TypeTag, PropTag);
+    static const auto defaultValue OPM_UNUSED = GET_PROP_VALUE_(TypeTag, PropTag);
 
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
     if (!ParamsMeta::registrationOpen())
