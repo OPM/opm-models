@@ -260,6 +260,12 @@ public:
         std::fill(minActivityCoeff_.begin(), minActivityCoeff_.end(), 1.0);
     }
 
+    void adaptGrid()
+    {
+        ParentType::adaptGrid();
+        minActivityCoeff_.resize(this->numGridDof());
+    }
+
     /*!
      * \copydoc FvBaseDiscretization::name
      */
