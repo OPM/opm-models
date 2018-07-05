@@ -132,7 +132,6 @@ public:
         if (deck.hasKeyword("MISCIBLE")) {
             isMiscible_ = true;
 
-            unsigned numSatRegions = tableManager.getTabdims().getNumSatTables();
             unsigned numMiscRegions = 1;
 
             // misicible hydrocabon relative permeability wrt water

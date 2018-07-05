@@ -398,10 +398,10 @@ void printUsage(const std::string& helpPreamble,
 
 /// \cond 0
 inline int noPositionalParameters_(std::string& errorMsg,
-                                   int argc,
+                                   int argc OPM_UNUSED,
                                    const char** argv,
                                    int paramIdx,
-                                   int posParamIdx)
+                                   int posParamIdx OPM_UNUSED)
 {
     errorMsg = std::string("Illegal parameter \"")+argv[paramIdx]+"\".";
     return 0;

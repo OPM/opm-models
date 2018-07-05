@@ -430,10 +430,10 @@ public:
         }
     }
 
-    void updateEnergyQuantities_(const ElementContext& elemCtx,
-                                 unsigned dofIdx,
-                                 unsigned timeIdx,
-                                 const typename FluidSystem::template ParameterCache<Evaluation>& paramCache)
+    void updateEnergyQuantities_(const ElementContext& elemCtx OPM_UNUSED,
+                                 unsigned dofIdx OPM_UNUSED,
+                                 unsigned timeIdx OPM_UNUSED,
+                                 const typename FluidSystem::template ParameterCache<Evaluation>& paramCache OPM_UNUSED)
     { }
 
     const Evaluation& rockInternalEnergy() const

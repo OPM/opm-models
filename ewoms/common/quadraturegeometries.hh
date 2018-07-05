@@ -48,19 +48,19 @@ public:
     { return Dune::GeometryType(/*topologyId=*/(1 << dim) - 1, dim); }
 
     template <class CornerContainer>
-    void setCorners(const CornerContainer& corners, unsigned numCorners)
+    void setCorners(const CornerContainer& corners, unsigned nCorners)
     {
         unsigned cornerIdx;
-        for (cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx) {
+        for (cornerIdx = 0; cornerIdx < nCorners; ++cornerIdx) {
             for (unsigned j = 0; j < dim; ++j)
                 corners_[cornerIdx][j] = corners[cornerIdx][j];
         }
-        assert(cornerIdx == numCorners);
+        assert(cornerIdx == nCorners);
 
         center_ = 0;
-        for (cornerIdx = 0; cornerIdx < numCorners; ++cornerIdx)
+        for (cornerIdx = 0; cornerIdx < nCorners; ++cornerIdx)
             center_ += corners_[cornerIdx];
-        center_ /= numCorners;
+        center_ /= nCorners;
     }
 
     /*!
