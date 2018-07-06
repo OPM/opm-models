@@ -348,11 +348,15 @@ public:
      */
     Scalar timeStepSize() const
     {
+        return timeStepSize_;
+
+        /* This should be handeled by ghe time stepper
         Scalar maximumTimeStepSize =
             std::min(episodeMaxTimeStepSize(),
                      std::max( Scalar(0), endTime() - this->time()));
 
         return std::min(timeStepSize_, maximumTimeStepSize);
+        */
     }
 
     /*!
@@ -548,7 +552,7 @@ public:
             if (verbose_)
                 std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
             this->deserialize(res);
-            problem_->deserialize(res);
+            problem_->deserialize(res, true);// to things for restart
             model_->deserialize(res);
             res.deserializeEnd();
             if (verbose_)
@@ -806,6 +810,20 @@ public:
         res.serializeEnd();
     }
 
+    void deserializeAll(Scalar t)
+    {
+        typedef Ewoms::Restart Restarter;
+        Restarter res;
+        res.deserializeBegin(*this, t);
+        if (gridView().comm().rank() == 0)
+            std::cout << "Deserialize file '" << res.fileName() << "'"
+                      << ", next time step size: " << timeStepSize()
+                      << "\n" << std::flush;
+        this->deserialize(res);
+        problem_->deserialize(res, false);
+        model_->deserialize(res);
+        res.deserializeEnd();
+    }
     /*!
      * \brief Write the time manager's state to a restart file.
      *
@@ -823,6 +841,7 @@ public:
             << episodeLength_ << " "
             << startTime_ << " "
             << time_ << " "
+            << timeStepSize_ << " "
             << timeStepIdx_ << " ";
         restarter.serializeSectionEnd();
     }
@@ -844,6 +863,7 @@ public:
             >> episodeLength_
             >> startTime_
             >> time_
+            >> timeStepSize_
             >> timeStepIdx_;
         restarter.deserializeSectionEnd();
     }

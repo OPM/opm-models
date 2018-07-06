@@ -605,7 +605,7 @@ protected:
      * \brief Linearize the global non-linear system of equations.
      */
     void linearize_()
-    { model().linearizer().linearize(); }
+    { model().linearizer().linearize(/*focus time*/ 0); }
 
     void preSolve_(const SolutionVector& currentSolution  OPM_UNUSED,
                    const GlobalEqVector& currentResidual)

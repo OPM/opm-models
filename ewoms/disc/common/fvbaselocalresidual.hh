@@ -492,6 +492,7 @@ protected:
     {
         EvalVector tmp;
         EqVector tmp2;
+        EvalVector tmp2_der;// this is added to support calculation of storage term derivative focusTime!=0 for need for adjoint: always used if cachedStororage term si false
         RateVector sourceRate;
 
         tmp = 0.0;
@@ -521,15 +522,26 @@ protected:
                 asImp_().computeStorage(tmp2, elemCtx, dofIdx, /*timeIdx=*/0);
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
                     tmp[eqIdx] = tmp2[eqIdx];
-            }
-            else
+            }else{
+                tmp=0.0;
                 asImp_().computeStorage(tmp, elemCtx, dofIdx, /*timeIdx=*/0);
 
+                Opm::Valgrind::CheckDefined(tmp);
 #ifndef NDEBUG
-            Opm::Valgrind::CheckDefined(tmp);
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                assert(Opm::isfinite(tmp[eqIdx]));
+		Opm::Valgrind::CheckDefined(tmp);
+		for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
+			assert(Opm::isfinite(tmp[eqIdx]));
 #endif
+
+            }
+
+//                tmp=0.0;
+//                asImp_().computeStorage(tmp, elemCtx, dofIdx, /*timeIdx=*/0);
+//                Opm::Valgrind::CheckDefined(tmp);
+//                tmp2 = 0.0;
+//                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
+//                Opm::Valgrind::CheckDefined(tmp2);
+
 
             if (elemCtx.enableStorageCache()) {
                 const auto& model = elemCtx.model();
@@ -555,22 +567,37 @@ protected:
                     tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
                     Opm::Valgrind::CheckDefined(tmp2);
                 }
-            }
-            else {
+            } else {
                 // if the mass storage at the beginning of the time step is not cached,
                 // we re-calculate it from scratch.
-                tmp2 = 0.0;
-                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
-                Opm::Valgrind::CheckDefined(tmp2);
+                // if storage cache not enables we always use derivatives
+                tmp2_der = 0.0;
+                asImp_().computeStorage(tmp2_der, elemCtx,  dofIdx, /*timeIdx=*/1);
+                Opm::Valgrind::CheckDefined(tmp2_der);
             }
 
-            // Use the implicit Euler time discretization
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                tmp[eqIdx] -= tmp2[eqIdx];
-                tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
-
-                residual[dofIdx][eqIdx] += tmp[eqIdx];
+            if( !elemCtx.enableStorageCache() ){
+                // Use the implicit Euler time discretization
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    if(elemCtx.focusTimeIndex()==0){
+                        tmp2_der[eqIdx] .clearDerivatives();// remove derivatives for the time index
+                    }else{
+                        tmp[eqIdx] .clearDerivatives();
+                    }
+                    tmp[eqIdx] -= tmp2_der[eqIdx];
+                    tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+                    residual[dofIdx][eqIdx] += tmp[eqIdx];
+                }
+            }else{
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    // cached storage should only be used in forward mode
+                    assert(elemCtx.focusTimeIndex()==0);
+                    tmp[eqIdx] -= tmp2[eqIdx];
+                    tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+                    residual[dofIdx][eqIdx] += tmp[eqIdx];
+                }
             }
+
 
             Opm::Valgrind::CheckDefined(residual[dofIdx]);
 

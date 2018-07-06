@@ -167,7 +167,7 @@ public:
      * The current state of affairs (esp. the previous and the current solutions) is
      * represented by the model object.
      */
-    void linearize()
+    void linearize(unsigned focustimeIndex)
     {
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
@@ -177,7 +177,7 @@ public:
 
         int succeeded;
         try {
-            linearize_();
+            linearize_(focustimeIndex);
             succeeded = 1;
         }
         catch (const std::exception& e)
@@ -384,7 +384,7 @@ private:
     }
 
     // linearize the whole system
-    void linearize_()
+    void linearize_(unsigned focustimeindex)
     {
         resetSystem_();
 
@@ -424,7 +424,7 @@ private:
                 if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                     continue;
 
-                linearizeElement_(elem);
+                linearizeElement_(elem, focustimeindex);
             }
         }
 
@@ -434,7 +434,7 @@ private:
     }
 
     // linearize an element in the interior of the process' grid partition
-    void linearizeElement_(const Element& elem)
+    void linearizeElement_(const Element& elem, unsigned focustimeindex)
     {
         unsigned threadId = ThreadManager::threadId();
 
@@ -442,6 +442,7 @@ private:
         auto& localLinearizer = model_().localLinearizer(threadId);
 
         // the actual work of linearization is done by the local linearizer class
+        elementCtx->setFocusTimeIndex(focustimeindex);
         localLinearizer.linearize(*elementCtx, elem);
 
         // update the right hand side and the Jacobian matrix

@@ -202,7 +202,7 @@ public:
     void deserialize(Restarter& res)
     {
         res.template deserializeEntities</*codim=*/0>(asImp_(), this->gridView_);
-        this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
+        this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);// may wrong and only valid for restart
     }
 
 private:
