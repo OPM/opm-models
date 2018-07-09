@@ -120,6 +120,15 @@ public:
      */
     virtual void linearize(JacobianMatrix& matrix, GlobalEqVector& residual) = 0;
 
+    /*!
+     * \brief This method is called after the linear solver has been called but before
+     *        the solution is updated for the next iteration.
+     *
+     * It is intended to implement stuff like Schur complements.
+     */
+    virtual void postSolve(GlobalEqVector& residual)
+    {};
+
 private:
     int dofOffset_;
 };
