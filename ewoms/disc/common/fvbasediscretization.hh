@@ -1693,7 +1693,7 @@ public:
      * well equations or model couplings via mortar DOFs. Auxiliary equations are
      * completely optional, though.
      */
-    void addAuxiliaryModule(std::shared_ptr<BaseAuxiliaryModule<TypeTag> > auxMod)
+    void addAuxiliaryModule(BaseAuxiliaryModule<TypeTag>* auxMod)
     {
         auxMod->setDofOffset(numTotalDof());
         auxEqModules_.push_back(auxMod);
@@ -1734,13 +1734,13 @@ public:
     /*!
      * \brief Returns a given module for auxiliary equations
      */
-    std::shared_ptr<BaseAuxiliaryModule<TypeTag> > auxiliaryModule(unsigned auxEqModIdx)
+    BaseAuxiliaryModule<TypeTag>* auxiliaryModule(unsigned auxEqModIdx)
     { return auxEqModules_[auxEqModIdx]; }
 
     /*!
      * \brief Returns a given module for auxiliary equations
      */
-    std::shared_ptr<const BaseAuxiliaryModule<TypeTag> > auxiliaryModule(unsigned auxEqModIdx) const
+    const BaseAuxiliaryModule<TypeTag>* auxiliaryModule(unsigned auxEqModIdx) const
     { return auxEqModules_[auxEqModIdx]; }
 
     /*!
@@ -1848,7 +1848,7 @@ protected:
     VertexMapper vertexMapper_;
 
     // a vector with all auxiliary equations to be considered
-    std::vector<std::shared_ptr<BaseAuxiliaryModule<TypeTag> > > auxEqModules_;
+    std::vector<BaseAuxiliaryModule<TypeTag>*> auxEqModules_;
 
     NewtonMethod newtonMethod_;
 
