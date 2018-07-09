@@ -159,7 +159,19 @@ public:
     }
 
     /*!
-     * \brief Linearize the global non-linear system of equations
+     * \brief Linearize the full system of non-linear equations.
+     *
+     * This means the spatial domain plus all auxiliary equations.
+     */
+    void linearize()
+    {
+        linearizeDomain();
+        linearizeAuxiliaryEquations();
+    }
+
+    /*!
+     * \brief Linearize the part of the non-linear system of equations that is associated
+     *        with the spatial domain.
      *
      * That means that the global Jacobian of the residual is assembled and the residual
      * is evaluated for the current solution.
@@ -167,7 +179,7 @@ public:
      * The current state of affairs (esp. the previous and the current solutions) is
      * represented by the model object.
      */
-    void linearize()
+    void linearizeDomain()
     {
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
@@ -207,6 +219,17 @@ public:
 
         if (!succeeded)
             throw Opm::NumericalIssue("A process did not succeed in linearizing the system");
+    }
+
+    /*!
+     * \brief Linearize the part of the non-linear system of equations that is associated
+     *        with the spatial domain.
+     */
+    void linearizeAuxiliaryEquations()
+    {
+        auto& model = model_();
+        for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
+            model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
     }
 
     /*!
@@ -429,8 +452,6 @@ private:
         }
 
         applyConstraintsToLinearization_();
-
-        linearizeAuxiliaryEquations_();
     }
 
     // linearize an element in the interior of the process' grid partition
@@ -465,13 +486,6 @@ private:
 
         if (GET_PROP_VALUE(TypeTag, UseLinearizationLock))
             globalMatrixMutex_.unlock();
-    }
-
-    void linearizeAuxiliaryEquations_()
-    {
-        auto& model = model_();
-        for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
-            model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
     }
 
     // apply the constraints to the solution. (i.e., the solution of constraint degrees
