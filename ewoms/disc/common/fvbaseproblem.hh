@@ -140,6 +140,15 @@ public:
             bool asyncVtkOutput =
                 simulator_.gridView().comm().size() == 1 &&
                 EWOMS_GET_PARAM(TypeTag, bool, EnableAsyncVtkOutput);
+
+            // asynchonous VTK output currently does not work in conjunction with grid
+            // adaptivity because the async-IO code assumes that the grid stays
+            // constant. complain about that case.
+            bool enableGridAdaptation = EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation);
+            if (asyncVtkOutput && enableGridAdaptation)
+                throw std::runtime_error("Asynchronous VTK output currently cannot be used "
+                                         "at the same time as grid adaptivity");
+
             defaultVtkWriter_ = new VtkMultiWriter(asyncVtkOutput, gridView_, asImp_().name());
         }
     }
