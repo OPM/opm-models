@@ -573,7 +573,7 @@ public:
 
             // write initial condition
             if (problem_->shouldWriteOutput())
-                problem_->writeOutput();
+                problem_->writeOutput(/*isSubstep=*/false);
 
             timeStepSize_ = oldTimeStepSize;
             timeStepIdx_ = oldTimeStepIdx;
@@ -647,7 +647,7 @@ public:
             // write the result to disk
             writeTimer_.start();
             if (problem_->shouldWriteOutput())
-                problem_->writeOutput();
+                problem_->writeOutput(/*isSubstep=*/!episodeWillBeOver());
             writeTimer_.stop();
 
             // do the next time integration
