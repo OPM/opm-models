@@ -369,14 +369,27 @@ public:
     /*!
      * \copydoc FvBaseDiscretization::eqWeight
      */
-    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx OPM_UNUSED) const
+    Scalar eqWeight(unsigned globalDofIdx, unsigned eqIdx) const
     {
         // do not care about the auxiliary equations as they are supposed to scale
         // themselves
         if (globalDofIdx >= this->numGridDof())
             return 1.0;
 
-        else if (SolventModule::eqApplies(eqIdx))
+        if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
+            switch (eqIdx) {
+            case Indices::conti0EqIdx + FluidSystem::waterCompIdx:
+                return 1.0/1000.0;
+
+            case Indices::conti0EqIdx + FluidSystem::gasCompIdx:
+                return 1.0;
+
+            case Indices::conti0EqIdx + FluidSystem::oilCompIdx:
+                return 1.0/650.0;
+            }
+        }
+
+        if (SolventModule::eqApplies(eqIdx))
             return SolventModule::eqWeight(eqIdx);
 
         else if (PolymerModule::eqApplies(eqIdx))
