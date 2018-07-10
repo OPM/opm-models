@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/output/data/Wells.hpp>
 #include <opm/material/common/Exceptions.hpp>
 
 #include <ewoms/common/propertysystem.hh>
@@ -78,6 +79,9 @@ class EclWellManager
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = FluidSystem::numPhases };
+    enum { waterPhaseIdx = FluidSystem::waterPhaseIdx };
+    enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
+    enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
 
     typedef typename GridView::template Codim<0>::Entity Element;
 
@@ -100,7 +104,6 @@ public:
     void init(const Opm::EclipseState& eclState,
               const Opm::Schedule& deckSchedule)
     {
-
         // create the wells which intersect with the current process' grid
         for (size_t deckWellIdx = 0; deckWellIdx < deckSchedule.numWells(); ++deckWellIdx)
         {
@@ -537,6 +540,26 @@ public:
         }
     }
 
+    Opm::data::Wells wellData() const
+    {
+        Opm::data::Wells wellDat;
+
+        using rt = Opm::data::Rates::opt;
+        for (unsigned wellIdx = 0; wellIdx < numWells(); ++wellIdx) {
+            const auto& ebosWell = well(wellIdx);
+            auto& wellOut = wellDat[ebosWell->name()];
+
+            wellOut.bhp = ebosWell->bottomHolePressure();
+            wellOut.thp = ebosWell->tubingHeadPressure();
+            wellOut.temperature = 0;
+            wellOut.rates.set( rt::wat, ebosWell->surfaceRate(waterPhaseIdx) );
+            wellOut.rates.set( rt::oil, ebosWell->surfaceRate(oilPhaseIdx) );
+            wellOut.rates.set( rt::gas, ebosWell->surfaceRate(gasPhaseIdx) );
+        }
+
+        return wellDat;
+    }
+
     /*!
      * \brief This method writes the complete state of all wells
      *        to the hard disk.
@@ -662,7 +685,7 @@ protected:
         wellIt = wells_.begin();
         for (; wellIt != wellEndIt; ++wellIt) {
             (*wellIt)->endSpec();
-            model.addAuxiliaryModule(*wellIt);
+            model.addAuxiliaryModule(wellIt->get());
         }
     }
 
