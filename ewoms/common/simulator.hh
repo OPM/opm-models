@@ -284,6 +284,8 @@ public:
      */
     const Ewoms::Timer& executionTimer() const
     { return executionTimer_; }
+    Ewoms::Timer& executionTimer()
+    { return executionTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed for
