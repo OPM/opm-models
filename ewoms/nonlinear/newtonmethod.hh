@@ -395,7 +395,7 @@ public:
                 }
 
                 solveTimer_.start();
-                solutionUpdate = 0;
+                solutionUpdate = 0.0;
                 linearSolver_.prepareMatrix(M);
                 bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
