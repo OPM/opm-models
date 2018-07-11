@@ -228,8 +228,35 @@ public:
     void linearizeAuxiliaryEquations()
     {
         auto& model = model_();
-        for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx)
-            model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
+        const auto& comm = simulator_().gridView().comm();
+        for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx) {
+            bool succeeded = true;
+            try {
+                model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
+            }
+            catch (const std::exception& e) {
+                succeeded = false;
+
+                std::cout << "rank " << simulator_().gridView().comm().rank()
+                          << " caught an exception while linearizing:" << e.what()
+                          << "\n"  << std::flush;
+            }
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
+            catch (const Dune::Exception& e)
+            {
+                succeeded = false;
+
+                std::cout << "rank " << simulator_().gridView().comm().rank()
+                          << " caught an exception while linearizing:" << e.what()
+                          << "\n"  << std::flush;
+            }
+#endif
+
+            succeeded = comm.min(succeeded);
+
+            if (!succeeded)
+                throw Opm::NumericalIssue("linearization of an auxilary equation failed");
+        }
     }
 
     /*!
