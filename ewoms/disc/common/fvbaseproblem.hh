@@ -117,6 +117,7 @@ public:
 #endif
         , boundingBoxMin_(std::numeric_limits<double>::max())
         , boundingBoxMax_(-std::numeric_limits<double>::max())
+        , nextTimeStepSize_(0.0)
         , simulator_(simulator)
         , defaultVtkWriter_(0)
     {
@@ -499,12 +500,21 @@ public:
     }
 
     /*!
+     * \brief Impose the next time step size to be used externally.
+     */
+    void setNextTimeStepSize(Scalar dt)
+    { nextTimeStepSize_ = dt; }
+
+    /*!
      * \brief Called by Ewoms::Simulator whenever a solution for a
      *        time step has been computed and the simulation time has
      *        been updated.
      */
-    Scalar nextTimeStepSize()
+    Scalar nextTimeStepSize() const
     {
+        if (nextTimeStepSize_ > 0.0)
+            return nextTimeStepSize_;
+
         Scalar dtNext = std::min(EWOMS_GET_PARAM(TypeTag, Scalar, MaxTimeStepSize),
                                  newtonMethod().suggestTimeStepSize(simulator().timeStepSize()));
 
@@ -737,6 +747,7 @@ private:
     VertexMapper vertexMapper_;
     GlobalPosition boundingBoxMin_;
     GlobalPosition boundingBoxMax_;
+    Scalar nextTimeStepSize_;
 
     // Attributes required for the actual simulation
     Simulator& simulator_;
