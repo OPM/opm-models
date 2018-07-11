@@ -42,6 +42,7 @@
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
 #include <dune/common/fvector.hh>
+#include <dune/common/version.hh>
 
 #include <sstream>
 #include <memory>
@@ -145,6 +146,7 @@ protected:
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
     typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
     typedef typename GET_PROP_TYPE(TypeTag, BorderListCreator) BorderListCreator;
@@ -246,6 +248,11 @@ public:
      */
     bool solve(Vector& x)
     {
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
+        Dune::FMatrixPrecision<LinearSolverScalar>::set_singular_limit(1.e-30);
+        Dune::FMatrixPrecision<LinearSolverScalar>::set_absolute_limit(1.e-30);
+#endif
+
         (*overlappingx_) = 0.0;
 
         auto parPreCond = asImp_().preparePreconditioner_();
