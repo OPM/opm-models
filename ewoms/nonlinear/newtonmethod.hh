@@ -395,7 +395,7 @@ public:
                 }
 
                 solveTimer_.start();
-                solutionUpdate = 0;
+                solutionUpdate = 0.0;
                 linearSolver_.prepareMatrix(M);
                 bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
@@ -598,7 +598,34 @@ protected:
      */
     void beginIteration_()
     {
-        problem().beginIteration();
+        const auto& comm = simulator_.gridView().comm();
+        bool succeeded = true;
+        try {
+            problem().beginIteration();
+        }
+        catch (const std::exception& e) {
+            succeeded = false;
+
+            std::cout << "rank " << simulator_.gridView().comm().rank()
+                      << " caught an exception while pre-processing the problem:" << e.what()
+                      << "\n"  << std::flush;
+        }
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
+        catch (const Dune::Exception& e)
+        {
+            succeeded = false;
+
+            std::cout << "rank " << simulator_.gridView().comm().rank()
+                      << " caught an exception while pre-processing the problem:" << e.what()
+                      << "\n"  << std::flush;
+        }
+#endif
+
+        succeeded = comm.min(succeeded);
+
+        if (!succeeded)
+            throw Opm::NumericalIssue("pre processing of the problem failed");
+
         lastError_ = error_;
     }
 
@@ -668,9 +695,36 @@ protected:
         // loop over the auxiliary modules and ask them to post process the solution
         // vector.
         auto& model = simulator_.model();
+        const auto& comm = simulator_.gridView().comm();
         for (unsigned i = 0; i < model.numAuxiliaryModules(); ++i) {
             auto& auxMod = *model.auxiliaryModule(i);
-            auxMod.postSolve(solutionUpdate);
+
+            bool succeeded = true;
+            try {
+                auxMod.postSolve(solutionUpdate);
+            }
+            catch (const std::exception& e) {
+                succeeded = false;
+
+                std::cout << "rank " << simulator_.gridView().comm().rank()
+                          << " caught an exception while post processing an auxiliary module:" << e.what()
+                          << "\n"  << std::flush;
+            }
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
+            catch (const Dune::Exception& e)
+            {
+                succeeded = false;
+
+                std::cout << "rank " << simulator_.gridView().comm().rank()
+                          << " caught an exception while post processing an auxiliary module:" << e.what()
+                          << "\n"  << std::flush;
+            }
+#endif
+
+            succeeded = comm.min(succeeded);
+
+            if (!succeeded)
+                throw Opm::NumericalIssue("post processing of an auxilary equation failed");
         }
     }
 
@@ -782,7 +836,34 @@ protected:
                        const SolutionVector& currentSolution  OPM_UNUSED)
     {
         ++numIterations_;
-        problem().endIteration();
+
+        const auto& comm = simulator_.gridView().comm();
+        bool succeeded = true;
+        try {
+            problem().endIteration();
+        }
+        catch (const std::exception& e) {
+            succeeded = false;
+
+            std::cout << "rank " << simulator_.gridView().comm().rank()
+                      << " caught an exception while letting the problem post-process:" << e.what()
+                      << "\n"  << std::flush;
+        }
+#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
+        catch (const Dune::Exception& e)
+        {
+            succeeded = false;
+
+            std::cout << "rank " << simulator_.gridView().comm().rank()
+                      << " caught an exception while letting the problem post process:" << e.what()
+                      << "\n"  << std::flush;
+        }
+#endif
+
+        succeeded = comm.min(succeeded);
+
+        if (!succeeded)
+            throw Opm::NumericalIssue("post processing of the problem failed");
 
         if (asImp_().verbose_()) {
             std::cout << "Newton iteration " << numIterations_ << ""
