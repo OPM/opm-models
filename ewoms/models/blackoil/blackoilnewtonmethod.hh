@@ -112,6 +112,7 @@ protected:
         ParentType::endIteration_(uCurrentIter, uLastIter);
     }
 
+public:
     void update_(SolutionVector& nextSolution,
                  const SolutionVector& currentSolution,
                  const GlobalEqVector& solutionUpdate,
@@ -140,6 +141,7 @@ protected:
         numPriVarsSwitched_ = comm.sum(numPriVarsSwitched_);
     }
 
+protected:
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
