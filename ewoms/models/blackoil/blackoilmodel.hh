@@ -331,12 +331,12 @@ public:
             return 1.0;
 
         // saturations are always in the range [0, 1]!
-        if (Indices::waterSaturationIdx == pvIdx)
+        if (int(Indices::waterSaturationIdx) == int(pvIdx))
             return 1.0;
 
         // oil pressures usually are in the range of 100 to 500 bars for typical oil
         // reservoirs (which is the only relevant application for the black-oil model).
-        else if (Indices::pressureSwitchIdx == pvIdx)
+        else if (int(Indices::pressureSwitchIdx) == int(pvIdx))
             return 1.0/300e5;
 
         // deal with primary variables stemming from the solvent module
@@ -352,7 +352,7 @@ public:
             return EnergyModule::primaryVarWeight(pvIdx);
 
         // if the primary variable is either the gas saturation, Rs or Rv
-        assert(Indices::compositionSwitchIdx == pvIdx);
+        assert(int(Indices::compositionSwitchIdx) == int(pvIdx));
 
         auto pvMeaning = this->solution(0)[globalDofIdx].primaryVarsMeaning();
         if (pvMeaning == PrimaryVariables::Sw_po_Sg)
