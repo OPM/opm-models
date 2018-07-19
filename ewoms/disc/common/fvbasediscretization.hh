@@ -1568,6 +1568,7 @@ public:
         ScalarBuffer* priVars[numEq];
         ScalarBuffer* priVarWeight[numEq];
         ScalarBuffer* relError = writer.allocateManagedScalarBuffer(numGridDof);
+        ScalarBuffer* normalizedRelError = writer.allocateManagedScalarBuffer(numGridDof);
         for (unsigned pvIdx = 0; pvIdx < numEq; ++pvIdx) {
             priVars[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
             priVarWeight[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
@@ -1575,8 +1576,9 @@ public:
             def[pvIdx] = writer.allocateManagedScalarBuffer(numGridDof);
         }
 
-        for (unsigned globalIdx = 0; globalIdx < numGridDof; ++ globalIdx)
-        {
+        Scalar minRelErr = 1e30;
+        Scalar maxRelErr = -1e30;
+        for (unsigned globalIdx = 0; globalIdx < numGridDof; ++ globalIdx) {
             for (unsigned pvIdx = 0; pvIdx < numEq; ++pvIdx) {
                 (*priVars[pvIdx])[globalIdx] = u[globalIdx][pvIdx];
                 (*priVarWeight[pvIdx])[globalIdx] = asImp_().primaryVarWeight(globalIdx, pvIdx);
@@ -1587,10 +1589,23 @@ public:
             PrimaryVariables uOld(u[globalIdx]);
             PrimaryVariables uNew(uOld);
             uNew -= deltaU[globalIdx];
-            (*relError)[globalIdx] = asImp_().relativeDofError(globalIdx, uOld, uNew);
+
+            Scalar err = asImp_().relativeDofError(globalIdx, uOld, uNew);
+            (*relError)[globalIdx] = err;
+            (*normalizedRelError)[globalIdx] = err;
+            minRelErr = std::min(err, minRelErr);
+            maxRelErr = std::max(err, maxRelErr);
         }
 
-        DiscBaseOutputModule::attachScalarDofData_(writer, *relError, "relErr");
+        // do the normalization of the relative error
+        Scalar alpha = std::max(1e-20,
+                                std::max(std::abs(maxRelErr),
+                                         std::abs(minRelErr)));
+        for (unsigned globalIdx = 0; globalIdx < numGridDof; ++ globalIdx)
+            (*normalizedRelError)[globalIdx] /= alpha;
+
+        DiscBaseOutputModule::attachScalarDofData_(writer, *relError, "relative error");
+        DiscBaseOutputModule::attachScalarDofData_(writer, *normalizedRelError, "normalized relative error");
 
         for (unsigned i = 0; i < numEq; ++i) {
             std::ostringstream oss;
