@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::ResidReductionCriterion
+ * \copydoc Ewoms::Linear::ResidReductionCriterion
  */
-#ifndef EWOMS_ISTL_RESID_REDUCTION_CRITERION_HH
-#define EWOMS_ISTL_RESID_REDUCTION_CRITERION_HH
+#ifndef EWOMS_RESID_REDUCTION_CRITERION_HH
+#define EWOMS_RESID_REDUCTION_CRITERION_HH
 
 #include "convergencecriterion.hh"
 
