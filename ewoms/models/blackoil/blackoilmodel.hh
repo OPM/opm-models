@@ -121,7 +121,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
 
 public:
-    typedef Opm::FluidSystems::BlackOil<Scalar> type;
+    typedef Opm::BlackOilFluidSystem<Scalar> type;
 };
 
 // by default, all ECL extension modules are disabled

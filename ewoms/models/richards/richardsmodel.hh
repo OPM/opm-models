@@ -163,7 +163,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, NonWettingFluid) NonWettingFluid;
 
 public:
-    typedef Opm::FluidSystems::TwoPhaseImmiscible<Scalar, WettingFluid, NonWettingFluid> type;
+    typedef Opm::TwoPhaseImmiscibleFluidSystem<Scalar, WettingFluid, NonWettingFluid> type;
 };
 
 
