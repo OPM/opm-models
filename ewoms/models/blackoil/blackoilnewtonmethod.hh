@@ -151,6 +151,9 @@ protected:
                                  const EqVector& update,
                                  const EqVector& currentResidual)
     {
+        static const Scalar maxSaturationChange = 0.2; // per iteration
+        static const Scalar maxPressureChange = 0.3; // relative, per iteration
+
         currentValue.checkDefined();
         Opm::Valgrind::CheckDefined(update);
         Opm::Valgrind::CheckDefined(currentResidual);
@@ -177,25 +180,25 @@ protected:
 
         // scaling factor for saturation deltas to make sure that none of them exceeds 20%
         Scalar satAlpha = 1.0;
-        if (maxSatDelta > 0.2)
-            satAlpha = 0.2/maxSatDelta;
+        if (maxSatDelta > maxSaturationChange)
+            satAlpha = maxSaturationChange/maxSatDelta;
 
-        for (int eqIdx = 0; eqIdx < int(numEq); ++eqIdx) {
+        for (int pvIdx = 0; pvIdx < int(numEq); ++pvIdx) {
             // calculate the update of the current primary variable. For the
             // black-oil model we limit the pressure and saturation updates, but do
             // we not clamp anything after the specified number of iterations was
             // reached
-            Scalar delta = update[eqIdx];
+            Scalar delta = update[pvIdx];
 
             // limit changes of pressure to 30% of the absolute value
-            if (eqIdx == Indices::pressureSwitchIdx) {
-                if (std::abs(delta) > 0.3*currentValue[eqIdx])
-                    delta = Ewoms::signum(delta)*0.3*currentValue[eqIdx];
+            if (pvIdx == Indices::pressureSwitchIdx) {
+                if (std::abs(delta) > maxPressureChange*currentValue[pvIdx])
+                    delta = Ewoms::signum(delta)*maxPressureChange*currentValue[pvIdx];
             }
             // change of water saturation
-            else if (eqIdx == Indices::waterSaturationIdx)
+            else if (pvIdx == Indices::waterSaturationIdx)
                 delta *= satAlpha;
-            else if (eqIdx == Indices::compositionSwitchIdx) {
+            else if (pvIdx == Indices::compositionSwitchIdx) {
                 // the switching primary variable for composition is tricky because the
                 // "reasonable" value ranges it exhibits vary widely depending on its
                 // interpretation (it can represent Sg, Rs or Rv). for now, we only limit
@@ -211,12 +214,12 @@ protected:
                     }
                 }
             }
-            else if (eqIdx == Indices::solventSaturationIdx)
+            else if (pvIdx == Indices::solventSaturationIdx)
                 // solvent saturation updates are also subject to the Appleyard chop
                 delta *= satAlpha;
 
             // do the actual update
-            nextValue[eqIdx] = currentValue[eqIdx] - delta;
+            nextValue[pvIdx] = currentValue[pvIdx] - delta;
         }
 
         // switch the new primary variables to something which is physically meaningful
