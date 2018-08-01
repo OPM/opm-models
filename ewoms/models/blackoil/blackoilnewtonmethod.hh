@@ -112,6 +112,7 @@ protected:
         ParentType::endIteration_(uCurrentIter, uLastIter);
     }
 
+public:
     void update_(SolutionVector& nextSolution,
                  const SolutionVector& currentSolution,
                  const GlobalEqVector& solutionUpdate,
@@ -140,6 +141,7 @@ protected:
         numPriVarsSwitched_ = comm.sum(numPriVarsSwitched_);
     }
 
+protected:
     /*!
      * \copydoc FvBaseNewtonMethod::updatePrimaryVariables_
      */
@@ -149,37 +151,75 @@ protected:
                                  const EqVector& update,
                                  const EqVector& currentResidual)
     {
+        static const Scalar maxSaturationChange = 0.2; // per iteration
+        static const Scalar maxPressureChange = 0.3; // relative, per iteration
+
         currentValue.checkDefined();
         Opm::Valgrind::CheckDefined(update);
         Opm::Valgrind::CheckDefined(currentResidual);
 
-        for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+        // saturation delta for each phase
+        Scalar deltaSw = update[Indices::waterSaturationIdx];
+        Scalar deltaSg = 0.0;
+        Scalar deltaSo = -deltaSw;
+        if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
+            deltaSg = update[Indices::compositionSwitchIdx];
+            deltaSo -= deltaSg;
+        }
+
+        // when it comes to the Appleyard chop, solvent needs to be handled like gas
+        // because it is treated as gas when considering the relative permeabilities.
+        if (GET_PROP_VALUE(TypeTag, EnableSolvent)) {
+            deltaSg += update[Indices::solventSaturationIdx];
+            deltaSo -= update[Indices::solventSaturationIdx];
+        }
+
+        // maximum saturation delta
+        Scalar maxSatDelta = std::max(std::abs(deltaSg), std::abs(deltaSo));
+        maxSatDelta = std::max(maxSatDelta, std::abs(deltaSw));
+
+        // scaling factor for saturation deltas to make sure that none of them exceeds 20%
+        Scalar satAlpha = 1.0;
+        if (maxSatDelta > maxSaturationChange)
+            satAlpha = maxSaturationChange/maxSatDelta;
+
+        for (int pvIdx = 0; pvIdx < int(numEq); ++pvIdx) {
             // calculate the update of the current primary variable. For the
             // black-oil model we limit the pressure and saturation updates, but do
             // we not clamp anything after the specified number of iterations was
             // reached
-            Scalar delta = update[eqIdx];
+            Scalar delta = update[pvIdx];
 
-            // limit changes in water saturation to 20%
-            if (eqIdx == Indices::waterSaturationIdx
-                && std::abs(delta) > 0.2)
-            {
-                delta = Ewoms::signum(delta)*0.2;
+            // limit changes of pressure to 30% of the absolute value
+            if (pvIdx == Indices::pressureSwitchIdx) {
+                if (std::abs(delta) > maxPressureChange*currentValue[pvIdx])
+                    delta = Ewoms::signum(delta)*maxPressureChange*currentValue[pvIdx];
             }
-            else if (eqIdx == Indices::compositionSwitchIdx) {
+            // change of water saturation
+            else if (pvIdx == Indices::waterSaturationIdx)
+                delta *= satAlpha;
+            else if (pvIdx == Indices::compositionSwitchIdx) {
                 // the switching primary variable for composition is tricky because the
                 // "reasonable" value ranges it exhibits vary widely depending on its
-                // interpretation (it can represent Sg, Rs or Rv).  we limit changes in
-                // gas saturation to 20%
-                if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg
-                    && std::abs(delta) > 0.2)
-                {
-                    delta = Ewoms::signum(delta)*0.2;
+                // interpretation (it can represent Sg, Rs or Rv). for now, we only limit
+                // changes in gas saturation
+                if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
+                    delta *= satAlpha;
+                else {
+                    // make sure that the R factors do not become negative
+                    if (currentValue[Indices::compositionSwitchIdx] > 0.0 &&
+                        delta > currentValue[Indices::compositionSwitchIdx])
+                    {
+                        delta = currentValue[Indices::compositionSwitchIdx];
+                    }
                 }
             }
+            else if (pvIdx == Indices::solventSaturationIdx)
+                // solvent saturation updates are also subject to the Appleyard chop
+                delta *= satAlpha;
 
             // do the actual update
-            nextValue[eqIdx] = currentValue[eqIdx] - delta;
+            nextValue[pvIdx] = currentValue[pvIdx] - delta;
         }
 
         // switch the new primary variables to something which is physically meaningful
