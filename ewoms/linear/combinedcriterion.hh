@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::WeightedResidualReductionCriterion
+ * \copydoc Ewoms::Linear::CombinedCriterion
  */
-#ifndef EWOMS_ISTL_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
-#define EWOMS_ISTL_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
+#ifndef EWOMS_COMBINED_CRITERION_HH
+#define EWOMS_COMBINED_CRITERION_HH
 
 #include "convergencecriterion.hh"
 

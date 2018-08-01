@@ -22,10 +22,10 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::WeightedResidualReductionCriterion
+ * \copydoc Ewoms::Linear::WeightedResidualReductionCriterion
  */
-#ifndef EWOMS_ISTL_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
-#define EWOMS_ISTL_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
+#ifndef EWOMS_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
+#define EWOMS_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
 
 #include "convergencecriterion.hh"
 
@@ -184,7 +184,9 @@ public:
     /*!
      * \copydoc ConvergenceCriterion::update(const Vector& , const Vector& )
      */
-    void update(const Vector& curSol, const Vector& curResid)
+    void update(const Vector& curSol,
+                const Vector& changeIndicator OPM_UNUSED,
+                const Vector& curResid)
     {
         lastResidualError_ = residualError_;
         updateErrors_(curSol, curResid);
