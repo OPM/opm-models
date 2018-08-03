@@ -217,8 +217,6 @@ public:
         // the values of all processes (using the assignAdd() methods)
         overlappingMatrix_->assignFromNative(M);
 
-        asImp_().rescale_();
-
         // synchronize all entries from their master processes and add entries on the
         // process border
         overlappingMatrix_->syncAdd();
@@ -322,27 +320,6 @@ protected:
         overlappingx_ = new OverlappingVector(*overlappingb_);
 
         // writeOverlapToVTK_();
-    }
-
-    void rescale_()
-    {
-        const auto& overlap = overlappingMatrix_->overlap();
-        for (unsigned domesticRowIdx = 0; domesticRowIdx < overlap.numLocal(); ++domesticRowIdx) {
-            Index nativeRowIdx = overlap.domesticToNative(static_cast<Index>(domesticRowIdx));
-            auto& row = (*overlappingMatrix_)[domesticRowIdx];
-
-            auto colIt = row.begin();
-            const auto& colEndIt = row.end();
-            for (; colIt != colEndIt; ++ colIt) {
-                auto& entry = *colIt;
-                for (unsigned i = 0; i < entry.rows; ++i)
-                    entry[i] *= simulator_.model().eqWeight(nativeRowIdx, i);
-            }
-
-            auto& rhsEntry = (*overlappingb_)[domesticRowIdx];
-            for (unsigned i = 0; i < rhsEntry.size(); ++i)
-                rhsEntry[i] *= simulator_.model().eqWeight(nativeRowIdx, i);
-        }
     }
 
     void cleanup_()
