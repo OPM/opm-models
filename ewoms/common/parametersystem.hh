@@ -322,7 +322,7 @@ inline void getFlattenedKeyList_(std::list<std::string>& dest,
 
 // print the values of a list of parameters
 template <class TypeTag>
-void printParamList_(std::ostream& os, const std::list<std::string>& keyList)
+void printParamList_(std::ostream& os, const std::list<std::string>& keyList, bool printDefaults = false)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
@@ -331,26 +331,15 @@ void printParamList_(std::ostream& os, const std::list<std::string>& keyList)
     auto keyIt = keyList.begin();
     const auto& keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        std::string value = ParamsMeta::registry().at(*keyIt).compileTimeValue;
+        const auto& paramInfo = ParamsMeta::registry().at(*keyIt);
+        const std::string& defaultValue = paramInfo.compileTimeValue;
+        std::string value = defaultValue;
         if (tree.hasKey(*keyIt))
             value = tree.get(*keyIt, "");
-        os << *keyIt << "=\"" << value << "\"\n";
-    }
-}
-
-// print the values of a list of parameters
-template <class TypeTag>
-void printCompileTimeParamList_(std::ostream& os,
-                                const std::list<std::string>& keyList)
-{
-    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
-
-    auto keyIt = keyList.begin();
-    const auto& keyEndIt = keyList.end();
-    for (; keyIt != keyEndIt; ++keyIt) {
-        const auto& paramInfo = ParamsMeta::registry().at(*keyIt);
-        os << *keyIt << "=\"" << paramInfo.compileTimeValue
-           << "\" # property: " << paramInfo.propertyName << "\n";
+        os << *keyIt << "=\"" << value << "\"";
+        if (printDefaults)
+            os << " # default: \"" << defaultValue << "\"";
+        os << "\n";
     }
 }
 
@@ -620,12 +609,12 @@ void printValues(std::ostream& os = std::cout)
     // parameters
     if (runTimeKeyList.size() > 0) {
         os << "# [known parameters which were specified at run-time]\n";
-        printParamList_<TypeTag>(os, runTimeKeyList);
+        printParamList_<TypeTag>(os, runTimeKeyList, /*printDefaults=*/true);
     }
 
     if (compileTimeKeyList.size() > 0) {
         os << "# [parameters which were specified at compile-time]\n";
-        printCompileTimeParamList_<TypeTag>(os, compileTimeKeyList);
+        printParamList_<TypeTag>(os, compileTimeKeyList, /*printDefaults=*/false);
     }
 
     if (unknownKeyList.size() > 0) {
