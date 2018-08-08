@@ -66,7 +66,7 @@ public:
         , buf_(buf)
         , codim_(codim)
         , matrixColumnIdx_(matrixColumnIdx)
-    { assert(int(buf_.size()) == mapper_.size()); }
+    { assert(int(buf_.size()) == int(mapper_.size())); }
 
     virtual std::string name() const
     { return name_; }
