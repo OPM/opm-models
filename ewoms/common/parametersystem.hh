@@ -29,8 +29,8 @@
  * Dune::ParameterTree with the default value taken from the property
  * system.
  */
-#ifndef EWOMS_PARAMETERS_HH
-#define EWOMS_PARAMETERS_HH
+#ifndef EWOMS_PARAMETER_SYSTEM_HH
+#define EWOMS_PARAMETER_SYSTEM_HH
 
 #include <ewoms/common/propertysystem.hh>
 
