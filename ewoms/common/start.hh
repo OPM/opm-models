@@ -120,7 +120,6 @@ static inline void registerAllParameters_(bool finalizeRegistration = true)
 template <class TypeTag>
 static inline int setupParameters_(int argc, const char **argv, bool registerParams = true)
 {
-    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParameterMetaData;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
 
     // first, get the MPI rank of the current process
@@ -172,9 +171,7 @@ static inline int setupParameters_(int argc, const char **argv, bool registerPar
         }
 
         // read the parameter file.
-        Dune::ParameterTreeParser::readINITree(paramFileName,
-                                               ParameterMetaData::tree(),
-                                               /*overwrite=*/false);
+        Parameters::parseParameterFile<TypeTag>(paramFileName, /*overwrite=*/false);
     }
 
     return /*status=*/0;
