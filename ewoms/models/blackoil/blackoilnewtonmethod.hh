@@ -33,6 +33,14 @@
 #include <ewoms/common/signum.hh>
 
 #include <opm/material/common/Unused.hpp>
+BEGIN_PROPERTIES
+NEW_PROP_TAG(DpMaxRel);
+NEW_PROP_TAG(DsMax);
+NEW_PROP_TAG(RestrictOscilationInPrimaryVariableMeaning);
+SET_SCALAR_PROP(NewtonMethod, DpMaxRel, 0.3);
+SET_SCALAR_PROP(NewtonMethod, DsMax, 0.2);
+SET_BOOL_PROP(NewtonMethod, RestrictOscilationInPrimaryVariableMeaning, true);
+END_PROPERTIES
 
 namespace Ewoms {
 
@@ -58,7 +66,11 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 
 public:
     BlackOilNewtonMethod(Simulator& simulator) : ParentType(simulator)
-    { }
+    {
+        unsigned numDof = simulator.vanguard().grid().size(0);
+        wasSwitched_.resize(numDof);
+        std::fill(wasSwitched_.begin(), wasSwitched_.end(), false);
+    }
 
     /*!
      * \brief Register all run-time parameters for the immiscible model.
@@ -66,6 +78,10 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, DpMaxRel, "Maximum relative change of pressure in a single iteration");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, DsMax, "Maximum absolute change of any saturation in a single iteration");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestrictOscilationInPrimaryVariableMeaning,
+                             "Adds a small factor to the primary variable switching conditions after its meaning has switched to hinder oscilations");
     }
 
     /*!
@@ -151,32 +167,38 @@ protected:
                                  const EqVector& update,
                                  const EqVector& currentResidual)
     {
-        static const Scalar maxSaturationChange = 0.2; // per iteration
-        static const Scalar maxPressureChange = 0.3; // relative, per iteration
+        static const Scalar maxSaturationChange = EWOMS_GET_PARAM(TypeTag, Scalar, DpMaxRel);; // per iteration
+        static const Scalar maxPressureChange = EWOMS_GET_PARAM(TypeTag, Scalar, DsMax); // relative, per iteration
 
         currentValue.checkDefined();
         Opm::Valgrind::CheckDefined(update);
         Opm::Valgrind::CheckDefined(currentResidual);
 
         // saturation delta for each phase
-        Scalar deltaSw = update[Indices::waterSaturationIdx];
+        Scalar deltaSw = 0.0;
+        Scalar deltaSo = 0.0;
         Scalar deltaSg = 0.0;
-        Scalar deltaSo = -deltaSw;
-        if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
+        Scalar deltaSs = 0.0;
+
+        if (Indices::waterEnabled) {
+            deltaSw = update[Indices::waterSaturationIdx];
+            deltaSo = -deltaSw;
+        }
+
+        if (Indices::gasEnabled && currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
             deltaSg = update[Indices::compositionSwitchIdx];
             deltaSo -= deltaSg;
         }
 
-        // when it comes to the Appleyard chop, solvent needs to be handled like gas
-        // because it is treated as gas when considering the relative permeabilities.
         if (GET_PROP_VALUE(TypeTag, EnableSolvent)) {
-            deltaSg += update[Indices::solventSaturationIdx];
-            deltaSo -= update[Indices::solventSaturationIdx];
+            deltaSs = update[Indices::solventSaturationIdx];
+            deltaSo -= deltaSs;
         }
 
         // maximum saturation delta
         Scalar maxSatDelta = std::max(std::abs(deltaSg), std::abs(deltaSo));
         maxSatDelta = std::max(maxSatDelta, std::abs(deltaSw));
+        maxSatDelta = std::max(maxSatDelta, std::abs(deltaSs));
 
         // scaling factor for saturation deltas to make sure that none of them exceeds 20%
         Scalar satAlpha = 1.0;
@@ -207,8 +229,7 @@ protected:
                     delta *= satAlpha;
                 else {
                     // make sure that the R factors do not become negative
-                    if (currentValue[Indices::compositionSwitchIdx] > 0.0 &&
-                        delta > currentValue[Indices::compositionSwitchIdx])
+                    if (delta > currentValue[Indices::compositionSwitchIdx])
                     {
                         delta = currentValue[Indices::compositionSwitchIdx];
                     }
@@ -220,10 +241,25 @@ protected:
 
             // do the actual update
             nextValue[pvIdx] = currentValue[pvIdx] - delta;
+
+            // keep the solvent saturation between 0 and 1
+            if (pvIdx == Indices::solventSaturationIdx)
+                nextValue[pvIdx] = std::min(std::max(nextValue[pvIdx], 0.0), 1.0);
+
+            // keep the polymer concentration above 0
+            if (pvIdx == Indices::polymerConcentrationIdx)
+                nextValue[pvIdx] = std::max(nextValue[pvIdx], 0.0);
+
         }
 
         // switch the new primary variables to something which is physically meaningful
-        if (nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx))
+        // add an epsilon to make it harder to switch back immediately after the primary variable meaning has changed.
+        if (EWOMS_GET_PARAM(TypeTag, Scalar, RestrictOscilationInPrimaryVariableMeaning) && wasSwitched_[globalDofIdx])
+            wasSwitched_[globalDofIdx] = nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx, 1e-5);
+        else
+            wasSwitched_[globalDofIdx] = nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx);
+
+        if (wasSwitched_[globalDofIdx])
             ++ numPriVarsSwitched_;
 
         nextValue.checkDefined();
@@ -231,6 +267,10 @@ protected:
 
 private:
     int numPriVarsSwitched_;
+
+    // keep track of cells where the primary variable meaning has changed
+    // to detect and hinder oscillations
+    std::vector<bool> wasSwitched_;
 };
 } // namespace Ewoms
 
