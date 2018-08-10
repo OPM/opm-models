@@ -41,6 +41,7 @@
 #include <dune/common/parametertree.hh>
 
 #include <map>
+#include <set>
 #include <list>
 #include <sstream>
 #include <string>
@@ -539,6 +540,7 @@ std::string parseCommandLineOptions(int argc,
         }
     }
 
+    std::set<std::string> seenKeys;
     int numPositionalParams = 0;
     for (int i = 1; i < argc; ++i) {
         // All non-positional command line options need to start with '-'
@@ -588,6 +590,17 @@ std::string parseCommandLineOptions(int argc,
 
         // parse argument
         paramName = transformKey_(parseKey_(s), /*capitalizeFirst=*/true);
+        if (seenKeys.count(paramName) > 0) {
+            std::string msg =
+                std::string("Parameter '")+paramName+"' specified multiple times as a "
+                "command line parameter";
+
+            if (!helpPreamble.empty())
+                printUsage<TypeTag>(helpPreamble, msg, std::cerr);
+            return msg;
+        }
+        seenKeys.insert(paramName);
+
         paramValue = s.substr(1);
 
         // Put the key=value pair into the parameter tree
@@ -607,6 +620,7 @@ void parseParameterFile(const std::string& fileName, bool overwrite = true)
 {
     Dune::ParameterTree& paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
 
+    std::set<std::string> seenKeys;
     std::ifstream ifs(fileName);
     unsigned curLineNum = 0;
     while (ifs) {
@@ -626,9 +640,12 @@ void parseParameterFile(const std::string& fileName, bool overwrite = true)
         // TODO (?): support for parameter groups.
 
         // find the "key" of the key=value pair
-        std::string key = transformKey_(parseKey_(curLine),
-                                        /*capitalizeFirst=*/true,
-                                        errorPrefix);
+        std::string key = parseKey_(curLine);
+        std::string canonicalKey = transformKey_(key, /*capitalizeFirst=*/true, errorPrefix);
+
+        if (seenKeys.count(canonicalKey) > 0)
+            throw std::runtime_error(errorPrefix+"Parameter '"+canonicalKey+"' seen multiple times in the same file");
+        seenKeys.insert(canonicalKey);
 
         // deal with the equals sign
         removeLeadingSpace_(curLine);
@@ -654,8 +671,8 @@ void parseParameterFile(const std::string& fileName, bool overwrite = true)
             std::runtime_error(errorPrefix+"Syntax error, expecting 'key=value'");
 
         // all went well, add the parameter to the database object
-        if (overwrite || !paramTree.hasKey(key))
-            paramTree[key] = value;
+        if (overwrite || !paramTree.hasKey(canonicalKey))
+            paramTree[canonicalKey] = value;
     }
 }
 
