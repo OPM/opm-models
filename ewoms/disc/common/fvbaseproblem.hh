@@ -209,6 +209,7 @@ public:
      *
      * Positional parameters are parameters that are not prefixed by any parameter name.
      *
+     * \param seenParams The parameters which have already been seen in the current context
      * \param errorMsg If the positional argument cannot be handled, this is the reason why
      * \param argc The total number of command line parameters
      * \param argv The string value of the command line parameters
@@ -219,7 +220,8 @@ public:
      *         the next regular parameter. If this is less than 1, it indicated that the
      *         positional parameter was invalid.
      */
-    static int handlePositionalParameter(std::string& errorMsg,
+    static int handlePositionalParameter(std::set<std::string>& seenParams OPM_UNUSED,
+                                         std::string& errorMsg,
                                          int argc OPM_UNUSED,
                                          const char** argv,
                                          int paramIdx,

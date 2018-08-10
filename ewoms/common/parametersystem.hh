@@ -388,7 +388,8 @@ void printUsage(const std::string& helpPreamble,
 }
 
 /// \cond 0
-inline int noPositionalParameters_(std::string& errorMsg,
+inline int noPositionalParameters_(std::set<std::string>& seenParams OPM_UNUSED,
+                                   std::string& errorMsg,
                                    int argc OPM_UNUSED,
                                    const char** argv,
                                    int paramIdx,
@@ -549,7 +550,7 @@ std::string parseCommandLineOptions(int argc,
             || argv[i][1] != '-')
         {
             std::string errorMsg;
-            int numHandled = posArgCallback(errorMsg, argc, argv, i, numPositionalParams);
+            int numHandled = posArgCallback(seenKeys, errorMsg, argc, argv, i, numPositionalParams);
 
             if (numHandled < 1) {
                 std::ostringstream oss;
