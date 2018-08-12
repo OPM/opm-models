@@ -219,7 +219,7 @@ public:
         , elementMapper_(mapper)
     {
         // try to ensure that the mapper passed indeed maps elements
-        assert(gridView.size(/*codim=*/0) == elementMapper_.size());
+        assert(int(gridView.size(/*codim=*/0)) == int(elementMapper_.size()));
     }
 
     void updateTopology(const Element& element)

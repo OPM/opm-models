@@ -29,8 +29,8 @@
  * Dune::ParameterTree with the default value taken from the property
  * system.
  */
-#ifndef EWOMS_PARAMETERS_HH
-#define EWOMS_PARAMETERS_HH
+#ifndef EWOMS_PARAMETER_SYSTEM_HH
+#define EWOMS_PARAMETER_SYSTEM_HH
 
 #include <ewoms/common/propertysystem.hh>
 
@@ -41,10 +41,12 @@
 #include <dune/common/parametertree.hh>
 
 #include <map>
+#include <set>
 #include <list>
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <unordered_map>
 
 /*!
@@ -322,7 +324,7 @@ inline void getFlattenedKeyList_(std::list<std::string>& dest,
 
 // print the values of a list of parameters
 template <class TypeTag>
-void printParamList_(std::ostream& os, const std::list<std::string>& keyList)
+void printParamList_(std::ostream& os, const std::list<std::string>& keyList, bool printDefaults = false)
 {
     typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
 
@@ -331,26 +333,15 @@ void printParamList_(std::ostream& os, const std::list<std::string>& keyList)
     auto keyIt = keyList.begin();
     const auto& keyEndIt = keyList.end();
     for (; keyIt != keyEndIt; ++keyIt) {
-        std::string value = ParamsMeta::registry().at(*keyIt).compileTimeValue;
+        const auto& paramInfo = ParamsMeta::registry().at(*keyIt);
+        const std::string& defaultValue = paramInfo.compileTimeValue;
+        std::string value = defaultValue;
         if (tree.hasKey(*keyIt))
             value = tree.get(*keyIt, "");
-        os << *keyIt << "=\"" << value << "\"\n";
-    }
-}
-
-// print the values of a list of parameters
-template <class TypeTag>
-void printCompileTimeParamList_(std::ostream& os,
-                                const std::list<std::string>& keyList)
-{
-    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
-
-    auto keyIt = keyList.begin();
-    const auto& keyEndIt = keyList.end();
-    for (; keyIt != keyEndIt; ++keyIt) {
-        const auto& paramInfo = ParamsMeta::registry().at(*keyIt);
-        os << *keyIt << "=\"" << paramInfo.compileTimeValue
-           << "\" # property: " << paramInfo.propertyName << "\n";
+        os << *keyIt << "=\"" << value << "\"";
+        if (printDefaults)
+            os << " # default: \"" << defaultValue << "\"";
+        os << "\n";
     }
 }
 
@@ -397,7 +388,8 @@ void printUsage(const std::string& helpPreamble,
 }
 
 /// \cond 0
-inline int noPositionalParameters_(std::string& errorMsg,
+inline int noPositionalParameters_(std::set<std::string>& seenParams OPM_UNUSED,
+                                   std::string& errorMsg,
                                    int argc OPM_UNUSED,
                                    const char** argv,
                                    int paramIdx,
@@ -408,6 +400,111 @@ inline int noPositionalParameters_(std::string& errorMsg,
 }
 
 /// \endcond
+
+
+inline void removeLeadingSpace_(std::string& s)
+{
+    unsigned i;
+    for (i = 0; i < s.size(); ++ i)
+        if (!std::isspace(s[i]))
+            break;
+    s = s.substr(i);
+}
+
+inline std::string transformKey_(const std::string& s,
+                                 bool capitalizeFirstLetter = true,
+                                 const std::string& errorPrefix = "")
+{
+    std::string result;
+
+    if (s.empty())
+        throw std::runtime_error(errorPrefix+"Empty parameter names are invalid");
+
+    if (!std::isalpha(s[0]))
+        throw std::runtime_error(errorPrefix+"Parameter name '" + s + "' is invalid: First character must be a letter");
+
+    if (capitalizeFirstLetter)
+        result += static_cast<char>(std::toupper(s[0]));
+    else
+        result += s[0];
+
+    for (unsigned i = 1; i < s.size(); ++i) {
+        if (s[i] == '-') {
+            ++ i;
+            if (s.size() <= i || !std::isalpha(s[i]))
+                throw std::runtime_error(errorPrefix+"Invalid parameter name '" + s + "'");
+            result += static_cast<char>(std::toupper(s[i]));
+        }
+        else if (!std::isalnum(s[i]))
+            throw std::runtime_error(errorPrefix+"Invalid parameter name '" + s + "'");
+        else
+            result += s[i];
+    }
+
+    return result;
+}
+
+inline std::string parseKey_(std::string& s)
+{
+    unsigned i;
+    for (i = 0; i < s.size(); ++ i)
+        if (std::isspace(s[i]) || s[i] == '=')
+            break;
+
+    std::string ret = s.substr(0, i);
+    s = s.substr(i);
+    return ret;
+}
+
+// parse a quoted string
+inline std::string parseQuotedValue_(std::string& s, const std::string& errorPrefix)
+{
+    if (s.empty() || s[0] != '"')
+        throw std::runtime_error(errorPrefix+"Expected quoted string");
+
+    std::string result;
+    unsigned i = 1;
+    for (; i < s.size(); ++i) {
+        // handle escape characters
+        if (s[i] == '\\') {
+            ++ i;
+            if (s.size() <= i)
+                throw std::runtime_error(errorPrefix+"Unexpected end of quoted string");
+
+            if (s[i] == 'n')
+                result += '\n';
+            else if (s[i] == 'r')
+                result += '\r';
+            else if (s[i] == 't')
+                result += '\t';
+            else if (s[i] == '"')
+                result += '"';
+            else if (s[i] == '\\')
+                result += '\\';
+            else
+                throw std::runtime_error(errorPrefix+"Unknown escape character '\\" + s[i] + "'");
+        }
+        else if (s[i] == '"')
+            break;
+        else
+            result += s[i];
+    }
+
+    s = s.substr(i+1);
+    return result;
+}
+
+inline std::string parseUnquotedValue_(std::string& s, const std::string& errorPrefix OPM_UNUSED)
+{
+    unsigned i;
+    for (i = 0; i < s.size(); ++ i)
+        if (std::isspace(s[i]))
+            break;
+
+    std::string ret = s.substr(0, i);
+    s = s.substr(i);
+    return ret;
+}
 
 /*!
  * \ingroup Parameter
@@ -444,12 +541,16 @@ std::string parseCommandLineOptions(int argc,
         }
     }
 
+    std::set<std::string> seenKeys;
     int numPositionalParams = 0;
     for (int i = 1; i < argc; ++i) {
         // All non-positional command line options need to start with '-'
-        if (argv[i][0] != '-') {
+        if (strlen(argv[i]) < 4
+            || argv[i][0] != '-'
+            || argv[i][1] != '-')
+        {
             std::string errorMsg;
-            int numHandled = posArgCallback(errorMsg, argc, argv, i, numPositionalParams);
+            int numHandled = posArgCallback(seenKeys, errorMsg, argc, argv, i, numPositionalParams);
 
             if (numHandled < 1) {
                 std::ostringstream oss;
@@ -471,105 +572,109 @@ std::string parseCommandLineOptions(int argc,
         // read a --my-opt=abc option. This gets transformed
         // into the parameter "MyOpt" with the value being
         // "abc"
-        if (argv[i][1] == '-') {
-            // There is nothing after the '-'
-            if (argv[i][2] == 0 || !std::isalpha(argv[i][2])) {
-                std::ostringstream oss;
-                oss << "Parameter name of argument " << i
-                    << " ('" << argv[i] << "') "
-                    << "is invalid because it does not start with a letter.";
 
-                if (!helpPreamble.empty())
-                    printUsage<TypeTag>(helpPreamble, oss.str(), std::cerr);
+        // There is nothing after the '-'
+        if (argv[i][2] == 0 || !std::isalpha(argv[i][2])) {
+            std::ostringstream oss;
+            oss << "Parameter name of argument " << i
+                << " ('" << argv[i] << "') "
+                << "is invalid because it does not start with a letter.";
 
-                return oss.str();
-            }
+            if (!helpPreamble.empty())
+                printUsage<TypeTag>(helpPreamble, oss.str(), std::cerr);
 
-            // copy everything after the "--" into a separate string
-            std::string s(argv[i] + 2);
-
-            // parse argument
-            unsigned j = 0;
-            while (true) {
-                if (j >= s.size()) {
-                    // encountered the end of the string, i.e. we
-                    // have a parameter where the argument is empty
-                    paramName = s;
-                    paramValue = "";
-                    break;
-                }
-                else if (s[j] == '=') {
-                    // we encountered a '=' character. everything
-                    // before is the name of the parameter,
-                    // everything after is the value.
-                    paramName = s.substr(0, j);
-                    paramValue = s.substr(j + 1);
-                    break;
-                }
-                else if (s[j] == '-') {
-                    // remove all "-" characters and capitalize the
-                    // character after them
-                    s.erase(j, 1);
-                    if (s.size() == j) {
-                        std::ostringstream oss;
-                        oss << "Parameter name of argument " << i
-                            << " ('" << argv[i] << "')"
-                            << " is invalid (ends with a '-' character).";
-
-                        if (!helpPreamble.empty())
-                            printUsage<TypeTag>(helpPreamble, oss.str(), std::cerr);
-                        return oss.str();
-                    }
-                    else if (s[j] == '-') {
-                        std::ostringstream oss;
-                        oss << "Malformed parameter name in argument " << i
-                            << " ('" << argv[i] << "'): "
-                            << "'--' in parameter name.";
-
-                        if (!helpPreamble.empty())
-                            printUsage<TypeTag>(helpPreamble, oss.str(), std::cerr);
-                        return oss.str();
-                    }
-                    s[j] = static_cast<char>(std::toupper(s[j]));
-                }
-                else if (!std::isalnum(s[j])) {
-                    std::ostringstream oss;
-                    oss << "Parameter name '" << argv[i] << "'"
-                        << " is invalid (character '" << s[j]
-                        << "' is not a letter or digit).";
-
-                    if (!helpPreamble.empty())
-                        printUsage<TypeTag>(helpPreamble, oss.str(), std::cerr);
-                    return oss.str();
-                }
-
-                ++j;
-            }
-        }
-        else {
-            // read a -myOpt abc option for the parameter "MyOpt" with
-            // a value of "abc"
-            paramName = argv[i] + 1;
-
-            if (argc == i + 1 || argv[i + 1][0] == '-') {
-                std::ostringstream oss;
-                oss << "No argument given for parameter '" << argv[i] << "'!";
-                if (!helpPreamble.empty())
-                    printUsage<TypeTag>(helpPreamble, oss.str(), std::cerr);
-                return oss.str();
-            }
-
-            paramValue = argv[i + 1];
-            ++i; // In the case of '-myOpt abc' each pair counts as two arguments
+            return oss.str();
         }
 
-        // capitalize first letter of parameter name
-        paramName[0] = static_cast<char>(std::toupper(paramName[0]));
+        // copy everything after the "--" into a separate string
+        std::string s(argv[i] + 2);
+
+        // parse argument
+        paramName = transformKey_(parseKey_(s), /*capitalizeFirst=*/true);
+        if (seenKeys.count(paramName) > 0) {
+            std::string msg =
+                std::string("Parameter '")+paramName+"' specified multiple times as a "
+                "command line parameter";
+
+            if (!helpPreamble.empty())
+                printUsage<TypeTag>(helpPreamble, msg, std::cerr);
+            return msg;
+        }
+        seenKeys.insert(paramName);
+
+        paramValue = s.substr(1);
 
         // Put the key=value pair into the parameter tree
         paramTree[paramName] = paramValue;
     }
     return "";
+}
+
+/*!
+ * \ingroup Parameter
+ * \brief Read the parameters from an INI-style file.
+ *
+ * This function does some basic syntax checks.
+ */
+template <class TypeTag>
+void parseParameterFile(const std::string& fileName, bool overwrite = true)
+{
+    Dune::ParameterTree& paramTree = GET_PROP(TypeTag, ParameterMetaData)::tree();
+
+    std::set<std::string> seenKeys;
+    std::ifstream ifs(fileName);
+    unsigned curLineNum = 0;
+    while (ifs) {
+        // string and file processing in c++ is quite blunt!
+        std::string curLine;
+        std::getline(ifs, curLine);
+        curLineNum += 1;
+        std::string errorPrefix = fileName+":"+std::to_string(curLineNum)+": ";
+
+        // strip leading white space
+        removeLeadingSpace_(curLine);
+
+        // ignore empty and comment lines
+        if (curLine.empty() || curLine[0] == '#' || curLine[0] == ';')
+            continue;
+
+        // TODO (?): support for parameter groups.
+
+        // find the "key" of the key=value pair
+        std::string key = parseKey_(curLine);
+        std::string canonicalKey = transformKey_(key, /*capitalizeFirst=*/true, errorPrefix);
+
+        if (seenKeys.count(canonicalKey) > 0)
+            throw std::runtime_error(errorPrefix+"Parameter '"+canonicalKey+"' seen multiple times in the same file");
+        seenKeys.insert(canonicalKey);
+
+        // deal with the equals sign
+        removeLeadingSpace_(curLine);
+        if (curLine.empty() || curLine[0] != '=')
+            std::runtime_error(errorPrefix+"Syntax error, expecting 'key=value'");
+
+        curLine = curLine.substr(1);
+        removeLeadingSpace_(curLine);
+
+        if (curLine.empty() || curLine[0] == '#' || curLine[0] == ';')
+            std::runtime_error(errorPrefix+"Syntax error, expecting 'key=value'");
+
+        // get the value
+        std::string value;
+        if (curLine[0] == '"')
+            value = parseQuotedValue_(curLine, errorPrefix);
+        else
+            value = parseUnquotedValue_(curLine, errorPrefix);
+
+        // ignore trailing comments
+        removeLeadingSpace_(curLine);
+        if (!curLine.empty() && curLine[0] != '#' && curLine[0] != ';')
+            std::runtime_error(errorPrefix+"Syntax error, expecting 'key=value'");
+
+        // all went well, add the parameter to the database object
+        if (overwrite || !paramTree.hasKey(canonicalKey))
+            paramTree[canonicalKey] = value;
+    }
 }
 
 /*!
@@ -620,12 +725,12 @@ void printValues(std::ostream& os = std::cout)
     // parameters
     if (runTimeKeyList.size() > 0) {
         os << "# [known parameters which were specified at run-time]\n";
-        printParamList_<TypeTag>(os, runTimeKeyList);
+        printParamList_<TypeTag>(os, runTimeKeyList, /*printDefaults=*/true);
     }
 
     if (compileTimeKeyList.size() > 0) {
         os << "# [parameters which were specified at compile-time]\n";
-        printCompileTimeParamList_<TypeTag>(os, compileTimeKeyList);
+        printParamList_<TypeTag>(os, compileTimeKeyList, /*printDefaults=*/false);
     }
 
     if (unknownKeyList.size() > 0) {
