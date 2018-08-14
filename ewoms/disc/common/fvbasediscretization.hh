@@ -226,6 +226,9 @@ SET_SCALAR_PROP(FvBaseDiscretization, MinTimeStepSize, 0.0);
 //! Disable grid adaptation by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableGridAdaptation, false);
 
+//! By default, write the simulation output to the current working directory
+SET_STRING_PROP(FvBaseDiscretization, OutputDir, ".");
+
 //! Enable the VTK output by default
 SET_BOOL_PROP(FvBaseDiscretization, EnableVtkOutput, true);
 
@@ -460,6 +463,7 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableStorageCache, "Store previous storage terms and avoid re-calculating them.");
+        EWOMS_REGISTER_PARAM(TypeTag, std::string, OutputDir, "The directory to which result files are written");
     }
 
     /*!

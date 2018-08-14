@@ -43,6 +43,8 @@
 #include <limits>
 #include <string>
 
+#include <sys/stat.h>
+
 namespace Ewoms {
 
 /*!
@@ -150,7 +152,10 @@ public:
                 throw std::runtime_error("Asynchronous VTK output currently cannot be used "
                                          "at the same time as grid adaptivity");
 
-            defaultVtkWriter_ = new VtkMultiWriter(asyncVtkOutput, gridView_, asImp_().name());
+            std::string outputDir = asImp_().outputDir();
+
+            defaultVtkWriter_ =
+                new VtkMultiWriter(asyncVtkOutput, gridView_, outputDir, asImp_().name());
         }
     }
 
@@ -173,6 +178,35 @@ public:
                              "before the simulation bails out");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableAsyncVtkOutput,
                              "Dispatch a separate thread to write the VTK output");
+    }
+
+    /*!
+     * \brief Determine the directory for simulation output.
+     *
+     * The actual problem may chose to transform the value of the OutputDir parameter and
+     * it can e.g. choose to create the directory on demand if it does not exist. The
+     * default behaviour is to just return the OutputDir parameter and to throw an
+     * exception if no directory with this name exists.
+     */
+    std::string outputDir() const
+    {
+        std::string outputDir = EWOMS_GET_PARAM(TypeTag, std::string, OutputDir);
+
+        if (outputDir == "")
+            throw std::runtime_error("No directory for output specified");
+
+        // TODO: replace this by std::filesystem once we require c++-2017
+        struct stat st;
+        if (::stat(outputDir.c_str(), &st) != 0)
+            throw std::runtime_error("Could not access output directory '"+outputDir+"':"
+                                     +strerror(errno));
+        if (!S_ISDIR(st.st_mode))
+            throw std::runtime_error("Path to output directory '"+outputDir+"' exists but is not a directory");
+
+        if (access(outputDir.c_str(), W_OK) != 0)
+            throw std::runtime_error("Output directory '"+outputDir+"' exists but is not writeable");
+
+        return outputDir;
     }
 
     /*!

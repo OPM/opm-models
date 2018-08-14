@@ -182,6 +182,11 @@ NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(EnableGridAdaptation);
 
 /*!
+ * \brief The directory to which simulation output ought to be written to.
+ */
+NEW_PROP_TAG(OutputDir);
+
+/*!
  * \brief Global switch to enable or disable the writing of VTK output files
  *
  * If writing VTK files is disabled, then the WriteVtk$FOO options do
