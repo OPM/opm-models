@@ -71,12 +71,19 @@ class Restart
      */
     template <class GridView, class Scalar>
     static const std::string restartFileName_(const GridView& gridView,
+                                              const std::string& outputDir,
                                               const std::string& simName,
                                               Scalar t)
     {
+        std::string dir = outputDir;
+        if (dir == ".")
+            dir = "";
+        else if (!dir.empty() && dir.back() != '/')
+            dir += "/";
+
         int rank = gridView.comm().rank();
         std::ostringstream oss;
-        oss << simName << "_time=" << t << "_rank=" << rank << ".ers";
+        oss << dir << simName << "_time=" << t << "_rank=" << rank << ".ers";
         return oss.str();
     }
 
@@ -95,6 +102,7 @@ public:
     {
         const std::string magicCookie = magicRestartCookie_(simulator.gridView());
         fileName_ = restartFileName_(simulator.gridView(),
+                                     simulator.problem().outputDir(),
                                      simulator.problem().name(),
                                      simulator.time());
 
@@ -163,7 +171,7 @@ public:
     template <class Simulator, class Scalar>
     void deserializeBegin(Simulator& simulator, Scalar t)
     {
-        fileName_ = restartFileName_(simulator.gridView(), simulator.problem().name(), t);
+        fileName_ = restartFileName_(simulator.gridView(), simulator.problem().outputDir(), simulator.problem().name(), t);
 
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());

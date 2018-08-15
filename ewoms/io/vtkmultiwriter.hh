@@ -74,8 +74,14 @@ class VtkMultiWriter : public BaseOutputWriter
         {
             std::string fileName;
             // write the actual data as vtu or vtp (plus the pieces file in the parallel case)
-            fileName = multiWriter_.curWriter_->write(/*name=*/multiWriter_.curOutFileName_.c_str(),
-                                                      static_cast<Dune::VTK::OutputType>(vtkFormat));
+            if (multiWriter_.commSize_ > 1)
+                fileName = multiWriter_.curWriter_->pwrite(/*name=*/multiWriter_.curOutFileName_,
+                                                           /*path=*/multiWriter_.outputDir_,
+                                                           /*extendPath=*/"",
+                                                           static_cast<Dune::VTK::OutputType>(vtkFormat));
+            else
+                fileName = multiWriter_.curWriter_->write(/*name=*/multiWriter_.outputDir_ + "/" + multiWriter_.curOutFileName_,
+                                                          static_cast<Dune::VTK::OutputType>(vtkFormat));
 
             // determine name to write into the multi-file for the
             // current time step
@@ -115,6 +121,7 @@ public:
 
     VtkMultiWriter(bool asyncWriting,
                    const GridView& gridView,
+                   const std::string& outputDir,
                    const std::string& simName = "",
                    std::string multiFileName = "")
         : gridView_(gridView)
@@ -129,12 +136,14 @@ public:
         , curWriterNum_(0)
         , taskletRunner_(/*numThreads=*/asyncWriting?1:0)
     {
+        outputDir_ = outputDir;
+        if (outputDir == "")
+            outputDir_ = ".";
+
         simName_ = (simName.empty()) ? "sim" : simName;
         multiFileName_ = multiFileName;
-        if (multiFileName_.empty()) {
-            multiFileName_ = simName_;
-            multiFileName_ += ".pvd";
-        }
+        if (multiFileName_.empty())
+            multiFileName_ = outputDir_+"/"+simName_+".pvd";
 
         commRank_ = gridView.comm().rank();
         commSize_ = gridView.comm().size();
@@ -475,8 +484,8 @@ private:
     {
         // use a new file name for each time step
         std::ostringstream oss;
-        oss << simName_ << "-" << std::setw(5) << std::setfill('0')
-            << curWriterNum_;
+        oss << simName_ << "-"
+            << std::setw(5) << std::setfill('0') << curWriterNum_;
         return oss.str();
     }
 
@@ -543,6 +552,7 @@ private:
     ElementMapper elementMapper_;
     VertexMapper vertexMapper_;
 
+    std::string outputDir_;
     std::string simName_;
     std::ofstream multiFile_;
     std::string multiFileName_;
