@@ -37,6 +37,10 @@
 #include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/Unused.hpp>
 
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif // HAVE_QUAD
+
 #include <dune/common/classname.hh>
 #include <dune/common/parametertree.hh>
 
@@ -261,20 +265,27 @@ inline void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
     paramMessage += cmdLineName;
 
     // add the =VALUE_TYPE part
-    if (paramInfo.paramTypeName == "std::string"
+    bool isString = false;
+    if (paramInfo.paramTypeName == Dune::className<std::string>()
         || paramInfo.paramTypeName == "const char *")
+    {
         paramMessage += "=STRING";
-    else if (paramInfo.paramTypeName == "float"
-             || paramInfo.paramTypeName == "double"
-             || paramInfo.paramTypeName == "long double"
-             || paramInfo.paramTypeName == "quad")
+        isString = true;
+    }
+    else if (paramInfo.paramTypeName == Dune::className<float>()
+             || paramInfo.paramTypeName == Dune::className<double>()
+             || paramInfo.paramTypeName == Dune::className<long double>()
+#if HAVE_QUAD
+             || paramInfo.paramTypeName == Dune::className<quad>()
+#endif // HAVE_QUAD
+        )
         paramMessage += "=SCALAR";
-    else if (paramInfo.paramTypeName == "int"
-             || paramInfo.paramTypeName == "unsigned int"
-             || paramInfo.paramTypeName == "short"
-             || paramInfo.paramTypeName == "unsigned short")
+    else if (paramInfo.paramTypeName == Dune::className<int>()
+             || paramInfo.paramTypeName == Dune::className<unsigned int>()
+             || paramInfo.paramTypeName == Dune::className<short>()
+             || paramInfo.paramTypeName == Dune::className<unsigned short>())
         paramMessage += "=INTEGER";
-    else if (paramInfo.paramTypeName == "bool")
+    else if (paramInfo.paramTypeName == Dune::className<bool>())
         paramMessage += "=BOOLEAN";
     else if (paramInfo.paramTypeName.empty()) {
         // the parameter is a flag. Do nothing!
@@ -289,8 +300,31 @@ inline void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
     while (paramMessage.size() < 50)
         paramMessage += " ";
 
+
     // append the parameter usage string.
     paramMessage += paramInfo.usageString;
+
+    // add the default value
+    if (!paramInfo.paramTypeName.empty()) {
+        if (paramMessage.back() != '.')
+            paramMessage += '.';
+        paramMessage += " Default: ";
+        if (paramInfo.paramTypeName == "bool") {
+            if (paramInfo.compileTimeValue == "0")
+                paramMessage += "false";
+            else
+                paramMessage += "true";
+        }
+        else if (isString) {
+            paramMessage += "\"";
+            paramMessage += paramInfo.compileTimeValue;
+            paramMessage += "\"";
+        }
+        else
+            paramMessage += paramInfo.compileTimeValue;
+    }
+
+    paramMessage = breakLines_(paramMessage, /*indent=*/52, ttyWidth);
     paramMessage += "\n";
 
     // print everything
