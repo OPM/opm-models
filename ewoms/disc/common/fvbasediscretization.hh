@@ -392,7 +392,7 @@ public:
         , vertexMapper_(gridView_)
 #endif
         , newtonMethod_(simulator)
-        , localLinearizer_(std::max(1, EWOMS_GET_PARAM(TypeTag, int, ThreadsPerProcess)))
+        , localLinearizer_(simulator.numThreads())
         , linearizer_(new Linearizer())
 #if HAVE_DUNE_FEM
         , space_( simulator.vanguard().gridPart() )

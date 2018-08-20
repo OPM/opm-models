@@ -39,12 +39,17 @@
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <vector>
 #include <string>
 #include <memory>
+#include <cstdlib>
 
 BEGIN_PROPERTIES
 
@@ -102,14 +107,7 @@ public:
         endTime_ = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
         timeStepSize_ = EWOMS_GET_PARAM(TypeTag, Scalar, InitialTimeStepSize);
 
-        // set up the multi-threading infrastructure
-        int numWorkerThreads = EWOMS_GET_PARAM(TypeTag, int, ThreadsPerProcess);
-        if (numWorkerThreads < 2)
-            // instead of just a single worker thread, use synchronous mode, i.e., do all
-            // work in the main thread.
-            numWorkerThreads = 0;
-
-        taskletRunner_.reset(new TaskletRunner(numWorkerThreads));
+        taskletRunner_.reset(new TaskletRunner(numWorkerThreads()));
 
         const std::string& predetTimeStepFile =
             EWOMS_GET_PARAM(TypeTag, std::string, PredeterminedTimeStepsFile);
@@ -869,6 +867,46 @@ public:
             >> timeStepIdx_;
         restarter.deserializeSectionEnd();
     }
+
+    /*!
+     * \brief Determines the number of worker threads that ought to be used by the object
+     *        returned by taskletManager()
+     *
+     * This function shall not be used in performance critical paths because it is
+     * relatively expensive. On the plus-side it works even before the simulator object
+     * has been fully initialized. (This avoids some catch-22s with the model and the
+     * problem objects.)
+     */
+    size_t numWorkerThreads() const
+    {
+        int numWorkerThreads = EWOMS_GET_PARAM(TypeTag, int, ThreadsPerProcess);
+
+#ifdef _OPENMP
+        // actually limit the number of threads and get the number of threads which are
+        // used in the end.
+        if (numWorkerThreads < 0)
+            numWorkerThreads = omp_get_max_threads();
+#endif
+
+        if (numWorkerThreads < 2)
+            // instead of just a single worker thread, use synchronous mode, i.e., do all
+            // work in the main thread.
+            numWorkerThreads = 0;
+
+        return static_cast<size_t>(numWorkerThreads);
+    }
+
+    /*!
+     * \brief Determines the number of threads used by the object returned by
+     *        taskletManager(), including the master thread.
+     *
+     * This function shall not be used in performance critical paths because it is
+     * relatively expensive. On the plus-side it works even before the simulator object
+     * has been fully initialized. (This avoids some catch-22s with the model and the
+     * problem objects.)
+     */
+    size_t numThreads() const
+    { return numWorkerThreads() + 1; }
 
 private:
     std::unique_ptr<Vanguard> vanguard_;

@@ -289,7 +289,7 @@ public:
     const std::map<unsigned, Constraints>& constraintsMap() const
     { return constraintsMap_; }
 
-private:
+protected:
     Simulator& simulator_()
     { return *simulatorPtr_; }
     const Simulator& simulator_() const
@@ -326,7 +326,7 @@ private:
         // allocate the element context objects for all threads. we need to do this here,
         // because the simulator is not yet fully allocated when this object is
         // constructed
-        int numThreads = std::max(simulator_().taskletRunner().numWorkerThreads(), 1);
+        int numThreads = std::max<int>(simulator_().numWorkerThreads(), 1);
         elementCtx_.resize(numThreads);
         for (int threadId = 0; threadId != numThreads; ++ threadId)
             elementCtx_[threadId] = new ElementContext(simulator_());
