@@ -411,6 +411,22 @@ public:
         typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         Dune::ParameterTree& tree = ParamsMeta::tree();
 
+        std::string param  = argv[paramIdx];
+        size_t i = param.find('=');
+        if (i != std::string::npos) {
+            std::string oldParamName = param.substr(0, i);
+            std::string oldParamValue = param.substr(i+1);
+            std::string newParamName = "--" + oldParamName;
+            for (int j = 0; j < newParamName.size(); ++j)
+                if (newParamName[j] == '_')
+                    newParamName[j] = '-';
+            errorMsg =
+                "The old syntax to specify parameters on the command line is no longer supported: "
+                "Try replacing '"+oldParamName+"="+oldParamValue+"' with "+
+                "'"+newParamName+"="+oldParamValue+"'!";
+            return 0;
+        }
+
         if (seenParams.count("EclDeckFileName") > 0) {
             errorMsg =
                 "Parameter 'EclDeckFileName' specified multiple times"
@@ -445,9 +461,9 @@ public:
     {
         if (briefDescription_.empty())
             return
-                "The Ecl-deck Black-Oil reservoir Simulator (ebos); a hydrocarbon\n"
-                "reservoir simulation program that processes ECL-formatted input\n"
-                "files which is provided by the Open Porous Media project\n"
+                "The Ecl-deck Black-Oil reservoir Simulator (ebos); a hydrocarbon "
+                "reservoir simulation program that processes ECL-formatted input "
+                "files which is provided by the Open Porous Media project "
                 "(https://opm-project.org).";
         else
             return briefDescription_;

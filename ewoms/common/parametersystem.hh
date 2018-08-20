@@ -37,6 +37,10 @@
 #include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/Unused.hpp>
 
+#if HAVE_QUAD
+#include <opm/material/common/quad.hpp>
+#endif // HAVE_QUAD
+
 #include <dune/common/classname.hh>
 #include <dune/common/parametertree.hh>
 
@@ -48,6 +52,9 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 /*!
  * \ingroup Parameter
@@ -242,10 +249,78 @@ void getFlattenedKeyList_(std::list<std::string>& dest,
                           const Dune::ParameterTree& tree,
                           const std::string& prefix = "");
 
+inline std::string breakLines_(const std::string& msg,
+                               int indentWidth,
+                               int maxWidth)
+{
+    std::string result;
+    int startInPos = 0;
+    int inPos = 0;
+    int lastBreakPos = 0;
+    int ttyPos = 0;
+    for (; inPos < int(msg.size()); ++ inPos, ++ ttyPos) {
+        if (msg[inPos] == '\n') {
+            result += msg.substr(startInPos, inPos + 1);
+            startInPos = inPos + 1;
+            lastBreakPos = startInPos + 1;
+
+            // we need to use -1 here because ttyPos is incremented after the loop body
+            ttyPos = -1;
+            continue;
+        }
+
+        if (std::isspace(msg[inPos]))
+            lastBreakPos = inPos;
+
+        if (ttyPos >= maxWidth) {
+            if (lastBreakPos > startInPos) {
+                result += msg.substr(startInPos, lastBreakPos - startInPos);
+                startInPos = lastBreakPos + 1;
+                lastBreakPos = startInPos;
+                inPos = startInPos;
+            }
+            else {
+                result += msg.substr(startInPos, inPos - startInPos);
+                startInPos = inPos;
+                lastBreakPos = startInPos;
+                inPos = startInPos;
+            }
+
+            result += "\n";
+            for (int i = 0; i < indentWidth; ++i)
+                result += " ";
+            ttyPos = indentWidth;
+        }
+    }
+
+    result += msg.substr(startInPos);
+
+    return result;
+}
+
+inline int getTtyWidth_()
+{
+    int ttyWidth = 10*1000; // effectively do not break lines at all.
+    if (isatty(STDOUT_FILENO)) {
+#if defined TIOCGWINSZ
+        // This is a bit too linux specific, IMO. let's do it anyway
+        struct winsize ttySize;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &ttySize);
+        ttyWidth = std::max<int>(80, ttySize.ws_col);
+#else
+        // default for systems that do not implement the TIOCGWINSZ ioctl
+        ttyWidth = 100;
+#endif
+    }
+
+    return ttyWidth;
+}
 
 inline void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
 {
     std::string paramMessage, paramType, paramDescription;
+
+    int ttyWidth = getTtyWidth_();
 
     // convert the CamelCase name to a command line --parameter-name.
     std::string cmdLineName = "-";
@@ -261,20 +336,27 @@ inline void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
     paramMessage += cmdLineName;
 
     // add the =VALUE_TYPE part
-    if (paramInfo.paramTypeName == "std::string"
+    bool isString = false;
+    if (paramInfo.paramTypeName == Dune::className<std::string>()
         || paramInfo.paramTypeName == "const char *")
+    {
         paramMessage += "=STRING";
-    else if (paramInfo.paramTypeName == "float"
-             || paramInfo.paramTypeName == "double"
-             || paramInfo.paramTypeName == "long double"
-             || paramInfo.paramTypeName == "quad")
+        isString = true;
+    }
+    else if (paramInfo.paramTypeName == Dune::className<float>()
+             || paramInfo.paramTypeName == Dune::className<double>()
+             || paramInfo.paramTypeName == Dune::className<long double>()
+#if HAVE_QUAD
+             || paramInfo.paramTypeName == Dune::className<quad>()
+#endif // HAVE_QUAD
+        )
         paramMessage += "=SCALAR";
-    else if (paramInfo.paramTypeName == "int"
-             || paramInfo.paramTypeName == "unsigned int"
-             || paramInfo.paramTypeName == "short"
-             || paramInfo.paramTypeName == "unsigned short")
+    else if (paramInfo.paramTypeName == Dune::className<int>()
+             || paramInfo.paramTypeName == Dune::className<unsigned int>()
+             || paramInfo.paramTypeName == Dune::className<short>()
+             || paramInfo.paramTypeName == Dune::className<unsigned short>())
         paramMessage += "=INTEGER";
-    else if (paramInfo.paramTypeName == "bool")
+    else if (paramInfo.paramTypeName == Dune::className<bool>())
         paramMessage += "=BOOLEAN";
     else if (paramInfo.paramTypeName.empty()) {
         // the parameter is a flag. Do nothing!
@@ -289,8 +371,31 @@ inline void printParamUsage_(std::ostream& os, const ParamInfo& paramInfo)
     while (paramMessage.size() < 50)
         paramMessage += " ";
 
+
     // append the parameter usage string.
     paramMessage += paramInfo.usageString;
+
+    // add the default value
+    if (!paramInfo.paramTypeName.empty()) {
+        if (paramMessage.back() != '.')
+            paramMessage += '.';
+        paramMessage += " Default: ";
+        if (paramInfo.paramTypeName == "bool") {
+            if (paramInfo.compileTimeValue == "0")
+                paramMessage += "false";
+            else
+                paramMessage += "true";
+        }
+        else if (isString) {
+            paramMessage += "\"";
+            paramMessage += paramInfo.compileTimeValue;
+            paramMessage += "\"";
+        }
+        else
+            paramMessage += paramInfo.compileTimeValue;
+    }
+
+    paramMessage = breakLines_(paramMessage, /*indent=*/52, ttyWidth);
     paramMessage += "\n";
 
     // print everything
@@ -368,8 +473,9 @@ void printUsage(const std::string& helpPreamble,
            << "\n";
     }
 
-    os << helpPreamble;
+    os << breakLines_(helpPreamble, /*indent=*/2, /*maxWidth=*/getTtyWidth_());
     os << "\n";
+
     os << "Recognized options:\n";
 
     if (!helpPreamble.empty()) {
