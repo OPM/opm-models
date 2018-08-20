@@ -147,14 +147,18 @@ public:
      */
     void writeOutput(bool isSubStep)
     {
-        Scalar curTime = simulator_.time() + simulator_.timeStepSize();
+        Scalar curTime = simulator_.time();
         Scalar totalSolverTime = simulator_.executionTimer().realTimeElapsed();
         Scalar nextStepSize = simulator_.problem().nextTimeStepSize();
+        int episodeIdx = simulator_.episodeIndex();
+        // all output except the initial one is done after the timestep is finished
+        if (simulator_.time() > 0 || isSubStep ) {
+            episodeIdx += 1;
+            curTime += simulator_.timeStepSize();
+        }
 
         // output using eclWriter if enabled
         Opm::data::Wells localWellData = simulator_.problem().wellModel().wellData();
-
-        int episodeIdx = simulator_.episodeIndex() + 1;
         const auto& gridView = simulator_.vanguard().gridView();
         int numElements = gridView.size(/*codim=*/0);
         bool log = collectToIORank_.isIORank();
