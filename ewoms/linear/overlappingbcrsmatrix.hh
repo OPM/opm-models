@@ -72,8 +72,15 @@ public:
         : ParentType(other)
     {}
 
-    template <class NativeBCRSMatrix>
-    OverlappingBCRSMatrix(const NativeBCRSMatrix& nativeMatrix,
+    template <class JacobianMatrix>
+    OverlappingBCRSMatrix(const JacobianMatrix& jacobian,
+                          const BorderList& borderList,
+                          const BlackList& blackList,
+                          unsigned overlapSize)
+        : OverlappingBCRSMatrix( jacobian.matrix(), borderList, blackList, overlapSize )
+    {}
+
+    OverlappingBCRSMatrix(const ParentType& nativeMatrix,
                           const BorderList& borderList,
                           const BlackList& blackList,
                           unsigned overlapSize)
@@ -136,8 +143,16 @@ public:
     /*!
      * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
      */
-    template <class NativeBCRSMatrix>
-    void assignAdd(const NativeBCRSMatrix& nativeMatrix)
+    template <class JacobianMatrix>
+    void assignAdd(const JacobianMatrix& jacobian)
+    {
+        assignAdd( jacobian.matrix() );
+    }
+
+    /*!
+     * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
+     */
+    void assignAdd(const ParentType& nativeMatrix)
     {
         // copy the native entries
         assignFromNative(nativeMatrix);
@@ -152,8 +167,20 @@ public:
      *
      * The non-master entries are copied from the master
      */
-    template <class NativeBCRSMatrix>
-    void assignCopy(const NativeBCRSMatrix& nativeMatrix)
+    template <class JacobianMatrix>
+    void assignCopy(const JacobianMatrix& jacobian)
+    {
+        assignCopy( jacobian.matrix() );
+    }
+
+
+    /*!
+     * \brief Assign and syncronize the overlapping matrix from a
+     *       non-overlapping one.
+     *
+     * The non-master entries are copied from the master
+     */
+    void assignCopy(const ParentType& nativeMatrix)
     {
         // copy the native entries
         assignFromNative(nativeMatrix);
@@ -218,8 +245,13 @@ public:
                                 "row");
     }
 
-    template <class NativeBCRSMatrix>
-    void assignFromNative(const NativeBCRSMatrix& nativeMatrix)
+    template <class JacobianMatrix>
+    void assignFromNative(const JacobianMatrix& jacobian)
+    {
+        assignFromNative( jacobian.matrix() );
+    }
+
+    void assignFromNative(const ParentType& nativeMatrix)
     {
         // first, set everything to 0,
         BCRSMatrix::operator=(0.0);

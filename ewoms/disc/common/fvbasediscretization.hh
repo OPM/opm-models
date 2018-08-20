@@ -50,6 +50,7 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
+#include <ewoms/linear/istlmatrixbackend.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>
 #include <ewoms/common/timer.hh>
@@ -127,7 +128,7 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtens
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
 
-//! Set the type of a global jacobian matrix from the solution types
+//! Set the type of a global Jacobian matrix from the solution types
 SET_PROP(FvBaseDiscretization, JacobianMatrix)
 {
 private:
@@ -135,7 +136,7 @@ private:
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     typedef typename Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
 public:
-    typedef typename Dune::BCRSMatrix<MatrixBlock> type;
+    typedef typename Ewoms::Linear::ISTLMatrixBackend< MatrixBlock >  type;
 };
 
 //! The maximum allowed number of timestep divisions for the
@@ -384,14 +385,14 @@ public:
         , elementMapper_(gridView_)
         , vertexMapper_(gridView_)
 #endif
-        , newtonMethod_(simulator)
-        , localLinearizer_(ThreadManager::maxThreads())
-        , linearizer_(new Linearizer())
 #if HAVE_DUNE_FEM
         , space_( simulator.vanguard().gridPart() )
 #else
         , space_( asImp_().numGridDof() )
 #endif
+        , newtonMethod_(simulator)
+        , localLinearizer_(ThreadManager::maxThreads())
+        , linearizer_(new Linearizer( space_ ))
         , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
         , enableIntensiveQuantityCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache))
         , enableStorageCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache))
@@ -1498,7 +1499,7 @@ public:
     void resetLinearizer ()
     {
         delete linearizer_;
-        linearizer_ = new Linearizer;
+        linearizer_ = new Linearizer( space_ );
         linearizer_->init(simulator_);
     }
 
@@ -1868,6 +1869,8 @@ protected:
     ElementMapper elementMapper_;
     VertexMapper vertexMapper_;
 
+    DiscreteFunctionSpace space_;
+
     // a vector with all auxiliary equations to be considered
     std::vector<BaseAuxiliaryModule<TypeTag>*> auxEqModules_;
 
@@ -1889,7 +1892,6 @@ protected:
     mutable IntensiveQuantitiesVector intensiveQuantityCache_[historySize];
     mutable std::vector<bool> intensiveQuantityCacheUpToDate_[historySize];
 
-    DiscreteFunctionSpace space_;
     mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
 #if HAVE_DUNE_FEM

@@ -375,10 +375,10 @@ public:
                 // give it the chance to update the error and thus to terminate the
                 // Newton method without the need of solving the last linearization.
                 updateTimer_.start();
-                auto& M = linearizer.matrix();
-                auto& b = linearizer.residual();
-                linearSolver_.prepareRhs(M, b);
-                asImp_().preSolve_(currentSolution, b);
+                auto& jacobian = linearizer.jacobian();
+                auto& residual = linearizer.residual();
+                linearSolver_.prepareRhs(jacobian, residual);
+                asImp_().preSolve_(currentSolution, residual);
                 updateTimer_.stop();
 
                 asImp_().linearizeAuxiliaryEquations_();
@@ -405,7 +405,7 @@ public:
 
                 solveTimer_.start();
                 solutionUpdate = 0.0;
-                linearSolver_.prepareMatrix(M);
+                linearSolver_.prepareMatrix( jacobian );
                 bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
 
@@ -432,9 +432,9 @@ public:
                 // (i.e. u). The result is stored in u
                 updateTimer_.start();
                 asImp_().postSolve_(currentSolution,
-                                    b,
+                                    residual,
                                     solutionUpdate);
-                asImp_().update_(nextSolution, currentSolution, solutionUpdate, b);
+                asImp_().update_(nextSolution, currentSolution, solutionUpdate, residual);
                 updateTimer_.stop();
 
                 if (asImp_().verbose_() && isatty(fileno(stdout)))
