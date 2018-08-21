@@ -907,7 +907,7 @@ public:
         hydrocarbonSaturation_ = fs.saturation(gasPhaseIdx);
 
         // apply a cut-off. Don't waste calculations if no solvent
-        if (std::abs(solventSaturation().value()) < cutOff)
+        if (solventSaturation().value() < cutOff)
             return;
 
         // make the saturation of the gas phase which is used by the saturation functions
@@ -934,7 +934,7 @@ public:
         solventMobility_ = 0.0;
 
         // apply a cut-off. Don't waste calculations if no solvent
-        if (std::abs(solventSaturation().value()) < cutOff)
+        if (solventSaturation().value() < cutOff)
             return;
 
         // Pressure effects on capillary pressure miscibility
@@ -965,7 +965,7 @@ public:
 
         Evaluation gasSolventSat = hydrocarbonSaturation_ + solventSaturation_;
 
-        if (std::abs(gasSolventSat.value()) < cutOff) // avoid division by zero
+        if (gasSolventSat.value() < cutOff) // avoid division by zero
             return;
 
         Evaluation Fhydgas = hydrocarbonSaturation_/gasSolventSat;
@@ -998,7 +998,7 @@ public:
             const Evaluation oilGasSolventEffSat = std::max(oilGasSolventSat - sor - sgc, zero);
 
             Evaluation F_totalGas = 0.0;
-            if (std::abs(oilGasSolventEffSat.value()) > cutOff) {
+            if (oilGasSolventEffSat.value() > cutOff) {
                 const Evaluation gasSolventEffSat = std::max(gasSolventSat - sgc, zero);
                 F_totalGas = gasSolventEffSat / oilGasSolventEffSat;
             }
@@ -1116,6 +1116,9 @@ private:
         const Evaluation& muOil = fs.viscosity(oilPhaseIdx);
         const Evaluation& muSolvent = solventViscosity_;
 
+        assert(muOil.value() > 0);
+        assert(muGas.value() > 0);
+        assert(muSolvent.value() > 0);
         const Evaluation muOilPow = pow(muOil, 0.25);
         const Evaluation muGasPow = pow(muGas, 0.25);
         const Evaluation muSolventPow = pow(muSolvent, 0.25);
@@ -1123,6 +1126,7 @@ private:
         Evaluation muMixOilSolvent = muOil;
         if (oilSolventEffSat > cutOff)
             muMixOilSolvent *= muSolvent / pow( ( (oilEffSat / oilSolventEffSat) * muSolventPow) + ( (solventEffSat / oilSolventEffSat) * muOilPow) , 4.0);
+
         Evaluation muMixSolventGas = muGas;
         if (solventGasEffSat > cutOff)
             muMixSolventGas *= muSolvent / pow( ( (gasEffSat / solventGasEffSat) * muSolventPow) + ( (solventEffSat / solventGasEffSat) * muGasPow) , 4.0);
@@ -1162,7 +1166,7 @@ private:
         const Evaluation oilGasEffSaturation = oilEffSat + gasEffSat;
         Evaluation sof = 0.0;
         Evaluation sgf = 0.0;
-        if ( std::abs(oilGasEffSaturation.value()) > cutOff ) {
+        if ( oilGasEffSaturation.value() > cutOff ) {
                 sof = oilEffSat / oilGasEffSaturation;
                 sgf = gasEffSat / oilGasEffSaturation;
         }
@@ -1170,11 +1174,11 @@ private:
         const Evaluation muSolventOilGasPow = muSolventPow * ( (sgf * muOilPow) + (sof * muGasPow) );
 
         Evaluation rhoMixSolventGasOil = 0.0;
-        if (std::abs(oilGasSolventEffSat.value()) > cutOff )
+        if (oilGasSolventEffSat.value() > cutOff )
             rhoMixSolventGasOil = (rhoOil * oilEffSat / oilGasSolventEffSat) + (rhoGas * gasEffSat / oilGasSolventEffSat) + (rhoSolvent * solventEffSat / oilGasSolventEffSat);
 
         Evaluation rhoGasEff = 0.0;
-        if ( std::abs(muSolvent.value() - muGas.value()) < cutOff )
+        if ( std::abs(muSolventPow.value() - muGasPow.value()) < cutOff )
             rhoGasEff = ( (1.0 - tlMixParamRho) * rhoGas) + (tlMixParamRho * rhoMixSolventGasOil);
         else {
             const Evaluation solventGasEffFraction = (muGasPow * (muSolventPow - muGasEffPow)) / (muGasEffPow * (muSolventPow - muGasPow));
@@ -1182,8 +1186,9 @@ private:
         }
 
         Evaluation rhoOilEff = 0.0;
-        if ( std::abs(muGas.value() - muOil.value()) < cutOff )
+        if ( std::abs(muOilPow.value() - muSolventPow.value()) < cutOff ) {
             rhoOilEff = ( (1.0 - tlMixParamRho) * rhoOil) + (tlMixParamRho * rhoMixSolventGasOil);
+        }
         else {
             const Evaluation solventOilEffFraction = (muOilPow * (muOilEffPow - muSolventPow)) / (muOilEffPow * (muOilPow - muSolventPow));
             rhoOilEff = (rhoOil * solventOilEffFraction) + (rhoSolvent * (1.0 - solventOilEffFraction));
