@@ -534,6 +534,8 @@ public:
             for (unsigned timeIdx = 0; timeIdx < historySize; ++ timeIdx)
                 invalidateIntensiveQuantitiesCache(timeIdx);
         }
+
+        newtonMethod_.finishInit();
     }
 
     /*!

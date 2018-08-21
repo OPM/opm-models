@@ -234,6 +234,15 @@ public:
     }
 
     /*!
+     * \brief Finialize the construction of the object.
+     *
+     * At this point, it can be assumed that all objects featured by the simulator have
+     * been allocated. (But not that they have been fully initialized yet.)
+     */
+    void finishInit()
+    { }
+
+    /*!
      * \brief Returns true if the error of the solution is below the
      *        tolerance.
      */

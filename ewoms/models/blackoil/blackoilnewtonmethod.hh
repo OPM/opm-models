@@ -66,9 +66,16 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 
 public:
     BlackOilNewtonMethod(Simulator& simulator) : ParentType(simulator)
+    {}
+
+    /*!
+     * \copydoc NewtonMethod::finishInit()
+     */
+    void finishInit()
     {
-        unsigned numDof = simulator.vanguard().grid().size(0);
-        wasSwitched_.resize(numDof);
+        ParentType::finishInit();
+
+        wasSwitched_.resize(this->model().numTotalDof());
         std::fill(wasSwitched_.begin(), wasSwitched_.end(), false);
     }
 
