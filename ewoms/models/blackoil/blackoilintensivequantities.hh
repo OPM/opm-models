@@ -329,7 +329,7 @@ public:
 
         asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);// strictly do not need focus time since no makeEvaluation is done
         asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
-        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache, focustimeidx);
+        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
 
         // update the quantities which are required by the chosen
         // velocity model
