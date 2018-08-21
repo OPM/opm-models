@@ -386,13 +386,13 @@ public:
         , vertexMapper_(gridView_)
 #endif
 #if HAVE_DUNE_FEM
-        , space_( simulator.vanguard().gridPart() )
+        , discreteFunctionSpace_( simulator.vanguard().gridPart() )
 #else
-        , space_( asImp_().numGridDof() )
+        , discreteFunctionSpace_( asImp_().numGridDof() )
 #endif
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
-        , linearizer_(new Linearizer( space_ ))
+        , linearizer_(new Linearizer( ))
         , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
         , enableIntensiveQuantityCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache))
         , enableStorageCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache))
@@ -417,7 +417,7 @@ public:
 
         size_t numDof = asImp_().numGridDof();
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].reset(new DiscreteFunction("solution", space_));
+            solution_[timeIdx].reset(new DiscreteFunction("solution", discreteFunctionSpace_));
 
             if (storeIntensiveQuantities()) {
                 intensiveQuantityCache_[timeIdx].resize(numDof);
@@ -1499,7 +1499,7 @@ public:
     void resetLinearizer ()
     {
         delete linearizer_;
-        linearizer_ = new Linearizer( space_ );
+        linearizer_ = new Linearizer( discreteFunctionSpace_ );
         linearizer_->init(simulator_);
     }
 
@@ -1869,7 +1869,7 @@ protected:
     ElementMapper elementMapper_;
     VertexMapper vertexMapper_;
 
-    DiscreteFunctionSpace space_;
+    DiscreteFunctionSpace discreteFunctionSpace_;
 
     // a vector with all auxiliary equations to be considered
     std::vector<BaseAuxiliaryModule<TypeTag>*> auxEqModules_;

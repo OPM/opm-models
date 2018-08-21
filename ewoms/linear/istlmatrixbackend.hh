@@ -43,11 +43,14 @@ class ISTLMatrixBackend
 {
     typedef A AllocatorType;
 public:
-    // \brief Implementation of matrix
+    //! \brief Implementation of matrix
     typedef Dune::BCRSMatrix< Block, AllocatorType >   Matrix;
 
-    // \brief block type forming the matrix entries (same as Block)
+    //! \brief block type forming the matrix entries (same as Block)
     typedef typename Matrix :: block_type          block_type;
+
+    //! \brief type of scalar
+    typedef typename block_type :: field_type      Scalar;
 
     /*!
      * \brief Constructor creating an empty matrix.
@@ -70,7 +73,7 @@ public:
      * \brief Allocate matrix structure give a sparsity pattern.
      */
     template <class Set>
-    inline void reserve( const std::vector< Set >& sparsityPattern )
+    void reserve( const std::vector< Set >& sparsityPattern )
     {
         // allocate raw matrix
         matrix_.reset( new Matrix(rows_, columns_, Matrix::random) );
@@ -104,23 +107,23 @@ public:
     /*!
      * \brief Return constant reference to matrix implementation.
      */
-    inline Matrix& matrix() { return *matrix_; }
-    inline const Matrix& matrix() const { return *matrix_; }
+    Matrix& matrix() { return *matrix_; }
+    const Matrix& matrix() const { return *matrix_; }
 
     /*!
      * \brief Return number of rows of the matrix.
      */
-    inline size_t rows () const { return rows_; }
+    size_t rows () const { return rows_; }
 
     /*!
      * \brief Return number of columns of the matrix.
      */
-    inline size_t cols () const { return columns_; }
+    size_t cols () const { return columns_; }
 
     /*!
      * \brief Set all matrix entries to zero.
      */
-    inline void clear()
+    void clear()
     {
         (*matrix_) = typename block_type :: field_type(0);
     }
@@ -128,11 +131,11 @@ public:
     /*!
      * \brief Set given row to zero except for the diagonal entry which is set to one.
      */
-    inline void unitRow( const size_t row )
+    void clearRow( const size_t row, const Scalar diag = 1.0 )
     {
-        block_type idBlock( 0 );
+        block_type idBlock( Scalar(0) );
         for (int i = 0; i < idBlock.rows; ++i)
-            idBlock[i][i] = 1.0;
+            idBlock[i][i] = diag;
 
         auto& matRow = (*matrix_)[ row ];
         auto colIt = matRow.begin();
@@ -142,14 +145,14 @@ public:
             if( colIt.index() == row )
                 *colIt = idBlock;
             else
-                *colIt = typename block_type :: field_type(0);
+                *colIt = Scalar(0);
         }
     }
 
     /*!
      * \brief Fill given block with entries stored in the matrix.
      */
-    inline void getBlock( const size_t row, const size_t col, block_type& entry ) const
+    void block( const size_t row, const size_t col, block_type& entry ) const
     {
         entry = (*matrix_)[ row ][ col ];
     }
@@ -157,7 +160,7 @@ public:
     /*!
      * \brief Set matrix block to given block.
      */
-    inline void setBlock( const size_t row, const size_t col, const block_type& entry )
+    void setBlock( const size_t row, const size_t col, const block_type& entry )
     {
         (*matrix_)[ row ][ col ] = entry;
     }
@@ -165,15 +168,23 @@ public:
     /*!
      * \brief Add block to matrix block.
      */
-    inline void addBlock( const size_t row, const size_t col, const block_type& entry )
+    void addBlock( const size_t row, const size_t col, const block_type& entry )
     {
         (*matrix_)[ row ][ col ] += entry;
     }
 
     /*!
+     * \brief Flush matrix from local caches into matrix structure Synchronize matrix (empty here)
+     */
+    void flush( )
+    {
+
+    }
+
+    /*!
      * \brief Synchronize matrix and finalize building stage.
      */
-    inline void communicate()
+    void finalize( )
     {
         // nothing to do here
         // may call compress when implicit build mode is used

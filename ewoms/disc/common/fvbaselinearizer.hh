@@ -85,8 +85,6 @@ class FvBaseLinearizer
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
-    typedef typename GET_PROP_TYPE(TypeTag, DiscreteFunctionSpace) DiscreteFunctionSpace;
-
     typedef typename GET_PROP_TYPE(TypeTag, GridCommHandleFactory) GridCommHandleFactory;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
@@ -111,9 +109,8 @@ class FvBaseLinearizer
 //! \endcond
 
 public:
-    FvBaseLinearizer(const DiscreteFunctionSpace& space)
-         : space_( space ),
-           jacobian_()
+    FvBaseLinearizer()
+        : jacobian_()
     {
         simulatorPtr_ = 0;
     }
@@ -224,7 +221,7 @@ public:
 
     void finalize()
     {
-        jacobian_->communicate();
+        jacobian_->finalize();
     }
 
     /*!
@@ -233,6 +230,9 @@ public:
      */
     void linearizeAuxiliaryEquations()
     {
+        // flush possible local caches into matrix structure
+        jacobian_->flush();
+
         auto& model = model_();
         const auto& comm = simulator_().gridView().comm();
         for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx) {
@@ -547,7 +547,7 @@ private:
 
             // reset the column of the Jacobian matrix
             // put an identity matrix on the main diagonal of the Jacobian
-            jacobian_->unitRow( constraintDofIdx );
+            jacobian_->clearRow( constraintDofIdx, Scalar(1) );
 
             // make the right-hand side of constraint DOFs zero
             residual_[constraintDofIdx] = 0.0;
@@ -556,8 +556,6 @@ private:
 
     static bool enableConstraints_()
     { return GET_PROP_VALUE(TypeTag, EnableConstraints); }
-
-    const DiscreteFunctionSpace& space_;
 
     Simulator *simulatorPtr_;
     std::vector<ElementContext*> elementCtx_;
