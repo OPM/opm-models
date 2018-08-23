@@ -33,13 +33,17 @@
 #include <ewoms/common/signum.hh>
 
 #include <opm/material/common/Unused.hpp>
+
 BEGIN_PROPERTIES
+
 NEW_PROP_TAG(DpMaxRel);
 NEW_PROP_TAG(DsMax);
-NEW_PROP_TAG(RestrictOscilationInPrimaryVariableMeaning);
+NEW_PROP_TAG(PriVarOscilationThreshold);
+
 SET_SCALAR_PROP(NewtonMethod, DpMaxRel, 0.3);
 SET_SCALAR_PROP(NewtonMethod, DsMax, 0.2);
-SET_BOOL_PROP(NewtonMethod, RestrictOscilationInPrimaryVariableMeaning, true);
+SET_SCALAR_PROP(NewtonMethod, PriVarOscilationThreshold, 1e-5);
+
 END_PROPERTIES
 
 namespace Ewoms {
@@ -66,7 +70,11 @@ class BlackOilNewtonMethod : public GET_PROP_TYPE(TypeTag, DiscNewtonMethod)
 
 public:
     BlackOilNewtonMethod(Simulator& simulator) : ParentType(simulator)
-    {}
+    {
+        priVarOscilationThreshold_ = EWOMS_GET_PARAM(TypeTag, Scalar, PriVarOscilationThreshold);
+        dpMaxRel_ = EWOMS_GET_PARAM(TypeTag, Scalar, DpMaxRel);
+        dsMax_ = EWOMS_GET_PARAM(TypeTag, Scalar, DsMax);
+    }
 
     /*!
      * \copydoc NewtonMethod::finishInit()
@@ -85,10 +93,11 @@ public:
     static void registerParameters()
     {
         ParentType::registerParameters();
+
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, DpMaxRel, "Maximum relative change of pressure in a single iteration");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, DsMax, "Maximum absolute change of any saturation in a single iteration");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, RestrictOscilationInPrimaryVariableMeaning,
-                             "Adds a small factor to the primary variable switching conditions after its meaning has switched to hinder oscilations");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, PriVarOscilationThreshold,
+                             "The threshold value for the primary variable switching conditions after its meaning has switched to hinder oscilations");
     }
 
     /*!
@@ -174,9 +183,6 @@ protected:
                                  const EqVector& update,
                                  const EqVector& currentResidual)
     {
-        static const Scalar maxSaturationChange = EWOMS_GET_PARAM(TypeTag, Scalar, DpMaxRel);; // per iteration
-        static const Scalar maxPressureChange = EWOMS_GET_PARAM(TypeTag, Scalar, DsMax); // relative, per iteration
-
         currentValue.checkDefined();
         Opm::Valgrind::CheckDefined(update);
         Opm::Valgrind::CheckDefined(currentResidual);
@@ -207,39 +213,40 @@ protected:
         maxSatDelta = std::max(maxSatDelta, std::abs(deltaSw));
         maxSatDelta = std::max(maxSatDelta, std::abs(deltaSs));
 
-        // scaling factor for saturation deltas to make sure that none of them exceeds 20%
+        // scaling factor for saturation deltas to make sure that none of them exceeds
+        // the specified threshold value.
         Scalar satAlpha = 1.0;
-        if (maxSatDelta > maxSaturationChange)
-            satAlpha = maxSaturationChange/maxSatDelta;
+        if (maxSatDelta > dsMax_)
+            satAlpha = dsMax_/maxSatDelta;
 
         for (int pvIdx = 0; pvIdx < int(numEq); ++pvIdx) {
-            // calculate the update of the current primary variable. For the
-            // black-oil model we limit the pressure and saturation updates, but do
-            // we not clamp anything after the specified number of iterations was
-            // reached
+            // calculate the update of the current primary variable. For the black-oil
+            // model we limit the pressure delta relative to the pressure's current
+            // absolute value (Default: 30%) and saturation deltas to an absolute change
+            // (Default: 20%). Further, we ensure that the R factors, solvent
+            // "saturation" and polymer concentration do not become negative after the
+            // update.
             Scalar delta = update[pvIdx];
 
-            // limit changes of pressure to 30% of the absolute value
+            // limit pressure delta
             if (pvIdx == Indices::pressureSwitchIdx) {
-                if (std::abs(delta) > maxPressureChange*currentValue[pvIdx])
-                    delta = Ewoms::signum(delta)*maxPressureChange*currentValue[pvIdx];
+                if (std::abs(delta) > dpMaxRel_*currentValue[pvIdx])
+                    delta = Ewoms::signum(delta)*dpMaxRel_*currentValue[pvIdx];
             }
-            // change of water saturation
+            // water saturation delta
             else if (pvIdx == Indices::waterSaturationIdx)
                 delta *= satAlpha;
             else if (pvIdx == Indices::compositionSwitchIdx) {
                 // the switching primary variable for composition is tricky because the
                 // "reasonable" value ranges it exhibits vary widely depending on its
-                // interpretation (it can represent Sg, Rs or Rv). for now, we only limit
-                // changes in gas saturation
+                // interpretation since it can represent Sg, Rs or Rv. For now, we only
+                // limit saturation deltas and ensure that the R factors do not become
+                // negative.
                 if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
                     delta *= satAlpha;
                 else {
-                    // make sure that the R factors do not become negative
                     if (delta > currentValue[Indices::compositionSwitchIdx])
-                    {
                         delta = currentValue[Indices::compositionSwitchIdx];
-                    }
                 }
             }
             else if (pvIdx == Indices::solventSaturationIdx)
@@ -259,10 +266,11 @@ protected:
 
         }
 
-        // switch the new primary variables to something which is physically meaningful
-        // add an epsilon to make it harder to switch back immediately after the primary variable meaning has changed.
-        if (EWOMS_GET_PARAM(TypeTag, Scalar, RestrictOscilationInPrimaryVariableMeaning) && wasSwitched_[globalDofIdx])
-            wasSwitched_[globalDofIdx] = nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx, 1e-5);
+        // switch the new primary variables to something which is physically meaningful.
+        // use a threshold value after a switch to make it harder to switch back
+        // immediately.
+        if (wasSwitched_[globalDofIdx])
+            wasSwitched_[globalDofIdx] = nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx, priVarOscilationThreshold_);
         else
             wasSwitched_[globalDofIdx] = nextValue.adaptPrimaryVariables(this->problem(), globalDofIdx);
 
@@ -274,6 +282,10 @@ protected:
 
 private:
     int numPriVarsSwitched_;
+
+    Scalar priVarOscilationThreshold_;
+    Scalar dpMaxRel_;
+    Scalar dsMax_;
 
     // keep track of cells where the primary variable meaning has changed
     // to detect and hinder oscillations
