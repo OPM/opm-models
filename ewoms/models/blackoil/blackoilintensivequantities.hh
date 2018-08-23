@@ -114,7 +114,7 @@ public:
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
-        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx, focustimeidx);
 
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
