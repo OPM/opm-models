@@ -70,7 +70,7 @@ class Restart
     /*!
      * \brief Return the restart file name.
      */
-    template <class GridView, class Scalar>
+    template <class Simulator, class Scalar>
     static const std::string restartFileName_(const Simulator& simulator,                                                                                     Scalar t)
     {
         // Directory.
@@ -88,7 +88,7 @@ class Restart
          }
 
         // Filename.
-        int rank = gridView.comm().rank();
+        int rank = simulator.gridView().comm().rank();
         std::string simName = simulator.problem().name();
         std::ostringstream oss;
         oss << simName << "_time=" << t << "_rank=" << rank << ".ers";
