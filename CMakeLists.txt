@@ -236,7 +236,7 @@ foreach(tapp co2injection_flash_ni_vcfv
 endforeach()
 
 opm_add_test(reservoir_blackoil_vcfv TEST_ARGS --end-time=8750000 --threads-per-process=1)
-opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000)
+opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000 --threads-per-process=1)
 opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000 --threads-per-process=1)
 opm_add_test(reservoir_ncp_ecfv TEST_ARGS --end-time=8750000 --threads-per-process=1)
 
