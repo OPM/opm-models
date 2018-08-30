@@ -222,7 +222,8 @@ public:
                                                                      miscSummaryData,
                                                                      regionData,
                                                                      blockData,
-                                                                     enableDoublePrecisionOutput);
+                                                                     enableDoublePrecisionOutput,
+                                                                     globalGrid_.eclipseOuputIndexLookup());
 
             // then, make sure that the previous I/O request has been completed and the
             // number of incomplete tasklets does not increase between time steps
@@ -305,7 +306,8 @@ public:
                                                                      miscSummaryData,
                                                                      regionData,
                                                                      blockData,
-                                                                     enableDoublePrecisionOutput);
+                                                                     enableDoublePrecisionOutput,
+                                                                     globalGrid_.eclipseOuputIndexLookup());
 
             // then, make sure that the previous I/O request has been completed and the
             // number of incomplete tasklets does not increase between time steps
@@ -515,7 +517,17 @@ private:
         std::map<std::string, std::vector<double>> regionSummaryValues_;
         std::map<std::pair<std::string, int>, double> blockSummaryValues_;
         bool writeDoublePrecision_;
+        /// \brief Indices for Reordering cell data for Eclipse IO.
+        ///
+        /// If not empty, a vector mapping the local Cpgrid index
+        /// (with index k running fastest) to the one needed by
+        /// Eclipse IO (i fastest, then j, and the k)
+        std::vector<int> eclipseReorderingIndices_;
 
+        ///
+        /// \param eclipseReorderingIndices If not empty, a vector mapping the local Cpgrid index
+        ///                                 (with index k running fastest) to the one needed by
+        ///                                 Eclipse IO (i fastest, then j, and the k)
         explicit EclWriteTasklet(Opm::EclipseIO& eclIO,
                                  int episodeIdx,
                                  bool isSubStep,
@@ -524,7 +536,8 @@ private:
                                  const std::map<std::string, double>& singleSummaryValues,
                                  const std::map<std::string, std::vector<double>>& regionSummaryValues,
                                  const std::map<std::pair<std::string, int>, double>& blockSummaryValues,
-                                 bool writeDoublePrecision)
+                                 bool writeDoublePrecision,
+                                 const std::vector<int>& eclipseReorderingIndices)
             : eclIO_(eclIO)
             , episodeIdx_(episodeIdx)
             , isSubStep_(isSubStep)
@@ -534,11 +547,31 @@ private:
             , regionSummaryValues_(regionSummaryValues)
             , blockSummaryValues_(blockSummaryValues)
             , writeDoublePrecision_(writeDoublePrecision)
+            , eclipseReorderingIndices_(eclipseReorderingIndices)
         { }
 
         // callback to eclIO serial writeTimeStep method
         void run()
         {
+            if ( eclipseReorderingIndices_.size() )
+            {
+                // reorder each entry in the CellData to get the ordering expected
+                // by eclipse IO
+                for(auto&& entry: restartValue_.solution)
+                {
+                    decltype(entry.second.data) tmp(eclipseReorderingIndices_.size());
+                    auto& origContainer = entry.second.data;
+                    auto newEntry = tmp.begin();
+                    for ( auto index: eclipseReorderingIndices_)
+                    {
+                        *newEntry = origContainer[index];
+                        ++newEntry;
+                    }
+                    assert(newEntry == tmp.end());
+                    origContainer.swap(tmp);
+                }
+            }
+
             eclIO_.writeTimeStep(episodeIdx_,
                                  isSubStep_,
                                  secondsElapsed_,

@@ -68,6 +68,8 @@ NEW_PROP_TAG(EclOutputInterval);
 SET_STRING_PROP(EclBaseVanguard, EclDeckFileName, "");
 SET_INT_PROP(EclBaseVanguard, EclOutputInterval, -1); // use the deck-provided value
 
+NEW_PROP_TAG(EnableReorderKFastest);
+SET_BOOL_PROP(EclBaseVanguard, EnableReorderKFastest, false);
 END_PROPERTIES
 
 namespace Ewoms {
@@ -102,6 +104,8 @@ public:
                              "The name of the file which contains the ECL deck to be simulated");
         EWOMS_REGISTER_PARAM(TypeTag, int, EclOutputInterval,
                              "The number of report steps that ought to be skipped between two writes of ECL results");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableReorderKFastest,
+                             "If true then k will be the fastest running index of ijk for CpGrid");
     }
 
     /*!
