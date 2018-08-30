@@ -459,7 +459,7 @@ public:
         Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGridAdaptation, "Enable adaptive grid refinement/coarsening");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turing on writing VTK files");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turning on writing VTK files");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableThermodynamicHints, "Enable thermodynamic hints");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableIntensiveQuantityCache, "Turn on caching of intensive quantities");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableStorageCache, "Store previous storage terms and avoid re-calculating them.");
