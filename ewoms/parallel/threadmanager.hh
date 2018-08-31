@@ -100,12 +100,6 @@ public:
         // used in the end.
         if (numThreads_ > 0)
             omp_set_num_threads(numThreads_);
-        else {
-            if (!getenv("OMP_NUM_THREADS")) {
-                int num_core = omp_get_num_procs();
-                omp_set_num_threads(std::min(2, num_core));
-            }
-        }
 
         numThreads_ = omp_get_max_threads();
 #endif
