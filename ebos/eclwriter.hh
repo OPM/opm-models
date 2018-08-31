@@ -559,15 +559,14 @@ private:
                 // by eclipse IO
                 for(auto&& entry: restartValue_.solution)
                 {
-                    decltype(entry.second.data) tmp(eclipseReorderingIndices_.size());
+                    decltype(entry.second.data) tmp;
+                    tmp.reserve(eclipseReorderingIndices_.size());
                     auto& origContainer = entry.second.data;
-                    auto newEntry = tmp.begin();
-                    for ( auto index: eclipseReorderingIndices_)
+                    for ( auto index: eclipseReorderingIndices_ )
                     {
-                        *newEntry = origContainer[index];
-                        ++newEntry;
+                        tmp.push_back(origContainer[index]);
                     }
-                    assert(newEntry == tmp.end());
+                    assert(origContainer.size() == tmp.size());
                     origContainer.swap(tmp);
                 }
             }
