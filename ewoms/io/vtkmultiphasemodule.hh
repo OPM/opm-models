@@ -228,9 +228,9 @@ public:
 
             if (extrusionFactorOutput_()) extrusionFactor_[I] = intQuants.extrusionFactor();
             if (porosityOutput_()) porosity_[I] = Toolbox::value(intQuants.porosity());
+
             if (intrinsicPermeabilityOutput_()) {
                 const auto& K = problem.intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
-                intrinsicPermeability_[I].resize(K.rows, K.cols);
                 for (unsigned rowIdx = 0; rowIdx < K.rows; ++rowIdx)
                     for (unsigned colIdx = 0; colIdx < K.cols; ++colIdx)
                         intrinsicPermeability_[I][rowIdx][colIdx] = K[rowIdx][colIdx];
