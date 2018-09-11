@@ -178,6 +178,32 @@ static inline int setupParameters_(int argc, const char **argv, bool registerPar
 }
 
 /*!
+ * \brief Resets the current TTY to a usable state if the program was aborted.
+ *
+ * This is intended to be called as part of a generic exception handler
+ */
+static inline void resetTerminal_()
+{
+    // make sure stderr and stderr do not contain any unwritten data and make sure that
+    // the TTY does not see any unfinished ANSI escape sequence.
+    std::cerr << "    \r\n";
+    std::cerr.flush();
+    std::cout << "    \r\n";
+    std::cout.flush();
+
+    // it seems like some terminals sometimes takes their time to react, so let's
+    // accommodate them.
+    usleep(/*usec=*/500*1000);
+
+    // this requires the 'stty' command to be available in the command search path. on
+    // most linux systems, is the case. (but even if the system() function fails, the
+    // worst thing which can happen is that the TTY stays potentially choked up...)
+    if (system("stty sane") != 0)
+        std::cout << "Executing the 'stty' command failed."
+                  << " Terminal might be left in an undefined state!\n";
+}
+
+/*!
  * \brief Resets the current TTY to a usable state if the program was interrupted by
  *        SIGABRT or SIGINT.
  */
@@ -189,12 +215,7 @@ static inline void resetTerminal_(int signum)
               << " (\"" << strsignal(signum) << "\")."
               << " Trying to reset the terminal.\n";
 
-    // this requires the 'stty' command to be available in the command search path. on
-    // most linux systems, is the case. (but even if the system() function fails, the
-    // worst thing which can happen is that the TTY stays potentially choked up...)
-    if (system("stty sane") != 0)
-        std::cout << "Executing the 'stty' command failed."
-                  << " Terminal might be left in an undefined state!\n";
+    resetTerminal_();
 
     // after we did our best to clean the pedestrian way, re-raise the signal
     raise(signum);
@@ -330,6 +351,10 @@ static inline int start(int argc, char **argv)
     {
         if (myRank == 0)
             std::cout << e.what() << ". Abort!\n" << std::flush;
+
+        std::cout << "Trying to reset TTY.\n";
+        resetTerminal_();
+
         return 1;
     }
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
@@ -337,6 +362,10 @@ static inline int start(int argc, char **argv)
     {
         if (myRank == 0)
             std::cout << "Dune reported an error: " << e.what() << std::endl  << std::flush;
+
+        std::cout << "Trying to reset TTY.\n";
+        resetTerminal_();
+
         return 2;
     }
 #endif
@@ -344,6 +373,10 @@ static inline int start(int argc, char **argv)
     {
         if (myRank == 0)
             std::cout << "Unknown exception thrown!\n" << std::flush;
+
+        std::cout << "Trying to reset TTY.\n";
+        resetTerminal_();
+
         return 3;
     }
 }
