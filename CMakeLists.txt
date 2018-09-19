@@ -314,3 +314,6 @@ opm_add_test(tutorial1
 
 opm_add_test(test_tasklets
              DRIVER_ARGS --plain)
+
+include(OpmBashCompletion)
+opm_add_bash_completion(ebos)
