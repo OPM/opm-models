@@ -347,16 +347,6 @@ static inline int start(int argc, char **argv)
         }
         return 0;
     }
-    catch (std::exception& e)
-    {
-        if (myRank == 0)
-            std::cout << e.what() << ". Abort!\n" << std::flush;
-
-        std::cout << "Trying to reset TTY.\n";
-        resetTerminal_();
-
-        return 1;
-    }
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
     catch (Dune::Exception& e)
     {
@@ -369,6 +359,16 @@ static inline int start(int argc, char **argv)
         return 2;
     }
 #endif
+    catch (std::exception& e)
+    {
+        if (myRank == 0)
+            std::cout << e.what() << ". Abort!\n" << std::flush;
+
+        std::cout << "Trying to reset TTY.\n";
+        resetTerminal_();
+
+        return 1;
+    }
     catch (...)
     {
         if (myRank == 0)
