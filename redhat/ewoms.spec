@@ -149,6 +149,7 @@ rm -fr %buildroot
 %{!?el6:
 %doc README
 %doc openmpi/doc/doxygen/html}
+/etc/bash_completion.d/ebos_bash_completion.sh
 
 %files devel
 %defattr(-,root,root)
