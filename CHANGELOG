@@ -1,6 +1,55 @@
 Changes in eWoms 2018.10
 ========================
 
+- Major improvements to the parameter system:
+  - Support for positional command line parameters.
+  - Possibility to hide parameters in the usage message. This is
+    useful if parameters are there but not actually used, as is the
+    case for the `flow` simulator from opm-autodiff.
+  - The `Dune::ParameterTreeParser` class has been replaced by custom
+    code. This was done because it allows to use the same
+    syntax for parameter specified in files and via command line
+    arguments.
+  - Nicer formating of the usage message with more sophisticated handling
+    of line breaks.
+  - The default values of runtime parameters are now printed in the
+    usage message and when outputting the list of parameters.
+- Various ebos improvements:
+  - The update procedure for Newton-Raphson iterations of blackoil
+    model has been improved to the point that it is now used by the
+    `flow` simulator from the opm-simulators module.
+  - Improvements to the handling of wells. It is now possible to
+    specify the well model externally -- i.e. from `flow` -- yet let
+    it be managed by ebos.
+  - Better restart from ECL restart files.
+  - Support to specify the input deck as a positional parameter and
+    only using the name of the deck, e.g., using
+
+      ebos SPE1
+
+    instead of
+
+      ebos --ecl-deck-filename=SPE1.DATA
+
+  - Output of fluid-in-place (FIP) numbers can now be forced to be
+    disabled using a command line parameter even if they are requested by
+    the deck. This can significantly reduce visual noise during
+    development.
+  - Various smaller bugfixes and improvements.
+- Better support for Schur complements. This feature is already useful
+  but it is not complete yet.
+- Support for writing VTK output asynchronously (in most cases).
+- Some performance improvements in the VTK output writing code.
+- Introduction of the BEGIN_PROPERTIES and END_PROPERTIES macros to
+  the property system: This avoids having to explicitly specify the
+  namespace where properties are located.
+- The compositional model based on non-linear complementarity problems
+  (NCP) now works with adaptive grids.
+- Various minor fixes and improvements.
+
+Changes in eWoms 2018.04
+========================
+
 - Significant improvements to the black-oil flow model and to ebos,
   the Ecl Black-Oil Simulator:
   - An extension for energy conservation similar to the "solvent" and
