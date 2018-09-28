@@ -229,7 +229,9 @@ public:
         }
         // and oil pressure
         oilPressure_.resize(bufferSize, 0.0);
-        temperature_.resize(bufferSize, 0.0);
+
+        if (simulator_.vanguard().eclState().getSimulationConfig().isThermal())
+            temperature_.resize(bufferSize, 0.0);
 
         if (FluidSystem::enableDissolvedGas())
             rs_.resize(bufferSize, 0.0);

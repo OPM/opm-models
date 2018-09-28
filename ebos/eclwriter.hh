@@ -318,13 +318,18 @@ public:
 
     void restartBegin()
     {
+        const auto& es = simulator_.vanguard().eclState();
+
         bool enableHysteresis = simulator_.problem().materialLawManager()->enableHysteresis();
-        bool enableSwatinit = simulator_.vanguard().eclState().get3DProperties().hasDeckDoubleGridProperty("SWATINIT");
+        bool enableSwatinit = es.get3DProperties().hasDeckDoubleGridProperty("SWATINIT");
+
+        bool enableTemperature = es.getSimulationConfig().isThermal();
+
         std::vector<Opm::RestartKey> solutionKeys{
             {"PRESSURE" , Opm::UnitSystem::measure::pressure},
             {"SWAT" ,     Opm::UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx))},
             {"SGAS" ,     Opm::UnitSystem::measure::identity, static_cast<bool>(FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx))},
-            {"TEMP" ,     Opm::UnitSystem::measure::temperature}, // always required for now
+            {"TEMP" ,     Opm::UnitSystem::measure::temperature, enableTemperature}, // restore if thermal run
             {"RS" ,       Opm::UnitSystem::measure::gas_oil_ratio, FluidSystem::enableDissolvedGas()},
             {"RV" ,       Opm::UnitSystem::measure::oil_gas_ratio, FluidSystem::enableVaporizedOil()},
             {"SOMAX",     Opm::UnitSystem::measure::identity, simulator_.problem().vapparsActive()},
