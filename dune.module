@@ -4,7 +4,7 @@
 ####################################################################
 Module: ewoms
 Version: 2019.04-pre
-Codename: Marvin
+Codename: Lance
 Description: OPM's numerical framework for flow and transport in porous media
 Url: http://opm-project.org
 MaintainerName: The Open Porous Media Project
