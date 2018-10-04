@@ -32,6 +32,7 @@
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <iostream>
 #include <condition_variable>
 
 namespace Ewoms {
