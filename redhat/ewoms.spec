@@ -1,4 +1,4 @@
-%define tag final
+%define tag rc1
 
 Name: ewoms
 Summary: OPM - Fully implicit models for flow and transport in porous media
