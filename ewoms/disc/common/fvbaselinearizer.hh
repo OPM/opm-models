@@ -47,6 +47,7 @@
 #include <thread>
 #include <set>
 #include <exception>   // current_exception, rethrow_exception
+#include <mutex>
 
 namespace Ewoms {
 // forward declarations
@@ -106,6 +107,13 @@ class FvBaseLinearizer
     // copying the linearizer is not a good idea
     FvBaseLinearizer(const FvBaseLinearizer&);
 //! \endcond
+
+#ifdef _OPENMP
+	// to avoid a race condition if two threads handles an exception at
+	// the same time, we use an explicit lock to control access to the
+	// exception storage amongst thread-local handlers
+	std::mutex exceptionLock;
+#endif
 
 public:
     FvBaseLinearizer()
@@ -456,14 +464,7 @@ private:
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
 #ifdef _OPENMP
-        // if an exception occurs in more than one thread, we must pick one of
-        // them to be rethrown as we cannot have two active exceptions at the
-        // same time. this solution essentially picks one at random. this will
-        // be a problem if two different kinds of exceptions are thrown, for
-        // instance if one thread gets a numerical issue and the other one is
-        // out of memory. however, we have no way of grading them for severity
-#pragma omp declare reduction(first_of : std::exception_ptr : omp_out = (omp_out ? omp_out : omp_in))
-#pragma omp parallel reduction(first_of: exc_ptr)
+#pragma omp parallel
 #endif
         {
 	        try {
@@ -490,11 +491,23 @@ private:
 			        linearizeElement_(elem);
 		        }
 	        }
-	        // if an exception occurs in the parallel block, it won't escape
-	        // the block; terminate() is called instead of a handler outside!
-	        // hence, we tuck any exceptions that occurs away in the pointer
+	        // if an exception occurs in the parallel block, it won't escape the
+	        // block; terminate() is called instead of a handler outside!
+	        // hence, we tuck any exceptions that occurs away in the pointer if
+	        // an exception occurs in more than one thread at the same time, we
+	        // must pick one of them to be rethrown as we cannot have two active
+	        // exceptions at the same time. this solution essentially picks one
+	        // at random. this will be a problem if two different kinds of
+	        // exceptions are thrown, for instance if one thread gets a
+	        // numerical issue and the other one is out of memory
 	        catch(...) {
+#ifdef _OPENMP
+		        this->exceptionLock.lock();
+#endif
 		        exc_ptr = std::current_exception();
+#ifdef _OPENMP
+		        this->exceptionLock.unlock();
+#endif
 	        }
         }  // parallel block
 
