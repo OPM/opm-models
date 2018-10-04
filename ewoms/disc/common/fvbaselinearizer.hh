@@ -459,7 +459,7 @@ private:
 
         // storage to any exception that needs to be bridged out of the
         // parallel block below. initialized to null to indicate no exception
-        std::exception_ptr exc_ptr = nullptr;
+        std::exception_ptr exceptionPtr = nullptr;
 
         // relinearize the elements...
         ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_());
@@ -504,15 +504,15 @@ private:
 #ifdef _OPENMP
 		        std::lock_guard<std::mutex> take(this->exceptionLock);
 #endif
-		        exc_ptr = std::current_exception();
+		        exceptionPtr = std::current_exception();
 	        }
         }  // parallel block
 
-        // after reduction from the parallel block, exc_ptr will point to
+        // after reduction from the parallel block, exceptionPtr will point to
         // a valid exception if one occurred in one of the threads; rethrow
         // it here to let the outer handler take care of it properly
-        if(exc_ptr) {
-	        std::rethrow_exception(exc_ptr);
+        if(exceptionPtr) {
+	        std::rethrow_exception(exceptionPtr);
         }
 
         applyConstraintsToLinearization_();
