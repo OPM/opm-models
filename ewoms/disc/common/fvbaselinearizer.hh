@@ -502,12 +502,9 @@ private:
 	        // numerical issue and the other one is out of memory
 	        catch(...) {
 #ifdef _OPENMP
-		        this->exceptionLock.lock();
+		        std::lock_guard<std::mutex> take(this->exceptionLock);
 #endif
 		        exc_ptr = std::current_exception();
-#ifdef _OPENMP
-		        this->exceptionLock.unlock();
-#endif
 	        }
         }  // parallel block
 
