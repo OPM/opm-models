@@ -32,6 +32,7 @@
 #include <thread>
 #include <queue>
 #include <mutex>
+#include <iostream>
 #include <condition_variable>
 
 namespace Ewoms {
@@ -226,7 +227,12 @@ public:
             // run the tasklet immediately in synchronous mode.
             while (tasklet->referenceCount() > 0) {
                 tasklet->dereference();
-                tasklet->run();
+                try {
+                    tasklet->run();
+                }
+                catch (...) {
+                    std::cerr << "ERROR: Uncaught exception when running tasklet. Trying to continue.\n";
+                }
             }
         }
         else {
@@ -317,7 +323,12 @@ protected:
             lock.unlock();
 
             // execute tasklet
-            tasklet->run();
+            try {
+                tasklet->run();
+            }
+            catch (...) {
+                std::cerr << "ERROR: Uncaught exception when running tasklet. Trying to continue.\n";
+            }
         }
     }
 
