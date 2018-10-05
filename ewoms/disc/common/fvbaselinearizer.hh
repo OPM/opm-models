@@ -108,13 +108,6 @@ class FvBaseLinearizer
     FvBaseLinearizer(const FvBaseLinearizer&);
 //! \endcond
 
-#ifdef _OPENMP
-	// to avoid a race condition if two threads handles an exception at
-	// the same time, we use an explicit lock to control access to the
-	// exception storage amongst thread-local handlers
-	std::mutex exceptionLock;
-#endif
-
 public:
     FvBaseLinearizer()
     {
@@ -457,6 +450,13 @@ private:
 
         *matrix_ = 0.0;
 
+#ifdef _OPENMP
+        // to avoid a race condition if two threads handles an exception at
+        // the same time, we use an explicit lock to control access to the
+        // exception storage amongst thread-local handlers
+        std::mutex exceptionLock;
+#endif
+
         // storage to any exception that needs to be bridged out of the
         // parallel block below. initialized to null to indicate no exception
         std::exception_ptr exceptionPtr = nullptr;
@@ -502,7 +502,7 @@ private:
 	        // numerical issue and the other one is out of memory
 	        catch(...) {
 #ifdef _OPENMP
-		        std::lock_guard<std::mutex> take(this->exceptionLock);
+		        std::lock_guard<std::mutex> take(exceptionLock);
 #endif
 		        exceptionPtr = std::current_exception();
 	        }
