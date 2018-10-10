@@ -81,6 +81,9 @@ class EclTransmissibility
 
     static const bool enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy);
 
+    typedef Dune::CartesianIndexMapper<Grid> CartesianIndexMapper;
+
+
     // Grid and world dimension
     enum { dimWorld = GridView::dimensionworld };
 
@@ -88,8 +91,10 @@ class EclTransmissibility
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
-    EclTransmissibility(const Vanguard& vanguard)
-        : vanguard_(vanguard)
+    EclTransmissibility(const Grid& grid, const CartesianIndexMapper& cartMapper, const Opm::EclipseState& eclState)
+        : grid_(grid)
+        , cartMapper_(cartMapper)
+        , eclState_(eclState)
     {}
 
     /*!
@@ -117,11 +122,9 @@ public:
      */
     void update()
     {
-        const auto& gridView = vanguard_.gridView();
-        const auto& cartMapper = vanguard_.cartesianIndexMapper();
-        const auto& eclState = vanguard_.eclState();
-        const auto& eclGrid = eclState.getInputGrid();
-        auto& transMult = eclState.getTransMult();
+        const auto& gridView = grid_.leafGridView();
+        const auto& eclGrid = eclState_.getInputGrid();
+        auto& transMult = eclState_.getTransMult();
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
         ElementMapper elemMapper(gridView, Dune::mcmgElementLayout());
 #else
@@ -151,7 +154,7 @@ public:
             // compute the axis specific "centroids" used for the transmissibilities. for
             // consistency with the flow simulator, we use the element centers as
             // computed by opm-parser's Opm::EclipseGrid class for all axes.
-            unsigned cartesianCellIdx = cartMapper.cartesianIndex(elemIdx);
+            unsigned cartesianCellIdx = cartMapper_.cartesianIndex(elemIdx);
             const auto& centroid = eclGrid.getCellCenter(cartesianCellIdx);
             for (unsigned axisIdx = 0; axisIdx < dimWorld; ++axisIdx)
                 for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
@@ -258,8 +261,8 @@ public:
                 if (elemIdx > outsideElemIdx)
                     continue;
 
-                unsigned insideCartElemIdx = cartMapper.cartesianIndex(elemIdx);
-                unsigned outsideCartElemIdx = cartMapper.cartesianIndex(outsideElemIdx);
+                unsigned insideCartElemIdx = cartMapper_.cartesianIndex(elemIdx);
+                unsigned outsideCartElemIdx = cartMapper_.cartesianIndex(outsideElemIdx);
 
                 // local indices of the faces of the inside and
                 // outside elements which contain the intersection
@@ -350,6 +353,63 @@ public:
         }
     }
 
+    void extractCartesianTrans_()
+    {
+        const auto& cartDims = cartMapper_.cartesianDimensions();
+        const int globalSize = cartDims[0]*cartDims[1]*cartDims[2];
+        tranx_.resize(globalSize, 0.0);
+        trany_.resize(globalSize, 0.0);
+        tranz_.resize(globalSize, 0.0);
+
+        const auto& gridView = grid_.leafGridView();
+        typedef typename Grid::LeafGridView GridView;
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> ElementMapper;
+        ElementMapper globalElemMapper(gridView, Dune::mcmgElementLayout());
+#else
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGElementLayout> ElementMapper;
+        ElementMapper globalElemMapper(gridView);
+#endif
+
+        auto elemIt = gridView.template begin</*codim=*/0>();
+        const auto& elemEndIt = gridView.template end</*codim=*/0>();
+        for (; elemIt != elemEndIt; ++ elemIt) {
+            const auto& elem = *elemIt;
+
+            auto isIt = gridView.ibegin(elem);
+            const auto& isEndIt = gridView.iend(elem);
+            for (; isIt != isEndIt; ++ isIt) {
+                const auto& is = *isIt;
+
+                if (!is.neighbor())
+                    continue; // intersection is on the domain boundary
+
+                unsigned c1 = globalElemMapper.index(is.inside());
+                unsigned c2 = globalElemMapper.index(is.outside());
+
+                if (c1 > c2)
+                    continue; // we only need to handle each connection once, thank you.
+
+
+                int gc1 = std::min(cartMapper_.cartesianIndex(c1), cartMapper_.cartesianIndex(c2));
+                int gc2 = std::max(cartMapper_.cartesianIndex(c1), cartMapper_.cartesianIndex(c2));
+                if (gc2 - gc1 == 1)
+                    tranx_[gc1] = transmissibility(c1, c2);
+                else if (gc2 - gc1 == cartDims[0])
+                    trany_[gc1] = transmissibility(c1, c2);
+                else if (gc2 - gc1 == cartDims[0]*cartDims[1])
+                    tranz_[gc1] = transmissibility(c1, c2);
+                else
+                    trannnc_[std::make_pair(c1,c2)] = transmissibility(c1, c2);
+            }
+        }
+    }
+
+    const std::vector<double>& tranx () const { return tranx_;}
+    const std::vector<double>& trany () const { return trany_;}
+    const std::vector<double>& tranz () const { return tranz_;}
+    const std::map<std::pair<int, int>, double>& trannnc () const {return trannnc_;}
+
     /*!
      * \brief Return the permeability for an element.
      */
@@ -421,16 +481,16 @@ private:
                                 /*isCpGrid=*/std::true_type) const
     {
         int faceIdx = intersection.id();
-        faceCenterInside = vanguard_.grid().faceCenterEcl(insideElemIdx,insideFaceIdx);
-        faceCenterOutside = vanguard_.grid().faceCenterEcl(outsideElemIdx,outsideFaceIdx);
-        faceAreaNormal = vanguard_.grid().faceAreaNormalEcl(faceIdx);
+        faceCenterInside = grid_.faceCenterEcl(insideElemIdx,insideFaceIdx);
+        faceCenterOutside = grid_.faceCenterEcl(outsideElemIdx,outsideFaceIdx);
+        faceAreaNormal = grid_.faceAreaNormalEcl(faceIdx);
     }
 
     void extractPermeability_()
     {
-        const auto& props = vanguard_.eclState().get3DProperties();
+        const auto& props = eclState_.get3DProperties();
 
-        unsigned numElem = vanguard_.gridView().size(/*codim=*/0);
+        unsigned numElem = grid_.leafGridView().size(/*codim=*/0);
         permeability_.resize(numElem);
 
         // read the intrinsic permeabilities from the eclState. Note that all arrays
@@ -448,7 +508,7 @@ private:
                 permzData = props.getDoubleGridProperty("PERMZ").getData();
 
             for (size_t dofIdx = 0; dofIdx < numElem; ++ dofIdx) {
-                unsigned cartesianElemIdx = vanguard_.cartesianIndex(dofIdx);
+                unsigned cartesianElemIdx = cartMapper_.cartesianIndex(dofIdx);
                 permeability_[dofIdx] = 0.0;
                 permeability_[dofIdx][0][0] = permxData[cartesianElemIdx];
                 permeability_[dofIdx][1][1] = permyData[cartesianElemIdx];
@@ -570,11 +630,10 @@ private:
 
         // compute volume weighted arithmetic average of NTG for
         // cells merged as an result of minpv.
-        const auto& eclState = vanguard_.eclState();
-        const auto& eclGrid = eclState.getInputGrid();
+        const auto& eclGrid = eclState_.getInputGrid();
 
         const std::vector<double>& ntg =
-            eclState.get3DProperties().getDoubleGridProperty("NTG").getData();
+            eclState_.get3DProperties().getDoubleGridProperty("NTG").getData();
 
         averageNtg = ntg;
 
@@ -584,10 +643,9 @@ private:
         if (!opmfil)
             return;
 
-        const auto& porv = eclState.get3DProperties().getDoubleGridProperty("PORV").getData();
-        const auto& actnum = eclState.get3DProperties().getIntGridProperty("ACTNUM").getData();
-        const auto& cartMapper = vanguard_.cartesianIndexMapper();
-        const auto& cartDims = cartMapper.cartesianDimensions();
+        const auto& porv = eclState_.get3DProperties().getDoubleGridProperty("PORV").getData();
+        const auto& actnum = eclState_.get3DProperties().getIntGridProperty("ACTNUM").getData();
+        const auto& cartDims = cartMapper_.cartesianDimensions();
         assert(dimWorld > 1);
         const size_t nxny = cartDims[0] * cartDims[1];
         for (size_t cartesianCellIdx = 0; cartesianCellIdx < ntg.size(); ++cartesianCellIdx)
@@ -616,13 +674,20 @@ private:
         }
     }
 
-    const Vanguard& vanguard_;
+    const Grid& grid_;
+    const CartesianIndexMapper& cartMapper_;
+    const Opm::EclipseState& eclState_;
     std::vector<DimMatrix> permeability_;
     std::unordered_map<std::uint64_t, Scalar> trans_;
     std::map<std::pair<unsigned, unsigned>, Scalar> transBoundary_;
     std::map<std::pair<unsigned, unsigned>, Scalar> thermalHalfTransBoundary_;
     Opm::ConditionalStorage<enableEnergy,
                             std::unordered_map<std::uint64_t, Scalar> > thermalHalfTrans_;
+
+    std::vector<double> tranx_;
+    std::vector<double> trany_;
+    std::vector<double> tranz_;
+    std::map<std::pair<int, int>, double> trannnc_;
 };
 
 } // namespace Ewoms
