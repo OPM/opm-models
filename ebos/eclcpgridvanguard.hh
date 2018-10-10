@@ -154,7 +154,7 @@ public:
             // transmissibilities are relatively expensive to compute, we only do it if
             // more than a single process is involved in the simulation.
             cartesianIndexMapper_ = new CartesianIndexMapper(*grid_);
-            globalTrans_ = new EclTransmissibility<TypeTag>(*grid_, *cartesianIndexMapper_, this->eclState());
+            globalTrans_ = new EclTransmissibility<TypeTag>(*grid_, *cartesianIndexMapper_, this->deck(), this->eclState());
             globalTrans_->update();
 
             // convert to transmissibility for faces

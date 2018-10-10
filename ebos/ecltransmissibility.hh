@@ -91,11 +91,15 @@ class EclTransmissibility
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
 
 public:
-    EclTransmissibility(const Grid& grid, const CartesianIndexMapper& cartMapper, const Opm::EclipseState& eclState)
+    EclTransmissibility(const Grid& grid, const CartesianIndexMapper& cartMapper, const Opm::Deck& deck, const Opm::EclipseState& eclState)
         : grid_(grid)
         , cartMapper_(cartMapper)
         , eclState_(eclState)
-    {}
+        , transMult_(Opm::GridDims(deck), deck, eclState.get3DProperties())
+
+    {
+
+    }
 
     /*!
      * \brief Actually compute the transmissibilty over a face as a pre-compute step.
@@ -112,7 +116,10 @@ public:
      * either but at least it seems to be much better.
      */
     void finishInit()
-    { update(); }
+    {
+        update();
+        updateFromEclState();
+    }
 
 
     /*!
@@ -124,7 +131,6 @@ public:
     {
         const auto& gridView = grid_.leafGridView();
         const auto& eclGrid = eclState_.getInputGrid();
-        auto& transMult = eclState_.getTransMult();
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
         ElementMapper elemMapper(gridView, Dune::mcmgElementLayout());
 #else
@@ -318,9 +324,9 @@ public:
 
                 // apply the full face transmissibility multipliers
                 // for the inside ...
-                applyMultipliers_(trans, insideFaceIdx, insideCartElemIdx, transMult);
+                applyMultipliers_(trans, insideFaceIdx, insideCartElemIdx, transMult_);
                 // ... and outside elements
-                applyMultipliers_(trans, outsideFaceIdx, outsideCartElemIdx, transMult);
+                applyMultipliers_(trans, outsideFaceIdx, outsideCartElemIdx, transMult_);
 
                 // apply the region multipliers (cf. the MULTREGT keyword)
                 Opm::FaceDir::DirEnum faceDir;
@@ -344,7 +350,7 @@ public:
                     throw std::logic_error("Could not determine a face direction");
                 }
 
-                trans *= transMult.getRegionMultiplier(insideCartElemIdx,
+                trans *= transMult_.getRegionMultiplier(insideCartElemIdx,
                                                        outsideCartElemIdx,
                                                        faceDir);
 
@@ -353,7 +359,60 @@ public:
         }
     }
 
-    void extractCartesianTrans_()
+    void updateFromEclState(){
+        const auto& gridView = grid_.leafGridView();
+        const auto& eclGrid = eclState_.getInputGrid();
+        const auto& cartDims = cartMapper_.cartesianDimensions();
+
+#if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
+        ElementMapper elemMapper(gridView, Dune::mcmgElementLayout());
+#else
+        ElementMapper elemMapper(gridView);
+#endif
+
+        const auto& tranx = eclState_.get3DProperties().getDoubleGridProperty("TRANX").getData();
+        const auto& trany = eclState_.get3DProperties().getDoubleGridProperty("TRANY").getData();
+        const auto& tranz = eclState_.get3DProperties().getDoubleGridProperty("TRANZ").getData();
+        // compute the transmissibilities for all intersections
+        auto elemIt = gridView.template begin</*codim=*/ 0>();
+        const auto& elemEndIt = gridView.template end</*codim=*/ 0>();
+
+        for (; elemIt != elemEndIt; ++elemIt) {
+            const auto& elem = *elemIt;
+            unsigned elemIdx = elemMapper.index(elem);
+
+            auto isIt = gridView.ibegin(elem);
+            const auto& isEndIt = gridView.iend(elem);
+            unsigned boundaryIsIdx = 0;
+            for (; isIt != isEndIt; ++ isIt) {
+                // store intersection, this might be costly
+                const auto& intersection = *isIt;
+                if (!intersection.neighbor())
+                    continue; // intersection is on the domain boundary
+
+                unsigned c1 = elemMapper.index(intersection.inside());
+                unsigned c2 = elemMapper.index(intersection.outside());
+
+                if (c1 > c2)
+                    continue; // we only need to handle each connection once, thank you.
+
+                auto isId = isId_(c1, c2);
+
+                int gc1 = std::min(cartMapper_.cartesianIndex(c1), cartMapper_.cartesianIndex(c2));
+                int gc2 = std::max(cartMapper_.cartesianIndex(c1), cartMapper_.cartesianIndex(c2));
+                if (gc2 - gc1 == 1)
+                    trans_[isId] = tranx[gc1];
+                else if (gc2 - gc1 == cartDims[0])
+                    trans_[isId] = trany[gc1];
+                else if (gc2 - gc1 == cartDims[0]*cartDims[1])
+                    trans_[isId] = tranz[gc1];
+                //else
+                    //trannnc_[std::make_pair(c1,c2)] = transmissibility(c1, c2);
+            }
+        }
+    }
+
+    void extractCartesianTrans()
     {
         const auto& cartDims = cartMapper_.cartesianDimensions();
         const int globalSize = cartDims[0]*cartDims[1]*cartDims[2];
@@ -677,6 +736,7 @@ private:
     const Grid& grid_;
     const CartesianIndexMapper& cartMapper_;
     const Opm::EclipseState& eclState_;
+    const Opm::TransMult transMult_;
     std::vector<DimMatrix> permeability_;
     std::unordered_map<std::uint64_t, Scalar> trans_;
     std::map<std::pair<unsigned, unsigned>, Scalar> transBoundary_;

@@ -482,7 +482,7 @@ public:
      */
     EclProblem(Simulator& simulator)
         : ParentType(simulator)
-        , transmissibilities_(simulator.vanguard().grid(),simulator.vanguard().cartesianIndexMapper(), simulator.vanguard().eclState())
+        , transmissibilities_(simulator.vanguard().grid(),simulator.vanguard().cartesianIndexMapper(), simulator.vanguard().deck(), simulator.vanguard().eclState())
         , thresholdPressures_(simulator)
         , wellModel_(simulator)
         , pffDofData_(simulator.gridView(), this->elementMapper())

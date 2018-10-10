@@ -27,6 +27,8 @@
 #ifndef EWOMS_ECL_BASE_VANGUARD_HH
 #define EWOMS_ECL_BASE_VANGUARD_HH
 
+#include "ecltransmissibility.hh"
+
 #include <ewoms/io/basevanguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
@@ -73,6 +75,48 @@ SET_BOOL_PROP(EclBaseVanguard, EnableOpmRstFile, true);
 END_PROPERTIES
 
 namespace Ewoms {
+
+template <class TypeTag>
+class EclTransmissibilityInitializer : public Opm::TransmissibilityInitializer
+{
+
+    typedef Dune::CartesianIndexMapper<Dune::CpGrid> CartesianIndexMapper;
+
+public:
+    EclTransmissibilityInitializer()
+        : eclTransmissibility_(nullptr)
+    {
+    }
+
+    void setup(const Opm::Deck& deck, const Opm::EclipseState& eclState) override
+    {
+        const auto& gridProps = eclState.get3DProperties();
+        const std::vector<double>& porv = gridProps.getDoubleGridProperty("PORV").getData();
+
+        Dune::CpGrid grid;
+        grid.processEclipseFormat(eclState.getInputGrid(),
+                                    /*isPeriodic=*/false,
+                                    /*flipNormals=*/false,
+                                    /*clipZ=*/false,
+                                    porv);
+
+        CartesianIndexMapper cartMapper(grid);
+        eclTransmissibility_ = new EclTransmissibility<TypeTag> (grid, cartMapper, deck, eclState);
+        eclTransmissibility_->update();
+        eclTransmissibility_->extractCartesianTrans();
+    }
+    const std::vector<double>& tranx() override { return eclTransmissibility_->tranx(); }
+    const std::vector<double>& trany() override { return eclTransmissibility_->trany(); }
+    const std::vector<double>& tranz() override { return eclTransmissibility_->tranz(); }
+    const std::map<std::pair<int,int>, double>& trannnc() override { return eclTransmissibility_->trannnc(); }
+
+private:
+    //Opm::EclipseState& eclState_;
+    EclTransmissibility<TypeTag>* eclTransmissibility_;
+
+
+
+};
 
 /*!
  * \ingroup EclBlackOilSimulator
@@ -215,13 +259,15 @@ public:
             tmp.emplace_back(Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputError::WARN);
             tmp.emplace_back(Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputError::WARN);
             Opm::ParseContext parseContext(tmp);
+            EclTransmissibilityInitializer<TypeTag>* transInit = new EclTransmissibilityInitializer<TypeTag>;
+            Opm::EclipseState::setTransmissibilityInitializer(transInit);
 
             internalDeck_.reset(new Opm::Deck(parser.parseFile(fileName , parseContext)));
             internalEclState_.reset(new Opm::EclipseState(*internalDeck_, parseContext));
             {
                 const auto& grid = internalEclState_->getInputGrid();
                 const Opm::TableManager table ( *internalDeck_ );
-                const Opm::Eclipse3DProperties eclipseProperties (*internalDeck_  , table, grid);
+                const Opm::Eclipse3DProperties eclipseProperties (table, grid, *internalDeck_, *internalEclState_);
                 internalSchedule_.reset(new Opm::Schedule(*internalDeck_, grid, eclipseProperties, Opm::Phases(true, true, true), parseContext ));
                 internalSummaryConfig_.reset(new Opm::SummaryConfig(*internalDeck_, *internalSchedule_, table,  parseContext));
             }
