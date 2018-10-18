@@ -98,8 +98,16 @@ public:
         storage = 0.0;
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
-            if (!FluidSystem::phaseIsActive(phaseIdx))
+            if (!FluidSystem::phaseIsActive(phaseIdx)) {
+                if (Indices::numPhases == 3) { // add trivial equation for the pseudo phase
+                    unsigned activeCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
+                    if (timeIdx == 0)
+                        storage[conti0EqIdx + activeCompIdx] = Opm::variable<LhsEval>(0.0, conti0EqIdx + activeCompIdx);
+                    else
+                        storage[conti0EqIdx + activeCompIdx] = 0.0;
+                }
                 continue;
+            }
 
             unsigned activeCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
             LhsEval surfaceVolume =

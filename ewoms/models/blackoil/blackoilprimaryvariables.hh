@@ -270,10 +270,10 @@ public:
         typedef typename std::remove_const<ConstEvaluation>::type FsEvaluation;
         typedef typename Opm::MathToolbox<FsEvaluation> FsToolbox;
 
-        bool gasPresent = (fluidState.saturation(gasPhaseIdx) > 0.0);
-        bool oilPresent = (fluidState.saturation(oilPhaseIdx) > 0.0);
+        bool gasPresent = FluidSystem::phaseIsActive(gasPhaseIdx)?(fluidState.saturation(gasPhaseIdx) > 0.0):false;
+        bool oilPresent = FluidSystem::phaseIsActive(oilPhaseIdx)?(fluidState.saturation(oilPhaseIdx) > 0.0):false;
         static const Scalar thresholdWaterFilledCell = 1.0 - 1e-6;
-        bool onlyWater = (fluidState.saturation(waterPhaseIdx) > thresholdWaterFilledCell);
+        bool onlyWater = FluidSystem::phaseIsActive(waterPhaseIdx)?(fluidState.saturation(waterPhaseIdx) > thresholdWaterFilledCell):false;
 
         // deal with the primary variables for the energy extension
         EnergyModule::assignPrimaryVars(*this, fluidState);
