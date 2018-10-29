@@ -28,6 +28,7 @@
 #define EWOMS_THREADED_ENTITY_ITERATOR_HH
 
 #include <thread>
+#include <mutex>
 
 namespace Ewoms {
 
