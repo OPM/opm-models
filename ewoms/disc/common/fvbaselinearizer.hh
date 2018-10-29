@@ -467,52 +467,52 @@ private:
 #pragma omp parallel
 #endif
         {
-	        try {
-		        ElementIterator elemIt = threadedElemIt.beginParallel();
-		        ElementIterator nextElemIt = elemIt;
-		        for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
-			        // give the model and the problem a chance to prefetch the data required
-			        // to linearize the next element, but only if we need to consider it
-			        nextElemIt = threadedElemIt.increment();
-			        if (!threadedElemIt.isFinished(nextElemIt)) {
-				        const auto& nextElem = *nextElemIt;
-				        if (linearizeNonLocalElements
-				            || nextElem.partitionType() == Dune::InteriorEntity)
-				        {
-					        model_().prefetch(nextElem);
-					        problem_().prefetch(nextElem);
-				        }
-			        }
+            try {
+                ElementIterator elemIt = threadedElemIt.beginParallel();
+                ElementIterator nextElemIt = elemIt;
+                for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
+                    // give the model and the problem a chance to prefetch the data required
+                    // to linearize the next element, but only if we need to consider it
+                    nextElemIt = threadedElemIt.increment();
+                    if (!threadedElemIt.isFinished(nextElemIt)) {
+                        const auto& nextElem = *nextElemIt;
+                        if (linearizeNonLocalElements
+                            || nextElem.partitionType() == Dune::InteriorEntity)
+                        {
+                            model_().prefetch(nextElem);
+                            problem_().prefetch(nextElem);
+                        }
+                    }
 
-			        const Element& elem = *elemIt;
-			        if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
-				        continue;
+                    const Element& elem = *elemIt;
+                    if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
+                        continue;
 
-			        linearizeElement_(elem);
-		        }
-	        }
-	        // if an exception occurs in the parallel block, it won't escape the
-	        // block; terminate() is called instead of a handler outside!
-	        // hence, we tuck any exceptions that occurs away in the pointer if
-	        // an exception occurs in more than one thread at the same time, we
-	        // must pick one of them to be rethrown as we cannot have two active
-	        // exceptions at the same time. this solution essentially picks one
-	        // at random. this will be a problem if two different kinds of
-	        // exceptions are thrown, for instance if one thread gets a
-	        // numerical issue and the other one is out of memory
-	        catch(...) {
+                    linearizeElement_(elem);
+                }
+            }
+            // if an exception occurs in the parallel block, it won't escape the
+            // block; terminate() is called instead of a handler outside!
+            // hence, we tuck any exceptions that occurs away in the pointer if
+            // an exception occurs in more than one thread at the same time, we
+            // must pick one of them to be rethrown as we cannot have two active
+            // exceptions at the same time. this solution essentially picks one
+            // at random. this will be a problem if two different kinds of
+            // exceptions are thrown, for instance if one thread gets a
+            // numerical issue and the other one is out of memory
+            catch(...) {
 #ifdef _OPENMP
-		        std::lock_guard<std::mutex> take(exceptionLock);
+                std::lock_guard<std::mutex> take(exceptionLock);
 #endif
-		        exceptionPtr = std::current_exception();
-	        }
+                exceptionPtr = std::current_exception();
+            }
         }  // parallel block
 
         // after reduction from the parallel block, exceptionPtr will point to
         // a valid exception if one occurred in one of the threads; rethrow
         // it here to let the outer handler take care of it properly
         if(exceptionPtr) {
-	        std::rethrow_exception(exceptionPtr);
+            std::rethrow_exception(exceptionPtr);
         }
 
         applyConstraintsToLinearization_();
