@@ -376,8 +376,6 @@ protected:
         const auto& gradCalc = elemCtx.gradientCalculator();
         Ewoms::MoleFractionCallback<TypeTag> moleFractionCallback(elemCtx);
 
-        DimEvalVector temperatureGrad;
-
         const auto& face = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
         const auto& normal = face.normal();
         const auto& extQuants = elemCtx.extensiveQuantities(faceIdx, timeIdx);
