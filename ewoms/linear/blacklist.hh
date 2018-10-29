@@ -36,6 +36,7 @@
 #include <dune/grid/common/gridenums.hh>
 #endif // HAVE_MPI
 
+#include <iostream>
 #include <algorithm>
 
 namespace Ewoms {
