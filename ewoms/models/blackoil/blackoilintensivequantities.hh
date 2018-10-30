@@ -316,7 +316,8 @@ public:
         }
 
         // retrieve the porosity from the problem
-        porosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
+        referencePorosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
+        porosity_ = referencePorosity_;
 
         // the porosity must be modified by the compressibility of the
         // rock...
@@ -396,6 +397,15 @@ public:
         return fluidState_.viscosity(phaseIdx)*mobility(phaseIdx);
     }
 
+    /*!
+     * \brief Returns the porosity of the rock at reference conditions.
+     *
+     * I.e., the porosity of rock which is not perturbed by pressure and temperature
+     * changes.
+     */
+    Scalar referencePorosity() const
+    { return referencePorosity_; }
+
 private:
     friend BlackOilSolventIntensiveQuantities<TypeTag>;
     friend BlackOilPolymerIntensiveQuantities<TypeTag>;
@@ -405,6 +415,7 @@ private:
     { return *static_cast<Implementation*>(this); }
 
     FluidState fluidState_;
+    Scalar referencePorosity_;
     Evaluation porosity_;
     Evaluation mobility_[numPhases];
 };
