@@ -91,13 +91,15 @@ class BlackOilIntensiveQuantities
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy> FluidState;
+    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > FluidState;
 
 public:
     BlackOilIntensiveQuantities()
     {
-        fluidState_.setRs(0.0);
-        fluidState_.setRv(0.0);
+        if (compositionSwitchEnabled) {
+            fluidState_.setRs(0.0);
+            fluidState_.setRv(0.0);
+        }
     }
 
     BlackOilIntensiveQuantities(const BlackOilIntensiveQuantities& other) = default;
@@ -156,9 +158,14 @@ public:
         if (enableSolvent)
             So -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx);
 
-        fluidState_.setSaturation(waterPhaseIdx, Sw);
-        fluidState_.setSaturation(gasPhaseIdx, Sg);
-        fluidState_.setSaturation(oilPhaseIdx, So);
+        if (FluidSystem::phaseIsActive(waterPhaseIdx))
+            fluidState_.setSaturation(waterPhaseIdx, Sw);
+
+        if (FluidSystem::phaseIsActive(gasPhaseIdx))
+            fluidState_.setSaturation(gasPhaseIdx, Sg);
+
+        if (FluidSystem::phaseIsActive(oilPhaseIdx))
+            fluidState_.setSaturation(oilPhaseIdx, So);
 
         asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
@@ -171,13 +178,15 @@ public:
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
             const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
+                if (FluidSystem::phaseIsActive(phaseIdx))
+                    fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
         }
 
         else {
             const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
-                fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
+                if (FluidSystem::phaseIsActive(phaseIdx))
+                    fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
         }
 
         // calculate relative permeabilities. note that we store the result into the
@@ -204,7 +213,7 @@ public:
                                                             SoMax);
                 fluidState_.setRs(Opm::min(RsMax, RsSat));
             }
-            else
+            else if (compositionSwitchEnabled)
                 fluidState_.setRs(0.0);
 
             if (FluidSystem::enableVaporizedOil()) {
@@ -216,7 +225,7 @@ public:
                                                             SoMax);
                 fluidState_.setRv(Opm::min(RvMax, RvSat));
             }
-            else
+            else if (compositionSwitchEnabled)
                 fluidState_.setRv(0.0);
         }
         else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs) {
