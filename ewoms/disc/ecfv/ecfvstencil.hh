@@ -133,6 +133,12 @@ public:
         const LocalGeometry geometry() const
         { return element_.geometry(); }
 
+        /*!
+         * \brief Geometry of the sub-control volume relative to parent.
+         */
+        const LocalGeometry localGeometry() const
+        { return element_.geometryInFather(); }
+
     private:
         GlobalPosition centerPos_;
         Scalar volume_;
