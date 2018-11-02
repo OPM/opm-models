@@ -47,6 +47,17 @@ public:
         , isEnabled_(true)
     { }
 
+    // allow moves
+    GenericGuard(GenericGuard&& other)
+        : callback_(other.callback_)
+        , isEnabled_(other.isEnabled)
+    {
+        other.isEnabled = false;
+    }
+
+    // disable copies
+    GenericGuard(const GenericGuard& other) = delete;
+
     ~GenericGuard()
     {
         if (isEnabled_)
@@ -72,6 +83,10 @@ private:
     Callback& callback_;
     bool isEnabled_;
 };
+
+template <class Callback>
+GenericGuard<Callback> make_guard(Callback& callback)
+{ return GenericGuard<Callback>(callback); }
 
 } // namespace Ewoms
 
