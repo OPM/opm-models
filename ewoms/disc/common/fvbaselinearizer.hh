@@ -450,12 +450,10 @@ private:
 
         *matrix_ = 0.0;
 
-#ifdef _OPENMP
-        // to avoid a race condition if two threads handles an exception at
-        // the same time, we use an explicit lock to control access to the
-        // exception storage amongst thread-local handlers
+        // to avoid a race condition if two threads handle an exception at the same time,
+        // we use an explicit lock to control access to the exception storage object
+        // amongst thread-local handlers
         std::mutex exceptionLock;
-#endif
 
         // storage to any exception that needs to be bridged out of the
         // parallel block below. initialized to null to indicate no exception
@@ -467,10 +465,10 @@ private:
 #pragma omp parallel
 #endif
         {
-            try {
-                ElementIterator elemIt = threadedElemIt.beginParallel();
-                ElementIterator nextElemIt = elemIt;
-                for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
+            ElementIterator elemIt = threadedElemIt.beginParallel();
+            ElementIterator nextElemIt = elemIt;
+            for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
+                try {
                     // give the model and the problem a chance to prefetch the data required
                     // to linearize the next element, but only if we need to consider it
                     nextElemIt = threadedElemIt.increment();
@@ -490,21 +488,20 @@ private:
 
                     linearizeElement_(elem);
                 }
-            }
-            // if an exception occurs in the parallel block, it won't escape the
-            // block; terminate() is called instead of a handler outside!
-            // hence, we tuck any exceptions that occurs away in the pointer if
-            // an exception occurs in more than one thread at the same time, we
-            // must pick one of them to be rethrown as we cannot have two active
-            // exceptions at the same time. this solution essentially picks one
-            // at random. this will be a problem if two different kinds of
-            // exceptions are thrown, for instance if one thread gets a
-            // numerical issue and the other one is out of memory
-            catch(...) {
-#ifdef _OPENMP
-                std::lock_guard<std::mutex> take(exceptionLock);
-#endif
-                exceptionPtr = std::current_exception();
+                // If an exception occurs in the parallel block, it won't escape the
+                // block; terminate() is called instead of a handler outside!  hence, we
+                // tuck any exceptions that occur away in the pointer. If an exception
+                // occurs in more than one thread at the same time, we must pick one of
+                // them to be rethrown as we cannot have two active exceptions at the
+                // same time. This solution essentially picks one at random. This will
+                // only be a problem if two different kinds of exceptions are thrown, for
+                // instance if one thread experiences a (recoverable) numerical issue
+                // while another is out of memory.
+                catch(...) {
+                    std::lock_guard<std::mutex> take(exceptionLock);
+                    exceptionPtr = std::current_exception();
+                    threadedElemIt.setFinished();
+                }
             }
         }  // parallel block
 
