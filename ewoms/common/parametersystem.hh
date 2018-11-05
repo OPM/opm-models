@@ -124,6 +124,18 @@
         #ParamName, #ParamName,                                         \
         /*errorIfNotRegistered=*/false))
 
+/*!
+ * \ingroup Parameter
+ *
+ * \brief Returns true if a parameter has been specified at runtime, false
+ *        otherwise.
+ *
+ * If the parameter in question has not been registered, this throws an exception.
+ */
+#define EWOMS_PARAM_IS_SET(TypeTag, ParamType, ParamName)               \
+    (::Ewoms::Parameters::isSet<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, \
+                                                                     #ParamName))
+
 namespace Ewoms {
 namespace Parameters {
 
@@ -905,6 +917,37 @@ public:
                                              errorIfNotRegistered);
     }
 
+    template <class ParamType, class PropTag>
+    static const ParamType isSet(const char *propTagName,
+                                 const char *paramName,
+                                 bool errorIfNotRegistered = true)
+    {
+
+#ifndef NDEBUG
+        // make sure that the parameter is used consistently. since
+        // this is potentially quite expensive, it is only done if
+        // debugging code is not explicitly turned off.
+        check_(Dune::className<ParamType>(), propTagName, paramName);
+#endif
+
+        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+        if (errorIfNotRegistered) {
+            if (ParamsMeta::registrationOpen())
+                throw std::runtime_error("Parameters can only checked after _all_ of them have "
+                                         "been registered.");
+
+            if (ParamsMeta::registry().find(paramName) == ParamsMeta::registry().end())
+                throw std::runtime_error("Accessing parameter "+std::string(paramName)
+                                         +" without prior registration is not allowed.");
+        }
+
+        std::string canonicalName(paramName);
+
+        // check whether the parameter is in the parameter tree
+        return ParamsMeta::tree().hasKey(canonicalName);
+    }
+
+
 private:
     struct Blubb
     {
@@ -995,6 +1038,14 @@ const ParamType get(const char *propTagName, const char *paramName, bool errorIf
     return Param<TypeTag>::template get<ParamType, PropTag>(propTagName,
                                                             paramName,
                                                             errorIfNotRegistered);
+}
+
+template <class TypeTag, class ParamType, class PropTag>
+bool isSet(const char *propTagName, const char *paramName, bool errorIfNotRegistered = true)
+{
+    return Param<TypeTag>::template isSet<ParamType, PropTag>(propTagName,
+                                                              paramName,
+                                                              errorIfNotRegistered);
 }
 
 template <class TypeTag, class ParamType, class PropTag>
