@@ -109,12 +109,12 @@ public:
      */
     void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx, unsigned focustimeidx)
     {
-        ParentType::update(elemCtx, dofIdx, timeIdx);// this only gives extrusion factor
+        ParentType::update(elemCtx, dofIdx, timeIdx);
 
         const auto& problem = elemCtx.problem();
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
 
-        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx, focustimeidx);
+        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx, focusTimeIdx);
 
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
@@ -123,21 +123,21 @@ public:
         // extract the water and the gas saturations for convenience
         Evaluation Sw = 0.0;
         if (waterEnabled)
-            Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx,  focustimeidx);
+            Sw = priVars.makeEvaluation(Indices::waterSaturationIdx, timeIdx,  focusTimeIdx);
 
         Evaluation Sg = 0.0;
         if (compositionSwitchEnabled)
         {
             if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
                 // -> threephase case
-                Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx, focustimeidx);
+                Sg = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx, focusTimeIdx);
             else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
                 // -> gas-water case
                 Sg = 1.0 - Sw;
 
                 // deal with solvent
                 if (enableSolvent)
-                    Sg -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx, focustimeidx);
+                    Sg -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx, focusTimeIdx);
             }
             else
             {
@@ -154,13 +154,13 @@ public:
 
         // deal with solvent
         if (enableSolvent)
-            So -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx, focustimeidx);
+            So -= priVars.makeEvaluation(Indices::solventSaturationIdx, timeIdx, focusTimeIdx);
 
         fluidState_.setSaturation(waterPhaseIdx, Sw);
         fluidState_.setSaturation(gasPhaseIdx, Sg);
         fluidState_.setSaturation(oilPhaseIdx, So);
 
-        asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
+        asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx, focusTimeIdx);
 
         // now we compute all phase pressures
         Evaluation pC[numPhases];
@@ -169,13 +169,13 @@ public:
 
         //oil is the reference phase for pressure
         if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv) {
-            const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, focustimeidx);
+            const Evaluation& pg = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, focusTimeIdx);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                 fluidState_.setPressure(phaseIdx, pg + (pC[phaseIdx] - pC[gasPhaseIdx]));
         }
 
         else {
-            const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, focustimeidx);
+            const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, focusTimeIdx);
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
                 fluidState_.setPressure(phaseIdx, po + (pC[phaseIdx] - pC[oilPhaseIdx]));
         }
@@ -186,7 +186,7 @@ public:
         Opm::Valgrind::CheckDefined(mobility_);
 
         // update the Saturation functions for the blackoil solvent module.
-        asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
+        asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx, focusTimeIdx);
 
         Scalar SoMax = elemCtx.problem().maxOilSaturation(globalSpaceIdx);
 
@@ -224,7 +224,7 @@ public:
             Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
 
             // oil phase, we can directly set the composition of the oil phase
-            const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx, focustimeidx);
+            const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx, focusTimeIdx);
             fluidState_.setRs(Opm::min(RsMax, Rs));
 
             if (FluidSystem::enableVaporizedOil()) {
@@ -245,7 +245,7 @@ public:
         else {
             assert(priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv);
 
-            const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx, focustimeidx);
+            const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx, focusTimeIdx);
             fluidState_.setRv(Rv);
 
             if (FluidSystem::enableDissolvedGas()) {
@@ -327,8 +327,8 @@ public:
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
 
-        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);// strictly do not need focus time since no makeEvaluation is done
-        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx, focustimeidx);
+        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx, focusTimeIdx);
+        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx, focusTimeIdx);
         asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
 
         // update the quantities which are required by the chosen

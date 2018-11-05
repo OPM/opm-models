@@ -492,7 +492,7 @@ protected:
     {
         EvalVector tmp;
         EqVector tmp2;
-        EvalVector tmp2_der;// this is added to support calculation of storage term derivative focusTime!=0 for need for adjoint: always used if cachedStororage term si false
+        EvalVector tmp2Der;// this is added to support calculation of storage term derivative focusTime!=0 for need for adjoint: always used if cachedStororage term si false
         RateVector sourceRate;
 
         tmp = 0.0;
@@ -561,20 +561,20 @@ protected:
                 // if the mass storage at the beginning of the time step is not cached,
                 // we re-calculate it from scratch.
                 // if storage cache not enables we always use derivatives
-                tmp2_der = 0.0;
-                asImp_().computeStorage(tmp2_der, elemCtx,  dofIdx, /*timeIdx=*/1);
-                Opm::Valgrind::CheckDefined(tmp2_der);
+                tmp2Der = 0.0;
+                asImp_().computeStorage(tmp2Der, elemCtx,  dofIdx, /*timeIdx=*/1);
+                Opm::Valgrind::CheckDefined(tmp2Der);
             }
 
             if( !elemCtx.enableStorageCache() ){
                 // Use the implicit Euler time discretization
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                     if(elemCtx.focusTimeIndex()==0){
-                        tmp2_der[eqIdx] .clearDerivatives();// remove derivatives for the time index
+                        tmp2Der[eqIdx] .clearDerivatives();// remove derivatives for the time index
                     }else{
                         tmp[eqIdx] .clearDerivatives();
                     }
-                    tmp[eqIdx] -= tmp2_der[eqIdx];
+                    tmp[eqIdx] -= tmp2Der[eqIdx];
                     tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
                     residual[dofIdx][eqIdx] += tmp[eqIdx];
                 }

@@ -503,7 +503,7 @@ public:
             }
         }
 
-        // this is restart spesific behavoir and to avoid this one have to hack outside for adjiont
+        // this is restart spesific 
         this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 

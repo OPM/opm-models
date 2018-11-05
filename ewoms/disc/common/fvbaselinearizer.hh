@@ -159,14 +159,15 @@ public:
     }
 
     /*!
-     * \brief Linearize the full system of non-linear equations.
+     * \brief Linearize the full system of non-linear equations about focusTimeIdx
+     * defualt is 0 i.e. current time normally time to be found.
      *
      * This means the spatial domain plus all auxiliary equations.
      */
-    void linearize(unsigned focustimeIndex)
+    void linearize(unsigned focusTimeIdx = 0)
     {
-        linearizeDomain(focustimeIndex);
-        linearizeAuxiliaryEquations(focustimeIndex);
+        linearizeDomain(focusTimeIdx);
+        linearizeAuxiliaryEquations(focusTimeIdx);
     }
 
     /*!

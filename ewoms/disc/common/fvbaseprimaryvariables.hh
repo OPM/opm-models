@@ -87,9 +87,9 @@ public:
      * it represents the a constant f = x_i. (the difference is that in the first case,
      * the derivative w.r.t. x_i is 1, while it is 0 in the second case.
      */
-    Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx,unsigned focustimeidx) const
+    Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx,unsigned focusTimeIdx) const
     {
-        if (timeIdx == focustimeidx)
+        if (timeIdx == focusTimeIdx)
             return Toolbox::createVariable((*this)[varIdx], varIdx);
         else
             return Toolbox::createConstant((*this)[varIdx]);
