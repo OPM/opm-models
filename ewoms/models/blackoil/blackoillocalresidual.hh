@@ -197,6 +197,7 @@ public:
         // scale the source term of the energy equation
         if (enableEnergy)
             source[Indices::contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
+
     }
 
     /*!

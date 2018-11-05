@@ -585,11 +585,11 @@ protected:
                 dofIdx != elemCtx.focusDofIndex())
             {
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx)
-                    residual[dofIdx][eqIdx] -= Opm::scalarValue(sourceRate[eqIdx])*scvVolume;
+                    residual[dofIdx][eqIdx] -= Opm::scalarValue(sourceRate[eqIdx]);
             }
             else {
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                    sourceRate[eqIdx] *= scvVolume;
+                    //sourceRate[eqIdx] *= scvVolume;
                     residual[dofIdx][eqIdx] -= sourceRate[eqIdx];
                 }
             }

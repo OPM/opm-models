@@ -1336,16 +1336,25 @@ public:
 
             // convert the source term from the total mass rate of the
             // cell to the one per unit of volume as used by the model.
-            unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
-                rate[eqIdx] /= this->model().dofTotalVolume(globalDofIdx);
+//            unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
+//            for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+//                rate[eqIdx] /= this->model().dofTotalVolume(globalDofIdx);
 
-                Opm::Valgrind::CheckDefined(rate[eqIdx]);
-                assert(Opm::isfinite(rate[eqIdx]));
-            }
+//                Opm::Valgrind::CheckDefined(rate[eqIdx]);
+//                assert(Opm::isfinite(rate[eqIdx]));
+//            }
         }
 
-        aquiferModel_.addToSource(rate, context, spaceIdx, timeIdx);
+        RateVector aquiferRate = 0.0;
+        aquiferModel_.addToSource(aquiferRate, context, spaceIdx, timeIdx);
+        unsigned globalDofIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
+        for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx) {
+            aquiferRate[eqIdx] *= this->model().dofTotalVolume(globalDofIdx);
+            Opm::Valgrind::CheckDefined(aquiferRate[eqIdx]);
+            assert(Opm::isfinite(aquiferRate[eqIdx]));
+            rate[eqIdx] += aquiferRate[eqIdx];
+        }
+
     }
 
     /*!
