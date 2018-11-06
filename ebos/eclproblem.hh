@@ -523,46 +523,17 @@ public:
         // or DRVDT up to the current time step in the schedule section counts, presence
         // of VAPPARS alone is not sufficient to disable DR[SV]DT. TODO: implment support
         // for this in opm-parser's Schedule object"
-        drsdtActive_ = false;
-        drvdtActive_ = false;
-        vapparsActive_ = false;
-
-        if (deck.hasKeyword("VAPPARS")) {
-            vapparsActive_ = true;
-
-            size_t numDof = this->model().numGridDof();
-            maxOilSaturation_.resize(numDof, 0.0);
-
-            // TODO: update the PVT objects. this is only required if VAPPARS becomes a
-            // fully dynamic keyword.
-        }
 
         // deal with DRSDT
-        maxDRsDt_ = 0.0;
-        maxDRs_ = -1.0;
-        if (!vapparsActive_ && deck.hasKeyword("DRSDT")) {
-            drsdtActive_ = !vapparsActive_;
-            const auto& drsdtKeyword = deck.getKeyword("DRSDT");
-            maxDRsDt_ = drsdtKeyword.getRecord(0).getItem("DRSDT_MAX").getSIDouble(0);
-            size_t numDof = this->model().numGridDof();
-            lastRs_.resize(numDof, 0.0);
-
-            std::string drsdtFlag =
-                drsdtKeyword.getRecord(0).getItem("Option").getTrimmedString(0);
-            std::transform(drsdtFlag.begin(), drsdtFlag.end(), drsdtFlag.begin(), ::toupper);
-
-            dRsDtOnlyFreeGas_ = (drsdtFlag == "FREE");
-        }
-
-        // deal with DRVDT
-        maxDRvDt_ = 0.0;
-        maxDRv_ = -1.0;
-        if (!vapparsActive_ && deck.hasKeyword("DRVDT")) {
-            const auto& drvdtKeyword = deck.getKeyword("DVSDT");
-            maxDRvDt_ = drvdtKeyword.getRecord(0).getItem("DRVDT_MAX").getSIDouble(0);
-            size_t numDof = this->model().numGridDof();
-            lastRv_.resize(numDof, 0.0);
-        }
+        const auto& eclState = simulator.vanguard().eclState();
+        unsigned ntpvt = eclState.runspec().tabdims().getNumPVTTables();
+        maxDRs_.resize(ntpvt, 1e30);
+        dRsDtOnlyFreeGas_.resize(ntpvt, false);
+        size_t numDof = this->model().numGridDof();
+        lastRs_.resize(numDof, 0.0);
+        maxDRv_.resize(ntpvt, 1e30);
+        lastRv_.resize(numDof, 0.0);
+        maxOilSaturation_.resize(numDof, 0.0);
 
         initFluidSystem_();
         updateElementDepths_();
@@ -571,7 +542,6 @@ public:
         readThermalParameters_();
         transmissibilities_.finishInit();
 
-        const auto& eclState = simulator.vanguard().eclState();
         const auto& initconfig = eclState.getInitConfig();
         const auto& timeMap = simulator.vanguard().schedule().getTimeMap();
         if(initconfig.restartRequested()) {
@@ -735,16 +705,21 @@ public:
      */
     void beginTimeStep()
     {
-        if (drsdtActive_)
+        int epsiodeIdx = this->simulator().episodeIndex();
+        const auto& oilVaporizationControl = this->simulator().vanguard().schedule().getOilVaporizationProperties(epsiodeIdx);
+        if (drsdtActive_())
             // DRSDT is enabled
-            maxDRs_ = maxDRsDt_*this->simulator().timeStepSize();
+            for (size_t pvtRegionIdx = 0; pvtRegionIdx < maxDRs_.size(); ++pvtRegionIdx )
+                maxDRs_[pvtRegionIdx] = oilVaporizationControl.getMaxDRSDT(pvtRegionIdx)*this->simulator().timeStepSize();
 
-        if (drvdtActive_)
+        if (drvdtActive_())
             // DRVDT is enabled
-            maxDRv_ = maxDRvDt_*this->simulator().timeStepSize();
+            for (size_t pvtRegionIdx = 0; pvtRegionIdx < maxDRv_.size(); ++pvtRegionIdx )
+                maxDRv_[pvtRegionIdx] = oilVaporizationControl.getMaxDRVDT(pvtRegionIdx)*this->simulator().timeStepSize();
 
-        if (!GET_PROP_VALUE(TypeTag, DisableWells))
+        if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
             wellModel_.beginTimeStep();
+        }
 
         aquiferModel_.beginTimeStep();
     }
@@ -807,6 +782,7 @@ public:
             initialFluidStates_.clear();
         }
 
+
         updateCompositionChangeLimits_();
     }
 
@@ -826,11 +802,6 @@ public:
             simulator.setFinished(true);
             return;
         }
-
-        if (!GET_PROP_VALUE(TypeTag, DisableWells))
-            wellModel_.endEpisode();
-
-        aquiferModel_.endEpisode();
     }
 
     /*!
@@ -1298,6 +1269,7 @@ public:
      */
     void initialSolutionApplied()
     {
+
         if (!GET_PROP_VALUE(TypeTag, DisableWells)) {
             // initialize the wells. Note that this needs to be done after initializing the
             // intrinsic permeabilities and the after applying the initial solution because
@@ -1354,10 +1326,11 @@ public:
      */
     Scalar maxGasDissolutionFactor(unsigned globalDofIdx) const
     {
-        if (!drsdtActive_ || maxDRs_ < 0.0)
+        int pvtRegionIdx = pvtRegionIndex(globalDofIdx);
+        if (!drsdtActive_() || maxDRs_[pvtRegionIdx] < 0.0)
             return std::numeric_limits<Scalar>::max()/2;
 
-        return lastRs_[globalDofIdx] + maxDRs_;
+        return lastRs_[globalDofIdx] + maxDRs_[pvtRegionIdx];
     }
 
     /*!
@@ -1366,10 +1339,11 @@ public:
      */
     Scalar maxOilVaporizationFactor(unsigned globalDofIdx) const
     {
-        if (!drvdtActive_ || maxDRv_ < 0.0)
+        int pvtRegionIdx = pvtRegionIndex(globalDofIdx);
+        if (!drvdtActive_() || maxDRv_[pvtRegionIdx] < 0.0)
             return std::numeric_limits<Scalar>::max()/2;
 
-        return lastRv_[globalDofIdx] + maxDRv_;
+        return lastRv_[globalDofIdx] + maxDRv_[pvtRegionIdx];
     }
 
     /*!
@@ -1381,7 +1355,7 @@ public:
      */
     Scalar maxOilSaturation(unsigned globalDofIdx) const
     {
-        if (!vapparsActive_)
+        if (!vapparsActive())
             return 0.0;
 
         return maxOilSaturation_[globalDofIdx];
@@ -1396,7 +1370,7 @@ public:
      */
     void setMaxOilSaturation(unsigned globalDofIdx, Scalar value)
     {
-        if (!vapparsActive_)
+        if (!vapparsActive())
             return;
 
         maxOilSaturation_[globalDofIdx] = value;
@@ -1422,10 +1396,26 @@ public:
 
     bool vapparsActive() const
     {
-        return vapparsActive_;
+        int epsiodeIdx = std::max(this->simulator().episodeIndex(), 0 );
+        const auto& oilVaporizationControl = this->simulator().vanguard().schedule().getOilVaporizationProperties(epsiodeIdx);
+        return (oilVaporizationControl.getType() == Opm::OilVaporizationEnum::VAPPARS);
     }
 
 private:
+    bool drsdtActive_() const
+    {
+        int epsiodeIdx = std::max(this->simulator().episodeIndex(), 0 );
+        const auto& oilVaporizationControl = this->simulator().vanguard().schedule().getOilVaporizationProperties(epsiodeIdx);
+        return (oilVaporizationControl.drsdtActive());
+
+    }
+    bool drvdtActive_() const
+    {
+        int epsiodeIdx = std::max(this->simulator().episodeIndex(), 0 );
+        const auto& oilVaporizationControl = this->simulator().vanguard().schedule().getOilVaporizationProperties(epsiodeIdx);
+        return (oilVaporizationControl.drvdtActive());
+
+    }
     Scalar cellCenterDepth( const Element& element ) const
     {
         typedef typename Element :: Geometry Geometry;
@@ -1466,7 +1456,10 @@ private:
     {
         // update the "last Rs" values for all elements, including the ones in the ghost
         // and overlap regions
-        if (drsdtActive_) {
+        int epsiodeIdx = std::max(this->simulator().episodeIndex(), 0 );
+        const auto& oilVaporizationControl = this->simulator().vanguard().schedule().getOilVaporizationProperties(epsiodeIdx);
+
+        if (oilVaporizationControl.drsdtActive()) {
             ElementContext elemCtx(this->simulator());
             const auto& vanguard = this->simulator().vanguard();
             auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
@@ -1483,7 +1476,8 @@ private:
 
                 typedef typename std::decay<decltype(fs) >::type FluidState;
 
-                if (!dRsDtOnlyFreeGas_ || fs.saturation(gasPhaseIdx) > freeGasMinSaturation_)
+                int pvtRegionIdx = pvtRegionIndex(compressedDofIdx);
+                if (oilVaporizationControl.getOption(pvtRegionIdx) || fs.saturation(gasPhaseIdx) > freeGasMinSaturation_)
                     lastRs_[compressedDofIdx] =
                         Opm::BlackOil::template getRs_<FluidSystem,
                                                        FluidState,
@@ -1495,7 +1489,7 @@ private:
 
         // update the "last Rv" values for all elements, including the ones in the ghost
         // and overlap regions
-        if (drvdtActive_) {
+        if (drvdtActive_()) {
             ElementContext elemCtx(this->simulator());
             const auto& vanguard = this->simulator().vanguard();
             auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
@@ -1523,7 +1517,7 @@ private:
     bool updateMaxOilSaturation_()
     {
         // we use VAPPARS
-        if (vapparsActive_) {
+        if (vapparsActive()) {
             ElementContext elemCtx(this->simulator());
             const auto& vanguard = this->simulator().vanguard();
             auto elemIt = vanguard.gridView().template begin</*codim=*/0>();
@@ -1943,6 +1937,8 @@ private:
         }
     }
 
+
+
     // update the hysteresis parameters of the material laws for the whole grid
     bool updateHysteresis_()
     {
@@ -2122,18 +2118,12 @@ private:
     std::vector<Scalar> polymerConcentration_;
     std::vector<Scalar> solventSaturation_;
 
-    bool drsdtActive_; // if no, VAPPARS *might* be active
-    bool dRsDtOnlyFreeGas_; // apply the DRSDT rate limit only to cells that exhibit free gas
+    std::vector<bool> dRsDtOnlyFreeGas_; // apply the DRSDT rate limit only to cells that exhibit free gas
     std::vector<Scalar> lastRs_;
-    Scalar maxDRsDt_;
-    Scalar maxDRs_;
-    bool drvdtActive_; // if no, VAPPARS *might* be active
+    std::vector<Scalar> maxDRs_;
     std::vector<Scalar> lastRv_;
-    Scalar maxDRvDt_;
-    Scalar maxDRv_;
+    std::vector<Scalar> maxDRv_;
     constexpr static Scalar freeGasMinSaturation_ = 1e-7;
-
-    bool vapparsActive_; // if no, DRSDT and/or DRVDT *might* be active
     std::vector<Scalar> maxOilSaturation_;
 
     EclWellModel wellModel_;
