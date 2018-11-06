@@ -376,16 +376,22 @@ public:
         if (globalDofIdx >= this->numGridDof())
             return 1.0;
 
+        // we do not care much about water, so it gets de-prioritized by a factor of 100
+        static constexpr Scalar waterPriority = 1e-2;
+
         if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
+            // Roughly convert the surface volume of the fluids from m^3 to kg. (in this
+            // context, it does not really matter if the actual densities are off by a
+            // factor of two or three.)
             switch (eqIdx) {
             case Indices::conti0EqIdx + FluidSystem::waterCompIdx:
-                return 1.0/1000.0;
+                return 1000.0*waterPriority;
 
             case Indices::conti0EqIdx + FluidSystem::gasCompIdx:
                 return 1.0;
 
             case Indices::conti0EqIdx + FluidSystem::oilCompIdx:
-                return 1.0/650.0;
+                return 650.0;
             }
         }
 
@@ -398,7 +404,9 @@ public:
         else if (EnergyModule::eqApplies(eqIdx))
             return EnergyModule::eqWeight(eqIdx);
 
-        // it is said that all kilograms are equal!
+        // it is said that all kilograms are born equal (except water)!
+        if (eqIdx == Indices::conti0EqIdx + FluidSystem::waterCompIdx)
+            return waterPriority;
         return 1.0;
     }
 
