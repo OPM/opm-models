@@ -92,6 +92,11 @@ NEW_PROP_TAG(LinearSolverOverlapSize);
 NEW_PROP_TAG(LinearSolverTolerance);
 
 /*!
+ * \brief Maximum accepted error of the norm of the residual.
+ */
+NEW_PROP_TAG(LinearSolverAbsTolerance);
+
+/*!
  * \brief Specifies the verbosity of the linear solver
  *
  * By default it is 0, i.e. it doesn't print anything. Setting this
@@ -189,6 +194,8 @@ public:
     {
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverTolerance,
                              "The maximum allowed error between of the linear solver");
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance,
+                             "The maximum accepted error of the norm of the residual");
         EWOMS_REGISTER_PARAM(TypeTag, unsigned, LinearSolverOverlapSize,
                              "The size of the algebraic overlap for the linear solver");
         EWOMS_REGISTER_PARAM(TypeTag, int, LinearSolverMaxIterations,
