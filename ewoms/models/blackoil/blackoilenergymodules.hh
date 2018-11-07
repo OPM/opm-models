@@ -167,8 +167,9 @@ public:
         }
 
         // add the internal energy of the rock
+        Scalar refPoro = intQuants.referencePorosity();
         const auto& uRock = Opm::decay<LhsEval>(intQuants.rockInternalEnergy());
-        storage[contiEnergyEqIdx] += (1.0 - poro)*uRock;
+        storage[contiEnergyEqIdx] += (1.0 - refPoro)*uRock;
         storage[contiEnergyEqIdx] *= GET_PROP_VALUE(TypeTag, BlackOilEnergyScalingFactor);
     }
 
