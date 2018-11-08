@@ -467,8 +467,8 @@ private:
         {
             ElementIterator elemIt = threadedElemIt.beginParallel();
             ElementIterator nextElemIt = elemIt;
-            for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
-                try {
+            try {
+                for (; !threadedElemIt.isFinished(elemIt); elemIt = nextElemIt) {
                     // give the model and the problem a chance to prefetch the data required
                     // to linearize the next element, but only if we need to consider it
                     nextElemIt = threadedElemIt.increment();
@@ -488,20 +488,20 @@ private:
 
                     linearizeElement_(elem);
                 }
-                // If an exception occurs in the parallel block, it won't escape the
-                // block; terminate() is called instead of a handler outside!  hence, we
-                // tuck any exceptions that occur away in the pointer. If an exception
-                // occurs in more than one thread at the same time, we must pick one of
-                // them to be rethrown as we cannot have two active exceptions at the
-                // same time. This solution essentially picks one at random. This will
-                // only be a problem if two different kinds of exceptions are thrown, for
-                // instance if one thread experiences a (recoverable) numerical issue
-                // while another is out of memory.
-                catch(...) {
-                    std::lock_guard<std::mutex> take(exceptionLock);
-                    exceptionPtr = std::current_exception();
-                    threadedElemIt.setFinished();
-                }
+            }
+            // If an exception occurs in the parallel block, it won't escape the
+            // block; terminate() is called instead of a handler outside!  hence, we
+            // tuck any exceptions that occur away in the pointer. If an exception
+            // occurs in more than one thread at the same time, we must pick one of
+            // them to be rethrown as we cannot have two active exceptions at the
+            // same time. This solution essentially picks one at random. This will
+            // only be a problem if two different kinds of exceptions are thrown, for
+            // instance if one thread experiences a (recoverable) numerical issue
+            // while another is out of memory.
+            catch(...) {
+                std::lock_guard<std::mutex> take(exceptionLock);
+                exceptionPtr = std::current_exception();
+                threadedElemIt.setFinished();
             }
         }  // parallel block
 
