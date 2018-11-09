@@ -262,6 +262,9 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableThermodynamicHints, false);
 // sufficient...
 SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverTolerance, 1e-3);
 
+// use default initialization based on rule-of-thumb of Newton tolerance
+SET_SCALAR_PROP(FvBaseDiscretization, LinearSolverAbsTolerance, -1.);
+
 //! Set the history size of the time discretization to 2 (for implicit euler)
 SET_INT_PROP(FvBaseDiscretization, TimeDiscHistorySize, 2);
 

@@ -187,7 +187,11 @@ protected:
         typedef CombinedCriterion<OverlappingVector, decltype(gridView.comm())> CCC;
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
-        Scalar linearSolverAbsTolerance = this->simulator_.model().newtonMethod().tolerance() / 10.0;
+        Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
+        // special magic value to indicate default
+        if(linearSolverAbsTolerance == -1.) {
+	        this->simulator_.model().newtonMethod().tolerance() / 10.0;
+        }
 
         convCrit_.reset(new CCC(gridView.comm(),
                                 /*residualReductionTolerance=*/linearSolverTolerance,
