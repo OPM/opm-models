@@ -88,6 +88,27 @@ class NcpIntensiveQuantities
     typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
 
+    typedef Opm::MathToolbox<Evaluation> Toolbox;
+    /*!
+     * \brief Ensure that a quantity is above a minimum threshold, while keeping
+     * the derivative of a variable.
+     */
+    static void truncateToThreshold_(ComponentVector& vec,
+                                     Scalar threshold,
+                                     unsigned compIdx,
+                                     unsigned timeIdx)
+    {
+        if(vec[compIdx] < threshold) {
+            // don't include derivatives from the initial state
+            if (timeIdx == 0) {
+                vec[compIdx] = Toolbox::createVariable(threshold, compIdx);
+            }
+            else {
+                vec[compIdx] = Toolbox::createConstant(threshold);
+            }
+        }
+    }
+
 public:
     NcpIntensiveQuantities()
     {}
@@ -136,8 +157,16 @@ public:
 
         ComponentVector fug;
         // retrieve component fugacities
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
+        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
             fug[compIdx] = priVars.makeEvaluation(fugacity0Idx + compIdx, timeIdx);
+
+            // as reservoirs have in the order of 10^2 bars pressure, the
+            // fugacities should be in the order of 10^7 Pascal; if we want a
+            // relative change of 10^-10 (see ewoms/models/blackoil/
+            // blackoilpolymermodules.hh:addStorage), we need a minimum of
+            // 10^{7-10} = 10^-3.
+            truncateToThreshold_(fug, 1.e-3, compIdx, timeIdx);
+        }
 
         // calculate phase compositions
         const auto *hint = elemCtx.thermodynamicHint(dofIdx, timeIdx);
