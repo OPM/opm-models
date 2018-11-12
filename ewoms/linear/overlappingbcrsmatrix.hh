@@ -136,15 +136,6 @@ public:
     /*!
      * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
      */
-    template <class JacobianMatrix>
-    void assignAdd(const JacobianMatrix& jacobian)
-    {
-        assignAdd( jacobian.matrix() );
-    }
-
-    /*!
-     * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
-     */
     void assignAdd(const ParentType& nativeMatrix)
     {
         // copy the native entries

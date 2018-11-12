@@ -102,7 +102,7 @@ NEW_PROP_TAG(EqVector);
 NEW_PROP_TAG(Linearizer);
 
 //! Specifies the type of a global Jacobian matrix
-NEW_PROP_TAG(JacobianMatrix);
+NEW_PROP_TAG(SparseMatrixAdapter);
 
 //! Specifies the type of the linear solver to be used
 NEW_PROP_TAG(LinearSolverBackend);
@@ -183,7 +183,6 @@ class NewtonMethod
     typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Linearizer) Linearizer;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverBackend) LinearSolverBackend;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonConvergenceWriter) ConvergenceWriter;
 

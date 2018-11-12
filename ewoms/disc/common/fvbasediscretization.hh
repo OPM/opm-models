@@ -50,7 +50,7 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
-#include <ewoms/linear/istlmatrixbackend.hh>
+#include <ewoms/linear/istlsparsematrixadapter.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>
 #include <ewoms/common/timer.hh>
@@ -131,7 +131,7 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtens
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
 
 //! Set the type of a global jacobian matrix from the solution types
-SET_PROP(FvBaseDiscretization, JacobianMatrix)
+SET_PROP(FvBaseDiscretization, SparseMatrixAdapter)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -139,7 +139,7 @@ private:
     typedef Dune::MatrixBlock<Scalar, numEq, numEq> Block;
 
 public:
-    typedef typename Ewoms::Linear::IstlMatrixBackend<Block> type;
+    typedef typename Ewoms::Linear::IstlSparseMatrixAdapter<Block> type;
 };
 
 //! The maximum allowed number of timestep divisions for the

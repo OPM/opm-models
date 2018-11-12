@@ -149,7 +149,7 @@ private:
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     // extract local matrices from jacobian matrix for consistency
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix)::block_type ScalarMatrixBlock;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter)::MatrixBlock ScalarMatrixBlock;
     typedef Dune::FieldVector<Scalar, numEq> ScalarVectorBlock;
 
     typedef Dune::BlockVector<ScalarVectorBlock> ScalarLocalBlockVector;

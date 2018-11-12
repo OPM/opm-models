@@ -111,7 +111,7 @@ private:
 
     typedef Dune::FieldVector<Scalar, numEq> ScalarVectorBlock;
     // extract local matrices from jacobian matrix for consistency
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix)::block_type ScalarMatrixBlock;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter)::MatrixBlock ScalarMatrixBlock;
 
     typedef Dune::BlockVector<ScalarVectorBlock> ScalarLocalBlockVector;
     typedef Dune::Matrix<ScalarMatrixBlock> ScalarLocalBlockMatrix;

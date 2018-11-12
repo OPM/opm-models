@@ -30,6 +30,7 @@
 #include "parallelbasebackend.hh"
 #include "bicgstabsolver.hh"
 #include "combinedcriterion.hh"
+#include "istlsparsematrixadapter.hh"
 
 #include <memory>
 
@@ -88,15 +89,21 @@ class ParallelBiCGStabSolverBackend : public ParallelBaseBackend<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
 
     typedef typename ParentType::ParallelOperator ParallelOperator;
     typedef typename ParentType::OverlappingVector OverlappingVector;
     typedef typename ParentType::ParallelPreconditioner ParallelPreconditioner;
     typedef typename ParentType::ParallelScalarProduct ParallelScalarProduct;
 
+    typedef typename SparseMatrixAdapter::MatrixBlock MatrixBlock;
+
     typedef BiCGStabSolver<ParallelOperator,
                            OverlappingVector,
                            ParallelPreconditioner> RawLinearSolver;
+
+    static_assert(std::is_same<SparseMatrixAdapter, IstlSparseMatrixAdapter<MatrixBlock> >::value,
+                  "The ParallelIstlSolverBackend linear solver backend requires the IstlSparseMatrixAdapter");
 
 public:
     ParallelBiCGStabSolverBackend(const Simulator& simulator)
