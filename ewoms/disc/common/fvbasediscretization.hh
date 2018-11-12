@@ -136,7 +136,7 @@ SET_PROP(FvBaseDiscretization, SparseMatrixAdapter)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::MatrixBlock<Scalar, numEq, numEq> Block;
+    typedef Ewoms::MatrixBlock<Scalar, numEq, numEq> Block;
 
 public:
     typedef typename Ewoms::Linear::IstlSparseMatrixAdapter<Block> type;

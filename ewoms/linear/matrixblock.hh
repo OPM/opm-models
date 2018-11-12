@@ -32,208 +32,179 @@
 
 #include <dune/common/fmatrix.hh>
 
-namespace Dune {
+namespace Ewoms {
+namespace MatrixBlockHelp {
 
-namespace FMatrixHelp {
+template <typename K, int m, int n>
+static inline void invertMatrix(Dune::FieldMatrix<K, m, n>& matrix)
+{ matrix.invert(); }
 
-//! invert 4x4 Matrix without changing the original matrix
 template <typename K>
-static inline K invertMatrix(const FieldMatrix<K, 4, 4> &matrix, FieldMatrix<K, 4, 4> &inverse)
+static inline void invertMatrix(Dune::FieldMatrix<K, 1, 1>& matrix)
 {
-    inverse[0][0] =
-        matrix[1][1]*matrix[2][2]*matrix[3][3] -
-        matrix[1][1]*matrix[2][3]*matrix[3][2] -
-        matrix[2][1]*matrix[1][2]*matrix[3][3] +
-        matrix[2][1]*matrix[1][3]*matrix[3][2] +
-        matrix[3][1]*matrix[1][2]*matrix[2][3] -
-        matrix[3][1]*matrix[1][3]*matrix[2][2];
+    matrix[0][0] = 1.0/matrix[0][0];
+}
 
-    inverse[1][0] =
-       -matrix[1][0]*matrix[2][2]*matrix[3][3] +
-        matrix[1][0]*matrix[2][3]*matrix[3][2] +
-        matrix[2][0]*matrix[1][2]*matrix[3][3] -
-        matrix[2][0]*matrix[1][3]*matrix[3][2] -
-        matrix[3][0]*matrix[1][2]*matrix[2][3] +
-        matrix[3][0]*matrix[1][3]*matrix[2][2];
+template <typename K>
+static inline void invertMatrix(Dune::FieldMatrix<K, 2, 2>& matrix)
+{
+    Dune::FieldMatrix<K, 2, 2> tmp(matrix);
+    Dune::FMatrixHelp::invertMatrix(tmp, matrix);
+}
 
-    inverse[2][0] =
-        matrix[1][0]*matrix[2][1]*matrix[3][3] -
-        matrix[1][0]*matrix[2][3]*matrix[3][1] -
-        matrix[2][0]*matrix[1][1]*matrix[3][3] +
-        matrix[2][0]*matrix[1][3]*matrix[3][1] +
-        matrix[3][0]*matrix[1][1]*matrix[2][3] -
-        matrix[3][0]*matrix[1][3]*matrix[2][1];
+template <typename K>
+static inline void invertMatrix(Dune::FieldMatrix<K, 3, 3>& matrix)
+{
+    Dune::FieldMatrix<K, 3, 3> tmp(matrix);
+    Dune::FMatrixHelp::invertMatrix(tmp, matrix);
+}
 
-    inverse[3][0] =
-       -matrix[1][0]*matrix[2][1]*matrix[3][2] +
-        matrix[1][0]*matrix[2][2]*matrix[3][1] +
-        matrix[2][0]*matrix[1][1]*matrix[3][2] -
-        matrix[2][0]*matrix[1][2]*matrix[3][1] -
-        matrix[3][0]*matrix[1][1]*matrix[2][2] +
-        matrix[3][0]*matrix[1][2]*matrix[2][1];
+template <typename K>
+static inline void invertMatrix(Dune::FieldMatrix<K, 4, 4>& matrix)
+{
+    Dune::FieldMatrix<K, 4, 4> tmp(matrix);
 
-    inverse[0][1] =
-       -matrix[0][1]*matrix[2][2]*matrix[3][3] +
-        matrix[0][1]*matrix[2][3]*matrix[3][2] +
-        matrix[2][1]*matrix[0][2]*matrix[3][3] -
-        matrix[2][1]*matrix[0][3]*matrix[3][2] -
-        matrix[3][1]*matrix[0][2]*matrix[2][3] +
-        matrix[3][1]*matrix[0][3]*matrix[2][2];
+    matrix[0][0] =
+        tmp[1][1]*tmp[2][2]*tmp[3][3] -
+        tmp[1][1]*tmp[2][3]*tmp[3][2] -
+        tmp[2][1]*tmp[1][2]*tmp[3][3] +
+        tmp[2][1]*tmp[1][3]*tmp[3][2] +
+        tmp[3][1]*tmp[1][2]*tmp[2][3] -
+        tmp[3][1]*tmp[1][3]*tmp[2][2];
 
-    inverse[1][1] =
-        matrix[0][0]*matrix[2][2]*matrix[3][3] -
-        matrix[0][0]*matrix[2][3]*matrix[3][2] -
-        matrix[2][0]*matrix[0][2]*matrix[3][3] +
-        matrix[2][0]*matrix[0][3]*matrix[3][2] +
-        matrix[3][0]*matrix[0][2]*matrix[2][3] -
-        matrix[3][0]*matrix[0][3]*matrix[2][2];
+    matrix[1][0] =
+       -tmp[1][0]*tmp[2][2]*tmp[3][3] +
+        tmp[1][0]*tmp[2][3]*tmp[3][2] +
+        tmp[2][0]*tmp[1][2]*tmp[3][3] -
+        tmp[2][0]*tmp[1][3]*tmp[3][2] -
+        tmp[3][0]*tmp[1][2]*tmp[2][3] +
+        tmp[3][0]*tmp[1][3]*tmp[2][2];
 
-    inverse[2][1] =
-       -matrix[0][0]*matrix[2][1]*matrix[3][3] +
-        matrix[0][0]*matrix[2][3]*matrix[3][1] +
-        matrix[2][0]*matrix[0][1]*matrix[3][3] -
-        matrix[2][0]*matrix[0][3]*matrix[3][1] -
-        matrix[3][0]*matrix[0][1]*matrix[2][3] +
-        matrix[3][0]*matrix[0][3]*matrix[2][1];
+    matrix[2][0] =
+        tmp[1][0]*tmp[2][1]*tmp[3][3] -
+        tmp[1][0]*tmp[2][3]*tmp[3][1] -
+        tmp[2][0]*tmp[1][1]*tmp[3][3] +
+        tmp[2][0]*tmp[1][3]*tmp[3][1] +
+        tmp[3][0]*tmp[1][1]*tmp[2][3] -
+        tmp[3][0]*tmp[1][3]*tmp[2][1];
 
-    inverse[3][1] =
-        matrix[0][0]*matrix[2][1]*matrix[3][2] -
-        matrix[0][0]*matrix[2][2]*matrix[3][1] -
-        matrix[2][0]*matrix[0][1]*matrix[3][2] +
-        matrix[2][0]*matrix[0][2]*matrix[3][1] +
-        matrix[3][0]*matrix[0][1]*matrix[2][2] -
-        matrix[3][0]*matrix[0][2]*matrix[2][1];
+    matrix[3][0] =
+       -tmp[1][0]*tmp[2][1]*tmp[3][2] +
+        tmp[1][0]*tmp[2][2]*tmp[3][1] +
+        tmp[2][0]*tmp[1][1]*tmp[3][2] -
+        tmp[2][0]*tmp[1][2]*tmp[3][1] -
+        tmp[3][0]*tmp[1][1]*tmp[2][2] +
+        tmp[3][0]*tmp[1][2]*tmp[2][1];
 
-    inverse[0][2] =
-        matrix[0][1]*matrix[1][2]*matrix[3][3] -
-        matrix[0][1]*matrix[1][3]*matrix[3][2] -
-        matrix[1][1]*matrix[0][2]*matrix[3][3] +
-        matrix[1][1]*matrix[0][3]*matrix[3][2] +
-        matrix[3][1]*matrix[0][2]*matrix[1][3] -
-        matrix[3][1]*matrix[0][3]*matrix[1][2];
+    matrix[0][1] =
+       -tmp[0][1]*tmp[2][2]*tmp[3][3] +
+        tmp[0][1]*tmp[2][3]*tmp[3][2] +
+        tmp[2][1]*tmp[0][2]*tmp[3][3] -
+        tmp[2][1]*tmp[0][3]*tmp[3][2] -
+        tmp[3][1]*tmp[0][2]*tmp[2][3] +
+        tmp[3][1]*tmp[0][3]*tmp[2][2];
 
-    inverse[1][2] =
-       -matrix[0][0] *matrix[1][2]*matrix[3][3] +
-        matrix[0][0]*matrix[1][3]*matrix[3][2] +
-        matrix[1][0]*matrix[0][2]*matrix[3][3] -
-        matrix[1][0]*matrix[0][3]*matrix[3][2] -
-        matrix[3][0]*matrix[0][2]*matrix[1][3] +
-        matrix[3][0]*matrix[0][3]*matrix[1][2];
+    matrix[1][1] =
+        tmp[0][0]*tmp[2][2]*tmp[3][3] -
+        tmp[0][0]*tmp[2][3]*tmp[3][2] -
+        tmp[2][0]*tmp[0][2]*tmp[3][3] +
+        tmp[2][0]*tmp[0][3]*tmp[3][2] +
+        tmp[3][0]*tmp[0][2]*tmp[2][3] -
+        tmp[3][0]*tmp[0][3]*tmp[2][2];
 
-    inverse[2][2] =
-        matrix[0][0]*matrix[1][1]*matrix[3][3] -
-        matrix[0][0]*matrix[1][3]*matrix[3][1] -
-        matrix[1][0]*matrix[0][1]*matrix[3][3] +
-        matrix[1][0]*matrix[0][3]*matrix[3][1] +
-        matrix[3][0]*matrix[0][1]*matrix[1][3] -
-        matrix[3][0]*matrix[0][3]*matrix[1][1];
+    matrix[2][1] =
+       -tmp[0][0]*tmp[2][1]*tmp[3][3] +
+        tmp[0][0]*tmp[2][3]*tmp[3][1] +
+        tmp[2][0]*tmp[0][1]*tmp[3][3] -
+        tmp[2][0]*tmp[0][3]*tmp[3][1] -
+        tmp[3][0]*tmp[0][1]*tmp[2][3] +
+        tmp[3][0]*tmp[0][3]*tmp[2][1];
 
-    inverse[3][2] =
-       -matrix[0][0]*matrix[1][1]*matrix[3][2] +
-        matrix[0][0]*matrix[1][2]*matrix[3][1] +
-        matrix[1][0]*matrix[0][1]*matrix[3][2] -
-        matrix[1][0]*matrix[0][2]*matrix[3][1] -
-        matrix[3][0]*matrix[0][1]*matrix[1][2] +
-        matrix[3][0]*matrix[0][2]*matrix[1][1];
+    matrix[3][1] =
+        tmp[0][0]*tmp[2][1]*tmp[3][2] -
+        tmp[0][0]*tmp[2][2]*tmp[3][1] -
+        tmp[2][0]*tmp[0][1]*tmp[3][2] +
+        tmp[2][0]*tmp[0][2]*tmp[3][1] +
+        tmp[3][0]*tmp[0][1]*tmp[2][2] -
+        tmp[3][0]*tmp[0][2]*tmp[2][1];
 
-    inverse[0][3] =
-       -matrix[0][1]*matrix[1][2]*matrix[2][3] +
-        matrix[0][1]*matrix[1][3]*matrix[2][2] +
-        matrix[1][1]*matrix[0][2]*matrix[2][3] -
-        matrix[1][1]*matrix[0][3]*matrix[2][2] -
-        matrix[2][1]*matrix[0][2]*matrix[1][3] +
-        matrix[2][1]*matrix[0][3]*matrix[1][2];
+    matrix[0][2] =
+        tmp[0][1]*tmp[1][2]*tmp[3][3] -
+        tmp[0][1]*tmp[1][3]*tmp[3][2] -
+        tmp[1][1]*tmp[0][2]*tmp[3][3] +
+        tmp[1][1]*tmp[0][3]*tmp[3][2] +
+        tmp[3][1]*tmp[0][2]*tmp[1][3] -
+        tmp[3][1]*tmp[0][3]*tmp[1][2];
 
-    inverse[1][3] =
-        matrix[0][0]*matrix[1][2]*matrix[2][3] -
-        matrix[0][0]*matrix[1][3]*matrix[2][2] -
-        matrix[1][0]*matrix[0][2]*matrix[2][3] +
-        matrix[1][0]*matrix[0][3]*matrix[2][2] +
-        matrix[2][0]*matrix[0][2]*matrix[1][3] -
-        matrix[2][0]*matrix[0][3]*matrix[1][2];
+    matrix[1][2] =
+       -tmp[0][0] *tmp[1][2]*tmp[3][3] +
+        tmp[0][0]*tmp[1][3]*tmp[3][2] +
+        tmp[1][0]*tmp[0][2]*tmp[3][3] -
+        tmp[1][0]*tmp[0][3]*tmp[3][2] -
+        tmp[3][0]*tmp[0][2]*tmp[1][3] +
+        tmp[3][0]*tmp[0][3]*tmp[1][2];
 
-    inverse[2][3] =
-       -matrix[0][0]*matrix[1][1]*matrix[2][3] +
-        matrix[0][0]*matrix[1][3]*matrix[2][1] +
-        matrix[1][0]*matrix[0][1]*matrix[2][3] -
-        matrix[1][0]*matrix[0][3]*matrix[2][1] -
-        matrix[2][0]*matrix[0][1]*matrix[1][3] +
-        matrix[2][0]*matrix[0][3]*matrix[1][1];
+    matrix[2][2] =
+        tmp[0][0]*tmp[1][1]*tmp[3][3] -
+        tmp[0][0]*tmp[1][3]*tmp[3][1] -
+        tmp[1][0]*tmp[0][1]*tmp[3][3] +
+        tmp[1][0]*tmp[0][3]*tmp[3][1] +
+        tmp[3][0]*tmp[0][1]*tmp[1][3] -
+        tmp[3][0]*tmp[0][3]*tmp[1][1];
 
-    inverse[3][3] =
-        matrix[0][0]*matrix[1][1]*matrix[2][2] -
-        matrix[0][0]*matrix[1][2]*matrix[2][1] -
-        matrix[1][0]*matrix[0][1]*matrix[2][2] +
-        matrix[1][0]*matrix[0][2]*matrix[2][1] +
-        matrix[2][0]*matrix[0][1]*matrix[1][2] -
-        matrix[2][0]*matrix[0][2]*matrix[1][1];
+    matrix[3][2] =
+       -tmp[0][0]*tmp[1][1]*tmp[3][2] +
+        tmp[0][0]*tmp[1][2]*tmp[3][1] +
+        tmp[1][0]*tmp[0][1]*tmp[3][2] -
+        tmp[1][0]*tmp[0][2]*tmp[3][1] -
+        tmp[3][0]*tmp[0][1]*tmp[1][2] +
+        tmp[3][0]*tmp[0][2]*tmp[1][1];
+
+    matrix[0][3] =
+       -tmp[0][1]*tmp[1][2]*tmp[2][3] +
+        tmp[0][1]*tmp[1][3]*tmp[2][2] +
+        tmp[1][1]*tmp[0][2]*tmp[2][3] -
+        tmp[1][1]*tmp[0][3]*tmp[2][2] -
+        tmp[2][1]*tmp[0][2]*tmp[1][3] +
+        tmp[2][1]*tmp[0][3]*tmp[1][2];
+
+    matrix[1][3] =
+        tmp[0][0]*tmp[1][2]*tmp[2][3] -
+        tmp[0][0]*tmp[1][3]*tmp[2][2] -
+        tmp[1][0]*tmp[0][2]*tmp[2][3] +
+        tmp[1][0]*tmp[0][3]*tmp[2][2] +
+        tmp[2][0]*tmp[0][2]*tmp[1][3] -
+        tmp[2][0]*tmp[0][3]*tmp[1][2];
+
+    matrix[2][3] =
+       -tmp[0][0]*tmp[1][1]*tmp[2][3] +
+        tmp[0][0]*tmp[1][3]*tmp[2][1] +
+        tmp[1][0]*tmp[0][1]*tmp[2][3] -
+        tmp[1][0]*tmp[0][3]*tmp[2][1] -
+        tmp[2][0]*tmp[0][1]*tmp[1][3] +
+        tmp[2][0]*tmp[0][3]*tmp[1][1];
+
+    matrix[3][3] =
+        tmp[0][0]*tmp[1][1]*tmp[2][2] -
+        tmp[0][0]*tmp[1][2]*tmp[2][1] -
+        tmp[1][0]*tmp[0][1]*tmp[2][2] +
+        tmp[1][0]*tmp[0][2]*tmp[2][1] +
+        tmp[2][0]*tmp[0][1]*tmp[1][2] -
+        tmp[2][0]*tmp[0][2]*tmp[1][1];
 
     K det =
-        matrix[0][0]*inverse[0][0] +
-        matrix[0][1]*inverse[1][0] +
-        matrix[0][2]*inverse[2][0] +
-        matrix[0][3]*inverse[3][0];
+        tmp[0][0]*matrix[0][0] +
+        tmp[0][1]*matrix[1][0] +
+        tmp[0][2]*matrix[2][0] +
+        tmp[0][3]*matrix[3][0];
 
     // return identity for singular or nearly singular matrices.
-    if (std::abs(det) < 1e-40) {
-        for (int i = 0; i < 4; ++i)
-            inverse[i][i] = 1.0;
-
-        return 1.0;
-    }
-
-    K invDet = 1.0 / det;
-    inverse *= invDet;
-
-    return det;
+    if (std::abs(det) < 1e-40)
+        matrix = std::numeric_limits<K>::quiet_NaN();
+    else
+        matrix *= 1.0/det;
 }
-} // namespace FMatrixHelp
-
-namespace ISTLUtility {
-
-//! invert matrix by calling FMatrixHelp::invert
-template <typename K>
-static inline void invertMatrix(FieldMatrix<K, 1, 1> &matrix)
-{
-    FieldMatrix<K, 1, 1> A(matrix);
-    FMatrixHelp::invertMatrix(A, matrix);
-}
-
-//! invert matrix by calling FMatrixHelp::invert
-template <typename K>
-static inline void invertMatrix(FieldMatrix<K, 2, 2> &matrix)
-{
-    FieldMatrix<K, 2, 2> A(matrix);
-    FMatrixHelp::invertMatrix(A, matrix);
-}
-
-//! invert matrix by calling FMatrixHelp::invert
-template <typename K>
-static inline void invertMatrix(FieldMatrix<K, 3, 3> &matrix)
-{
-    FieldMatrix<K, 3, 3> A(matrix);
-    FMatrixHelp::invertMatrix(A, matrix);
-}
-
-//! invert matrix by calling FMatrixHelp::invert
-template <typename K>
-static inline void invertMatrix(FieldMatrix<K, 4, 4> &matrix)
-{
-    FieldMatrix<K, 4, 4> A(matrix);
-    FMatrixHelp::invertMatrix(A, matrix);
-}
-
-//! invert matrix by calling matrix.invert
-template <typename K, int n>
-static inline void invertMatrix(FieldMatrix<K, n, n> &matrix)
-{
-#if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2, 6)
-    Dune::FMatrixPrecision<K>::set_singular_limit(1.e-20);
-#endif
-    matrix.invert();
-}
-
-} // end ISTLUtility
+} // namespace MatrixBlockHelp
 
 template <class Scalar, int n, int m>
 class MatrixBlock : public Dune::FieldMatrix<Scalar, n, m>
@@ -254,48 +225,51 @@ public:
     {}
 
     void invert()
-    { ISTLUtility::invertMatrix(*this); }
+    { Ewoms::MatrixBlockHelp::invertMatrix(asBase()); }
 
     const BaseType& asBase() const
-    { return static_cast< const BaseType& >(*this); }
+    { return static_cast<const BaseType&>(*this); }
 
     BaseType& asBase()
-    { return static_cast< BaseType& >(*this); }
+    { return static_cast<BaseType&>(*this); }
 };
 
+} // namespace Ewoms
+
+namespace Dune {
+
 template<class K, int n, int m>
-void
-print_row(std::ostream& s, const MatrixBlock<K, n, m>& A,
-          typename FieldMatrix<K, n, m>::size_type I,
-          typename FieldMatrix<K, n, m>::size_type J,
-          typename FieldMatrix<K, n, m>::size_type therow,
-          int width,
-          int precision)
+void print_row(std::ostream& s, const Ewoms::MatrixBlock<K, n, m>& A,
+               typename FieldMatrix<K, n, m>::size_type I,
+               typename FieldMatrix<K, n, m>::size_type J,
+               typename FieldMatrix<K, n, m>::size_type therow,
+               int width,
+               int precision)
 { print_row(s, A.asBase(), I, J, therow, width, precision); }
 
 template<class K, int n, int m>
-K& firstmatrixelement(MatrixBlock<K, n, m>& A)
+K& firstmatrixelement(Ewoms::MatrixBlock<K, n, m>& A)
 { return firstmatrixelement(A.asBase()); }
 
 template <typename Scalar, int n, int m>
-struct MatrixDimension<MatrixBlock<Scalar, n, m> >
-    : public MatrixDimension<typename MatrixBlock<Scalar, n, m>::BaseType>
+struct MatrixDimension<Ewoms::MatrixBlock<Scalar, n, m> >
+    : public MatrixDimension<typename Ewoms::MatrixBlock<Scalar, n, m>::BaseType>
 { };
 
 
 #if HAVE_UMFPACK
-/// \brief UMFPack specialization for MatrixBlock to make AMG happy
+/// \brief UMFPack specialization for Ewoms::MatrixBlock to make AMG happy
 ///
 /// Without this the empty default implementation would be used.
 template <typename T, typename A, int n, int m>
-class UMFPack<BCRSMatrix<MatrixBlock<T, n, m>, A> >
-    : public UMFPack<BCRSIstlMatrix<FieldMatrix<T, n, m>, A> >
+class UMFPack<BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> >
+    : public UMFPack<BCRSMatrix<FieldMatrix<T, n, m>, A> >
 {
     typedef UMFPack<BCRSMatrix<FieldMatrix<T, n, m>, A> > Base;
     typedef BCRSMatrix<FieldMatrix<T, n, m>, A> Matrix;
 
 public:
-    typedef BCRSMatrix<MatrixBlock<T, n, m>, A> RealMatrix;
+    typedef BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> RealMatrix;
 
     UMFPack(const RealMatrix& matrix, int verbose, bool)
         : Base(reinterpret_cast<const Matrix&>(matrix), verbose)
@@ -304,25 +278,24 @@ public:
 #endif
 
 #if HAVE_SUPERLU
-/// \brief SuperLU specialization for MatrixBlock to make AMG happy
+/// \brief SuperLU specialization for Ewoms::MatrixBlock to make AMG happy
 ///
 /// Without this the empty default implementation would be used.
 template <typename T, typename A, int n, int m>
-class SuperLU<BCRSMatrix<MatrixBlock<T, n, m>, A> >
+class SuperLU<BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> >
     : public SuperLU<BCRSMatrix<FieldMatrix<T, n, m>, A> >
 {
     typedef SuperLU<BCRSMatrix<FieldMatrix<T, n, m>, A> > Base;
     typedef BCRSMatrix<FieldMatrix<T, n, m>, A> Matrix;
 
 public:
-    typedef BCRSMatrix<MatrixBlock<T, n, m>, A> RealMatrix;
+    typedef BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> RealMatrix;
 
     SuperLU(const RealMatrix& matrix, int verbose, bool reuse=true)
         : Base(reinterpret_cast<const Matrix&>(matrix), verbose, reuse)
     {}
 };
 #endif
-
 
 } // end namespace Dune
 
