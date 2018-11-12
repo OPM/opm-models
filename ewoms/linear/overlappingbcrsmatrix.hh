@@ -136,8 +136,16 @@ public:
     /*!
      * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
      */
-    template <class NativeBCRSMatrix>
-    void assignAdd(const NativeBCRSMatrix& nativeMatrix)
+    template <class JacobianMatrix>
+    void assignAdd(const JacobianMatrix& jacobian)
+    {
+        assignAdd( jacobian.matrix() );
+    }
+
+    /*!
+     * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
+     */
+    void assignAdd(const ParentType& nativeMatrix)
     {
         // copy the native entries
         assignFromNative(nativeMatrix);

@@ -50,16 +50,19 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
+#include <ewoms/linear/istlmatrixbackend.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
+#include <ewoms/linear/matrixblock.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>
 #include <opm/material/common/Exceptions.hpp>
 
+#include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
@@ -133,9 +136,10 @@ SET_PROP(FvBaseDiscretization, JacobianMatrix)
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef typename Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
+    typedef Dune::MatrixBlock<Scalar, numEq, numEq> Block;
+
 public:
-    typedef typename Dune::BCRSMatrix<MatrixBlock> type;
+    typedef typename Ewoms::Linear::IstlMatrixBackend<Block> type;
 };
 
 //! The maximum allowed number of timestep divisions for the
@@ -1896,8 +1900,8 @@ protected:
     mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
 #if HAVE_DUNE_FEM
-    std::unique_ptr< RestrictProlong  > restrictProlong_;
-    std::unique_ptr< AdaptationManager> adaptationManager_;
+    std::unique_ptr<RestrictProlong> restrictProlong_;
+    std::unique_ptr<AdaptationManager> adaptationManager_;
 #endif
 
 

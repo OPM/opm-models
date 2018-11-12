@@ -67,10 +67,11 @@ namespace Linear {
     {                                                                           \
         typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;                 \
         typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix; \
+        typedef typename JacobianMatrix::Matrix Matrix;                         \
         typedef typename GET_PROP_TYPE(TypeTag, OverlappingVector) OverlappingVector; \
                                                                                 \
     public:                                                                     \
-        typedef ISTL_PREC_TYPE<JacobianMatrix, OverlappingVector,               \
+        typedef ISTL_PREC_TYPE<Matrix, OverlappingVector,                       \
                                OverlappingVector> SequentialPreconditioner;     \
         PreconditionerWrapper##PREC_NAME()                                      \
         {}                                                                      \
@@ -84,7 +85,7 @@ namespace Linear {
                                  "preconditioner");                             \
         }                                                                       \
                                                                                 \
-        void prepare(JacobianMatrix& matrix)                                    \
+        void prepare(Matrix& matrix)                                            \
         {                                                                       \
             int order = EWOMS_GET_PARAM(TypeTag, int, PreconditionerOrder);     \
             Scalar relaxationFactor = EWOMS_GET_PARAM(TypeTag, Scalar, PreconditionerRelaxation);   \

@@ -146,8 +146,11 @@ protected:
         return bicgstabSolver;
     }
 
-    bool runSolver_(std::shared_ptr<RawLinearSolver> solver)
-    { return solver->apply(*this->overlappingx_); }
+    std::pair<bool,int> runSolver_(std::shared_ptr<RawLinearSolver> solver)
+    {
+        bool converged = solver->apply(*this->overlappingx_);
+        return std::make_pair(converged, int(solver->report().iterations()));
+    }
 
     void cleanupSolver_()
     { /* nothing to do */ }
