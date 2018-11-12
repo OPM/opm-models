@@ -50,9 +50,9 @@ public:
     // allow moves
     GenericGuard(GenericGuard&& other)
         : callback_(other.callback_)
-        , isEnabled_(other.isEnabled)
+        , isEnabled_(other.isEnabled_)
     {
-        other.isEnabled = false;
+        other.isEnabled_ = false;
     }
 
     // disable copies
