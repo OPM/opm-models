@@ -188,10 +188,8 @@ protected:
 
         Scalar linearSolverTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverTolerance);
         Scalar linearSolverAbsTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, LinearSolverAbsTolerance);
-        // special magic value to indicate default
-        if(linearSolverAbsTolerance == -1.) {
-	        this->simulator_.model().newtonMethod().tolerance() / 10.0;
-        }
+        if(linearSolverAbsTolerance < 0.0)
+            linearSolverAbsTolerance = this->simulator_.model().newtonMethod().tolerance()/100.0;
 
         convCrit_.reset(new CCC(gridView.comm(),
                                 /*residualReductionTolerance=*/linearSolverTolerance,
