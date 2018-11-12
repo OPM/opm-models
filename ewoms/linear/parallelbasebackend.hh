@@ -261,12 +261,9 @@ public:
         (*overlappingx_) = 0.0;
 
         auto parPreCond = asImp_().preparePreconditioner_();
-
-        auto cleanupPrecondFn =
-            [this]() -> void
-            { this->asImp_().cleanupPreconditioner_(); };
-
-        GenericGuard<decltype(cleanupPrecondFn)> precondGuard(cleanupPrecondFn);
+        const auto precondCleanupGuard =
+            Ewoms::make_guard([this]() -> void
+                              { this->asImp_().cleanupPreconditioner_(); });
 
         // create the parallel scalar product and the parallel operator
         ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
