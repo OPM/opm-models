@@ -397,12 +397,14 @@ public:
                 Opm::Valgrind::CheckDefined(gasFormationVolumeFactor_[globalDofIdx]);
 
             }
+            /*
             if (saturatedOilFormationVolumeFactor_.size() > 0) {
                 saturatedOilFormationVolumeFactor_[globalDofIdx] =
                     1.0/FluidSystem::template saturatedInverseFormationVolumeFactor<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);
                 Opm::Valgrind::CheckDefined(saturatedOilFormationVolumeFactor_[globalDofIdx]);
 
             }
+            */
             if (oilSaturationPressure_.size() > 0) {
                 oilSaturationPressure_[globalDofIdx] =
                     FluidSystem::template saturationPressure<FluidState, Scalar>(fs, oilPhaseIdx, pvtRegionIdx);

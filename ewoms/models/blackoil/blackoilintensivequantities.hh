@@ -40,6 +40,9 @@
 #include <cstring>
 #include <utility>
 
+BEGIN_PROPERTIES
+NEW_PROP_TAG(FluidState);
+END_PROPERTIES
 namespace Ewoms {
 /*!
  * \ingroup BlackOilModel
@@ -68,7 +71,8 @@ class BlackOilIntensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, FluxModule) FluxModule;
-
+    typedef typename GET_PROP_TYPE(TypeTag, FluidState) FluidState;
+    
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
@@ -91,7 +95,8 @@ class BlackOilIntensiveQuantities
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > FluidState;
+    //typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > FluidState;
+    //typedef FluidStateType<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > FluidState; 
 
 public:
     BlackOilIntensiveQuantities()

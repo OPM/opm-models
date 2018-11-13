@@ -530,6 +530,7 @@ protected:
 
     void registerOutputModules_()
     {
+        /*
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which make sense for the blackoil model
@@ -539,6 +540,7 @@ protected:
 
         this->addOutputModule(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
         this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        */
     }
 
 private:

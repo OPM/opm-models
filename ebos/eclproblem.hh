@@ -1250,7 +1250,8 @@ public:
 
         if (useMassConservativeInitialCondition_) {
             const auto& matParams = materialLawParams(context, spaceIdx, timeIdx);
-            values.assignMassConservative(initialFluidStates_[globalDofIdx], matParams);
+            throw std::runtime_error("Mass conservative initialization disabled");            
+            //values.assignMassConservative(initialFluidStates_[globalDofIdx], matParams);
         }
         else
             values.assignNaive(initialFluidStates_[globalDofIdx]);
