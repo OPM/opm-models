@@ -209,9 +209,9 @@ static inline void invertMatrix(Dune::FieldMatrix<K, 4, 4>& matrix)
 template <class Scalar, int n, int m>
 class MatrixBlock : public Dune::FieldMatrix<Scalar, n, m>
 {
+public:
     typedef Dune::FieldMatrix<Scalar, n, m>  BaseType;
 
-public:
     using BaseType::operator= ;
     using BaseType::rows;
     using BaseType::cols;
