@@ -147,7 +147,9 @@ private:
     typedef typename GridView::template Codim<0>::Entity Element;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Dune::FieldMatrix<Scalar, numEq, numEq> ScalarMatrixBlock;
+
+    // extract local matrices from jacobian matrix for consistency
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter)::MatrixBlock ScalarMatrixBlock;
     typedef Dune::FieldVector<Scalar, numEq> ScalarVectorBlock;
 
     typedef Dune::BlockVector<ScalarVectorBlock> ScalarLocalBlockVector;

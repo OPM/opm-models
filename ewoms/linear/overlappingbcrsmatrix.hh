@@ -136,8 +136,7 @@ public:
     /*!
      * \brief Assign and syncronize the overlapping matrix from a non-overlapping one.
      */
-    template <class NativeBCRSMatrix>
-    void assignAdd(const NativeBCRSMatrix& nativeMatrix)
+    void assignAdd(const ParentType& nativeMatrix)
     {
         // copy the native entries
         assignFromNative(nativeMatrix);

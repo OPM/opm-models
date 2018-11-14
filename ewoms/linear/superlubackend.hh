@@ -29,6 +29,7 @@
 
 #if HAVE_SUPERLU
 
+#include <ewoms/linear/istlsparsematrixbackend.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <opm/material/common/Unused.hpp>
@@ -43,7 +44,7 @@ BEGIN_PROPERTIES
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
 NEW_PROP_TAG(Simulator);
-NEW_PROP_TAG(JacobianMatrix);
+NEW_PROP_TAG(SparseMatrixAdapter);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(LinearSolverVerbosity);
 NEW_PROP_TAG(LinearSolverBackend);
@@ -65,8 +66,11 @@ class SuperLUBackend
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
-    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
+    typedef typename SparseMatrixAdapter::block_type Matrix;
+
+    static_assert(std::is_same<SparseMatrixAdapter, IstlSparseMatrixAdapter<MatrixBlock>::value,
+                  "The SuperLU linear solver backend requires the IstlSparseMatrixAdapter");
 
 public:
     SuperLUBackend(Simulator& simulator OPM_UNUSED)
@@ -87,15 +91,11 @@ public:
     void eraseMatrix()
     { }
 
-    void prepareMatrix(const Matrix& M)
-    {
-        M_ = &M;
-    }
+    void prepareMatrix(const SparseMatrixAdapter& M)
+    { M_ = &M; }
 
     void prepareRhs(const Matrix& M OPM_UNUSED, Vector& b)
-    {
-        b_ = &b;
-    }
+    { b_ = &b; }
 
     bool solve(Vector& x)
     { return SuperLUSolve_<Scalar, TypeTag, Matrix, Vector>::solve_(*M_, x, *b_); }

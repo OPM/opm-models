@@ -106,8 +106,8 @@ NEW_PROP_TAG(LinearizeNonLocalElements);
 
 //! Linearizes the global non-linear system of equations
 NEW_PROP_TAG(BaseLinearizer);
-//! Type of the global jacobian matrix
-NEW_PROP_TAG(JacobianMatrix);
+//! The class that allows to manipulate sparse matrices
+NEW_PROP_TAG(SparseMatrixAdapter);
 
 //! A vector of holding a quantity for each equation (usually at a given spatial location)
 NEW_PROP_TAG(EqVector);

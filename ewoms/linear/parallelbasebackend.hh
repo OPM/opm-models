@@ -38,6 +38,7 @@
 #include <ewoms/common/genericguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
+#include <ewoms/linear/matrixblock.hh>
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 
@@ -55,7 +56,7 @@ NEW_TYPE_TAG(ParallelBaseLinearSolver);
 NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(NumEq);
-NEW_PROP_TAG(JacobianMatrix);
+NEW_PROP_TAG(SparseMatrixAdapter);
 NEW_PROP_TAG(GlobalEqVector);
 NEW_PROP_TAG(VertexMapper);
 NEW_PROP_TAG(GridView);
@@ -152,7 +153,7 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
     typedef typename GET_PROP_TYPE(TypeTag, BorderListCreator) BorderListCreator;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -164,10 +165,8 @@ protected:
     typedef typename GET_PROP_TYPE(TypeTag, PreconditionerWrapper) PreconditionerWrapper;
     typedef typename PreconditionerWrapper::SequentialPreconditioner SequentialPreconditioner;
 
-    typedef Ewoms::Linear::OverlappingPreconditioner<SequentialPreconditioner,
-                                                     Overlap> ParallelPreconditioner;
-    typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector,
-                                                    Overlap> ParallelScalarProduct;
+    typedef Ewoms::Linear::OverlappingPreconditioner<SequentialPreconditioner, Overlap> ParallelPreconditioner;
+    typedef Ewoms::Linear::OverlappingScalarProduct<OverlappingVector, Overlap> ParallelScalarProduct;
     typedef Ewoms::Linear::OverlappingOperator<OverlappingMatrix,
                                                OverlappingVector,
                                                OverlappingVector> ParallelOperator;
@@ -178,6 +177,7 @@ public:
     ParallelBaseBackend(const Simulator& simulator)
         : simulator_(simulator)
         , gridSequenceNumber_( -1 )
+        , lastIterations_( -1 )
     {
         overlappingMatrix_ = nullptr;
         overlappingb_ = nullptr;
@@ -213,7 +213,7 @@ public:
     void eraseMatrix()
     { cleanup_(); }
 
-    void prepareMatrix(const Matrix& M)
+    void prepareMatrix(const SparseMatrixAdapter& M)
     {
         // make sure that the overlapping matrix and block vectors
         // have been created
@@ -222,7 +222,7 @@ public:
         // copy the interior values of the non-overlapping linear system of
         // equations to the overlapping one. On ther border, we add up
         // the values of all processes (using the assignAdd() methods)
-        overlappingMatrix_->assignFromNative(M);
+        overlappingMatrix_->assignFromNative(M.istlMatrix());
 
         // synchronize all entries from their master processes and add entries on the
         // process border
@@ -231,7 +231,7 @@ public:
         overlappingb_->sync();
     }
 
-    void prepareRhs(const Matrix& M, Vector& b)
+    void prepareRhs(const SparseMatrixAdapter& M, Vector& b)
     {
         // make sure that the overlapping matrix and block vectors
         // have been created
@@ -261,13 +261,9 @@ public:
         (*overlappingx_) = 0.0;
 
         auto parPreCond = asImp_().preparePreconditioner_();
-
-        auto cleanupPrecondFn =
-            [this]() -> void
-            { this->asImp_().cleanupPreconditioner_(); };
-
-        GenericGuard<decltype(cleanupPrecondFn)> precondGuard(cleanupPrecondFn);
-
+        auto precondCleanupFn = [this]() -> void
+                                { this->asImp_().cleanupPreconditioner_(); };
+        auto precondCleanupGuard = Ewoms::make_guard(precondCleanupFn);
         // create the parallel scalar product and the parallel operator
         ParallelScalarProduct parScalarProduct(overlappingMatrix_->overlap());
         ParallelOperator parOperator(*overlappingMatrix_);
@@ -283,13 +279,22 @@ public:
         GenericGuard<decltype(cleanupSolverFn)> solverGuard(cleanupSolverFn);
 
         // run the linear solver and have some fun
-        bool result = asImp_().runSolver_(solver);
+        auto result = asImp_().runSolver_(solver);
+        // store number of iterations used
+        lastIterations_ = result.second;
 
         // copy the result back to the non-overlapping vector
         overlappingx_->assignTo(x);
 
         // return the result of the solver
-        return result;
+        return result.first;
+    }
+
+    /*!
+     * \brief Return number of iterations used during last solve.
+     */
+    size_t iterations () const {
+        return lastIterations_;
     }
 
 protected:
@@ -299,7 +304,7 @@ protected:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 
-    void prepare_(const Matrix& M)
+    void prepare_(const SparseMatrixAdapter& M)
     {
         // if grid has changed the sequence number has changed too
         int curSeqNum = simulator_.vanguard().gridSequenceNumber();
@@ -316,7 +321,7 @@ protected:
 
         // create the overlapping Jacobian matrix
         unsigned overlapSize = EWOMS_GET_PARAM(TypeTag, unsigned, LinearSolverOverlapSize);
-        overlappingMatrix_ = new OverlappingMatrix(M,
+        overlappingMatrix_ = new OverlappingMatrix(M.istlMatrix(),
                                                    borderListCreator.borderList(),
                                                    borderListCreator.blackList(),
                                                    overlapSize);
@@ -409,6 +414,7 @@ protected:
 
     const Simulator& simulator_;
     int gridSequenceNumber_;
+    size_t lastIterations_;
 
     OverlappingMatrix *overlappingMatrix_;
     OverlappingVector *overlappingb_;
@@ -437,10 +443,13 @@ SET_TYPE_PROP(ParallelBaseLinearSolver,
 
 SET_PROP(ParallelBaseLinearSolver, OverlappingMatrix)
 {
+private:
     static constexpr int numEq = GET_PROP_VALUE(TypeTag, NumEq);
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
-    typedef Dune::FieldMatrix<LinearSolverScalar, numEq, numEq> MatrixBlock;
+    typedef Ewoms::MatrixBlock<LinearSolverScalar, numEq, numEq> MatrixBlock;
     typedef Dune::BCRSMatrix<MatrixBlock> NonOverlappingMatrix;
+
+public:
     typedef Ewoms::Linear::OverlappingBCRSMatrix<NonOverlappingMatrix> type;
 };
 

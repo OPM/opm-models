@@ -80,7 +80,7 @@ class FvBaseLinearizer
 
     typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) GlobalEqVector;
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) JacobianMatrix;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
     typedef typename GET_PROP_TYPE(TypeTag, EqVector) EqVector;
     typedef typename GET_PROP_TYPE(TypeTag, Constraints) Constraints;
     typedef typename GET_PROP_TYPE(TypeTag, Stencil) Stencil;
@@ -94,12 +94,13 @@ class FvBaseLinearizer
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
     typedef GlobalEqVector Vector;
-    typedef JacobianMatrix Matrix;
+
+    typedef typename SparseMatrixAdapter::IstlMatrix IstlMatrix;
 
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize) };
 
-    typedef Dune::FieldMatrix<Scalar, numEq, numEq> MatrixBlock;
+    typedef typename SparseMatrixAdapter::MatrixBlock MatrixBlock;
     typedef Dune::FieldVector<Scalar, numEq> VectorBlock;
 
     static const bool linearizeNonLocalElements = GET_PROP_VALUE(TypeTag, LinearizeNonLocalElements);
@@ -110,15 +111,13 @@ class FvBaseLinearizer
 
 public:
     FvBaseLinearizer()
+        : jacobian_()
     {
         simulatorPtr_ = 0;
-
-        matrix_ = 0;
     }
 
     ~FvBaseLinearizer()
     {
-        delete matrix_;
         auto it = elementCtx_.begin();
         const auto& endIt = elementCtx_.end();
         for (; it != endIt; ++it)
@@ -143,8 +142,7 @@ public:
     void init(Simulator& simulator)
     {
         simulatorPtr_ = &simulator;
-        delete matrix_; // <- note that this even works for nullpointers!
-        matrix_ = 0;
+        eraseMatrix();
     }
 
     /*!
@@ -156,8 +154,7 @@ public:
      */
     void eraseMatrix()
     {
-        delete matrix_; // <- note that this even works for nullpointers!
-        matrix_ = 0;
+        jacobian_.reset();
     }
 
     /*!
@@ -186,7 +183,7 @@ public:
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
         // initialized...
-        if (!matrix_)
+        if (!jacobian_)
             initFirstIteration_();
 
         int succeeded;
@@ -223,18 +220,26 @@ public:
             throw Opm::NumericalIssue("A process did not succeed in linearizing the system");
     }
 
+    void finalize()
+    {
+        jacobian_->finalize();
+    }
+
     /*!
      * \brief Linearize the part of the non-linear system of equations that is associated
      *        with the spatial domain.
      */
     void linearizeAuxiliaryEquations()
     {
+        // flush possible local caches into matrix structure
+        jacobian_->commit();
+
         auto& model = model_();
         const auto& comm = simulator_().gridView().comm();
         for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx) {
             bool succeeded = true;
             try {
-                model.auxiliaryModule(auxModIdx)->linearize(*matrix_, residual_);
+                model.auxiliaryModule(auxModIdx)->linearize(*jacobian_, residual_);
             }
             catch (const std::exception& e) {
                 succeeded = false;
@@ -262,13 +267,13 @@ public:
     }
 
     /*!
-     * \brief Return constant reference to global Jacobian matrix.
+     * \brief Return constant reference to global Jacobian matrix backend.
      */
-    const Matrix& matrix() const
-    { return *matrix_; }
+    const SparseMatrixAdapter& jacobian() const
+    { return *jacobian_; }
 
-    Matrix& matrix()
-    { return *matrix_; }
+    SparseMatrixAdapter& jacobian()
+    { return *jacobian_; }
 
     /*!
      * \brief Return constant reference to global residual vector.
@@ -318,9 +323,8 @@ private:
         createMatrix_();
 
         // initialize the Jacobian matrix and the vector for the residual function
-        (*matrix_) = 0.0;
         residual_.resize(model_().numTotalDof());
-        residual_ = 0;
+        resetSystem_();
 
         // create the per-thread context objects
         elementCtx_.resize(ThreadManager::maxThreads());
@@ -331,17 +335,14 @@ private:
     // Construct the BCRS matrix for the Jacobian of the residual function
     void createMatrix_()
     {
-        size_t numAllDof =  model_().numTotalDof();
-
-        // allocate raw matrix
-        matrix_ = new Matrix(numAllDof, numAllDof, Matrix::random);
-
-        Stencil stencil(gridView_(), model_().dofMapper() );
+        const auto& model = model_();
+        Stencil stencil(gridView_(), model_().dofMapper());
 
         // for the main model, find out the global indices of the neighboring degrees of
         // freedom of each primary degree of freedom
-        typedef std::set<unsigned> NeighborSet;
-        std::vector<NeighborSet> neighbors(numAllDof);
+        typedef std::set< unsigned > NeighborSet;
+        std::vector<NeighborSet> sparsityPattern(model.numTotalDof());
+
         ElementIterator elemIt = gridView_().template begin<0>();
         const ElementIterator elemEndIt = gridView_().template end<0>();
         for (; elemIt != elemEndIt; ++elemIt) {
@@ -353,40 +354,30 @@ private:
 
                 for (unsigned dofIdx = 0; dofIdx < stencil.numDof(); ++dofIdx) {
                     unsigned neighborIdx = stencil.globalSpaceIndex(dofIdx);
-                    neighbors[myIdx].insert(neighborIdx);
+                    sparsityPattern[myIdx].insert(neighborIdx);
                 }
             }
         }
 
         // add the additional neighbors and degrees of freedom caused by the auxiliary
         // equations
-        const auto& model = model_();
         size_t numAuxMod = model.numAuxiliaryModules();
         for (unsigned auxModIdx = 0; auxModIdx < numAuxMod; ++auxModIdx)
-            model.auxiliaryModule(auxModIdx)->addNeighbors(neighbors);
+            model.auxiliaryModule(auxModIdx)->addNeighbors(sparsityPattern);
 
-        // allocate space for the rows of the matrix
-        for (unsigned dofIdx = 0; dofIdx < numAllDof; ++ dofIdx)
-            matrix_->setrowsize(dofIdx, neighbors[dofIdx].size());
-        matrix_->endrowsizes();
+        // allocate raw matrix
+        jacobian_.reset(new SparseMatrixAdapter(simulator_()));
 
-        // fill the rows with indices. each degree of freedom talks to
-        // all of its neighbors. (it also talks to itself since
-        // degrees of freedom are sometimes quite egocentric.)
-        for (unsigned dofIdx = 0; dofIdx < numAllDof; ++ dofIdx) {
-            typename NeighborSet::iterator nIt = neighbors[dofIdx].begin();
-            typename NeighborSet::iterator nEndIt = neighbors[dofIdx].end();
-            for (; nIt != nEndIt; ++nIt)
-                matrix_->addindex(dofIdx, *nIt);
-        }
-        matrix_->endindices();
+        // create matrix structure based on sparsity pattern
+        jacobian_->reserve(sparsityPattern);
     }
 
     // reset the global linear system of equations.
     void resetSystem_()
     {
         residual_ = 0.0;
-        (*matrix_) = 0.0;
+        // zero all matrix entries
+        jacobian_->clear();
     }
 
     // query the problem for all constraint degrees of freedom. note that this method is
@@ -447,8 +438,6 @@ private:
             updateConstraintsMap_();
 
         applyConstraintsToSolution_();
-
-        *matrix_ = 0.0;
 
         // to avoid a race condition if two threads handle an exception at the same time,
         // we use an explicit lock to control access to the exception storage object
@@ -541,7 +530,7 @@ private:
             for (unsigned dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
                 unsigned globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
-                (*matrix_)[globJ][globI] += localLinearizer.jacobian(dofIdx, primaryDofIdx);
+                jacobian_->addToBlock(globJ, globI, localLinearizer.jacobian(dofIdx, primaryDofIdx));
             }
         }
 
@@ -575,23 +564,14 @@ private:
         if (!enableConstraints_())
             return;
 
-        MatrixBlock idBlock = 0.0;
-        for (unsigned i = 0; i < numEq; ++i)
-            idBlock[i][i] = 1.0;
-
         auto it = constraintsMap_.begin();
         const auto& endIt = constraintsMap_.end();
         for (; it != endIt; ++it) {
             unsigned constraintDofIdx = it->first;
 
             // reset the column of the Jacobian matrix
-            auto colIt = (*matrix_)[constraintDofIdx].begin();
-            const auto& colEndIt = (*matrix_)[constraintDofIdx].end();
-            for (; colIt != colEndIt; ++colIt)
-                *colIt = 0.0;
-
             // put an identity matrix on the main diagonal of the Jacobian
-            (*matrix_)[constraintDofIdx][constraintDofIdx] = idBlock;
+            jacobian_->clearRow(constraintDofIdx, Scalar(1.0));
 
             // make the right-hand side of constraint DOFs zero
             residual_[constraintDofIdx] = 0.0;
@@ -609,7 +589,8 @@ private:
     std::map<unsigned, Constraints> constraintsMap_;
 
     // the jacobian matrix
-    Matrix *matrix_;
+    std::unique_ptr<SparseMatrixAdapter> jacobian_;
+
     // the right-hand side
     GlobalEqVector residual_;
 

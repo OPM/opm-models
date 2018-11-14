@@ -86,16 +86,18 @@ class ParallelIstlSolverBackend : public ParallelBaseBackend<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, LinearSolverWrapper) LinearSolverWrapper;
+    typedef typename GET_PROP_TYPE(TypeTag, SparseMatrixAdapter) SparseMatrixAdapter;
 
     typedef typename ParentType::ParallelOperator ParallelOperator;
     typedef typename ParentType::OverlappingVector OverlappingVector;
     typedef typename ParentType::ParallelPreconditioner ParallelPreconditioner;
     typedef typename ParentType::ParallelScalarProduct ParallelScalarProduct;
 
+    typedef typename SparseMatrixAdapter::MatrixBlock MatrixBlock;
     typedef typename LinearSolverWrapper::RawSolver RawLinearSolver;
 
-    typedef typename GET_PROP_TYPE(TypeTag, JacobianMatrix) Matrix;
-    typedef typename GET_PROP_TYPE(TypeTag, GlobalEqVector) Vector;
+    static_assert(std::is_same<SparseMatrixAdapter, IstlSparseMatrixAdapter<MatrixBlock> >::value,
+                  "The ParallelIstlSolverBackend linear solver backend requires the IstlSparseMatrixAdapter");
 
 public:
     ParallelIstlSolverBackend(const Simulator& simulator)
@@ -129,11 +131,11 @@ protected:
         solverWrapper_.cleanup();
     }
 
-    bool runSolver_(std::shared_ptr<RawLinearSolver> solver)
+    std::pair<bool, int> runSolver_(std::shared_ptr<RawLinearSolver> solver)
     {
         Dune::InverseOperatorResult result;
         solver->apply(*this->overlappingx_, *this->overlappingb_, result);
-        return result.converged;
+        return std::make_pair(result.converged, result.iterations);
     }
 
     LinearSolverWrapper solverWrapper_;
