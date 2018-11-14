@@ -69,6 +69,7 @@
 #include <opm/material/thermal/EclThermalLawManager.hpp>
 
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>
+#include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/DryGasPvt.hpp>
 #include <opm/material/fluidsystems/blackoilpvt/WetGasPvt.hpp>
@@ -137,6 +138,9 @@ NEW_PROP_TAG(EnableThermalFluxBoundaries);
 // The class which deals with ECL aquifers
 NEW_PROP_TAG(EclAquiferModel);
 
+// the class to set fluid state
+NEW_PROP_TAG(FluidState);
+
 // Set the problem property
 SET_TYPE_PROP(EclBaseProblem, Problem, Ewoms::EclProblem<TypeTag>);
 
@@ -145,6 +149,26 @@ SET_TAG_PROP(EclBaseProblem, SpatialDiscretizationSplice, EcfvDiscretization);
 
 //! for ebos, use automatic differentiation to linearize the system of PDEs
 SET_TAG_PROP(EclBaseProblem, LocalLinearizerSplice, AutoDiffLocalLinearizer);
+
+
+SET_PROP(EclBaseProblem, FluidState)
+    {
+    private:
+      typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
+      typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
+      enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
+      enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+      enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+      enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
+      typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+      typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
+      static const bool compositionSwitchEnabled = Indices::gasEnabled;
+ 
+    public:
+//typedef Opm::BlackOilFluidSystemSimple<Scalar> type;
+       typedef Opm::BlackOilFluidState<Evaluation, FluidSystem, enableTemperature, enableEnergy, compositionSwitchEnabled,  Indices::numPhases > type;
+};
+
 
 // Set the material law for fluid fluxes
 SET_PROP(EclBaseProblem, MaterialLaw)
