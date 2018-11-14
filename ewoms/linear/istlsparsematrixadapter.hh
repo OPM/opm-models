@@ -47,6 +47,8 @@ public:
 
     //! \brief block type forming the matrix entries
     typedef typename IstlMatrix::block_type MatrixBlock;
+    static_assert(std::is_same<MatrixBlock, MatrixBlockType>::value,
+                  "IstlMatrix::block_type and MatrixBlockType must be identical");
 
     //! \brief type of scalar
     typedef typename MatrixBlock::field_type Scalar;
@@ -125,7 +127,10 @@ public:
     { (*istlMatrix_) = Scalar(0.0); }
 
     /*!
-     * \brief Set given row to zero except for the diagonal entry which is set to one.
+     * \brief Set given row to zero except for the main-diagonal entry (if it exists).
+     *
+     * If the sparsity pattern of the matrix features an explicit block on the main
+     * diagonal, the diagonal on that block is set to the second agument of the function.
      */
     void clearRow(const size_t row, const Scalar diag = 1.0)
     {
