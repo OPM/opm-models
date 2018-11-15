@@ -161,13 +161,19 @@ protected:
             Scalar& val = nextValue[fugacity0Idx + compIdx];
             Scalar oldVal = currentValue[fugacity0Idx + compIdx];
 
-            // allow the mole fraction of the component to change
-            // at most 70% (assuming composition independent
-            // fugacity coefficients)
+            // get the minimum activity coefficient for the component (i.e., the activity
+            // coefficient of the phase for which the component has the highest affinity)
             Scalar minPhi = this->problem().model().minActivityCoeff(globalDofIdx, compIdx);
-            Scalar maxDelta = 0.7 * minPhi;
+            // Make sure that the activity coefficient does not get too small.
+            minPhi = std::max(0.001*currentValue[pressure0Idx], minPhi);
 
+            // allow the mole fraction of the component to change at most 70% in any
+            // phase (assuming composition independent fugacity coefficients).
+            Scalar maxDelta = 0.7 * minPhi;
             clampValue_(val, oldVal - maxDelta, oldVal + maxDelta);
+
+            // make sure that fugacities do not become negative
+            val = std::max(val, 0.0);
         }
 
         // do not become grossly unphysical in a single iteration for the first few
