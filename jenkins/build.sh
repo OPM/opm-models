@@ -19,10 +19,12 @@ fi
 
 # Downstreams and revisions
 declare -a downstreams
-downstreams=(opm-simulators)
+downstreams=(opm-simulators
+             opm-simulators-legacy)
 
 declare -A downstreamRev
 downstreamRev[opm-simulators]=master
+downstreamRev[opm-simulators-legacy]=master
 
 # Clone opm-common
 pushd .
