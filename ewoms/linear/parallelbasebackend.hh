@@ -213,29 +213,19 @@ public:
     void eraseMatrix()
     { cleanup_(); }
 
-    void prepareMatrix(const SparseMatrixAdapter& M)
+    void prepare(SparseMatrixAdapter& M, Vector& b)
     {
         // make sure that the overlapping matrix and block vectors
         // have been created
         prepare_(M);
 
         // copy the interior values of the non-overlapping linear system of
-        // equations to the overlapping one. On ther border, we add up
-        // the values of all processes (using the assignAdd() methods)
+        // equations to the overlapping one.
         overlappingMatrix_->assignFromNative(M.istlMatrix());
 
         // synchronize all entries from their master processes and add entries on the
         // process border
         overlappingMatrix_->syncAdd();
-        // the entries on the border have already been added in prepareRhs()
-        overlappingb_->sync();
-    }
-
-    void prepareRhs(const SparseMatrixAdapter& M, Vector& b)
-    {
-        // make sure that the overlapping matrix and block vectors
-        // have been created
-        prepare_(M);
 
         overlappingb_->assignAddBorder(b);
 
