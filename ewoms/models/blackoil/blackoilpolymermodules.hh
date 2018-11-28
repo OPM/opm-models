@@ -333,9 +333,9 @@ public:
             for (const auto& table : plymwinjTables) {
                 const int table_number = table.first;
                 const auto& plymwinjtable = table.second;
-                const std::vector<double>& throughput = plymwinjtable.getXSamplingPoints();
-                const std::vector<double>& watervelocity = plymwinjtable.getYSamplingPoints();
-                const std::vector<std::vector<double>>& molecularweight = plymwinjtable.getTableData();
+                const std::vector<double>& throughput = plymwinjtable.getThroughputs();
+                const std::vector<double>& watervelocity = plymwinjtable.getVelocities();
+                const std::vector<std::vector<double>>& molecularweight = plymwinjtable.getMoleWeights();
                 TabulatedTwoDFunction tablefunc(throughput, watervelocity, molecularweight, true, false);
                 plymwinjTables_[table_number] = std::move(tablefunc);
             }
@@ -345,9 +345,9 @@ public:
             for (const auto& table : skprwatTables) {
                 const int table_number = table.first;
                 const auto& skprwattable = table.second;
-                const std::vector<double>& throughput = skprwattable.getXSamplingPoints();
-                const std::vector<double>& watervelocity = skprwattable.getYSamplingPoints();
-                const std::vector<std::vector<double>>& skinpressure = skprwattable.getTableData();
+                const std::vector<double>& throughput = skprwattable.getThroughputs();
+                const std::vector<double>& watervelocity = skprwattable.getVelocities();
+                const std::vector<std::vector<double>>& skinpressure = skprwattable.getSkinPressures();
                 TabulatedTwoDFunction tablefunc(throughput, watervelocity, skinpressure, true, false);
                 skprwatTables_[table_number] = std::move(tablefunc);
             }
@@ -357,9 +357,9 @@ public:
             for (const auto& table : skprpolyTables) {
                 const int table_number = table.first;
                 const auto& skprpolytable = table.second;
-                const std::vector<double>& throughput = skprpolytable.getXSamplingPoints();
-                const std::vector<double>& watervelocity = skprpolytable.getYSamplingPoints();
-                const std::vector<std::vector<double>>& skinpressure = skprpolytable.getTableData();
+                const std::vector<double>& throughput = skprpolytable.getThroughputs();
+                const std::vector<double>& watervelocity = skprpolytable.getVelocities();
+                const std::vector<std::vector<double>>& skinpressure = skprpolytable.getSkinPressures();
                 const double ref_polymer_concentration = skprpolytable.referenceConcentration();
                 SkprpolyTable tablefunc = {ref_polymer_concentration,
                                            TabulatedTwoDFunction(throughput, watervelocity, skinpressure, true, false)};
