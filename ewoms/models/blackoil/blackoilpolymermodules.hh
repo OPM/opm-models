@@ -884,14 +884,14 @@ public:
         const Scalar eps = 1e-14;
         // return 1.0 if the polymer has no effect on the water.
         if ( std::abs( (viscosityMultiplier - 1.0) ) < eps){
-            return 1.0;
+            return v0 * 0. + 1.;
         }
 
         const std::vector<Scalar>& shearEffectRefLogVelocity = plyshlogShearEffectRefLogVelocity_[pvtnumRegionIdx];
         auto v0AbsLog = Opm::log(Opm::abs(v0));
         // return 1.0 if the velocity /sharte is smaller than the first velocity entry.
         if (v0AbsLog < shearEffectRefLogVelocity[0])
-            return 1.0;
+            return v0 * 0. + 1.0;
 
         // compute shear factor from input
         // Z = (1 + (P - 1) * M(v) ) / P
