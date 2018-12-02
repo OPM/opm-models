@@ -566,7 +566,7 @@ protected:
                 Opm::Valgrind::CheckDefined(tmp2Der);
             }
 
-            if( !elemCtx.enableStorageCache() ){
+            if( !elemCtx.enableStorageCache() or elemCtx.focusTimeIndex()>0){
                 // Use the implicit Euler time discretization
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
                     if(elemCtx.focusTimeIndex()==0){

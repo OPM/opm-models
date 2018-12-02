@@ -143,6 +143,12 @@ public:
         simulatorPtr_ = &simulator;
         delete matrix_; // <- note that this even works for nullpointers!
         matrix_ = 0;
+        auto it = elementCtx_.begin();
+        const auto& endIt = elementCtx_.end();
+        for (; it != endIt; ++it){
+            delete *it;
+        }
+        elementCtx_.resize(0);
     }
 
     /*!
@@ -327,6 +333,7 @@ private:
             elementCtx_[threadId] = new ElementContext(simulator_());
     }
 
+    
     // Construct the BCRS matrix for the Jacobian of the residual function
     void createMatrix_()
     {
