@@ -129,7 +129,6 @@ SET_BOOL_PROP(BlackOilModel, EnableSolvent, false);
 SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
 SET_BOOL_PROP(BlackOilModel, EnablePolymerMW, false);
 
-
 //! By default, the blackoil model is isothermal and does not conserve energy
 SET_BOOL_PROP(BlackOilModel, EnableTemperature, false);
 SET_BOOL_PROP(BlackOilModel, EnableEnergy, false);

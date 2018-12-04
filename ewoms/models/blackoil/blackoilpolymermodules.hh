@@ -78,10 +78,6 @@ class BlackOilPolymerModule
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     typedef typename Opm::Tabulated1DFunction<Scalar> TabulatedFunction;
-    // the tables related to polymer injectivity are sampled in both direction,
-    // it is possible to implement a UniformXYTabulated2DFunction table for that, possible
-    // simpler or more efficient
-    // At the moment, we use UniformXTabulated2DFunction.
     typedef typename Opm::XYTabulated2DFunction<Scalar> TabulatedTwoDFunction;
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
@@ -119,11 +115,6 @@ public:
     /*!
      * \brief Initialize all internal data structures needed by the polymer module
      */
-    // TODO: the structure of the following function remains to be optimized
-    // TODO: basically, there are three parts. Common ones, ones for POLYMER, ones for POLYMH
-    // TODO: we need to re-organize them to improve the readability of this function
-    // TODO: to save space, maybe some resize will not be necessary depending the keywords setp
-    // enablePolymer and enablePolymerMW
     static void initFromDeck(const Opm::Deck& deck, const Opm::EclipseState& eclState)
     {
         // some sanity checks: if polymers are enabled, the POLYMER keyword must be
@@ -197,7 +188,7 @@ public:
 
         // initialize the objects which deal with the PLYVISC keyword
         const auto& plyviscTables = tableManager.getPlyviscTables();
-        if (!plyviscTables.empty()) {
+        if (!plyviscTables.empty() ) {
             // different viscosity model is used for POLYMW
             if (enablePolymerMW) {
                 Opm::OpmLog::warning("PLYVISC should not be used in POLYMW runs, "
@@ -219,7 +210,6 @@ public:
 
         // initialize the objects which deal with the PLYMAX keyword
         const auto& plymaxTables = tableManager.getPlymaxTables();
-        // TODO: maybe we should get it directly from NPLMIX of REGDIMS?
         const unsigned numMixRegions = plymaxTables.size();
         setNumMixRegions(numMixRegions);
         if (!plymaxTables.empty()) {
@@ -310,8 +300,6 @@ public:
             }
         }
 
-        // TODO: for now, we use the mixing region first for keyword PLYVMH
-        // initialize the PLYVMH related
         if (enablePolymerMW) {
             const Opm::DeckKeyword& plyvmhKeyword = deck.getKeyword("PLYVMH");
             assert(plyvmhKeyword.size() == numMixRegions);
@@ -328,7 +316,6 @@ public:
             }
 
             // handling PLYMWINJ keyword
-            // TODO: this 2D table can be simpler, while using this to test first.
             const auto& plymwinjTables = tableManager.getPlymwinjTables();
             for (const auto& table : plymwinjTables) {
                 const int table_number = table.first;
@@ -607,7 +594,6 @@ public:
         surfaceVolumeWater = Opm::max(surfaceVolumeWater, 1e-10);
 
         // polymer in water phase
-        // TODO: different name for this term?
         const LhsEval massPolymer = surfaceVolumeWater
                 * Toolbox::template decay<LhsEval>(intQuants.polymerConcentration())
                 * (1.0 - Toolbox::template decay<LhsEval>(intQuants.polymerDeadPoreVolume()));
@@ -624,10 +610,6 @@ public:
 
         // tracking the polymer molecular weight
         if (enablePolymerMW) {
-            // TODO: it possible to have problems related to the zero polymer concentration
-            // TODO: for the water, there is something like a minimum water saturation there
-            // TODO: basically, it is multiplying the accumulation term of polymer equation by the molecular weight
-            // TODO: needs to check later whether this is the good way
             accumulationPolymer = Opm::max(accumulationPolymer, 1e-10);
 
             storage[contiPolymerMWEqIdx]  += accumulationPolymer
@@ -878,20 +860,22 @@ public:
                                          unsigned pvtnumRegionIdx,
                                          const Evaluation& v0) {
 
+        typedef Opm::MathToolbox<Evaluation> ToolboxLocal;
+
         const auto& viscosityMultiplierTable = plyviscViscosityMultiplierTable_[pvtnumRegionIdx];
         Scalar viscosityMultiplier = viscosityMultiplierTable.eval( Opm::scalarValue(polymerConcentration), /*extrapolate=*/true);
 
         const Scalar eps = 1e-14;
         // return 1.0 if the polymer has no effect on the water.
         if ( std::abs( (viscosityMultiplier - 1.0) ) < eps){
-            return v0 * 0. + 1.;
+            return ToolboxLocal::createBlank(v0) + 1.;
         }
 
         const std::vector<Scalar>& shearEffectRefLogVelocity = plyshlogShearEffectRefLogVelocity_[pvtnumRegionIdx];
         auto v0AbsLog = Opm::log(Opm::abs(v0));
         // return 1.0 if the velocity /sharte is smaller than the first velocity entry.
         if (v0AbsLog < shearEffectRefLogVelocity[0])
-            return v0 * 0. + 1.0;
+            return ToolboxLocal::createBlank(v0) + 1.0;
 
         // compute shear factor from input
         // Z = (1 + (P - 1) * M(v) ) / P
@@ -1107,24 +1091,22 @@ public:
 
         // compute effective viscosities
         if ( !enablePolymerMW ) {
-            // TODO: put the following to a function
-        const auto& fs = asImp_().fluidState_;
-            // TODO: not sure muWater is needed here, if not used, we should remove it
-        const Evaluation& muWater = fs.viscosity(waterPhaseIdx);
-        const auto& viscosityMultiplier = PolymerModule::plyviscViscosityMultiplierTable(elemCtx, dofIdx, timeIdx);
-        const Evaluation viscosityMixture = viscosityMultiplier.eval(polymerConcentration_, /*extrapolate=*/true) * muWater;
+            const auto& fs = asImp_().fluidState_;
+            const Evaluation& muWater = fs.viscosity(waterPhaseIdx);
+            const auto& viscosityMultiplier = PolymerModule::plyviscViscosityMultiplierTable(elemCtx, dofIdx, timeIdx);
+            const Evaluation viscosityMixture = viscosityMultiplier.eval(polymerConcentration_, /*extrapolate=*/true) * muWater;
 
-        // Do the Todd-Longstaff mixing
-        const Scalar plymixparToddLongstaff = PolymerModule::plymixparToddLongstaff(elemCtx, dofIdx, timeIdx);
-        const Evaluation viscosityPolymer = viscosityMultiplier.eval(cmax, /*extrapolate=*/true) * muWater;
-        const Evaluation viscosityPolymerEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(viscosityPolymer, 1.0 - plymixparToddLongstaff);
-        const Evaluation viscosityWaterEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(muWater, 1.0 - plymixparToddLongstaff);
+            // Do the Todd-Longstaff mixing
+            const Scalar plymixparToddLongstaff = PolymerModule::plymixparToddLongstaff(elemCtx, dofIdx, timeIdx);
+            const Evaluation viscosityPolymer = viscosityMultiplier.eval(cmax, /*extrapolate=*/true) * muWater;
+            const Evaluation viscosityPolymerEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(viscosityPolymer, 1.0 - plymixparToddLongstaff);
+            const Evaluation viscosityWaterEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(muWater, 1.0 - plymixparToddLongstaff);
 
-        const Evaluation cbar = polymerConcentration_ / cmax;
-        // waterViscosity / effectiveWaterViscosity
-        waterViscosityCorrection_ = muWater * ( (1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective );
-        // effectiveWaterViscosity / effectivePolymerViscosity
-        polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
+            const Evaluation cbar = polymerConcentration_ / cmax;
+            // waterViscosity / effectiveWaterViscosity
+            waterViscosityCorrection_ = muWater * ( (1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective );
+            // effectiveWaterViscosity / effectivePolymerViscosity
+            polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
         } else { // based on PLYVMH
             const auto& plyvmhCoefficients = PolymerModule::plyvmhCoefficients(elemCtx, dofIdx, timeIdx);
             const Scalar k_mh = plyvmhCoefficients.k_mh;
@@ -1132,15 +1114,9 @@ public:
             const Scalar gamma = plyvmhCoefficients.gamma;
             const Scalar kappa = plyvmhCoefficients.kappa;
 
-            // TODO: the following pow function should have a version for Evaluation type
             const Evaluation intrinsicViscosity = k_mh * pow(polymerMoleWeight_ * 1000., a_mh) * 1000.;
-            // the meaning of this variable is not very clear, while it is x in the formulation employed
-            // in the formulation, the concentration unit is mg/l, here the concentration is kg/m^3, 1000 is used to
-            // convert the unit
             const Evaluation x = 1.e-6 * 1000. * polymerConcentration_ * intrinsicViscosity;
-            // TODO: the viscosity correction is used for mobility, so it is a division correction
             waterViscosityCorrection_ = 1.0 / ( 1.0 + gamma * (x + kappa * x * x) );
-            // In this model, the mixing parameter is not considered. We assume fully mixing always.
             polymerViscosityCorrection_ = 1.0;
         }
 
