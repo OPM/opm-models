@@ -812,7 +812,7 @@ public:
         res.serializeEnd();
     }
 
-    void deserializeAll(Scalar t)
+    void deserializeAll(Scalar t,bool only_reservoir)
     {
         typedef Ewoms::Restart Restarter;
         Restarter res;
@@ -822,8 +822,11 @@ public:
                       << ", next time step size: " << timeStepSize()
                       << "\n" << std::flush;
         this->deserialize(res);
-        problem_->deserialize(res, false);
-        model_->deserialize(res);
+        if( not(only_reservoir) ){
+            problem_->deserialize(res, false);
+        }
+         model_->deserialize(res);
+
         res.deserializeEnd();
     }
     /*!

@@ -635,7 +635,7 @@ public:
             beginEpisode(/*isOnRestart=*/true);
         }
         // deserialize the wells
-        wellModel_.deserialize(res);
+        wellModel_.deserialize(res, isOnRestart);
     }
 
     /*!
