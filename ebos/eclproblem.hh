@@ -246,6 +246,10 @@ SET_SCALAR_PROP(EclBaseProblem, NewtonMaxError, 0.1);
 // step succeeds at more than 14 Newton iteration is rather small
 SET_INT_PROP(EclBaseProblem, NewtonMaxIterations, 14);
 
+// set no adjoint variables ad default
+NEW_PROP_TAG(NumAdjoint);
+SET_INT_PROP(EclBaseProblem, NumAdjoint, 0);
+
 // also, reduce the target for the "optimum" number of Newton iterations to 6. Note that
 // this is only relevant if the time step is reduced from the report step size for some
 // reason. (because ebos first tries to do a report step using a single time step.)
@@ -605,14 +609,16 @@ public:
      * \param res The deserializer object
      */
     template <class Restarter>
-    void deserialize(Restarter& res)
+    void deserialize(Restarter& res, bool isOnRestart)
     {
         // reload the current episode/report step from the deck
-        beginEpisode(/*isOnRestart=*/true);
-
+        // beginEpisode(/*isOnRestart=*/true);
+        // should probably be removed
+        if(isOnRestart){
+            beginEpisode(/*isOnRestart=*/true);
+        }
         // deserialize the wells
-        wellModel_.deserialize(res);
-
+        wellModel_.deserialize(res, isOnRestart);
         // deserialize the aquifer
         aquiferModel_.deserialize(res);
     }

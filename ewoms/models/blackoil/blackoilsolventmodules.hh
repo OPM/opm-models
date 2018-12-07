@@ -899,11 +899,12 @@ public:
      */
     void solventPreSatFuncUpdate_(const ElementContext& elemCtx,
                                   unsigned dofIdx,
-                                  unsigned timeIdx)
+                                  unsigned timeIdx,
+                                  unsigned focustimeIdx)
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         auto& fs = asImp_().fluidState_;
-        solventSaturation_ = priVars.makeEvaluation(solventSaturationIdx, timeIdx);
+        solventSaturation_ = priVars.makeEvaluation(solventSaturationIdx, timeIdx,focustimeIdx);
         hydrocarbonSaturation_ = fs.saturation(gasPhaseIdx);
 
         // apply a cut-off. Don't waste calculations if no solvent
@@ -924,7 +925,8 @@ public:
      */
     void solventPostSatFuncUpdate_(const ElementContext& elemCtx,
                                    unsigned dofIdx,
-                                   unsigned timeIdx)
+                                   unsigned timeIdx,
+                                   unsigned focustimeidx)
     {
         // revert the gas "saturation" of the fluid state back to the saturation of the
         // hydrocarbon gas.
@@ -953,9 +955,9 @@ public:
 
             //oil is the reference phase for pressure
             if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
-                pgMisc = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
+                pgMisc = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, focustimeidx);
             else {
-                const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx);
+                const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, focustimeidx);
                 pgMisc = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
             }
 
@@ -1039,7 +1041,8 @@ public:
      */
     void solventPvtUpdate_(const ElementContext& elemCtx,
                            unsigned scvIdx,
-                           unsigned timeIdx)
+                           unsigned timeIdx,
+                           unsigned focustimeidx)
     {
         const auto& iq = asImp_();
         const auto& fs = iq.fluidState();
@@ -1268,17 +1271,20 @@ class BlackOilSolventIntensiveQuantities<TypeTag, false>
 public:
     void solventPreSatFuncUpdate_(const ElementContext& elemCtx OPM_UNUSED,
                                   unsigned scvIdx OPM_UNUSED,
-                                  unsigned timeIdx OPM_UNUSED)
+                                  unsigned timeIdx OPM_UNUSED,
+                                  unsigned focustimeidx OPM_UNUSED)
     { }
 
     void solventPostSatFuncUpdate_(const ElementContext& elemCtx OPM_UNUSED,
                                    unsigned scvIdx OPM_UNUSED,
-                                   unsigned timeIdx OPM_UNUSED)
+                                   unsigned timeIdx OPM_UNUSED,
+                                   unsigned focustimeidx OPM_UNUSED )
     { }
 
     void solventPvtUpdate_(const ElementContext& elemCtx OPM_UNUSED,
                            unsigned scvIdx OPM_UNUSED,
-                           unsigned timeIdx OPM_UNUSED)
+                           unsigned timeIdx OPM_UNUSED,
+                           unsigned focustimeIdx OPM_UNUSED)
     { }
 
     const Evaluation& solventSaturation() const

@@ -577,10 +577,10 @@ public:
      * It is the inverse of the serialize() method.
      */
     template <class Restarter>
-    void deserialize(Restarter& res OPM_UNUSED)
+    void deserialize(Restarter& res, bool wasRestarted=true)
     {
         // initialize the wells for the current episode
-        beginEpisode(simulator_.vanguard().eclState(), simulator_.vanguard().schedule(), /*wasRestarted=*/true);
+        beginEpisode(simulator_.vanguard().eclState(), simulator_.vanguard().schedule(), wasRestarted);
     }
 
     /*!
@@ -689,7 +689,7 @@ protected:
         }
     }
 
-    void computeWellConnectionsMap_(unsigned reportStepIdx OPM_UNUSED, WellConnectionsMap& cartesianIdxToConnectionMap)
+    void computeWellConnectionsMap_(unsigned reportStepIdx, WellConnectionsMap& cartesianIdxToConnectionMap)
     {
         const auto& deckSchedule = simulator_.vanguard().schedule();
 

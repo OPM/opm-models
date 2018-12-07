@@ -642,6 +642,7 @@ protected:
      *        spatial domain.
      */
     void linearizeDomain_()
+<<<<<<< HEAD
     {
         model().linearizer().linearizeDomain();
     }
@@ -651,6 +652,12 @@ protected:
         model().linearizer().linearizeAuxiliaryEquations();
         model().linearizer().finalize();
     }
+=======
+    { model().linearizer().linearizeDomain(/*focus time*/ 0); }
+
+    void linearizeAuxiliaryEquations_()
+    { model().linearizer().linearizeAuxiliaryEquations(/*focus time*/ 0); }
+>>>>>>> adjoint_rebased
 
     void preSolve_(const SolutionVector& currentSolution  OPM_UNUSED,
                    const GlobalEqVector& currentResidual)

@@ -31,6 +31,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+# include <boost/filesystem.hpp>
 
 namespace Ewoms {
 
@@ -46,7 +47,7 @@ class Restart
     template <class GridView>
     static const std::string magicRestartCookie_(const GridView& gridView)
     {
-        static const std::string gridName = "blubb"; // gridView.grid().name();
+        static const std::string gridName = gridView.grid().name();
         static const int dim = GridView::dimension;
 
         int numVertices = gridView.size(dim);
@@ -69,22 +70,33 @@ class Restart
     /*!
      * \brief Return the restart file name.
      */
-    template <class GridView, class Scalar>
-    static const std::string restartFileName_(const GridView& gridView,
-                                              const std::string& outputDir,
-                                              const std::string& simName,
-                                              Scalar t)
+    template <class Simulator, class Scalar>
+    static const std::string restartFileName_(const Simulator& simulator,                                                                                     Scalar t)
     {
-        std::string dir = outputDir;
+        // Directory.
+        std::string dir = simulator.problem().outputDir();
         if (dir == ".")
             dir = "";
         else if (!dir.empty() && dir.back() != '/')
             dir += "/";
+        namespace fs = boost::filesystem;
+        fs::path output_dir(dir);
+        fs::path subdir("ebos_restart");
+        output_dir = output_dir / subdir;
+        if(!(fs::exists(output_dir))){
+                fs::create_directory(output_dir);
+         }
 
-        int rank = gridView.comm().rank();
+        // Filename.
+        int rank = simulator.gridView().comm().rank();
+        std::string simName = simulator.problem().name();
         std::ostringstream oss;
-        oss << dir << simName << "_time=" << t << "_rank=" << rank << ".ers";
-        return oss.str();
+        oss << simName << "_time=" << t << "_rank=" << rank << ".ers";
+        fs::path output_file(oss.str());
+
+        // Combine and return.
+        fs::path full_path = output_dir / output_file;
+        return full_path.string();
     }
 
 public:
@@ -101,9 +113,7 @@ public:
     void serializeBegin(Simulator& simulator)
     {
         const std::string magicCookie = magicRestartCookie_(simulator.gridView());
-        fileName_ = restartFileName_(simulator.gridView(),
-                                     simulator.problem().outputDir(),
-                                     simulator.problem().name(),
+        fileName_ = restartFileName_(simulator,
                                      simulator.time());
 
         // open output file and write magic cookie
@@ -164,14 +174,16 @@ public:
     void serializeEnd()
     { outStream_.close(); }
 
-    /*!
+
+   /*!
      * \brief Start reading a restart file at a certain simulated
      *        time.
      */
+
     template <class Simulator, class Scalar>
     void deserializeBegin(Simulator& simulator, Scalar t)
     {
-        fileName_ = restartFileName_(simulator.gridView(), simulator.problem().outputDir(), simulator.problem().name(), t);
+        fileName_ = restartFileName_(simulator, t);
 
         // open input file and read magic cookie
         inStream_.open(fileName_.c_str());
