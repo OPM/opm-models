@@ -230,8 +230,11 @@ public:
                 try {
                     tasklet->run();
                 }
+                catch (const std::exception& e) {
+                    std::cerr << "ERROR: Uncaught std::exception when running tasklet: " << e.what() << ". Trying to continue.\n";
+                }
                 catch (...) {
-                    std::cerr << "ERROR: Uncaught exception when running tasklet. Trying to continue.\n";
+                    std::cerr << "ERROR: Uncaught exception (general type) when running tasklet. Trying to continue.\n";
                 }
             }
         }
@@ -325,6 +328,9 @@ protected:
             // execute tasklet
             try {
                 tasklet->run();
+            }
+            catch (const std::exception& e) {
+                std::cerr << "ERROR: Uncaught std::exception when running tasklet: " << e.what() << ". Trying to continue.\n";
             }
             catch (...) {
                 std::cerr << "ERROR: Uncaught exception when running tasklet. Trying to continue.\n";
