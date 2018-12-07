@@ -381,6 +381,7 @@ protected:
     bool linearSolve_(const TracerMatrix& M, TracerVector& x, TracerVector& b)
     {
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,7)
+        typedef typename GET_PROP_TYPE(TypeTag, LinearSolverScalar) LinearSolverScalar;
         Dune::FMatrixPrecision<LinearSolverScalar>::set_singular_limit(1.e-30);
         Dune::FMatrixPrecision<LinearSolverScalar>::set_absolute_limit(1.e-30);
 #endif
@@ -392,7 +393,7 @@ protected:
         typedef Dune::BiCGSTABSolver<TracerVector> TracerSolver;
         typedef Dune::MatrixAdapter<TracerMatrix, TracerVector , TracerVector > TracerOperator;
         typedef Dune::SeqScalarProduct< TracerVector > TracerScalarProduct ;
-        typedef Dune::SeqILU< TracerMatrix, TracerVector, TracerVector  > TracerPreconditioner;
+        typedef Dune::SeqILU0< TracerMatrix, TracerVector, TracerVector  > TracerPreconditioner;
 
         TracerOperator tracerOperator(M);
         TracerScalarProduct tracerScalarProduct;
