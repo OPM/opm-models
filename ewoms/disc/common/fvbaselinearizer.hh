@@ -246,7 +246,7 @@ public:
         for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx) {
             bool succeeded = true;
             try {
-                model.auxiliaryModule(auxModIdx)->linearize(*jacobian_, residual_, focusTimeIdx);
+                model.auxiliaryModule(auxModIdx)->linearize(*jacobian_, residual_);//, focusTimeIdx);
             }
             catch (const std::exception& e) {
                 succeeded = false;

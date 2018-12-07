@@ -618,9 +618,9 @@ public:
             beginEpisode(/*isOnRestart=*/true);
         }
         // deserialize the wells
-        wellModel_.deserialize(res, isOnRestart);
+        //wellModel_.deserialize(res, isOnRestart);
         // deserialize the aquifer
-        aquiferModel_.deserialize(res);
+        //aquiferModel_.deserialize(res);
     }
 
     /*!
@@ -629,12 +629,12 @@ public:
      *
      * The file format used here is ad-hoc.
      */
-    template <class Restarter>
-    void serialize(Restarter& res)
-    {
-        wellModel_.serialize(res);
-        aquiferModel_.serialize(res);
-    }
+    // template <class Restarter>
+    // void serialize(Restarter& res)
+    // {
+    //     wellModel_.serialize(res);
+    //     //aquiferModel_.serialize(res);
+    // }
 
     /*!
      * \brief Called by the simulator before an episode begins.
