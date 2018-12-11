@@ -591,8 +591,10 @@ protected:
             Opm::Valgrind::CheckDefined(residual[dofIdx]);
 
             // deal with the source term
-            asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
-
+            //assumes sourceterm is independent of prevois state
+            if(elemCtx.focusTimeIndex()==0){
+                asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
+            }
             // if the model uses extensive quantities in its storage term, and we use
             // automatic differention and current DOF is also not the one we currently
             // focus on, the storage term does not need any derivatives!
