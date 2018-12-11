@@ -192,7 +192,7 @@ public:
             // different viscosity model is used for POLYMW
             if (enablePolymerMW) {
                 Opm::OpmLog::warning("PLYVISC should not be used in POLYMW runs, "
-                                     "they will not take effects. Different viscosity model based on PLYVMH is used \n");
+                                     "it will have no effect. A viscosity model based on PLYVMH is used instead.\n");
             } else {
 
                 assert(numPvtRegions == plyviscTables.size());
@@ -223,7 +223,7 @@ public:
 
         if (deck.hasKeyword("PLMIXPAR")) {
             if (enablePolymerMW) {
-                Opm::OpmLog::warning("PLMIXPAR should not be used in POLYMW runs, it will take no effects \n");
+                Opm::OpmLog::warning("PLMIXPAR should not be used in POLYMW runs, it will have no effect.\n");
             } else {
                 // initialize the objects which deal with the PLMIXPAR keyword
                 for (unsigned mixRegionIdx = 0; mixRegionIdx < numMixRegions; ++ mixRegionIdx) {
@@ -239,7 +239,7 @@ public:
         hasShrate_ = deck.hasKeyword("SHRATE");
 
         if ( (hasPlyshlog_ || hasShrate_) && enablePolymerMW) {
-            Opm::OpmLog::warning("PLYSHLOG and SHRATE should not be used in POLYMW runs, they will take no effects \n");
+            Opm::OpmLog::warning("PLYSHLOG and SHRATE should not be used in POLYMW runs, they will have no effect.\n");
         }
 
         if (hasPlyshlog_ && !enablePolymerMW) {
@@ -525,7 +525,7 @@ public:
         return pvIdx == polymerConcentrationIdx || pvIdx == polymerMoleWeightIdx;
     }
 
-    static std::string primaryVarName(unsigned pvIdx OPM_OPTIM_UNUSED)
+    static std::string primaryVarName(unsigned pvIdx)
     {
         assert(primaryVarApplies(pvIdx));
 
@@ -536,7 +536,7 @@ public:
         }
     }
 
-    static Scalar primaryVarWeight(unsigned pvIdx OPM_OPTIM_UNUSED)
+    static Scalar primaryVarWeight(unsigned pvIdx)
     {
         assert(primaryVarApplies(pvIdx));
 
@@ -556,18 +556,18 @@ public:
         return eqIdx == contiPolymerEqIdx || eqIdx == contiPolymerMWEqIdx;
     }
 
-    static std::string eqName(unsigned eqIdx OPM_OPTIM_UNUSED)
+    static std::string eqName(unsigned eqIdx)
     {
         assert(eqApplies(eqIdx));
 
         if (eqIdx == contiPolymerEqIdx) {
             return "conti^polymer";
         } else {
-            return "conti^polymer_molecularwegiht";
+            return "conti^polymer_molecularweight";
         }
     }
 
-    static Scalar eqWeight(unsigned eqIdx OPM_OPTIM_UNUSED)
+    static Scalar eqWeight(unsigned eqIdx)
     {
         assert(eqApplies(eqIdx));
 
@@ -746,7 +746,8 @@ public:
         instream >> priVars0[polymerMoleWeightIdx];
 
         // set the primary variables for the beginning of the current time step.
-        priVars1 = priVars0; // [polymerConcentrationIdx];
+        priVars1[polymerConcentrationIdx] = priVars0[polymerConcentrationIdx];
+        priVars1[polymerMoleWeightIdx] = priVars0[polymerMoleWeightIdx];
     }
 
     static const Scalar plyrockDeadPoreVolume(const ElementContext& elemCtx,
@@ -1114,8 +1115,10 @@ public:
             const Scalar gamma = plyvmhCoefficients.gamma;
             const Scalar kappa = plyvmhCoefficients.kappa;
 
-            const Evaluation intrinsicViscosity = k_mh * pow(polymerMoleWeight_ * 1000., a_mh) * 1000.;
-            const Evaluation x = 1.e-6 * 1000. * polymerConcentration_ * intrinsicViscosity;
+            // viscosity model based on Mark-Houwink equation and Huggins equation
+            // 1000 is a emperical constant, most likely related to unit conversion
+            const Evaluation intrinsicViscosity = k_mh * pow(polymerMoleWeight_ * 1000., a_mh);
+            const Evaluation x = polymerConcentration_ * intrinsicViscosity;
             waterViscosityCorrection_ = 1.0 / ( 1.0 + gamma * (x + kappa * x * x) );
             polymerViscosityCorrection_ = 1.0;
         }
@@ -1134,7 +1137,7 @@ public:
     const Evaluation& polymerMoleWeight() const
     {
         if ( !enablePolymerMW )
-            throw std::runtime_error("polymerMoleWeight() called by polymers are disabled");
+            throw std::logic_error("polymerMoleWeight() is called but polymer milecular weight is disabled");
 
         return polymerMoleWeight_;
     }
@@ -1187,7 +1190,7 @@ public:
     { }
 
     const Evaluation& polymerMoleWeight() const
-    { throw std::runtime_error("polymerMoleWeight() called by polymers are disabled"); }
+    { throw std::logic_error("polymerMoleWeight() called but polymer molecular weight is disabled"); }
 
     const Evaluation& polymerConcentration() const
     { throw std::runtime_error("polymerConcentration() called but polymers are disabled"); }

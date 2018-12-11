@@ -254,7 +254,10 @@ protected:
                 delta *= satAlpha;
             else if (pvIdx == Indices::polymerMoleWeightIdx) {
                 const double sign = delta >= 0. ? 1. : -1.;
-                delta = sign * std::min(std::abs(delta), 5.0);
+                // maximum change of polymer molecular weight, the unit is MDa.
+                // applying this limit to stabilize the simulation. The value itself is still experimental.
+                const double maxMWChange = 100.0;
+                delta = sign * std::min(std::abs(delta), maxMWChange);
                 delta *= satAlpha;
             }
 
