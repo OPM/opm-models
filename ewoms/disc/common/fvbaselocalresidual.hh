@@ -163,16 +163,17 @@ public:
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
 
         residual = 0.0;
-
+        if(elemCtx.focusTimeIndex()==0){
         // evaluate the flux terms
-        asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
-
+            asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
+        }
         // evaluate the storage and the source terms
+
         asImp_().evalVolumeTerms_(residual, elemCtx);
-
+        if(elemCtx.focusTimeIndex()==0){
         // evaluate the boundary conditions
-        asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
-
+            asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
+        }
         if (useVolumetricResidual) {
             // make the residual volume specific (i.e., make it incorrect mass per cubic
             // meter instead of total mass)
