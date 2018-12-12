@@ -243,26 +243,6 @@ public:
         assignNaive(fsFlash);
     }
 
-    // TODO: this function is not called anywhere, so the extension for the polymer
-    // molecular weight is not done for this function
-    template <class FluidState, class SolventContainer>
-    void assignMassConservative(const FluidState& fluidState,
-                                const MaterialLawParams& matParams,
-                                Scalar solSat,
-                                bool isInEquilibrium = false)
-    {
-        assignMassConservative(fluidState, matParams, isInEquilibrium);
-
-        // set the primary variables of the solvent module
-        SolventModule::assignPrimaryVars(*this, solSat);
-
-        // set the primary variables of the polymer module
-        PolymerModule::assignPrimaryVars(*this, solSat);
-
-        // set the primary variables of the energy module
-        EnergyModule::assignPrimaryVars(*this, solSat);
-    }
-
     /*!
      * \copydoc ImmisciblePrimaryVariables::assignNaive
      */

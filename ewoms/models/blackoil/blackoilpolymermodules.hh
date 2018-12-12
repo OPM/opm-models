@@ -671,33 +671,6 @@ public:
     }
 
     /*!
-     * \brief Assign the polymer specific primary variables to a PrimaryVariables object
-     */
-    static void assignPrimaryVars(PrimaryVariables& priVars,
-                                  Scalar polymerConcentration)
-    {
-        if (!enablePolymer)
-            return;
-        // TODO: not called
-        priVars[polymerConcentrationIdx] = polymerConcentration;
-    }
-
-    /*!
-     * \brief Do a Newton-Raphson update the primary variables of the polymers.
-     */
-    static void updatePrimaryVars(PrimaryVariables& newPv,
-                                  const PrimaryVariables& oldPv,
-                                  const EqVector& delta)
-    {
-        if (!enablePolymer)
-            return;
-
-        // TODO: not called
-        // do a plain unchopped Newton update
-        newPv[polymerConcentrationIdx] = oldPv[polymerConcentrationIdx] - delta[polymerConcentrationIdx];
-    }
-
-    /*!
      * \brief Return how much a Newton-Raphson update is considered an error
      */
     static Scalar computeUpdateError(const PrimaryVariables& oldPv OPM_UNUSED,
@@ -707,16 +680,6 @@ public:
         // convergence
         // TODO: maybe this should be changed
         return static_cast<Scalar>(0.0);
-    }
-
-    /*!
-     * \brief Return how much a residual is considered an error
-     */
-    static Scalar computeResidualError(const EqVector& resid)
-    {
-        // TODO: not called
-        // do not weight the residual of polymers when it comes to convergence
-        return std::abs(Toolbox::scalarValue(resid[contiPolymerEqIdx]));
     }
 
     template <class DofEntity>
@@ -741,7 +704,6 @@ public:
         PrimaryVariables& priVars0 = model.solution(/*timeIdx=*/0)[dofIdx];
         PrimaryVariables& priVars1 = model.solution(/*timeIdx=*/1)[dofIdx];
 
-        // TODO: not sure how to handle here for polymer molecular weight
         instream >> priVars0[polymerConcentrationIdx];
         instream >> priVars0[polymerMoleWeightIdx];
 
