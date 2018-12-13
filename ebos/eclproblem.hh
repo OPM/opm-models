@@ -713,7 +713,10 @@ public:
 
         aquiferModel_.beginEpisode();
 
-        if (doInvalidate)
+        // if drsdt and drvdt is active invalidating the intesive quantities
+        // results in wrong initial storage term. (timeIndex = 1)
+        // TODO: Explicitly store the last storage term in the endTimeStep method
+        if (doInvalidate && !drsdtActive_() && !drvdtActive_())
             this->model().invalidateIntensiveQuantitiesCache(/*timeIdx=*/0);
     }
 
