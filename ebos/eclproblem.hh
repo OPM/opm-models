@@ -93,6 +93,8 @@
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <boost/date_time.hpp>
 
 #include <set>
@@ -335,6 +337,8 @@ class EclProblem : public GET_PROP_TYPE(TypeTag, BaseProblem)
     enum { numComponents = FluidSystem::numComponents };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW) };
+
     enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { enableThermalFluxBoundaries = GET_PROP_VALUE(TypeTag, EnableThermalFluxBoundaries) };
@@ -1115,6 +1119,19 @@ public:
         return polymerConcentration_[elemIdx];
     }
 
+
+    /*!
+    * \brief Returns the polymer molecule weight for a given cell index
+    */
+    // TODO: remove this function if not called
+    Scalar polymerMolecularWeight(const unsigned elemIdx) const
+    {
+        if (polymerMoleWeight_.empty())
+            return 0.0;
+
+        return polymerMoleWeight_[elemIdx];
+    }
+
     /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
@@ -1276,10 +1293,13 @@ public:
             values.assignNaive(initialFluidStates_[globalDofIdx]);
 
         if (enableSolvent)
-             values[Indices::solventSaturationIdx] = solventSaturation_[globalDofIdx];
+            values[Indices::solventSaturationIdx] = solventSaturation_[globalDofIdx];
 
         if (enablePolymer)
-             values[Indices::polymerConcentrationIdx] = polymerConcentration_[globalDofIdx];
+            values[Indices::polymerConcentrationIdx] = polymerConcentration_[globalDofIdx];
+
+        if (enablePolymerMW)
+            values[Indices::polymerMoleWeightIdx]= polymerMoleWeight_[globalDofIdx];
 
         values.checkDefined();
     }
@@ -1789,6 +1809,14 @@ private:
         if (enablePolymer)
             polymerConcentration_.resize(numElems,0.0);
 
+        if (enablePolymerMW) {
+            const std::string msg {"Support of the RESTART for polymer molecular weight "
+                                   "is not implemented yet. The polymer weight value will be "
+                                   "zero when RESTART begins"};
+            Opm::OpmLog::warning("NO_POLYMW_RESTART", msg);
+            polymerMoleWeight_.resize(numElems, 0.0);
+        }
+
         for (size_t elemIdx = 0; elemIdx < numElems; ++elemIdx) {
             auto& elemFluidState = initialFluidStates_[elemIdx];
             elemFluidState.setPvtRegionIndex(pvtRegionIndex(elemIdx));
@@ -1798,6 +1826,7 @@ private:
                  solventSaturation_[elemIdx] = eclWriter_->eclOutputModule().getSolventSaturation(elemIdx);
             if (enablePolymer)
                  polymerConcentration_[elemIdx] = eclWriter_->eclOutputModule().getPolymerConcentration(elemIdx);
+            // if we need to restart for polymer molecular weight simulation, we need to add related here
         }
 
         if (tracerModel().numTracers() > 0)
@@ -1959,6 +1988,18 @@ private:
                 polymerConcentration_[dofIdx] = polyConcentrationData[cartesianDofIdx];
             }
         }
+
+        if (enablePolymerMW) {
+            const std::vector<double>& polyMoleWeightData = eclState.get3DProperties().getDoubleGridProperty("SPOLYMW").getData();
+            polymerMoleWeight_.resize(numDof,0.0);
+            for (size_t dofIdx = 0; dofIdx < numDof; ++dofIdx) {
+                const size_t cartesianDofIdx = vanguard.cartesianIndex(dofIdx);
+                assert(0 <= cartesianDofIdx);
+                assert(cartesianDofIdx <= polyMoleWeightData.size());
+                polymerMoleWeight_[dofIdx] = polyMoleWeightData[cartesianDofIdx];
+            }
+        }
+
     }
 
 
@@ -2140,6 +2181,8 @@ private:
     std::vector<Scalar> initialTemperature_;
 
     std::vector<Scalar> polymerConcentration_;
+    // polymer molecular weight
+    std::vector<Scalar> polymerMoleWeight_;
     std::vector<Scalar> solventSaturation_;
 
     std::vector<bool> dRsDtOnlyFreeGas_; // apply the DRSDT rate limit only to cells that exhibit free gas
