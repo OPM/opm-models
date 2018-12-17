@@ -252,6 +252,14 @@ protected:
             else if (pvIdx == Indices::solventSaturationIdx)
                 // solvent saturation updates are also subject to the Appleyard chop
                 delta *= satAlpha;
+            else if (pvIdx == Indices::polymerMoleWeightIdx) {
+                const double sign = delta >= 0. ? 1. : -1.;
+                // maximum change of polymer molecular weight, the unit is MDa.
+                // applying this limit to stabilize the simulation. The value itself is still experimental.
+                const double maxMWChange = 100.0;
+                delta = sign * std::min(std::abs(delta), maxMWChange);
+                delta *= satAlpha;
+            }
 
             // do the actual update
             nextValue[pvIdx] = currentValue[pvIdx] - delta;
@@ -263,6 +271,13 @@ protected:
             // keep the polymer concentration above 0
             if (pvIdx == Indices::polymerConcentrationIdx)
                 nextValue[pvIdx] = std::max(nextValue[pvIdx], 0.0);
+
+            if (pvIdx == Indices::polymerMoleWeightIdx) {
+                nextValue[pvIdx] = std::max(nextValue[pvIdx], 0.0);
+                const double polymerConcentration = nextValue[Indices::polymerConcentrationIdx];
+                if (polymerConcentration < 1.e-10)
+                    nextValue[pvIdx] = 0.0;
+            }
 
         }
 

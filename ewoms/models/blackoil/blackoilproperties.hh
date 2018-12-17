@@ -48,6 +48,8 @@ NEW_PROP_TAG(SolidEnergyLawParams);
 NEW_PROP_TAG(EnableSolvent);
 //! Enable the ECL-blackoil extension for polymer.
 NEW_PROP_TAG(EnablePolymer);
+//! Enable the tracking polymer molecular weight tracking and related functionalities
+NEW_PROP_TAG(EnablePolymerMW);
 //! Enable surface volume scaling
 NEW_PROP_TAG(BlackoilConserveSurfaceVolume);
 
