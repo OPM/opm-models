@@ -365,9 +365,11 @@ public:
                               << std::flush;
                 }
 
+                //
+                int focusTimeIdx = 0;
                 // do the actual linearization
                 linearizeTimer_.start();
-                asImp_().linearizeDomain_();
+                asImp_().linearizeDomain_(focusTimeIdx);
                 linearizeTimer_.stop();
 
                 // notify the implementation of the successful linearization on order to
@@ -380,7 +382,7 @@ public:
                 asImp_().preSolve_(currentSolution, residual);
                 updateTimer_.stop();
 
-                asImp_().linearizeAuxiliaryEquations_();
+                asImp_().linearizeAuxiliaryEquations_(focusTimeIdx);
 
                 if (!asImp_().proceed_()) {
                     if (asImp_().verbose_() && isatty(fileno(stdout)))
