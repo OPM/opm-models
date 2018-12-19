@@ -33,7 +33,7 @@
 #include <ewoms/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
-#include <opm/material/common/XYTabulated2DFunction.hpp>
+#include <opm/material/common/IntervalTabulated2DFunction.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -78,7 +78,7 @@ class BlackOilPolymerModule
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     typedef typename Opm::Tabulated1DFunction<Scalar> TabulatedFunction;
-    typedef typename Opm::XYTabulated2DFunction<Scalar> TabulatedTwoDFunction;
+    typedef typename Opm::IntervalTabulated2DFunction<Scalar> TabulatedTwoDFunction;
 
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
