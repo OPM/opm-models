@@ -405,7 +405,7 @@ public:
 #ifndef NDEBUG
         assert(0 <= dofIdx && dofIdx < numDof(timeIdx));
 
-        if (enableStorageCache_ && timeIdx != 0)
+        if (enableStorageCache_ && timeIdx != 0 && problem().recycleFirstIterationStorage())
             throw std::logic_error("If caching of the storage term is enabled, only the intensive quantities "
                                    "for the most-recent substep (i.e. time index 0) are available!");
 #endif
@@ -577,7 +577,7 @@ protected:
     void updateSingleIntQuants_(const PrimaryVariables& priVars, unsigned dofIdx, unsigned timeIdx)
     {
 #ifndef NDEBUG
-        if (enableStorageCache_ && timeIdx != 0)
+        if (enableStorageCache_ && timeIdx != 0 && problem().recycleFirstIterationStorage())
             throw std::logic_error("If caching of the storage term is enabled, only the intensive quantities "
                                    "for the most-recent substep (i.e. time index 0) are available!");
 #endif

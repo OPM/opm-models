@@ -205,7 +205,7 @@ public:
             // in the threephase case, gas and oil phases are potentially present, i.e.,
             // we use the compositions of the gas-saturated oil and oil-saturated gas.
             if (FluidSystem::enableDissolvedGas()) {
-                Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
+                Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(timeIdx, globalSpaceIdx);
                 const Evaluation& RsSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             oilPhaseIdx,
@@ -217,7 +217,7 @@ public:
                 fluidState_.setRs(0.0);
 
             if (FluidSystem::enableVaporizedOil()) {
-                Scalar RvMax = elemCtx.problem().maxOilVaporizationFactor(globalSpaceIdx);
+                Scalar RvMax = elemCtx.problem().maxOilVaporizationFactor(timeIdx, globalSpaceIdx);
                 const Evaluation& RvSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             gasPhaseIdx,
@@ -230,7 +230,7 @@ public:
         }
         else if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_po_Rs) {
             // if the switching variable is the mole fraction of the gas component in the
-            Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
+            Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(timeIdx, globalSpaceIdx);
 
             // oil phase, we can directly set the composition of the oil phase
             const auto& Rs = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
@@ -239,7 +239,7 @@ public:
             if (FluidSystem::enableVaporizedOil()) {
                 // the gas phase is not present, but we need to compute its "composition"
                 // for the gravity correction anyway
-                Scalar RvMax = elemCtx.problem().maxOilVaporizationFactor(globalSpaceIdx);
+                Scalar RvMax = elemCtx.problem().maxOilVaporizationFactor(timeIdx, globalSpaceIdx);
                 const auto& RvSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             gasPhaseIdx,
@@ -260,7 +260,7 @@ public:
             if (FluidSystem::enableDissolvedGas()) {
                 // the oil phase is not present, but we need to compute its "composition" for
                 // the gravity correction anyway
-                Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(globalSpaceIdx);
+                Scalar RsMax = elemCtx.problem().maxGasDissolutionFactor(timeIdx, globalSpaceIdx);
                 const auto& RsSat =
                     FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             oilPhaseIdx,

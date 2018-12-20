@@ -65,7 +65,7 @@ public:
      *
      * This is required for the DRSDT keyword.
      */
-    Scalar maxGasDissolutionFactor(unsigned globalDofIdx OPM_UNUSED) const
+    Scalar maxGasDissolutionFactor(unsigned timeIdx OPM_UNUSED, unsigned globalDofIdx OPM_UNUSED) const
     { return std::numeric_limits<Scalar>::max()/2; }
 
     /*!
@@ -74,7 +74,7 @@ public:
      *
      * This is required for the DRVDT keyword.
      */
-    Scalar maxOilVaporizationFactor(unsigned globalDofIdx OPM_UNUSED) const
+    Scalar maxOilVaporizationFactor(unsigned timeIdx OPM_UNUSED, unsigned globalDofIdx OPM_UNUSED) const
     { return std::numeric_limits<Scalar>::max()/2; }
 
     /*!
