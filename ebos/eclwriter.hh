@@ -147,7 +147,7 @@ public:
      */
     void writeOutput(bool isSubStep)
     {
-        Scalar curTime = simulator_.time() + simulator_.timeStepSize();
+        Scalar curTime = simulator_.time();// + simulator_.timeStepSize();
         Scalar totalSolverTime = simulator_.executionTimer().realTimeElapsed();
         Scalar nextStepSize = simulator_.problem().nextTimeStepSize();
 
