@@ -119,9 +119,10 @@ public:
                 (*this)[domRowIdx] = nativeBlockVector[nativeRowIdx];
         }
 
-        // add up the contents of border rows, for the remaining rows,
-        // get the values from their respective master process.
-        syncAddBorder();
+        // add up the contents of the overlapping rows. Since non-native rows are set to
+        // zero above, the addition is only different from an assignment if the row is
+        // shared amongst multiple ranks.
+        syncAdd();
     }
 
     /*!
@@ -173,22 +174,13 @@ public:
      */
     void sync()
     {
-        typename PeerSet::const_iterator peerIt;
-        typename PeerSet::const_iterator peerEndIt = overlap_->peerSet().end();
-
         // send all entries to all peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
+        for (const auto peerRank: overlap_->peerSet())
             sendEntries_(peerRank);
-        }
 
         // recieve all entries to the peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
+        for (const auto peerRank: overlap_->peerSet())
             receiveFromMaster_(peerRank);
-        }
 
         // wait until we have send everything
         waitSendFinished_();
@@ -200,53 +192,16 @@ public:
      */
     void syncAdd()
     {
-        typename PeerSet::const_iterator peerIt;
-        typename PeerSet::const_iterator peerEndIt = overlap_->peerSet().end();
-
         // send all entries to all peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
+        for (const auto peerRank: overlap_->peerSet())
             sendEntries_(peerRank);
-        }
 
         // recieve all entries to the peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
+        for (const auto peerRank: overlap_->peerSet())
             receiveAdd_(peerRank);
-        }
 
         // wait until we have send everything
         waitSendFinished_();
-    }
-
-    /*!
-     * \brief Syncronize all values of the block vector from the
-     *        master rank, but add up the entries on the border.
-     */
-    void syncAddBorder()
-    {
-        typename PeerSet::const_iterator peerIt;
-        typename PeerSet::const_iterator peerEndIt = overlap_->peerSet().end();
-
-        // send all entries to all peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-            sendEntries_(peerRank);
-        }
-
-        // recieve all entries to the peers
-        peerIt = overlap_->peerSet().begin();
-        for (; peerIt != peerEndIt; ++peerIt) {
-            ProcessRank peerRank = *peerIt;
-            receiveAddBorder_(peerRank);
-        }
-
-        // wait until we have send everything
-        waitSendFinished_();
-
     }
 
     void print() const
@@ -374,24 +329,6 @@ private:
             if (overlap_->masterRank(domRowIdx) == peerRank) {
                 (*this)[static_cast<unsigned>(domRowIdx)] = values[j];
             }
-        }
-    }
-
-    void receiveAddBorder_(ProcessRank peerRank)
-    {
-        const MpiBuffer<Index>& indices = *indicesRecvBuff_[peerRank];
-        MpiBuffer<FieldVector>& values = *valuesRecvBuff_[peerRank];
-
-        // receive the values from the peer
-        values.receive(peerRank);
-
-        // add up the values of rows on the shared boundary
-        for (unsigned j = 0; j < indices.size(); ++j) {
-            Index domRowIdx = indices[j];
-            if (overlap_->isBorderWith(domRowIdx, peerRank))
-                (*this)[static_cast<unsigned>(domRowIdx)] += values[j];
-            else
-                (*this)[static_cast<unsigned>(domRowIdx)] = values[j];
         }
     }
 

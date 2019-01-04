@@ -376,10 +376,10 @@ public:
                 // give it the chance to update the error and thus to terminate the
                 // Newton method without the need of solving the last linearization.
                 updateTimer_.start();
-                auto& jacobian = linearizer.jacobian();
                 auto& residual = linearizer.residual();
-                linearSolver_.prepareRhs(jacobian, residual);
-                asImp_().preSolve_(currentSolution, residual);
+                auto& jacobian = linearizer.jacobian();
+                linearSolver_.prepare(jacobian, residual);
+                asImp_().preSolve_(currentSolution, linearizer.residual());
                 updateTimer_.stop();
 
                 asImp_().linearizeAuxiliaryEquations_(focusTimeIdx);
@@ -406,7 +406,9 @@ public:
 
                 solveTimer_.start();
                 solutionUpdate = 0.0;
-                linearSolver_.prepareMatrix(jacobian);
+
+                // solve A x = b, where b is the residual, A is its Jacobian and x is the
+                // update of the solution
                 bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
 

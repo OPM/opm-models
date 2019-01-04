@@ -91,11 +91,11 @@ public:
     void eraseMatrix()
     { }
 
-    void prepareMatrix(const SparseMatrixAdapter& M)
-    { M_ = &M; }
-
-    void prepareRhs(const Matrix& M OPM_UNUSED, Vector& b)
-    { b_ = &b; }
+    void prepare(SparseMatrixAdapter& M, Vector& b)
+    {
+        M_ = &M;
+        b_ = &b;
+    }
 
     bool solve(Vector& x)
     { return SuperLUSolve_<Scalar, TypeTag, Matrix, Vector>::solve_(*M_, x, *b_); }
