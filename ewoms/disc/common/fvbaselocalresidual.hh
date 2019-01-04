@@ -143,7 +143,7 @@ public:
      *
      * \copydetails Doxygen::ecfvElemCtxParam
      */
-    void eval(const ElementContext& elemCtx)
+    void eval(ElementContext& elemCtx)
     {
         size_t numDof = elemCtx.numDof(/*timeIdx=*/0);
         internalResidual_.resize(numDof);
@@ -158,7 +158,7 @@ public:
      * \copydetails Doxygen::ecfvElemCtxParam
      */
     void eval(LocalEvalBlockVector& residual,
-              const ElementContext& elemCtx) const
+              ElementContext& elemCtx) const
     {
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
 
@@ -488,7 +488,7 @@ protected:
      *        current element.
      */
     void evalVolumeTerms_(LocalEvalBlockVector& residual,
-                          const ElementContext& elemCtx) const
+                          ElementContext& elemCtx) const
     {
         EvalVector tmp;
         EqVector tmp2;
@@ -537,19 +537,32 @@ protected:
                 if (model.newtonMethod().numIterations() == 0 &&
                     !elemCtx.haveStashedIntensiveQuantities())
                 {
-                    // if the storage term is cached and we're in the first iteration of
-                    // the time step, update the cache of the storage term (this assumes
-                    // that the initial guess for the solution at the end of the time
-                    // step is the same as the solution at the beginning of the time
-                    // step. This is usually true, but some fancy preprocessing scheme
-                    // might invalidate that assumption.)
-                    for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
-                        tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
+                    if (!elemCtx.problem().recycleFirstIterationStorage()) {
+                        // we re-calculate the storage term for the solution of the
+                        // previous time step from scratch instead of using the one of
+                        // the first iteration of the current time step.
+                        tmp2 = 0.0;
+                        elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/1);
+                        asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
+                    }
+                    else {
+                        // if the storage term is cached and we're in the first iteration
+                        // of the time step, use the storage term of the first iteration
+                        // as the one as the solution of the last time step (this assumes
+                        // that the initial guess for the solution at the end of the time
+                        // step is the same as the solution at the beginning of the time
+                        // step. This is usually true, but some fancy preprocessing
+                        // scheme might invalidate that assumption.)
+                        for (unsigned eqIdx = 0; eqIdx < numEq; ++ eqIdx)
+                            tmp2[eqIdx] = Toolbox::value(tmp[eqIdx]);
+                    }
+
                     Opm::Valgrind::CheckDefined(tmp2);
 
                     model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
                 }
                 else {
+                    // if the mass storage at the beginning of the time step is not cached,
                     // if the storage term is cached and we're not looking at the first
                     // iteration of the time step, we take the cached data.
                     tmp2 = model.cachedStorage(globalDofIdx, /*timeIdx=*/1);
