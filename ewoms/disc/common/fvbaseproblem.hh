@@ -181,6 +181,16 @@ public:
     }
 
     /*!
+     * \brief Return if the storage term of the first iteration is identical to the storage
+     *        term for the solution of the previous time step.
+     *
+     * This is only relevant if the storage cache is enabled and is usually the case,
+     * i.e., this method only needs to be overwritten in rare corner cases.
+     */
+    bool recycleFirstIterationStorage() const
+    { return true; }
+
+    /*!
      * \brief Determine the directory for simulation output.
      *
      * The actual problem may chose to transform the value of the OutputDir parameter and
