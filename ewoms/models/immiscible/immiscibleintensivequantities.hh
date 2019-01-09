@@ -96,7 +96,6 @@ public:
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         // material law parameters
-        typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto& problem = elemCtx.problem();
         const typename MaterialLaw::Params& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
@@ -123,7 +122,6 @@ public:
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx)
             fluidState_.setPressure(phaseIdx, p0 + (pC[phaseIdx] - pC[0]));
 
-        typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.updateAll(fluidState_);
 

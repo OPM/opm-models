@@ -536,7 +536,7 @@ public:
         }
     }
 
-    static Scalar primaryVarWeight(unsigned pvIdx)
+    static Scalar primaryVarWeight(unsigned pvIdx OPM_OPTIM_UNUSED)
     {
         assert(primaryVarApplies(pvIdx));
 
@@ -560,14 +560,13 @@ public:
     {
         assert(eqApplies(eqIdx));
 
-        if (eqIdx == contiPolymerEqIdx) {
+        if (eqIdx == contiPolymerEqIdx)
             return "conti^polymer";
-        } else {
+        else
             return "conti^polymer_molecularweight";
-        }
     }
 
-    static Scalar eqWeight(unsigned eqIdx)
+    static Scalar eqWeight(unsigned eqIdx OPM_OPTIM_UNUSED)
     {
         assert(eqApplies(eqIdx));
 

@@ -126,7 +126,7 @@ public:
      *
      * It is intended to implement stuff like Schur complements.
      */
-    virtual void postSolve(GlobalEqVector& residual)
+    virtual void postSolve(GlobalEqVector& residual OPM_UNUSED)
     {};
 
 private:

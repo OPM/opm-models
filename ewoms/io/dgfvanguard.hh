@@ -147,20 +147,20 @@ public:
 protected:
     void addFractures_(Dune::GridPtr<Grid>& dgfPointer)
     {
-        typedef typename Grid::LevelGridView GridView;
+        typedef typename Grid::LevelGridView LevelGridView;
 
         // check if fractures are available (only 2d currently)
         if (dgfPointer.nofParameters(static_cast<int>(Grid::dimension)) == 0)
             return;
 
-        GridView gridView = dgfPointer->levelGridView(/*level=*/0);
+        LevelGridView gridView = dgfPointer->levelGridView(/*level=*/0);
         const unsigned edgeCodim = Grid::dimension - 1;
 
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
-        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView> VertexMapper;
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<LevelGridView> VertexMapper;
         VertexMapper vertexMapper(gridView, Dune::mcmgVertexLayout());
 #else
-        typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView, Dune::MCMGVertexLayout> VertexMapper;
+        typedef Dune::MultipleCodimMultipleGeomTypeMapper<LevelGridView, Dune::MCMGVertexLayout> VertexMapper;
         VertexMapper vertexMapper(gridView);
 #endif
 

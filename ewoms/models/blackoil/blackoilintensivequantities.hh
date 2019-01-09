@@ -273,7 +273,6 @@ public:
                 fluidState_.setRs(0.0);
         }
 
-        typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
         typename FluidSystem::template ParameterCache<Evaluation> paramCache;
         paramCache.setRegionIndex(pvtRegionIdx);
         paramCache.setMaxOilSat(SoMax);
