@@ -33,7 +33,6 @@
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
 #include <dune/common/fvector.hh>
@@ -60,7 +59,6 @@ NEW_PROP_TAG(VtkWritePotentialGradients);
 NEW_PROP_TAG(VtkWriteFilterVelocities);
 NEW_PROP_TAG(VtkOutputFormat);
 NEW_PROP_TAG(EnableVtkOutput);
-NEW_PROP_TAG(Evaluation);
 
 // set default values for what quantities to output
 SET_BOOL_PROP(VtkMultiPhase, VtkWriteExtrusionFactor, false);
@@ -105,7 +103,6 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
 
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    typedef typename GET_PROP_TYPE(TypeTag, Evaluation) Evaluation;
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
@@ -114,8 +111,6 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
     typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
-
-    typedef Opm::MathToolbox<Evaluation> Toolbox;
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -215,8 +210,6 @@ public:
      */
     void processElement(const ElementContext& elemCtx)
     {
-        typedef Opm::MathToolbox<Evaluation> Toolbox;
-
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
@@ -227,7 +220,7 @@ public:
             const auto& fs = intQuants.fluidState();
 
             if (extrusionFactorOutput_()) extrusionFactor_[I] = intQuants.extrusionFactor();
-            if (porosityOutput_()) porosity_[I] = Toolbox::value(intQuants.porosity());
+            if (porosityOutput_()) porosity_[I] = Opm::getValue(intQuants.porosity());
 
             if (intrinsicPermeabilityOutput_()) {
                 const auto& K = problem.intrinsicPermeability(elemCtx, i, /*timeIdx=*/0);
@@ -238,19 +231,19 @@ public:
 
             for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                 if (pressureOutput_())
-                    pressure_[phaseIdx][I] = Toolbox::value(fs.pressure(phaseIdx));
+                    pressure_[phaseIdx][I] = Opm::getValue(fs.pressure(phaseIdx));
                 if (densityOutput_())
-                    density_[phaseIdx][I] = Toolbox::value(fs.density(phaseIdx));
+                    density_[phaseIdx][I] = Opm::getValue(fs.density(phaseIdx));
                 if (saturationOutput_())
-                    saturation_[phaseIdx][I] = Toolbox::value(fs.saturation(phaseIdx));
+                    saturation_[phaseIdx][I] = Opm::getValue(fs.saturation(phaseIdx));
                 if (mobilityOutput_())
-                    mobility_[phaseIdx][I] = Toolbox::value(intQuants.mobility(phaseIdx));
+                    mobility_[phaseIdx][I] = Opm::getValue(intQuants.mobility(phaseIdx));
                 if (relativePermeabilityOutput_())
-                    relativePermeability_[phaseIdx][I] = Toolbox::value(intQuants.relativePermeability(phaseIdx));
+                    relativePermeability_[phaseIdx][I] = Opm::getValue(intQuants.relativePermeability(phaseIdx));
                 if (viscosityOutput_())
-                    viscosity_[phaseIdx][I] = Toolbox::value(fs.viscosity(phaseIdx));
+                    viscosity_[phaseIdx][I] = Opm::getValue(fs.viscosity(phaseIdx));
                 if (averageMolarMassOutput_())
-                    averageMolarMass_[phaseIdx][I] = Toolbox::value(fs.averageMolarMass(phaseIdx));
+                    averageMolarMass_[phaseIdx][I] = Opm::getValue(fs.averageMolarMass(phaseIdx));
             }
         }
 
@@ -270,7 +263,7 @@ public:
                     const auto& inputPGrad = extQuants.potentialGrad(phaseIdx);
                     DimVector pGrad;
                     for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx)
-                        pGrad[dimIdx] = Toolbox::value(inputPGrad[dimIdx])*weight;
+                        pGrad[dimIdx] = Opm::getValue(inputPGrad[dimIdx])*weight;
                     potentialGradient_[phaseIdx][I] += pGrad;
                 } // end for all phases
             } // end for all faces
@@ -289,7 +282,7 @@ public:
 
                 for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
                     Scalar weight = std::max<Scalar>(1e-16,
-                                                     std::abs(Toolbox::value(extQuants.volumeFlux(phaseIdx))));
+                                                     std::abs(Opm::getValue(extQuants.volumeFlux(phaseIdx))));
                     Opm::Valgrind::CheckDefined(extQuants.extrusionFactor());
                     assert(extQuants.extrusionFactor() > 0);
                     weight *= extQuants.extrusionFactor();
@@ -297,7 +290,7 @@ public:
                     const auto& inputV = extQuants.filterVelocity(phaseIdx);
                     DimVector v;
                     for (unsigned k = 0; k < dimWorld; ++k)
-                        v[k] = Toolbox::value(inputV[k]);
+                        v[k] = Opm::getValue(inputV[k]);
                     if (v.two_norm() > 1e-20)
                         weight /= v.two_norm();
                     v *= weight;

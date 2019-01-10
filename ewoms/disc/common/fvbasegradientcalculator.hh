@@ -60,7 +60,6 @@ class FvBaseGradientCalculator
     // we assume that the geometry with the most pointsq is a cube.
     enum { maxFap = 2 << dim };
 
-    typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, dim> DimVector;
     typedef Dune::FieldVector<Evaluation, dim> EvalDimVector;
 
@@ -103,8 +102,6 @@ public:
         typedef decltype(quantityCallback.operator()(0)) RawReturnType;
         typedef typename std::remove_const<typename std::remove_reference<RawReturnType>::type>::type ReturnType;
 
-        typedef Opm::MathToolbox<ReturnType> Toolbox;
-
         Scalar interiorDistance;
         Scalar exteriorDistance;
         computeDistances_(interiorDistance, exteriorDistance, elemCtx, fapIdx);
@@ -119,12 +116,12 @@ public:
         if (i == focusDofIdx)
             value = quantityCallback(i)*interiorDistance;
         else
-            value = Toolbox::value(quantityCallback(i))*interiorDistance;
+            value = Opm::getValue(quantityCallback(i))*interiorDistance;
 
         if (j == focusDofIdx)
             value += quantityCallback(j)*exteriorDistance;
         else
-            value += Toolbox::value(quantityCallback(j))*exteriorDistance;
+            value += Opm::getValue(quantityCallback(j))*exteriorDistance;
 
         value /= interiorDistance + exteriorDistance;
 
@@ -151,11 +148,6 @@ public:
         typedef decltype(quantityCallback.operator()(0)) RawReturnType;
         typedef typename std::remove_const<typename std::remove_reference<RawReturnType>::type>::type ReturnType;
 
-        typedef decltype(std::declval<ReturnType>()[0]) RawFieldType;
-        typedef typename std::remove_const<typename std::remove_reference<RawFieldType>::type>::type FieldType;
-
-        typedef Opm::MathToolbox<FieldType> Toolbox;
-
         Scalar interiorDistance;
         Scalar exteriorDistance;
         computeDistances_(interiorDistance, exteriorDistance, elemCtx, fapIdx);
@@ -173,9 +165,9 @@ public:
                 value[k] *= interiorDistance;
         }
         else {
-            const auto& dofVal = Toolbox::value(quantityCallback(i));
+            const auto& dofVal = Opm::getValue(quantityCallback(i));
             for (int k = 0; k < dofVal.size(); ++k)
-                value[k] = Toolbox::value(dofVal[k])*interiorDistance;
+                value[k] = Opm::getValue(dofVal[k])*interiorDistance;
         }
 
         if (j == focusDofIdx) {
@@ -186,7 +178,7 @@ public:
         else {
             const auto& dofVal = quantityCallback(j);
             for (int k = 0; k < dofVal.size(); ++k)
-                value[k] += Toolbox::value(dofVal[k])*exteriorDistance;
+                value[k] += Opm::getValue(dofVal[k])*exteriorDistance;
         }
 
         Scalar totDistance = interiorDistance + exteriorDistance;
@@ -226,18 +218,18 @@ public:
         Evaluation deltay;
         if (i == focusIdx) {
             deltay =
-                Toolbox::value(quantityCallback(j))
+                Opm::getValue(quantityCallback(j))
                 - quantityCallback(i);
         }
         else if (j == focusIdx) {
             deltay =
                 quantityCallback(j)
-                - Toolbox::value(quantityCallback(i));
+                - Opm::getValue(quantityCallback(i));
         }
         else
             deltay =
-                Toolbox::value(quantityCallback(j))
-                - Toolbox::value(quantityCallback(i));
+                Opm::getValue(quantityCallback(j))
+                - Opm::getValue(quantityCallback(i));
 
         Scalar distSquared = 0.0;
         for (unsigned dimIdx = 0; dimIdx < dimWorld; ++dimIdx) {
@@ -296,12 +288,6 @@ public:
                                    unsigned faceIdx,
                                    const QuantityCallback& quantityCallback) const
     {
-        typedef typename std::decay<decltype(quantityCallback(0))>::type Evaluation;
-        typedef typename std::decay<decltype(quantityCallback.boundaryValue())>::type BoundaryEvaluation;
-
-        typedef Opm::MathToolbox<Evaluation> Toolbox;
-        typedef Opm::MathToolbox<BoundaryEvaluation> BoundaryToolbox;
-
         const auto& stencil = elemCtx.stencil(/*timeIdx=*/0);
         const auto& face = stencil.boundaryFace(faceIdx);
 
@@ -310,8 +296,8 @@ public:
             deltay = quantityCallback.boundaryValue() - quantityCallback(face.interiorIndex());
         else
             deltay =
-                BoundaryToolbox::value(quantityCallback.boundaryValue())
-                - Toolbox::value(quantityCallback(face.interiorIndex()));
+                Opm::getValue(quantityCallback.boundaryValue())
+                - Opm::getValue(quantityCallback(face.interiorIndex()));
 
         const auto& boundaryFacePos = face.integrationPos();
         const auto& interiorPos = stencil.subControlVolume(face.interiorIndex()).center();

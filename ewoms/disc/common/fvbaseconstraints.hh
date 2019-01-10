@@ -56,11 +56,13 @@ public:
     FvBaseConstraints()
     { setActive(false); }
 
+    FvBaseConstraints(const FvBaseConstraints&) = default;
+
 //! \cond SKIP
     /*!
-     * \brief Use the assignment operators from the parent type
+     * \brief Use the default assignment operator
      */
-    using ParentType::operator=;
+    FvBaseConstraints &operator=(const FvBaseConstraints&) = default;
 //! \endcond
 
     /*!

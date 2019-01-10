@@ -92,7 +92,6 @@ public:
         fluidState_.setTemperature(T);
 
         // material law parameters
-        typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto& problem = elemCtx.problem();
         const typename MaterialLaw::Params& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);
