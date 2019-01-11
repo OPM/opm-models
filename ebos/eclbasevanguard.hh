@@ -158,10 +158,12 @@ public:
      * management of these two objects, i.e., they are not allowed to be deleted as long
      * as the simulator vanguard object is alive.
      */
-    static void setExternalDeck(Opm::Deck* deck, Opm::EclipseState* eclState)
+    static void setExternalDeck(Opm::Deck* deck, Opm::EclipseState* eclState, Opm::Schedule * schedule, Opm::SummaryConfig * summaryConfig)
     {
         externalDeck_ = deck;
         externalEclState_ = eclState;
+        externalEclSchedule_ = schedule;
+        externalEclSummaryConfig_ = summaryConfig;
     }
 
     /*!
