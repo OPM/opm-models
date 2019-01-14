@@ -554,7 +554,7 @@ public:
             if (verbose_)
                 std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
             this->deserialize(res);
-            problem_->deserialize(res, true);// true make this code call beginEpisode 
+            problem_->deserialize(res);
             model_->deserialize(res);
             res.deserializeEnd();
             if (verbose_)

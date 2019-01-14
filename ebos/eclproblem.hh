@@ -643,7 +643,7 @@ public:
      * \param res The deserializer object
      */
     template <class Restarter>
-    void deserialize(Restarter& res, bool isOnRestart)
+    void deserialize(Restarter& res, bool isOnRestart = true)
     {
         // reload the current episode/report step from the deck
         // beginEpisode(/*isOnRestart=*/true);
