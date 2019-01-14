@@ -35,6 +35,30 @@
 
 namespace Ewoms {
 
+
+// This small trio of functions is necessary to provide a generic
+// interface to getting grid names, when only some grids provide the
+// name() method.
+template <class GridView>
+auto getGridNameImp(const GridView& gridView, int)
+    -> decltype(gridView.grid().name())
+{
+    return gridView.grid().name();
+};
+template <class GridView>
+auto getGridNameImp(const GridView&, long long)
+    -> std::string
+{
+    return "GridWithNoNameMethod";
+};
+template <class GridView>
+auto getGridName(const GridView& gridView)
+    -> decltype(getGridNameImp(gridView, 0))
+{
+    return getGridNameImp(gridView, 0);
+};
+
+
 /*!
  * \brief Load or save a state of a problem to/from the harddisk.
  */
@@ -47,7 +71,7 @@ class Restart
     template <class GridView>
     static const std::string magicRestartCookie_(const GridView& gridView)
     {
-        static const std::string gridName = gridView.grid().name();
+        static const std::string gridName = getGridName(gridView);
         static const int dim = GridView::dimension;
 
         int numVertices = gridView.size(dim);
