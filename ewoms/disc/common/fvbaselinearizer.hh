@@ -143,6 +143,12 @@ public:
     {
         simulatorPtr_ = &simulator;
         eraseMatrix();
+        auto it = elementCtx_.begin();
+        const auto& endIt = elementCtx_.end();
+        for (; it != endIt; ++it){
+            delete *it;
+        }
+        elementCtx_.resize(0);
     }
 
     /*!
@@ -158,14 +164,15 @@ public:
     }
 
     /*!
-     * \brief Linearize the full system of non-linear equations.
+     * \brief Linearize the full system of non-linear equations about focusTimeIdx
+     * defualt is 0 i.e. current time normally time to be found.
      *
      * This means the spatial domain plus all auxiliary equations.
      */
-    void linearize()
+    void linearize(unsigned focusTimeIdx = 0)
     {
-        linearizeDomain();
-        linearizeAuxiliaryEquations();
+        linearizeDomain(focusTimeIdx);
+        linearizeAuxiliaryEquations(focusTimeIdx);
     }
 
     /*!
@@ -178,7 +185,7 @@ public:
      * The current state of affairs (esp. the previous and the current solutions) is
      * represented by the model object.
      */
-    void linearizeDomain()
+    void linearizeDomain(unsigned focustimeIndex)
     {
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
@@ -188,7 +195,7 @@ public:
 
         int succeeded;
         try {
-            linearize_();
+            linearize_(focustimeIndex);
             succeeded = 1;
         }
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
@@ -229,7 +236,7 @@ public:
      * \brief Linearize the part of the non-linear system of equations that is associated
      *        with the spatial domain.
      */
-    void linearizeAuxiliaryEquations()
+    void linearizeAuxiliaryEquations(unsigned focusTimeIdx = 0)
     {
         // flush possible local caches into matrix structure
         jacobian_->commit();
@@ -239,7 +246,7 @@ public:
         for (unsigned auxModIdx = 0; auxModIdx < model.numAuxiliaryModules(); ++auxModIdx) {
             bool succeeded = true;
             try {
-                model.auxiliaryModule(auxModIdx)->linearize(*jacobian_, residual_);
+                model.auxiliaryModule(auxModIdx)->linearize(*jacobian_, residual_);//, focusTimeIdx);
             }
             catch (const std::exception& e) {
                 succeeded = false;
@@ -332,6 +339,7 @@ private:
             elementCtx_[threadId] = new ElementContext(simulator_());
     }
 
+    
     // Construct the BCRS matrix for the Jacobian of the residual function
     void createMatrix_()
     {
@@ -427,7 +435,7 @@ private:
     }
 
     // linearize the whole system
-    void linearize_()
+    void linearize_(unsigned focustimeindex)
     {
         resetSystem_();
 
@@ -474,8 +482,7 @@ private:
                     const Element& elem = *elemIt;
                     if (!linearizeNonLocalElements && elem.partitionType() != Dune::InteriorEntity)
                         continue;
-
-                    linearizeElement_(elem);
+                    linearizeElement_(elem, focustimeindex);
                 }
             }
             // If an exception occurs in the parallel block, it won't escape the
@@ -505,7 +512,7 @@ private:
     }
 
     // linearize an element in the interior of the process' grid partition
-    void linearizeElement_(const Element& elem)
+    void linearizeElement_(const Element& elem, unsigned focustimeindex)
     {
         unsigned threadId = ThreadManager::threadId();
 
@@ -513,6 +520,7 @@ private:
         auto& localLinearizer = model_().localLinearizer(threadId);
 
         // the actual work of linearization is done by the local linearizer class
+        elementCtx->setFocusTimeIndex(focustimeindex);
         localLinearizer.linearize(*elementCtx, elem);
 
         // update the right hand side and the Jacobian matrix

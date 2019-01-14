@@ -163,16 +163,17 @@ public:
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
 
         residual = 0.0;
-
+        if(elemCtx.focusTimeIndex()==0){
         // evaluate the flux terms
-        asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
-
+            asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
+        }
         // evaluate the storage and the source terms
+
         asImp_().evalVolumeTerms_(residual, elemCtx);
-
+        if(elemCtx.focusTimeIndex()==0){
         // evaluate the boundary conditions
-        asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
-
+            asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
+        }
         if (useVolumetricResidual) {
             // make the residual volume specific (i.e., make it incorrect mass per cubic
             // meter instead of total mass)
@@ -492,6 +493,7 @@ protected:
     {
         EvalVector tmp;
         EqVector tmp2;
+        EvalVector tmp2Der;// this is added to support calculation of storage term derivative focusTime!=0 for need for adjoint: always used if cachedStororage term si false
         RateVector sourceRate;
 
         tmp = 0.0;
@@ -572,24 +574,41 @@ protected:
             else {
                 // if the mass storage at the beginning of the time step is not cached,
                 // we re-calculate it from scratch.
-                tmp2 = 0.0;
-                asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
-                Opm::Valgrind::CheckDefined(tmp2);
+                // if storage cache not enables we always use derivatives
+                tmp2Der = 0.0;
+                asImp_().computeStorage(tmp2Der, elemCtx,  dofIdx, /*timeIdx=*/1);
+                Opm::Valgrind::CheckDefined(tmp2Der);
             }
 
-            // Use the implicit Euler time discretization
-            for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                tmp[eqIdx] -= tmp2[eqIdx];
-                tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
-
-                residual[dofIdx][eqIdx] += tmp[eqIdx];
+            if( !elemCtx.enableStorageCache() or elemCtx.focusTimeIndex()>0){
+                // Use the implicit Euler time discretization
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    if(elemCtx.focusTimeIndex()==0){
+                        tmp2Der[eqIdx] .clearDerivatives();// remove derivatives for the time index
+                    }else{
+                        tmp[eqIdx] .clearDerivatives();
+                    }
+                    tmp[eqIdx] -= tmp2Der[eqIdx];
+                    tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+                    residual[dofIdx][eqIdx] += tmp[eqIdx];
+                }
+            }else{
+                for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
+                    // cached storage should only be used in forward mode
+                    assert(elemCtx.focusTimeIndex()==0);
+                    tmp[eqIdx] -= tmp2[eqIdx];
+                    tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
+                    residual[dofIdx][eqIdx] += tmp[eqIdx];
+                }
             }
 
             Opm::Valgrind::CheckDefined(residual[dofIdx]);
 
             // deal with the source term
-            asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
-
+            //assumes sourceterm is independent of prevois state
+            if(elemCtx.focusTimeIndex()==0){
+                asImp_().computeSource(sourceRate, elemCtx, dofIdx, /*timeIdx=*/0);
+            }
             // if the model uses extensive quantities in its storage term, and we use
             // automatic differention and current DOF is also not the one we currently
             // focus on, the storage term does not need any derivatives!

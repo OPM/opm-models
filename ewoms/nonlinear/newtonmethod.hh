@@ -365,9 +365,11 @@ public:
                               << std::flush;
                 }
 
+                //
+                int focusTimeIdx = 0;
                 // do the actual linearization
                 linearizeTimer_.start();
-                asImp_().linearizeDomain_();
+                asImp_().linearizeDomain_(focusTimeIdx);
                 linearizeTimer_.stop();
 
                 // notify the implementation of the successful linearization on order to
@@ -380,7 +382,7 @@ public:
                 asImp_().preSolve_(currentSolution, linearizer.residual());
                 updateTimer_.stop();
 
-                asImp_().linearizeAuxiliaryEquations_();
+                asImp_().linearizeAuxiliaryEquations_(focusTimeIdx);
 
                 if (!asImp_().proceed_()) {
                     if (asImp_().verbose_() && isatty(fileno(stdout)))
@@ -643,14 +645,14 @@ protected:
      * \brief Linearize the global non-linear system of equations associated with the
      *        spatial domain.
      */
-    void linearizeDomain_()
+    void linearizeDomain_(int focusTimeIdx)
     {
-        model().linearizer().linearizeDomain();
+        model().linearizer().linearizeDomain(focusTimeIdx);
     }
 
-    void linearizeAuxiliaryEquations_()
+    void linearizeAuxiliaryEquations_(int focusTimeIdx)
     {
-        model().linearizer().linearizeAuxiliaryEquations();
+        model().linearizer().linearizeAuxiliaryEquations(focusTimeIdx);
         model().linearizer().finalize();
     }
 
