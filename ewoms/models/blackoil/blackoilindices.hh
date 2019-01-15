@@ -79,10 +79,10 @@ struct BlackOilIndices
     ////////
 
     //! The index of the water saturation
-    static const int waterSaturationIdx = PVOffset + 0;
+    static const int waterSaturationIdx = PVOffset + 1;
 
     //! Index of the oil pressure in a vector of primary variables
-    static const int pressureSwitchIdx = PVOffset + 1;
+    static const int pressureSwitchIdx = PVOffset + 0;
 
     /*!
      * \brief Index of the switching variable which determines the composition of the
