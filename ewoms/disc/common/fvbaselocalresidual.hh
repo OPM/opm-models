@@ -583,10 +583,10 @@ protected:
             if( !elemCtx.enableStorageCache() or elemCtx.focusTimeIndex()>0){
                 // Use the implicit Euler time discretization
                 for (unsigned eqIdx = 0; eqIdx < numEq; ++eqIdx) {
-                    if(elemCtx.focusTimeIndex()==0){
-                        tmp2Der[eqIdx] .clearDerivatives();// remove derivatives for the time index
-                    }else{
-                        tmp[eqIdx] .clearDerivatives();
+                    if (elemCtx.focusTimeIndex() == 0) {
+                        tmp2Der[eqIdx] = Toolbox::value(tmp2Der[eqIdx]);
+                    } else {
+                        tmp[eqIdx] = Toolbox::value(tmp[eqIdx]);
                     }
                     tmp[eqIdx] -= tmp2Der[eqIdx];
                     tmp[eqIdx] *= scvVolume / elemCtx.simulator().timeStepSize();
