@@ -336,6 +336,9 @@ SET_BOOL_PROP(EclBaseProblem, EnableThermalFluxBoundaries, false);
 
 SET_BOOL_PROP(EclBaseProblem, EnableTracerModel, false);
 
+// timesteps are managed outside the Simulator class
+SET_BOOL_PROP(EclBaseProblem, SimulatorManageTimeStep, false);
+
 END_PROPERTIES
 
 namespace Ewoms {

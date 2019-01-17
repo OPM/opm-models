@@ -279,6 +279,9 @@ SET_BOOL_PROP(FvBaseDiscretization, ExtensiveStorageTerm, false);
 // use volumetric residuals is default
 SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
 
+// by default the Simulator class ensures timesteps do not exceed simulation time etc.
+SET_BOOL_PROP(FvBaseDiscretization, SimulatorManageTimeStep, true);
+
 
 END_PROPERTIES
 
