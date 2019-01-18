@@ -211,11 +211,25 @@ static inline void resetTerminal_(int signum)
 {
     // first thing to do when a nuke hits: restore the default signal handler
     signal(signum, SIG_DFL);
-    std::cout << "\n\nReceived signal " << signum
-              << " (\"" << strsignal(signum) << "\")."
-              << " Trying to reset the terminal.\n";
 
-    resetTerminal_();
+#if HAVE_MPI
+    int rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank != 0) {
+        // re-raise the signal
+        raise(signum);
+
+        return;
+    }
+#endif
+
+    if (isatty(fileno(stdout)) && isatty(fileno(stdin))) {
+        std::cout << "\n\nReceived signal " << signum
+                  << " (\"" << strsignal(signum) << "\")."
+                  << " Trying to reset the terminal.\n";
+
+        resetTerminal_();
+    }
 
     // after we did our best to clean the pedestrian way, re-raise the signal
     raise(signum);
@@ -350,32 +364,35 @@ static inline int start(int argc, char **argv)
 #if ! DUNE_VERSION_NEWER(DUNE_COMMON, 2,5)
     catch (Dune::Exception& e)
     {
-        if (myRank == 0)
+        if (myRank == 0) {
             std::cout << "Dune reported an error: " << e.what() << std::endl  << std::flush;
 
-        std::cout << "Trying to reset TTY.\n";
-        resetTerminal_();
+            std::cout << "Trying to reset TTY.\n";
+            resetTerminal_();
+        }
 
         return 2;
     }
 #endif
     catch (std::exception& e)
     {
-        if (myRank == 0)
+        if (myRank == 0) {
             std::cout << e.what() << ". Abort!\n" << std::flush;
 
-        std::cout << "Trying to reset TTY.\n";
-        resetTerminal_();
+            std::cout << "Trying to reset TTY.\n";
+            resetTerminal_();
+        }
 
         return 1;
     }
     catch (...)
     {
-        if (myRank == 0)
+        if (myRank == 0) {
             std::cout << "Unknown exception thrown!\n" << std::flush;
 
-        std::cout << "Trying to reset TTY.\n";
-        resetTerminal_();
+            std::cout << "Trying to reset TTY.\n";
+            resetTerminal_();
+        }
 
         return 3;
     }
