@@ -133,6 +133,13 @@ EwomsAddApplication(ebos
                     EXE_NAME ebos
                     CONDITION OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
 
+opm_add_test(SPE1
+  EXE_NAME ebos
+  NO_COMPILE
+  DEPENDS ebos
+  CONDITION opm-common_FOUND AND opm-grid_FOUND
+  DRIVER_ARGS --spe1 "${COMPARE_ECL_COMMAND}")
+
 if(OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
   install(TARGETS ebos DESTINATION bin)
 endif()
