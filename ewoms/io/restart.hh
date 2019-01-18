@@ -138,7 +138,7 @@ public:
     {
         const std::string magicCookie = magicRestartCookie_(simulator.gridView());
         fileName_ = restartFileName_(simulator,
-                                     simulator.time());
+                                     simulator.time() + simulator.timeStepSize());
 
         // open output file and write magic cookie
         outStream_.open(fileName_.c_str());
