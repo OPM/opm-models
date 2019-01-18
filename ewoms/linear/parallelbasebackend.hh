@@ -213,27 +213,75 @@ public:
     void eraseMatrix()
     { cleanup_(); }
 
-    void prepare(SparseMatrixAdapter& M, Vector& b)
+    /*!
+     * \brief Set up the internal data structures required for the linear solver.
+     *
+     * This only specified the topology of the linear system of equations; it does does
+     * *not* assign the values of the residual vector and its Jacobian matrix.
+     */
+    void prepare(const SparseMatrixAdapter& M, const Vector& b)
     {
-        // make sure that the overlapping matrix and block vectors
-        // have been created
-        prepare_(M);
+        // if grid has changed the sequence number has changed too
+        int curSeqNum = simulator_.vanguard().gridSequenceNumber();
+        if (gridSequenceNumber_ == curSeqNum && overlappingMatrix_)
+            // the grid has not changed since the overlappingMatrix_has been created, so
+            // there's noting to do
+            return;
 
-        // copy the interior values of the non-overlapping linear system of
-        // equations to the overlapping one.
-        overlappingMatrix_->assignFromNative(M.istlMatrix());
+        asImp_().cleanup_();
+        gridSequenceNumber_ = curSeqNum;
 
-        // synchronize all entries from their master processes and add entries on the
-        // process border
-        overlappingMatrix_->syncAdd();
+        BorderListCreator borderListCreator(simulator_.gridView(),
+                                            simulator_.model().dofMapper());
 
+        // create the overlapping Jacobian matrix
+        unsigned overlapSize = EWOMS_GET_PARAM(TypeTag, unsigned, LinearSolverOverlapSize);
+        overlappingMatrix_ = new OverlappingMatrix(M.istlMatrix(),
+                                                   borderListCreator.borderList(),
+                                                   borderListCreator.blackList(),
+                                                   overlapSize);
+
+        // create the overlapping vectors for the residual and the
+        // solution
+        overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
+        overlappingx_ = new OverlappingVector(*overlappingb_);
+
+        // writeOverlapToVTK_();
+    }
+
+    /*!
+     * \brief Assign values to the internal data structure for the residual vector.
+     *
+     * This method also cares about synchronizing that vector with the peer processes.
+     */
+    void setResidual(const Vector& b)
+    {
+        // copy the interior values of the non-overlapping residual vector to the
+        // overlapping one
         overlappingb_->assignAddBorder(b);
+    }
 
-        // copy the result back to the non-overlapping vector. This is
-        // necessary here as assignAddBorder() might modify the
-        // residual vector for the border entities and we need the
-        // "globalized" residual in b...
+    /*!
+     * \brief Retrieve the synchronized internal residual vector.
+     *
+     * This only deals with entries which are local to the current process.
+     */
+    void getResidual(Vector& b) const
+    {
+        // update the non-overlapping vector with the overlapping one
         overlappingb_->assignTo(b);
+    }
+
+    /*!
+     * \brief Sets the values of the residual's Jacobian matrix.
+     *
+     * This method also synchronizes the data structure across the processes which are
+     * involved in the simulation run.
+     */
+    void setMatrix(const SparseMatrixAdapter& M)
+    {
+        overlappingMatrix_->assignFromNative(M.istlMatrix());
+        overlappingMatrix_->syncAdd();
     }
 
     /*!
@@ -283,9 +331,8 @@ public:
     /*!
      * \brief Return number of iterations used during last solve.
      */
-    size_t iterations () const {
-        return lastIterations_;
-    }
+    size_t iterations () const
+    { return lastIterations_; }
 
 protected:
     Implementation& asImp_()
@@ -293,36 +340,6 @@ protected:
 
     const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
-
-    void prepare_(const SparseMatrixAdapter& M)
-    {
-        // if grid has changed the sequence number has changed too
-        int curSeqNum = simulator_.vanguard().gridSequenceNumber();
-        if( gridSequenceNumber_ == curSeqNum && overlappingMatrix_)
-            // the grid has not changed since the overlappingMatrix_has been created, so
-            // there's noting to do
-            return;
-
-        asImp_().cleanup_();
-        gridSequenceNumber_ = curSeqNum;
-
-        BorderListCreator borderListCreator(simulator_.gridView(),
-                                            simulator_.model().dofMapper());
-
-        // create the overlapping Jacobian matrix
-        unsigned overlapSize = EWOMS_GET_PARAM(TypeTag, unsigned, LinearSolverOverlapSize);
-        overlappingMatrix_ = new OverlappingMatrix(M.istlMatrix(),
-                                                   borderListCreator.borderList(),
-                                                   borderListCreator.blackList(),
-                                                   overlapSize);
-
-        // create the overlapping vectors for the residual and the
-        // solution
-        overlappingb_ = new OverlappingVector(overlappingMatrix_->overlap());
-        overlappingx_ = new OverlappingVector(*overlappingb_);
-
-        // writeOverlapToVTK_();
-    }
 
     void cleanup_()
     {

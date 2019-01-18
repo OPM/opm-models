@@ -221,9 +221,7 @@ public:
     }
 
     void finalize()
-    {
-        jacobian_->finalize();
-    }
+    { jacobian_->finalize(); }
 
     /*!
      * \brief Linearize the part of the non-linear system of equations that is associated
