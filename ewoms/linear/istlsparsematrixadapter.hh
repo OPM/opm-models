@@ -153,19 +153,19 @@ public:
      * \brief Fill given block with entries stored in the matrix.
      */
     void block(const size_t rowIdx, const size_t colIdx, MatrixBlock& value) const
-    { value = (*istlMatrix_)[rowIdx][colIdx]; }
+    { value = istlMatrix_->entry(rowIdx, colIdx); }
 
     /*!
      * \brief Set matrix block to given block.
      */
     void setBlock(const size_t rowIdx, const size_t colIdx, const MatrixBlock& value)
-    { (*istlMatrix_)[rowIdx][colIdx] = value; }
+    { istlMatrix_->entry(rowIdx, colIdx) = value; }
 
     /*!
      * \brief Add block to matrix block.
      */
     void addToBlock(const size_t rowIdx, const size_t colIdx, const MatrixBlock& value)
-    { (*istlMatrix_)[rowIdx][colIdx] += value; }
+    { istlMatrix_->entry(rowIdx, colIdx) += value; }
 
     /*!
      * \brief Commit matrix from local caches into matrix native structure.

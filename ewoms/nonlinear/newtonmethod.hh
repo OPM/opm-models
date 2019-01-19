@@ -368,19 +368,23 @@ public:
                 // do the actual linearization
                 linearizeTimer_.start();
                 asImp_().linearizeDomain_();
+                asImp_().linearizeAuxiliaryEquations_();
                 linearizeTimer_.stop();
 
-                // notify the implementation of the successful linearization on order to
-                // give it the chance to update the error and thus to terminate the
-                // Newton method without the need of solving the last linearization.
-                updateTimer_.start();
+                solveTimer_.start();
                 auto& residual = linearizer.residual();
-                auto& jacobian = linearizer.jacobian();
+                const auto& jacobian = linearizer.jacobian();
                 linearSolver_.prepare(jacobian, residual);
-                asImp_().preSolve_(currentSolution, linearizer.residual());
-                updateTimer_.stop();
+                linearSolver_.setResidual(residual);
+                linearSolver_.getResidual(residual);
+                solveTimer_.stop();
 
-                asImp_().linearizeAuxiliaryEquations_();
+                // The preSolve_() method usually computes the errors, but it can do
+                // something else in addition. TODO: should its costs be counted to
+                // the linearization or to the update?
+                updateTimer_.start();
+                asImp_().preSolve_(currentSolution, residual);
+                updateTimer_.stop();
 
                 if (!asImp_().proceed_()) {
                     if (asImp_().verbose_() && isatty(fileno(stdout)))
@@ -403,10 +407,10 @@ public:
                 }
 
                 solveTimer_.start();
-                solutionUpdate = 0.0;
-
                 // solve A x = b, where b is the residual, A is its Jacobian and x is the
                 // update of the solution
+                linearSolver_.setMatrix(jacobian);
+                solutionUpdate = 0.0;
                 bool converged = linearSolver_.solve(solutionUpdate);
                 solveTimer_.stop();
 
