@@ -134,11 +134,11 @@ public:
      * \brief Write the current state of the model to disk.
      */
     template <class Simulator>
-    void serializeBegin(Simulator& simulator)
+    void serializeBegin(Simulator& simulator, const bool atEndOfStep = true)
     {
         const std::string magicCookie = magicRestartCookie_(simulator.gridView());
-        fileName_ = restartFileName_(simulator,
-                                     simulator.time() + simulator.timeStepSize());
+        const double serializationTime = atEndOfStep ? simulator.time() + simulator.timeStepSize() : simulator.time();
+        fileName_ = restartFileName_(simulator, serializationTime);
 
         // open output file and write magic cookie
         outStream_.open(fileName_.c_str());

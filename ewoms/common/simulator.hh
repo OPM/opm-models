@@ -798,11 +798,11 @@ public:
      * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
      * file.)  See Ewoms::Restart for details.
      */
-    void serialize()
+    void serialize(const bool atEndOfStep = true)
     {
         typedef Ewoms::Restart Restarter;
         Restarter res;
-        res.serializeBegin(*this);
+        res.serializeBegin(*this, atEndOfStep);
         if (gridView().comm().rank() == 0)
             std::cout << "Serialize to file '" << res.fileName() << "'"
                       << ", next time step size: " << timeStepSize()
