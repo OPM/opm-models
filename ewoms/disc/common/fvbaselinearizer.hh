@@ -236,7 +236,7 @@ public:
      * \brief Linearize the part of the non-linear system of equations that is associated
      *        with the spatial domain.
      */
-    void linearizeAuxiliaryEquations(unsigned focusTimeIdx = 0)
+    void linearizeAuxiliaryEquations(unsigned focusTimeIdx OPM_UNUSED = 0)
     {
         // flush possible local caches into matrix structure
         jacobian_->commit();

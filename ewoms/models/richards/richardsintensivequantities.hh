@@ -84,15 +84,14 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx, unsigned focusTimeIdx)
     {
-        ParentType::update(elemCtx, dofIdx, timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx, focusTimeIdx);
 
         const auto& T = elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx);
         fluidState_.setTemperature(T);
 
         // material law parameters
-        typedef typename GET_PROP_TYPE(TypeTag, MaterialLaw) MaterialLaw;
         const auto& problem = elemCtx.problem();
         const typename MaterialLaw::Params& materialParams =
             problem.materialLawParams(elemCtx, dofIdx, timeIdx);

@@ -56,6 +56,7 @@ NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PredeterminedTimeStepsFile);
+NEW_PROP_TAG(SimulatorManageTimeStep);
 
 END_PROPERTIES
 
@@ -81,6 +82,8 @@ class Simulator
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+
+    enum { simulatorManageTimeStep = GET_PROP_VALUE(TypeTag, SimulatorManageTimeStep) };
 
 public:
     // do not allow to copy simulators around
@@ -350,15 +353,14 @@ public:
      */
     Scalar timeStepSize() const
     {
-        return timeStepSize_;
-
-        /* This should be handeled by ghe time stepper
-        Scalar maximumTimeStepSize =
-            std::min(episodeMaxTimeStepSize(),
-                     std::max( Scalar(0), endTime() - this->time()));
-
-        return std::min(timeStepSize_, maximumTimeStepSize);
-        */
+        if (simulatorManageTimeStep) {
+            Scalar maximumTimeStepSize =
+                std::min(episodeMaxTimeStepSize(),
+                         std::max( Scalar(0), endTime() - this->time()));
+            return std::min(timeStepSize_, maximumTimeStepSize);
+        } else {
+            return timeStepSize_;
+        }
     }
 
     /*!
@@ -554,7 +556,7 @@ public:
             if (verbose_)
                 std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
             this->deserialize(res);
-            problem_->deserialize(res, true);// true make this code call beginEpisode 
+            problem_->deserialize(res);
             model_->deserialize(res);
             res.deserializeEnd();
             if (verbose_)
@@ -796,11 +798,11 @@ public:
      * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
      * file.)  See Ewoms::Restart for details.
      */
-    void serialize()
+    void serialize(const bool atEndOfStep = true)
     {
         typedef Ewoms::Restart Restarter;
         Restarter res;
-        res.serializeBegin(*this);
+        res.serializeBegin(*this, atEndOfStep);
         if (gridView().comm().rank() == 0)
             std::cout << "Serialize to file '" << res.fileName() << "'"
                       << ", next time step size: " << timeStepSize()

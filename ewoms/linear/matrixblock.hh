@@ -291,8 +291,8 @@ class SuperLU<BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> >
 public:
     typedef BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> RealMatrix;
 
-    SuperLU(const RealMatrix& matrix, int verbose, bool reuse=true)
-        : Base(reinterpret_cast<const Matrix&>(matrix), verbose, reuse)
+    SuperLU(const RealMatrix& matrix, int verb, bool reuse=true)
+        : Base(reinterpret_cast<const Matrix&>(matrix), verb, reuse)
     {}
 };
 #endif

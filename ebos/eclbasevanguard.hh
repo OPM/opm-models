@@ -33,6 +33,7 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -64,6 +65,7 @@ NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(EclDeckFileName);
 NEW_PROP_TAG(OutputDir);
 NEW_PROP_TAG(EnableOpmRstFile);
+NEW_PROP_TAG(EclStrictParsing);
 NEW_PROP_TAG(EclOutputInterval);
 NEW_PROP_TAG(IgnoreKeywords);
 
@@ -71,6 +73,7 @@ SET_STRING_PROP(EclBaseVanguard, IgnoreKeywords, "");
 SET_STRING_PROP(EclBaseVanguard, EclDeckFileName, "");
 SET_INT_PROP(EclBaseVanguard, EclOutputInterval, -1); // use the deck-provided value
 SET_BOOL_PROP(EclBaseVanguard, EnableOpmRstFile, true);
+SET_BOOL_PROP(EclBaseVanguard, EclStrictParsing, false);
 
 END_PROPERTIES
 
@@ -110,6 +113,8 @@ public:
                              "Include OPM-specific keywords in the ECL restart file to enable restart of OPM simulators from these files");
         EWOMS_REGISTER_PARAM(TypeTag, std::string, IgnoreKeywords,
                              "List of Eclipse keywords which should be ignored. As a ':' separated string.");
+        EWOMS_REGISTER_PARAM(TypeTag, bool, EclStrictParsing,
+                             "Use strict mode for parsing - all errors are collected before the applicaton exists.");
     }
 
     /*!
@@ -211,6 +216,7 @@ public:
         tmp.emplace_back(Opm::ParseContext::SUMMARY_UNKNOWN_WELL, Opm::InputError::WARN);
         tmp.emplace_back(Opm::ParseContext::SUMMARY_UNKNOWN_GROUP, Opm::InputError::WARN);
         Opm::ParseContext parseContext(tmp);
+        Opm::ErrorGuard errorGuard;
 
         const std::string ignoredKeywords = EWOMS_GET_PARAM(TypeTag, std::string, IgnoreKeywords);
         if (ignoredKeywords.size() > 0) {
@@ -226,13 +232,16 @@ public:
             }
         }
 
+        if (EWOMS_GET_PARAM(TypeTag, bool , EclStrictParsing))
+            parseContext.update(Opm::InputError::DELAYED_EXIT1);
+
         if (!externalDeck_) {
             if (myRank == 0)
                 std::cout << "Reading the deck file '" << fileName << "'" << std::endl;
 
             Opm::Parser parser;
-            internalDeck_.reset(new Opm::Deck(parser.parseFile(fileName , parseContext)));
-            internalEclState_.reset(new Opm::EclipseState(*internalDeck_, parseContext));
+            internalDeck_.reset(new Opm::Deck(parser.parseFile(fileName , parseContext, errorGuard)));
+            internalEclState_.reset(new Opm::EclipseState(*internalDeck_, parseContext, errorGuard));
 
             deck_ = &(*internalDeck_);
             eclState_ = &(*internalEclState_);
@@ -249,7 +258,7 @@ public:
             // create the schedule object. Note that if eclState is supposed to represent
             // the internalized version of the deck, this constitutes a layering
             // violation.
-            internalEclSchedule_.reset(new Opm::Schedule(*deck_, *eclState_, parseContext));
+            internalEclSchedule_.reset(new Opm::Schedule(*deck_, *eclState_, parseContext, errorGuard));
             eclSchedule_ = &(*internalEclSchedule_);
         }
         else
@@ -262,12 +271,20 @@ public:
             internalEclSummaryConfig_.reset(new Opm::SummaryConfig(*deck_,
                                                                    *eclSchedule_,
                                                                    eclState_->getTableManager(),
-                                                                   parseContext));
+                                                                   parseContext,
+                                                                   errorGuard));
 
             eclSummaryConfig_ = &(*internalEclSummaryConfig_);
         }
         else
             eclSummaryConfig_ = externalEclSummaryConfig_;
+
+        if (errorGuard) {
+            errorGuard.dump();
+            errorGuard.clear();
+
+            throw std::runtime_error("Unrecoverable errors were encountered while loading input.");
+        }
 
         // Possibly override IOConfig setting for how often RESTART files should get
         // written to disk (every N report step)
