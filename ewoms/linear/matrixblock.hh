@@ -232,6 +232,17 @@ public:
 
     BaseType& asBase()
     { return static_cast<BaseType&>(*this); }
+
+    MatrixBlock<Scalar, m, n> transpose() const {
+        MatrixBlock<Scalar, n, m> out;
+        for (int i=0; i< this->M(); i++){
+            for (int j=0; j< this->N(); j++){
+                out[j][i] = (*this)[i][j];
+            }
+        }
+ 
+        return out;
+    }
 };
 
 } // namespace Ewoms
