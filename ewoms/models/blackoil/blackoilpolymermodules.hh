@@ -891,6 +891,11 @@ public:
 
     }
 
+    const Scalar molarMass() const
+    {
+        return 0.25; // kg/mol
+    }
+
 
 
 

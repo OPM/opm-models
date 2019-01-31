@@ -56,9 +56,13 @@ class BlackOilBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
+    enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+    enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { contiEnergyEqIdx = Indices::contiEnergyEqIdx };
+
+    static constexpr bool blackoilConserveSurfaceVolume = GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume);
 
     typedef Ewoms::BlackOilEnergyModule<TypeTag, enableEnergy> EnergyModule;
 
@@ -114,13 +118,16 @@ public:
                                                                      insideIntQuants.pvtRegionIndex(),
                                                                      extQuants,
                                                                      insideIntQuants.fluidState());
-            else if (pBoundary > pInside)
+            else if (pBoundary > pInside) {
+                typedef typename std::conditional<std::is_same<typename FluidState::Scalar, Evaluation>::value,
+                                                  Evaluation, Scalar>::type RhsEval;
                 // influx
-                LocalResidual::template evalPhaseFluxes_<Evaluation>(tmp,
-                                                                     phaseIdx,
-                                                                     insideIntQuants.pvtRegionIndex(),
-                                                                     extQuants,
-                                                                     fluidState);
+                LocalResidual::template evalPhaseFluxes_<RhsEval>(tmp,
+                                                                  phaseIdx,
+                                                                  insideIntQuants.pvtRegionIndex(),
+                                                                  extQuants,
+                                                                  fluidState);
+            }
 
             for (unsigned i = 0; i < tmp.size(); ++i)
                 (*this)[i] += tmp[i];
@@ -151,6 +158,19 @@ public:
                 Evaluation enthalpyRate = density*extQuants.volumeFlux(phaseIdx)*specificEnthalpy;
                 EnergyModule::addToEnthalpyRate(*this, enthalpyRate);
             }
+        }
+
+        if (enableSolvent) {
+            (*this)[Indices::contiSolventEqIdx] = extQuants.solventVolumeFlux();
+            if (blackoilConserveSurfaceVolume)
+                (*this)[Indices::contiSolventEqIdx] *= insideIntQuants.solventInverseFormationVolumeFactor();
+            else
+                (*this)[Indices::contiSolventEqIdx] *= insideIntQuants.solventDensity();
+
+        }
+
+        if (enablePolymer) {
+            (*this)[Indices::contiPolymerEqIdx] = extQuants.volumeFlux(FluidSystem::waterPhaseIdx) * insideIntQuants.polymerConcentration();
         }
 
         // make sure that the right mass conservation quantities are used
