@@ -88,14 +88,14 @@ class BlackOilPolymerModule
 
 
     static constexpr unsigned enablePolymer = enablePolymerV;
-    static constexpr bool enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
+    static constexpr bool enablePolymerMolarWeightTracking = GET_PROP_VALUE(TypeTag, EnablePolymerMolarWeightTracking);
 
     static constexpr unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
     static constexpr unsigned numPhases = FluidSystem::numPhases;
 
     struct SkprpolyTable {
         double refConcentration;
-        TabulatedTwoDFunction table_func;
+        TabulatedTwoDFunction tableFunc;
     };
 
 public:
@@ -128,16 +128,16 @@ public:
                                      "contains the POLYMER keyword");
         }
 
-        if (enablePolymerMW && !deck.hasKeyword("POLYMW")) {
+        if (enablePolymerMolarWeightTracking && !deck.hasKeyword("POLYMW")) {
             throw std::runtime_error("Polymer molecular weight tracking is enabled at compile time, but "
                                      "the deck does not contain the POLYMW keyword");
         }
-        else if (!enablePolymerMW && deck.hasKeyword("POLYMW")) {
+        else if (!enablePolymerMolarWeightTracking && deck.hasKeyword("POLYMW")) {
             throw std::runtime_error("Polymer molecular weight tracking is disabled at compile time, but the deck "
                                      "contains the POLYMW keyword");
         }
 
-        if (enablePolymerMW && !enablePolymer) {
+        if (enablePolymerMolarWeightTracking && !enablePolymer) {
             throw std::runtime_error("Polymer molecular weight tracking is enabled while polymer treatment "
                                      "is disabled at compile time");
         }
@@ -163,7 +163,8 @@ public:
                            static_cast<AdsorptionBehaviour>(plyrockTable.getAdsorbtionIndexColumn()[satRegionIdx]),
                            plyrockTable.getMaxAdsorbtionColumn()[satRegionIdx]);
             }
-        } else {
+        }
+        else {
             throw std::runtime_error("PLYROCK must be specified in POLYMER runs\n");
         }
 
@@ -178,7 +179,8 @@ public:
                 const auto& ads = plyadsTable.getAdsorbedPolymerColumn();
                 plyadsAdsorbedPolymer_[satRegionIdx].setXYContainers(c, ads);
             }
-        } else {
+        }
+        else {
             throw std::runtime_error("PLYADS must be specified in POLYMER runs\n");
         }
 
@@ -188,12 +190,13 @@ public:
 
         // initialize the objects which deal with the PLYVISC keyword
         const auto& plyviscTables = tableManager.getPlyviscTables();
-        if (!plyviscTables.empty() ) {
+        if (!plyviscTables.empty()) {
             // different viscosity model is used for POLYMW
-            if (enablePolymerMW) {
+            if (enablePolymerMolarWeightTracking) {
                 Opm::OpmLog::warning("PLYVISC should not be used in POLYMW runs, "
                                      "it will have no effect. A viscosity model based on PLYVMH is used instead.\n");
-            } else {
+            }
+            else {
 
                 assert(numPvtRegions == plyviscTables.size());
                 for (unsigned pvtRegionIdx = 0; pvtRegionIdx < numPvtRegions; ++ pvtRegionIdx) {
@@ -204,7 +207,8 @@ public:
                     plyviscViscosityMultiplierTable_[pvtRegionIdx].setXYContainers(c, visc);
                 }
             }
-        } else if ( !enablePolymerMW ) {
+        }
+        else if (!enablePolymerMolarWeightTracking) {
             throw std::runtime_error("PLYVISC must be specified in POLYMER runs\n");
         }
 
@@ -217,32 +221,35 @@ public:
                 const auto& plymaxTable = plymaxTables.template getTable<Opm::PlymaxTable>(mixRegionIdx);
                 setPlymax(mixRegionIdx, plymaxTable.getPolymerConcentrationColumn()[mixRegionIdx]);
             }
-        } else {
+        }
+        else {
             throw std::runtime_error("PLYMAX must be specified in POLYMER runs\n");
         }
 
         if (deck.hasKeyword("PLMIXPAR")) {
-            if (enablePolymerMW) {
+            if (enablePolymerMolarWeightTracking) {
                 Opm::OpmLog::warning("PLMIXPAR should not be used in POLYMW runs, it will have no effect.\n");
-            } else {
+            }
+            else {
                 // initialize the objects which deal with the PLMIXPAR keyword
                 for (unsigned mixRegionIdx = 0; mixRegionIdx < numMixRegions; ++ mixRegionIdx) {
                     const auto& plmixparRecord = deck.getKeyword("PLMIXPAR").getRecord(mixRegionIdx);
                     setPlmixpar(mixRegionIdx, plmixparRecord.getItem("TODD_LONGSTAFF").getSIDouble(0));
                 }
             }
-        } else if ( !enablePolymerMW ) {
+        }
+        else if (!enablePolymerMolarWeightTracking) {
             throw std::runtime_error("PLMIXPAR must be specified in POLYMER runs\n");
         }
 
         hasPlyshlog_ = deck.hasKeyword("PLYSHLOG");
         hasShrate_ = deck.hasKeyword("SHRATE");
 
-        if ( (hasPlyshlog_ || hasShrate_) && enablePolymerMW) {
+        if ((hasPlyshlog_ || hasShrate_) && enablePolymerMolarWeightTracking) {
             Opm::OpmLog::warning("PLYSHLOG and SHRATE should not be used in POLYMW runs, they will have no effect.\n");
         }
 
-        if (hasPlyshlog_ && !enablePolymerMW) {
+        if (hasPlyshlog_ && !enablePolymerMolarWeightTracking) {
             const auto& plyshlogTables = tableManager.getPlyshlogTables();
             assert(numPvtRegions == plyshlogTables.size());
             plyshlogShearEffectRefMultiplier_.resize(numPvtRegions);
@@ -257,7 +264,7 @@ public:
                 // do the unit version here for the waterVelocity
                 Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
                 double siFactor = hasShrate_? unitSystem.parse("1/Time").getSIScaling() : unitSystem.parse("Length/Time").getSIScaling();
-                for (size_t i = 0; i < waterVelocity.size(); ++i ) {
+                for (size_t i = 0; i < waterVelocity.size(); ++i) {
                     waterVelocity[i] *= siFactor;
                     // for plyshlog the input must be stored as logarithms
                     // the interpolation is then done the log-space.
@@ -266,7 +273,7 @@ public:
 
                 Scalar refViscMult = plyviscViscosityMultiplierTable_[pvtRegionIdx].eval(plyshlogRefPolymerConcentration, /*extrapolate=*/true);
                 // convert the table using referece conditions
-                for (size_t i = 0; i < waterVelocity.size(); ++i ) {
+                for (size_t i = 0; i < waterVelocity.size(); ++i) {
                     shearMultiplier[i] *= refViscMult;
                     shearMultiplier[i] -= 1;
                     shearMultiplier[i] /= (refViscMult - 1);
@@ -275,14 +282,14 @@ public:
                 plyshlogShearEffectRefMultiplier_[pvtRegionIdx].resize(waterVelocity.size());
                 plyshlogShearEffectRefLogVelocity_[pvtRegionIdx].resize(waterVelocity.size());
 
-                for (size_t i = 0; i < waterVelocity.size(); ++i ) {
+                for (size_t i = 0; i < waterVelocity.size(); ++i) {
                     plyshlogShearEffectRefMultiplier_[pvtRegionIdx][i] = shearMultiplier[i];
                     plyshlogShearEffectRefLogVelocity_[pvtRegionIdx][i] = waterVelocity[i];
                 }
             }
         }
 
-        if (hasShrate_ && !enablePolymerMW) {
+        if (hasShrate_ && !enablePolymerMolarWeightTracking) {
             if(!hasPlyshlog_) {
                 throw std::runtime_error("PLYSHLOG must be specified if SHRATE is used in POLYMER runs\n");
             }
@@ -292,65 +299,68 @@ public:
             for (unsigned pvtRegionIdx = 0; pvtRegionIdx < numPvtRegions; ++ pvtRegionIdx) {
                 if (shrateFromDeck.empty()) {
                     shrate_[pvtRegionIdx] = 4.8; //default;
-                } else if (shrateFromDeck.size() == numPvtRegions) {
+                }
+                else if (shrateFromDeck.size() == numPvtRegions) {
                     shrate_[pvtRegionIdx] = shrateKeyword.getSIDoubleData()[pvtRegionIdx];
-                } else {
+                }
+                else {
                     throw std::runtime_error("SHRATE must either have 0 or number of NUMPVT entries\n");
                 }
             }
         }
 
-        if (enablePolymerMW) {
+        if (enablePolymerMolarWeightTracking) {
             const Opm::DeckKeyword& plyvmhKeyword = deck.getKeyword("PLYVMH");
             assert(plyvmhKeyword.size() == numMixRegions);
             if (plyvmhKeyword.size() > 0) {
-                for (size_t region_idx = 0; region_idx < plyvmhKeyword.size(); ++region_idx) {
-                    const Opm::DeckRecord& record = plyvmhKeyword.getRecord(region_idx);
-                    plyvmhCoefficients_[region_idx].k_mh = record.getItem("K_MH").getSIDouble(0);
-                    plyvmhCoefficients_[region_idx].a_mh = record.getItem("A_MH").getSIDouble(0);
-                    plyvmhCoefficients_[region_idx].gamma = record.getItem("GAMMA").getSIDouble(0);
-                    plyvmhCoefficients_[region_idx].kappa = record.getItem("KAPPA").getSIDouble(0);
+                for (size_t regionIdx = 0; regionIdx < plyvmhKeyword.size(); ++regionIdx) {
+                    const Opm::DeckRecord& record = plyvmhKeyword.getRecord(regionIdx);
+                    plyvmhCoefficients_[regionIdx].k_mh = record.getItem("K_MH").getSIDouble(0);
+                    plyvmhCoefficients_[regionIdx].a_mh = record.getItem("A_MH").getSIDouble(0);
+                    plyvmhCoefficients_[regionIdx].gamma = record.getItem("GAMMA").getSIDouble(0);
+                    plyvmhCoefficients_[regionIdx].kappa = record.getItem("KAPPA").getSIDouble(0);
                 }
-            } else {
+            }
+            else {
                 throw std::runtime_error("PLYVMH keyword must be specified in POLYMW rus \n");
             }
 
             // handling PLYMWINJ keyword
             const auto& plymwinjTables = tableManager.getPlymwinjTables();
             for (const auto& table : plymwinjTables) {
-                const int table_number = table.first;
+                const int tableNumber = table.first;
                 const auto& plymwinjtable = table.second;
                 const std::vector<double>& throughput = plymwinjtable.getThroughputs();
                 const std::vector<double>& watervelocity = plymwinjtable.getVelocities();
                 const std::vector<std::vector<double>>& molecularweight = plymwinjtable.getMoleWeights();
                 TabulatedTwoDFunction tablefunc(throughput, watervelocity, molecularweight, true, false);
-                plymwinjTables_[table_number] = std::move(tablefunc);
+                plymwinjTables_[tableNumber] = std::move(tablefunc);
             }
 
             // handling SKPRWAT keyword
             const auto& skprwatTables = tableManager.getSkprwatTables();
             for (const auto& table : skprwatTables) {
-                const int table_number = table.first;
+                const int tableNumber = table.first;
                 const auto& skprwattable = table.second;
                 const std::vector<double>& throughput = skprwattable.getThroughputs();
                 const std::vector<double>& watervelocity = skprwattable.getVelocities();
                 const std::vector<std::vector<double>>& skinpressure = skprwattable.getSkinPressures();
                 TabulatedTwoDFunction tablefunc(throughput, watervelocity, skinpressure, true, false);
-                skprwatTables_[table_number] = std::move(tablefunc);
+                skprwatTables_[tableNumber] = std::move(tablefunc);
             }
 
             // handling SKPRPOLY keyword
             const auto& skprpolyTables = tableManager.getSkprpolyTables();
             for (const auto& table : skprpolyTables) {
-                const int table_number = table.first;
+                const int tableNumber = table.first;
                 const auto& skprpolytable = table.second;
                 const std::vector<double>& throughput = skprpolytable.getThroughputs();
                 const std::vector<double>& watervelocity = skprpolytable.getVelocities();
                 const std::vector<std::vector<double>>& skinpressure = skprpolytable.getSkinPressures();
-                const double ref_polymer_concentration = skprpolytable.referenceConcentration();
-                SkprpolyTable tablefunc = {ref_polymer_concentration,
+                const double refPolymerConcentration = skprpolytable.referenceConcentration();
+                SkprpolyTable tablefunc = {refPolymerConcentration,
                                            TabulatedTwoDFunction(throughput, watervelocity, skinpressure, true, false)};
-                skprpolyTables_[table_number] = std::move(tablefunc);
+                skprpolyTables_[tableNumber] = std::move(tablefunc);
             }
         }
     }
@@ -421,7 +431,7 @@ public:
         plymaxMaxConcentration_.resize(numRegions);
         plymixparToddLongstaff_.resize(numRegions);
 
-        if ( enablePolymerMW ) {
+        if (enablePolymerMolarWeightTracking) {
             plyvmhCoefficients_.resize(numRegions);
         }
     }
@@ -451,39 +461,42 @@ public:
     /*!
     * \brief get the PLYMWINJ table
     */
-    static TabulatedTwoDFunction& getPlymwinjTable(const int numTable)
+    static TabulatedTwoDFunction& getPlymwinjTable(const int tableNumber)
     {
-        const auto iterTable = plymwinjTables_.find(numTable);
+        const auto iterTable = plymwinjTables_.find(tableNumber);
         if (iterTable != plymwinjTables_.end()) {
             return iterTable->second;
-        } else {
-            throw std::runtime_error(" the PLYMWINJ table " + std::to_string(numTable) + " does not exist\n");
+        }
+        else {
+            throw std::runtime_error(" the PLYMWINJ table " + std::to_string(tableNumber) + " does not exist\n");
         }
     }
 
     /*!
     * \brief get the SKPRWAT table
     */
-    static TabulatedTwoDFunction& getSkprwatTable(const int numTable)
+    static TabulatedTwoDFunction& getSkprwatTable(const int tableNumber)
     {
-        const auto iterTable = skprwatTables_.find(numTable);
+        const auto iterTable = skprwatTables_.find(tableNumber);
         if (iterTable != plymwinjTables_.end()) {
             return iterTable->second;
-        } else {
-            throw std::runtime_error(" the SKPRWAT table " + std::to_string(numTable) + " does not exist\n");
+        }
+        else {
+            throw std::runtime_error(" the SKPRWAT table " + std::to_string(tableNumber) + " does not exist\n");
         }
     }
 
     /*!
     * \brief get the SKPRWAT table
     */
-    static SkprpolyTable& getSkprpolyTable(const int numTable)
+    static SkprpolyTable& getSkprpolyTable(const int tableNumber)
     {
-        const auto iterTable = skprpolyTables_.find(numTable);
+        const auto iterTable = skprpolyTables_.find(tableNumber);
         if (iterTable != skprpolyTables_.end()) {
             return iterTable->second;
-        } else {
-            throw std::runtime_error(" the SKPRPOLY table " + std::to_string(numTable) + " does not exist\n");
+        }
+        else {
+            throw std::runtime_error(" the SKPRPOLY table " + std::to_string(tableNumber) + " does not exist\n");
         }
     }
 
@@ -518,10 +531,10 @@ public:
             // polymers have been disabled at compile time
             return false;
 
-        if (!enablePolymerMW)
+        if (!enablePolymerMolarWeightTracking)
            return pvIdx == polymerConcentrationIdx;
 
-        // both enablePolymer and enablePolymerMW are true here
+        // both enablePolymer and enablePolymerMolarWeightTracking are true here
         return pvIdx == polymerConcentrationIdx || pvIdx == polymerMoleWeightIdx;
     }
 
@@ -531,7 +544,8 @@ public:
 
         if (pvIdx == polymerConcentrationIdx) {
             return "polymer_waterconcentration";
-        } else {
+        }
+        else {
             return "polymer_molecularweight";
         }
     }
@@ -549,10 +563,10 @@ public:
         if (!enablePolymer)
             return false;
 
-        if (!enablePolymerMW)
+        if (!enablePolymerMolarWeightTracking)
             return eqIdx == contiPolymerEqIdx;
 
-        // both enablePolymer and enablePolymerMW are true here
+        // both enablePolymer and enablePolymerMolarWeightTracking are true here
         return eqIdx == contiPolymerEqIdx || eqIdx == contiPolymerMWEqIdx;
     }
 
@@ -608,11 +622,11 @@ public:
         storage[contiPolymerEqIdx] += accumulationPolymer;
 
         // tracking the polymer molecular weight
-        if (enablePolymerMW) {
+        if (enablePolymerMolarWeightTracking) {
             accumulationPolymer = Opm::max(accumulationPolymer, 1e-10);
 
             storage[contiPolymerMWEqIdx]  += accumulationPolymer
-                                         * Toolbox::template decay<LhsEval> (intQuants.polymerMoleWeight() );
+                                         * Toolbox::template decay<LhsEval> (intQuants.polymerMoleWeight());
         }
     }
 
@@ -644,7 +658,8 @@ public:
             // modify water
             flux[contiWaterEqIdx] /=
                     extQuants.waterShearFactor();
-        } else {
+        }
+        else {
             flux[contiPolymerEqIdx] =
                     extQuants.volumeFlux(waterPhaseIdx)
                     *Opm::decay<Scalar>(up.fluidState().invB(waterPhaseIdx))
@@ -658,12 +673,13 @@ public:
         }
 
         // flux related to transport of polymer molecular weight
-        if (enablePolymerMW) {
+        if (enablePolymerMolarWeightTracking) {
             if (upIdx == inIdx) {
                 flux[contiPolymerMWEqIdx] = flux[contiPolymerEqIdx] * up.polymerMoleWeight();
-            } else {
+            }
+            else {
                 flux[contiPolymerMWEqIdx] = flux[contiPolymerEqIdx]
-                                          * Opm::decay<Scalar>(up.polymerMoleWeight() );
+                                          * Opm::decay<Scalar>(up.polymerMoleWeight());
             }
         }
 
@@ -814,22 +830,22 @@ public:
     /*!
      * \brief Computes the shear factor
      *
-     * Input is polymer concentration and either the water velocity or the shrate if has_shrate_ is true.
+     * Input is polymer concentration and either the water velocity or the shrate if hasShrate_ is true.
      * The pvtnumRegionIdx is needed to make sure the right table is used.
      */
     template <class Evaluation>
     static Evaluation computeShearFactor(const Evaluation& polymerConcentration,
                                          unsigned pvtnumRegionIdx,
-                                         const Evaluation& v0) {
-
+                                         const Evaluation& v0)
+    {
         typedef Opm::MathToolbox<Evaluation> ToolboxLocal;
 
         const auto& viscosityMultiplierTable = plyviscViscosityMultiplierTable_[pvtnumRegionIdx];
-        Scalar viscosityMultiplier = viscosityMultiplierTable.eval( Opm::scalarValue(polymerConcentration), /*extrapolate=*/true);
+        Scalar viscosityMultiplier = viscosityMultiplierTable.eval(Opm::scalarValue(polymerConcentration), /*extrapolate=*/true);
 
         const Scalar eps = 1e-14;
         // return 1.0 if the polymer has no effect on the water.
-        if ( std::abs( (viscosityMultiplier - 1.0) ) < eps){
+        if (std::abs((viscosityMultiplier - 1.0)) < eps){
             return ToolboxLocal::createBlank(v0) + 1.;
         }
 
@@ -840,7 +856,7 @@ public:
             return ToolboxLocal::createBlank(v0) + 1.0;
 
         // compute shear factor from input
-        // Z = (1 + (P - 1) * M(v) ) / P
+        // Z = (1 + (P - 1) * M(v)) / P
         // where M(v) is computed from user input
         // and P = viscosityMultiplier
         const std::vector<Scalar>& shearEffectRefMultiplier = plyshlogShearEffectRefMultiplier_[pvtnumRegionIdx];
@@ -854,7 +870,7 @@ public:
         }
         // store the logarithmic velocity and logarithmic multipliers in a table for easy look up and
         // linear interpolation in the logarithmic space.
-        TabulatedFunction logShearEffectMultiplier = TabulatedFunction(numTableEntries, shearEffectRefLogVelocity, shearEffectMultiplier, /*bool sortInputs =*/ false );
+        TabulatedFunction logShearEffectMultiplier = TabulatedFunction(numTableEntries, shearEffectRefLogVelocity, shearEffectMultiplier, /*bool sortInputs =*/ false);
 
         // Find sheared velocity (v) that satisfies
         // F = log(v) + log (Z) - log(v0) = 0;
@@ -873,7 +889,7 @@ public:
         // Use log(v0) as initial value for u
         auto u = v0AbsLog;
         bool converged = false;
-        for (int i = 0; i < 20; ++i ) {
+        for (int i = 0; i < 20; ++i) {
             auto f = F(u);
             auto df = dF(u);
             u -= f/df;
@@ -887,7 +903,7 @@ public:
         }
 
         // return the shear factor
-        return Opm::exp( logShearEffectMultiplier.eval(u, /*extrapolate=*/true) );
+        return Opm::exp(logShearEffectMultiplier.eval(u, /*extrapolate=*/true));
 
     }
 
@@ -1021,7 +1037,7 @@ class BlackOilPolymerIntensiveQuantities
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     static constexpr int polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
-    static constexpr bool enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
+    static constexpr bool enablePolymerMolarWeightTracking = GET_PROP_VALUE(TypeTag, EnablePolymerMolarWeightTracking);
     static constexpr int polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
 
 
@@ -1038,7 +1054,7 @@ public:
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
-        if (enablePolymerMW) {
+        if (enablePolymerMolarWeightTracking) {
             polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx);
         }
         const Scalar cmax = PolymerModule::plymaxMaxConcentration(elemCtx, dofIdx, timeIdx);
@@ -1047,7 +1063,7 @@ public:
         const Scalar& maxAdsorbtion = PolymerModule::plyrockMaxAdsorbtion(elemCtx, dofIdx, timeIdx);
         const auto& plyadsAdsorbedPolymer = PolymerModule::plyadsAdsorbedPolymer(elemCtx, dofIdx, timeIdx);
         polymerAdsorption_ = plyadsAdsorbedPolymer.eval(polymerConcentration_, /*extrapolate=*/true);
-        if (PolymerModule::plyrockAdsorbtionIndex(elemCtx, dofIdx, timeIdx) == PolymerModule::NoDesorption ) {
+        if (PolymerModule::plyrockAdsorbtionIndex(elemCtx, dofIdx, timeIdx) == PolymerModule::NoDesorption) {
             const Scalar& maxPolymerAdsorption = elemCtx.problem().maxPolymerAdsorption(elemCtx, dofIdx, timeIdx);
             polymerAdsorption_ = std::max(Evaluation(maxPolymerAdsorption) , polymerAdsorption_);
         }
@@ -1057,7 +1073,7 @@ public:
         const Evaluation resistanceFactor = 1.0 + (residualResistanceFactor - 1.0) * polymerAdsorption_ / maxAdsorbtion;
 
         // compute effective viscosities
-        if ( !enablePolymerMW ) {
+        if (!enablePolymerMolarWeightTracking) {
             const auto& fs = asImp_().fluidState_;
             const Evaluation& muWater = fs.viscosity(waterPhaseIdx);
             const auto& viscosityMultiplier = PolymerModule::plyviscViscosityMultiplierTable(elemCtx, dofIdx, timeIdx);
@@ -1071,10 +1087,11 @@ public:
 
             const Evaluation cbar = polymerConcentration_ / cmax;
             // waterViscosity / effectiveWaterViscosity
-            waterViscosityCorrection_ = muWater * ( (1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective );
+            waterViscosityCorrection_ = muWater * ((1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective);
             // effectiveWaterViscosity / effectivePolymerViscosity
             polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
-        } else { // based on PLYVMH
+        }
+        else { // based on PLYVMH
             const auto& plyvmhCoefficients = PolymerModule::plyvmhCoefficients(elemCtx, dofIdx, timeIdx);
             const Scalar k_mh = plyvmhCoefficients.k_mh;
             const Scalar a_mh = plyvmhCoefficients.a_mh;
@@ -1085,7 +1102,7 @@ public:
             // 1000 is a emperical constant, most likely related to unit conversion
             const Evaluation intrinsicViscosity = k_mh * pow(polymerMoleWeight_ * 1000., a_mh);
             const Evaluation x = polymerConcentration_ * intrinsicViscosity;
-            waterViscosityCorrection_ = 1.0 / ( 1.0 + gamma * (x + kappa * x * x) );
+            waterViscosityCorrection_ = 1.0 / (1.0 + gamma * (x + kappa * x * x));
             polymerViscosityCorrection_ = 1.0;
         }
 
@@ -1102,7 +1119,7 @@ public:
 
     const Evaluation& polymerMoleWeight() const
     {
-        if ( !enablePolymerMW )
+        if (!enablePolymerMolarWeightTracking)
             throw std::logic_error("polymerMoleWeight() is called but polymer milecular weight is disabled");
 
         return polymerMoleWeight_;
@@ -1199,16 +1216,13 @@ class BlackOilPolymerExtensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
-
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
-
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
 
     static constexpr unsigned gasPhaseIdx = FluidSystem::gasPhaseIdx;
     static constexpr int dimWorld = GridView::dimensionworld;
     static constexpr unsigned waterPhaseIdx =  FluidSystem::waterPhaseIdx;
-
-    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
-    typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
 
 public:
     /*!
@@ -1274,17 +1288,24 @@ public:
             Scalar trans = elemCtx.problem().transmissibility(elemCtx, interiorDofIdx, exteriorDofIdx);
             if (trans > 0.0) {
                 Scalar faceArea = elemCtx.stencil(timeIdx).interiorFace(scvfIdx).area();
-                auto dist = elemCtx.pos(interiorDofIdx, timeIdx ) -  elemCtx.pos(exteriorDofIdx, timeIdx );
+                auto dist = elemCtx.pos(interiorDofIdx, timeIdx) -  elemCtx.pos(exteriorDofIdx, timeIdx);
                 // compute permeability from transmissibility.
                 Scalar absPerm = trans / faceArea * dist.two_norm();
-                waterVolumeVelocity *= PolymerModule::shrate(pvtnumRegionIdx) * Opm::sqrt( poroAvg * Sw / (relWater * absPerm )    ) ;
+                waterVolumeVelocity *=
+                    PolymerModule::shrate(pvtnumRegionIdx)*Opm::sqrt(poroAvg*Sw / (relWater*absPerm));
                 assert(Opm::isfinite(waterVolumeVelocity));
             }
         }
 
         // compute share factors for water and polymer
-        waterShearFactor_ = PolymerModule::computeShearFactor(up.polymerConcentration(), pvtnumRegionIdx, waterVolumeVelocity);
-        polymerShearFactor_ = PolymerModule::computeShearFactor(up.polymerConcentration(), pvtnumRegionIdx, waterVolumeVelocity * up.polymerViscosityCorrection());
+        waterShearFactor_ =
+            PolymerModule::computeShearFactor(up.polymerConcentration(),
+                                              pvtnumRegionIdx,
+                                              waterVolumeVelocity);
+        polymerShearFactor_ =
+            PolymerModule::computeShearFactor(up.polymerConcentration(),
+                                              pvtnumRegionIdx,
+                                              waterVolumeVelocity*up.polymerViscosityCorrection());
 
     }
 
