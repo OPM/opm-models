@@ -83,19 +83,19 @@ class BlackOilPolymerModule
     static constexpr unsigned polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr unsigned polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
     static constexpr unsigned contiPolymerEqIdx = Indices::contiPolymerEqIdx;
-    static constexpr unsigned contiPolymerMWEqIdx = Indices::contiPolymerMWEqIdx;
+    static constexpr unsigned contiPolymerMolarWeightEqIdx = Indices::contiPolymerMWEqIdx;
     static constexpr unsigned waterPhaseIdx = FluidSystem::waterPhaseIdx;
 
 
     static constexpr unsigned enablePolymer = enablePolymerV;
-    static constexpr bool enablePolymerMolarWeightTracking = GET_PROP_VALUE(TypeTag, EnablePolymerMolarWeightTracking);
+    static constexpr bool enablePolymerMolarWeight = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
 
     static constexpr unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
     static constexpr unsigned numPhases = FluidSystem::numPhases;
 
     struct SkprpolyTable {
         double refConcentration;
-        TabulatedTwoDFunction tableFunc;
+        TabulatedTwoDFunction table_func;
     };
 
 public:
@@ -128,16 +128,16 @@ public:
                                      "contains the POLYMER keyword");
         }
 
-        if (enablePolymerMolarWeightTracking && !deck.hasKeyword("POLYMW")) {
+        if (enablePolymerMolarWeight && !deck.hasKeyword("POLYMW")) {
             throw std::runtime_error("Polymer molecular weight tracking is enabled at compile time, but "
                                      "the deck does not contain the POLYMW keyword");
         }
-        else if (!enablePolymerMolarWeightTracking && deck.hasKeyword("POLYMW")) {
+        else if (!enablePolymerMolarWeight && deck.hasKeyword("POLYMW")) {
             throw std::runtime_error("Polymer molecular weight tracking is disabled at compile time, but the deck "
                                      "contains the POLYMW keyword");
         }
 
-        if (enablePolymerMolarWeightTracking && !enablePolymer) {
+        if (enablePolymerMolarWeight && !enablePolymer) {
             throw std::runtime_error("Polymer molecular weight tracking is enabled while polymer treatment "
                                      "is disabled at compile time");
         }
@@ -192,7 +192,7 @@ public:
         const auto& plyviscTables = tableManager.getPlyviscTables();
         if (!plyviscTables.empty()) {
             // different viscosity model is used for POLYMW
-            if (enablePolymerMolarWeightTracking) {
+            if (enablePolymerMolarWeight) {
                 Opm::OpmLog::warning("PLYVISC should not be used in POLYMW runs, "
                                      "it will have no effect. A viscosity model based on PLYVMH is used instead.\n");
             }
@@ -208,7 +208,7 @@ public:
                 }
             }
         }
-        else if (!enablePolymerMolarWeightTracking) {
+        else if (!enablePolymerMolarWeight) {
             throw std::runtime_error("PLYVISC must be specified in POLYMER runs\n");
         }
 
@@ -227,7 +227,7 @@ public:
         }
 
         if (deck.hasKeyword("PLMIXPAR")) {
-            if (enablePolymerMolarWeightTracking) {
+            if (enablePolymerMolarWeight) {
                 Opm::OpmLog::warning("PLMIXPAR should not be used in POLYMW runs, it will have no effect.\n");
             }
             else {
@@ -238,18 +238,18 @@ public:
                 }
             }
         }
-        else if (!enablePolymerMolarWeightTracking) {
+        else if (!enablePolymerMolarWeight) {
             throw std::runtime_error("PLMIXPAR must be specified in POLYMER runs\n");
         }
 
         hasPlyshlog_ = deck.hasKeyword("PLYSHLOG");
         hasShrate_ = deck.hasKeyword("SHRATE");
 
-        if ((hasPlyshlog_ || hasShrate_) && enablePolymerMolarWeightTracking) {
+        if ((hasPlyshlog_ || hasShrate_) && enablePolymerMolarWeight) {
             Opm::OpmLog::warning("PLYSHLOG and SHRATE should not be used in POLYMW runs, they will have no effect.\n");
         }
 
-        if (hasPlyshlog_ && !enablePolymerMolarWeightTracking) {
+        if (hasPlyshlog_ && !enablePolymerMolarWeight) {
             const auto& plyshlogTables = tableManager.getPlyshlogTables();
             assert(numPvtRegions == plyshlogTables.size());
             plyshlogShearEffectRefMultiplier_.resize(numPvtRegions);
@@ -289,7 +289,7 @@ public:
             }
         }
 
-        if (hasShrate_ && !enablePolymerMolarWeightTracking) {
+        if (hasShrate_ && !enablePolymerMolarWeight) {
             if(!hasPlyshlog_) {
                 throw std::runtime_error("PLYSHLOG must be specified if SHRATE is used in POLYMER runs\n");
             }
@@ -309,7 +309,7 @@ public:
             }
         }
 
-        if (enablePolymerMolarWeightTracking) {
+        if (enablePolymerMolarWeight) {
             const Opm::DeckKeyword& plyvmhKeyword = deck.getKeyword("PLYVMH");
             assert(plyvmhKeyword.size() == numMixRegions);
             if (plyvmhKeyword.size() > 0) {
@@ -431,7 +431,7 @@ public:
         plymaxMaxConcentration_.resize(numRegions);
         plymixparToddLongstaff_.resize(numRegions);
 
-        if (enablePolymerMolarWeightTracking) {
+        if (enablePolymerMolarWeight) {
             plyvmhCoefficients_.resize(numRegions);
         }
     }
@@ -531,10 +531,10 @@ public:
             // polymers have been disabled at compile time
             return false;
 
-        if (!enablePolymerMolarWeightTracking)
+        if (!enablePolymerMolarWeight)
            return pvIdx == polymerConcentrationIdx;
 
-        // both enablePolymer and enablePolymerMolarWeightTracking are true here
+        // both enablePolymer and enablePolymerMolarWeight are true here
         return pvIdx == polymerConcentrationIdx || pvIdx == polymerMoleWeightIdx;
     }
 
@@ -563,11 +563,11 @@ public:
         if (!enablePolymer)
             return false;
 
-        if (!enablePolymerMolarWeightTracking)
+        if (!enablePolymerMolarWeight)
             return eqIdx == contiPolymerEqIdx;
 
-        // both enablePolymer and enablePolymerMolarWeightTracking are true here
-        return eqIdx == contiPolymerEqIdx || eqIdx == contiPolymerMWEqIdx;
+        // both enablePolymer and enablePolymerMolarWeight are true here
+        return eqIdx == contiPolymerEqIdx || eqIdx == contiPolymerMolarWeightEqIdx;
     }
 
     static std::string eqName(unsigned eqIdx)
@@ -622,10 +622,10 @@ public:
         storage[contiPolymerEqIdx] += accumulationPolymer;
 
         // tracking the polymer molecular weight
-        if (enablePolymerMolarWeightTracking) {
+        if (enablePolymerMolarWeight) {
             accumulationPolymer = Opm::max(accumulationPolymer, 1e-10);
 
-            storage[contiPolymerMWEqIdx]  += accumulationPolymer
+            storage[contiPolymerMolarWeightEqIdx]  += accumulationPolymer
                                          * Toolbox::template decay<LhsEval> (intQuants.polymerMoleWeight());
         }
     }
@@ -673,14 +673,13 @@ public:
         }
 
         // flux related to transport of polymer molecular weight
-        if (enablePolymerMolarWeightTracking) {
-            if (upIdx == inIdx) {
-                flux[contiPolymerMWEqIdx] = flux[contiPolymerEqIdx] * up.polymerMoleWeight();
-            }
-            else {
-                flux[contiPolymerMWEqIdx] = flux[contiPolymerEqIdx]
-                                          * Opm::decay<Scalar>(up.polymerMoleWeight());
-            }
+        if (enablePolymerMolarWeight) {
+            if (upIdx == inIdx)
+                flux[contiPolymerMolarWeightEqIdx] =
+                    flux[contiPolymerEqIdx]*up.polymerMoleWeight();
+            else
+                flux[contiPolymerMolarWeightEqIdx] =
+                    flux[contiPolymerEqIdx]*Opm::decay<Scalar>(up.polymerMoleWeight());
         }
 
     }
@@ -1037,7 +1036,7 @@ class BlackOilPolymerIntensiveQuantities
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     static constexpr int polymerConcentrationIdx = Indices::polymerConcentrationIdx;
     static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
-    static constexpr bool enablePolymerMolarWeightTracking = GET_PROP_VALUE(TypeTag, EnablePolymerMolarWeightTracking);
+    static constexpr bool enablePolymerMolarWeight = GET_PROP_VALUE(TypeTag, EnablePolymerMW);
     static constexpr int polymerMoleWeightIdx = Indices::polymerMoleWeightIdx;
 
 
@@ -1054,7 +1053,7 @@ public:
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
-        if (enablePolymerMolarWeightTracking) {
+        if (enablePolymerMolarWeight) {
             polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx);
         }
         const Scalar cmax = PolymerModule::plymaxMaxConcentration(elemCtx, dofIdx, timeIdx);
@@ -1073,7 +1072,7 @@ public:
         const Evaluation resistanceFactor = 1.0 + (residualResistanceFactor - 1.0) * polymerAdsorption_ / maxAdsorbtion;
 
         // compute effective viscosities
-        if (!enablePolymerMolarWeightTracking) {
+        if (!enablePolymerMolarWeight) {
             const auto& fs = asImp_().fluidState_;
             const Evaluation& muWater = fs.viscosity(waterPhaseIdx);
             const auto& viscosityMultiplier = PolymerModule::plyviscViscosityMultiplierTable(elemCtx, dofIdx, timeIdx);
@@ -1119,7 +1118,7 @@ public:
 
     const Evaluation& polymerMoleWeight() const
     {
-        if (!enablePolymerMolarWeightTracking)
+        if (!enablePolymerMolarWeight)
             throw std::logic_error("polymerMoleWeight() is called but polymer milecular weight is disabled");
 
         return polymerMoleWeight_;
@@ -1215,14 +1214,14 @@ class BlackOilPolymerExtensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
+    static constexpr unsigned gasPhaseIdx = FluidSystem::gasPhaseIdx;
+    static constexpr int dimWorld = GridView::dimensionworld;
+    static constexpr unsigned waterPhaseIdx =  FluidSystem::waterPhaseIdx;
+
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef BlackOilPolymerModule<TypeTag> PolymerModule;
     typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
     typedef Dune::FieldVector<Evaluation, dimWorld> DimEvalVector;
-
-    static constexpr unsigned gasPhaseIdx = FluidSystem::gasPhaseIdx;
-    static constexpr int dimWorld = GridView::dimensionworld;
-    static constexpr unsigned waterPhaseIdx =  FluidSystem::waterPhaseIdx;
 
 public:
     /*!

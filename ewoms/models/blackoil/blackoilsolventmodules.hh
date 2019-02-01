@@ -1531,9 +1531,8 @@ public:
     const Evaluation& solventVolumeFlux() const
     { return solventVolumeFlux_; }
 
-    void setSolventVolumeFlux(const Evaluation& solventVolumeFlux) {
-        solventVolumeFlux_ = solventVolumeFlux;
-    }
+    void setSolventVolumeFlux(const Evaluation& solventVolumeFlux)
+    { solventVolumeFlux_ = solventVolumeFlux; }
 
 private:
     Implementation& asImp_()

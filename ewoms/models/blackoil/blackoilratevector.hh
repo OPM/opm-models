@@ -66,7 +66,7 @@ class BlackOilRateVector
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
-    enum { enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW) };
+    enum { enablePolymerMolarWeight = GET_PROP_VALUE(TypeTag, EnablePolymerMW) };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Evaluation, numEq> ParentType;
@@ -138,7 +138,7 @@ public:
         (*this)[Indices::contiSolventEqIdx] *= solventPvt.molarMass(pvtRegionIdx);
 
         if ( enablePolymer ) {
-            if (enablePolymerMW )
+            if (enablePolymerMolarWeight )
                 throw std::logic_error("Set molar rate with polymer weight tracking not implemented");
 
             (*this)[Indices::contiPolymerEqIdx] *= PolymerModule::molarMass(pvtRegionIdx);
