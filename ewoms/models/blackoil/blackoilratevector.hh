@@ -56,11 +56,17 @@ class BlackOilRateVector
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
     typedef typename GET_PROP_TYPE(TypeTag, Indices) Indices;
 
+    typedef BlackOilSolventModule<TypeTag> SolventModule;
+    typedef BlackOilPolymerModule<TypeTag> PolymerModule;
+
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { contiEnergyEqIdx = Indices::contiEnergyEqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
+    enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enablePolymerMW = GET_PROP_VALUE(TypeTag, EnablePolymerMW) };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Evaluation, numEq> ParentType;
@@ -95,12 +101,24 @@ public:
 
         // convert to "surface volume" if requested
         if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
-            (*this)[FluidSystem::gasCompIdx] /=
-                FluidSystem::referenceDensity(FluidSystem::gasPhaseIdx, pvtRegionIdx);
-            (*this)[FluidSystem::oilCompIdx] /=
-                FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx, pvtRegionIdx);
-            (*this)[FluidSystem::waterCompIdx] /=
-                FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
+            if (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
+                (*this)[FluidSystem::gasCompIdx] /=
+                        FluidSystem::referenceDensity(FluidSystem::gasPhaseIdx, pvtRegionIdx);
+            }
+            if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
+                (*this)[FluidSystem::oilCompIdx] /=
+                        FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx, pvtRegionIdx);
+            }
+            if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx)) {
+                (*this)[FluidSystem::waterCompIdx] /=
+                        FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
+            }
+            if (enableSolvent) {
+                const auto& solventPvt = SolventModule::solventPvt();
+                (*this)[Indices::contiSolventEqIdx] /=
+                        solventPvt.referenceDensity(pvtRegionIdx);
+            }
+
         }
     }
 
@@ -116,14 +134,34 @@ public:
         for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx)
             (*this)[conti0EqIdx + compIdx] *= FluidSystem::molarMass(compIdx, pvtRegionIdx);
 
+        const auto& solventPvt = SolventModule::solventPvt();
+        (*this)[Indices::contiSolventEqIdx] *= solventPvt.molarMass(pvtRegionIdx);
+
+        if ( enablePolymer ) {
+            if (enablePolymerMW )
+                throw std::logic_error("Set molar rate with polymer weight tracking not implemented");
+
+            (*this)[Indices::contiPolymerEqIdx] *= PolymerModule::molarMass(pvtRegionIdx);
+        }
+
         // convert to "surface volume" if requested
         if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
-            (*this)[FluidSystem::gasCompIdx] /=
-                FluidSystem::referenceDensity(FluidSystem::gasPhaseIdx, pvtRegionIdx);
-            (*this)[FluidSystem::oilCompIdx] /=
-                FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx, pvtRegionIdx);
-            (*this)[FluidSystem::waterCompIdx] /=
-                FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
+            if (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
+                (*this)[FluidSystem::gasCompIdx] /=
+                        FluidSystem::referenceDensity(FluidSystem::gasPhaseIdx, pvtRegionIdx);
+            }
+            if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
+                (*this)[FluidSystem::oilCompIdx] /=
+                        FluidSystem::referenceDensity(FluidSystem::oilPhaseIdx, pvtRegionIdx);
+            }
+            if (FluidSystem::phaseIsActive(FluidSystem::waterPhaseIdx)) {
+                (*this)[FluidSystem::waterCompIdx] /=
+                        FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
+            }
+            if (enableSolvent) {
+                (*this)[Indices::contiSolventEqIdx] /=
+                        solventPvt.referenceDensity(pvtRegionIdx);
+            }
         }
     }
 

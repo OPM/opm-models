@@ -1521,6 +1521,10 @@ public:
     const Evaluation& solventVolumeFlux() const
     { return solventVolumeFlux_; }
 
+    void setSolventVolumeFlux(const Evaluation& solventVolumeFlux) {
+        solventVolumeFlux_ = solventVolumeFlux;
+    }
+
 private:
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
@@ -1555,6 +1559,9 @@ public:
 
     const Evaluation& solventVolumeFlux() const
     { throw std::runtime_error("solventVolumeFlux() called but solvents are disabled"); }
+
+    void setSolventVolumeFlux(const Evaluation& solventVolumeFlux)
+    { throw std::runtime_error("setSolventVolumeFlux() called but solvents are disabled"); }
 };
 
 } // namespace Ewoms
