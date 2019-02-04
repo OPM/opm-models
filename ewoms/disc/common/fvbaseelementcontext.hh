@@ -102,13 +102,11 @@ public:
         focusDofIdx_ = -1;
     }
 
-    static void *operator new(size_t size) {
-        return Ewoms::aligned_alloc(alignof(FvBaseElementContext), size);
-    }
+    static void *operator new(size_t size)
+    { return Ewoms::aligned_alloc(alignof(FvBaseElementContext), size); }
 
-    static void operator delete(void *ptr) {
-        Ewoms::aligned_free(ptr);
-    }
+    static void operator delete(void *ptr)
+    { Ewoms::aligned_free(ptr); }
 
     /*!
      * \brief Construct all volume and extensive quantities of an element

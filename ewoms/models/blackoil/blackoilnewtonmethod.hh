@@ -256,8 +256,8 @@ protected:
                 const double sign = delta >= 0. ? 1. : -1.;
                 // maximum change of polymer molecular weight, the unit is MDa.
                 // applying this limit to stabilize the simulation. The value itself is still experimental.
-                const double maxMWChange = 100.0;
-                delta = sign * std::min(std::abs(delta), maxMWChange);
+                const double maxMolarWeightChange = 100.0;
+                delta = sign * std::min(std::abs(delta), maxMolarWeightChange);
                 delta *= satAlpha;
             }
 
