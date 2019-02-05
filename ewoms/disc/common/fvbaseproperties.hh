@@ -156,6 +156,11 @@ NEW_PROP_TAG(DiscBaseOutputModule);
 //! The class to create grid communication handles
 NEW_PROP_TAG(GridCommHandleFactory);
 
+/*!
+ * \brief The OpenMP threads manager (DEPRECATED!)
+ */
+NEW_PROP_TAG(ThreadManager);
+
 //! use locking to prevent race conditions when linearizing the global system of
 //! equations in multi-threaded mode. (setting this property to true is always save, but
 //! it may slightly deter performance in multi-threaded simlations and some

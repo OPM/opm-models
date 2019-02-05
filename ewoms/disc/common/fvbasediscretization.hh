@@ -211,6 +211,7 @@ SET_TYPE_PROP(FvBaseDiscretization, ConstraintsContext, Ewoms::FvBaseConstraints
 /*!
  * \brief The multi-threading related properties
  */
+SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Ewoms::ThreadManager<TypeTag>);
 SET_INT_PROP(FvBaseDiscretization, ThreadsPerProcess, 1);
 SET_BOOL_PROP(FvBaseDiscretization, UseLinearizationLock, true);
 
