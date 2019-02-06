@@ -429,7 +429,7 @@ protected:
 
         // evaluate the boundary for all boundary faces of the current context
         size_t numBoundaryFaces = boundaryCtx.numBoundaryFaces(/*timeIdx=*/0);
-        for (unsigned faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx) {
+        for (unsigned faceIdx = 0; faceIdx < numBoundaryFaces; ++faceIdx, boundaryCtx.increment()) {
             // add the residual of all vertices of the boundary
             // segment
             evalBoundarySegment_(residual,

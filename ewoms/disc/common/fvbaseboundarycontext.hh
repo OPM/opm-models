@@ -74,6 +74,13 @@ public:
         , intersectionIt_(gridView().ibegin(element()))
     { }
 
+    void increment()
+    {
+        const auto& iend = gridView().iend(element());
+        while (intersectionIt_ != iend && !intersectionIt_->boundary())
+            ++ intersectionIt_;
+    }
+
     /*!
      * \copydoc Ewoms::ElementContext::problem()
      */
