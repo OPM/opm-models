@@ -64,7 +64,6 @@ NEW_PROP_TAG(EquilGrid);
 NEW_PROP_TAG(Scalar);
 NEW_PROP_TAG(EclDeckFileName);
 NEW_PROP_TAG(OutputDir);
-NEW_PROP_TAG(EnableOpmRstFile);
 NEW_PROP_TAG(EclStrictParsing);
 NEW_PROP_TAG(EclOutputInterval);
 NEW_PROP_TAG(IgnoreKeywords);
@@ -72,7 +71,6 @@ NEW_PROP_TAG(IgnoreKeywords);
 SET_STRING_PROP(EclBaseVanguard, IgnoreKeywords, "");
 SET_STRING_PROP(EclBaseVanguard, EclDeckFileName, "");
 SET_INT_PROP(EclBaseVanguard, EclOutputInterval, -1); // use the deck-provided value
-SET_BOOL_PROP(EclBaseVanguard, EnableOpmRstFile, true);
 SET_BOOL_PROP(EclBaseVanguard, EclStrictParsing, false);
 
 END_PROPERTIES
@@ -109,8 +107,6 @@ public:
                              "The name of the file which contains the ECL deck to be simulated");
         EWOMS_REGISTER_PARAM(TypeTag, int, EclOutputInterval,
                              "The number of report steps that ought to be skipped between two writes of ECL results");
-        EWOMS_REGISTER_PARAM(TypeTag, bool, EnableOpmRstFile,
-                             "Include OPM-specific keywords in the ECL restart file to enable restart of OPM simulators from these files");
         EWOMS_REGISTER_PARAM(TypeTag, std::string, IgnoreKeywords,
                              "List of Eclipse keywords which should be ignored. As a ':' separated string.");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EclStrictParsing,
@@ -471,8 +467,7 @@ private:
         // specify the directory output. This is not a very nice mechanism because
         // the eclState is supposed to be immutable here, IMO.
         ioConfig.setOutputDir(outputDir);
-
-        ioConfig.setEclCompatibleRST(!EWOMS_GET_PARAM(TypeTag, bool, EnableOpmRstFile));
+        ioConfig.setEclCompatibleRST(true);
     }
 
     Implementation& asImp_()
