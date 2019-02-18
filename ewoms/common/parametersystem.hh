@@ -272,7 +272,7 @@ inline std::string breakLines_(const std::string& msg,
     int ttyPos = 0;
     for (; inPos < int(msg.size()); ++ inPos, ++ ttyPos) {
         if (msg[inPos] == '\n') {
-            result += msg.substr(startInPos, inPos + 1);
+            result += msg.substr(startInPos, inPos - startInPos + 1);
             startInPos = inPos + 1;
             lastBreakPos = startInPos + 1;
 
