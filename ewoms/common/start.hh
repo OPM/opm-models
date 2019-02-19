@@ -252,6 +252,7 @@ static inline int start(int argc, char **argv)
 {
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
+    typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
     typedef typename GET_PROP_TYPE(TypeTag, ThreadManager) ThreadManager;
 
     // set the signal handlers to reset the TTY to a well defined state on unexpected
@@ -311,10 +312,18 @@ static inline int start(int argc, char **argv)
 #else
             std::string versionString = "";
 #endif
-            std::cout << "eWoms " << versionString
-                      << " will now start the trip. "
-                      << "Please sit back, relax and enjoy the ride.\n"
-                      << std::flush;
+            const std::string briefDescription = Problem::briefDescription();
+            if (!briefDescription.empty()) {
+                std::string tmp = Parameters::breakLines_(briefDescription,
+                                                          /*indentWidth=*/0,
+                                                          Parameters::getTtyWidth_());
+                std::cout << tmp << std::endl << std::endl;
+            }
+            else
+                std::cout << "eWoms " << versionString
+                          << " will now start the trip. "
+                          << "Please sit back, relax and enjoy the ride.\n"
+                          << std::flush;
         }
 
         // print the parameters if requested
