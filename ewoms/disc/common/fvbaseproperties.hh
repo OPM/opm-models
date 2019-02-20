@@ -308,6 +308,10 @@ NEW_PROP_TAG(ExtensiveStorageTerm);
 //! \brief Specify whether to use volumetric residuals or not
 NEW_PROP_TAG(UseVolumetricResidual);
 
+
+//! Specify if experimental features should be enabled or not.
+NEW_PROP_TAG(EnableExperiments);
+
 END_PROPERTIES
 
 #endif

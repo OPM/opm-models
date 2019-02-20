@@ -279,6 +279,9 @@ SET_BOOL_PROP(FvBaseDiscretization, ExtensiveStorageTerm, false);
 // use volumetric residuals is default
 SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
 
+//! eWoms is mainly targeted at research, so experimental features are enabled by
+//! default.
+SET_BOOL_PROP(FvBaseDiscretization, EnableExperiments, true);
 
 END_PROPERTIES
 
