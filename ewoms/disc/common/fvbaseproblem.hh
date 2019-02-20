@@ -109,7 +109,8 @@ public:
      *                 used (normally the leaf grid view)
      */
     FvBaseProblem(Simulator& simulator)
-        : gridView_(simulator.gridView())
+        : nextTimeStepSize_(0.0)
+        , gridView_(simulator.gridView())
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
         , elementMapper_(gridView_, Dune::mcmgElementLayout())
         , vertexMapper_(gridView_, Dune::mcmgVertexLayout())
@@ -119,7 +120,6 @@ public:
 #endif
         , boundingBoxMin_(std::numeric_limits<double>::max())
         , boundingBoxMax_(-std::numeric_limits<double>::max())
-        , nextTimeStepSize_(0.0)
         , simulator_(simulator)
         , defaultVtkWriter_(0)
     {
@@ -775,6 +775,9 @@ public:
     VtkMultiWriter& defaultVtkWriter() const
     { return defaultVtkWriter_; }
 
+protected:
+    Scalar nextTimeStepSize_;
+
 private:
     bool enableVtkOutput_() const
     { return EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput); }
@@ -793,7 +796,6 @@ private:
     VertexMapper vertexMapper_;
     GlobalPosition boundingBoxMin_;
     GlobalPosition boundingBoxMax_;
-    Scalar nextTimeStepSize_;
 
     // Attributes required for the actual simulation
     Simulator& simulator_;
