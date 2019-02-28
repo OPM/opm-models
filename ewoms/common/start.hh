@@ -124,9 +124,6 @@ static inline int setupParameters_(int argc, const char **argv, bool registerPar
 
     // first, get the MPI rank of the current process
     int myRank = 0;
-#if HAVE_MPI
-    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-#endif
 
     ////////////////////////////////////////////////////////////
     // Register all parameters
@@ -269,14 +266,7 @@ static inline int start(int argc, char **argv)
 
     Opm::resetLocale();
 
-    // initialize MPI, finalize is done automatically on exit
-#if HAVE_DUNE_FEM
-    Dune::Fem::MPIManager::initialize(argc, argv);
-    const int myRank = Dune::Fem::MPIManager::rank();
-#else
-    const int myRank = Dune::MPIHelper::instance(argc, argv).rank();
-#endif
-
+    int myRank = 0;
     try
     {
         int paramStatus = setupParameters_<TypeTag>(argc, const_cast<const char**>(argv));
@@ -286,6 +276,14 @@ static inline int start(int argc, char **argv)
             return 0;
 
         ThreadManager::init();
+
+        // initialize MPI, finalize is done automatically on exit
+#if HAVE_DUNE_FEM
+        Dune::Fem::MPIManager::initialize(argc, argv);
+        myRank = Dune::Fem::MPIManager::rank();
+#else
+        myRank = Dune::MPIHelper::instance(argc, argv).rank();
+#endif
 
         // read the initial time step and the end time
         Scalar endTime = EWOMS_GET_PARAM(TypeTag, Scalar, EndTime);
@@ -304,7 +302,6 @@ static inline int start(int argc, char **argv)
                                                 "not specified!");
             return 1;
         }
-
 
         if (myRank == 0) {
 #ifdef EWOMS_VERSION
