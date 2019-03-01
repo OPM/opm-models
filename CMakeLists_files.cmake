@@ -44,16 +44,6 @@ list(APPEND TEST_DATA_FILES
 	${TMP_GRIDS}
 	${TMP_VTPS}
 	${TMP_VTUS}
-	tests/data/equil_rsvd_and_rvvd.DATA
-        tests/data/equil_pbvd_and_pdvd.DATA
-	tests/data/equil_capillary_overlap.DATA
-	tests/data/equil_deadfluids.DATA
-	tests/data/equil_capillary.DATA
-	tests/data/equil_capillary_swatinit.DATA
-	tests/data/equil_base.DATA
-	tests/data/equil_livegas.DATA
-	tests/data/equil_liveoil.DATA
-	tests/data/SUMMARY_DECK_NON_CONSTANT_POROSITY.DATA
 	)
 
 list(APPEND TEST_SOURCE_FILES)

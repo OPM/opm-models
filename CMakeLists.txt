@@ -127,23 +127,6 @@ opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
 set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 add_custom_target(ewoms_prepare)
 
-# the general-purpose ECL simulator ("ebos" == "&ecl &black-&oil &simulator)
-EwomsAddApplication(ebos
-                    SOURCES ebos/ebos.cc
-                    EXE_NAME ebos
-                    CONDITION OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
-
-opm_add_test(SPE1
-  EXE_NAME ebos
-  NO_COMPILE
-  DEPENDS ebos
-  CONDITION opm-common_FOUND AND opm-grid_FOUND
-  DRIVER_ARGS --spe1)
-
-if(OPM_GRID_FOUND AND HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT)
-  install(TARGETS ebos DESTINATION bin)
-endif()
-
 # the ART to DGF file format conversion utility
 EwomsAddApplication(art2dgf
                     SOURCES art2dgf/art2dgf.cc
@@ -155,16 +138,6 @@ opm_add_test(art2dgf
   NO_COMPILE
   DRIVER_ARGS --plain
   TEST_ARGS "data/fracture-raw.art")
-
-# EQUIL init tests
-opm_add_test(test_equil
-             DRIVER_ARGS --plain
-             CONDITION HAVE_ECL_INPUT AND HAVE_ECL_OUTPUT AND OPM_GRID_FOUND)
-
-# Output ECL tests
-opm_add_test(test_ecl_output
-             DRIVER_ARGS --plain
-             CONDITION HAVE_ECL_INPUT AND OPM_GRID_FOUND AND HAVE_ECL_OUTPUT)
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
