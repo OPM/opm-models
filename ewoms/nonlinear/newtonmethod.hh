@@ -127,7 +127,7 @@ NEW_PROP_TAG(ConvergenceWriter);
  * This value can (and for the porous media models will) be changed to account for grid
  * scaling and other effects.
  */
-NEW_PROP_TAG(NewtonRawTolerance);
+NEW_PROP_TAG(NewtonTolerance);
 
 //! The maximum error which may occur in a simulation before the
 //! Newton method for the time step is aborted
@@ -151,7 +151,7 @@ SET_TYPE_PROP(NewtonMethod, NewtonMethod, Ewoms::NewtonMethod<TypeTag>);
 SET_TYPE_PROP(NewtonMethod, NewtonConvergenceWriter, Ewoms::NullConvergenceWriter<TypeTag>);
 SET_BOOL_PROP(NewtonMethod, NewtonWriteConvergence, false);
 SET_BOOL_PROP(NewtonMethod, NewtonVerbose, true);
-SET_SCALAR_PROP(NewtonMethod, NewtonRawTolerance, 1e-8);
+SET_SCALAR_PROP(NewtonMethod, NewtonTolerance, 1e-8);
 // set the abortion tolerace to some very large value. if not
 // overwritten at run-time this basically disables abortions
 SET_SCALAR_PROP(NewtonMethod, NewtonMaxError, 1e100);
@@ -199,7 +199,7 @@ public:
     {
         lastError_ = 1e100;
         error_ = 1e100;
-        tolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRawTolerance);
+        tolerance_ = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonTolerance);
 
         numIterations_ = 0;
     }
@@ -223,7 +223,7 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, int, NewtonMaxIterations,
                              "The maximum number of Newton iterations per time "
                              "step");
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonRawTolerance,
+        EWOMS_REGISTER_PARAM(TypeTag, Scalar, NewtonTolerance,
                              "The maximum raw error tolerated by the Newton"
                              "method for considering a solution to be "
                              "converged");
