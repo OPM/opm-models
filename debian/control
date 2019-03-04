@@ -42,9 +42,3 @@ Description: documentation for ewoms
  framework which is capable of capturing all macro-scale scenarios
  relevant for academic research and industrial applications involving
  flow and transport processes in porous media.
-
-Package: ebos
-Section: science
-Architecture: any
-Description: ebos is an ECL simulator
- ebos is an ECL simulator.

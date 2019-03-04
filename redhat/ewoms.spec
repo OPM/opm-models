@@ -72,27 +72,6 @@ framework which is capable of capturing all macro-scale scenarios
 relevant for academic research and industrial applications involving
 flow and transport processes in porous media.
 
-%package -n ebos
-Summary:        ebos is an ECL simulator.
-Group:          Scientific
-
-%description -n ebos
-ebos is an ECL simulator.
-
-%package -n ebos-openmpi
-Summary:        ebos is an ECL simulator.
-Group:          Scientific
-
-%description -n ebos-openmpi
-ebos is an ECL simulator.
-
-%package -n ebos-mpich
-Summary:        ebos is an ECL simulator.
-Group:          Scientific
-
-%description -n ebos-mpich
-ebos is an ECL simulator.
-
 %prep
 %setup -q -n %{name}-release-%{version}-%{tag}
 
@@ -149,7 +128,6 @@ rm -fr %buildroot
 %{!?el6:
 %doc README
 %doc openmpi/doc/doxygen/html}
-/etc/bash_completion.d/ebos_bash_completion.sh
 
 %files devel
 %defattr(-,root,root)
@@ -171,12 +149,3 @@ rm -fr %buildroot
 %{_libdir}/mpich/lib/dunecontrol/*
 %{_libdir}/mpich/lib/pkgconfig/*
 %{_libdir}/mpich/share/*
-
-%files -n ebos
-%{_bindir}/ebos
-
-%files -n ebos-openmpi
-%{_libdir}/openmpi/bin/ebos
-
-%files -n ebos-mpich
-%{_libdir}/mpich/bin/ebos
