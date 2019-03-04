@@ -170,27 +170,6 @@ public:
     }
 
     /*!
-     * \copydoc FvBaseDiscretization::finishInit()
-     */
-    void finishInit()
-    {
-        ParentType::finishInit();
-
-        // Reduce the Newton tolerance by the volume of smallest degree of freedom. (For
-        // large grids the tolerance needs to be reduced because the total mass lost
-        // would be too large.)
-        Scalar minDofVolume = 1e100;
-        for (unsigned globalDofIdx = 0; globalDofIdx < this->numGridDof(); ++ globalDofIdx)
-            if (this->isLocalDof(globalDofIdx))
-                minDofVolume = std::min(minDofVolume, this->dofTotalVolume(globalDofIdx));
-        minDofVolume = this->gridView().comm().min(minDofVolume);
-
-        Scalar newtonTolerance = EWOMS_GET_PARAM(TypeTag, Scalar, NewtonRawTolerance);
-        newtonTolerance /= std::sqrt(minDofVolume);
-        this->newtonMethod().setTolerance(newtonTolerance);
-    }
-
-    /*!
      * \brief Returns true iff a fluid phase is used by the model.
      *
      * \param phaseIdx The index of the fluid phase in question
