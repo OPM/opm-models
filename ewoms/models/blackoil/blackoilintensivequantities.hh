@@ -327,6 +327,8 @@ public:
         referencePorosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
         porosity_ = referencePorosity_;
 
+        porosity_ *= problem.getPoreVolumeMultiplier(fluidState_.pressure(oilPhaseIdx), elemCtx, dofIdx, timeIdx);
+
         // the porosity must be modified by the compressibility of the
         // rock...
         Scalar rockCompressibility = problem.rockCompressibility(elemCtx, dofIdx, timeIdx);
