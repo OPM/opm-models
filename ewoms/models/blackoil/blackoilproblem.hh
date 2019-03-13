@@ -87,6 +87,15 @@ public:
     { return 1.0; }
 
     /*!
+     * \brief Returns the maximum value of the water saturation seen at the current time
+     *        for a given degree of freedom.
+     *
+     * This is required for output of ROCKC (rock compaction related stuff).
+     */
+    Scalar maxWaterSaturation(unsigned globalDofIdx OPM_UNUSED) const
+    { return 1.0; }
+
+    /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
     template <class Context>
@@ -139,6 +148,15 @@ public:
                                  unsigned spaceIdx OPM_UNUSED,
                                  unsigned timeIdx OPM_UNUSED) const
     { return 1e5; }
+
+    template <class LhsEval, class Context>
+    LhsEval getPoreVolumeMultiplier(const LhsEval& pressure OPM_UNUSED,
+                                       const Context& context OPM_UNUSED,
+                                       unsigned spaceIdx OPM_UNUSED,
+                                       unsigned timeIdx OPM_UNUSED) const {
+        return 1.0;
+    }
+
 
     /*!
      * \brief Returns the reference temperature
