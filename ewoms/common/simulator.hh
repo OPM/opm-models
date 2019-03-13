@@ -119,11 +119,29 @@ public:
 
         if (verbose_)
             std::cout << "Instantiating the vanguard\n" << std::flush;
-        vanguard_.reset(new Vanguard(*this));
+        int exceptionThrown = 0;
+        try {
+            vanguard_.reset(new Vanguard(*this));
+        }
+        catch (const std::exception& e) {
+            exceptionThrown = 1;
+        }
+        const auto& cc = Dune::MPIHelper::getCollectiveCommunication();
+        if (cc.max(exceptionThrown) == 1) {
+            throw std::runtime_error("Could not instantiate the vanguard.");
+        }
 
         if (verbose_)
             std::cout << "Distributing the vanguard data\n" << std::flush;
-        vanguard_->loadBalance();
+        try {
+            vanguard_->loadBalance();
+        }
+        catch (const std::exception& e) {
+            exceptionThrown = 1;
+        }
+        if (cc.max(exceptionThrown) == 1) {
+            throw std::runtime_error("Could not distribute the vanguard data.");
+        }
 
         if (verbose_)
             std::cout << "Allocating the model\n" << std::flush;
@@ -135,11 +153,27 @@ public:
 
         if (verbose_)
             std::cout << "Finish init of the model\n" << std::flush;
-        model_->finishInit();
+        try {
+            model_->finishInit();
+        }
+        catch (const std::exception& e) {
+            exceptionThrown = 1;
+        }
+        if (cc.max(exceptionThrown) == 1) {
+            throw std::runtime_error("Could not finish init of the model.");
+        }
 
         if (verbose_)
             std::cout << "Finish init of the problem\n" << std::flush;
-        problem_->finishInit();
+        try {
+            problem_->finishInit();
+        }
+        catch (const std::exception& e) {
+            exceptionThrown = 1;
+        }
+        if (cc.max(exceptionThrown) == 1) {
+            throw std::runtime_error("Could not finish init of the problem.");
+        }
 
         setupTimer_.stop();
 
