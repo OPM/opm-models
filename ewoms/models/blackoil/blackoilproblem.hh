@@ -149,11 +149,9 @@ public:
                                  unsigned timeIdx OPM_UNUSED) const
     { return 1e5; }
 
-    template <class LhsEval, class Context>
+    template <class LhsEval>
     LhsEval getPoreVolumeMultiplier(const LhsEval& pressure OPM_UNUSED,
-                                       const Context& context OPM_UNUSED,
-                                       unsigned spaceIdx OPM_UNUSED,
-                                       unsigned timeIdx OPM_UNUSED) const {
+                                    unsigned globalDofIdx OPM_UNUSED) const {
         return 1.0;
     }
 

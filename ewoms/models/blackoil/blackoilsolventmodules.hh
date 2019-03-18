@@ -1510,15 +1510,18 @@ public:
 
         Scalar faceArea = elemCtx.stencil(timeIdx).interiorFace(scvfIdx).area();
         const IntensiveQuantities& up = elemCtx.intensiveQuantities(solventUpstreamDofIdx_, timeIdx);
+        const auto& problem = elemCtx.problem();
+        const auto& stencil = elemCtx.stencil(timeIdx);
+        const Evaluation transModified = trans*problem.getTransmissibiltyMultiplier(up.fluidState().pressure(FluidSystem::oilPhaseIdx), stencil.globalSpaceIndex(solventDownstreamDofIdx_));
         if (solventUpstreamDofIdx_ == interiorDofIdx)
             solventVolumeFlux_ =
                 up.solventMobility()
-                *(-trans/faceArea)
+                *(-transModified/faceArea)
                 *pressureDiffSolvent;
         else
             solventVolumeFlux_ =
                 Opm::scalarValue(up.solventMobility())
-                *(-trans/faceArea)
+                *(-transModified/faceArea)
                 *pressureDiffSolvent;
     }
 
