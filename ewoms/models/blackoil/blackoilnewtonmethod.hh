@@ -183,6 +183,11 @@ protected:
                                  const EqVector& update,
                                  const EqVector& currentResidual)
     {
+        static constexpr bool enableSolvent = Indices::solventSaturationIdx >= 0;
+        static constexpr bool enablePolymer = Indices::polymerConcentrationIdx >= 0;
+        static constexpr bool enablePolymerWeight = Indices::polymerMoleWeightIdx >= 0;
+        static constexpr bool enableEnergy = Indices::temperatureIdx >= 0;
+
         currentValue.checkDefined();
         Opm::Valgrind::CheckDefined(update);
         Opm::Valgrind::CheckDefined(currentResidual);
@@ -203,7 +208,7 @@ protected:
             deltaSo -= deltaSg;
         }
 
-        if (GET_PROP_VALUE(TypeTag, EnableSolvent)) {
+        if (enableSolvent) {
             deltaSs = update[Indices::solventSaturationIdx];
             deltaSo -= deltaSs;
         }
@@ -249,10 +254,10 @@ protected:
                         delta = currentValue[Indices::compositionSwitchIdx];
                 }
             }
-            else if (pvIdx == Indices::solventSaturationIdx)
+            else if (enableSolvent && pvIdx == Indices::solventSaturationIdx)
                 // solvent saturation updates are also subject to the Appleyard chop
                 delta *= satAlpha;
-            else if (pvIdx == Indices::polymerMoleWeightIdx) {
+            else if (enablePolymerWeight && pvIdx == Indices::polymerMoleWeightIdx) {
                 const double sign = delta >= 0. ? 1. : -1.;
                 // maximum change of polymer molecular weight, the unit is MDa.
                 // applying this limit to stabilize the simulation. The value itself is still experimental.
@@ -265,14 +270,14 @@ protected:
             nextValue[pvIdx] = currentValue[pvIdx] - delta;
 
             // keep the solvent saturation between 0 and 1
-            if (pvIdx == Indices::solventSaturationIdx)
+            if (enableSolvent && pvIdx == Indices::solventSaturationIdx)
                 nextValue[pvIdx] = std::min(std::max(nextValue[pvIdx], 0.0), 1.0);
 
             // keep the polymer concentration above 0
-            if (pvIdx == Indices::polymerConcentrationIdx)
+            if (enablePolymer && pvIdx == Indices::polymerConcentrationIdx)
                 nextValue[pvIdx] = std::max(nextValue[pvIdx], 0.0);
 
-            if (pvIdx == Indices::polymerMoleWeightIdx) {
+            if (enablePolymerWeight && pvIdx == Indices::polymerMoleWeightIdx) {
                 nextValue[pvIdx] = std::max(nextValue[pvIdx], 0.0);
                 const double polymerConcentration = nextValue[Indices::polymerConcentrationIdx];
                 if (polymerConcentration < 1.e-10)
