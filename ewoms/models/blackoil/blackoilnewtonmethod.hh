@@ -284,6 +284,9 @@ protected:
                     nextValue[pvIdx] = 0.0;
             }
 
+            // keep the temperature above 100 and below 1000 Kelvin
+            if (enableEnergy && pvIdx == Indices::temperatureIdx)
+                nextValue[pvIdx] = std::max(std::min(nextValue[pvIdx], 1000.0), 100.0);
         }
 
         // switch the new primary variables to something which is physically meaningful.
