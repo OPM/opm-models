@@ -118,30 +118,34 @@ public:
         finished_ = false;
 
         if (verbose_)
-            std::cout << "Instantiating the vanguard\n" << std::flush;
+            std::cout << "Allocating the simulation vanguard\n" << std::flush;
+
         int exceptionThrown = 0;
-        try {
-            vanguard_.reset(new Vanguard(*this));
-        }
+        const auto& cc = Dune::MPIHelper::getCollectiveCommunication();
+        try
+        { vanguard_.reset(new Vanguard(*this)); }
         catch (const std::exception& e) {
             exceptionThrown = 1;
-        }
-        const auto& cc = Dune::MPIHelper::getCollectiveCommunication();
-        if (cc.max(exceptionThrown) == 1) {
-            throw std::runtime_error("Could not instantiate the vanguard.");
+            if (verbose_)
+                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
         }
 
+        if (cc.max(exceptionThrown))
+            throw std::runtime_error("Allocating the simulation vanguard failed.");
+
         if (verbose_)
-            std::cout << "Distributing the vanguard data\n" << std::flush;
-        try {
-            vanguard_->loadBalance();
-        }
+            std::cout << "Distributing the vanguard's data\n" << std::flush;
+
+        try
+        { vanguard_->loadBalance(); }
         catch (const std::exception& e) {
             exceptionThrown = 1;
+            if (verbose_)
+                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
         }
-        if (cc.max(exceptionThrown) == 1) {
+
+        if (cc.max(exceptionThrown))
             throw std::runtime_error("Could not distribute the vanguard data.");
-        }
 
         if (verbose_)
             std::cout << "Allocating the model\n" << std::flush;
@@ -152,33 +156,37 @@ public:
         problem_.reset(new Problem(*this));
 
         if (verbose_)
-            std::cout << "Finish init of the model\n" << std::flush;
-        try {
-            model_->finishInit();
-        }
+            std::cout << "Initializing the model\n" << std::flush;
+
+        try
+        { model_->finishInit(); }
         catch (const std::exception& e) {
             exceptionThrown = 1;
-        }
-        if (cc.max(exceptionThrown) == 1) {
-            throw std::runtime_error("Could not finish init of the model.");
+            if (verbose_)
+                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
         }
 
+        if (cc.max(exceptionThrown))
+            throw std::runtime_error("Could not initialize the model.");
+
         if (verbose_)
-            std::cout << "Finish init of the problem\n" << std::flush;
-        try {
-            problem_->finishInit();
-        }
+            std::cout << "Initializing the problem\n" << std::flush;
+
+        try
+        { problem_->finishInit(); }
         catch (const std::exception& e) {
             exceptionThrown = 1;
+            if (verbose_)
+                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
         }
-        if (cc.max(exceptionThrown) == 1) {
-            throw std::runtime_error("Could not finish init of the problem.");
-        }
+
+        if (cc.max(exceptionThrown))
+            throw std::runtime_error("Could not initialize the problem.");
 
         setupTimer_.stop();
 
         if (verbose_)
-            std::cout << "Construction of simulation done\n" << std::flush;
+            std::cout << "Simulator successfully set up\n" << std::flush;
     }
 
     /*!
