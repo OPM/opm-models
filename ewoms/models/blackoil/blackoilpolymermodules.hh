@@ -478,7 +478,7 @@ public:
     static TabulatedTwoDFunction& getSkprwatTable(const int tableNumber)
     {
         const auto iterTable = skprwatTables_.find(tableNumber);
-        if (iterTable != plymwinjTables_.end()) {
+        if (iterTable != skprwatTables_.end()) {
             return iterTable->second;
         }
         else {
@@ -487,7 +487,7 @@ public:
     }
 
     /*!
-    * \brief get the SKPRWAT table
+    * \brief get the SKPRPOLY table
     */
     static SkprpolyTable& getSkprpolyTable(const int tableNumber)
     {
