@@ -59,6 +59,31 @@ NEW_PROP_TAG(PredeterminedTimeStepsFile);
 
 END_PROPERTIES
 
+#define EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(code)                      \
+    {                                                                   \
+        const auto& comm = Dune::MPIHelper::getCollectiveCommunication(); \
+        bool exceptionThrown = false;                                   \
+        try { code; }                                                   \
+        catch (const Dune::Exception& e) {                              \
+            exceptionThrown = true;                                     \
+            std::cerr << "Process " << comm.rank() << " threw a fatal exception: " \
+                      << e.what() << ". Abort!" << std::endl;           \
+        }                                                               \
+        catch (const std::exception& e) {                               \
+            exceptionThrown = true;                                     \
+            std::cerr << "Process " << comm.rank() << " threw a fatal exception: " \
+                      << e.what() << ". Abort!" << std::endl;           \
+        }                                                               \
+        catch (...) {                                                   \
+            exceptionThrown = true;                                     \
+            std::cerr << "Process " << comm.rank() << " threw a fatal exception. " \
+                      <<" Abort!" << std::endl;                         \
+        }                                                               \
+                                                                        \
+        if (comm.max(exceptionThrown))                                  \
+            std::abort();                                               \
+    }
+
 namespace Ewoms {
 
 /*!
@@ -92,7 +117,8 @@ public:
 
         setupTimer_.start();
 
-        verbose_ = verbose && Dune::MPIHelper::getCollectiveCommunication().rank() == 0;
+        const auto& comm = Dune::MPIHelper::getCollectiveCommunication();
+        verbose_ = verbose && comm.rank() == 0;
 
         timeStepIdx_ = 0;
         startTime_ = 0.0;
@@ -121,16 +147,15 @@ public:
             std::cout << "Allocating the simulation vanguard\n" << std::flush;
 
         int exceptionThrown = 0;
-        const auto& cc = Dune::MPIHelper::getCollectiveCommunication();
         try
         { vanguard_.reset(new Vanguard(*this)); }
         catch (const std::exception& e) {
             exceptionThrown = 1;
             if (verbose_)
-                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
+                std::cerr << "Rank " << comm.rank() << " threw an exception: " << e.what() << std::endl;
         }
 
-        if (cc.max(exceptionThrown))
+        if (comm.max(exceptionThrown))
             throw std::runtime_error("Allocating the simulation vanguard failed.");
 
         if (verbose_)
@@ -141,10 +166,10 @@ public:
         catch (const std::exception& e) {
             exceptionThrown = 1;
             if (verbose_)
-                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
+                std::cerr << "Rank " << comm.rank() << " threw an exception: " << e.what() << std::endl;
         }
 
-        if (cc.max(exceptionThrown))
+        if (comm.max(exceptionThrown))
             throw std::runtime_error("Could not distribute the vanguard data.");
 
         if (verbose_)
@@ -163,10 +188,10 @@ public:
         catch (const std::exception& e) {
             exceptionThrown = 1;
             if (verbose_)
-                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
+                std::cerr << "Rank " << comm.rank() << " threw an exception: " << e.what() << std::endl;
         }
 
-        if (cc.max(exceptionThrown))
+        if (comm.max(exceptionThrown))
             throw std::runtime_error("Could not initialize the model.");
 
         if (verbose_)
@@ -177,10 +202,10 @@ public:
         catch (const std::exception& e) {
             exceptionThrown = 1;
             if (verbose_)
-                std::cerr << "Rank " << cc.rank() << " threw an exception: " << e.what() << std::endl;
+                std::cerr << "Rank " << comm.rank() << " threw an exception: " << e.what() << std::endl;
         }
 
-        if (cc.max(exceptionThrown))
+        if (comm.max(exceptionThrown))
             throw std::runtime_error("Could not initialize the problem.");
 
         setupTimer_.stop();
@@ -588,13 +613,13 @@ public:
             time_ = restartTime;
 
             Ewoms::Restart res;
-            res.deserializeBegin(*this, time_);
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(res.deserializeBegin(*this, time_));
             if (verbose_)
                 std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
-            this->deserialize(res);
-            problem_->deserialize(res);
-            model_->deserialize(res);
-            res.deserializeEnd();
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(this->deserialize(res));
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->deserialize(res));
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(model_->deserialize(res));
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(res.deserializeEnd());
             if (verbose_)
                 std::cout << "Deserialization done."
                           << " Simulator time: " << time() << humanReadableTime(time())
@@ -613,11 +638,11 @@ public:
             timeStepSize_ = 0.0;
             timeStepIdx_ = -1;
 
-            model_->applyInitialSolution();
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(model_->applyInitialSolution());
 
             // write initial condition
             if (problem_->shouldWriteOutput())
-                problem_->writeOutput(/*isSubstep=*/false);
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput(/*isSubstep=*/false));
 
             timeStepSize_ = oldTimeStepSize;
             timeStepIdx_ = oldTimeStepIdx;
@@ -632,13 +657,14 @@ public:
             if (episodeBegins) {
                 // notify the problem that a new episode has just been
                 // started.
-                problem_->beginEpisode();
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->beginEpisode());
 
                 if (finished()) {
                     // the problem can chose to terminate the simulation in
                     // beginEpisode(), so we have handle this case.
-                    problem_->endEpisode();
+                    EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->endEpisode());
                     prePostProcessTimer_.stop();
+
                     break;
                 }
             }
@@ -652,13 +678,15 @@ public:
             }
 
             // pre-process the current solution
-            problem_->beginTimeStep();
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->beginTimeStep());
+
             if (finished()) {
                 // the problem can chose to terminate the simulation in
                 // beginTimeStep(), so we have handle this case.
-                problem_->endTimeStep();
-                problem_->endEpisode();
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->endTimeStep());
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->endEpisode());
                 prePostProcessTimer_.stop();
+
                 break;
             }
             prePostProcessTimer_.stop();
@@ -668,6 +696,8 @@ public:
                 problem_->timeIntegration();
             }
             catch (...) {
+                // exceptions in the time integration might be recoverable. clean up in
+                // case they are
                 const auto& model = problem_->model();
                 prePostProcessTimer_ += model.prePostProcessTimer();
                 linearizeTimer_ += model.linearizeTimer();
@@ -685,19 +715,18 @@ public:
 
             // post-process the current solution
             prePostProcessTimer_.start();
-            problem_->endTimeStep();
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->endTimeStep());
             prePostProcessTimer_.stop();
 
             // write the result to disk
             writeTimer_.start();
             if (problem_->shouldWriteOutput())
-                problem_->writeOutput(/*isSubstep=*/!episodeWillBeOver());
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput(/*isSubstep=*/!episodeWillBeOver()));
             writeTimer_.stop();
 
             // do the next time integration
             Scalar oldDt = timeStepSize();
-            problem_->advanceTimeLevel();
-
+            EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->advanceTimeLevel());
 
             if (verbose_) {
                 std::cout << "Time step " << timeStepIndex() + 1 << " done. "
@@ -715,7 +744,7 @@ public:
             // notify the problem if an episode is finished
             if (episodeIsOver()) {
                 // Notify the problem about the end of the current episode...
-                problem_->endEpisode();
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->endEpisode());
                 episodeBegins = true;
             }
             else {
@@ -736,12 +765,12 @@ public:
             // write restart file if mandated by the problem
             writeTimer_.start();
             if (problem_->shouldWriteRestartFile())
-                serialize();
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(serialize());
             writeTimer_.stop();
         }
         executionTimer_.stop();
 
-        problem_->finalize();
+        EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->finalize());
     }
 
     /*!
