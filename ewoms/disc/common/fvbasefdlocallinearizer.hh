@@ -58,7 +58,7 @@ NEW_PROP_TAG(LocalLinearizer);
 NEW_PROP_TAG(Evaluation);
 NEW_PROP_TAG(NumericDifferenceMethod);
 NEW_PROP_TAG(BaseEpsilon);
-
+NEW_PROP_TAG(SparseMatrixAdapter);
 NEW_PROP_TAG(LocalResidual);
 NEW_PROP_TAG(Simulator);
 NEW_PROP_TAG(Problem);
