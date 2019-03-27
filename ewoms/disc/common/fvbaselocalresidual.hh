@@ -542,8 +542,16 @@ protected:
                         // previous time step from scratch instead of using the one of
                         // the first iteration of the current time step.
                         tmp2 = 0.0;
+                        elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
                         elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/1);
                         asImp_().computeStorage(tmp2, elemCtx,  dofIdx, /*timeIdx=*/1);
+                        const auto& intQuants0 = elemCtx.intensiveQuantities(dofIdx, 0);
+                        const auto& intQuants1 = elemCtx.intensiveQuantities(dofIdx, 1);
+                        const auto& poro0 = intQuants0.porosity();
+                        const auto& poro1 = intQuants1.porosity();
+                        if (poro0 != poro1)
+                            std::cout << poro0 << " " << poro1 << std::endl;
+
                     }
                     else {
                         // if the storage term is cached and we're in the first iteration

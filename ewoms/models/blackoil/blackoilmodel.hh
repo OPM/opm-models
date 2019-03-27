@@ -378,7 +378,7 @@ public:
             return 1.0;
 
         // we do not care much about water, so it gets de-prioritized by a factor of 100
-        static constexpr Scalar waterPriority = 1e-2;
+        static constexpr Scalar waterPriority = 1.0; //e-2;
 
         if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
             // Roughly convert the surface volume of the fluids from m^3 to kg. (in this
