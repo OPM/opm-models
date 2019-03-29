@@ -30,6 +30,7 @@
 #include "parallelbasebackend.hh"
 #include "bicgstabsolver.hh"
 #include "combinedcriterion.hh"
+#include "istlsparsematrixadapter.hh"
 
 #include <dune/istl/bcrsmatrix.hh>
 #include <dune/istl/paamg/amg.hh>
