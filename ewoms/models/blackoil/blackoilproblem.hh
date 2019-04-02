@@ -87,15 +87,6 @@ public:
     { return 1.0; }
 
     /*!
-     * \brief Returns the maximum value of the water saturation seen at the current time
-     *        for a given degree of freedom.
-     *
-     * This is required for output of ROCKC (rock compaction related stuff).
-     */
-    Scalar maxWaterSaturation(unsigned globalDofIdx OPM_UNUSED) const
-    { return 1.0; }
-
-    /*!
      * \brief Returns the index of the relevant region for thermodynmic properties
      */
     template <class Context>

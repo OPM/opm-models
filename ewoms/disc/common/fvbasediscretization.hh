@@ -673,7 +673,7 @@ public:
             !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
-        if (timeIdx > 0 && enableStorageCache_ && false)
+        if (timeIdx > 0 && enableStorageCache_ && simulator_.problem().recycleFirstIterationStorage())
             // with the storage cache enabled, only the intensive quantities for the most
             // recent time step are cached!
             return 0;
@@ -744,7 +744,7 @@ public:
         if (!storeIntensiveQuantities())
             return;
 
-        if (enableStorageCache() && false) {
+        if (enableStorageCache() && simulator_.problem().recycleFirstIterationStorage()) {
             // if the storage term is cached, the intensive quantities of the previous
             // time steps do not need to be accessed, and we can thus spare ourselves to
             // copy the objects for the intensive quantities.
