@@ -1512,7 +1512,7 @@ public:
         const IntensiveQuantities& up = elemCtx.intensiveQuantities(solventUpstreamDofIdx_, timeIdx);
         const auto& problem = elemCtx.problem();
         const auto& stencil = elemCtx.stencil(timeIdx);
-        const Evaluation transModified = trans*problem.getTransmissibiltyMultiplier(up.fluidState().pressure(FluidSystem::oilPhaseIdx), stencil.globalSpaceIndex(solventDownstreamDofIdx_));
+        const Evaluation transModified = trans*problem.getTransmissibiltyMultiplier(up.fluidState().pressure(FluidSystem::oilPhaseIdx), timeIdx, stencil.globalSpaceIndex(solventDownstreamDofIdx_));
         if (solventUpstreamDofIdx_ == interiorDofIdx)
             solventVolumeFlux_ =
                 up.solventMobility()
