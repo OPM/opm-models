@@ -47,6 +47,7 @@ private:
     typedef MultiPhaseBaseProblem<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    typedef typename GET_PROP_TYPE(TypeTag, IntensiveQuantities) IntensiveQuantities;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
 public:
@@ -148,6 +149,17 @@ public:
      */
     Scalar referenceTemperature() const
     { return 273.15 + 15.56; /* [K] */ }
+
+    /*!
+     * \brief Returns the porosity multiplier due to water-induced rock compaction
+     *
+     * This is a somewhat exotic feature. Most likely you will not need to touch this
+     * method.
+     */
+    template <class Evaluation>
+    Scalar rockCompPoroMultiplier(const IntensiveQuantities& intQuants OPM_UNUSED,
+                                  unsigned globalSpaceIdx OPM_UNUSED) const
+    { return 1.0; }
 
 private:
     //! Returns the implementation of the problem (i.e. static polymorphism)

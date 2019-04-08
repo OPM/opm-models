@@ -74,6 +74,7 @@ class BlackOilIntensiveQuantities
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
     enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableExperiments = GET_PROP_VALUE(TypeTag, EnableExperiments) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -337,6 +338,10 @@ public:
             Evaluation x = rockCompressibility*(fluidState_.pressure(oilPhaseIdx) - rockRefPressure);
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
+
+        if (enableExperiments)
+            // deal with water induced rock compaction
+            porosity_ *= problem.template rockCompPoroMultiplier<Evaluation>(*this, globalSpaceIdx);
 
         asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
         asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
