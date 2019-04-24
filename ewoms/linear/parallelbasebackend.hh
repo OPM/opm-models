@@ -219,7 +219,7 @@ public:
      * This only specified the topology of the linear system of equations; it does does
      * *not* assign the values of the residual vector and its Jacobian matrix.
      */
-    void prepare(const SparseMatrixAdapter& M, const Vector& b)
+    void prepare(const SparseMatrixAdapter& M, const Vector& )
     {
         // if grid has changed the sequence number has changed too
         int curSeqNum = simulator_.vanguard().gridSequenceNumber();
