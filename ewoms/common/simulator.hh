@@ -636,7 +636,7 @@ public:
 
             // write initial condition
             if (problem_->shouldWriteOutput())
-                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput(/*isSubstep=*/false));
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput(/*isSubstep=*/!episodeWillBeOver()));
 
             timeStepSize_ = oldTimeStepSize;
             timeStepIdx_ = oldTimeStepIdx;
