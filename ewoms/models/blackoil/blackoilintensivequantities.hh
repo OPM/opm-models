@@ -197,7 +197,9 @@ public:
         // update the Saturation functions for the blackoil solvent module.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
-        Scalar SoMax = elemCtx.problem().maxOilSaturation(globalSpaceIdx);
+        const Evaluation& SoMax =
+            Opm::max(fluidState_.saturation(oilPhaseIdx),
+                     elemCtx.problem().maxOilSaturation(globalSpaceIdx));
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
