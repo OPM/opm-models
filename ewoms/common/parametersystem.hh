@@ -52,6 +52,7 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+#include <tuple>
 
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -797,14 +798,17 @@ void parseParameterFile(const std::string& fileName, bool overwrite = true)
 
 /*!
  * \ingroup Parameter
- * \brief Print values of the run-time parameters.
+ * \brief Creates list of keywords parsed by the parameter system.
  *
- * \param os The \c std::ostream on which the message should be printed
+ * \return A tuple consisting of the list of valid runtime keywords,
+ *         a list of all runtime parameters parsed, and a list of
+ *         unknown keywords parsed.
  */
 template <class TypeTag>
-void printValues(std::ostream& os = std::cout)
+std::tuple<std::list<std::string>,std::list<std::string>,std::list<std::string> >
+getParsedKeywords()
 {
-    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+    using ParamsMeta = typename GET_PROP(TypeTag, ParameterMetaData);
 
     const Dune::ParameterTree& tree = ParamsMeta::tree();
 
@@ -825,6 +829,28 @@ void printValues(std::ostream& os = std::cout)
             runTimeKeyList.push_back(*keyIt);
         }
     }
+    return std::make_tuple(runTimeKeyList, runTimeAllKeyList, unknownKeyList);
+}
+
+/*!
+ * \ingroup Parameter
+ * \brief Print values of the run-time parameters.
+ *
+ * \param os The \c std::ostream on which the message should be printed
+ * \return A list of unknown keywords seen while parsing.
+ */
+template <class TypeTag>
+std::list<std::string> printValues(std::ostream& os = std::cout)
+{
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+
+    const Dune::ParameterTree& tree = ParamsMeta::tree();
+
+    std::list<std::string> runTimeAllKeyList;
+    std::list<std::string> runTimeKeyList;
+    std::list<std::string> unknownKeyList;
+
+    std::tie(runTimeKeyList, runTimeAllKeyList, unknownKeyList) = getParsedKeywords<TypeTag>();
 
     // loop over all registered parameters
     std::list<std::string> compileTimeKeyList;
@@ -859,6 +885,8 @@ void printValues(std::ostream& os = std::cout)
             os << *unusedKeyIt << "=\"" << tree.get(*unusedKeyIt, "") << "\"\n" << std::flush;
         }
     }
+
+    return unknownKeyList;
 }
 
 /*!
