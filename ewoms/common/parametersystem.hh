@@ -52,6 +52,7 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+#include <cstring>
 
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -704,8 +705,20 @@ std::string parseCommandLineOptions(int argc,
             return oss.str();
         }
 
-        // copy everything after the "--" into a separate string
-        std::string s(argv[i] + 2);
+        std::string s;
+
+        if (strchr(argv[i], '=') == nullptr && i < argc - 1
+            && strlen(argv[i+1]) && argv[i+1][0]!='-' ){
+            // User seems to use spaces between param and value
+            // copy everyting after "--" and use the next argument as value
+            std::ostringstream oss;
+            oss << (argv[i] + 2) << '=' << argv[i+1];
+            s = oss.str();
+            ++i; // skip the next argument
+        } else {
+            // copy everything after the "--" into a separate string
+            s = std::string(argv[i] + 2);
+        }
 
         // parse argument
         paramName = transformKey_(parseKey_(s), /*capitalizeFirst=*/true);
