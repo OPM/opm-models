@@ -193,8 +193,6 @@ public:
         if (!EWOMS_GET_PARAM(TypeTag, bool, EnableVtkOutput))
             return;
 
-        typedef Opm::MathToolbox<Evaluation> Toolbox;
-
         for (unsigned dofIdx = 0; dofIdx < elemCtx.numPrimaryDof(/*timeIdx=*/0); ++dofIdx) {
             const auto& fs = elemCtx.intensiveQuantities(dofIdx, /*timeIdx=*/0).fluidState();
             typedef typename std::remove_const<typename std::remove_reference<decltype(fs)>::type>::type FluidState;
@@ -203,11 +201,12 @@ public:
             const auto& primaryVars = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0);
 
             unsigned pvtRegionIdx = elemCtx.primaryVars(dofIdx, /*timeIdx=*/0).pvtRegionIndex();
-            Scalar SoMax = elemCtx.problem().maxOilSaturation(globalDofIdx);
-            Scalar x_oG = Toolbox::value(fs.moleFraction(oilPhaseIdx, gasCompIdx));
-            Scalar x_gO = Toolbox::value(fs.moleFraction(gasPhaseIdx, oilCompIdx));
-            Scalar X_oG = Toolbox::value(fs.massFraction(oilPhaseIdx, gasCompIdx));
-            Scalar X_gO = Toolbox::value(fs.massFraction(gasPhaseIdx, oilCompIdx));
+            Scalar SoMax = std::max(Opm::getValue(fs.saturation(oilPhaseIdx)),
+                                    elemCtx.problem().maxOilSaturation(globalDofIdx));
+            Scalar x_oG = Opm::getValue(fs.moleFraction(oilPhaseIdx, gasCompIdx));
+            Scalar x_gO = Opm::getValue(fs.moleFraction(gasPhaseIdx, oilCompIdx));
+            Scalar X_oG = Opm::getValue(fs.massFraction(oilPhaseIdx, gasCompIdx));
+            Scalar X_gO = Opm::getValue(fs.massFraction(gasPhaseIdx, oilCompIdx));
             Scalar Rs = FluidSystem::convertXoGToRs(X_oG, pvtRegionIdx);
             Scalar Rv = FluidSystem::convertXgOToRv(X_gO, pvtRegionIdx);
 

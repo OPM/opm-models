@@ -1569,7 +1569,7 @@ public:
     const Evaluation& solventVolumeFlux() const
     { throw std::runtime_error("solventVolumeFlux() called but solvents are disabled"); }
 
-    void setSolventVolumeFlux(const Evaluation& solventVolumeFlux)
+    void setSolventVolumeFlux(const Evaluation& /* solventVolumeFlux */)
     { throw std::runtime_error("setSolventVolumeFlux() called but solvents are disabled"); }
 };
 

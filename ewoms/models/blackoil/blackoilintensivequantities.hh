@@ -74,6 +74,7 @@ class BlackOilIntensiveQuantities
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
     enum { enableTemperature = GET_PROP_VALUE(TypeTag, EnableTemperature) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
+    enum { enableExperiments = GET_PROP_VALUE(TypeTag, EnableExperiments) };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -201,7 +202,9 @@ public:
         // update the Saturation functions for the blackoil solvent module.
         asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
 
-        Scalar SoMax = elemCtx.problem().maxOilSaturation(globalSpaceIdx);
+        const Evaluation& SoMax =
+            Opm::max(fluidState_.saturation(oilPhaseIdx),
+                     elemCtx.problem().maxOilSaturation(globalSpaceIdx));
 
         // take the meaning of the switiching primary variable into account for the gas
         // and oil phase compositions
@@ -350,6 +353,10 @@ public:
             }
             porosity_ *= 1.0 + x + 0.5*x*x;
         }
+
+        if (enableExperiments)
+            // deal with water induced rock compaction
+            porosity_ *= problem.template rockCompPoroMultiplier<Evaluation>(*this, globalSpaceIdx);
 
         asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
         asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);

@@ -720,6 +720,16 @@ std::string parseCommandLineOptions(int argc,
         }
         seenKeys.insert(paramName);
 
+        if (s.empty() || s[0] != '=' || s.size()==1) {
+            std::string msg =
+                std::string("Parameter '")+paramName+"' is missing a value. "
+                +" Please use "+argv[i]+"=value.";
+
+            if (!helpPreamble.empty())
+                printUsage<TypeTag>(helpPreamble, msg, std::cerr);
+            return msg;
+        }
+
         paramValue = s.substr(1);
 
         // Put the key=value pair into the parameter tree
