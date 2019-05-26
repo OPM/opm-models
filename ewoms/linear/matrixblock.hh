@@ -29,7 +29,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/paamg/amg.hh>
-
+#include <dune/istl/matrixmarket.hh>
 #include <dune/common/fmatrix.hh>
 
 namespace Ewoms {

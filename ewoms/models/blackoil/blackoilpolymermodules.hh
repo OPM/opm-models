@@ -888,6 +888,7 @@ public:
         // Use log(v0) as initial value for u
         auto u = v0AbsLog;
         bool converged = false;
+        // TODO make this into paramters
         for (int i = 0; i < 20; ++i) {
             auto f = F(u);
             auto df = dF(u);
@@ -1049,12 +1050,13 @@ public:
      */
     void polymerPropertiesUpdate_(const ElementContext& elemCtx,
                                   unsigned dofIdx,
-                                  unsigned timeIdx)
+                                  unsigned timeIdx,
+                                  unsigned focusTimeIdx)
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-        polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx);
+        polymerConcentration_ = priVars.makeEvaluation(polymerConcentrationIdx, timeIdx, focusTimeIdx);
         if (enablePolymerMolarWeight) {
-            polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx);
+            polymerMoleWeight_ = priVars.makeEvaluation(polymerMoleWeightIdx, timeIdx, focusTimeIdx);
         }
         const Scalar cmax = PolymerModule::plymaxMaxConcentration(elemCtx, dofIdx, timeIdx);
 
@@ -1168,7 +1170,9 @@ class BlackOilPolymerIntensiveQuantities<TypeTag, false>
 public:
     void polymerPropertiesUpdate_(const ElementContext& elemCtx OPM_UNUSED,
                                   unsigned scvIdx OPM_UNUSED,
-                                  unsigned timeIdx OPM_UNUSED)
+                                  unsigned timeIdx OPM_UNUSED,
+                                  unsigned focusTimeIdxIdx OPM_UNUSED)
+
     { }
 
     const Evaluation& polymerMoleWeight() const

@@ -281,6 +281,7 @@ SET_BOOL_PROP(FvBaseDiscretization, UseVolumetricResidual, true);
 
 //! eWoms is mainly targeted at research, so experimental features are enabled by
 //! default.
+SET_BOOL_PROP(FvBaseDiscretization, SimulatorManageTimeStep, true);
 SET_BOOL_PROP(FvBaseDiscretization, EnableExperiments, true);
 
 END_PROPERTIES
@@ -772,6 +773,15 @@ public:
     bool enableStorageCache() const
     { return enableStorageCache_; }
 
+    /*!
+     * \brief Set the value of enable storage cache  
+     *
+     * Be aware that calling the *CachedStorage() methods if the storage cache is
+     * disabled will crash the program.
+     */
+    void setEnableStorageCache(bool enableStorageCache) 
+    { enableStorageCache_= enableStorageCache; }
+    
     /*!
      * \brief Retrieve an entry of the cache for the storage term.
      *

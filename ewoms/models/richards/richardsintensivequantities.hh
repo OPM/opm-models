@@ -84,9 +84,9 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx, unsigned focusTimeIdx)
     {
-        ParentType::update(elemCtx, dofIdx, timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx, focusTimeIdx);
 
         const auto& T = elemCtx.problem().temperature(elemCtx, dofIdx, timeIdx);
         fluidState_.setTemperature(T);
