@@ -163,14 +163,14 @@ public:
         assert(residual.size() == elemCtx.numDof(/*timeIdx=*/0));
 
         residual = 0.0;
-        if(elemCtx.focusTimeIndex()==0){
+        if(elemCtx.focusTimeIndex()==0){//NB: This is only valid if fluxeterm sis purely implicite, This was nesseary to not get false derivatives form wells in adjiont.
         // evaluate the flux terms
             asImp_().evalFluxes(residual, elemCtx, /*timeIdx=*/0);
         }
         // evaluate the storage and the source terms
 
         asImp_().evalVolumeTerms_(residual, elemCtx);
-        if(elemCtx.focusTimeIndex()==0){
+        if(elemCtx.focusTimeIndex()==0){//NB: This is only valid if fluxeterm sis purely implicite, This was nesseary to not get false derivatives form wells in adjiont.
         // evaluate the boundary conditions
             asImp_().evalBoundary_(residual, elemCtx, /*timeIdx=*/0);
         }
