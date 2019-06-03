@@ -636,7 +636,7 @@ public:
 
             // write initial condition
             if (problem_->shouldWriteOutput())
-                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput(/*isSubstep=*/!episodeWillBeOver()));
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput());
 
             timeStepSize_ = oldTimeStepSize;
             timeStepIdx_ = oldTimeStepIdx;
@@ -715,7 +715,7 @@ public:
             // write the result to disk
             writeTimer_.start();
             if (problem_->shouldWriteOutput())
-                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput(/*isSubstep=*/!episodeWillBeOver()));
+                EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(problem_->writeOutput());
             writeTimer_.stop();
 
             // do the next time integration

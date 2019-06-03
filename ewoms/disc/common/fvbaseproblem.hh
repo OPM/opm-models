@@ -749,7 +749,7 @@ public:
      *
      * \param verbose Specify if a message should be printed whenever a file is written
      */
-    void writeOutput(bool isSubStep OPM_UNUSED, bool verbose = true)
+    void writeOutput(bool verbose = true)
     {
         if (!enableVtkOutput_())
             return;
