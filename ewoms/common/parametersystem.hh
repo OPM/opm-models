@@ -124,6 +124,10 @@
         #ParamName, #ParamName,                                         \
         /*errorIfNotRegistered=*/false))
 
+//!\cond SKIP_THIS
+#define EWOMS_RESET_PARAMS_(TypeTag)            \
+    (::Ewoms::Parameters::reset<TypeTag>())
+
 /*!
  * \ingroup Parameter
  *
@@ -182,7 +186,7 @@ public:
         : paramName_(paramName)
     {}
 
-    void retrieve()
+    virtual void retrieve() override
     {
         // retrieve the parameter once to make sure that its value does
         // not contain a syntax error.
@@ -214,7 +218,7 @@ SET_PROP(ParameterSystem, ParameterMetaData)
     typedef Dune::ParameterTree type;
 
     static Dune::ParameterTree& tree()
-    { return storage_().tree; }
+    { return *storage_().tree; }
 
     static std::map<std::string, ::Ewoms::Parameters::ParamInfo>& mutableRegistry()
     { return storage_().registry; }
@@ -222,12 +226,19 @@ SET_PROP(ParameterSystem, ParameterMetaData)
     static const std::map<std::string, ::Ewoms::Parameters::ParamInfo>& registry()
     { return storage_().registry; }
 
-    static std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> &
-    registrationFinalizers()
+    static std::list<std::unique_ptr<::Ewoms::Parameters::ParamRegFinalizerBase_> > &registrationFinalizers()
     { return storage_().finalizers; }
 
     static bool& registrationOpen()
     { return storage_().registrationOpen; }
+
+    static void clear()
+    {
+        storage_().tree.reset(new Dune::ParameterTree());
+        storage_().finalizers.clear();
+        storage_().registrationOpen = true;
+        storage_().registry.clear();
+    }
 
 private:
     // this is not pretty, but handling these attributes as static variables inside
@@ -236,11 +247,14 @@ private:
     // times...
     struct Storage_ {
         Storage_()
-        { registrationOpen = true; }
+        {
+            tree.reset(new Dune::ParameterTree());
+            registrationOpen = true;
+        }
 
-        Dune::ParameterTree tree;
+        std::unique_ptr<Dune::ParameterTree> tree;
         std::map<std::string, ::Ewoms::Parameters::ParamInfo> registry;
-        std::list< ::Ewoms::Parameters::ParamRegFinalizerBase_ *> finalizers;
+        std::list<std::unique_ptr<::Ewoms::Parameters::ParamRegFinalizerBase_> > finalizers;
         bool registrationOpen;
     };
     static Storage_& storage_() {
@@ -927,10 +941,17 @@ public:
                                              errorIfNotRegistered);
     }
 
+    static void clear()
+    {
+        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+
+        ParamsMeta::clear();
+    }
+
     template <class ParamType, class PropTag>
-    static const ParamType isSet(const char *propTagName,
-                                 const char *paramName,
-                                 bool errorIfNotRegistered = true)
+    static const bool isSet(const char *propTagName,
+                            const char *paramName,
+                            bool errorIfNotRegistered = true)
     {
 
 #ifndef NDEBUG
@@ -1050,6 +1071,12 @@ const ParamType get(const char *propTagName, const char *paramName, bool errorIf
                                                             errorIfNotRegistered);
 }
 
+template <class TypeTag>
+void reset()
+{
+    return Param<TypeTag>::clear();
+}
+
 template <class TypeTag, class ParamType, class PropTag>
 bool isSet(const char *propTagName, const char *paramName, bool errorIfNotRegistered = true)
 {
@@ -1066,7 +1093,7 @@ void registerParam(const char *paramName, const char *propertyName, const char *
         throw std::logic_error("Parameter registration was already closed before "
                                "the parameter '"+std::string(paramName)+"' was registered.");
 
-    ParamsMeta::registrationFinalizers().push_back(
+    ParamsMeta::registrationFinalizers().emplace_back(
         new ParamRegFinalizer_<TypeTag, ParamType, PropTag>(paramName));
 
     ParamInfo paramInfo;
@@ -1127,10 +1154,9 @@ void endParamRegistration()
     // that there is no syntax error
     auto pIt = ParamsMeta::registrationFinalizers().begin();
     const auto& pEndIt = ParamsMeta::registrationFinalizers().end();
-    for (; pIt != pEndIt; ++pIt) {
+    for (; pIt != pEndIt; ++pIt)
         (*pIt)->retrieve();
-        delete *pIt;
-    }
+    ParamsMeta::registrationFinalizers().clear();
 }
 //! \endcond
 
