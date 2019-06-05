@@ -62,7 +62,7 @@ class FvBaseBoundaryContext
     enum { dimWorld = GridView::dimensionworld };
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
     typedef Dune::FieldVector<Scalar, dimWorld> Vector;
 
 public:

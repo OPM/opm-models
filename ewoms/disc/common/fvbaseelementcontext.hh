@@ -78,11 +78,11 @@ class FvBaseElementContext
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    static const unsigned dim = GridView::dimension;
+    static const unsigned dimWorld = GridView::dimensionworld;
     static const unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
 
     typedef typename GridView::ctype CoordScalar;
-    typedef Dune::FieldVector<CoordScalar, dim> GlobalPosition;
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
     // we don't allow copies of element contexts!
     FvBaseElementContext(const FvBaseElementContext& ) = delete;

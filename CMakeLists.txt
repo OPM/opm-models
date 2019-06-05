@@ -154,6 +154,9 @@ opm_add_test(lens_immiscible_vcfv_fd
 opm_add_test(lens_immiscible_ecfv_ad
              TEST_ARGS --end-time=3000)
 
+opm_add_test(lens_immiscible_ecfv_ad_23
+             TEST_ARGS --end-time=3000)
+
 # this test is identical to the simulation of the lens problem that
 # uses the element centered finite volume discretization in
 # conjunction with automatic differentiation
