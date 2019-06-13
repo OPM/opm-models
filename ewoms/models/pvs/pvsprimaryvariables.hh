@@ -260,9 +260,14 @@ public:
             return 0.0;
 
         unsigned varIdx = switch0Idx + phaseIdx - 1;
-        if (timeIdx != 0)
-            Toolbox::createConstant((*this)[varIdx]);
-        return Toolbox::createVariable((*this)[varIdx], varIdx);
+        if (std::is_same<Evaluation, Scalar>::value)
+            return (*this)[varIdx]; // finite differences
+        else {
+            // automatic differentiation
+            if (timeIdx != 0)
+                Toolbox::createConstant((*this)[varIdx]);
+            return Toolbox::createVariable((*this)[varIdx], varIdx);
+        }
     }
 
     /*!
