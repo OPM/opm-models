@@ -734,7 +734,7 @@ std::string parseCommandLineOptions(int argc,
         }
         seenKeys.insert(paramName);
 
-        if (s.empty() || s[0] != '=' || s.size()==1) {
+        if (s.empty() || s[0] != '=') {
             std::string msg =
                 std::string("Parameter '")+paramName+"' is missing a value. "
                 +" Please use "+argv[i]+"=value.";
