@@ -540,6 +540,17 @@ public:
     { return episodeLength_; }
 
     /*!
+     * \brief Returns true if the current episode has just been started at the
+     *        current time.
+     */
+    bool episodeStarts() const
+    {
+        static const Scalar eps = std::numeric_limits<Scalar>::epsilon()*1e3;
+
+        return this->time() <= (episodeStartTime_ - startTime())*(1 + eps);
+    }
+
+    /*!
      * \brief Returns true if the current episode is finished at the
      *        current time.
      */
