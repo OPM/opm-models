@@ -509,28 +509,25 @@ public:
      */
     void timeIntegration()
     {
-        unsigned maxFails = EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions);
-        Scalar minTimeStepSize = EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize);
+        unsigned maxFails = asImp_().maxTimeIntegrationFailures();
+        Scalar minTimeStepSize = asImp_().minTimeStepSize();
 
-        // if the time step size of the simulator is smaller than
-        // the specified minimum size and we're not going to finish
-        // the simulation or an episode, try with the minimum size.
-        if (simulator().timeStepSize() < minTimeStepSize &&
-            !simulator().episodeWillBeOver() &&
-            !simulator().willBeFinished())
-        {
-            simulator().setTimeStepSize(minTimeStepSize);
-        }
-
+        std::string errorMessage;
         for (unsigned i = 0; i < maxFails; ++i) {
             bool converged = model().update();
             if (converged)
                 return;
 
             Scalar dt = simulator().timeStepSize();
-            Scalar nextDt = dt / 2;
-            if (nextDt < minTimeStepSize)
+            Scalar nextDt = dt / 2.0;
+            if (dt < minTimeStepSize*(1 + 1e-9)) {
+                errorMessage =
+                    "Time integration did not succeed with the minumum time step size of "
+                    + std::to_string(double(minTimeStepSize)) + " seconds. Giving up!";
                 break; // give up: we can't make the time step smaller anymore!
+            }
+            else if (nextDt < minTimeStepSize)
+                nextDt = minTimeStepSize;
             simulator().setTimeStepSize(nextDt);
 
             // update failed
@@ -540,10 +537,26 @@ public:
                           << nextDt << " seconds\n" << std::flush;
         }
 
-        throw std::runtime_error("Newton solver didn't converge after "
-                                 +std::to_string(maxFails)+" time-step divisions. dt="
-                                 +std::to_string(double(simulator().timeStepSize())));
+        if (errorMessage.empty())
+            errorMessage =
+                "Newton solver didn't converge after "
+                +std::to_string(maxFails)+" time-step divisions. dt="
+                +std::to_string(double(simulator().timeStepSize()));
+        throw std::runtime_error(errorMessage);
     }
+
+    /*!
+     * \brief Returns the minimum allowable size of a time step.
+     */
+    Scalar minTimeStepSize() const
+    { return EWOMS_GET_PARAM(TypeTag, Scalar, MinTimeStepSize); }
+
+    /*!
+     * \brief Returns the maximum number of subsequent failures for the time integration
+     *        before giving up.
+     */
+    unsigned maxTimeIntegrationFailures() const
+    { return EWOMS_GET_PARAM(TypeTag, unsigned, MaxTimeStepDivisions); }
 
     /*!
      * \brief Impose the next time step size to be used externally.

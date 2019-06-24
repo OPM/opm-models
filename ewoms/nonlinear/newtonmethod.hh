@@ -529,21 +529,23 @@ public:
      * scaled by the ratio between the target iterations and the
      * iterations required to actually solve the last time-step.
      */
-    Scalar suggestTimeStepSize(Scalar oldTimeStep) const
+    Scalar suggestTimeStepSize(Scalar oldDt) const
     {
         // be aggressive reducing the time-step size but
         // conservative when increasing it. the rationale is
         // that we want to avoid failing in the next time
         // integration which would be quite expensive
         if (numIterations_ > targetIterations_()) {
-            Scalar percent = Scalar(numIterations_ - targetIterations_())
-                             / targetIterations_();
-            return oldTimeStep / (1.0 + percent);
+            Scalar percent = Scalar(numIterations_ - targetIterations_())/targetIterations_();
+            Scalar nextDt = std::max(problem().minTimeStepSize(),
+                                     oldDt/(1.0 + percent));
+            return nextDt;
         }
 
-        Scalar percent = Scalar(targetIterations_() - numIterations_)
-                         / targetIterations_();
-        return oldTimeStep * (1.0 + percent / 1.2);
+        Scalar percent = Scalar(targetIterations_() - numIterations_)/targetIterations_();
+        Scalar nextDt = std::max(problem().minTimeStepSize(),
+                                 oldDt*(1.0 + percent/1.2));
+        return nextDt;
     }
 
     /*!
