@@ -943,15 +943,13 @@ public:
 
     static void clear()
     {
-        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
-
         ParamsMeta::clear();
     }
 
     template <class ParamType, class PropTag>
-    static const bool isSet(const char *propTagName,
-                            const char *paramName,
-                            bool errorIfNotRegistered = true)
+    static bool isSet(const char *propTagName OPM_OPTIM_UNUSED,
+                      const char *paramName OPM_OPTIM_UNUSED,
+                      bool errorIfNotRegistered = true)
     {
 
 #ifndef NDEBUG
@@ -961,7 +959,6 @@ public:
         check_(Dune::className<ParamType>(), propTagName, paramName);
 #endif
 
-        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
             if (ParamsMeta::registrationOpen())
                 throw std::runtime_error("Parameters can only checked after _all_ of them have "
@@ -1038,7 +1035,6 @@ private:
         check_(Dune::className<ParamType>(), propTagName, paramName);
 #endif
 
-        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
             if (ParamsMeta::registrationOpen())
                 throw std::runtime_error("Parameters can only retieved after _all_ of them have "
