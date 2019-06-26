@@ -124,6 +124,17 @@
         #ParamName, #ParamName,                                         \
         /*errorIfNotRegistered=*/false))
 
+/*!
+ * \ingroup Parameter
+ *
+ * \brief Retrieves the lists of parameters specified at runtime and their values.
+ *
+ * The two arguments besides the TypeTag are assumed to be STL containers which store
+ * std::pair<std::string, std::string>.
+ */
+#define EWOMS_GET_PARAM_LISTS(TypeTag, UsedParamList, UnusedParamList)    \
+    (::Ewoms::Parameters::getLists<TypeTag>(UsedParamList, UnusedParamList))
+
 //!\cond SKIP_THIS
 #define EWOMS_RESET_PARAMS_(TypeTag)            \
     (::Ewoms::Parameters::reset<TypeTag>())
@@ -993,7 +1004,8 @@ private:
     };
 
     static void check_(const std::string& paramTypeName,
-                       const std::string& propertyName, const char *paramName)
+                       const std::string& propertyName,
+                       const char *paramName)
     {
         typedef std::unordered_map<std::string, Blubb> StaticData;
         static StaticData staticData;
@@ -1065,6 +1077,34 @@ const ParamType get(const char *propTagName, const char *paramName, bool errorIf
     return Param<TypeTag>::template get<ParamType, PropTag>(propTagName,
                                                             paramName,
                                                             errorIfNotRegistered);
+}
+
+template <class TypeTag, class Container>
+const void getLists(Container& usedParams, Container& unusedParams)
+{
+    usedParams.clear();
+    unusedParams.clear();
+
+    typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
+    if (ParamsMeta::registrationOpen())
+        throw std::runtime_error("Parameter lists can only retieved after _all_ of them have "
+                                 "been registered.");
+
+    // get all parameter keys
+    std::list<std::string> allKeysList;
+    const auto& paramTree = ParamsMeta::tree();
+    getFlattenedKeyList_(allKeysList, paramTree);
+
+    for (const auto& key : allKeysList) {
+        if (ParamsMeta::registry().find(key) == ParamsMeta::registry().end()) {
+            // key was not registered
+            unusedParams.emplace_back(key, paramTree[key]);
+        }
+        else {
+            // key was registered
+            usedParams.emplace_back(key, paramTree[key]);
+        }
+    }
 }
 
 template <class TypeTag>
