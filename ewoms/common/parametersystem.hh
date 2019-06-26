@@ -947,9 +947,9 @@ public:
     }
 
     template <class ParamType, class PropTag>
-    static const bool isSet(const char *propTagName OPM_OPTIM_UNUSED,
-                            const char *paramName OPM_OPTIM_UNUSED,
-                            bool errorIfNotRegistered = true)
+    static bool isSet(const char *propTagName OPM_OPTIM_UNUSED,
+                      const char *paramName OPM_OPTIM_UNUSED,
+                      bool errorIfNotRegistered = true)
     {
 
 #ifndef NDEBUG
