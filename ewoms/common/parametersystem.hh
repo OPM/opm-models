@@ -943,8 +943,6 @@ public:
 
     static void clear()
     {
-        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
-
         ParamsMeta::clear();
     }
 
@@ -961,7 +959,6 @@ public:
         check_(Dune::className<ParamType>(), propTagName, paramName);
 #endif
 
-        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
             if (ParamsMeta::registrationOpen())
                 throw std::runtime_error("Parameters can only checked after _all_ of them have "
@@ -1038,7 +1035,6 @@ private:
         check_(Dune::className<ParamType>(), propTagName, paramName);
 #endif
 
-        typedef typename GET_PROP(TypeTag, ParameterMetaData) ParamsMeta;
         if (errorIfNotRegistered) {
             if (ParamsMeta::registrationOpen())
                 throw std::runtime_error("Parameters can only retieved after _all_ of them have "
