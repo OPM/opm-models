@@ -1080,7 +1080,7 @@ const ParamType get(const char *propTagName, const char *paramName, bool errorIf
 }
 
 template <class TypeTag, class Container>
-const void getLists(Container& usedParams, Container& unusedParams)
+void getLists(Container& usedParams, Container& unusedParams)
 {
     usedParams.clear();
     unusedParams.clear();
