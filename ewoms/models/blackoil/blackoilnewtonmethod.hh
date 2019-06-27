@@ -187,6 +187,7 @@ protected:
         static constexpr bool enablePolymer = Indices::polymerConcentrationIdx >= 0;
         static constexpr bool enablePolymerWeight = Indices::polymerMoleWeightIdx >= 0;
         static constexpr bool enableEnergy = Indices::temperatureIdx >= 0;
+        static constexpr bool enableFoam = Indices::foamConcentrationIdx >= 0;
 
         currentValue.checkDefined();
         Opm::Valgrind::CheckDefined(update);
@@ -283,6 +284,10 @@ protected:
                 if (polymerConcentration < 1.e-10)
                     nextValue[pvIdx] = 0.0;
             }
+
+            // keep the foam concentration above 0
+            if (enableFoam && pvIdx == Indices::foamConcentrationIdx)
+                nextValue[pvIdx] = std::max(nextValue[pvIdx], 0.0);
 
             // keep the temperature above 100 and below 1000 Kelvin
             if (enableEnergy && pvIdx == Indices::temperatureIdx)

@@ -146,6 +146,10 @@ public:
             (*this)[Indices::contiPolymerEqIdx] *= PolymerModule::molarMass(pvtRegionIdx);
         }
 
+        if ( enableFoam ) {
+            throw std::logic_error("setMolarRate() not implemented for foam");
+        }
+
         // convert to "surface volume" if requested
         if (GET_PROP_VALUE(TypeTag, BlackoilConserveSurfaceVolume)) {
             if (FluidSystem::phaseIsActive(FluidSystem::gasPhaseIdx)) {
