@@ -133,6 +133,12 @@ SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCal
 //! Newton solver
 SET_INT_PROP(FvBaseDiscretization, MaxTimeStepDivisions, 10);
 
+
+//! By default, do not continue with a non-converged solution instead of giving up
+//! if we encounter a time step size smaller than the minimum time
+//! step size.
+SET_BOOL_PROP(FvBaseDiscretization, ContinueOnConvergenceError, false);
+
 /*!
  * \brief A vector of quanties, each for one equation.
  */

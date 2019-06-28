@@ -240,6 +240,13 @@ NEW_PROP_TAG(MinTimeStepSize);
 NEW_PROP_TAG(MaxTimeStepDivisions);
 
 /*!
+ * \brief Continue with a non-converged solution instead of giving up
+ *        if we encounter a time step size smaller than the minimum time
+ *        step size.
+ */
+NEW_PROP_TAG(ContinueOnConvergenceError);
+
+/*!
  * \brief Specify whether all intensive quantities for the grid should be
  *        cached in the discretization.
  *
