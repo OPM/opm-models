@@ -444,7 +444,7 @@ protected:
         }
     }
 
-    void sendIndicesToPeer_(ProcessRank peerRank)
+    void sendIndicesToPeer_(ProcessRank peerRank OPM_UNUSED_NOMPI)
     {
 #if HAVE_MPI
         const auto& foreignOverlap = foreignOverlap_.foreignOverlapWithPeer(peerRank);
@@ -489,7 +489,7 @@ protected:
         delete indicesSendBuffer_[peerRank];
     }
 
-    void receiveIndicesFromPeer_(ProcessRank peerRank)
+    void receiveIndicesFromPeer_(ProcessRank peerRank OPM_UNUSED_NOMPI)
     {
 #if HAVE_MPI
         // receive the number of additional indices

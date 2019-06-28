@@ -78,7 +78,7 @@ public:
     { peerBlackLists_[peerRank] = peerBlackList; }
 
     template <class DomesticOverlap>
-    void updateNativeToDomesticMap(const DomesticOverlap& domesticOverlap)
+    void updateNativeToDomesticMap(const DomesticOverlap& domesticOverlap OPM_UNUSED_NOMPI)
     {
 #if HAVE_MPI
         auto peerListIt = peerBlackLists_.begin();
