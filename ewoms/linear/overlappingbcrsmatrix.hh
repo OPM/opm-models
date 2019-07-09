@@ -636,7 +636,7 @@ private:
 #endif // HAVE_MPI
     }
 
-    void receiveCopyEntries_(int peerRank)
+    void receiveCopyEntries_(int peerRank OPM_UNUSED_NOMPI)
     {
 #if HAVE_MPI
         MpiBuffer<block_type> &mpiRecvBuff = *entryValuesRecvBuff_[peerRank];
