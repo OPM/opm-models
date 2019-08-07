@@ -46,8 +46,6 @@ struct BlackOilIndices
     static const bool waterEnabled = true;
     static const bool gasEnabled = true;
 
-    //static const bool foamEnabled = foamEnabled___;
-
     //! Are solvents involved?
     static const bool enableSolvent = numSolventsV > 0;
 

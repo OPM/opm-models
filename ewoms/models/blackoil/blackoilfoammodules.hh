@@ -82,6 +82,7 @@ class BlackOilFoamModule
     static constexpr unsigned gasPhaseIdx = FluidSystem::gasPhaseIdx;
 
     static constexpr unsigned enableFoam = enableFoamV;
+    static constexpr bool enableVtkOutput = GET_PROP_VALUE(TypeTag, EnableVtkOutput);
 
     static constexpr unsigned numEq = GET_PROP_VALUE(TypeTag, NumEq);
     static constexpr unsigned numPhases = FluidSystem::numPhases;
@@ -127,8 +128,21 @@ public:
                                      "contains the FOAM keyword");
         }
 
-        if (!deck.hasKeyword("FOAM"))
+        if (!deck.hasKeyword("FOAM")) {
             return; // foam treatment is supposed to be disabled
+        }
+
+        // Check that only implemented options are used.
+        // We only support the default values of FOAMOPTS (GAS, TAB).
+        if (deck.hasKeyword("FOAMOPTS")) {
+            const auto kw = deck.getKeyword("FOAMOPTS");
+            if (kw.getRecord(0).getItem("TRANSPORT_PHASE").get<std::string>(0) != "GAS") {
+                throw std::runtime_error("In FOAMOPTS, only GAS is allowed for the transport phase.");
+            }
+            if (kw.getRecord(0).getItem("MODEL").get<std::string>(0) != "TAB") {
+                throw std::runtime_error("In FOAMOPTS, only TAB is allowed for the gas mobility factor reduction model.");
+            }
+        }
 
         const auto& tableManager = eclState.getTableManager();
         const unsigned int numSatRegions = tableManager.getTabdims().getNumSatTables();
@@ -234,6 +248,9 @@ public:
             // foam have been disabled at compile time
             return;
 
+        if (enableVtkOutput) {
+            Opm::OpmLog::warning("VTK output requested, currently unsupported by the foam module.");
+        }
         //model.addOutputModule(new Ewoms::VtkBlackOilFoamModule<TypeTag>(simulator));
     }
 
@@ -502,8 +519,10 @@ public:
 
         // Compute gas mobility reduction factor
         Evaluation mobilityReductionFactor = 1.0;
-        if (false) { // TODO: allow this model
+        if (false) {
             // The functional model is used.
+            // TODO: allow this model.
+            // In order to do this we must allow transport to be in the water phase, not just the gas phase.
             const auto& foamCoefficients = FoamModule::foamCoefficients(elemCtx, dofIdx, timeIdx);
 
             const Scalar fm_mob = foamCoefficients.fm_mob;
@@ -534,6 +553,8 @@ public:
             mobilityReductionFactor = 1./(1. + fm_mob*F1*F2*F3*F7);
         } else {
             // The tabular model is used.
+            // Note that the current implementation only includes the effect of foam concentration (FOAMMOB),
+            // and not the optional pressure dependence (FOAMMOBP) or shear dependence (FOAMMOBS).
             const auto& gasMobilityMultiplier = FoamModule::gasMobilityMultiplierTable(elemCtx, dofIdx, timeIdx);
             mobilityReductionFactor = gasMobilityMultiplier.eval(foamConcentration_, /* extrapolate = */ true);
         }
