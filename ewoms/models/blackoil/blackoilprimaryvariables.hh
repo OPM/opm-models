@@ -32,6 +32,7 @@
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
 #include "blackoilenergymodules.hh"
+#include "blackoilfoammodules.hh"
 
 #include <ewoms/disc/common/fvbaseprimaryvariables.hh>
 
@@ -90,6 +91,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
+    enum { enableFoam = GET_PROP_VALUE(TypeTag, EnableFoam) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
@@ -100,6 +102,7 @@ class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef BlackOilSolventModule<TypeTag, enableSolvent> SolventModule;
     typedef BlackOilPolymerModule<TypeTag, enablePolymer> PolymerModule;
     typedef BlackOilEnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef BlackOilFoamModule<TypeTag, enableFoam> FoamModule;
 
     static_assert(numPhases == 3, "The black-oil model assumes three phases!");
     static_assert(numComponents == 3, "The black-oil model assumes three components!");
@@ -589,6 +592,14 @@ private:
             return 0.0;
 
         return (*this)[Indices::polymerConcentrationIdx];
+    }
+
+    Scalar foamConcentration_() const
+    {
+        if (!enableFoam)
+            return 0.0;
+
+        return (*this)[Indices::foamConcentrationIdx];
     }
 
     Scalar temperature_() const

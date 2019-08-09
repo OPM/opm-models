@@ -52,6 +52,8 @@ NEW_PROP_TAG(EnablePolymer);
 NEW_PROP_TAG(EnablePolymerMW);
 //! Enable surface volume scaling
 NEW_PROP_TAG(BlackoilConserveSurfaceVolume);
+//! Enable the ECL-blackoil extension for foam
+NEW_PROP_TAG(EnableFoam);
 
 //! Allow the spatial and temporal domains to exhibit non-constant temperature
 //! in the black-oil model

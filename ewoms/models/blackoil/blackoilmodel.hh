@@ -43,6 +43,7 @@
 #include "blackoilproperties.hh"
 #include "blackoilsolventmodules.hh"
 #include "blackoilpolymermodules.hh"
+#include "blackoilfoammodules.hh"
 #include "blackoildarcyfluxmodule.hh"
 
 #include <ewoms/models/common/multiphasebasemodel.hh>
@@ -111,6 +112,7 @@ SET_TYPE_PROP(BlackOilModel, Indices,
               Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent),
                                      GET_PROP_VALUE(TypeTag, EnablePolymer),
                                      GET_PROP_VALUE(TypeTag, EnableEnergy),
+                                     GET_PROP_VALUE(TypeTag, EnableFoam),
                                      /*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
@@ -128,6 +130,7 @@ public:
 SET_BOOL_PROP(BlackOilModel, EnableSolvent, false);
 SET_BOOL_PROP(BlackOilModel, EnablePolymer, false);
 SET_BOOL_PROP(BlackOilModel, EnablePolymerMW, false);
+SET_BOOL_PROP(BlackOilModel, EnableFoam, false);
 
 //! By default, the blackoil model is isothermal and does not conserve energy
 SET_BOOL_PROP(BlackOilModel, EnableTemperature, false);
