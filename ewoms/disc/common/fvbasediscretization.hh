@@ -50,7 +50,6 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <ewoms/linear/nullborderlistmanager.hh>
-#include <ewoms/linear/istlsparsematrixadapter.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>
 #include <ewoms/common/timer.hh>
@@ -129,18 +128,6 @@ SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtens
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
-
-//! Set the type of a global jacobian matrix from the solution types
-SET_PROP(FvBaseDiscretization, SparseMatrixAdapter)
-{
-private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
-    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
-    typedef Ewoms::MatrixBlock<Scalar, numEq, numEq> Block;
-
-public:
-    typedef typename Ewoms::Linear::IstlSparseMatrixAdapter<Block> type;
-};
 
 //! The maximum allowed number of timestep divisions for the
 //! Newton solver

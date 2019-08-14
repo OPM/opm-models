@@ -60,8 +60,8 @@ class FvBaseGradientCalculator
     // we assume that the geometry with the most pointsq is a cube.
     enum { maxFap = 2 << dim };
 
-    typedef Dune::FieldVector<Scalar, dim> DimVector;
-    typedef Dune::FieldVector<Evaluation, dim> EvalDimVector;
+    typedef Dune::FieldVector<Scalar, dimWorld> DimVector;
+    typedef Dune::FieldVector<Evaluation, dimWorld> EvalDimVector;
 
 public:
     /*!

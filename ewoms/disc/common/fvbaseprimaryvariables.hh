@@ -89,10 +89,14 @@ public:
      */
     Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx, unsigned focusTimeIdx = 0) const
     {
+    if (std::is_same<Evaluation, Scalar>::value)
+	return (*this)[varIdx]; // finite differences
+    else {
         if (timeIdx == focusTimeIdx)
             return Toolbox::createVariable((*this)[varIdx], varIdx);
         else
             return Toolbox::createConstant((*this)[varIdx]);
+    }
     }
 
     /*!

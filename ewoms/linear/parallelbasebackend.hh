@@ -27,6 +27,7 @@
 #ifndef EWOMS_PARALLEL_BASE_BACKEND_HH
 #define EWOMS_PARALLEL_BASE_BACKEND_HH
 
+#include <ewoms/linear/istlsparsematrixadapter.hh>
 #include <ewoms/linear/overlappingbcrsmatrix.hh>
 #include <ewoms/linear/overlappingblockvector.hh>
 #include <ewoms/linear/overlappingpreconditioner.hh>
@@ -114,6 +115,20 @@ NEW_PROP_TAG(PreconditionerOrder);
 
 //! The relaxation factor of the preconditioner
 NEW_PROP_TAG(PreconditionerRelaxation);
+
+//! Set the type of a global jacobian matrix for linear solvers that are based on
+//! dune-istl.
+SET_PROP(ParallelBaseLinearSolver, SparseMatrixAdapter)
+{
+private:
+    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
+    enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
+    typedef Ewoms::MatrixBlock<Scalar, numEq, numEq> Block;
+
+public:
+    typedef typename Ewoms::Linear::IstlSparseMatrixAdapter<Block> type;
+};
+
 END_PROPERTIES
 
 namespace Ewoms {
