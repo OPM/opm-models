@@ -1,16 +1,16 @@
-ewoms (2015.04-1~precise) precise; urgency=medium
+opm-models (2015.04-1~precise) precise; urgency=medium
 
   * Release new version
 
  -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Fri, 24 Apr 2015 15:34:34 +0200
 
-ewoms (2013.10-2~precise) precise; urgency=low
+opm-models (2013.10-2~precise) precise; urgency=low
 
   * New release
 
  -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Tue, 22 Oct 2013 12:22:29 +0200
 
-ewoms (2.3~precise); urgency=low
+opm-models (2.3~precise); urgency=low
 
   * Initial release
 

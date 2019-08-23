@@ -27,6 +27,6 @@ override_dh_auto_install:
 	dh_auto_install -- install-html
 
 override_dh_installdocs:
-	dh_installdocs --link-doc=libewoms1-dev
+	dh_installdocs --link-doc=libopm-models1-dev
 
 override_dh_auto_test:
