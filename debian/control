@@ -1,4 +1,4 @@
-Source: ewoms
+Source: opm-models
 Section: libs
 Priority: optional
 Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
@@ -18,25 +18,25 @@ Homepage: http://opm-project.org/ewoms
 Vcs-Git: git://github.com/OPM/ewoms.git
 Vcs-Browser: https://github.com/OPM/ewoms
 
-Package: libewoms1-dev
+Package: libopm-models1-dev
 Architecture: all
 Depends: ${misc:Depends},
  libdune-grid-dev (>= 2.2.0), libdune-istl-dev (>= 2.2.0),
  libdune-localfunctions-dev (>= 2.2.0), libopm-material-dev
-Provides: libewoms-dev
-Description: development files for ewoms
- eWoms is an simulation framework which is primary focused on fully implicit
+Provides: libopm-models-dev
+Description: development files for opm-models
+ opm-models is an simulation framework which is primary focused on fully implicit
  models for flow and transport in porous media. Its main objectives
  are to provide a easily usable, well maintainable, high performance
  framework which is capable of capturing all macro-scale scenarios
  relevant for academic research and industrial applications involving
  flow and transport processes in porous media.
 
-Package: libewoms1-doc
+Package: libopm-models1-doc
 Architecture: all
-Provides: libewoms-doc
-Description: documentation for ewoms
- eWoms is an simulation framework which is primary focused on fully implicit
+Provides: libopm-models-doc
+Description: documentation for opm-models
+ opm-models is an simulation framework which is primary focused on fully implicit
  models for flow and transport in porous media. Its main objectives
  are to provide a easily usable, well maintainable, high performance
  framework which is capable of capturing all macro-scale scenarios

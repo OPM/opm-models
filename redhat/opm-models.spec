@@ -1,6 +1,6 @@
 %define tag final
 
-Name: ewoms
+Name: opm-models
 Summary: OPM - Fully implicit models for flow and transport in porous media
 Version: 2018.10
 Release: 0
@@ -23,7 +23,7 @@ Requires:      ewoms-openmpi-devel ewoms-mpich-devel
 %{!?el6:BuildRequires: cmake boost-devel}
 
 %description
-eWoms is an simulation framework which is primary focused on fully implicit
+opm-models is an simulation framework which is primary focused on fully implicit
 models for flow and transport in porous media. Its main objectives
 are to provide a easily usable, well maintainable, high performance
 framework which is capable of capturing all macro-scale scenarios
@@ -31,13 +31,13 @@ relevant for academic research and industrial applications involving
 flow and transport processes in porous media.
 
 %package devel
-License:        GPL
-Requires:      %name = %version
-Summary:     	ewoms development files
-Group:          Development/Libraries/C and C++
+License:      GPL
+Requires:     %name = %version
+Summary:     	opm-models development files
+Group:        Development/Libraries/C and C++
 
 %description devel
-eWoms is an simulation framework which is primary focused on fully implicit
+opm-models is an simulation framework which is primary focused on fully implicit
 models for flow and transport in porous media. Its main objectives
 are to provide a easily usable, well maintainable, high performance
 framework which is capable of capturing all macro-scale scenarios
@@ -47,11 +47,11 @@ flow and transport processes in porous media.
 %package openmpi-devel
 License:        GPL
 Requires:      %name = %version
-Summary:     	ewoms development files
+Summary:     	opm-models development files
 Group:          Development/Libraries/C and C++
 
 %description openmpi-devel
-eWoms is an simulation framework which is primary focused on fully implicit
+opm-models is an simulation framework which is primary focused on fully implicit
 models for flow and transport in porous media. Its main objectives
 are to provide a easily usable, well maintainable, high performance
 framework which is capable of capturing all macro-scale scenarios
@@ -61,11 +61,11 @@ flow and transport processes in porous media.
 %package mpich-devel
 License:        GPL
 Requires:      %name = %version
-Summary:     	ewoms development files
+Summary:     	opm-models development files
 Group:          Development/Libraries/C and C++
 
 %description mpich-devel
-eWoms is an simulation framework which is primary focused on fully implicit
+opm-models is an simulation framework which is primary focused on fully implicit
 models for flow and transport in porous media. Its main objectives
 are to provide a easily usable, well maintainable, high performance
 framework which is capable of capturing all macro-scale scenarios

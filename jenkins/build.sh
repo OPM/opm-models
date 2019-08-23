@@ -38,7 +38,7 @@ popd
 source $WORKSPACE/deps/opm-common/jenkins/build-opm-module.sh
 
 parseRevisions
-printHeader ewoms
+printHeader opm-models
 
 # Setup opm-data
 if grep -q "with downstreams" <<< $ghprbCommentBody
@@ -46,4 +46,4 @@ then
   source $WORKSPACE/deps/opm-common/jenkins/setup-opm-tests.sh
 fi
 
-build_module_full ewoms
+build_module_full opm-models

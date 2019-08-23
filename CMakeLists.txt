@@ -15,7 +15,7 @@
 ###########################################################################
 
 # Mandatory call to project
-project(ewoms C CXX)
+project(opm-models C CXX)
 
 cmake_minimum_required (VERSION 2.8)
 
@@ -125,7 +125,7 @@ opm_set_test_driver("${PROJECT_SOURCE_DIR}/bin/runtest.sh" "--simulation")
 opm_set_test_default_working_directory("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
-add_custom_target(ewoms_prepare)
+add_custom_target(opm-models_prepare)
 
 # the ART to DGF file format conversion utility
 EwomsAddApplication(art2dgf

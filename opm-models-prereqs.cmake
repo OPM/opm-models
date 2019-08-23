@@ -3,7 +3,7 @@
 set(DUNE_AVOID_CAPABILITIES_IS_PARALLEL_DEPRECATION_WARNING 1)
 
 # defines that must be present in config.h for our headers
-set (ewoms_CONFIG_VAR
+set (opm-models_CONFIG_VAR
   HAVE_QUAD
   HAVE_VALGRIND
   HAVE_DUNE_COMMON
@@ -19,7 +19,7 @@ set (ewoms_CONFIG_VAR
   )
 
 # dependencies
-set (ewoms_DEPS
+set (opm-models_DEPS
   # compile with C++0x/11 support if available
   "CXX11Features REQUIRED"
   # Need boost::test
@@ -42,4 +42,4 @@ set (ewoms_DEPS
   "Quadmath"
   )
 
-find_package_deps(ewoms)
+find_package_deps(opm-models)
