@@ -18,7 +18,7 @@ BuildRequires: dune-istl-devel dune-localfunctions-devel doxygen zlib-devel
 BuildRequires: devtoolset-6-toolchain ecl-devel
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel
 BuildRequires:  mpich-devel trilinos-mpich-devel ptscotch-mpich-devel
-Requires:      ewoms-openmpi-devel ewoms-mpich-devel
+Requires:      opm-models-openmpi-devel opm-models-mpich-devel
 %{?el6:BuildRequires: cmake3 boost148-devel}
 %{!?el6:BuildRequires: cmake boost-devel}
 
