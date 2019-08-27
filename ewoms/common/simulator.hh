@@ -56,6 +56,7 @@ NEW_PROP_TAG(EndTime);
 NEW_PROP_TAG(RestartTime);
 NEW_PROP_TAG(InitialTimeStepSize);
 NEW_PROP_TAG(PredeterminedTimeStepsFile);
+NEW_PROP_TAG(SimulatorManageTimeStep);
 
 END_PROPERTIES
 
@@ -106,6 +107,8 @@ class Simulator
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Problem;
+
+    enum { simulatorManageTimeStep = GET_PROP_VALUE(TypeTag, SimulatorManageTimeStep) };
 
 public:
     // do not allow to copy simulators around
@@ -866,11 +869,11 @@ public:
      * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
      * file.)  See Ewoms::Restart for details.
      */
-    void serialize()
+    void serialize(const bool atEndOfStep = true)
     {
         typedef Ewoms::Restart Restarter;
         Restarter res;
-        res.serializeBegin(*this);
+        res.serializeBegin(*this, atEndOfStep);
         if (gridView().comm().rank() == 0)
             std::cout << "Serialize to file '" << res.fileName() << "'"
                       << ", next time step size: " << timeStepSize()
@@ -882,6 +885,23 @@ public:
         res.serializeEnd();
     }
 
+    void deserializeAll(Scalar t,bool only_reservoir)
+    {
+        typedef Ewoms::Restart Restarter;
+        Restarter res;
+        res.deserializeBegin(*this, t);
+        if (gridView().comm().rank() == 0)
+            std::cout << "Deserialize file '" << res.fileName() << "'"
+                      << ", next time step size: " << timeStepSize()
+                      << "\n" << std::flush;
+        this->deserialize(res);
+        if( not(only_reservoir) ){
+            problem_->deserialize(res, false);
+        }
+         model_->deserialize(res);
+
+        res.deserializeEnd();
+    }
     /*!
      * \brief Write the time manager's state to a restart file.
      *
@@ -899,6 +919,7 @@ public:
             << episodeLength_ << " "
             << startTime_ << " "
             << time_ << " "
+            << timeStepSize_ << " "
             << timeStepIdx_ << " ";
         restarter.serializeSectionEnd();
     }
@@ -920,6 +941,7 @@ public:
             >> episodeLength_
             >> startTime_
             >> time_
+            >> timeStepSize_
             >> timeStepIdx_;
         restarter.deserializeSectionEnd();
     }

@@ -87,17 +87,16 @@ public:
      * it represents the a constant f = x_i. (the difference is that in the first case,
      * the derivative w.r.t. x_i is 1, while it is 0 in the second case.
      */
-    Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx) const
+    Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx, unsigned focusTimeIdx = 0) const
     {
-        if (std::is_same<Evaluation, Scalar>::value)
-            return (*this)[varIdx]; // finite differences
-        else {
-            // automatic differentiation
-            if (timeIdx == 0)
-                return Toolbox::createVariable((*this)[varIdx], varIdx);
-            else
-                return Toolbox::createConstant((*this)[varIdx]);
-        }
+    if (std::is_same<Evaluation, Scalar>::value)
+	return (*this)[varIdx]; // finite differences
+    else {
+        if (timeIdx == focusTimeIdx)
+            return Toolbox::createVariable((*this)[varIdx], varIdx);
+        else
+            return Toolbox::createConstant((*this)[varIdx]);
+    }
     }
 
     /*!

@@ -105,9 +105,9 @@ public:
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::update
      */
-    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx, unsigned focusTimeIdx)
     {
-        ParentType::update(elemCtx, dofIdx, timeIdx);
+        ParentType::update(elemCtx, dofIdx, timeIdx, focusTimeIdx);
         EnergyIntensiveQuantities::updateTemperatures_(fluidState_, elemCtx, dofIdx, timeIdx);
 
         const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);

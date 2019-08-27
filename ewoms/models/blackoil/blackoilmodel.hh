@@ -515,6 +515,7 @@ public:
             }
         }
 
+        // this is restart spesific 
         this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 

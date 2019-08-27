@@ -97,9 +97,10 @@ public:
     {
         // remember the simulator object
         simulatorPtr_ = &simulator;
-        enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
+        enableStorageCache_ = simulator.model().enableStorageCache();//EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
         stashedDofIdx_ = -1;
         focusDofIdx_ = -1;
+        focusTimeIdx_ = 0;
     }
 
     static void *operator new(size_t size)
@@ -261,12 +262,31 @@ public:
     { focusDofIdx_ = dofIdx; }
 
     /*!
+     * \brief Sets the time index on which the simulator is currently "focused" on
+     *
+     * I.e., in the case of automatic differentiation, all derivatives are with regard to
+     * the primary variables of that time index. Only "primary" DOFs can be
+     * focused on.
+     */
+    
+    void setFocusTimeIndex(unsigned timeIdx)
+    { focusTimeIdx_ = timeIdx; }
+
+    /*!
      * \brief Returns the degree of freedom on which the simulator is currently "focused" on
      *
      * \copydetails setFocusDof()
      */
     unsigned focusDofIndex() const
     { return focusDofIdx_; }
+
+    /*!
+     * \brief Returns the time index on which the simulator is currently "focused" on
+     *
+     * \copydetails setFocusDof()
+     */ 
+    unsigned focusTimeIndex() const
+    { return focusTimeIdx_; }
 
     /*!
      * \brief Return a reference to the simulator.
@@ -581,7 +601,7 @@ protected:
 #endif
 
         dofVars_[dofIdx].priVars[timeIdx] = priVars;
-        dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/asImp_(), dofIdx, timeIdx);
+        dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/asImp_(), dofIdx, timeIdx, focusTimeIdx_);
     }
 
     IntensiveQuantities intensiveQuantitiesStashed_;
@@ -599,6 +619,7 @@ protected:
 
     int stashedDofIdx_;
     int focusDofIdx_;
+    int focusTimeIdx_;
     bool enableStorageCache_;
 };
 
