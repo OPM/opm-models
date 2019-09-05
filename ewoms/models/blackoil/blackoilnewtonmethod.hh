@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilNewtonMethod
+ * \copydoc Opm::BlackOilNewtonMethod
  */
 #ifndef EWOMS_BLACK_OIL_NEWTON_METHOD_HH
 #define EWOMS_BLACK_OIL_NEWTON_METHOD_HH
@@ -46,7 +46,7 @@ SET_SCALAR_PROP(NewtonMethod, PriVarOscilationThreshold, 1e-5);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -237,7 +237,7 @@ protected:
             // limit pressure delta
             if (pvIdx == Indices::pressureSwitchIdx) {
                 if (std::abs(delta) > dpMaxRel_*currentValue[pvIdx])
-                    delta = Ewoms::signum(delta)*dpMaxRel_*currentValue[pvIdx];
+                    delta = Opm::signum(delta)*dpMaxRel_*currentValue[pvIdx];
             }
             // water saturation delta
             else if (pvIdx == Indices::waterSaturationIdx)
@@ -319,6 +319,6 @@ private:
     // to detect and hinder oscillations
     std::vector<bool> wasSwitched_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

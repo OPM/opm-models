@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VtkMultiWriter
+ * \copydoc Opm::VtkMultiWriter
  */
 #ifndef EWOMS_VTK_MULTI_WRITER_HH
 #define EWOMS_VTK_MULTI_WRITER_HH
@@ -52,7 +52,7 @@
 #include <sstream>
 #include <fstream>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief Simplifies writing multi-file VTK datasets.
  *
@@ -248,7 +248,7 @@ public:
     {
         sanitizeScalarBuffer_(buf);
 
-        typedef Ewoms::VtkScalarFunction<GridView, VertexMapper> VtkFn;
+        typedef Opm::VtkScalarFunction<GridView, VertexMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
                                     vertexMapper_,
@@ -276,7 +276,7 @@ public:
     {
         sanitizeScalarBuffer_(buf);
 
-        typedef Ewoms::VtkScalarFunction<GridView, ElementMapper> VtkFn;
+        typedef Opm::VtkScalarFunction<GridView, ElementMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
                                     elementMapper_,
@@ -305,7 +305,7 @@ public:
     {
         sanitizeVectorBuffer_(buf);
 
-        typedef Ewoms::VtkVectorFunction<GridView, VertexMapper> VtkFn;
+        typedef Opm::VtkVectorFunction<GridView, VertexMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
                                     vertexMapper_,
@@ -319,7 +319,7 @@ public:
      */
     void attachTensorVertexData(TensorBuffer& buf, std::string name)
     {
-        typedef Ewoms::VtkTensorFunction<GridView, VertexMapper> VtkFn;
+        typedef Opm::VtkTensorFunction<GridView, VertexMapper> VtkFn;
 
         for (unsigned colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
             std::ostringstream oss;
@@ -354,7 +354,7 @@ public:
     {
         sanitizeVectorBuffer_(buf);
 
-        typedef Ewoms::VtkVectorFunction<GridView, ElementMapper> VtkFn;
+        typedef Opm::VtkVectorFunction<GridView, ElementMapper> VtkFn;
         FunctionPtr fnPtr(new VtkFn(name,
                                     gridView_,
                                     elementMapper_,
@@ -368,7 +368,7 @@ public:
      */
     void attachTensorElementData(TensorBuffer& buf, std::string name)
     {
-        typedef Ewoms::VtkTensorFunction<GridView, ElementMapper> VtkFn;
+        typedef Opm::VtkTensorFunction<GridView, ElementMapper> VtkFn;
 
         for (unsigned colIdx = 0; colIdx < buf[0].N(); ++colIdx) {
             std::ostringstream oss;
@@ -570,6 +570,6 @@ private:
 
     TaskletRunner taskletRunner_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

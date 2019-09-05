@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvBaseOutputModule
+ * \copydoc Opm::VcfvBaseOutputModule
  */
 #ifndef EWOMS_VCFV_VTK_BASE_OUTPUT_MODULE_HH
 #define EWOMS_VCFV_VTK_BASE_OUTPUT_MODULE_HH
@@ -35,7 +35,7 @@
 #include <string>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup VcfvDiscretization
  *
@@ -80,6 +80,6 @@ public:
     { baseWriter.attachTensorVertexData(buffer, name.c_str()); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::ThreadedEntityIterator
+ * \copydoc Opm::ThreadedEntityIterator
  */
 #ifndef EWOMS_THREADED_ENTITY_ITERATOR_HH
 #define EWOMS_THREADED_ENTITY_ITERATOR_HH
@@ -30,7 +30,7 @@
 #include <thread>
 #include <mutex>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides an STL-iterator like interface to iterate over the enties of a
@@ -96,6 +96,6 @@ private:
 
     std::mutex mutex_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilLocalResidual
+ * \copydoc Opm::BlackOilLocalResidual
  */
 #ifndef EWOMS_BLACK_OIL_LOCAL_RESIDUAL_HH
 #define EWOMS_BLACK_OIL_LOCAL_RESIDUAL_HH
@@ -36,7 +36,7 @@
 
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup BlackOilModel
  *
@@ -294,6 +294,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

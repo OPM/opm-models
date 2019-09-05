@@ -74,7 +74,7 @@
  * \endcode
  */
 #define EWOMS_REGISTER_PARAM(TypeTag, ParamType, ParamName, Description)       \
-    ::Ewoms::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>( \
+    ::Opm::Parameters::registerParam<TypeTag, ParamType, PTAG(ParamName)>( \
         #ParamName, #ParamName, Description)
 
 /*!
@@ -85,7 +85,7 @@
  * This allows to deal with unused parameters
  */
 #define EWOMS_HIDE_PARAM(TypeTag, ParamName)                \
-    ::Ewoms::Parameters::hideParam<TypeTag, PTAG(ParamName)>(#ParamName)
+    ::Opm::Parameters::hideParam<TypeTag, PTAG(ParamName)>(#ParamName)
 
 /*!
  * \ingroup Parameter
@@ -97,7 +97,7 @@
  * will be thrown.
  */
 #define EWOMS_END_PARAM_REGISTRATION(TypeTag)                                  \
-    ::Ewoms::Parameters::endParamRegistration<TypeTag>()
+    ::Opm::Parameters::endParamRegistration<TypeTag>()
 
 /*!
  * \ingroup Parameter
@@ -115,12 +115,12 @@
  * \endcode
  */
 #define EWOMS_GET_PARAM(TypeTag, ParamType, ParamName)                         \
-    (::Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, \
-                                                                   #ParamName))
+    (::Opm::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, \
+                                                                 #ParamName))
 
 //!\cond SKIP_THIS
 #define EWOMS_GET_PARAM_(TypeTag, ParamType, ParamName)                 \
-    (::Ewoms::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(     \
+    (::Opm::Parameters::get<TypeTag, ParamType, PTAG(ParamName)>(     \
         #ParamName, #ParamName,                                         \
         /*errorIfNotRegistered=*/false))
 
@@ -133,11 +133,11 @@
  * std::pair<std::string, std::string>.
  */
 #define EWOMS_GET_PARAM_LISTS(TypeTag, UsedParamList, UnusedParamList)    \
-    (::Ewoms::Parameters::getLists<TypeTag>(UsedParamList, UnusedParamList))
+    (::Opm::Parameters::getLists<TypeTag>(UsedParamList, UnusedParamList))
 
 //!\cond SKIP_THIS
 #define EWOMS_RESET_PARAMS_(TypeTag)            \
-    (::Ewoms::Parameters::reset<TypeTag>())
+    (::Opm::Parameters::reset<TypeTag>())
 
 /*!
  * \ingroup Parameter
@@ -148,10 +148,10 @@
  * If the parameter in question has not been registered, this throws an exception.
  */
 #define EWOMS_PARAM_IS_SET(TypeTag, ParamType, ParamName)               \
-    (::Ewoms::Parameters::isSet<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, \
-                                                                     #ParamName))
+    (::Opm::Parameters::isSet<TypeTag, ParamType, PTAG(ParamName)>(#ParamName, \
+                                                                   #ParamName))
 
-namespace Ewoms {
+namespace Opm {
 namespace Parameters {
 
 struct ParamInfo
@@ -212,7 +212,7 @@ private:
 };
 } // namespace Parameters
 
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
@@ -231,13 +231,13 @@ SET_PROP(ParameterSystem, ParameterMetaData)
     static Dune::ParameterTree& tree()
     { return *storage_().tree; }
 
-    static std::map<std::string, ::Ewoms::Parameters::ParamInfo>& mutableRegistry()
+    static std::map<std::string, ::Opm::Parameters::ParamInfo>& mutableRegistry()
     { return storage_().registry; }
 
-    static const std::map<std::string, ::Ewoms::Parameters::ParamInfo>& registry()
+    static const std::map<std::string, ::Opm::Parameters::ParamInfo>& registry()
     { return storage_().registry; }
 
-    static std::list<std::unique_ptr<::Ewoms::Parameters::ParamRegFinalizerBase_> > &registrationFinalizers()
+    static std::list<std::unique_ptr<::Opm::Parameters::ParamRegFinalizerBase_> > &registrationFinalizers()
     { return storage_().finalizers; }
 
     static bool& registrationOpen()
@@ -264,8 +264,8 @@ private:
         }
 
         std::unique_ptr<Dune::ParameterTree> tree;
-        std::map<std::string, ::Ewoms::Parameters::ParamInfo> registry;
-        std::list<std::unique_ptr<::Ewoms::Parameters::ParamRegFinalizerBase_> > finalizers;
+        std::map<std::string, ::Opm::Parameters::ParamInfo> registry;
+        std::list<std::unique_ptr<::Opm::Parameters::ParamRegFinalizerBase_> > finalizers;
         bool registrationOpen;
     };
     static Storage_& storage_() {
@@ -277,7 +277,7 @@ private:
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 namespace Parameters {
 // function prototype declarations
@@ -1197,6 +1197,6 @@ void endParamRegistration()
 //! \endcond
 
 } // namespace Parameters
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

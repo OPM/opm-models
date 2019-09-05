@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkMultiPhaseModule
+ * \copydoc Opm::VtkMultiPhaseModule
  */
 #ifndef EWOMS_VTK_MULTI_PHASE_MODULE_HH
 #define EWOMS_VTK_MULTI_PHASE_MODULE_HH
@@ -77,7 +77,7 @@ SET_BOOL_PROP(VtkMultiPhase, VtkWriteFilterVelocities, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Vtk
@@ -111,7 +111,7 @@ class VtkMultiPhaseModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { dimWorld = GridView::dimensionworld };
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
@@ -477,6 +477,6 @@ private:
     PhaseBuffer potentialWeight_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

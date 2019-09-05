@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkTensorFunction
+ * \copydoc Opm::VtkTensorFunction
  */
 #ifndef VTK_TENSOR_FUNCTION_HH
 #define VTK_TENSOR_FUNCTION_HH
@@ -39,7 +39,7 @@
 #include <limits>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides a tensor-valued function using Dune::FieldMatrix objects as elements.
@@ -122,6 +122,6 @@ private:
     unsigned matrixColumnIdx_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

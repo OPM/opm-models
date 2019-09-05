@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilModel
+ * \copydoc Opm::BlackOilModel
  */
 #ifndef EWOMS_BLACK_OIL_MODEL_HH
 #define EWOMS_BLACK_OIL_MODEL_HH
@@ -57,7 +57,7 @@
 #include <sstream>
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class BlackOilModel;
 
@@ -77,43 +77,43 @@ NEW_TYPE_TAG(BlackOilModel, INHERITS_FROM(MultiPhaseBaseModel,
 
 //! Set the local residual function
 SET_TYPE_PROP(BlackOilModel, LocalResidual,
-              Ewoms::BlackOilLocalResidual<TypeTag>);
+              Opm::BlackOilLocalResidual<TypeTag>);
 
 //! Use the black-oil specific newton method
-SET_TYPE_PROP(BlackOilModel, NewtonMethod, Ewoms::BlackOilNewtonMethod<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, NewtonMethod, Opm::BlackOilNewtonMethod<TypeTag>);
 
 //! The Model property
-SET_TYPE_PROP(BlackOilModel, Model, Ewoms::BlackOilModel<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, Model, Opm::BlackOilModel<TypeTag>);
 
 //! The Problem property
-SET_TYPE_PROP(BlackOilModel, BaseProblem, Ewoms::BlackOilProblem<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, BaseProblem, Opm::BlackOilProblem<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(BlackOilModel, RateVector, Ewoms::BlackOilRateVector<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, RateVector, Opm::BlackOilRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(BlackOilModel, BoundaryRateVector, Ewoms::BlackOilBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, BoundaryRateVector, Opm::BlackOilBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(BlackOilModel, PrimaryVariables, Ewoms::BlackOilPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, PrimaryVariables, Opm::BlackOilPrimaryVariables<TypeTag>);
 
 //! the IntensiveQuantities property
-SET_TYPE_PROP(BlackOilModel, IntensiveQuantities, Ewoms::BlackOilIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, IntensiveQuantities, Opm::BlackOilIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
-SET_TYPE_PROP(BlackOilModel, ExtensiveQuantities, Ewoms::BlackOilExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, ExtensiveQuantities, Opm::BlackOilExtensiveQuantities<TypeTag>);
 
 //! Use the the velocity module which is aware of the black-oil specific model extensions
 //! (i.e., the polymer and solvent extensions)
-SET_TYPE_PROP(BlackOilModel, FluxModule, Ewoms::BlackOilDarcyFluxModule<TypeTag>);
+SET_TYPE_PROP(BlackOilModel, FluxModule, Opm::BlackOilDarcyFluxModule<TypeTag>);
 
 //! The indices required by the model
 SET_TYPE_PROP(BlackOilModel, Indices,
-              Ewoms::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent),
-                                     GET_PROP_VALUE(TypeTag, EnablePolymer),
-                                     GET_PROP_VALUE(TypeTag, EnableEnergy),
-                                     GET_PROP_VALUE(TypeTag, EnableFoam),
-                                     /*PVOffset=*/0>);
+              Opm::BlackOilIndices<GET_PROP_VALUE(TypeTag, EnableSolvent),
+                                   GET_PROP_VALUE(TypeTag, EnablePolymer),
+                                   GET_PROP_VALUE(TypeTag, EnableEnergy),
+                                   GET_PROP_VALUE(TypeTag, EnableFoam),
+                                   /*PVOffset=*/0>);
 
 //! Set the fluid system to the black-oil fluid system by default
 SET_PROP(BlackOilModel, FluidSystem)
@@ -162,7 +162,7 @@ SET_BOOL_PROP(BlackOilModel, BlackoilConserveSurfaceVolume, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -219,7 +219,7 @@ namespace Ewoms {
  * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Opm::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The primary variables used by this model are:
@@ -268,8 +268,8 @@ public:
         EnergyModule::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VtkBlackOilModule<TypeTag>::registerParameters();
-        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
+        Opm::VtkBlackOilModule<TypeTag>::registerParameters();
+        Opm::VtkCompositionModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -541,8 +541,8 @@ protected:
         PolymerModule::registerOutputModules(*this, this->simulator_);
         EnergyModule::registerOutputModules(*this, this->simulator_);
 
-        this->addOutputModule(new Ewoms::VtkBlackOilModule<TypeTag>(this->simulator_));
-        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkBlackOilModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkCompositionModule<TypeTag>(this->simulator_));
     }
 
 private:
@@ -561,6 +561,6 @@ private:
         priVars.setPvtRegionIndex(regionIdx);
     }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

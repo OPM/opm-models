@@ -60,7 +60,7 @@
 
 //! \cond SKIP_THIS
 
-namespace Ewoms {
+namespace Opm {
 namespace Properties {
 
 #define EWOMS_GET_HEAD_(Arg1, ...) Arg1
@@ -132,7 +132,7 @@ namespace Properties {
  * \ingroup Properties
  * \brief Indicates that property definitions follow
  */
-#define BEGIN_PROPERTIES namespace Ewoms { namespace Properties {
+#define BEGIN_PROPERTIES namespace Opm { namespace Properties {
 
 /*!
  * \ingroup Properties
@@ -147,7 +147,7 @@ namespace Properties {
  * The main advantage of the type of a \c TypeTag is that it can be
  * passed as a template argument.
  */
-#define TTAG(TypeTagName) Ewoms::Properties::TTag::TypeTagName
+#define TTAG(TypeTagName) Opm::Properties::TTag::TypeTagName
 
 /*!
  * \ingroup Properties
@@ -156,7 +156,7 @@ namespace Properties {
  * Again property type names can be passed as template argument. This
  * is rarely needed, though.
  */
-#define PTAG(PropTagName) Ewoms::Properties::PTag::PropTagName
+#define PTAG(PropTagName) Opm::Properties::PTag::PropTagName
 
 /*!
  * \ingroup Properties
@@ -484,10 +484,10 @@ namespace Properties {
  * the '\c typename' keyword.
  */
 #define GET_PROP(TypeTag, PropTagName) \
-    ::Ewoms::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p
+    ::Opm::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p
 //!\cond SKIP_THIS
 #define GET_PROP_(TypeTag, PropTag) \
-    ::Ewoms::Properties::GetProperty<TypeTag, PropTag>::p
+    ::Opm::Properties::GetProperty<TypeTag, PropTag>::p
 //!\endcond
 
 /*!
@@ -499,10 +499,10 @@ namespace Properties {
  * have an attribute named \c value, this yields a compiler error.
  */
 #define GET_PROP_VALUE(TypeTag, PropTagName)                            \
-    ::Ewoms::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::value
+    ::Opm::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::value
 //!\cond SKIP_THIS
 #define GET_PROP_VALUE_(TypeTag, PropTag)                               \
-    ::Ewoms::Properties::GetProperty<TypeTag, PropTag>::p::value
+    ::Opm::Properties::GetProperty<TypeTag, PropTag>::p::value
 //!\endcond
 
 /*!
@@ -516,10 +516,10 @@ namespace Properties {
  * the \c typename keyword.
  */
 #define GET_PROP_TYPE(TypeTag, PropTagName) \
-    ::Ewoms::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::type
+    ::Opm::Properties::GetProperty<TypeTag, PTAG(PropTagName)>::p::type
 //!\cond SKIP_THIS
 #define GET_PROP_TYPE_(TypeTag, PropTag) \
-    ::Ewoms::Properties::GetProperty<TypeTag, PropTag>::p::type
+    ::Opm::Properties::GetProperty<TypeTag, PropTag>::p::type
 //!\endcond
 
 #if !defined NO_PROPERTY_INTROSPECTION
@@ -541,7 +541,7 @@ namespace Properties {
  * \endcode
  */
 #define PROP_DIAGNOSTIC(TypeTag, PropTagName) \
-    ::Ewoms::Properties::getDiagnostic<TypeTag>(#PropTagName)
+    ::Opm::Properties::getDiagnostic<TypeTag>(#PropTagName)
 
 #else
 #define PROP_DIAGNOSTIC(TypeTag, PropTagName) "Property introspection disabled by macro NO_PROPERTY_INTROSPECTION."
@@ -730,7 +730,7 @@ private:
 
 class PropertyRegistry
 {
-    typedef Ewoms::Properties::TypeTagRegistry TypeTagRegistry;
+    typedef Opm::Properties::TypeTagRegistry TypeTagRegistry;
 
 public:
     typedef std::map<std::string, PropertyRegistryKey> KeyList;
@@ -1036,7 +1036,7 @@ inline std::string canonicalTypeTagNameToName_(const std::string& canonicalName)
 inline std::string canonicalTypeTagNameToName_(const std::string& canonicalName)
 {
     std::string result(canonicalName);
-    myReplaceAll_(result, "Ewoms::Properties::TTag::", "TTAG(");
+    myReplaceAll_(result, "Opm::Properties::TTag::", "TTAG(");
     myReplaceAll_(result, "::", "");
     result += ")";
     return result;
@@ -1095,7 +1095,7 @@ const std::string getDiagnostic(std::string propTagName)
     propTagName.replace(0, strlen("PTag("), "");
     auto n = propTagName.length();
     propTagName.replace(n - 1, 1, "");
-    //TypeTagName.replace(0, strlen("Ewoms::Properties::TTag::"), "");
+    //TypeTagName.replace(0, strlen("Opm::Properties::TTag::"), "");
 
     return result;
 }
@@ -1134,10 +1134,10 @@ inline void print_(const std::string& rootTypeTagName,
         if (key.propertyKind() != "opaque") {
             std::string s(key.propertyValue());
             myReplaceAll_(s, "typename ", "");
-            if (myReplaceAll_(s, "::Ewoms::Properties::TTag::", "TTAG("))
+            if (myReplaceAll_(s, "::Opm::Properties::TTag::", "TTAG("))
                 s += ')';
-            myReplaceAll_(s, "::Ewoms::Properties::PTag::", "");
-            myReplaceAll_(s, "::Ewoms::Properties::GetProperty<", "GET_PROP(");
+            myReplaceAll_(s, "::Opm::Properties::PTag::", "");
+            myReplaceAll_(s, "::Opm::Properties::GetProperty<", "GET_PROP(");
             myReplaceAll_(s, ">::p::", ")::");
             myReplaceAll_(s, "GET_PROP(TypeTag, Scalar)::type", "Scalar");
 
@@ -1204,6 +1204,6 @@ const std::string getDiagnostic(std::string propTagName)
 //! \endcond
 
 } // namespace Properties
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

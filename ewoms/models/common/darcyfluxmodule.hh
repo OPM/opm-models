@@ -48,7 +48,7 @@ NEW_PROP_TAG(MaterialLaw);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 template <class TypeTag>
 class DarcyIntensiveQuantities;
@@ -192,7 +192,7 @@ protected:
                              unsigned timeIdx)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
-        Ewoms::PressureCallback<TypeTag> pressureCallback(elemCtx);
+        Opm::PressureCallback<TypeTag> pressureCallback(elemCtx);
 
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
         const auto& faceNormal = scvf.normal();
@@ -341,7 +341,7 @@ protected:
                                      const FluidState& fluidState)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
-        Ewoms::BoundaryPressureCallback<TypeTag, FluidState> pressureCallback(elemCtx, fluidState);
+        Opm::BoundaryPressureCallback<TypeTag, FluidState> pressureCallback(elemCtx, fluidState);
 
         // calculate the pressure gradient
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
@@ -564,6 +564,6 @@ protected:
     short exteriorDofIdx_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,14 +23,14 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureLocalResidual
+ * \copydoc Opm::DiscreteFractureLocalResidual
  */
 #ifndef EWOMS_DISCRETE_FRACTURE_LOCAL_RESIDUAL_BASE_HH
 #define EWOMS_DISCRETE_FRACTURE_LOCAL_RESIDUAL_BASE_HH
 
 #include <ewoms/models/immiscible/immisciblelocalresidual.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup DiscreteFractureModel
@@ -53,7 +53,7 @@ class DiscreteFractureLocalResidual : public ImmiscibleLocalResidual<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -154,6 +154,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

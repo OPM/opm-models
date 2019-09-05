@@ -34,7 +34,7 @@
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/common/version.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Data handle for parallel communication which sums up all
@@ -265,6 +265,6 @@ private:
     Container& container_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

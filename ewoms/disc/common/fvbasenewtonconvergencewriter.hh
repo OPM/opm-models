@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseNewtonConvergenceWriter
+ * \copydoc Opm::FvBaseNewtonConvergenceWriter
  */
 #ifndef EWOMS_FV_BASE_NEWTON_CONVERGENCE_WRITER_HH
 #define EWOMS_FV_BASE_NEWTON_CONVERGENCE_WRITER_HH
@@ -46,7 +46,7 @@ NEW_PROP_TAG(VtkOutputFormat);
 END_PROPERTIES
 //! \endcond
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup FiniteVolumeDiscretizations
  *
@@ -63,7 +63,7 @@ class FvBaseNewtonConvergenceWriter
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) NewtonMethod;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
     FvBaseNewtonConvergenceWriter(NewtonMethod& nm)
@@ -151,6 +151,6 @@ private:
     NewtonMethod& newtonMethod_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBasePrimaryVariables
+ * \copydoc Opm::FvBasePrimaryVariables
  */
 #ifndef EWOMS_FV_BASE_PRIMARY_VARIABLES_HH
 #define EWOMS_FV_BASE_PRIMARY_VARIABLES_HH
@@ -38,7 +38,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -126,7 +126,7 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 namespace Dune {
 
@@ -136,7 +136,7 @@ namespace Dune {
   struct FieldTraitsImpl;
 
   /** FieldTraitsImpl for classes derived from
-   * Ewoms::FvBasePrimaryVariables: use FieldVector's FieldTraits implementation) */
+   * Opm::FvBasePrimaryVariables: use FieldVector's FieldTraits implementation) */
   template<class TypeTag>
   struct FieldTraitsImpl< TypeTag, true >
       : public FieldTraits<FieldVector<typename GET_PROP_TYPE(TypeTag, Scalar),
@@ -145,7 +145,7 @@ namespace Dune {
   };
 
   /** FieldTraitsImpl for classes not derived from
-   * Ewoms::FvBasePrimaryVariables, fall bakc to existing implementation */
+   * Opm::FvBasePrimaryVariables, fall bakc to existing implementation */
   template<class T>
   struct FieldTraitsImpl< T, false >
     : public FieldTraits< T >
@@ -153,11 +153,11 @@ namespace Dune {
   };
 
 
-  /** Specialization of FieldTraits for all PrimaryVariables derived from Ewoms::FvBasePrimaryVariables */
+  /** Specialization of FieldTraits for all PrimaryVariables derived from Opm::FvBasePrimaryVariables */
   template<class TypeTag, template <class> class EwomsPrimaryVariable>
   struct FieldTraits< EwomsPrimaryVariable< TypeTag > >
     : public FieldTraitsImpl< TypeTag,
-                              std::is_base_of< Ewoms::FvBasePrimaryVariables< TypeTag >,
+                              std::is_base_of< Opm::FvBasePrimaryVariables< TypeTag >,
                                                EwomsPrimaryVariable< TypeTag > > :: value >
   {
   };

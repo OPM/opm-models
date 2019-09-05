@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpIndices
+ * \copydoc Opm::NcpIndices
  */
 #ifndef EWOMS_NCP_INDICES_HH
 #define EWOMS_NCP_INDICES_HH
@@ -31,7 +31,7 @@
 #include "ncpproperties.hh"
 #include <ewoms/models/common/energymodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup NcpModel
@@ -52,7 +52,7 @@ private:
     enum { numComponents = FluidSystem::numComponents };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Ewoms::EnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
+    typedef Opm::EnergyIndices<PVOffset + numComponents + numPhases, enableEnergy> EnergyIndices;
 
 public:
     /*!
@@ -99,6 +99,6 @@ public:
     static const int pressure0Idx = saturation0Idx + numPhases - 1;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

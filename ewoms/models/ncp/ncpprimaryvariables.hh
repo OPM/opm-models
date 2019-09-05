@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpPrimaryVariables
+ * \copydoc Opm::NcpPrimaryVariables
  */
 #ifndef EWOMS_NCP_PRIMARY_VARIABLES_HH
 #define EWOMS_NCP_PRIMARY_VARIABLES_HH
@@ -39,7 +39,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup NcpModel
@@ -71,7 +71,7 @@ class NcpPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
     typedef Opm::MathToolbox<Evaluation> Toolbox;
@@ -187,6 +187,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

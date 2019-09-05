@@ -46,7 +46,7 @@
 #include <type_traits>
 #include <cassert>
 
-namespace Ewoms {
+namespace Opm {
 
 namespace detail {
 constexpr inline bool is_alignment(std::size_t value) noexcept

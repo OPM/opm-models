@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseConstraints
+ * \copydoc Opm::FvBaseConstraints
  */
 #ifndef EWOMS_FV_BASE_CONSTRAINTS_HH
 #define EWOMS_FV_BASE_CONSTRAINTS_HH
@@ -37,7 +37,7 @@ NEW_PROP_TAG(PrimaryVariables);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -81,6 +81,6 @@ private:
     bool isActive_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

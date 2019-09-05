@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::OverlappingOperator
+ * \copydoc Opm::Linear::OverlappingOperator
  */
 #ifndef EWOMS_OVERLAPPING_OPERATOR_HH
 #define EWOMS_OVERLAPPING_OPERATOR_HH
@@ -30,7 +30,7 @@
 #include <dune/istl/operators.hh>
 #include <dune/common/version.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -86,6 +86,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -51,7 +51,7 @@ NEW_PROP_TAG(SolidEnergyLawParams);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Energy
  * \brief Provides the auxiliary methods required for consideration of
@@ -61,7 +61,7 @@ template <class TypeTag, bool enableEnergy>
 class EnergyModule;
 
 /*!
- * \copydoc Ewoms::EnergyModule
+ * \copydoc Opm::EnergyModule
  */
 template <class TypeTag>
 class EnergyModule<TypeTag, /*enableEnergy=*/false>
@@ -228,7 +228,7 @@ public:
 };
 
 /*!
- * \copydoc Ewoms::EnergyModule
+ * \copydoc Opm::EnergyModule
  */
 template <class TypeTag>
 class EnergyModule<TypeTag, /*enableEnergy=*/true>
@@ -494,7 +494,7 @@ public:
 
 /*!
  * \ingroup Energy
- * \class Ewoms::EnergyIndices
+ * \class Opm::EnergyIndices
  *
  * \brief Provides the indices required for the energy equation.
  */
@@ -502,7 +502,7 @@ template <unsigned PVOffset, bool enableEnergy>
 struct EnergyIndices;
 
 /*!
- * \copydoc Ewoms::EnergyIndices
+ * \copydoc Opm::EnergyIndices
  */
 template <unsigned PVOffset>
 struct EnergyIndices<PVOffset, /*enableEnergy=*/false>
@@ -518,7 +518,7 @@ protected:
 };
 
 /*!
- * \copydoc Ewoms::EnergyIndices
+ * \copydoc Opm::EnergyIndices
  */
 template <unsigned PVOffset>
 struct EnergyIndices<PVOffset, /*enableEnergy=*/true>
@@ -535,7 +535,7 @@ protected:
 
 /*!
  * \ingroup Energy
- * \class Ewoms::EnergyIntensiveQuantities
+ * \class Opm::EnergyIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the energy equation.
  */
@@ -543,7 +543,7 @@ template <class TypeTag, bool enableEnergy>
 class EnergyIntensiveQuantities;
 
 /*!
- * \copydoc Ewoms::EnergyIntensiveQuantities
+ * \copydoc Opm::EnergyIntensiveQuantities
  */
 template <class TypeTag>
 class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/false>
@@ -602,7 +602,7 @@ protected:
 };
 
 /*!
- * \copydoc Ewoms::EnergyIntensiveQuantities
+ * \copydoc Opm::EnergyIntensiveQuantities
  */
 template <class TypeTag>
 class EnergyIntensiveQuantities<TypeTag, /*enableEnergy=*/true>
@@ -699,7 +699,7 @@ private:
 
 /*!
  * \ingroup Energy
- * \class Ewoms::EnergyExtensiveQuantities
+ * \class Opm::EnergyExtensiveQuantities
  *
  * \brief Provides the quantities required to calculate energy fluxes.
  */
@@ -707,7 +707,7 @@ template <class TypeTag, bool enableEnergy>
 class EnergyExtensiveQuantities;
 
 /*!
- * \copydoc Ewoms::EnergyExtensiveQuantities
+ * \copydoc Opm::EnergyExtensiveQuantities
  */
 template <class TypeTag>
 class EnergyExtensiveQuantities<TypeTag, /*enableEnergy=*/false>
@@ -753,7 +753,7 @@ public:
 };
 
 /*!
- * \copydoc Ewoms::EnergyExtensiveQuantities
+ * \copydoc Opm::EnergyExtensiveQuantities
  */
 template <class TypeTag>
 class EnergyExtensiveQuantities<TypeTag, /*enableEnergy=*/true>
@@ -775,7 +775,7 @@ protected:
     void update_(const ElementContext& elemCtx, unsigned faceIdx, unsigned timeIdx)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
-        Ewoms::TemperatureCallback<TypeTag> temperatureCallback(elemCtx);
+        Opm::TemperatureCallback<TypeTag> temperatureCallback(elemCtx);
 
         EvalDimVector temperatureGrad;
         gradCalc.calculateGradient(temperatureGrad,
@@ -854,6 +854,6 @@ private:
     Evaluation thermalConductivity_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

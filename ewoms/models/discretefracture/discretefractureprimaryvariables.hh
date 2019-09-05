@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFracturePrimaryVariables
+ * \copydoc Opm::DiscreteFracturePrimaryVariables
  */
 #ifndef EWOMS_DISCRETE_FRACTURE_PRIMARY_VARIABLES_HH
 #define EWOMS_DISCRETE_FRACTURE_PRIMARY_VARIABLES_HH
@@ -32,7 +32,7 @@
 
 #include <ewoms/models/immiscible/immiscibleprimaryvariables.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup DiscreteFractureModel
  *
@@ -119,6 +119,6 @@ private:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

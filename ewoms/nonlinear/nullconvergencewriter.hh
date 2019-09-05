@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NullConvergenceWriter
+ * \copydoc Opm::NullConvergenceWriter
  */
 #ifndef EWOMS_NULL_CONVERGENCE_WRITER_HH
 #define EWOMS_NULL_CONVERGENCE_WRITER_HH
@@ -41,7 +41,7 @@ NEW_PROP_TAG(GlobalEqVector);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Newton
  *
@@ -104,6 +104,6 @@ public:
     {}
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

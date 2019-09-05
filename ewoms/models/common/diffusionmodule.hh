@@ -43,11 +43,11 @@ NEW_PROP_TAG(Indices);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Diffusion
- * \class Ewoms::DiffusionModule
+ * \class Opm::DiffusionModule
  * \brief Provides the auxiliary methods required for consideration of the
  * diffusion equation.
  */
@@ -55,7 +55,7 @@ template <class TypeTag, bool enableDiffusion>
 class DiffusionModule;
 
 /*!
- * \copydoc Ewoms::DiffusionModule
+ * \copydoc Opm::DiffusionModule
  */
 template <class TypeTag>
 class DiffusionModule<TypeTag, /*enableDiffusion=*/false>
@@ -84,7 +84,7 @@ public:
 };
 
 /*!
- * \copydoc Ewoms::DiffusionModule
+ * \copydoc Opm::DiffusionModule
  */
 template <class TypeTag>
 class DiffusionModule<TypeTag, /*enableDiffusion=*/true>
@@ -139,7 +139,7 @@ public:
 
 /*!
  * \ingroup Diffusion
- * \class Ewoms::DiffusionIntensiveQuantities
+ * \class Opm::DiffusionIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the
  *        calculation of molecular diffusive fluxes.
@@ -148,7 +148,7 @@ template <class TypeTag, bool enableDiffusion>
 class DiffusionIntensiveQuantities;
 
 /*!
- * \copydoc Ewoms::DiffusionIntensiveQuantities
+ * \copydoc Opm::DiffusionIntensiveQuantities
  */
 template <class TypeTag>
 class DiffusionIntensiveQuantities<TypeTag, /*enableDiffusion=*/false>
@@ -203,7 +203,7 @@ protected:
 };
 
 /*!
- * \copydoc Ewoms::DiffusionIntensiveQuantities
+ * \copydoc Opm::DiffusionIntensiveQuantities
  */
 template <class TypeTag>
 class DiffusionIntensiveQuantities<TypeTag, /*enableDiffusion=*/true>
@@ -285,7 +285,7 @@ private:
 
 /*!
  * \ingroup Diffusion
- * \class Ewoms::DiffusionExtensiveQuantities
+ * \class Opm::DiffusionExtensiveQuantities
  *
  * \brief Provides the quantities required to calculate diffusive mass fluxes.
  */
@@ -293,7 +293,7 @@ template <class TypeTag, bool enableDiffusion>
 class DiffusionExtensiveQuantities;
 
 /*!
- * \copydoc Ewoms::DiffusionExtensiveQuantities
+ * \copydoc Opm::DiffusionExtensiveQuantities
  */
 template <class TypeTag>
 class DiffusionExtensiveQuantities<TypeTag, /*enableDiffusion=*/false>
@@ -349,7 +349,7 @@ public:
 };
 
 /*!
- * \copydoc Ewoms::DiffusionExtensiveQuantities
+ * \copydoc Opm::DiffusionExtensiveQuantities
  */
 template <class TypeTag>
 class DiffusionExtensiveQuantities<TypeTag, /*enableDiffusion=*/true>
@@ -374,7 +374,7 @@ protected:
     void update_(const ElementContext& elemCtx, unsigned faceIdx, unsigned timeIdx)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
-        Ewoms::MoleFractionCallback<TypeTag> moleFractionCallback(elemCtx);
+        Opm::MoleFractionCallback<TypeTag> moleFractionCallback(elemCtx);
 
         const auto& face = elemCtx.stencil(timeIdx).interiorFace(faceIdx);
         const auto& normal = face.normal();
@@ -491,6 +491,6 @@ private:
     Evaluation effectiveDiffusionCoefficient_[numPhases][numComponents];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

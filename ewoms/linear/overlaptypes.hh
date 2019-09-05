@@ -35,7 +35,7 @@
 #include <map>
 #include <cstddef>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -187,6 +187,6 @@ typedef std::vector<Index> DomesticOverlapWithPeer;
 typedef std::map<ProcessRank, DomesticOverlapWithPeer> DomesticOverlapByRank;
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

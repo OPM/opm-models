@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::ParallelAmgBackend
+ * \copydoc Opm::Linear::ParallelAmgBackend
  */
 #ifndef EWOMS_PARALLEL_AMG_BACKEND_HH
 #define EWOMS_PARALLEL_AMG_BACKEND_HH
@@ -41,7 +41,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 template <class TypeTag>
 class ParallelAmgBackend;
@@ -61,11 +61,11 @@ SET_INT_PROP(ParallelAmgLinearSolver, AmgCoarsenTarget, 5000);
 SET_SCALAR_PROP(ParallelAmgLinearSolver, LinearSolverMaxError, 1e7);
 
 SET_TYPE_PROP(ParallelAmgLinearSolver, LinearSolverBackend,
-              Ewoms::Linear::ParallelAmgBackend<TypeTag>);
+              Opm::Linear::ParallelAmgBackend<TypeTag>);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \ingroup Linear
@@ -110,7 +110,7 @@ class ParallelAmgBackend : public ParallelBaseBackend<TypeTag>
 #endif
 
 #if HAVE_MPI
-    typedef Dune::OwnerOverlapCopyCommunication<Ewoms::Linear::Index>
+    typedef Dune::OwnerOverlapCopyCommunication<Opm::Linear::Index>
     OwnerOverlapCopyCommunication;
     typedef Dune::OverlappingSchwarzOperator<IstlMatrix,
                                              Vector,
@@ -311,6 +311,6 @@ protected:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

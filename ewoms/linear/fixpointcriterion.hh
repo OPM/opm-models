@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::FixPointCriterion
+ * \copydoc Opm::FixPointCriterion
  */
 #ifndef EWOMS_ISTL_FIXPOINT_CRITERION_HH
 #define EWOMS_ISTL_FIXPOINT_CRITERION_HH
@@ -31,7 +31,7 @@
 
 #include <opm/material/common/Unused.hpp>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*! \addtogroup Linear

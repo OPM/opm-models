@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleIntensiveQuantities
+ * \copydoc Opm::ImmiscibleIntensiveQuantities
  */
 #ifndef EWOMS_IMMISCIBLE_INTENSIVE_QUANTITIES_HH
 #define EWOMS_IMMISCIBLE_INTENSIVE_QUANTITIES_HH
@@ -38,7 +38,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup ImmiscibleModel
  * \ingroup IntensiveQuantities
@@ -75,7 +75,7 @@ class ImmiscibleIntensiveQuantities
     typedef Dune::FieldVector<Evaluation, numPhases> EvalPhaseVector;
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
+    typedef Opm::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
     typedef Opm::ImmiscibleFluidState<Evaluation, FluidSystem,
                                       /*storeEnthalpy=*/enableEnergy> FluidState;
 
@@ -194,6 +194,6 @@ protected:
     Evaluation mobility_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -29,7 +29,7 @@
  * specifying the "PreconditionerWrapper" property:
  * \code
  * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,
- *               Ewoms::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
+ *               Opm::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
  * \endcode
  *
  * Where the choices possible for '\c $PRECONDITIONER' are:
@@ -59,7 +59,7 @@ NEW_PROP_TAG(PreconditionerOrder);
 NEW_PROP_TAG(PreconditionerRelaxation);
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 #define EWOMS_WRAP_ISTL_PRECONDITIONER(PREC_NAME, ISTL_PREC_TYPE)               \
     template <class TypeTag>                                                    \

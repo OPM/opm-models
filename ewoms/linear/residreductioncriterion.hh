@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::ResidReductionCriterion
+ * \copydoc Opm::Linear::ResidReductionCriterion
  */
 #ifndef EWOMS_RESID_REDUCTION_CRITERION_HH
 #define EWOMS_RESID_REDUCTION_CRITERION_HH
@@ -33,7 +33,7 @@
 
 #include <dune/istl/scalarproducts.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*! \addtogroup Linear

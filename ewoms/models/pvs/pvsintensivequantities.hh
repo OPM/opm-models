@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsIntensiveQuantities
+ * \copydoc Opm::PvsIntensiveQuantities
  */
 #ifndef EWOMS_PVS_INTENSIVE_QUANTITIES_HH
 #define EWOMS_PVS_INTENSIVE_QUANTITIES_HH
@@ -43,7 +43,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup PvsModel
  * \ingroup IntensiveQuantities
@@ -88,8 +88,8 @@ class PvsIntensiveQuantities
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
-    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
+    typedef Opm::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
+    typedef Opm::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -292,6 +292,6 @@ private:
     Evaluation mobility_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

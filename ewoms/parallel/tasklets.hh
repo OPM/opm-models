@@ -35,7 +35,7 @@
 #include <iostream>
 #include <condition_variable>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief The base class for tasklets.

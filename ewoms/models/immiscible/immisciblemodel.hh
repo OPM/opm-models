@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleModel
+ * \copydoc Opm::ImmiscibleModel
  */
 #ifndef EWOMS_IMMISCIBLE_MODEL_HH
 #define EWOMS_IMMISCIBLE_MODEL_HH
@@ -50,7 +50,7 @@
 #include <sstream>
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class ImmiscibleModel;
 }
@@ -66,28 +66,28 @@ NEW_TYPE_TAG(ImmiscibleTwoPhaseModel, INHERITS_FROM(ImmiscibleModel));
 
 //! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
 SET_TYPE_PROP(ImmiscibleModel, LocalResidual,
-              Ewoms::ImmiscibleLocalResidual<TypeTag>);
+              Opm::ImmiscibleLocalResidual<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(ImmiscibleModel, Model, Ewoms::ImmiscibleModel<TypeTag>);
+SET_TYPE_PROP(ImmiscibleModel, Model, Opm::ImmiscibleModel<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(ImmiscibleModel, RateVector, Ewoms::ImmiscibleRateVector<TypeTag>);
+SET_TYPE_PROP(ImmiscibleModel, RateVector, Opm::ImmiscibleRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(ImmiscibleModel, BoundaryRateVector, Ewoms::ImmiscibleBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(ImmiscibleModel, BoundaryRateVector, Opm::ImmiscibleBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(ImmiscibleModel, PrimaryVariables, Ewoms::ImmisciblePrimaryVariables<TypeTag>);
+SET_TYPE_PROP(ImmiscibleModel, PrimaryVariables, Opm::ImmisciblePrimaryVariables<TypeTag>);
 
 //! the IntensiveQuantities property
-SET_TYPE_PROP(ImmiscibleModel, IntensiveQuantities, Ewoms::ImmiscibleIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(ImmiscibleModel, IntensiveQuantities, Opm::ImmiscibleIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
-SET_TYPE_PROP(ImmiscibleModel, ExtensiveQuantities, Ewoms::ImmiscibleExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(ImmiscibleModel, ExtensiveQuantities, Opm::ImmiscibleExtensiveQuantities<TypeTag>);
 
 //! The indices required by the isothermal immiscible multi-phase model
-SET_TYPE_PROP(ImmiscibleModel, Indices, Ewoms::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
+SET_TYPE_PROP(ImmiscibleModel, Indices, Opm::ImmiscibleIndices<TypeTag, /*PVOffset=*/0>);
 
 //! Disable the energy equation by default
 SET_BOOL_PROP(ImmiscibleModel, EnableEnergy, false);
@@ -155,7 +155,7 @@ public:
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup ImmiscibleModel
@@ -175,7 +175,7 @@ namespace Ewoms {
  * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Opm::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -195,9 +195,9 @@ namespace Ewoms {
  */
 template <class TypeTag>
 class ImmiscibleModel
-    : public Ewoms::MultiPhaseBaseModel<TypeTag>
+    : public Opm::MultiPhaseBaseModel<TypeTag>
 {
-    typedef Ewoms::MultiPhaseBaseModel<TypeTag> ParentType;
+    typedef Opm::MultiPhaseBaseModel<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
@@ -211,7 +211,7 @@ class ImmiscibleModel
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     ImmiscibleModel(Simulator& simulator)
@@ -226,7 +226,7 @@ public:
         ParentType::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
+            Opm::VtkEnergyModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -340,7 +340,7 @@ public:
         ParentType::registerOutputModules_();
 
         if (enableEnergy)
-            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
 private:
@@ -349,6 +349,6 @@ private:
 
     mutable Scalar referencePressure_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

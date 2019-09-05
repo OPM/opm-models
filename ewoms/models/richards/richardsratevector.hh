@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsRateVector
+ * \copydoc Opm::RichardsRateVector
  */
 #ifndef EWOMS_RICHARDS_RATE_VECTOR_HH
 #define EWOMS_RICHARDS_RATE_VECTOR_HH
@@ -35,7 +35,7 @@
 
 #include "richardsintensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -141,6 +141,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

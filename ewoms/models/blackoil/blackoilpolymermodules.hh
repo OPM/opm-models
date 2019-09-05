@@ -53,7 +53,7 @@
 
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup BlackOil
  * \brief Contains the high level supplements required to extend the black oil
@@ -509,7 +509,7 @@ public:
             // polymers have been disabled at compile time
             return;
 
-        Ewoms::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
+        Opm::VtkBlackOilPolymerModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -522,7 +522,7 @@ public:
             // polymers have been disabled at compile time
             return;
 
-        model.addOutputModule(new Ewoms::VtkBlackOilPolymerModule<TypeTag>(simulator));
+        model.addOutputModule(new Opm::VtkBlackOilPolymerModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
@@ -1012,7 +1012,7 @@ BlackOilPolymerModule<TypeTag, enablePolymerV>::skprpolyTables_;
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilPolymerIntensiveQuantities
+ * \class Opm::BlackOilPolymerIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the equations needed by the
  *        polymers extension of the black-oil model.
@@ -1195,7 +1195,7 @@ public:
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilPolymerExtensiveQuantities
+ * \class Opm::BlackOilPolymerExtensiveQuantities
  *
  * \brief Provides the polymer specific extensive quantities to the generic black-oil
  *        module's extensive quantities.
@@ -1348,6 +1348,6 @@ public:
 };
 
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

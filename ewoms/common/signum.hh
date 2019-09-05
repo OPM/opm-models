@@ -27,7 +27,7 @@
 #ifndef EWOMS_SIGNUM_HH
 #define EWOMS_SIGNUM_HH
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief Template function which returns the sign of a floating point value
  *
@@ -40,6 +40,6 @@ template <class Scalar>
 int signum(Scalar val)
 { return (0 < val) - (val < 0); }
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

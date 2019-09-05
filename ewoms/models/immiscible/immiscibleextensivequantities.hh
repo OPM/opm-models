@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleExtensiveQuantities
+ * \copydoc Opm::ImmiscibleExtensiveQuantities
  */
 #ifndef EWOMS_IMMISCIBLE_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_IMMISCIBLE_EXTENSIVE_QUANTITIES_HH
@@ -33,7 +33,7 @@
 #include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 #include <ewoms/models/common/energymodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup ImmiscibleModel
  * \ingroup ExtensiveQuantities
@@ -58,7 +58,7 @@ class ImmiscibleExtensiveQuantities
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef typename FluidSystem::template ParameterCache<Evaluation> ParameterCache;
-    typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
+    typedef Opm::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
     /*!
@@ -92,6 +92,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

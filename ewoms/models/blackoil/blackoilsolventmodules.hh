@@ -56,7 +56,7 @@
 
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup BlackOil
  * \brief Contains the high level supplements required to extend the black oil
@@ -484,7 +484,7 @@ public:
             // solvents have disabled at compile time
             return;
 
-        Ewoms::VtkBlackOilSolventModule<TypeTag>::registerParameters();
+        Opm::VtkBlackOilSolventModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -497,7 +497,7 @@ public:
             // solvents have disabled at compile time
             return;
 
-        model.addOutputModule(new Ewoms::VtkBlackOilSolventModule<TypeTag>(simulator));
+        model.addOutputModule(new Opm::VtkBlackOilSolventModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
@@ -866,7 +866,7 @@ BlackOilSolventModule<TypeTag, enableSolventV>::isMiscible_;
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilSolventIntensiveQuantities
+ * \class Opm::BlackOilSolventIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the equations needed by the
  *        solvents extension of the black-oil model.
@@ -1312,7 +1312,7 @@ public:
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilSolventExtensiveQuantities
+ * \class Opm::BlackOilSolventExtensiveQuantities
  *
  * \brief Provides the solvent specific extensive quantities to the generic black-oil
  *        module's extensive quantities.
@@ -1350,7 +1350,7 @@ public:
                               unsigned timeIdx)
     {
         const auto& gradCalc = elemCtx.gradientCalculator();
-        Ewoms::PressureCallback<TypeTag> pressureCallback(elemCtx);
+        Opm::PressureCallback<TypeTag> pressureCallback(elemCtx);
 
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const auto& faceNormal = scvf.normal();
@@ -1573,6 +1573,6 @@ public:
     { throw std::runtime_error("setSolventVolumeFlux() called but solvents are disabled"); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

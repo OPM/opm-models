@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::P1FeGradientCalculator
+ * \copydoc Opm::P1FeGradientCalculator
  */
 #ifndef EWOMS_P1FE_GRADIENT_CALCULATOR_HH
 #define EWOMS_P1FE_GRADIENT_CALCULATOR_HH
@@ -51,7 +51,7 @@
 #define EWOMS_NO_LOCALFUNCTIONS_UNUSED  OPM_UNUSED
 #endif
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup FiniteElementDiscretizations
  *
@@ -358,7 +358,7 @@ template<class TypeTag>
 typename P1FeGradientCalculator<TypeTag>::LocalFiniteElementCache
 P1FeGradientCalculator<TypeTag>::feCache_;
 #endif
-} // namespace Ewoms
+} // namespace Opm
 
 #undef EWOMS_NO_LOCALFUNCTIONS_UNUSED
 

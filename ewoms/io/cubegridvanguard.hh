@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::CubeGridVanguard
+ * \copydoc Opm::CubeGridVanguard
  */
 #ifndef EWOMS_CUBE_GRID_VANGUARD_HH
 #define EWOMS_CUBE_GRID_VANGUARD_HH
@@ -55,7 +55,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides a simulator vanguad which creates a regular grid made of
@@ -151,6 +151,6 @@ protected:
     GridPointer cubeGrid_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

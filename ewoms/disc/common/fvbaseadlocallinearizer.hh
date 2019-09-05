@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseAdLocalLinearizer
+ * \copydoc Opm::FvBaseAdLocalLinearizer
  */
 #ifndef EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
 #define EWOMS_FV_BASE_AD_LOCAL_LINEARIZER_HH
@@ -40,7 +40,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 // forward declaration
 template<class TypeTag>
 class FvBaseAdLocalLinearizer;
@@ -66,7 +66,7 @@ NEW_PROP_TAG(GridView);
 
 // set the properties to be spliced in
 SET_TYPE_PROP(AutoDiffLocalLinearizer, LocalLinearizer,
-              Ewoms::FvBaseAdLocalLinearizer<TypeTag>);
+              Opm::FvBaseAdLocalLinearizer<TypeTag>);
 
 //! Set the function evaluation w.r.t. the primary variables
 SET_PROP(AutoDiffLocalLinearizer, Evaluation)
@@ -82,7 +82,7 @@ public:
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -311,6 +311,6 @@ protected:
     ScalarLocalBlockMatrix jacobian_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

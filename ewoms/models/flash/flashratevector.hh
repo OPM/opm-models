@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashRateVector
+ * \copydoc Opm::FlashRateVector
  */
 #ifndef EWOMS_FLASH_RATE_VECTOR_HH
 #define EWOMS_FLASH_RATE_VECTOR_HH
@@ -36,12 +36,12 @@
 
 #include "flashintensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FlashModel
  *
- * \copydoc Ewoms::ImmiscibleRateVector
+ * \copydoc Opm::ImmiscibleRateVector
  */
 template <class TypeTag>
 class FlashRateVector
@@ -58,7 +58,7 @@ class FlashRateVector
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
 
     typedef Dune::FieldVector<Evaluation, numEq> ParentType;
-    typedef Ewoms::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     FlashRateVector() : ParentType()
@@ -139,6 +139,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

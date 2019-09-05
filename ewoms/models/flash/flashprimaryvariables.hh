@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashPrimaryVariables
+ * \copydoc Opm::FlashPrimaryVariables
  */
 #ifndef EWOMS_FLASH_PRIMARY_VARIABLES_HH
 #define EWOMS_FLASH_PRIMARY_VARIABLES_HH
@@ -43,7 +43,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FlashModel
@@ -72,7 +72,7 @@ class FlashPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
-    typedef Ewoms::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     FlashPrimaryVariables() : ParentType()
@@ -145,6 +145,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

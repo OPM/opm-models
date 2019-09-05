@@ -23,14 +23,14 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::TimerGuard
+ * \copydoc Opm::TimerGuard
  */
 #ifndef EWOMS_TIMER_GUARD_HH
 #define EWOMS_TIMER_GUARD_HH
 
 #include "timer.hh"
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Common
  *
@@ -53,6 +53,6 @@ private:
     Timer& timer_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

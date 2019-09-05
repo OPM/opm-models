@@ -29,7 +29,7 @@
  * "SolverWrapper" property:
  * \code
  * SET_TYPE_PROP(YourTypeTag, LinearSolverWrapper,
- *               Ewoms::Linear::SolverWrapper$SOLVER<TypeTag>);
+ *               Opm::Linear::SolverWrapper$SOLVER<TypeTag>);
  * \endcode
  *
  * The possible choices for '\c $SOLVER' are:
@@ -61,7 +61,7 @@ NEW_PROP_TAG(LinearSolverVerbosity);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 namespace Linear {
 

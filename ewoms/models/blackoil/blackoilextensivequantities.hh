@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilExtensiveQuantities
+ * \copydoc Opm::BlackOilExtensiveQuantities
  */
 #ifndef EWOMS_BLACK_OIL_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_BLACK_OIL_EXTENSIVE_QUANTITIES_HH
@@ -35,7 +35,7 @@
 
 #include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -98,6 +98,6 @@ protected:
     { return *static_cast<const Implementation*>(this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

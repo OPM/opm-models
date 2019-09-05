@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvStencil
+ * \copydoc Opm::VcfvStencil
  */
 #ifndef EWOMS_VCFV_STENCIL_HH
 #define EWOMS_VCFV_STENCIL_HH
@@ -45,7 +45,7 @@
 
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief The types of reference elements available.
@@ -73,7 +73,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::cube>
     enum { numScv = 2 };
 
 public:
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static void init()
     {
@@ -112,7 +112,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/1, ElementType::simplex>
     enum { numScv = 2 };
 
 public:
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static const ScvLocalGeometry& get(unsigned scvIdx OPM_UNUSED)
     {
@@ -130,7 +130,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::simplex>
     enum { numScv = 3 };
 
 public:
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
@@ -182,7 +182,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/2, ElementType::cube>
     enum { numScv = 4 };
 
 public:
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
@@ -243,7 +243,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::simplex>
     enum { numScv = 4 };
 
 public:
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
@@ -322,7 +322,7 @@ class VcfvScvGeometries<Scalar, /*dim=*/3, ElementType::cube>
     enum { numScv = 8 };
 
 public:
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
     static const ScvLocalGeometry& get(unsigned scvIdx)
     { return scvGeoms_[scvIdx]; }
@@ -484,7 +484,7 @@ private:
     typedef Dune::FieldVector<CoordScalar,dim> LocalPosition;
     typedef typename GridView::IntersectionIterator IntersectionIterator;
 
-    typedef Ewoms::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
+    typedef Opm::QuadrialteralQuadratureGeometry<Scalar, dim> ScvLocalGeometry;
 
 #if HAVE_DUNE_LOCALFUNCTIONS
     typedef Dune::PQkLocalFiniteElementCache<CoordScalar, Scalar, dim, 1> LocalFiniteElementCache;
@@ -1390,7 +1390,7 @@ typename VcfvStencil<Scalar, GridView>::LocalFiniteElementCache
 VcfvStencil<Scalar, GridView>::feCache_;
 #endif // HAVE_DUNE_LOCALFUNCTIONS
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif
 

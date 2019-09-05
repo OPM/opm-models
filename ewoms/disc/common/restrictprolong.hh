@@ -29,7 +29,7 @@
 #include <dune/fem/space/common/restrictprolonginterface.hh>
 #endif
 
-namespace Ewoms
+namespace Opm
 {
     template < class Grid, class Container >
     class CopyRestrictProlong;
@@ -200,6 +200,6 @@ namespace Ewoms
       { }
     };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

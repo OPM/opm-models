@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilProblem
+ * \copydoc Opm::BlackOilProblem
  */
 #ifndef EWOMS_BLACKOIL_PROBLEM_HH
 #define EWOMS_BLACKOIL_PROBLEM_HH
@@ -34,7 +34,7 @@
 
 #include <opm/material/common/Unused.hpp>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -171,6 +171,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

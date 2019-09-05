@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::EcfvBaseOutputModule
+ * \copydoc Opm::EcfvBaseOutputModule
  */
 #ifndef EWOMS_ECFV_VTK_BASE_OUTPUT_MODULE_HH
 #define EWOMS_ECFV_VTK_BASE_OUTPUT_MODULE_HH
@@ -32,7 +32,7 @@
 
 #include <ewoms/io/vtkmultiwriter.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup EcfvDiscretization
  *
@@ -76,6 +76,6 @@ public:
     { baseWriter.attachTensorElementData(buffer, name.c_str()); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

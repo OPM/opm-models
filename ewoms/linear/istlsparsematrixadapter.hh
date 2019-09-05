@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::IstlSparseMatrixAdapter
+ * \copydoc Opm::Linear::IstlSparseMatrixAdapter
  */
 #ifndef EWOMS_ISTL_SPARSE_MATRIX_ADAPTER_HH
 #define EWOMS_ISTL_SPARSE_MATRIX_ADAPTER_HH
@@ -31,7 +31,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/version.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!

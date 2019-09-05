@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkTemperatureModule
+ * \copydoc Opm::VtkTemperatureModule
  */
 #ifndef EWOMS_VTK_TEMPERATURE_MODULE_HH
 #define EWOMS_VTK_TEMPERATURE_MODULE_HH
@@ -50,7 +50,7 @@ SET_BOOL_PROP(VtkTemperature, VtkWriteTemperature, true);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Vtk
@@ -72,7 +72,7 @@ class VtkTemperatureModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
     VtkTemperatureModule(const Simulator& simulator)
@@ -142,6 +142,6 @@ private:
     ScalarBuffer temperature_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

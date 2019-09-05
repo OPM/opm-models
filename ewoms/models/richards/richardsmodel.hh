@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsModel
+ * \copydoc Opm::RichardsModel
  */
 #ifndef EWOMS_RICHARDS_MODEL_HH
 #define EWOMS_RICHARDS_MODEL_HH
@@ -51,7 +51,7 @@
 #include <sstream>
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class RichardsModel;
 }
@@ -84,31 +84,31 @@ SET_INT_PROP(Richards, GasComponentIndex, 1 - GET_PROP_VALUE(TypeTag, LiquidComp
 //! The local residual operator
 SET_TYPE_PROP(Richards,
               LocalResidual,
-              Ewoms::RichardsLocalResidual<TypeTag>);
+              Opm::RichardsLocalResidual<TypeTag>);
 
 //! The global model used
-SET_TYPE_PROP(Richards, Model, Ewoms::RichardsModel<TypeTag>);
+SET_TYPE_PROP(Richards, Model, Opm::RichardsModel<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(Richards, RateVector, Ewoms::RichardsRateVector<TypeTag>);
+SET_TYPE_PROP(Richards, RateVector, Opm::RichardsRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(Richards, BoundaryRateVector, Ewoms::RichardsBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(Richards, BoundaryRateVector, Opm::RichardsBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(Richards, PrimaryVariables, Ewoms::RichardsPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(Richards, PrimaryVariables, Opm::RichardsPrimaryVariables<TypeTag>);
 
 //! The class for the intensive quantities
-SET_TYPE_PROP(Richards, IntensiveQuantities, Ewoms::RichardsIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(Richards, IntensiveQuantities, Opm::RichardsIntensiveQuantities<TypeTag>);
 
 //! The class for the quantities required for the flux calculation
-SET_TYPE_PROP(Richards, ExtensiveQuantities, Ewoms::RichardsExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(Richards, ExtensiveQuantities, Opm::RichardsExtensiveQuantities<TypeTag>);
 
 //! The class of the Newton method
-SET_TYPE_PROP(Richards, NewtonMethod, Ewoms::RichardsNewtonMethod<TypeTag>);
+SET_TYPE_PROP(Richards, NewtonMethod, Opm::RichardsNewtonMethod<TypeTag>);
 
 //! The class with all index definitions for the model
-SET_TYPE_PROP(Richards, Indices, Ewoms::RichardsIndices);
+SET_TYPE_PROP(Richards, Indices, Opm::RichardsIndices);
 
 /*!
  * \brief The wetting phase used.
@@ -169,7 +169,7 @@ public:
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -368,6 +368,6 @@ public:
 
     mutable Scalar referencePressure_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

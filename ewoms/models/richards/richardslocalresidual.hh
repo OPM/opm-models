@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsLocalResidual
+ * \copydoc Opm::RichardsLocalResidual
  */
 #ifndef EWOMS_RICHARDS_LOCAL_RESIDUAL_HH
 #define EWOMS_RICHARDS_LOCAL_RESIDUAL_HH
@@ -32,7 +32,7 @@
 
 #include "richardsextensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -106,6 +106,6 @@ public:
     { elemCtx.problem().source(source, elemCtx, dofIdx, timeIdx); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsExtensiveQuantities
+ * \copydoc Opm::PvsExtensiveQuantities
  */
 #ifndef EWOMS_PVS_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_PVS_EXTENSIVE_QUANTITIES_HH
@@ -34,7 +34,7 @@
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -58,10 +58,10 @@ class PvsExtensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef Ewoms::DiffusionExtensiveQuantities<TypeTag, enableDiffusion> DiffusionExtensiveQuantities;
+    typedef Opm::DiffusionExtensiveQuantities<TypeTag, enableDiffusion> DiffusionExtensiveQuantities;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
+    typedef Opm::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
     /*!
@@ -89,6 +89,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

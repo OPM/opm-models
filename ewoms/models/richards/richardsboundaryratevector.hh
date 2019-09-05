@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsBoundaryRateVector
+ * \copydoc Opm::RichardsBoundaryRateVector
  */
 #ifndef EWOMS_RICHARDS_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_RICHARDS_BOUNDARY_RATE_VECTOR_HH
@@ -33,7 +33,7 @@
 
 #include "richardsintensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -160,6 +160,6 @@ public:
     { (*this) = Evaluation(0.0); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

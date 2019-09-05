@@ -37,7 +37,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Discretization
  *
@@ -477,6 +477,6 @@ private:
     unsigned short compIdx_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

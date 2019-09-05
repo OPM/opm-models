@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::MultiPhaseBaseExtensiveQuantities
+ * \copydoc Opm::MultiPhaseBaseExtensiveQuantities
  */
 #ifndef EWOMS_MULTI_PHASE_BASE_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_MULTI_PHASE_BASE_EXTENSIVE_QUANTITIES_HH
@@ -39,7 +39,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Discretization
  *
@@ -172,6 +172,6 @@ private:
     short downstreamScvIdx_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

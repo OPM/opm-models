@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::Simulator
+ * \copydoc Opm::Simulator
  */
 #ifndef EWOMS_SIMULATOR_HH
 #define EWOMS_SIMULATOR_HH
@@ -84,7 +84,7 @@ END_PROPERTIES
             std::abort();                                               \
     }
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Common
@@ -113,7 +113,7 @@ public:
 
     Simulator(bool verbose = true)
     {
-        Ewoms::TimerGuard setupTimerGuard(setupTimer_);
+        Opm::TimerGuard setupTimerGuard(setupTimer_);
 
         setupTimer_.start();
 
@@ -342,51 +342,51 @@ public:
      * \brief Returns a reference to the timer object which measures the time needed to
      *        set up and initialize the simulation
      */
-    const Ewoms::Timer& setupTimer() const
+    const Opm::Timer& setupTimer() const
     { return setupTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed to
      *        run the simulation
      */
-    const Ewoms::Timer& executionTimer() const
+    const Opm::Timer& executionTimer() const
     { return executionTimer_; }
-    Ewoms::Timer& executionTimer()
+    Opm::Timer& executionTimer()
     { return executionTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed for
      *        pre- and postprocessing of the solutions.
      */
-    const Ewoms::Timer& prePostProcessTimer() const
+    const Opm::Timer& prePostProcessTimer() const
     { return prePostProcessTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed for
      *        linarizing the solutions.
      */
-    const Ewoms::Timer& linearizeTimer() const
+    const Opm::Timer& linearizeTimer() const
     { return linearizeTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed by
      *        the solver.
      */
-    const Ewoms::Timer& solveTimer() const
+    const Opm::Timer& solveTimer() const
     { return solveTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed to
      *        the solutions of the non-linear system of equations.
      */
-    const Ewoms::Timer& updateTimer() const
+    const Opm::Timer& updateTimer() const
     { return updateTimer_; }
 
     /*!
      * \brief Returns a reference to the timer object which measures the time needed to
      *        write the visualization output
      */
-    const Ewoms::Timer& writeTimer() const
+    const Opm::Timer& writeTimer() const
     { return writeTimer_; }
 
     /*!
@@ -617,7 +617,7 @@ public:
             // try to restart a previous simulation
             time_ = restartTime;
 
-            Ewoms::Restart res;
+            Opm::Restart res;
             EWOMS_CATCH_PARALLEL_EXCEPTIONS_FATAL(res.deserializeBegin(*this, time_));
             if (verbose_)
                 std::cout << "Deserialize from file '" << res.fileName() << "'\n" << std::flush;
@@ -864,11 +864,11 @@ public:
      * The file will start with the prefix returned by the name()
      * method, has the current time of the simulation clock in it's
      * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
-     * file.)  See Ewoms::Restart for details.
+     * file.)  See Opm::Restart for details.
      */
     void serialize()
     {
-        typedef Ewoms::Restart Restarter;
+        typedef Opm::Restart Restarter;
         Restarter res;
         res.serializeBegin(*this);
         if (gridView().comm().rank() == 0)
@@ -933,13 +933,13 @@ private:
     Scalar episodeStartTime_;
     Scalar episodeLength_;
 
-    Ewoms::Timer setupTimer_;
-    Ewoms::Timer executionTimer_;
-    Ewoms::Timer prePostProcessTimer_;
-    Ewoms::Timer linearizeTimer_;
-    Ewoms::Timer solveTimer_;
-    Ewoms::Timer updateTimer_;
-    Ewoms::Timer writeTimer_;
+    Opm::Timer setupTimer_;
+    Opm::Timer executionTimer_;
+    Opm::Timer prePostProcessTimer_;
+    Opm::Timer linearizeTimer_;
+    Opm::Timer solveTimer_;
+    Opm::Timer updateTimer_;
+    Opm::Timer writeTimer_;
 
     std::vector<Scalar> forcedTimeSteps_;
     Scalar startTime_;
@@ -952,6 +952,6 @@ private:
     bool finished_;
     bool verbose_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

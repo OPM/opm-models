@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseLocalResidual
+ * \copydoc Opm::FvBaseLocalResidual
  */
 #ifndef EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
 #define EWOMS_FV_BASE_LOCAL_RESIDUAL_HH
@@ -46,7 +46,7 @@
 
 #include <cmath>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup FiniteVolumeDiscretizations
  *
@@ -87,7 +87,7 @@ private:
     {}
 
 public:
-    typedef Dune::BlockVector<EvalVector, Ewoms::aligned_allocator<EvalVector, alignof(EvalVector)> > LocalEvalBlockVector;
+    typedef Dune::BlockVector<EvalVector, Opm::aligned_allocator<EvalVector, alignof(EvalVector)> > LocalEvalBlockVector;
 
     FvBaseLocalResidual()
     { }
@@ -633,6 +633,6 @@ private:
     LocalEvalBlockVector internalResidual_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilPrimaryVariables
+ * \copydoc Opm::BlackOilPrimaryVariables
  */
 #ifndef EWOMS_BLACK_OIL_PRIMARY_VARIABLES_HH
 #define EWOMS_BLACK_OIL_PRIMARY_VARIABLES_HH
@@ -44,7 +44,7 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag, bool enableSolvent>
 class BlackOilSolventModule;
 
@@ -642,6 +642,6 @@ private:
 };
 
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

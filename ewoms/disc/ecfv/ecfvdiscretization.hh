@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::EcfvDiscretization
+ * \copydoc Opm::EcfvDiscretization
  */
 #ifndef EWOMS_ECFV_DISCRETIZATION_HH
 #define EWOMS_ECFV_DISCRETIZATION_HH
@@ -43,7 +43,7 @@
 #include <dune/fem/space/finitevolume.hh>
 #endif
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class EcfvDiscretization;
 }
@@ -58,23 +58,23 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
 public:
-    typedef Ewoms::EcfvStencil<Scalar, GridView> type;
+    typedef Opm::EcfvStencil<Scalar, GridView> type;
 };
 
 //! Mapper for the degrees of freedoms.
 SET_TYPE_PROP(EcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, ElementMapper));
 
 //! The concrete class which manages the spatial discretization
-SET_TYPE_PROP(EcfvDiscretization, Discretization, Ewoms::EcfvDiscretization<TypeTag>);
+SET_TYPE_PROP(EcfvDiscretization, Discretization, Opm::EcfvDiscretization<TypeTag>);
 
 //! The base class for the output modules (decides whether to write
 //! element or vertex based fields)
 SET_TYPE_PROP(EcfvDiscretization, DiscBaseOutputModule,
-              Ewoms::EcfvBaseOutputModule<TypeTag>);
+              Opm::EcfvBaseOutputModule<TypeTag>);
 
 //! The class to create grid communication handles
 SET_TYPE_PROP(EcfvDiscretization, GridCommHandleFactory,
-              Ewoms::EcfvGridCommHandleFactory<TypeTag>);
+              Opm::EcfvGridCommHandleFactory<TypeTag>);
 
 #if HAVE_DUNE_FEM
 //! Set the DiscreteFunctionSpace
@@ -100,7 +100,7 @@ SET_PROP(EcfvDiscretization, BorderListCreator)
     typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 public:
-    typedef Ewoms::Linear::ElementBorderListFromGrid<GridView, ElementMapper> type;
+    typedef Opm::Linear::ElementBorderListFromGrid<GridView, ElementMapper> type;
 };
 
 //! For the element centered finite volume method, ghost and overlap elements must be
@@ -114,7 +114,7 @@ SET_BOOL_PROP(EcfvDiscretization, UseLinearizationLock, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup EcfvDiscretization
  *
@@ -211,6 +211,6 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

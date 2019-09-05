@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::GlobalIndices
+ * \copydoc Opm::Linear::GlobalIndices
  */
 #ifndef EWOMS_GLOBAL_INDICES_HH
 #define EWOMS_GLOBAL_INDICES_HH
@@ -44,7 +44,7 @@
 
 #include "overlaptypes.hh"
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \brief This class maps domestic row indices to and from "global"
@@ -344,6 +344,6 @@ protected:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

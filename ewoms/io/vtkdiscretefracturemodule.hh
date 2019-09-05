@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkDiscreteFractureModule
+ * \copydoc Opm::VtkDiscreteFractureModule
  */
 #ifndef EWOMS_VTK_DISCRETE_FRACTURE_MODULE_HH
 #define EWOMS_VTK_DISCRETE_FRACTURE_MODULE_HH
@@ -68,7 +68,7 @@ SET_BOOL_PROP(VtkDiscreteFracture, VtkWriteFractureVolumeFraction, true);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -98,7 +98,7 @@ class VtkDiscreteFractureModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, DiscBaseOutputModule) DiscBaseOutputModule;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { dim = GridView::dimension };
     enum { dimWorld = GridView::dimensionworld };
@@ -359,6 +359,6 @@ private:
     PhaseBuffer potentialWeight_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

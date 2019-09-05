@@ -23,12 +23,12 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilIndices
+ * \copydoc Opm::BlackOilIndices
  */
 #ifndef EWOMS_BLACK_OIL_INDICES_HH
 #define EWOMS_BLACK_OIL_INDICES_HH
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -148,6 +148,6 @@ struct BlackOilIndices
         enableEnergy ? PVOffset + numPhases + numSolvents + numPolymers + numFoam : -1000;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

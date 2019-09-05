@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::MpiBuffer
+ * \copydoc Opm::MpiBuffer
  */
 #ifndef EWOMS_MPI_BUFFER_HH
 #define EWOMS_MPI_BUFFER_HH
@@ -36,7 +36,7 @@
 #include <type_traits>
 #include <cassert>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Simplifies handling of buffers to be used in conjunction with MPI
@@ -234,6 +234,6 @@ private:
 #endif // HAVE_MPI
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::ParallelIstlSolverBackend
+ * \copydoc Opm::Linear::ParallelIstlSolverBackend
  */
 #ifndef EWOMS_PARALLEL_ISTL_BACKEND_HH
 #define EWOMS_PARALLEL_ISTL_BACKEND_HH
@@ -45,7 +45,7 @@ NEW_PROP_TAG(GMResRestart);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \ingroup Linear
@@ -55,7 +55,7 @@ namespace Linear {
  * To set the linear solver, use
  * \code
  * SET_TYPE_PROP(YourTypeTag, LinearSolverWrapper,
- *               Ewoms::Linear::SolverWrapper$SOLVER<TypeTag>);
+ *               Opm::Linear::SolverWrapper$SOLVER<TypeTag>);
  * \endcode
  *
  * The possible choices for '\c $SOLVER' are:
@@ -69,7 +69,7 @@ namespace Linear {
  * Chosing the preconditioner works in an analogous way:
  * \code
  * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,
- *               Ewoms::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
+ *               Opm::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
  * \endcode
  *
  * Where the choices possible for '\c $PRECONDITIONER' are:
@@ -149,20 +149,20 @@ BEGIN_PROPERTIES
 
 SET_TYPE_PROP(ParallelIstlLinearSolver,
               LinearSolverBackend,
-              Ewoms::Linear::ParallelIstlSolverBackend<TypeTag>);
+              Opm::Linear::ParallelIstlSolverBackend<TypeTag>);
 
 SET_TYPE_PROP(ParallelIstlLinearSolver,
               LinearSolverWrapper,
-              Ewoms::Linear::SolverWrapperBiCGStab<TypeTag>);
+              Opm::Linear::SolverWrapperBiCGStab<TypeTag>);
 
 #if DUNE_VERSION_NEWER(DUNE_ISTL, 2,7)
 SET_TYPE_PROP(ParallelIstlLinearSolver,
               PreconditionerWrapper,
-              Ewoms::Linear::PreconditionerWrapperILU<TypeTag>);
+              Opm::Linear::PreconditionerWrapperILU<TypeTag>);
 #else
 SET_TYPE_PROP(ParallelIstlLinearSolver,
               PreconditionerWrapper,
-              Ewoms::Linear::PreconditionerWrapperILU0<TypeTag>);
+              Opm::Linear::PreconditionerWrapperILU0<TypeTag>);
 #endif
 
 //! set the GMRes restart parameter to 10 by default

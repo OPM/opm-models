@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashModel
+ * \copydoc Opm::FlashModel
  */
 #ifndef EWOMS_FLASH_MODEL_HH
 #define EWOMS_FLASH_MODEL_HH
@@ -51,7 +51,7 @@
 #include <sstream>
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class FlashModel;
 }
@@ -66,7 +66,7 @@ NEW_TYPE_TAG(FlashModel, INHERITS_FROM(MultiPhaseBaseModel,
 
 //! Use the FlashLocalResidual function for the flash model
 SET_TYPE_PROP(FlashModel, LocalResidual,
-              Ewoms::FlashLocalResidual<TypeTag>);
+              Opm::FlashLocalResidual<TypeTag>);
 
 //! Use the NCP flash solver by default
 SET_TYPE_PROP(FlashModel, FlashSolver,
@@ -77,25 +77,25 @@ SET_TYPE_PROP(FlashModel, FlashSolver,
 SET_SCALAR_PROP(FlashModel, FlashTolerance, -1.0);
 
 //! the Model property
-SET_TYPE_PROP(FlashModel, Model, Ewoms::FlashModel<TypeTag>);
+SET_TYPE_PROP(FlashModel, Model, Opm::FlashModel<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(FlashModel, PrimaryVariables, Ewoms::FlashPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(FlashModel, PrimaryVariables, Opm::FlashPrimaryVariables<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(FlashModel, RateVector, Ewoms::FlashRateVector<TypeTag>);
+SET_TYPE_PROP(FlashModel, RateVector, Opm::FlashRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(FlashModel, BoundaryRateVector, Ewoms::FlashBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(FlashModel, BoundaryRateVector, Opm::FlashBoundaryRateVector<TypeTag>);
 
 //! the IntensiveQuantities property
-SET_TYPE_PROP(FlashModel, IntensiveQuantities, Ewoms::FlashIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(FlashModel, IntensiveQuantities, Opm::FlashIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
-SET_TYPE_PROP(FlashModel, ExtensiveQuantities, Ewoms::FlashExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(FlashModel, ExtensiveQuantities, Opm::FlashExtensiveQuantities<TypeTag>);
 
 //! The indices required by the flash-baseed isothermal compositional model
-SET_TYPE_PROP(FlashModel, Indices, Ewoms::FlashIndices<TypeTag, /*PVIdx=*/0>);
+SET_TYPE_PROP(FlashModel, Indices, Opm::FlashIndices<TypeTag, /*PVIdx=*/0>);
 
 // The updates of intensive quantities tend to be _very_ expensive for this
 // model, so let's try to minimize the number of required ones
@@ -114,7 +114,7 @@ SET_BOOL_PROP(FlashModel, EnableEnergy, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FlashModel
@@ -137,7 +137,7 @@ namespace Ewoms {
  * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Opm::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -191,7 +191,7 @@ class FlashModel
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     FlashModel(Simulator& simulator)
@@ -206,13 +206,13 @@ public:
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
+        Opm::VtkCompositionModule<TypeTag>::registerParameters();
 
         if (enableDiffusion)
-            Ewoms::VtkDiffusionModule<TypeTag>::registerParameters();
+            Opm::VtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
+            Opm::VtkEnergyModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, FlashTolerance,
                              "The maximum tolerance for the flash solver to "
@@ -305,14 +305,14 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which are meaningful for the model
-        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
-            this->addOutputModule(new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
-            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

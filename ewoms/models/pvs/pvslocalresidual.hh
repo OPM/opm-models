@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsLocalResidual
+ * \copydoc Opm::PvsLocalResidual
  */
 #ifndef EWOMS_PVS_LOCAL_RESIDUAL_HH
 #define EWOMS_PVS_LOCAL_RESIDUAL_HH
@@ -35,7 +35,7 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -59,10 +59,10 @@ class PvsLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
+    typedef Opm::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -195,6 +195,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

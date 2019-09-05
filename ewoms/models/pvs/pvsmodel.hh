@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsModel
+ * \copydoc Opm::PvsModel
  */
 #ifndef EWOMS_PVS_MODEL_HH
 #define EWOMS_PVS_MODEL_HH
@@ -56,7 +56,7 @@
 #include <string>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class PvsModel;
 }
@@ -73,31 +73,31 @@ NEW_TYPE_TAG(PvsModel, INHERITS_FROM(MultiPhaseBaseModel,
 //! Use the PVS local jacobian operator for the PVS model
 SET_TYPE_PROP(PvsModel,
               LocalResidual,
-              Ewoms::PvsLocalResidual<TypeTag>);
+              Opm::PvsLocalResidual<TypeTag>);
 
 //! Use the PVS specific newton method for the PVS model
-SET_TYPE_PROP(PvsModel, NewtonMethod, Ewoms::PvsNewtonMethod<TypeTag>);
+SET_TYPE_PROP(PvsModel, NewtonMethod, Opm::PvsNewtonMethod<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(PvsModel, Model, Ewoms::PvsModel<TypeTag>);
+SET_TYPE_PROP(PvsModel, Model, Opm::PvsModel<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(PvsModel, PrimaryVariables, Ewoms::PvsPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(PvsModel, PrimaryVariables, Opm::PvsPrimaryVariables<TypeTag>);
 
 //! the RateVector property
-SET_TYPE_PROP(PvsModel, RateVector, Ewoms::PvsRateVector<TypeTag>);
+SET_TYPE_PROP(PvsModel, RateVector, Opm::PvsRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(PvsModel, BoundaryRateVector, Ewoms::PvsBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(PvsModel, BoundaryRateVector, Opm::PvsBoundaryRateVector<TypeTag>);
 
 //! the IntensiveQuantities property
-SET_TYPE_PROP(PvsModel, IntensiveQuantities, Ewoms::PvsIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(PvsModel, IntensiveQuantities, Opm::PvsIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
-SET_TYPE_PROP(PvsModel, ExtensiveQuantities, Ewoms::PvsExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(PvsModel, ExtensiveQuantities, Opm::PvsExtensiveQuantities<TypeTag>);
 
 //! The indices required by the isothermal PVS model
-SET_TYPE_PROP(PvsModel, Indices, Ewoms::PvsIndices<TypeTag, /*PVIdx=*/0>);
+SET_TYPE_PROP(PvsModel, Indices, Opm::PvsIndices<TypeTag, /*PVIdx=*/0>);
 
 // set the model to a medium verbosity
 SET_INT_PROP(PvsModel, PvsVerbosity, 1);
@@ -119,7 +119,7 @@ SET_SCALAR_PROP(PvsModel, PvsMoleFractionsBaseWeight, 1.0);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -141,7 +141,7 @@ namespace Ewoms {
  * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Opm::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -240,7 +240,7 @@ class PvsModel
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     PvsModel(Simulator& simulator)
@@ -258,14 +258,14 @@ public:
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VtkPhasePresenceModule<TypeTag>::registerParameters();
-        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
+        Opm::VtkPhasePresenceModule<TypeTag>::registerParameters();
+        Opm::VtkCompositionModule<TypeTag>::registerParameters();
 
         if (enableDiffusion)
-            Ewoms::VtkDiffusionModule<TypeTag>::registerParameters();
+            Opm::VtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
+            Opm::VtkEnergyModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, int, PvsVerbosity,
                              "The verbosity level of the primary variable "
@@ -577,12 +577,12 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which are meaningful for the model
-        this->addOutputModule(new Ewoms::VtkPhasePresenceModule<TypeTag>(this->simulator_));
-        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkPhasePresenceModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
-            this->addOutputModule(new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
-            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
     mutable Scalar referencePressure_;

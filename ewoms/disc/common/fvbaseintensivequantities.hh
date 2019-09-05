@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseIntensiveQuantities
+ * \copydoc Opm::FvBaseIntensiveQuantities
  */
 #ifndef EWOMS_FV_BASE_INTENSIVE_QUANTITIES_HH
 #define EWOMS_FV_BASE_INTENSIVE_QUANTITIES_HH
@@ -33,7 +33,7 @@
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -98,6 +98,6 @@ private:
     Scalar extrusionFactor_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

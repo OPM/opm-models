@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::DgfVanguard
+ * \copydoc Opm::DgfVanguard
  */
 #ifndef EWOMS_DGF_GRID_VANGUARD_HH
 #define EWOMS_DGF_GRID_VANGUARD_HH
@@ -50,7 +50,7 @@ NEW_PROP_TAG(Simulator);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides a simulator vanguard which creates a grid by parsing a Dune Grid
@@ -63,7 +63,7 @@ class DgfVanguard : public BaseVanguard<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
-    typedef Ewoms::FractureMapper<TypeTag> FractureMapper;
+    typedef Opm::FractureMapper<TypeTag> FractureMapper;
 
     typedef std::unique_ptr< Grid > GridPointer;
 
@@ -203,6 +203,6 @@ private:
     FractureMapper fractureMapper_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

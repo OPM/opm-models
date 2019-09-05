@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureModel
+ * \copydoc Opm::DiscreteFractureModel
  */
 #ifndef EWOMS_DISCRETE_FRACTURE_MODEL_HH
 #define EWOMS_DISCRETE_FRACTURE_MODEL_HH
@@ -44,7 +44,7 @@
 
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class DiscreteFractureModel;
 }
@@ -55,13 +55,13 @@ BEGIN_PROPERTIES
 NEW_TYPE_TAG(DiscreteFractureModel, INHERITS_FROM(ImmiscibleTwoPhaseModel, VtkDiscreteFracture));
 
 //! The class for the model
-SET_TYPE_PROP(DiscreteFractureModel, Model, Ewoms::DiscreteFractureModel<TypeTag>);
+SET_TYPE_PROP(DiscreteFractureModel, Model, Opm::DiscreteFractureModel<TypeTag>);
 
 //! The class for the model
-SET_TYPE_PROP(DiscreteFractureModel, BaseProblem, Ewoms::DiscreteFractureProblem<TypeTag>);
+SET_TYPE_PROP(DiscreteFractureModel, BaseProblem, Opm::DiscreteFractureProblem<TypeTag>);
 
 //! Use the immiscible multi-phase local jacobian operator for the immiscible multi-phase model
-SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Ewoms::DiscreteFractureLocalResidual<TypeTag>);
+SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Opm::DiscreteFractureLocalResidual<TypeTag>);
 
 // The type of the base base class for actual problems.
 // TODO!?
@@ -69,15 +69,15 @@ SET_TYPE_PROP(DiscreteFractureModel, LocalResidual, Ewoms::DiscreteFractureLocal
 
 //! the PrimaryVariables property
 SET_TYPE_PROP(DiscreteFractureModel, PrimaryVariables,
-              Ewoms::DiscreteFracturePrimaryVariables<TypeTag>);
+              Opm::DiscreteFracturePrimaryVariables<TypeTag>);
 
 //! the IntensiveQuantities property
 SET_TYPE_PROP(DiscreteFractureModel, IntensiveQuantities,
-              Ewoms::DiscreteFractureIntensiveQuantities<TypeTag>);
+              Opm::DiscreteFractureIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
 SET_TYPE_PROP(DiscreteFractureModel, ExtensiveQuantities,
-              Ewoms::DiscreteFractureExtensiveQuantities<TypeTag>);
+              Opm::DiscreteFractureExtensiveQuantities<TypeTag>);
 
 //! For the discrete fracture model, we need to use two-point flux approximation or it
 //! will converge very poorly
@@ -92,7 +92,7 @@ SET_BOOL_PROP(DiscreteFractureModel, EnableIntensiveQuantityCache, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup DiscreteFractureModel
@@ -135,7 +135,7 @@ public:
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VtkDiscreteFractureModule<TypeTag>::registerParameters();
+        Opm::VtkDiscreteFractureModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -148,9 +148,9 @@ public:
     {
         ParentType::registerOutputModules_();
 
-        this->addOutputModule(new Ewoms::VtkDiscreteFractureModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkDiscreteFractureModule<TypeTag>(this->simulator_));
     }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

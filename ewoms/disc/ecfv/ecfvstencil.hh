@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::EcfvStencil
+ * \copydoc Opm::EcfvStencil
  */
 #ifndef EWOMS_ECFV_STENCIL_HH
 #define EWOMS_ECFV_STENCIL_HH
@@ -40,7 +40,7 @@
 
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup EcfvDiscretization
  *
@@ -392,7 +392,7 @@ protected:
     std::vector<BoundaryFace>  boundaryFaces_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 
 #endif

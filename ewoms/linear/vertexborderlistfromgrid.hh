@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::VertexBorderListFromGrid
+ * \copydoc Opm::Linear::VertexBorderListFromGrid
  */
 #ifndef EWOMS_VERTEX_BORDER_LIST_FROM_GRID_HH
 #define EWOMS_VERTEX_BORDER_LIST_FROM_GRID_HH
@@ -41,7 +41,7 @@
 
 #include <algorithm>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \brief Uses communication on the grid to find the initial seed list
@@ -134,6 +134,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

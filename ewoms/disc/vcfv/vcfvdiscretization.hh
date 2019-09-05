@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VcfvDiscretization
+ * \copydoc Opm::VcfvDiscretization
  */
 #ifndef EWOMS_VCFV_DISCRETIZATION_HH
 #define EWOMS_VCFV_DISCRETIZATION_HH
@@ -44,11 +44,11 @@
 #include <dune/fem/space/lagrange.hh>
 #endif
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class VcfvDiscretization;
 
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
@@ -60,27 +60,27 @@ private:
     typedef typename GridView::ctype CoordScalar;
 
 public:
-    typedef Ewoms::VcfvStencil<CoordScalar, GridView> type;
+    typedef Opm::VcfvStencil<CoordScalar, GridView> type;
 };
 
 //! Mapper for the degrees of freedoms.
 SET_TYPE_PROP(VcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper));
 
 //! The concrete class which manages the spatial discretization
-SET_TYPE_PROP(VcfvDiscretization, Discretization, Ewoms::VcfvDiscretization<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, Discretization, Opm::VcfvDiscretization<TypeTag>);
 
 //! The base class for the output modules (decides whether to write
 //! element or vertex based fields)
 SET_TYPE_PROP(VcfvDiscretization, DiscBaseOutputModule,
-              Ewoms::VcfvBaseOutputModule<TypeTag>);
+              Opm::VcfvBaseOutputModule<TypeTag>);
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
 SET_TYPE_PROP(VcfvDiscretization, GradientCalculator,
-              Ewoms::P1FeGradientCalculator<TypeTag>);
+              Opm::P1FeGradientCalculator<TypeTag>);
 
 //! The class to create grid communication handles
 SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory,
-              Ewoms::VcfvGridCommHandleFactory<TypeTag>);
+              Opm::VcfvGridCommHandleFactory<TypeTag>);
 
 //! Use two-point gradients by default for the vertex centered finite volume scheme.
 SET_BOOL_PROP(VcfvDiscretization, UseP1FiniteElementGradients, false);
@@ -109,7 +109,7 @@ SET_PROP(VcfvDiscretization, BorderListCreator)
     typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 public:
-    typedef Ewoms::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
+    typedef Opm::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
 };
 
 //! For the vertex centered finite volume method, ghost and overlap elements must _not_
@@ -120,7 +120,7 @@ SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup VcfvDiscretization
@@ -193,6 +193,6 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

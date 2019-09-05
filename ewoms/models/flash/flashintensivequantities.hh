@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashIntensiveQuantities
+ * \copydoc Opm::FlashIntensiveQuantities
  */
 #ifndef EWOMS_FLASH_INTENSIVE_QUANTITIES_HH
 #define EWOMS_FLASH_INTENSIVE_QUANTITIES_HH
@@ -40,7 +40,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FlashModel
@@ -82,8 +82,8 @@ class FlashIntensiveQuantities
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
 
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
-    typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
-    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
+    typedef Opm::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
+    typedef Opm::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
 
 public:
     //! The type of the object returned by the fluidState() method
@@ -212,6 +212,6 @@ private:
     Evaluation mobility_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

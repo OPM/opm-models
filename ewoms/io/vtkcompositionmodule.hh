@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkCompositionModule
+ * \copydoc Opm::VtkCompositionModule
  */
 #ifndef EWOMS_VTK_COMPOSITION_MODULE_HH
 #define EWOMS_VTK_COMPOSITION_MODULE_HH
@@ -62,7 +62,7 @@ SET_BOOL_PROP(VtkComposition, VtkWriteFugacityCoeffs, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Vtk
@@ -92,7 +92,7 @@ class VtkCompositionModule : public BaseOutputModule<TypeTag>
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     typedef typename ParentType::ComponentBuffer ComponentBuffer;
     typedef typename ParentType::PhaseComponentBuffer PhaseComponentBuffer;
@@ -290,6 +290,6 @@ private:
     PhaseComponentBuffer fugacityCoeff_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

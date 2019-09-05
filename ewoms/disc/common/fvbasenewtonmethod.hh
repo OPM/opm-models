@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseNewtonMethod
+ * \copydoc Opm::FvBaseNewtonMethod
  */
 #ifndef EWOMS_FV_BASE_NEWTON_METHOD_HH
 #define EWOMS_FV_BASE_NEWTON_METHOD_HH
@@ -33,14 +33,14 @@
 #include <ewoms/nonlinear/newtonmethod.hh>
 #include <ewoms/common/propertysystem.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 template <class TypeTag>
 class FvBaseNewtonMethod;
 
 template <class TypeTag>
 class FvBaseNewtonConvergenceWriter;
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
@@ -68,15 +68,15 @@ NEW_PROP_TAG(NewtonMethod);
 
 // set default values
 SET_TYPE_PROP(FvBaseNewtonMethod, DiscNewtonMethod,
-              Ewoms::FvBaseNewtonMethod<TypeTag>);
+              Opm::FvBaseNewtonMethod<TypeTag>);
 SET_TYPE_PROP(FvBaseNewtonMethod, NewtonMethod,
               typename GET_PROP_TYPE(TypeTag, DiscNewtonMethod));
 SET_TYPE_PROP(FvBaseNewtonMethod, NewtonConvergenceWriter,
-              Ewoms::FvBaseNewtonConvergenceWriter<TypeTag>);
+              Opm::FvBaseNewtonConvergenceWriter<TypeTag>);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -89,7 +89,7 @@ namespace Ewoms {
 template <class TypeTag>
 class FvBaseNewtonMethod : public NewtonMethod<TypeTag>
 {
-    typedef Ewoms::NewtonMethod<TypeTag> ParentType;
+    typedef Opm::NewtonMethod<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, NewtonMethod) Implementation;
 
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -109,7 +109,7 @@ public:
     { }
 
 protected:
-    friend class Ewoms::NewtonMethod<TypeTag>;
+    friend class Opm::NewtonMethod<TypeTag>;
 
     /*!
      * \brief Update the current solution with a delta vector.
@@ -174,6 +174,6 @@ private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation*>(this); }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

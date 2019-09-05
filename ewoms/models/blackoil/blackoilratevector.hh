@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilRateVector
+ * \copydoc Opm::BlackOilRateVector
  */
 #ifndef EWOMS_BLACK_OIL_RATE_VECTOR_HH
 #define EWOMS_BLACK_OIL_RATE_VECTOR_HH
@@ -35,7 +35,7 @@
 
 #include "blackoilintensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -208,6 +208,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

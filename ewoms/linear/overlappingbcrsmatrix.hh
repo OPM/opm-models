@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::OverlappingBCRSMatrix
+ * \copydoc Opm::Linear::OverlappingBCRSMatrix
  */
 #ifndef EWOMS_OVERLAPPING_BCRS_MATRIX_HH
 #define EWOMS_OVERLAPPING_BCRS_MATRIX_HH
@@ -44,7 +44,7 @@
 #include <vector>
 #include <memory>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -56,7 +56,7 @@ class OverlappingBCRSMatrix : public BCRSMatrix
     typedef BCRSMatrix ParentType;
 
 public:
-    typedef Ewoms::Linear::DomesticOverlapFromBCRSMatrix Overlap;
+    typedef Opm::Linear::DomesticOverlapFromBCRSMatrix Overlap;
 
 private:
     typedef std::vector<std::set<Index> > Entries;
@@ -688,6 +688,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif
