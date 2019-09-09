@@ -27,19 +27,19 @@
 #ifndef EWOMS_PARALLEL_BASE_BACKEND_HH
 #define EWOMS_PARALLEL_BASE_BACKEND_HH
 
-#include <ewoms/linear/istlsparsematrixadapter.hh>
-#include <ewoms/linear/overlappingbcrsmatrix.hh>
-#include <ewoms/linear/overlappingblockvector.hh>
-#include <ewoms/linear/overlappingpreconditioner.hh>
-#include <ewoms/linear/overlappingscalarproduct.hh>
-#include <ewoms/linear/overlappingoperator.hh>
-#include <ewoms/linear/parallelbasebackend.hh>
-#include <ewoms/linear/istlpreconditionerwrappers.hh>
+#include <opm/simulators/linalg/istlsparsematrixadapter.hh>
+#include <opm/simulators/linalg/overlappingbcrsmatrix.hh>
+#include <opm/simulators/linalg/overlappingblockvector.hh>
+#include <opm/simulators/linalg/overlappingpreconditioner.hh>
+#include <opm/simulators/linalg/overlappingscalarproduct.hh>
+#include <opm/simulators/linalg/overlappingoperator.hh>
+#include <opm/simulators/linalg/parallelbasebackend.hh>
+#include <opm/simulators/linalg/istlpreconditionerwrappers.hh>
 
 #include <ewoms/common/genericguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/linear/matrixblock.hh>
+#include <opm/simulators/linalg/matrixblock.hh>
 
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 

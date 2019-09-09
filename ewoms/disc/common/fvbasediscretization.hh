@@ -49,12 +49,12 @@
 
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
-#include <ewoms/linear/nullborderlistmanager.hh>
+#include <opm/simulators/linalg/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
-#include <ewoms/linear/matrixblock.hh>
+#include <opm/simulators/linalg/matrixblock.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>

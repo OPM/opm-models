@@ -36,7 +36,7 @@
 #include "vcfvgridcommhandlefactory.hh"
 #include "vcfvbaseoutputmodule.hh"
 
-#include <ewoms/linear/vertexborderlistfromgrid.hh>
+#include <opm/simulators/linalg/vertexborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
 
 #if HAVE_DUNE_FEM

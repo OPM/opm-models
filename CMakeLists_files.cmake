@@ -61,35 +61,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 	)
 
 list (APPEND PUBLIC_HEADER_FILES
-             ewoms/linear/parallelistlbackend.hh
-             ewoms/linear/weightedresidreductioncriterion.hh
-             ewoms/linear/vertexborderlistfromgrid.hh
-             ewoms/linear/linearsolverreport.hh
-             ewoms/linear/istlsparsematrixadapter.hh
-             ewoms/linear/istlpreconditionerwrappers.hh
-             ewoms/linear/residreductioncriterion.hh
-             ewoms/linear/overlappingbcrsmatrix.hh
-             ewoms/linear/blacklist.hh
-             ewoms/linear/parallelbasebackend.hh
-             ewoms/linear/overlappingblockvector.hh
-             ewoms/linear/parallelbicgstabbackend.hh
-             ewoms/linear/nullborderlistmanager.hh
-             ewoms/linear/overlappingoperator.hh
-             ewoms/linear/elementborderlistfromgrid.hh
-             ewoms/linear/combinedcriterion.hh
-             ewoms/linear/bicgstabsolver.hh
-             ewoms/linear/globalindices.hh
-             ewoms/linear/superlubackend.hh
-             ewoms/linear/matrixblock.hh
-             ewoms/linear/istlsolverwrappers.hh
-             ewoms/linear/overlaptypes.hh
-             ewoms/linear/overlappingpreconditioner.hh
-             ewoms/linear/domesticoverlapfrombcrsmatrix.hh
-             ewoms/linear/fixpointcriterion.hh
-             ewoms/linear/parallelamgbackend.hh
-             ewoms/linear/foreignoverlapfrombcrsmatrix.hh
-             ewoms/linear/overlappingscalarproduct.hh
-             ewoms/linear/convergencecriterion.hh
              ewoms/nonlinear/nullconvergencewriter.hh
              ewoms/nonlinear/newtonmethod.hh
              ewoms/io/vtktensorfunction.hh
@@ -246,4 +217,33 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvstencil.hh
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
-             ewoms/disc/ecfv/ecfvproperties.hh)
+             ewoms/disc/ecfv/ecfvproperties.hh
+             opm/simulators/linalg/parallelistlbackend.hh
+             opm/simulators/linalg/weightedresidreductioncriterion.hh
+             opm/simulators/linalg/vertexborderlistfromgrid.hh
+             opm/simulators/linalg/linearsolverreport.hh
+             opm/simulators/linalg/istlsparsematrixadapter.hh
+             opm/simulators/linalg/istlpreconditionerwrappers.hh
+             opm/simulators/linalg/residreductioncriterion.hh
+             opm/simulators/linalg/overlappingbcrsmatrix.hh
+             opm/simulators/linalg/blacklist.hh
+             opm/simulators/linalg/parallelbasebackend.hh
+             opm/simulators/linalg/overlappingblockvector.hh
+             opm/simulators/linalg/parallelbicgstabbackend.hh
+             opm/simulators/linalg/nullborderlistmanager.hh
+             opm/simulators/linalg/overlappingoperator.hh
+             opm/simulators/linalg/elementborderlistfromgrid.hh
+             opm/simulators/linalg/combinedcriterion.hh
+             opm/simulators/linalg/bicgstabsolver.hh
+             opm/simulators/linalg/globalindices.hh
+             opm/simulators/linalg/superlubackend.hh
+             opm/simulators/linalg/matrixblock.hh
+             opm/simulators/linalg/istlsolverwrappers.hh
+             opm/simulators/linalg/overlaptypes.hh
+             opm/simulators/linalg/overlappingpreconditioner.hh
+             opm/simulators/linalg/domesticoverlapfrombcrsmatrix.hh
+             opm/simulators/linalg/fixpointcriterion.hh
+             opm/simulators/linalg/parallelamgbackend.hh
+             opm/simulators/linalg/foreignoverlapfrombcrsmatrix.hh
+             opm/simulators/linalg/overlappingscalarproduct.hh
+             opm/simulators/linalg/convergencecriterion.hh)

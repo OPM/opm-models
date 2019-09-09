@@ -35,7 +35,7 @@
 #include "ecfvgridcommhandlefactory.hh"
 #include "ecfvbaseoutputmodule.hh"
 
-#include <ewoms/linear/elementborderlistfromgrid.hh>
+#include <opm/simulators/linalg/elementborderlistfromgrid.hh>
 #include <ewoms/disc/common/fvbasediscretization.hh>
 
 #if HAVE_DUNE_FEM

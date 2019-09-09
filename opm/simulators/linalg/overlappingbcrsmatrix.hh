@@ -27,9 +27,9 @@
 #ifndef EWOMS_OVERLAPPING_BCRS_MATRIX_HH
 #define EWOMS_OVERLAPPING_BCRS_MATRIX_HH
 
-#include <ewoms/linear/domesticoverlapfrombcrsmatrix.hh>
-#include <ewoms/linear/globalindices.hh>
-#include <ewoms/linear/blacklist.hh>
+#include <opm/simulators/linalg/domesticoverlapfrombcrsmatrix.hh>
+#include <opm/simulators/linalg/globalindices.hh>
+#include <opm/simulators/linalg/blacklist.hh>
 #include <ewoms/parallel/mpibuffer.hh>
 
 #include <opm/material/common/Valgrind.hpp>
