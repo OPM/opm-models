@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseProblem
+ * \copydoc Opm::FvBaseProblem
  */
 #ifndef EWOMS_FV_BASE_PROBLEM_HH
 #define EWOMS_FV_BASE_PROBLEM_HH
@@ -45,7 +45,7 @@
 
 #include <sys/stat.h>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -64,7 +64,7 @@ private:
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     static const int vtkOutputFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkOutputFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkOutputFormat> VtkMultiWriter;
 
     typedef typename GET_PROP_TYPE(TypeTag, Model) Model;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -280,7 +280,7 @@ public:
     }
 
     /*!
-     * \brief Called by the Ewoms::Simulator in order to initialize the problem.
+     * \brief Called by the Opm::Simulator in order to initialize the problem.
      *
      * If you overload this method don't forget to call ParentType::finishInit()
      */
@@ -508,7 +508,7 @@ public:
     }
 
     /*!
-     * \brief Called by Ewoms::Simulator in order to do a time
+     * \brief Called by Opm::Simulator in order to do a time
      *        integration on the model.
      */
     void timeIntegration()
@@ -586,7 +586,7 @@ public:
     { nextTimeStepSize_ = dt; }
 
     /*!
-     * \brief Called by Ewoms::Simulator whenever a solution for a
+     * \brief Called by Opm::Simulator whenever a solution for a
      *        time step has been computed and the simulation time has
      *        been updated.
      */
@@ -747,7 +747,7 @@ public:
      * The file will start with the prefix returned by the name()
      * method, has the current time of the simulation clock in it's
      * name and uses the extension <tt>.ers</tt>. (Ewoms ReStart
-     * file.)  See Ewoms::Restart for details.
+     * file.)  See Opm::Restart for details.
      *
      * \tparam Restarter The serializer type
      *
@@ -836,6 +836,6 @@ private:
     mutable VtkMultiWriter *defaultVtkWriter_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpModel
+ * \copydoc Opm::NcpModel
  */
 #ifndef EWOMS_NCP_MODEL_HH
 #define EWOMS_NCP_MODEL_HH
@@ -57,7 +57,7 @@
 #include <vector>
 #include <array>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class NcpModel;
 }
@@ -75,16 +75,16 @@ NEW_TYPE_TAG(NcpModel, INHERITS_FROM(MultiPhaseBaseModel,
 //! Use the Ncp local jacobian operator for the compositional NCP model
 SET_TYPE_PROP(NcpModel,
               LocalResidual,
-              Ewoms::NcpLocalResidual<TypeTag>);
+              Opm::NcpLocalResidual<TypeTag>);
 
 //! Use the Ncp specific newton method for the compositional NCP model
-SET_TYPE_PROP(NcpModel, NewtonMethod, Ewoms::NcpNewtonMethod<TypeTag>);
+SET_TYPE_PROP(NcpModel, NewtonMethod, Opm::NcpNewtonMethod<TypeTag>);
 
 //! the Model property
-SET_TYPE_PROP(NcpModel, Model, Ewoms::NcpModel<TypeTag>);
+SET_TYPE_PROP(NcpModel, Model, Opm::NcpModel<TypeTag>);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(NcpModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
+SET_TYPE_PROP(NcpModel, BaseProblem, Opm::MultiPhaseBaseProblem<TypeTag>);
 
 //! Disable the energy equation by default
 SET_BOOL_PROP(NcpModel, EnableEnergy, false);
@@ -93,22 +93,22 @@ SET_BOOL_PROP(NcpModel, EnableEnergy, false);
 SET_BOOL_PROP(NcpModel, EnableDiffusion, false);
 
 //! the RateVector property
-SET_TYPE_PROP(NcpModel, RateVector, Ewoms::NcpRateVector<TypeTag>);
+SET_TYPE_PROP(NcpModel, RateVector, Opm::NcpRateVector<TypeTag>);
 
 //! the BoundaryRateVector property
-SET_TYPE_PROP(NcpModel, BoundaryRateVector, Ewoms::NcpBoundaryRateVector<TypeTag>);
+SET_TYPE_PROP(NcpModel, BoundaryRateVector, Opm::NcpBoundaryRateVector<TypeTag>);
 
 //! the PrimaryVariables property
-SET_TYPE_PROP(NcpModel, PrimaryVariables, Ewoms::NcpPrimaryVariables<TypeTag>);
+SET_TYPE_PROP(NcpModel, PrimaryVariables, Opm::NcpPrimaryVariables<TypeTag>);
 
 //! the IntensiveQuantities property
-SET_TYPE_PROP(NcpModel, IntensiveQuantities, Ewoms::NcpIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(NcpModel, IntensiveQuantities, Opm::NcpIntensiveQuantities<TypeTag>);
 
 //! the ExtensiveQuantities property
-SET_TYPE_PROP(NcpModel, ExtensiveQuantities, Ewoms::NcpExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(NcpModel, ExtensiveQuantities, Opm::NcpExtensiveQuantities<TypeTag>);
 
 //! The indices required by the compositional NCP model
-SET_TYPE_PROP(NcpModel, Indices, Ewoms::NcpIndices<TypeTag, 0>);
+SET_TYPE_PROP(NcpModel, Indices, Opm::NcpIndices<TypeTag, 0>);
 
 //! The unmodified weight for the pressure primary variable
 SET_SCALAR_PROP(NcpModel, NcpPressureBaseWeight, 1.0);
@@ -119,7 +119,7 @@ SET_SCALAR_PROP(NcpModel, NcpFugacitiesBaseWeight, 1.0e-6);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup NcpModel
@@ -144,7 +144,7 @@ namespace Ewoms {
  * \c FluxModule property. For example, the velocity model can by
  * changed to the Forchheimer approach by
  * \code
- * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Ewoms::ForchheimerFluxModule<TypeTag>);
+ * SET_TYPE_PROP(MyProblemTypeTag, FluxModule, Opm::ForchheimerFluxModule<TypeTag>);
  * \endcode
  *
  * The core of the model is the conservation mass of each component by
@@ -221,8 +221,8 @@ class NcpModel
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
-    typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
 public:
     NcpModel(Simulator& simulator)
@@ -240,13 +240,13 @@ public:
         EnergyModule::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VtkCompositionModule<TypeTag>::registerParameters();
+        Opm::VtkCompositionModule<TypeTag>::registerParameters();
 
         if (enableDiffusion)
-            Ewoms::VtkDiffusionModule<TypeTag>::registerParameters();
+            Opm::VtkDiffusionModule<TypeTag>::registerParameters();
 
         if (enableEnergy)
-            Ewoms::VtkEnergyModule<TypeTag>::registerParameters();
+            Opm::VtkEnergyModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -439,17 +439,17 @@ public:
     {
         ParentType::registerOutputModules_();
 
-        this->addOutputModule(new Ewoms::VtkCompositionModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkCompositionModule<TypeTag>(this->simulator_));
         if (enableDiffusion)
-            this->addOutputModule(new Ewoms::VtkDiffusionModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkDiffusionModule<TypeTag>(this->simulator_));
         if (enableEnergy)
-            this->addOutputModule(new Ewoms::VtkEnergyModule<TypeTag>(this->simulator_));
+            this->addOutputModule(new Opm::VtkEnergyModule<TypeTag>(this->simulator_));
     }
 
     mutable Scalar referencePressure_;
     mutable std::vector<ComponentVector> minActivityCoeff_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

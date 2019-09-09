@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::DomesticOverlapFromBCRSMatrix
+ * \copydoc Opm::Linear::DomesticOverlapFromBCRSMatrix
  */
 #ifndef EWOMS_DOMESTIC_OVERLAP_FROM_BCRS_MATRIX_HH
 #define EWOMS_DOMESTIC_OVERLAP_FROM_BCRS_MATRIX_HH
@@ -39,7 +39,7 @@
 #include <map>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -51,8 +51,8 @@ namespace Linear {
  */
 class DomesticOverlapFromBCRSMatrix
 {
-    typedef Ewoms::Linear::ForeignOverlapFromBCRSMatrix ForeignOverlap;
-    typedef Ewoms::Linear::GlobalIndices<ForeignOverlap> GlobalIndices;
+    typedef Opm::Linear::ForeignOverlapFromBCRSMatrix ForeignOverlap;
+    typedef Opm::Linear::GlobalIndices<ForeignOverlap> GlobalIndices;
 
 public:
     // overlaps should never be copied!
@@ -578,6 +578,6 @@ protected:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

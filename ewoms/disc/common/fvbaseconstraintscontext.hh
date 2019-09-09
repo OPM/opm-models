@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseConstraintsContext
+ * \copydoc Opm::FvBaseConstraintsContext
  */
 #ifndef EWOMS_FV_BASE_CONSTRAINTS_CONTEXT_HH
 #define EWOMS_FV_BASE_CONSTRAINTS_CONTEXT_HH
@@ -32,7 +32,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -62,49 +62,49 @@ public:
     { }
 
     /*!
-     * \copydoc Ewoms::ElementContext::problem()
+     * \copydoc Opm::ElementContext::problem()
      */
     const Problem& problem() const
     { return elemCtx_.problem(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::model()
+     * \copydoc Opm::ElementContext::model()
      */
     const Model& model() const
     { return elemCtx_.model(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::gridView()
+     * \copydoc Opm::ElementContext::gridView()
      */
     const GridView& gridView() const
     { return elemCtx_.gridView(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::element()
+     * \copydoc Opm::ElementContext::element()
      */
     const Element& element() const
     { return elemCtx_.element(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::numDof()
+     * \copydoc Opm::ElementContext::numDof()
      */
     int numDof(int timeIdx) const
     { return elemCtx_.numDof(timeIdx); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::numInteriorFaces()
+     * \copydoc Opm::ElementContext::numInteriorFaces()
      */
     int numInteriorFaces(int timeIdx) const
     { return elemCtx_.numInteriorFaces(timeIdx); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::globalSpaceIndex
+     * \copydoc Opm::ElementContext::globalSpaceIndex
      */
     int globalSpaceIndex(int dofIdx, int timeIdx) const
     { return elemCtx_.globalSpaceIndex(dofIdx, timeIdx); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::pos
+     * \copydoc Opm::ElementContext::pos
      */
     GlobalPosition pos(int dofIdx, int timeIdx) const
     { return elemCtx_.pos(dofIdx, timeIdx); }
@@ -113,6 +113,6 @@ protected:
     const ElementContext& elemCtx_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsRateVector
+ * \copydoc Opm::PvsRateVector
  */
 #ifndef EWOMS_PVS_RATE_VECTOR_HH
 #define EWOMS_PVS_RATE_VECTOR_HH
@@ -36,7 +36,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -62,7 +62,7 @@ class PvsRateVector
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Evaluation, numEq> ParentType;
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     PvsRateVector() : ParentType()
@@ -143,6 +143,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

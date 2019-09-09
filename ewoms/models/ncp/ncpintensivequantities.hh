@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpIntensiveQuantities
+ * \copydoc Opm::NcpIntensiveQuantities
  */
 #ifndef EWOMS_NCP_INTENSIVE_QUANTITIES_HH
 #define EWOMS_NCP_INTENSIVE_QUANTITIES_HH
@@ -41,7 +41,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup NcpModel
  * \ingroup IntensiveQuantities
@@ -84,8 +84,8 @@ class NcpIntensiveQuantities
                                          /*storeEnthalpy=*/enableEnergy> FluidState;
     typedef Dune::FieldVector<Evaluation, numComponents> ComponentVector;
     typedef Dune::FieldMatrix<Scalar, dimWorld, dimWorld> DimMatrix;
-    typedef Ewoms::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
-    typedef Ewoms::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
+    typedef Opm::DiffusionIntensiveQuantities<TypeTag, enableDiffusion> DiffusionIntensiveQuantities;
+    typedef Opm::EnergyIntensiveQuantities<TypeTag, enableEnergy> EnergyIntensiveQuantities;
     typedef typename FluxModule::FluxIntensiveQuantities FluxIntensiveQuantities;
 
 public:
@@ -242,6 +242,6 @@ private:
     Evaluation mobility_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

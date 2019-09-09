@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::VtkDiffusionModule
+ * \copydoc Opm::VtkDiffusionModule
  */
 #ifndef EWOMS_VTK_DIFFUSION_MODULE_HH
 #define EWOMS_VTK_DIFFUSION_MODULE_HH
@@ -57,7 +57,7 @@ SET_BOOL_PROP(VtkDiffusion, VtkWriteEffectiveDiffusionCoefficients, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -85,7 +85,7 @@ class VtkDiffusionModule : public BaseOutputModule<TypeTag>
     typedef typename ParentType::PhaseBuffer PhaseBuffer;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
@@ -199,6 +199,6 @@ private:
     PhaseComponentBuffer effectiveDiffusionCoefficient_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

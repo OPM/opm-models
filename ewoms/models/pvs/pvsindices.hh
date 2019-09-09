@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsIndices
+ * \copydoc Opm::PvsIndices
  */
 #ifndef EWOMS_PVS_INDICES_HH
 #define EWOMS_PVS_INDICES_HH
@@ -32,7 +32,7 @@
 
 #include <ewoms/models/common/energymodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup PvsModel
  *
@@ -48,7 +48,7 @@ class PvsIndices
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
+    typedef Opm::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
     //! Number of partial differential equations or primary variables, respectively
@@ -68,6 +68,6 @@ public:
     static const int conti0EqIdx = PVOffset;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

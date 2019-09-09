@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleIndices
+ * \copydoc Opm::ImmiscibleIndices
  */
 #ifndef EWOMS_IMMISCIBLE_INDICES_HH
 #define EWOMS_IMMISCIBLE_INDICES_HH
@@ -31,7 +31,7 @@
 #include "immiscibleproperties.hh"
 #include <ewoms/models/common/energymodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup ImmiscibleModel
@@ -45,7 +45,7 @@ struct ImmiscibleIndices
 {
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
+    typedef Opm::EnergyIndices<PVOffset + numPhases, enableEnergy> EnergyIndices;
 
 public:
     // number of equations/primary variables
@@ -64,6 +64,6 @@ public:
     //! Index of the continuity equation of the first phase
     static const int conti0EqIdx = PVOffset + 0;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

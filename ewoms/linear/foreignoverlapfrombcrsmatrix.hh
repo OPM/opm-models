@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::ForeignOverlapFromBCRSMatrix
+ * \copydoc Opm::Linear::ForeignOverlapFromBCRSMatrix
  */
 #ifndef EWOMS_FOREIGN_OVERLAP_FROM_BCRS_MATRIX_HH
 #define EWOMS_FOREIGN_OVERLAP_FROM_BCRS_MATRIX_HH
@@ -48,7 +48,7 @@
 #include <mpi.h>
 #endif // HAVE_MPI
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -515,8 +515,8 @@ protected:
         // now borderIndices contains the lists of indices which we
         // would like to send to each neighbor. Let's create the MPI
         // buffers.
-        std::map<ProcessRank, Ewoms::MpiBuffer<unsigned> > numIndicesSendBufs;
-        std::map<ProcessRank, Ewoms::MpiBuffer<BorderIndex> > indicesSendBufs;
+        std::map<ProcessRank, Opm::MpiBuffer<unsigned> > numIndicesSendBufs;
+        std::map<ProcessRank, Opm::MpiBuffer<BorderIndex> > indicesSendBufs;
         auto peerIt = neighborPeerSet().begin();
         const auto& peerEndIt = neighborPeerSet().end();
         for (; peerIt != peerEndIt; ++peerIt) {
@@ -707,6 +707,6 @@ protected:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BaseOutputWriter
+ * \copydoc Opm::BaseOutputWriter
  */
 #ifndef EWOMS_BASE_OUTPUT_WRITER_HH
 #define EWOMS_BASE_OUTPUT_WRITER_HH
@@ -33,7 +33,7 @@
 
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief The base class for all output writers.
  *
@@ -101,6 +101,6 @@ public:
      */
     virtual void endWrite(bool onlyDiscard = false) = 0;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

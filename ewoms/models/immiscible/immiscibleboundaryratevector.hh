@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleBoundaryRateVector
+ * \copydoc Opm::ImmiscibleBoundaryRateVector
  */
 #ifndef EWOMS_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_IMMISCIBLE_BOUNDARY_RATE_VECTOR_HH
@@ -33,7 +33,7 @@
 
 #include "immiscibleintensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup ImmiscibleModel
@@ -57,7 +57,7 @@ class ImmiscibleBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     ImmiscibleBoundaryRateVector()
@@ -213,6 +213,6 @@ public:
     { (*this) = Evaluation(0.0); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

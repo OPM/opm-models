@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::BlackList
+ * \copydoc Opm::Linear::BlackList
  */
 #ifndef EWOMS_BLACK_LIST_HH
 #define EWOMS_BLACK_LIST_HH
@@ -39,7 +39,7 @@
 #include <iostream>
 #include <algorithm>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \brief Expresses which degrees of freedom are blacklisted for the parallel linear
@@ -181,6 +181,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

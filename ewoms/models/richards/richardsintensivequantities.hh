@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsIntensiveQuantities
+ * \copydoc Opm::RichardsIntensiveQuantities
  */
 #ifndef EWOMS_RICHARDS_INTENSIVE_QUANTITIES_HH
 #define EWOMS_RICHARDS_INTENSIVE_QUANTITIES_HH
@@ -35,7 +35,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -194,6 +194,6 @@ private:
     Evaluation porosity_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

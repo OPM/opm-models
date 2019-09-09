@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseGradientCalculator
+ * \copydoc Opm::FvBaseGradientCalculator
  */
 #ifndef EWOMS_FV_BASE_GRADIENT_CALCULATOR_HH
 #define EWOMS_FV_BASE_GRADIENT_CALCULATOR_HH
@@ -34,7 +34,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 template<class TypeTag>
 class EcfvDiscretization;
 
@@ -353,6 +353,6 @@ private:
         exteriorDistance = std::sqrt(std::abs(exteriorDistance));
     }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

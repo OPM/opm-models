@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseLinearizer
+ * \copydoc Opm::FvBaseLinearizer
  */
 #ifndef EWOMS_FV_BASE_LINEARIZER_HH
 #define EWOMS_FV_BASE_LINEARIZER_HH
@@ -49,7 +49,7 @@
 #include <exception>   // current_exception, rethrow_exception
 #include <mutex>
 
-namespace Ewoms {
+namespace Opm {
 // forward declarations
 template<class TypeTag>
 class EcfvDiscretization;
@@ -596,6 +596,6 @@ private:
     std::mutex globalMatrixMutex_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

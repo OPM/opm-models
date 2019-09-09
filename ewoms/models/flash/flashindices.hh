@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashIndices
+ * \copydoc Opm::FlashIndices
  */
 #ifndef EWOMS_FLASH_INDICES_HH
 #define EWOMS_FLASH_INDICES_HH
@@ -31,7 +31,7 @@
 #include "flashproperties.hh"
 #include <ewoms/models/common/energymodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FlashModel
@@ -48,7 +48,7 @@ class FlashIndices
 {
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
+    typedef Opm::EnergyIndices<PVOffset + numComponents, enableEnergy> EnergyIndices;
 
 public:
     //! number of equations/primary variables
@@ -67,6 +67,6 @@ public:
     static const int conti0EqIdx = PVOffset;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::MultiPhaseBaseModel
+ * \copydoc Opm::MultiPhaseBaseModel
  */
 #ifndef EWOMS_MULTI_PHASE_BASE_MODEL_HH
 #define EWOMS_MULTI_PHASE_BASE_MODEL_HH
@@ -43,7 +43,7 @@
 #include <opm/material/thermal/NullSolidEnergyLaw.hpp>
 #include <opm/material/common/Unused.hpp>
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class MultiPhaseBaseModel;
 }
@@ -69,10 +69,10 @@ SET_INT_PROP(MultiPhaseBaseModel, NumPhases, GET_PROP_TYPE(TypeTag, FluidSystem)
 SET_INT_PROP(MultiPhaseBaseModel, NumComponents, GET_PROP_TYPE(TypeTag, FluidSystem)::numComponents);
 
 //! The type of the base base class for actual problems
-SET_TYPE_PROP(MultiPhaseBaseModel, BaseProblem, Ewoms::MultiPhaseBaseProblem<TypeTag>);
+SET_TYPE_PROP(MultiPhaseBaseModel, BaseProblem, Opm::MultiPhaseBaseProblem<TypeTag>);
 
 //! By default, use the Darcy relation to determine the phase velocity
-SET_TYPE_PROP(MultiPhaseBaseModel, FluxModule, Ewoms::DarcyFluxModule<TypeTag>);
+SET_TYPE_PROP(MultiPhaseBaseModel, FluxModule, Opm::DarcyFluxModule<TypeTag>);
 
 /*!
  * \brief Set the material law to the null law by default.
@@ -125,7 +125,7 @@ SET_BOOL_PROP(MultiPhaseBaseModel, EnableGravity, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup MultiPhaseBaseModel
@@ -165,8 +165,8 @@ public:
         ParentType::registerParameters();
 
         // register runtime parameters of the VTK output modules
-        Ewoms::VtkMultiPhaseModule<TypeTag>::registerParameters();
-        Ewoms::VtkTemperatureModule<TypeTag>::registerParameters();
+        Opm::VtkMultiPhaseModule<TypeTag>::registerParameters();
+        Opm::VtkTemperatureModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -240,14 +240,14 @@ public:
         ParentType::registerOutputModules_();
 
         // add the VTK output modules which make sense for all multi-phase models
-        this->addOutputModule(new Ewoms::VtkMultiPhaseModule<TypeTag>(this->simulator_));
-        this->addOutputModule(new Ewoms::VtkTemperatureModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkMultiPhaseModule<TypeTag>(this->simulator_));
+        this->addOutputModule(new Opm::VtkTemperatureModule<TypeTag>(this->simulator_));
     }
 
 private:
     const Implementation& asImp_() const
     { return *static_cast<const Implementation *>(this); }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

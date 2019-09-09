@@ -27,7 +27,7 @@
 #ifndef EWOMS_PREFETCH_HH
 #define EWOMS_PREFETCH_HH
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief Template function which emits prefetch instructions for a range of memory
  *
@@ -49,6 +49,6 @@ void prefetch(const T& val, unsigned n = 1)
 #endif
 }
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

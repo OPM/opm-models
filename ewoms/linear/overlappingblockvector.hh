@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::OverlappingBlockVector
+ * \copydoc Opm::Linear::OverlappingBlockVector
  */
 #ifndef EWOMS_OVERLAPPING_BLOCK_VECTOR_HH
 #define EWOMS_OVERLAPPING_BLOCK_VECTOR_HH
@@ -39,7 +39,7 @@
 #include <map>
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -357,6 +357,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::OverlappingScalarProduct
+ * \copydoc Opm::Linear::OverlappingScalarProduct
  */
 #ifndef EWOMS_OVERLAPPING_SCALAR_PRODUCT_HH
 #define EWOMS_OVERLAPPING_SCALAR_PRODUCT_HH
@@ -31,7 +31,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/istl/scalarproducts.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -87,6 +87,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

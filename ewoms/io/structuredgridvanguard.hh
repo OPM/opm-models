@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::StructuredGridVanguard
+ * \copydoc Opm::StructuredGridVanguard
  */
 #ifndef EWOMS_STRUCTURED_GRID_VANGUARD_HH
 #define EWOMS_STRUCTURED_GRID_VANGUARD_HH
@@ -45,12 +45,12 @@
 #include <vector>
 #include <memory>
 
-namespace Ewoms {
+namespace Opm {
 
 template <class TypeTag>
 class StructuredGridVanguard;
 
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
@@ -84,11 +84,11 @@ SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::ALUGrid< dim, dim, Dune::cube,
 SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::YaspGrid< dim >);
 #endif
 
-SET_TYPE_PROP(StructuredGridVanguard, Vanguard, Ewoms::StructuredGridVanguard<TypeTag>);
+SET_TYPE_PROP(StructuredGridVanguard, Vanguard, Opm::StructuredGridVanguard<TypeTag>);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup TestProblems
@@ -194,6 +194,6 @@ private:
     GridPointer gridPtr_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

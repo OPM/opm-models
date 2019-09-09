@@ -23,12 +23,12 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::GenericGuard
+ * \copydoc Opm::GenericGuard
  */
 #ifndef EWOMS_GENERIC_GUARD_HH
 #define EWOMS_GENERIC_GUARD_HH
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Common
  *
@@ -88,6 +88,6 @@ template <class Callback>
 GenericGuard<Callback> make_guard(Callback& callback)
 { return GenericGuard<Callback>(callback); }
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

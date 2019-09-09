@@ -42,7 +42,7 @@
 
 #include <string>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup BlackOil
  * \brief Contains the high level supplements required to extend the black oil
@@ -81,7 +81,7 @@ public:
             // energys have been disabled at compile time
             return;
 
-        Ewoms::VtkBlackOilEnergyModule<TypeTag>::registerParameters();
+        Opm::VtkBlackOilEnergyModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -94,7 +94,7 @@ public:
             // energys have been disabled at compile time
             return;
 
-        model.addOutputModule(new Ewoms::VtkBlackOilEnergyModule<TypeTag>(simulator));
+        model.addOutputModule(new Opm::VtkBlackOilEnergyModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
@@ -319,7 +319,7 @@ public:
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilEnergyIntensiveQuantities
+ * \class Opm::BlackOilEnergyIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the equations needed by the
  *        energys extension of the black-oil model.
@@ -453,7 +453,7 @@ protected:
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilEnergyExtensiveQuantities
+ * \class Opm::BlackOilEnergyExtensiveQuantities
  *
  * \brief Provides the energy specific extensive quantities to the generic black-oil
  *        module's extensive quantities.
@@ -619,6 +619,6 @@ public:
 };
 
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

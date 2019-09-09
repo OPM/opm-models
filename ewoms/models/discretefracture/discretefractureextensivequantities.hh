@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureExtensiveQuantities
+ * \copydoc Opm::DiscreteFractureExtensiveQuantities
  */
 #ifndef EWOMS_DISCRETE_FRACTURE_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_DISCRETE_FRACTURE_EXTENSIVE_QUANTITIES_HH
@@ -33,7 +33,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup DiscreteFractureModel
@@ -133,6 +133,6 @@ private:
     Scalar fractureWidth_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

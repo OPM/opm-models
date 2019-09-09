@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsExtensiveQuantities
+ * \copydoc Opm::RichardsExtensiveQuantities
  */
 #ifndef EWOMS_RICHARDS_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_RICHARDS_EXTENSIVE_QUANTITIES_HH
@@ -32,7 +32,7 @@
 
 #include <ewoms/models/common/multiphasebaseextensivequantities.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -47,6 +47,6 @@ class RichardsExtensiveQuantities
 {
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

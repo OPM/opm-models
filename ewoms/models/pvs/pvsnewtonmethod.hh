@@ -23,14 +23,14 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsNewtonMethod
+ * \copydoc Opm::PvsNewtonMethod
  */
 #ifndef EWOMS_PVS_NEWTON_METHOD_HH
 #define EWOMS_PVS_NEWTON_METHOD_HH
 
 #include "pvsproperties.hh"
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -124,6 +124,6 @@ protected:
     void clampValue_(Scalar& val, Scalar minVal, Scalar maxVal) const
     { val = std::max(minVal, std::min(val, maxVal)); }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

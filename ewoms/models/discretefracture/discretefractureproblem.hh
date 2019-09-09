@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureProblem
+ * \copydoc Opm::DiscreteFractureProblem
  */
 #ifndef EWOMS_DISCRETE_FRACTURE_PROBLEM_HH
 #define EWOMS_DISCRETE_FRACTURE_PROBLEM_HH
@@ -47,7 +47,7 @@ NEW_PROP_TAG(FluxModule);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup DiscreteFractureModel
@@ -58,7 +58,7 @@ template<class TypeTag>
 class DiscreteFractureProblem
     : public MultiPhaseBaseProblem<TypeTag>
 {
-    typedef Ewoms::MultiPhaseBaseProblem<TypeTag> ParentType;
+    typedef Opm::MultiPhaseBaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -144,6 +144,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

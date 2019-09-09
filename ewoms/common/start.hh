@@ -83,7 +83,7 @@ END_PROPERTIES
 
 //! \cond SKIP_THIS
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief Announce all runtime parameters to the registry but do not specify them yet.
  */
@@ -364,20 +364,20 @@ static inline int start(int argc, char **argv)
             if (printParams) {
                 bool printSeparator = false;
                 if (printParams == 1 || !isatty(fileno(stdout))) {
-                    Ewoms::Parameters::printValues<TypeTag>();
+                    Opm::Parameters::printValues<TypeTag>();
                     printSeparator = true;
                 }
                 else
                     // always print the list of specified but unused parameters
                     printSeparator =
                         printSeparator ||
-                        Ewoms::Parameters::printUnused<TypeTag>();
+                        Opm::Parameters::printUnused<TypeTag>();
                 if (printSeparator)
                     std::cout << endParametersSeparator;
             }
             else
                 // always print the list of specified but unused parameters
-                if (Ewoms::Parameters::printUnused<TypeTag>())
+                if (Opm::Parameters::printUnused<TypeTag>())
                     std::cout << endParametersSeparator;
         }
 
@@ -385,7 +385,7 @@ static inline int start(int argc, char **argv)
         int printProps = EWOMS_GET_PARAM(TypeTag, int, PrintProperties);
         if (printProps && myRank == 0) {
             if (printProps == 1 || !isatty(fileno(stdout)))
-                Ewoms::Properties::printValues<TypeTag>();
+                Opm::Properties::printValues<TypeTag>();
         }
 
         // instantiate and run the concrete problem. make sure to
@@ -438,6 +438,6 @@ static inline int start(int argc, char **argv)
     }
 }
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

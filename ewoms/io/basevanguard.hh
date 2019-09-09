@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::BaseVanguard
+ * \copydoc Opm::BaseVanguard
  */
 #ifndef EWOMS_BASE_VANGUARD_HH
 #define EWOMS_BASE_VANGUARD_HH
@@ -52,7 +52,7 @@ NEW_PROP_TAG(Simulator);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides the base class for most (all?) simulator vanguards.
@@ -158,6 +158,6 @@ private:
     std::unique_ptr<GridView> gridView_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

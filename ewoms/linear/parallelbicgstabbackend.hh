@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::ParallelBiCGStabSolverBackend
+ * \copydoc Opm::Linear::ParallelBiCGStabSolverBackend
  */
 #ifndef EWOMS_PARALLEL_BICGSTAB_BACKEND_HH
 #define EWOMS_PARALLEL_BICGSTAB_BACKEND_HH
@@ -34,7 +34,7 @@
 
 #include <memory>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 template <class TypeTag>
 class ParallelBiCGStabSolverBackend;
@@ -48,13 +48,13 @@ NEW_PROP_TAG(LinearSolverMaxError);
 
 SET_TYPE_PROP(ParallelBiCGStabLinearSolver,
               LinearSolverBackend,
-              Ewoms::Linear::ParallelBiCGStabSolverBackend<TypeTag>);
+              Opm::Linear::ParallelBiCGStabSolverBackend<TypeTag>);
 
 SET_SCALAR_PROP(ParallelBiCGStabLinearSolver, LinearSolverMaxError, 1e7);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \ingroup Linear
@@ -65,7 +65,7 @@ namespace Linear {
  *
  * \code
  * SET_TYPE_PROP(YourTypeTag, PreconditionerWrapper,
- *               Ewoms::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
+ *               Opm::Linear::PreconditionerWrapper$PRECONDITIONER<TypeTag>);
  * \endcode
  *
  * Where the choices possible for '\c $PRECONDITIONER' are:

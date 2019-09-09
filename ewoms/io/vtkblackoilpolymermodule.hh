@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkBlackOilPolymerModule
+ * \copydoc Opm::VtkBlackOilPolymerModule
  */
 #ifndef EWOMS_VTK_BLACK_OIL_POLYMER_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_POLYMER_MODULE_HH
@@ -65,7 +65,7 @@ SET_BOOL_PROP(VtkBlackOilPolymer, VtkWritePolymerAdsorption, true);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -83,7 +83,7 @@ class VtkBlackOilPolymerModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { enablePolymer = GET_PROP_VALUE(TypeTag, EnablePolymer) };
 
@@ -266,6 +266,6 @@ private:
     ScalarBuffer polymerViscosityCorrection_;
     ScalarBuffer waterViscosityCorrection_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

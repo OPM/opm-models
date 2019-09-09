@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsBoundaryRateVector
+ * \copydoc Opm::PvsBoundaryRateVector
  */
 #ifndef EWOMS_PVS_BOUNDARY_RATE_VECTOR_HH
 #define EWOMS_PVS_BOUNDARY_RATE_VECTOR_HH
@@ -33,7 +33,7 @@
 #include <ewoms/models/common/energymodule.hh>
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -58,7 +58,7 @@ class PvsBoundaryRateVector : public GET_PROP_TYPE(TypeTag, RateVector)
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
@@ -199,6 +199,6 @@ public:
     { (*this) = Evaluation(0.0); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

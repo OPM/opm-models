@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleRateVector
+ * \copydoc Opm::ImmiscibleRateVector
  */
 #ifndef EWOMS_IMMISCIBLE_RATE_VECTOR_HH
 #define EWOMS_IMMISCIBLE_RATE_VECTOR_HH
@@ -35,7 +35,7 @@
 
 #include "immiscibleintensivequantities.hh"
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup ImmiscibleModel
  *
@@ -60,7 +60,7 @@ class ImmiscibleRateVector
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
     typedef Dune::FieldVector<Evaluation, numEq> ParentType;
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
 public:
     /*!
@@ -176,6 +176,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

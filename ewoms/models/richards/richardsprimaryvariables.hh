@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsPrimaryVariables
+ * \copydoc Opm::RichardsPrimaryVariables
  */
 #ifndef EWOMS_RICHARDS_PRIMARY_VARIABLES_HH
 #define EWOMS_RICHARDS_PRIMARY_VARIABLES_HH
@@ -39,7 +39,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -188,6 +188,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

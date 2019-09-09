@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkPrimaryVarsModule
+ * \copydoc Opm::VtkPrimaryVarsModule
  */
 #ifndef EWOMS_VTK_PRIMARY_VARS_MODULE_HH
 #define EWOMS_VTK_PRIMARY_VARS_MODULE_HH
@@ -52,7 +52,7 @@ SET_BOOL_PROP(VtkPrimaryVars, VtkWriteDofIndex, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Vtk
@@ -69,7 +69,7 @@ class VtkPrimaryVarsModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
     typedef typename ParentType::EqBuffer EqBuffer;
@@ -180,6 +180,6 @@ private:
     ScalarBuffer dofIndex_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

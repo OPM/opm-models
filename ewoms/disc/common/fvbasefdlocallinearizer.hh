@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseFdLocalLinearizer
+ * \copydoc Opm::FvBaseFdLocalLinearizer
  */
 #ifndef EWOMS_FV_BASE_FD_LOCAL_LINEARIZER_HH
 #define EWOMS_FV_BASE_FD_LOCAL_LINEARIZER_HH
@@ -42,12 +42,12 @@
 
 #include <limits>
 
-namespace Ewoms {
+namespace Opm {
 // forward declaration
 template<class TypeTag>
 class FvBaseFdLocalLinearizer;
 
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
@@ -72,7 +72,7 @@ NEW_PROP_TAG(NumEq);
 
 // set the properties to be spliced in
 SET_TYPE_PROP(FiniteDifferenceLocalLinearizer, LocalLinearizer,
-              Ewoms::FvBaseFdLocalLinearizer<TypeTag>);
+              Opm::FvBaseFdLocalLinearizer<TypeTag>);
 
 SET_TYPE_PROP(FiniteDifferenceLocalLinearizer, Evaluation,
               typename GET_PROP_TYPE(TypeTag, Scalar));
@@ -93,7 +93,7 @@ SET_SCALAR_PROP(FiniteDifferenceLocalLinearizer,
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -515,6 +515,6 @@ protected:
     LocalResidual localResidual_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

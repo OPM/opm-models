@@ -23,14 +23,14 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilTwoPhaseIndices
+ * \copydoc Opm::BlackOilTwoPhaseIndices
  */
 #ifndef EWOMS_BLACK_OIL_TWO_PHASE_INDICES_HH
 #define EWOMS_BLACK_OIL_TWO_PHASE_INDICES_HH
 
 #include <cassert>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup BlackOilModel
@@ -176,6 +176,6 @@ struct BlackOilTwoPhaseIndices
         enableEnergy ? PVOffset + numPhases + numSolvents + numPolymers + numFoam : -1000;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

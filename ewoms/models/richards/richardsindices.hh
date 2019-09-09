@@ -23,12 +23,12 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsIndices
+ * \copydoc Opm::RichardsIndices
  */
 #ifndef EWOMS_RICHARDS_INDICES_HH
 #define EWOMS_RICHARDS_INDICES_HH
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -47,6 +47,6 @@ struct RichardsIndices
     static const int numEq = 1;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

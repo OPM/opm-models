@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseBoundaryContext
+ * \copydoc Opm::FvBaseBoundaryContext
  */
 #ifndef EWOMS_FV_BASE_BOUNDARY_CONTEXT_HH
 #define EWOMS_FV_BASE_BOUNDARY_CONTEXT_HH
@@ -34,7 +34,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -82,25 +82,25 @@ public:
     }
 
     /*!
-     * \copydoc Ewoms::ElementContext::problem()
+     * \copydoc Opm::ElementContext::problem()
      */
     const Problem& problem() const
     { return elemCtx_.problem(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::model()
+     * \copydoc Opm::ElementContext::model()
      */
     const Model& model() const
     { return elemCtx_.model(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::gridView()
+     * \copydoc Opm::ElementContext::gridView()
      */
     const GridView& gridView() const
     { return elemCtx_.gridView(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::element()
+     * \copydoc Opm::ElementContext::element()
      */
     const Element& element() const
     { return elemCtx_.element(); }
@@ -118,19 +118,19 @@ public:
     { return elemCtx_.gradientCalculator(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::numDof()
+     * \copydoc Opm::ElementContext::numDof()
      */
     size_t numDof(unsigned timeIdx) const
     { return elemCtx_.numDof(timeIdx); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::numPrimaryDof()
+     * \copydoc Opm::ElementContext::numPrimaryDof()
      */
     size_t numPrimaryDof(unsigned timeIdx) const
     { return elemCtx_.numPrimaryDof(timeIdx); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::numInteriorFaces()
+     * \copydoc Opm::ElementContext::numInteriorFaces()
      */
     size_t numInteriorFaces(unsigned timeIdx) const
     { return elemCtx_.numInteriorFaces(timeIdx); }
@@ -142,7 +142,7 @@ public:
     { return elemCtx_.stencil(timeIdx).numBoundaryFaces(); }
 
     /*!
-     * \copydoc Ewoms::ElementContext::stencil()
+     * \copydoc Opm::ElementContext::stencil()
      */
     const Stencil& stencil(unsigned timeIdx) const
     { return elemCtx_.stencil(timeIdx); }
@@ -264,6 +264,6 @@ protected:
     IntersectionIterator intersectionIt_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

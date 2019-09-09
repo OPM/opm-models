@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkEnergyModule
+ * \copydoc Opm::VtkEnergyModule
  */
 #ifndef EWOMS_VTK_ENERGY_MODULE_HH
 #define EWOMS_VTK_ENERGY_MODULE_HH
@@ -56,7 +56,7 @@ SET_BOOL_PROP(VtkEnergy, VtkWriteEnthalpies, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -88,7 +88,7 @@ class VtkEnergyModule : public BaseOutputModule<TypeTag>
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
 
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
 public:
     VtkEnergyModule(const Simulator& simulator)
@@ -213,6 +213,6 @@ private:
     ScalarBuffer solidInternalEnergy_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::SimplexGridVanguard
+ * \copydoc Opm::SimplexGridVanguard
  */
 #ifndef EWOMS_SIMPLEX_GRID_VANGUARD_HH
 #define EWOMS_SIMPLEX_GRID_VANGUARD_HH
@@ -53,7 +53,7 @@ NEW_PROP_TAG(GridGlobalRefinements);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief Provides a simulator vanguard which a creates regular grid made of simplices.
  */
@@ -146,6 +146,6 @@ public:
 private:
     GridPointer simplexGrid_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

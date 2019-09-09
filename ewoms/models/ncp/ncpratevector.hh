@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpRateVector
+ * \copydoc Opm::NcpRateVector
  */
 #ifndef EWOMS_NCP_RATE_VECTOR_HH
 #define EWOMS_NCP_RATE_VECTOR_HH
@@ -35,7 +35,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup NcpModel
  *
@@ -60,7 +60,7 @@ class NcpRateVector
     enum { numComponents = GET_PROP_VALUE(TypeTag, NumComponents) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
@@ -146,6 +146,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

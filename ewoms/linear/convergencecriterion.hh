@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::ConvergenceCriterion
+ * \copydoc Opm::ConvergenceCriterion
  */
 #ifndef EWOMS_ISTL_CONVERGENCE_CRITERION_HH
 #define EWOMS_ISTL_CONVERGENCE_CRITERION_HH
@@ -36,7 +36,7 @@
 #include <iostream>
 #include <iomanip>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*! \addtogroup Linear

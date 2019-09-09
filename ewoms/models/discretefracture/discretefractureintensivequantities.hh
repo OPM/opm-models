@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::DiscreteFractureIntensiveQuantities
+ * \copydoc Opm::DiscreteFractureIntensiveQuantities
  */
 #ifndef EWOMS_DISCRETE_FRACTURE_INTENSIVE_QUANTITIES_HH
 #define EWOMS_DISCRETE_FRACTURE_INTENSIVE_QUANTITIES_HH
@@ -34,7 +34,7 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup DiscreteFractureModel
@@ -239,6 +239,6 @@ protected:
     Scalar fractureRelativePermeabilities_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

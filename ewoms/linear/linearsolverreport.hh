@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::SolverReport
+ * \copydoc Opm::Linear::SolverReport
  */
 #ifndef EWOMS_LINEAR_SOLVER_REPORT_HH
 #define EWOMS_LINEAR_SOLVER_REPORT_HH
@@ -32,7 +32,7 @@
 #include <ewoms/common/timer.hh>
 #include <ewoms/common/timerguard.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -51,10 +51,10 @@ public:
         converged_ = 0;
     }
 
-    const Ewoms::Timer& timer() const
+    const Opm::Timer& timer() const
     { return timer_; }
 
-    Ewoms::Timer& timer()
+    Opm::Timer& timer()
     { return timer_; }
 
     unsigned iterations() const
@@ -73,7 +73,7 @@ public:
     { converged_ = value; }
 
 private:
-    Ewoms::Timer timer_;
+    Opm::Timer timer_;
     unsigned iterations_;
     bool converged_;
 };

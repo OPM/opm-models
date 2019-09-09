@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::EcfvGridCommHandleFactory
+ * \copydoc Opm::EcfvGridCommHandleFactory
  */
 #ifndef EWOMS_ECFV_GRID_COMM_HANDLE_FACTORY_HH
 #define EWOMS_ECFV_GRID_COMM_HANDLE_FACTORY_HH
@@ -32,7 +32,7 @@
 
 #include <ewoms/parallel/gridcommhandles.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup EcfvDiscretization
  *
@@ -83,6 +83,6 @@ public:
         return  std::shared_ptr<Handle>(new Handle(array, dofMapper));
     }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::Timer
+ * \copydoc Opm::Timer
  */
 #ifndef EWOMS_TIMER_HH
 #define EWOMS_TIMER_HH
@@ -34,7 +34,7 @@
 #include <mpi.h>
 #endif
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Common
  *
@@ -212,6 +212,6 @@ private:
     double realTimeElapsed_;
     TimeData startTime_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

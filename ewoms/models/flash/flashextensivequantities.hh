@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FlashExtensiveQuantities
+ * \copydoc Opm::FlashExtensiveQuantities
  */
 #ifndef EWOMS_FLASH_EXTENSIVE_QUANTITIES_HH
 #define EWOMS_FLASH_EXTENSIVE_QUANTITIES_HH
@@ -34,7 +34,7 @@
 #include <ewoms/models/common/energymodule.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FlashModel
@@ -60,10 +60,10 @@ class FlashExtensiveQuantities
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef Ewoms::DiffusionExtensiveQuantities<TypeTag, enableDiffusion> DiffusionExtensiveQuantities;
+    typedef Opm::DiffusionExtensiveQuantities<TypeTag, enableDiffusion> DiffusionExtensiveQuantities;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
+    typedef Opm::EnergyExtensiveQuantities<TypeTag, enableEnergy> EnergyExtensiveQuantities;
 
 public:
     /*!
@@ -91,6 +91,6 @@ public:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

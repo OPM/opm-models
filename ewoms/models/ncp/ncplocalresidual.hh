@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpLocalResidual
+ * \copydoc Opm::NcpLocalResidual
  */
 #ifndef EWOMS_NCP_LOCAL_RESIDUAL_HH
 #define EWOMS_NCP_LOCAL_RESIDUAL_HH
@@ -35,7 +35,7 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup NcpModel
  *
@@ -61,10 +61,10 @@ class NcpLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { conti0EqIdx = Indices::conti0EqIdx };
 
     enum { enableDiffusion = GET_PROP_VALUE(TypeTag, EnableDiffusion) };
-    typedef Ewoms::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
+    typedef Opm::DiffusionModule<TypeTag, enableDiffusion> DiffusionModule;
 
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
 
     typedef Dune::FieldVector<Evaluation, numEq> EvalEqVector;
     typedef Dune::BlockVector<EvalEqVector> ElemEvalEqVector;
@@ -256,6 +256,6 @@ private:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

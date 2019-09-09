@@ -35,7 +35,7 @@
 #include <ewoms/models/common/darcyfluxmodule.hh>
 #include <ewoms/common/propertysystem.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 template <class TypeTag>
 class BlackOilDarcyExtensiveQuantities;
@@ -95,6 +95,6 @@ protected:
     { return *static_cast<Implementation*>(this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

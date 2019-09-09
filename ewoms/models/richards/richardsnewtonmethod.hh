@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::RichardsNewtonMethod
+ * \copydoc Opm::RichardsNewtonMethod
  */
 #ifndef EWOMS_RICHARDS_NEWTON_METHOD_HH
 #define EWOMS_RICHARDS_NEWTON_METHOD_HH
@@ -35,7 +35,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup RichardsModel
@@ -154,6 +154,6 @@ protected:
         nextValue[pressureWIdx] = pW;
     }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -32,7 +32,7 @@
 
 #include <dune/common/fmatrix.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace MatrixBlockHelp {
 
 template <typename K, int m, int n>
@@ -225,7 +225,7 @@ public:
     {}
 
     void invert()
-    { Ewoms::MatrixBlockHelp::invertMatrix(asBase()); }
+    { Opm::MatrixBlockHelp::invertMatrix(asBase()); }
 
     const BaseType& asBase() const
     { return static_cast<const BaseType&>(*this); }
@@ -234,12 +234,12 @@ public:
     { return static_cast<BaseType&>(*this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 namespace Dune {
 
 template<class K, int n, int m>
-void print_row(std::ostream& s, const Ewoms::MatrixBlock<K, n, m>& A,
+void print_row(std::ostream& s, const Opm::MatrixBlock<K, n, m>& A,
                typename FieldMatrix<K, n, m>::size_type I,
                typename FieldMatrix<K, n, m>::size_type J,
                typename FieldMatrix<K, n, m>::size_type therow,
@@ -248,28 +248,28 @@ void print_row(std::ostream& s, const Ewoms::MatrixBlock<K, n, m>& A,
 { print_row(s, A.asBase(), I, J, therow, width, precision); }
 
 template<class K, int n, int m>
-K& firstmatrixelement(Ewoms::MatrixBlock<K, n, m>& A)
+K& firstmatrixelement(Opm::MatrixBlock<K, n, m>& A)
 { return firstmatrixelement(A.asBase()); }
 
 template <typename Scalar, int n, int m>
-struct MatrixDimension<Ewoms::MatrixBlock<Scalar, n, m> >
-    : public MatrixDimension<typename Ewoms::MatrixBlock<Scalar, n, m>::BaseType>
+struct MatrixDimension<Opm::MatrixBlock<Scalar, n, m> >
+    : public MatrixDimension<typename Opm::MatrixBlock<Scalar, n, m>::BaseType>
 { };
 
 
 #if HAVE_UMFPACK
-/// \brief UMFPack specialization for Ewoms::MatrixBlock to make AMG happy
+/// \brief UMFPack specialization for Opm::MatrixBlock to make AMG happy
 ///
 /// Without this the empty default implementation would be used.
 template <typename T, typename A, int n, int m>
-class UMFPack<BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> >
+class UMFPack<BCRSMatrix<Opm::MatrixBlock<T, n, m>, A> >
     : public UMFPack<BCRSMatrix<FieldMatrix<T, n, m>, A> >
 {
     typedef UMFPack<BCRSMatrix<FieldMatrix<T, n, m>, A> > Base;
     typedef BCRSMatrix<FieldMatrix<T, n, m>, A> Matrix;
 
 public:
-    typedef BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> RealMatrix;
+    typedef BCRSMatrix<Opm::MatrixBlock<T, n, m>, A> RealMatrix;
 
     UMFPack(const RealMatrix& matrix, int verbose, bool)
         : Base(reinterpret_cast<const Matrix&>(matrix), verbose)
@@ -278,18 +278,18 @@ public:
 #endif
 
 #if HAVE_SUPERLU
-/// \brief SuperLU specialization for Ewoms::MatrixBlock to make AMG happy
+/// \brief SuperLU specialization for Opm::MatrixBlock to make AMG happy
 ///
 /// Without this the empty default implementation would be used.
 template <typename T, typename A, int n, int m>
-class SuperLU<BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> >
+class SuperLU<BCRSMatrix<Opm::MatrixBlock<T, n, m>, A> >
     : public SuperLU<BCRSMatrix<FieldMatrix<T, n, m>, A> >
 {
     typedef SuperLU<BCRSMatrix<FieldMatrix<T, n, m>, A> > Base;
     typedef BCRSMatrix<FieldMatrix<T, n, m>, A> Matrix;
 
 public:
-    typedef BCRSMatrix<Ewoms::MatrixBlock<T, n, m>, A> RealMatrix;
+    typedef BCRSMatrix<Opm::MatrixBlock<T, n, m>, A> RealMatrix;
 
     SuperLU(const RealMatrix& matrix, int verb, bool reuse=true)
         : Base(reinterpret_cast<const Matrix&>(matrix), verb, reuse)

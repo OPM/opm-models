@@ -34,7 +34,7 @@
 
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief A random-access container which stores data attached to a grid's degrees of
  *        freedom in a prefetch friendly manner.
@@ -104,7 +104,7 @@ public:
 
         // we use 0 as the temporal locality, because it is reasonable to assume that an
         // entry will only be accessed once.
-        Ewoms::prefetch</*temporalLocality=*/0>(elemData_[elemIdx]);
+        Opm::prefetch</*temporalLocality=*/0>(elemData_[elemIdx]);
     }
 
     const Data& get(const Element& elem, unsigned localDofIdx) const
@@ -137,6 +137,6 @@ private:
     std::vector<Data*> elemData_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

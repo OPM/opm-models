@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::OverlappingPreconditioner
+ * \copydoc Opm::Linear::OverlappingPreconditioner
  */
 #ifndef EWOMS_OVERLAPPING_PRECONDITIONER_HH
 #define EWOMS_OVERLAPPING_PRECONDITIONER_HH
@@ -35,7 +35,7 @@
 
 #include <dune/common/version.hh>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*!
@@ -188,6 +188,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

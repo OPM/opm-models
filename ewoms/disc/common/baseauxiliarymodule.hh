@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::BaseAuxiliaryModule
+ * \copydoc Opm::BaseAuxiliaryModule
  */
 #ifndef EWOMS_BASE_AUXILIARY_MODULE_HH
 #define EWOMS_BASE_AUXILIARY_MODULE_HH
@@ -48,7 +48,7 @@ NEW_PROP_TAG(SparseMatrixAdapter);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup ModelModules
@@ -133,6 +133,6 @@ private:
     int dofOffset_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

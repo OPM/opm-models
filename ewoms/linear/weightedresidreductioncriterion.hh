@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::WeightedResidualReductionCriterion
+ * \copydoc Opm::Linear::WeightedResidualReductionCriterion
  */
 #ifndef EWOMS_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
 #define EWOMS_WEIGHTED_RESIDUAL_REDUCTION_CRITERION_HH
@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*! \addtogroup Linear

@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::BlackOilIntensiveQuantities
+ * \copydoc Opm::BlackOilIntensiveQuantities
  */
 #ifndef EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
 #define EWOMS_BLACK_OIL_INTENSIVE_QUANTITIES_HH
@@ -41,7 +41,7 @@
 #include <cstring>
 #include <utility>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup BlackOilModel
  * \ingroup IntensiveQuantities
@@ -440,6 +440,6 @@ private:
     Evaluation mobility_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

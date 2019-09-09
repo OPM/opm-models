@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::QuadrialteralQuadratureGeometry
+ * \copydoc Opm::QuadrialteralQuadratureGeometry
  */
 #ifndef EWOMS_QUADRATURE_GEOMETRIES_HH
 #define EWOMS_QUADRATURE_GEOMETRIES_HH
@@ -31,7 +31,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/geometry/type.hh>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \brief Quadrature geometry for quadrilaterals.
  */
@@ -149,6 +149,6 @@ private:
     GlobalPosition center_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif // EWOMS_QUADRATURE_GEOMETRY_HH

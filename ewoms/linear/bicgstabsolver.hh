@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::BiCGStabSolver
+ * \copydoc Opm::Linear::BiCGStabSolver
  */
 #ifndef EWOMS_BICG_STAB_SOLVER_HH
 #define EWOMS_BICG_STAB_SOLVER_HH
@@ -38,7 +38,7 @@
 
 #include <memory>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \brief Implements a preconditioned stabilized BiCG linear solver.
@@ -52,7 +52,7 @@ namespace Linear {
 template <class LinearOperator, class Vector, class Preconditioner>
 class BiCGStabSolver
 {
-    typedef Ewoms::Linear::ConvergenceCriterion<Vector> ConvergenceCriterion;
+    typedef Opm::Linear::ConvergenceCriterion<Vector> ConvergenceCriterion;
     typedef typename LinearOperator::field_type Scalar;
 
 public:
@@ -127,7 +127,7 @@ public:
         // stopped in case exceptions are thrown as well as if the method returns
         // regularly.)
         report_.reset();
-        Ewoms::TimerGuard reportTimerGuard(report_.timer());
+        Opm::TimerGuard reportTimerGuard(report_.timer());
         report_.timer().start();
 
         // preconditioned stabilized biconjugate gradient method
@@ -334,7 +334,7 @@ public:
         convergenceCriterion_ = &crit;
     }
 
-    const Ewoms::Linear::SolverReport& report() const
+    const Opm::Linear::SolverReport& report() const
     { return report_; }
 
 private:
@@ -344,13 +344,13 @@ private:
     Preconditioner& preconditioner_;
     ConvergenceCriterion& convergenceCriterion_;
     Dune::ScalarProduct<Vector>& scalarProduct_;
-    Ewoms::Linear::SolverReport report_;
+    Opm::Linear::SolverReport report_;
 
     unsigned maxIterations_;
     unsigned verbosity_;
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

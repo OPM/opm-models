@@ -139,7 +139,7 @@ SET_PROP(NumericModel, ParameterTree)
 SET_STRING_PROP(NumericModel, ModelParameterGroup, "");
 
 //! Use the DgfVanguard by default
-SET_TYPE_PROP(NumericModel, Vanguard, Ewoms::DgfVanguard<TypeTag>);
+SET_TYPE_PROP(NumericModel, Vanguard, Opm::DgfVanguard<TypeTag>);
 
 //! Set a value for the GridFile property
 SET_STRING_PROP(NumericModel, GridFile, "");

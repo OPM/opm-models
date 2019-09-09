@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkPhasePresenceModule
+ * \copydoc Opm::VtkPhasePresenceModule
  */
 #ifndef EWOMS_VTK_PHASE_PRESENCE_MODULE_HH
 #define EWOMS_VTK_PHASE_PRESENCE_MODULE_HH
@@ -47,7 +47,7 @@ SET_BOOL_PROP(VtkPhasePresence, VtkWritePhasePresence, false);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -64,7 +64,7 @@ class VtkPhasePresenceModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     typedef typename ParentType::ScalarBuffer ScalarBuffer;
 
@@ -136,6 +136,6 @@ private:
     ScalarBuffer phasePresence_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

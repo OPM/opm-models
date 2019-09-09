@@ -49,7 +49,7 @@ NEW_PROP_TAG(MaterialLaw);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 template <class TypeTag>
 class ForchheimerIntensiveQuantities;
 
@@ -578,6 +578,6 @@ protected:
     Evaluation density_[numPhases];
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

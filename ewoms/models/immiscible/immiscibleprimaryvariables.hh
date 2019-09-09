@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmisciblePrimaryVariables
+ * \copydoc Opm::ImmisciblePrimaryVariables
  */
 #ifndef EWOMS_IMMISCIBLE_PRIMARY_VARIABLES_HH
 #define EWOMS_IMMISCIBLE_PRIMARY_VARIABLES_HH
@@ -39,7 +39,7 @@
 
 #include <dune/common/fvector.hh>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup ImmiscibleModel
@@ -74,7 +74,7 @@ class ImmisciblePrimaryVariables : public FvBasePrimaryVariables<TypeTag>
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
     typedef Opm::ImmiscibleFlash<Scalar, FluidSystem> ImmiscibleFlash;
-    typedef Ewoms::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, GET_PROP_VALUE(TypeTag, EnableEnergy)> EnergyModule;
 
 public:
     /*!
@@ -209,6 +209,6 @@ private:
     { return *static_cast<Implementation *>(this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

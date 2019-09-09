@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::ImmiscibleLocalResidual
+ * \copydoc Opm::ImmiscibleLocalResidual
  */
 #ifndef EWOMS_IMMISCIBLE_LOCAL_RESIDUAL_BASE_HH
 #define EWOMS_IMMISCIBLE_LOCAL_RESIDUAL_BASE_HH
@@ -34,7 +34,7 @@
 
 #include <opm/material/common/Valgrind.hpp>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup ImmiscibleModel
  *
@@ -60,7 +60,7 @@ class ImmiscibleLocalResidual : public GET_PROP_TYPE(TypeTag, DiscLocalResidual)
     enum { numPhases = GET_PROP_VALUE(TypeTag, NumPhases) };
     enum { enableEnergy = GET_PROP_VALUE(TypeTag, EnableEnergy) };
 
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Opm::MathToolbox<Evaluation> Toolbox;
 
 public:
@@ -194,6 +194,6 @@ private:
     { return *static_cast<const Implementation *>(this); }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

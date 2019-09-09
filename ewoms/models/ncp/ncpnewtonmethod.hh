@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::NcpNewtonMethod
+ * \copydoc Opm::NcpNewtonMethod
  */
 #ifndef EWOMS_NCP_NEWTON_METHOD_HH
 #define EWOMS_NCP_NEWTON_METHOD_HH
@@ -35,7 +35,7 @@
 
 #include <algorithm>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup NcpModel
@@ -206,6 +206,6 @@ private:
     void clampValue_(Scalar& val, Scalar minVal, Scalar maxVal) const
     { val = std::max(minVal, std::min(val, maxVal)); }
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

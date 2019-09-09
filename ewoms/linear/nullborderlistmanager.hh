@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::NullBorderListCreator
+ * \copydoc Opm::Linear::NullBorderListCreator
  */
 #ifndef EWOMS_NULL_BORDER_LIST_MANAGER_HH
 #define EWOMS_NULL_BORDER_LIST_MANAGER_HH
@@ -40,7 +40,7 @@
 
 #include <algorithm>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 /*!
  * \brief This is a grid manager which does not create any border list.
@@ -68,6 +68,6 @@ private:
 };
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

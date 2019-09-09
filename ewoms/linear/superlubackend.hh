@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::SuperLUBackend
+ * \copydoc Opm::Linear::SuperLUBackend
  */
 #ifndef EWOMS_SUPER_LU_BACKEND_HH
 #define EWOMS_SUPER_LU_BACKEND_HH
@@ -52,7 +52,7 @@ NEW_TYPE_TAG(SuperLULinearSolver);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 template <class Scalar, class TypeTag, class Matrix, class Vector>
 class SuperLUSolve_;
@@ -177,13 +177,13 @@ public:
 #endif
 
 } // namespace Linear
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
 SET_INT_PROP(SuperLULinearSolver, LinearSolverVerbosity, 0);
 SET_TYPE_PROP(SuperLULinearSolver, LinearSolverBackend,
-              Ewoms::Linear::SuperLUBackend<TypeTag>);
+              Opm::Linear::SuperLUBackend<TypeTag>);
 
 END_PROPERTIES
 

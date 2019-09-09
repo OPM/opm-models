@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkBlackOilModule
+ * \copydoc Opm::VtkBlackOilModule
  */
 #ifndef EWOMS_VTK_BLACK_OIL_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_MODULE_HH
@@ -74,7 +74,7 @@ SET_BOOL_PROP(VtkBlackOil, VtkWriteSaturatedGasOilVaporizationFactor, false);
 SET_BOOL_PROP(VtkBlackOil, VtkWritePrimaryVarsMeaning, false);
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -94,7 +94,7 @@ class VtkBlackOilModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, FluidSystem) FluidSystem;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
@@ -385,6 +385,6 @@ private:
 
     ScalarBuffer primaryVarsMeaning_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

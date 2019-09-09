@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Restart
+ * \copydoc Opm::Restart
  */
 #ifndef EWOMS_RESTART_HH
 #define EWOMS_RESTART_HH
@@ -32,7 +32,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Load or save a state of a problem to/from the harddisk.
@@ -270,6 +270,6 @@ private:
     std::ifstream inStream_;
     std::ofstream outStream_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

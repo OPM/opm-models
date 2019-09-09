@@ -51,7 +51,7 @@
 #include <string>
 #include <math.h>
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup BlackOil
  * \brief Contains the high level supplements required to extend the black oil
@@ -235,7 +235,7 @@ public:
             // foam has been disabled at compile time
             return;
 
-        //Ewoms::VtkBlackOilFoamModule<TypeTag>::registerParameters();
+        //Opm::VtkBlackOilFoamModule<TypeTag>::registerParameters();
     }
 
     /*!
@@ -251,7 +251,7 @@ public:
         if (enableVtkOutput) {
             Opm::OpmLog::warning("VTK output requested, currently unsupported by the foam module.");
         }
-        //model.addOutputModule(new Ewoms::VtkBlackOilFoamModule<TypeTag>(simulator));
+        //model.addOutputModule(new Opm::VtkBlackOilFoamModule<TypeTag>(simulator));
     }
 
     static bool primaryVarApplies(unsigned pvIdx)
@@ -476,7 +476,7 @@ BlackOilFoamModule<TypeTag, enableFoam>::gasMobilityMultiplierTable_;
 
 /*!
  * \ingroup BlackOil
- * \class Ewoms::BlackOilFoamIntensiveQuantities
+ * \class Opm::BlackOilFoamIntensiveQuantities
  *
  * \brief Provides the volumetric quantities required for the equations needed by the
  *        polymers extension of the black-oil model.
@@ -614,6 +614,6 @@ public:
 };
 
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

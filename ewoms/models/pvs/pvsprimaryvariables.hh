@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::PvsPrimaryVariables
+ * \copydoc Opm::PvsPrimaryVariables
  */
 #ifndef EWOMS_PVS_PRIMARY_VARIABLES_HH
 #define EWOMS_PVS_PRIMARY_VARIABLES_HH
@@ -43,7 +43,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup PvsModel
@@ -78,7 +78,7 @@ class PvsPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 
     typedef typename Opm::MathToolbox<Evaluation> Toolbox;
     typedef Dune::FieldVector<Scalar, numComponents> ComponentVector;
-    typedef Ewoms::EnergyModule<TypeTag, enableEnergy> EnergyModule;
+    typedef Opm::EnergyModule<TypeTag, enableEnergy> EnergyModule;
     typedef Opm::NcpFlash<Scalar, FluidSystem> NcpFlash;
 
 public:
@@ -373,6 +373,6 @@ private:
     short phasePresence_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

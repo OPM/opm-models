@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::ThreadManager
+ * \copydoc Opm::ThreadManager
  */
 #ifndef EWOMS_THREAD_MANAGER_HH
 #define EWOMS_THREAD_MANAGER_HH
@@ -44,7 +44,7 @@ NEW_PROP_TAG(ThreadsPerProcess);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Simplifies multi-threaded capabilities.
@@ -129,6 +129,6 @@ private:
 
 template <class TypeTag>
 int ThreadManager<TypeTag>::numThreads_ = 1;
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

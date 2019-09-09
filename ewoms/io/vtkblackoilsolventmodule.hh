@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkBlackOilSolventModule
+ * \copydoc Opm::VtkBlackOilSolventModule
  */
 #ifndef EWOMS_VTK_BLACK_OIL_SOLVENT_MODULE_HH
 #define EWOMS_VTK_BLACK_OIL_SOLVENT_MODULE_HH
@@ -61,7 +61,7 @@ SET_BOOL_PROP(VtkBlackOilSolvent, VtkWriteSolventMobility, true);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 /*!
  * \ingroup Vtk
  *
@@ -79,7 +79,7 @@ class VtkBlackOilSolventModule : public BaseOutputModule<TypeTag>
     typedef typename GET_PROP_TYPE(TypeTag, ElementContext) ElementContext;
 
     static const int vtkFormat = GET_PROP_VALUE(TypeTag, VtkOutputFormat);
-    typedef Ewoms::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
+    typedef Opm::VtkMultiWriter<GridView, vtkFormat> VtkMultiWriter;
 
     enum { enableSolvent = GET_PROP_VALUE(TypeTag, EnableSolvent) };
 
@@ -225,6 +225,6 @@ private:
     ScalarBuffer solventViscosity_;
     ScalarBuffer solventMobility_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

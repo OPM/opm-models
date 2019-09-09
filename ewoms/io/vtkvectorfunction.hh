@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkVectorFunction
+ * \copydoc Opm::VtkVectorFunction
  */
 #ifndef VTK_VECTOR_FUNCTION_HH
 #define VTK_VECTOR_FUNCTION_HH
@@ -40,7 +40,7 @@
 #include <limits>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides a vector-valued function using Dune::FieldVectors
@@ -119,6 +119,6 @@ private:
     unsigned codim_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

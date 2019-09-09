@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::VtkScalarFunction
+ * \copydoc Opm::VtkScalarFunction
  */
 #ifndef VTK_SCALAR_FUNCTION_HH
 #define VTK_SCALAR_FUNCTION_HH
@@ -42,7 +42,7 @@
 #include <limits>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \brief Provides a vector-valued function using Dune::FieldVectors
@@ -121,6 +121,6 @@ private:
     unsigned codim_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

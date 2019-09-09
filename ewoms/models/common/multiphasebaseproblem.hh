@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::MultiPhaseBaseProblem
+ * \copydoc Opm::MultiPhaseBaseProblem
  */
 #ifndef EWOMS_MULTI_PHASE_BASE_PROBLEM_HH
 #define EWOMS_MULTI_PHASE_BASE_PROBLEM_HH
@@ -50,7 +50,7 @@ NEW_PROP_TAG(FluxModule);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup Discretization
@@ -64,7 +64,7 @@ class MultiPhaseBaseProblem
     , public GET_PROP_TYPE(TypeTag, FluxModule)::FluxBaseProblem
 {
 //! \cond SKIP_THIS
-    typedef Ewoms::FvBaseProblem<TypeTag> ParentType;
+    typedef Opm::FvBaseProblem<TypeTag> ParentType;
 
     typedef typename GET_PROP_TYPE(TypeTag, Problem) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
@@ -404,6 +404,6 @@ private:
     }
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

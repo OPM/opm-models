@@ -23,7 +23,7 @@
 /*!
  * \file
  *
- * \copydoc Ewoms::FvBaseDiscretization
+ * \copydoc Opm::FvBaseDiscretization
  */
 #ifndef EWOMS_FV_BASE_DISCRETIZATION_HH
 #define EWOMS_FV_BASE_DISCRETIZATION_HH
@@ -83,16 +83,16 @@
 #include <string>
 #include <vector>
 
-namespace Ewoms {
+namespace Opm {
 template<class TypeTag>
 class FvBaseDiscretization;
 
-} // namespace Ewoms
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
 //! Set the default type for the time manager
-SET_TYPE_PROP(FvBaseDiscretization, Simulator, Ewoms::Simulator<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, Simulator, Opm::Simulator<TypeTag>);
 
 //! Mapper for the grid view's vertices.
 #if DUNE_VERSION_NEWER(DUNE_GRID, 2,6)
@@ -118,16 +118,16 @@ SET_PROP(FvBaseDiscretization, BorderListCreator)
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 public:
-    typedef Ewoms::Linear::NullBorderListCreator<GridView, DofMapper> type;
+    typedef Opm::Linear::NullBorderListCreator<GridView, DofMapper> type;
 };
 
-SET_TYPE_PROP(FvBaseDiscretization, DiscLocalResidual, Ewoms::FvBaseLocalResidual<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, DiscLocalResidual, Opm::FvBaseLocalResidual<TypeTag>);
 
-SET_TYPE_PROP(FvBaseDiscretization, DiscIntensiveQuantities, Ewoms::FvBaseIntensiveQuantities<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Ewoms::FvBaseExtensiveQuantities<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, DiscIntensiveQuantities, Opm::FvBaseIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, DiscExtensiveQuantities, Opm::FvBaseExtensiveQuantities<TypeTag>);
 
 //! Calculates the gradient of any quantity given the index of a flux approximation point
-SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Ewoms::FvBaseGradientCalculator<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, GradientCalculator, Opm::FvBaseGradientCalculator<TypeTag>);
 
 //! The maximum allowed number of timestep divisions for the
 //! Newton solver
@@ -163,7 +163,7 @@ SET_TYPE_PROP(FvBaseDiscretization, BoundaryRateVector,
 /*!
  * \brief The class which represents constraints.
  */
-SET_TYPE_PROP(FvBaseDiscretization, Constraints, Ewoms::FvBaseConstraints<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, Constraints, Opm::FvBaseConstraints<TypeTag>);
 
 /*!
  * \brief The type for storing a residual for an element.
@@ -180,7 +180,7 @@ SET_TYPE_PROP(FvBaseDiscretization, GlobalEqVector,
 /*!
  * \brief An object representing a local set of primary variables.
  */
-SET_TYPE_PROP(FvBaseDiscretization, PrimaryVariables, Ewoms::FvBasePrimaryVariables<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, PrimaryVariables, Opm::FvBasePrimaryVariables<TypeTag>);
 
 /*!
  * \brief The type of a solution for the whole grid at a fixed time.
@@ -193,26 +193,26 @@ SET_TYPE_PROP(FvBaseDiscretization, SolutionVector,
  *
  * This should almost certainly be overloaded by the model...
  */
-SET_TYPE_PROP(FvBaseDiscretization, IntensiveQuantities, Ewoms::FvBaseIntensiveQuantities<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, IntensiveQuantities, Opm::FvBaseIntensiveQuantities<TypeTag>);
 
 /*!
  * \brief The element context
  */
-SET_TYPE_PROP(FvBaseDiscretization, ElementContext, Ewoms::FvBaseElementContext<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, BoundaryContext, Ewoms::FvBaseBoundaryContext<TypeTag>);
-SET_TYPE_PROP(FvBaseDiscretization, ConstraintsContext, Ewoms::FvBaseConstraintsContext<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, ElementContext, Opm::FvBaseElementContext<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, BoundaryContext, Opm::FvBaseBoundaryContext<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, ConstraintsContext, Opm::FvBaseConstraintsContext<TypeTag>);
 
 /*!
  * \brief The OpenMP threads manager
  */
-SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Ewoms::ThreadManager<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, ThreadManager, Opm::ThreadManager<TypeTag>);
 SET_INT_PROP(FvBaseDiscretization, ThreadsPerProcess, 1);
 SET_BOOL_PROP(FvBaseDiscretization, UseLinearizationLock, true);
 
 /*!
  * \brief Linearizer for the global system of equations.
  */
-SET_TYPE_PROP(FvBaseDiscretization, Linearizer, Ewoms::FvBaseLinearizer<TypeTag>);
+SET_TYPE_PROP(FvBaseDiscretization, Linearizer, Opm::FvBaseLinearizer<TypeTag>);
 
 //! use an unlimited time step size by default
 SET_SCALAR_PROP(FvBaseDiscretization, MaxTimeStepSize, std::numeric_limits<Scalar>::infinity());
@@ -278,7 +278,7 @@ SET_BOOL_PROP(FvBaseDiscretization, EnableExperiments, true);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup FiniteVolumeDiscretizations
@@ -324,7 +324,7 @@ class FvBaseDiscretization
         historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize),
     };
 
-    typedef std::vector<IntensiveQuantities, Ewoms::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > IntensiveQuantitiesVector;
+    typedef std::vector<IntensiveQuantities, Opm::aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> > IntensiveQuantitiesVector;
 
     typedef typename GridView::template Codim<0>::Entity Element;
     typedef typename GridView::template Codim<0>::Iterator ElementIterator;
@@ -459,7 +459,7 @@ public:
         NewtonMethod::registerParameters();
 
         // register runtime parameters of the output modules
-        Ewoms::VtkPrimaryVarsModule<TypeTag>::registerParameters();
+        Opm::VtkPrimaryVarsModule<TypeTag>::registerParameters();
 
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableGridAdaptation, "Enable adaptive grid refinement/coarsening");
         EWOMS_REGISTER_PARAM(TypeTag, bool, EnableVtkOutput, "Global switch for turning on writing VTK files");
@@ -1187,7 +1187,7 @@ public:
      */
     bool update()
     {
-        Ewoms::TimerGuard prePostProcessGuard(prePostProcessTimer_);
+        Opm::TimerGuard prePostProcessGuard(prePostProcessTimer_);
 
 #ifndef NDEBUG
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
@@ -1789,16 +1789,16 @@ public:
     }
 #endif
 
-    const Ewoms::Timer& prePostProcessTimer() const
+    const Opm::Timer& prePostProcessTimer() const
     { return prePostProcessTimer_; }
 
-    const Ewoms::Timer& linearizeTimer() const
+    const Opm::Timer& linearizeTimer() const
     { return linearizeTimer_; }
 
-    const Ewoms::Timer& solveTimer() const
+    const Opm::Timer& solveTimer() const
     { return solveTimer_; }
 
-    const Ewoms::Timer& updateTimer() const
+    const Opm::Timer& updateTimer() const
     { return updateTimer_; }
 
 protected:
@@ -1839,7 +1839,7 @@ protected:
     void registerOutputModules_()
     {
         // add the output modules available on all model
-        auto *mod = new Ewoms::VtkPrimaryVarsModule<TypeTag>(simulator_);
+        auto *mod = new Opm::VtkPrimaryVarsModule<TypeTag>(simulator_);
         this->outputModules_.push_back(mod);
     }
 
@@ -1876,10 +1876,10 @@ protected:
 
     NewtonMethod newtonMethod_;
 
-    Ewoms::Timer prePostProcessTimer_;
-    Ewoms::Timer linearizeTimer_;
-    Ewoms::Timer solveTimer_;
-    Ewoms::Timer updateTimer_;
+    Opm::Timer prePostProcessTimer_;
+    Opm::Timer linearizeTimer_;
+    Opm::Timer solveTimer_;
+    Opm::Timer updateTimer_;
 
     // calculates the local jacobian matrix for a given element
     std::vector<LocalLinearizer> localLinearizer_;
@@ -1914,6 +1914,6 @@ protected:
     bool enableStorageCache_;
     bool enableThermodynamicHints_;
 };
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::FractureMapper
+ * \copydoc Opm::FractureMapper
  */
 #ifndef EWOMS_FRACTURE_MAPPER_HH
 #define EWOMS_FRACTURE_MAPPER_HH
@@ -32,7 +32,7 @@
 #include <algorithm>
 #include <set>
 
-namespace Ewoms {
+namespace Opm {
 
 /*!
  * \ingroup DiscreteFractureModel
@@ -103,6 +103,6 @@ private:
     std::set<unsigned> fractureVertices_;
 };
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif // EWOMS_FRACTURE_MAPPER_HH

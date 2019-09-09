@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::BaseOutputModule
+ * \copydoc Opm::BaseOutputModule
  */
 #ifndef EWOMS_BASE_OUTPUT_MODULE_HH
 #define EWOMS_BASE_OUTPUT_MODULE_HH
@@ -62,7 +62,7 @@ NEW_PROP_TAG(DiscBaseOutputModule);
 
 END_PROPERTIES
 
-namespace Ewoms {
+namespace Opm {
 
 #if __GNUC__ || __clang__
 #pragma GCC diagnostic push
@@ -513,6 +513,6 @@ protected:
 #pragma GCC diagnostic pop
 #endif
 
-} // namespace Ewoms
+} // namespace Opm
 
 #endif

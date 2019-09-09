@@ -22,7 +22,7 @@
 */
 /*!
  * \file
- * \copydoc Ewoms::Linear::CombinedCriterion
+ * \copydoc Opm::Linear::CombinedCriterion
  */
 #ifndef EWOMS_COMBINED_CRITERION_HH
 #define EWOMS_COMBINED_CRITERION_HH
@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-namespace Ewoms {
+namespace Opm {
 namespace Linear {
 
 /*! \addtogroup Linear
