@@ -36,7 +36,7 @@
 
 #include <ewoms/common/basicproperties.hh>
 #include <ewoms/io/vtkprimaryvarsmodule.hh>
-#include <ewoms/linear/parallelbicgstabbackend.hh>
+#include <opm/simulators/linalg/parallelbicgstabbackend.hh>
 
 BEGIN_PROPERTIES
 
