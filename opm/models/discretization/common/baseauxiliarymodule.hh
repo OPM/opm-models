@@ -29,7 +29,7 @@
 
 #include <opm/models/utils/propertysystem.hh>
 
-#include <ewoms/disc/common/fvbaseproperties.hh>
+#include <opm/models/discretization/common/fvbaseproperties.hh>
 
 #include <set>
 #include <vector>

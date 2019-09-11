@@ -29,7 +29,7 @@
 #ifndef EWOMS_VCFV_PROPERTIES_HH
 #define EWOMS_VCFV_PROPERTIES_HH
 
-#include <ewoms/disc/common/fvbaseproperties.hh>
+#include <opm/models/discretization/common/fvbaseproperties.hh>
 
 #include <opm/models/utils/propertysystem.hh>
 
