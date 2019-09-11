@@ -29,7 +29,7 @@
 
 #include <ewoms/common/start.hh>
 #include <ewoms/models/blackoil/blackoilmodel.hh>
-#include <ewoms/disc/vcfv/vcfvdiscretization.hh>
+#include <opm/models/discretization/vcfv/vcfvdiscretization.hh>
 #include "problems/reservoirproblem.hh"
 
 BEGIN_PROPERTIES

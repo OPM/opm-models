@@ -30,7 +30,7 @@
 
 #include "vcfvproperties.hh"
 
-#include <ewoms/disc/common/fvbasegradientcalculator.hh>
+#include <opm/models/discretization/common/fvbasegradientcalculator.hh>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>

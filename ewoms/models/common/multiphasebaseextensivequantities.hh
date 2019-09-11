@@ -31,7 +31,7 @@
 #include "multiphasebaseproperties.hh"
 
 #include <ewoms/models/common/quantitycallbacks.hh>
-#include <ewoms/disc/common/fvbaseextensivequantities.hh>
+#include <opm/models/discretization/common/fvbaseextensivequantities.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <opm/material/common/Valgrind.hpp>

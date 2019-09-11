@@ -31,7 +31,7 @@
 #include "pvsindices.hh"
 #include "pvsproperties.hh"
 
-#include <ewoms/disc/common/fvbaseprimaryvariables.hh>
+#include <opm/models/discretization/common/fvbaseprimaryvariables.hh>
 #include <ewoms/models/common/energymodule.hh>
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>

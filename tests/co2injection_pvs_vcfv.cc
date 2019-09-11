@@ -30,7 +30,7 @@
 
 #include <ewoms/common/start.hh>
 #include <ewoms/models/pvs/pvsmodel.hh>
-#include <ewoms/disc/vcfv/vcfvdiscretization.hh>
+#include <opm/models/discretization/vcfv/vcfvdiscretization.hh>
 
 #include "problems/co2injectionproblem.hh"
 

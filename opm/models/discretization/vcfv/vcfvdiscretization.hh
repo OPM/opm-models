@@ -23,62 +23,71 @@
 /*!
  * \file
  *
- * \copydoc Opm::EcfvDiscretization
+ * \copydoc Opm::VcfvDiscretization
  */
-#ifndef EWOMS_ECFV_DISCRETIZATION_HH
-#define EWOMS_ECFV_DISCRETIZATION_HH
+#ifndef EWOMS_VCFV_DISCRETIZATION_HH
+#define EWOMS_VCFV_DISCRETIZATION_HH
 
 #include <opm/material/densead/Math.hpp>
 
-#include "ecfvproperties.hh"
-#include "ecfvstencil.hh"
-#include "ecfvgridcommhandlefactory.hh"
-#include "ecfvbaseoutputmodule.hh"
+#include "vcfvproperties.hh"
+#include "vcfvstencil.hh"
+#include "p1fegradientcalculator.hh"
+#include "vcfvgridcommhandlefactory.hh"
+#include "vcfvbaseoutputmodule.hh"
 
-#include <opm/simulators/linalg/elementborderlistfromgrid.hh>
-#include <ewoms/disc/common/fvbasediscretization.hh>
+#include <opm/simulators/linalg/vertexborderlistfromgrid.hh>
+#include <opm/models/discretization/common/fvbasediscretization.hh>
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/space/common/functionspace.hh>
-#include <dune/fem/space/finitevolume.hh>
+#include <dune/fem/space/lagrange.hh>
 #endif
 
 namespace Opm {
 template <class TypeTag>
-class EcfvDiscretization;
-}
+class VcfvDiscretization;
+
+} // namespace Opm
 
 BEGIN_PROPERTIES
 
 //! Set the stencil
-SET_PROP(EcfvDiscretization, Stencil)
+SET_PROP(VcfvDiscretization, Stencil)
 {
 private:
-    typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
+    typedef typename GridView::ctype CoordScalar;
 
 public:
-    typedef Opm::EcfvStencil<Scalar, GridView> type;
+    typedef Opm::VcfvStencil<CoordScalar, GridView> type;
 };
 
 //! Mapper for the degrees of freedoms.
-SET_TYPE_PROP(EcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, ElementMapper));
+SET_TYPE_PROP(VcfvDiscretization, DofMapper, typename GET_PROP_TYPE(TypeTag, VertexMapper));
 
 //! The concrete class which manages the spatial discretization
-SET_TYPE_PROP(EcfvDiscretization, Discretization, Opm::EcfvDiscretization<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, Discretization, Opm::VcfvDiscretization<TypeTag>);
 
 //! The base class for the output modules (decides whether to write
 //! element or vertex based fields)
-SET_TYPE_PROP(EcfvDiscretization, DiscBaseOutputModule,
-              Opm::EcfvBaseOutputModule<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, DiscBaseOutputModule,
+              Opm::VcfvBaseOutputModule<TypeTag>);
+
+//! Calculates the gradient of any quantity given the index of a flux approximation point
+SET_TYPE_PROP(VcfvDiscretization, GradientCalculator,
+              Opm::P1FeGradientCalculator<TypeTag>);
 
 //! The class to create grid communication handles
-SET_TYPE_PROP(EcfvDiscretization, GridCommHandleFactory,
-              Opm::EcfvGridCommHandleFactory<TypeTag>);
+SET_TYPE_PROP(VcfvDiscretization, GridCommHandleFactory,
+              Opm::VcfvGridCommHandleFactory<TypeTag>);
+
+//! Use two-point gradients by default for the vertex centered finite volume scheme.
+SET_BOOL_PROP(VcfvDiscretization, UseP1FiniteElementGradients, false);
 
 #if HAVE_DUNE_FEM
 //! Set the DiscreteFunctionSpace
-SET_PROP(EcfvDiscretization, DiscreteFunctionSpace)
+SET_PROP(VcfvDiscretization, DiscreteFunctionSpace)
 {
 private:
     typedef typename GET_PROP_TYPE(TypeTag, Scalar)   Scalar;
@@ -89,51 +98,48 @@ private:
                                      GridPart::GridType::dimensionworld,
                                      numEq> FunctionSpace;
 public:
-    typedef Dune::Fem::FiniteVolumeSpace< FunctionSpace, GridPart, 0 > type;
+    // Lagrange discrete function space with unknowns at the cell vertices
+    typedef Dune::Fem::LagrangeDiscreteFunctionSpace< FunctionSpace, GridPart, 1 > type;
 };
 #endif
 
-//! Set the border list creator for to the one of an element based
-//! method
-SET_PROP(EcfvDiscretization, BorderListCreator)
+//! Set the border list creator for vertices
+SET_PROP(VcfvDiscretization, BorderListCreator)
 { private:
-    typedef typename GET_PROP_TYPE(TypeTag, ElementMapper) ElementMapper;
+    typedef typename GET_PROP_TYPE(TypeTag, VertexMapper) VertexMapper;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
 public:
-    typedef Opm::Linear::ElementBorderListFromGrid<GridView, ElementMapper> type;
+    typedef Opm::Linear::VertexBorderListFromGrid<GridView, VertexMapper> type;
 };
 
-//! For the element centered finite volume method, ghost and overlap elements must be
-//! assembled to calculate the fluxes over the process boundary faces of the local
-//! process' grid partition
-SET_BOOL_PROP(EcfvDiscretization, LinearizeNonLocalElements, true);
+//! For the vertex centered finite volume method, ghost and overlap elements must _not_
+//! be assembled to avoid accounting twice for the fluxes over the process boundary faces
+//! of the local process' grid partition
+SET_BOOL_PROP(VcfvDiscretization, LinearizeNonLocalElements, false);
 
-//! locking is not required for the element centered finite volume method because race
-//! conditions cannot occur since each matrix/vector entry is written exactly once
-SET_BOOL_PROP(EcfvDiscretization, UseLinearizationLock, false);
 
 END_PROPERTIES
 
 namespace Opm {
+
 /*!
- * \ingroup EcfvDiscretization
+ * \ingroup VcfvDiscretization
  *
- * \brief The base class for the element-centered finite-volume discretization scheme.
+ * \brief The base class for the vertex centered finite volume discretization scheme.
  */
 template<class TypeTag>
-class EcfvDiscretization : public FvBaseDiscretization<TypeTag>
+class VcfvDiscretization : public FvBaseDiscretization<TypeTag>
 {
     typedef FvBaseDiscretization<TypeTag> ParentType;
-
     typedef typename GET_PROP_TYPE(TypeTag, Model) Implementation;
     typedef typename GET_PROP_TYPE(TypeTag, DofMapper) DofMapper;
-    typedef typename GET_PROP_TYPE(TypeTag, PrimaryVariables) PrimaryVariables;
-    typedef typename GET_PROP_TYPE(TypeTag, SolutionVector) SolutionVector;
     typedef typename GET_PROP_TYPE(TypeTag, GridView) GridView;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
 
+    enum { dim = GridView::dimension };
+
 public:
-    EcfvDiscretization(Simulator& simulator)
+    VcfvDiscretization(Simulator& simulator)
         : ParentType(simulator)
     { }
 
@@ -141,44 +147,20 @@ public:
      * \brief Returns a string of discretization's human-readable name
      */
     static std::string discretizationName()
-    { return "ecfv"; }
+    { return "vcfv"; }
 
     /*!
      * \brief Returns the number of global degrees of freedom (DOFs) due to the grid
      */
     size_t numGridDof() const
-    { return static_cast<size_t>(this->gridView_.size(/*codim=*/0)); }
+    { return static_cast<size_t>(this->gridView_.size(/*codim=*/dim)); }
 
     /*!
      * \brief Mapper to convert the Dune entities of the
      *        discretization's degrees of freedoms are to indices.
      */
     const DofMapper& dofMapper() const
-    { return this->elementMapper(); }
-
-    /*!
-     * \brief Syncronize the values of the primary variables on the
-     *        degrees of freedom that overlap with the neighboring
-     *        processes.
-     *
-     * For the Element Centered Finite Volume discretization, this
-     * method retrieves the primary variables corresponding to
-     * overlap/ghost elements from their respective master process.
-     */
-    void syncOverlap()
-    {
-        // syncronize the solution on the ghost and overlap elements
-        typedef GridCommHandleGhostSync<PrimaryVariables,
-                                        SolutionVector,
-                                        DofMapper,
-                                        /*commCodim=*/0> GhostSyncHandle;
-
-        auto ghostSync = GhostSyncHandle(this->solution(/*timeIdx=*/0),
-                                         asImp_().dofMapper());
-        this->gridView().communicate(ghostSync,
-                                     Dune::InteriorBorder_All_Interface,
-                                     Dune::ForwardCommunication);
-    }
+    { return this->vertexMapper(); }
 
     /*!
      * \brief Serializes the current state of the model.
@@ -189,7 +171,7 @@ public:
      */
     template <class Restarter>
     void serialize(Restarter& res)
-    { res.template serializeEntities</*codim=*/0>(asImp_(), this->gridView_); }
+    { res.template serializeEntities</*codim=*/dim>(asImp_(), this->gridView_); }
 
     /*!
      * \brief Deserializes the state of the model.
@@ -201,7 +183,7 @@ public:
     template <class Restarter>
     void deserialize(Restarter& res)
     {
-        res.template deserializeEntities</*codim=*/0>(asImp_(), this->gridView_);
+        res.template deserializeEntities</*codim=*/dim>(asImp_(), this->gridView_);
         this->solution(/*timeIdx=*/1) = this->solution(/*timeIdx=*/0);
     }
 

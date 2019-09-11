@@ -188,36 +188,36 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/blackoil/blackoiltwophaseindices.hh
              ewoms/models/blackoil/blackoilpolymermodules.hh
              ewoms/models/blackoil/blackoilboundaryratevector.hh
-             ewoms/disc/vcfv/vcfvbaseoutputmodule.hh
-             ewoms/disc/vcfv/vcfvdiscretization.hh
-             ewoms/disc/vcfv/p1fegradientcalculator.hh
-             ewoms/disc/vcfv/vcfvgridcommhandlefactory.hh
-             ewoms/disc/vcfv/vcfvproperties.hh
-             ewoms/disc/vcfv/vcfvstencil.hh
-             ewoms/disc/common/fvbasenewtonmethod.hh
-             ewoms/disc/common/fvbasenewtonconvergencewriter.hh
-             ewoms/disc/common/fvbaseintensivequantities.hh
-             ewoms/disc/common/fvbaseconstraintscontext.hh
-             ewoms/disc/common/baseauxiliarymodule.hh
-             ewoms/disc/common/fvbaseelementcontext.hh
-             ewoms/disc/common/fvbaselocalresidual.hh
-             ewoms/disc/common/fvbasefdlocallinearizer.hh
-             ewoms/disc/common/fvbaseboundarycontext.hh
-             ewoms/disc/common/fvbaseadlocallinearizer.hh
-             ewoms/disc/common/fvbaseconstraints.hh
-             ewoms/disc/common/fvbaseproperties.hh
-             ewoms/disc/common/fvbaseextensivequantities.hh
-             ewoms/disc/common/fvbaselinearizer.hh
-             ewoms/disc/common/restrictprolong.hh
-             ewoms/disc/common/fvbasediscretization.hh
-             ewoms/disc/common/fvbasegradientcalculator.hh
-             ewoms/disc/common/fvbaseproblem.hh
-             ewoms/disc/common/fvbaseprimaryvariables.hh
-             ewoms/disc/ecfv/ecfvgridcommhandlefactory.hh
-             ewoms/disc/ecfv/ecfvstencil.hh
-             ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
-             ewoms/disc/ecfv/ecfvdiscretization.hh
-             ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/discretization/vcfv/vcfvbaseoutputmodule.hh
+             opm/models/discretization/vcfv/vcfvdiscretization.hh
+             opm/models/discretization/vcfv/p1fegradientcalculator.hh
+             opm/models/discretization/vcfv/vcfvgridcommhandlefactory.hh
+             opm/models/discretization/vcfv/vcfvproperties.hh
+             opm/models/discretization/vcfv/vcfvstencil.hh
+             opm/models/discretization/common/fvbasenewtonmethod.hh
+             opm/models/discretization/common/fvbasenewtonconvergencewriter.hh
+             opm/models/discretization/common/fvbaseintensivequantities.hh
+             opm/models/discretization/common/fvbaseconstraintscontext.hh
+             opm/models/discretization/common/baseauxiliarymodule.hh
+             opm/models/discretization/common/fvbaseelementcontext.hh
+             opm/models/discretization/common/fvbaselocalresidual.hh
+             opm/models/discretization/common/fvbasefdlocallinearizer.hh
+             opm/models/discretization/common/fvbaseboundarycontext.hh
+             opm/models/discretization/common/fvbaseadlocallinearizer.hh
+             opm/models/discretization/common/fvbaseconstraints.hh
+             opm/models/discretization/common/fvbaseproperties.hh
+             opm/models/discretization/common/fvbaseextensivequantities.hh
+             opm/models/discretization/common/fvbaselinearizer.hh
+             opm/models/discretization/common/restrictprolong.hh
+             opm/models/discretization/common/fvbasediscretization.hh
+             opm/models/discretization/common/fvbasegradientcalculator.hh
+             opm/models/discretization/common/fvbaseproblem.hh
+             opm/models/discretization/common/fvbaseprimaryvariables.hh
+             opm/models/discretization/ecfv/ecfvgridcommhandlefactory.hh
+             opm/models/discretization/ecfv/ecfvstencil.hh
+             opm/models/discretization/ecfv/ecfvbaseoutputmodule.hh
+             opm/models/discretization/ecfv/ecfvdiscretization.hh
+             opm/models/discretization/ecfv/ecfvproperties.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh

@@ -30,7 +30,7 @@
 
 #include "richardsproperties.hh"
 
-#include <ewoms/disc/common/fvbaseprimaryvariables.hh>
+#include <opm/models/discretization/common/fvbaseprimaryvariables.hh>
 
 #include <opm/material/constraintsolvers/ImmiscibleFlash.hpp>
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>

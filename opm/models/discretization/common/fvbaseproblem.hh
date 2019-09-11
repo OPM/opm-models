@@ -32,7 +32,7 @@
 
 #include <ewoms/io/vtkmultiwriter.hh>
 #include <ewoms/io/restart.hh>
-#include <ewoms/disc/common/restrictprolong.hh>
+#include <opm/models/discretization/common/restrictprolong.hh>
 
 #include <opm/material/common/Unused.hpp>
 #include <opm/material/common/Exceptions.hpp>
