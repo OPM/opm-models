@@ -28,8 +28,8 @@
 #ifndef EWOMS_FV_BASE_FD_LOCAL_LINEARIZER_HH
 #define EWOMS_FV_BASE_FD_LOCAL_LINEARIZER_HH
 
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parametersystem.hh>
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/parametersystem.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
 #include <opm/material/common/Valgrind.hpp>

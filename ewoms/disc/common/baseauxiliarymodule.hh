@@ -27,7 +27,7 @@
 #ifndef EWOMS_BASE_AUXILIARY_MODULE_HH
 #define EWOMS_BASE_AUXILIARY_MODULE_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/models/utils/propertysystem.hh>
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
 

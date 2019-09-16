@@ -27,17 +27,17 @@
 #ifndef EWOMS_START_HH
 #define EWOMS_START_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/models/utils/propertysystem.hh>
 // the following header is not required here, but it must be included before
 // dune/common/densematrix.hh because of some c++ ideosyncrasies
 #include <opm/material/densead/Evaluation.hpp>
 
 #include "parametersystem.hh"
 
-#include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/simulator.hh>
-#include <ewoms/common/timer.hh>
+#include <opm/models/utils/parametersystem.hh>
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/simulator.hh>
+#include <opm/models/utils/timer.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 

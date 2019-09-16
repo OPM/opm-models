@@ -28,7 +28,7 @@
 #ifndef EWOMS_VCFV_STENCIL_HH
 #define EWOMS_VCFV_STENCIL_HH
 
-#include <ewoms/common/quadraturegeometries.hh>
+#include <opm/models/utils/quadraturegeometries.hh>
 
 #include <opm/material/common/Unused.hpp>
 #include <opm/material/common/Exceptions.hpp>

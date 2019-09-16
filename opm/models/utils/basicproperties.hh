@@ -30,8 +30,8 @@
 
 #include <dune/common/parametertree.hh>
 
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parametersystem.hh>
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/parametersystem.hh>
 #include <ewoms/io/dgfvanguard.hh>
 
 #if HAVE_DUNE_FEM

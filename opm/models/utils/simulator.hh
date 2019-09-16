@@ -29,11 +29,11 @@
 #define EWOMS_SIMULATOR_HH
 
 #include <ewoms/io/restart.hh>
-#include <ewoms/common/parametersystem.hh>
+#include <opm/models/utils/parametersystem.hh>
 
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/timer.hh>
-#include <ewoms/common/timerguard.hh>
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/timer.hh>
+#include <opm/models/utils/timerguard.hh>
 
 #include <dune/common/version.hh>
 #include <dune/common/parallel/mpihelper.hh>

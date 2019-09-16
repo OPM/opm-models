@@ -32,7 +32,7 @@
 
 #include <ewoms/models/common/quantitycallbacks.hh>
 #include <ewoms/disc/common/fvbaseextensivequantities.hh>
-#include <ewoms/common/parametersystem.hh>
+#include <opm/models/utils/parametersystem.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>

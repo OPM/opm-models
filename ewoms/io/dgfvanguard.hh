@@ -32,8 +32,8 @@
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 
 #include <ewoms/io/basevanguard.hh>
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parametersystem.hh>
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/parametersystem.hh>
 
 
 #include <type_traits>
