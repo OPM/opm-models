@@ -107,15 +107,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/pvs/pvsintensivequantities.hh
              ewoms/models/pvs/pvslocalresidual.hh
              ewoms/models/pvs/pvsmodel.hh
-             ewoms/models/immiscible/immisciblelocalresidual.hh
-             ewoms/models/immiscible/immiscibleproperties.hh
-             ewoms/models/immiscible/immisciblemodel.hh
-             ewoms/models/immiscible/immiscibleboundaryratevector.hh
-             ewoms/models/immiscible/immiscibleratevector.hh
-             ewoms/models/immiscible/immiscibleindices.hh
-             ewoms/models/immiscible/immiscibleextensivequantities.hh
-             ewoms/models/immiscible/immiscibleprimaryvariables.hh
-             ewoms/models/immiscible/immiscibleintensivequantities.hh
              ewoms/models/ncp/ncpmodel.hh
              ewoms/models/ncp/ncpindices.hh
              ewoms/models/ncp/ncpextensivequantities.hh
@@ -200,6 +191,15 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/flash/flashprimaryvariables.hh
              opm/models/flash/flashextensivequantities.hh
              opm/models/flash/flashproperties.hh
+             opm/models/immiscible/immisciblelocalresidual.hh
+             opm/models/immiscible/immiscibleproperties.hh
+             opm/models/immiscible/immisciblemodel.hh
+             opm/models/immiscible/immiscibleboundaryratevector.hh
+             opm/models/immiscible/immiscibleratevector.hh
+             opm/models/immiscible/immiscibleindices.hh
+             opm/models/immiscible/immiscibleextensivequantities.hh
+             opm/models/immiscible/immiscibleprimaryvariables.hh
+             opm/models/immiscible/immiscibleintensivequantities.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
              opm/models/parallel/gridcommhandles.hh
