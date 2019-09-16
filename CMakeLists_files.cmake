@@ -152,15 +152,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/pvs/pvsintensivequantities.hh
              ewoms/models/pvs/pvslocalresidual.hh
              ewoms/models/pvs/pvsmodel.hh
-             ewoms/models/immiscible/immisciblelocalresidual.hh
-             ewoms/models/immiscible/immiscibleproperties.hh
-             ewoms/models/immiscible/immisciblemodel.hh
-             ewoms/models/immiscible/immiscibleboundaryratevector.hh
-             ewoms/models/immiscible/immiscibleratevector.hh
-             ewoms/models/immiscible/immiscibleindices.hh
-             ewoms/models/immiscible/immiscibleextensivequantities.hh
-             ewoms/models/immiscible/immiscibleprimaryvariables.hh
-             ewoms/models/immiscible/immiscibleintensivequantities.hh
              ewoms/models/ncp/ncpmodel.hh
              ewoms/models/ncp/ncpindices.hh
              ewoms/models/ncp/ncpextensivequantities.hh
@@ -218,6 +209,15 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/immiscible/immisciblelocalresidual.hh
+             opm/models/immiscible/immiscibleproperties.hh
+             opm/models/immiscible/immisciblemodel.hh
+             opm/models/immiscible/immiscibleboundaryratevector.hh
+             opm/models/immiscible/immiscibleratevector.hh
+             opm/models/immiscible/immiscibleindices.hh
+             opm/models/immiscible/immiscibleextensivequantities.hh
+             opm/models/immiscible/immiscibleprimaryvariables.hh
+             opm/models/immiscible/immiscibleintensivequantities.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
