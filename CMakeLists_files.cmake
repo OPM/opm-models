@@ -71,16 +71,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/richards/richardsproperties.hh
              ewoms/models/richards/richardsintensivequantities.hh
              ewoms/models/richards/richardslocalresidual.hh
-             ewoms/models/pvs/pvsboundaryratevector.hh
-             ewoms/models/pvs/pvsratevector.hh
-             ewoms/models/pvs/pvsindices.hh
-             ewoms/models/pvs/pvsproperties.hh
-             ewoms/models/pvs/pvsnewtonmethod.hh
-             ewoms/models/pvs/pvsprimaryvariables.hh
-             ewoms/models/pvs/pvsextensivequantities.hh
-             ewoms/models/pvs/pvsintensivequantities.hh
-             ewoms/models/pvs/pvslocalresidual.hh
-             ewoms/models/pvs/pvsmodel.hh
              opm/models/blackoil/blackoilmodel.hh
              opm/models/blackoil/blackoilextensivequantities.hh
              opm/models/blackoil/blackoilintensivequantities.hh
@@ -205,6 +195,16 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/parallel/gridcommhandles.hh
              opm/models/parallel/mpibuffer.hh
              opm/models/parallel/threadedentityiterator.hh
+             opm/models/pvs/pvsboundaryratevector.hh
+             opm/models/pvs/pvsratevector.hh
+             opm/models/pvs/pvsindices.hh
+             opm/models/pvs/pvsproperties.hh
+             opm/models/pvs/pvsnewtonmethod.hh
+             opm/models/pvs/pvsprimaryvariables.hh
+             opm/models/pvs/pvsextensivequantities.hh
+             opm/models/pvs/pvsintensivequantities.hh
+             opm/models/pvs/pvslocalresidual.hh
+             opm/models/pvs/pvsmodel.hh
              opm/models/utils/start.hh
              opm/models/utils/timerguard.hh
              opm/models/utils/propertysystem.hh
