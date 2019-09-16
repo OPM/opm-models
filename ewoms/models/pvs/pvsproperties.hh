@@ -33,10 +33,10 @@
 #include <ewoms/models/common/multiphasebaseproperties.hh>
 #include <ewoms/models/common/diffusionmodule.hh>
 #include <ewoms/models/common/energymodule.hh>
-#include <ewoms/io/vtkcompositionmodule.hh>
-#include <ewoms/io/vtkphasepresencemodule.hh>
-#include <ewoms/io/vtkdiffusionmodule.hh>
-#include <ewoms/io/vtkenergymodule.hh>
+#include <opm/models/io/vtkcompositionmodule.hh>
+#include <opm/models/io/vtkphasepresencemodule.hh>
+#include <opm/models/io/vtkdiffusionmodule.hh>
+#include <opm/models/io/vtkenergymodule.hh>
 
 BEGIN_PROPERTIES
 

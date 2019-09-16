@@ -32,7 +32,7 @@
 
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
-#include <ewoms/io/dgfvanguard.hh>
+#include <opm/models/io/dgfvanguard.hh>
 
 #if HAVE_DUNE_FEM
 #include <dune/fem/gridpart/adaptiveleafgridpart.hh>

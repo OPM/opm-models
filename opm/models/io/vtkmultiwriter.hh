@@ -32,7 +32,7 @@
 #include "vtkvectorfunction.hh"
 #include "vtktensorfunction.hh"
 
-#include <ewoms/io/baseoutputwriter.hh>
+#include <opm/models/io/baseoutputwriter.hh>
 #include <ewoms/parallel/tasklets.hh>
 
 #include <opm/material/common/Valgrind.hpp>

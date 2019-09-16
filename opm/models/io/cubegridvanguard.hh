@@ -22,43 +22,26 @@
 */
 /*!
  * \file
- * \copydoc Opm::StructuredGridVanguard
+ * \copydoc Opm::CubeGridVanguard
  */
-#ifndef EWOMS_STRUCTURED_GRID_VANGUARD_HH
-#define EWOMS_STRUCTURED_GRID_VANGUARD_HH
+#ifndef EWOMS_CUBE_GRID_VANGUARD_HH
+#define EWOMS_CUBE_GRID_VANGUARD_HH
 
-#include <ewoms/io/basevanguard.hh>
+#include <opm/models/io/basevanguard.hh>
+#include <ewoms/common/basicproperties.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 
-#include <dune/grid/yaspgrid.hh>
-#include <dune/grid/io/file/dgfparser/dgfyasp.hh>
-
-#if HAVE_DUNE_ALUGRID
-#include <dune/alugrid/grid.hh>
-#include <dune/alugrid/dgf.hh>
-#endif
+#include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/version.hh>
 
-#include <vector>
 #include <memory>
-
-namespace Opm {
-
-template <class TypeTag>
-class StructuredGridVanguard;
-
-} // namespace Opm
 
 BEGIN_PROPERTIES
 
-NEW_TYPE_TAG(StructuredGridVanguard);
-
-// declare the properties required by the for the structured grid simulator vanguard
-NEW_PROP_TAG(Grid);
 NEW_PROP_TAG(Scalar);
+NEW_PROP_TAG(Grid);
 
 NEW_PROP_TAG(DomainSizeX);
 NEW_PROP_TAG(DomainSizeY);
@@ -70,46 +53,33 @@ NEW_PROP_TAG(CellsZ);
 
 NEW_PROP_TAG(GridGlobalRefinements);
 
-// GRIDDIM is only set by the finger problem
-#ifndef GRIDDIM
-static const int dim = 2;
-#else
-static const int dim = GRIDDIM;
-#endif
-
-// set the Grid and Vanguard properties
-#if HAVE_DUNE_ALUGRID
-SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::ALUGrid< dim, dim, Dune::cube, Dune::nonconforming >);
-#else
-SET_TYPE_PROP(StructuredGridVanguard, Grid, Dune::YaspGrid< dim >);
-#endif
-
-SET_TYPE_PROP(StructuredGridVanguard, Vanguard, Opm::StructuredGridVanguard<TypeTag>);
-
 END_PROPERTIES
 
 namespace Opm {
 
 /*!
- * \ingroup TestProblems
+ * \brief Provides a simulator vanguad which creates a regular grid made of
+ *        quadrilaterals.
  *
- * \brief Helper class for grid instantiation of the lens problem.
+ * A quadrilateral is a line segment in 1D, a rectangle in 2D and a
+ * cube in 3D.
  */
 template <class TypeTag>
-class StructuredGridVanguard : public BaseVanguard<TypeTag>
+class CubeGridVanguard : public BaseVanguard<TypeTag>
 {
     typedef BaseVanguard<TypeTag> ParentType;
     typedef typename GET_PROP_TYPE(TypeTag, Scalar) Scalar;
     typedef typename GET_PROP_TYPE(TypeTag, Simulator) Simulator;
     typedef typename GET_PROP_TYPE(TypeTag, Grid) Grid;
 
-    typedef std::unique_ptr<Grid> GridPointer;
-
-    static const int dim = Grid::dimension;
+    typedef Dune::shared_ptr<Grid> GridPointer;
+    typedef typename Grid::ctype CoordScalar;
+    enum { dimWorld = Grid::dimensionworld };
+    typedef Dune::FieldVector<CoordScalar, dimWorld> GlobalPosition;
 
 public:
     /*!
-     * \brief Register all run-time parameters for the structured grid simulator vanguard.
+     * \brief Register all run-time parameters for the simulator vanguad.
      */
     static void registerParameters()
     {
@@ -120,13 +90,13 @@ public:
                              "The size of the domain in x direction");
         EWOMS_REGISTER_PARAM(TypeTag, unsigned, CellsX,
                              "The number of intervalls in x direction");
-        if (dim > 1) {
+        if (dimWorld > 1) {
             EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeY,
                                  "The size of the domain in y direction");
             EWOMS_REGISTER_PARAM(TypeTag, unsigned, CellsY,
                                  "The number of intervalls in y direction");
         }
-        if (dim > 2) {
+        if (dimWorld > 2) {
             EWOMS_REGISTER_PARAM(TypeTag, Scalar, DomainSizeZ,
                                  "The size of the domain in z direction");
             EWOMS_REGISTER_PARAM(TypeTag, unsigned, CellsZ,
@@ -135,63 +105,50 @@ public:
     }
 
     /*!
-     * \brief Create the grid for the lens problem
+     * \brief Create the grid
      */
-    StructuredGridVanguard(Simulator& simulator)
+    CubeGridVanguard(Simulator& simulator)
         : ParentType(simulator)
     {
-        Dune::FieldVector<int, dim> cellRes;
+        std::array<unsigned int, dimWorld> cellRes;
+        GlobalPosition upperRight(0.0);
+        GlobalPosition lowerLeft(0.0);
 
-        typedef double GridScalar;
-        Dune::FieldVector<GridScalar, dim> upperRight;
-        Dune::FieldVector<GridScalar, dim> lowerLeft( 0 );
+        for (unsigned i = 0; i < dimWorld; ++i)
+            cellRes[i] = 0;
 
         upperRight[0] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeX);
-        upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
-
         cellRes[0] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX);
-        cellRes[1] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsY);
-        if (dim == 3) {
+        if (dimWorld > 1) {
+            upperRight[1] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeY);
+            cellRes[1] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsY);
+        }
+        if (dimWorld > 2) {
             upperRight[2] = EWOMS_GET_PARAM(TypeTag, Scalar, DomainSizeZ);
             cellRes[2] = EWOMS_GET_PARAM(TypeTag, unsigned, CellsZ);
         }
 
-        std::stringstream dgffile;
-        dgffile << "DGF" << std::endl;
-        dgffile << "INTERVAL" << std::endl;
-        dgffile << lowerLeft  << std::endl;
-        dgffile << upperRight << std::endl;
-        dgffile << cellRes    << std::endl;
-        dgffile << "#" << std::endl;
-        dgffile << "GridParameter" << std::endl;
-        dgffile << "overlap 1" << std::endl;
-        dgffile << "#" << std::endl;
-        dgffile << "Simplex" << std::endl;
-        dgffile << "#" << std::endl;
-
-        // use DGF parser to create a grid from interval block
-        gridPtr_.reset( Dune::GridPtr< Grid >( dgffile ).release() );
-
         unsigned numRefinements = EWOMS_GET_PARAM(TypeTag, unsigned, GridGlobalRefinements);
-        gridPtr_->globalRefine(static_cast<int>(numRefinements));
+        cubeGrid_ = Dune::StructuredGridFactory<Grid>::createCubeGrid(lowerLeft, upperRight, cellRes);
+        cubeGrid_->globalRefine(static_cast<int>(numRefinements));
 
         this->finalizeInit_();
     }
 
     /*!
-     * \brief Return a reference to the grid object.
+     * \brief Returns a reference to the grid.
      */
     Grid& grid()
-    { return *gridPtr_; }
+    { return *cubeGrid_; }
 
     /*!
-     * \brief Return a constant reference to the grid object.
+     * \brief Returns a reference to the grid.
      */
     const Grid& grid() const
-    { return *gridPtr_; }
+    { return *cubeGrid_; }
 
-private:
-    GridPointer gridPtr_;
+protected:
+    GridPointer cubeGrid_;
 };
 
 } // namespace Opm

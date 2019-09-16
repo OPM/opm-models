@@ -31,7 +31,7 @@
 #include <dune/grid/common/mcmgmapper.hh>
 #include <ewoms/models/discretefracture/fracturemapper.hh>
 
-#include <ewoms/io/basevanguard.hh>
+#include <opm/models/io/basevanguard.hh>
 #include <ewoms/common/propertysystem.hh>
 #include <ewoms/common/parametersystem.hh>
 

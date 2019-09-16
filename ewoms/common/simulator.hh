@@ -28,7 +28,7 @@
 #ifndef EWOMS_SIMULATOR_HH
 #define EWOMS_SIMULATOR_HH
 
-#include <ewoms/io/restart.hh>
+#include <opm/models/io/restart.hh>
 #include <ewoms/common/parametersystem.hh>
 
 #include <ewoms/common/propertysystem.hh>

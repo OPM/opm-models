@@ -22,15 +22,14 @@
 */
 /*!
  * \file
- * \copydoc Opm::VtkVectorFunction
+ * \copydoc Opm::VtkTensorFunction
  */
-#ifndef VTK_VECTOR_FUNCTION_HH
-#define VTK_VECTOR_FUNCTION_HH
+#ifndef VTK_TENSOR_FUNCTION_HH
+#define VTK_TENSOR_FUNCTION_HH
 
-#include <ewoms/io/baseoutputwriter.hh>
+#include <opm/models/io/baseoutputwriter.hh>
 
 #include <dune/grid/io/file/vtk/function.hh>
-#include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
 
@@ -43,45 +42,46 @@
 namespace Opm {
 
 /*!
- * \brief Provides a vector-valued function using Dune::FieldVectors
- *        as elements.
+ * \brief Provides a tensor-valued function using Dune::FieldMatrix objects as elements.
  */
 template <class GridView, class Mapper>
-class VtkVectorFunction : public Dune::VTKFunction<GridView>
+class VtkTensorFunction : public Dune::VTKFunction<GridView>
 {
     enum { dim = GridView::dimension };
     typedef typename GridView::ctype ctype;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    typedef BaseOutputWriter::VectorBuffer VectorBuffer;
+    typedef BaseOutputWriter::TensorBuffer TensorBuffer;
 
 public:
-    VtkVectorFunction(std::string name,
+    VtkTensorFunction(std::string name,
                       const GridView& gridView,
                       const Mapper& mapper,
-                      const VectorBuffer& buf,
-                      unsigned codim)
+                      const TensorBuffer& buf,
+                      unsigned codim,
+                      unsigned matrixColumnIdx)
         : name_(name)
         , gridView_(gridView)
         , mapper_(mapper)
         , buf_(buf)
         , codim_(codim)
+        , matrixColumnIdx_(matrixColumnIdx)
     { assert(int(buf_.size()) == int(mapper_.size())); }
 
     virtual std::string name() const
     { return name_; }
 
     virtual int ncomps() const
-    { return static_cast<int>(buf_[0].size()); }
+    { return static_cast<int>(buf_[0].M()); }
 
     virtual double evaluate(int mycomp,
                             const Element& e,
                             const Dune::FieldVector<ctype, dim>& xi) const
     {
-        unsigned idx;
+        size_t idx;
         if (codim_ == 0) {
             // cells. map element to the index
-            idx = static_cast<unsigned>(mapper_.index(e));
+            idx = static_cast<size_t>(mapper_.index(e));
         }
         else if (codim_ == dim) {
             // find vertex which is closest to xi in local
@@ -102,21 +102,24 @@ public:
             }
 
             // map vertex to an index
-            idx = static_cast<unsigned>(mapper_.subIndex(e, imin, codim_));
+            idx = static_cast<size_t>(mapper_.subIndex(e, imin, codim_));
         }
         else
-            throw std::logic_error("Only element and vertex based vector fields are "
-                                   "supported so far.");
+            throw std::logic_error("Only element and vertex based tensor fields are supported so far.");
 
-        return static_cast<double>(static_cast<float>(buf_[idx][static_cast<unsigned>(mycomp)]));
+        unsigned i = static_cast<unsigned>(mycomp);
+        unsigned j = static_cast<unsigned>(matrixColumnIdx_);
+
+        return static_cast<double>(static_cast<float>(buf_[idx][i][j]));
     }
 
 private:
     const std::string name_;
     const GridView gridView_;
     const Mapper& mapper_;
-    const VectorBuffer& buf_;
+    const TensorBuffer& buf_;
     unsigned codim_;
+    unsigned matrixColumnIdx_;
 };
 
 } // namespace Opm

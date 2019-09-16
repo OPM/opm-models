@@ -22,19 +22,17 @@
 */
 /*!
  * \file
- * \copydoc Opm::VtkScalarFunction
+ * \copydoc Opm::VtkVectorFunction
  */
-#ifndef VTK_SCALAR_FUNCTION_HH
-#define VTK_SCALAR_FUNCTION_HH
+#ifndef VTK_VECTOR_FUNCTION_HH
+#define VTK_VECTOR_FUNCTION_HH
 
-#include <ewoms/io/baseoutputwriter.hh>
+#include <opm/models/io/baseoutputwriter.hh>
 
 #include <dune/grid/io/file/vtk/function.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/version.hh>
-
-#include <opm/material/common/Unused.hpp>
 
 #include <opm/material/common/Exceptions.hpp>
 
@@ -49,19 +47,19 @@ namespace Opm {
  *        as elements.
  */
 template <class GridView, class Mapper>
-class VtkScalarFunction : public Dune::VTKFunction<GridView>
+class VtkVectorFunction : public Dune::VTKFunction<GridView>
 {
     enum { dim = GridView::dimension };
     typedef typename GridView::ctype ctype;
     typedef typename GridView::template Codim<0>::Entity Element;
 
-    typedef BaseOutputWriter::ScalarBuffer ScalarBuffer;
+    typedef BaseOutputWriter::VectorBuffer VectorBuffer;
 
 public:
-    VtkScalarFunction(std::string name,
+    VtkVectorFunction(std::string name,
                       const GridView& gridView,
                       const Mapper& mapper,
-                      const ScalarBuffer& buf,
+                      const VectorBuffer& buf,
                       unsigned codim)
         : name_(name)
         , gridView_(gridView)
@@ -74,9 +72,9 @@ public:
     { return name_; }
 
     virtual int ncomps() const
-    { return 1; }
+    { return static_cast<int>(buf_[0].size()); }
 
-    virtual double evaluate(int mycomp OPM_UNUSED,
+    virtual double evaluate(int mycomp,
                             const Element& e,
                             const Dune::FieldVector<ctype, dim>& xi) const
     {
@@ -99,7 +97,7 @@ public:
                 local -= xi;
                 if (local.infinity_norm() < min) {
                     min = local.infinity_norm();
-                    imin = static_cast<int>(i);
+                    imin = i;
                 }
             }
 
@@ -107,17 +105,17 @@ public:
             idx = static_cast<unsigned>(mapper_.subIndex(e, imin, codim_));
         }
         else
-            throw std::logic_error("Only element and vertex based vector fields are"
-                                   " supported so far.");
+            throw std::logic_error("Only element and vertex based vector fields are "
+                                   "supported so far.");
 
-        return static_cast<double>(static_cast<float>(buf_[idx]));
+        return static_cast<double>(static_cast<float>(buf_[idx][static_cast<unsigned>(mycomp)]));
     }
 
 private:
     const std::string name_;
     const GridView gridView_;
     const Mapper& mapper_;
-    const ScalarBuffer& buf_;
+    const VectorBuffer& buf_;
     unsigned codim_;
 };
 
