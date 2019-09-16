@@ -30,7 +30,7 @@
 #ifndef EWOMS_BLACK_OIL_DARCY_FLUX_MODULE_HH
 #define EWOMS_BLACK_OIL_DARCY_FLUX_MODULE_HH
 
-#include <ewoms/models/blackoil/blackoilproperties.hh>
+#include <opm/models/blackoil/blackoilproperties.hh>
 
 #include <opm/models/common/darcyfluxmodule.hh>
 #include <opm/models/utils/propertysystem.hh>

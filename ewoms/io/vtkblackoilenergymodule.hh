@@ -34,7 +34,7 @@
 
 #include <opm/models/utils/propertysystem.hh>
 #include <opm/models/utils/parametersystem.hh>
-#include <ewoms/models/blackoil/blackoilproperties.hh>
+#include <opm/models/blackoil/blackoilproperties.hh>
 
 #include <dune/common/fvector.hh>
 
