@@ -63,30 +63,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 list (APPEND PUBLIC_HEADER_FILES
              ewoms/nonlinear/nullconvergencewriter.hh
              ewoms/nonlinear/newtonmethod.hh
-             ewoms/io/vtktensorfunction.hh
-             ewoms/io/dgfvanguard.hh
-             ewoms/io/vtkscalarfunction.hh
-             ewoms/io/vtkenergymodule.hh
-             ewoms/io/restart.hh
-             ewoms/io/cubegridvanguard.hh
-             ewoms/io/baseoutputwriter.hh
-             ewoms/io/vtkmultiwriter.hh
-             ewoms/io/vtkmultiphasemodule.hh
-             ewoms/io/vtkdiscretefracturemodule.hh
-             ewoms/io/vtkdiffusionmodule.hh
-             ewoms/io/vtkphasepresencemodule.hh
-             ewoms/io/vtkblackoilmodule.hh
-             ewoms/io/vtkblackoilsolventmodule.hh
-             ewoms/io/vtkvectorfunction.hh
-             ewoms/io/vtkprimaryvarsmodule.hh
-             ewoms/io/simplexvanguard.hh
-             ewoms/io/basevanguard.hh
-             ewoms/io/vtktemperaturemodule.hh
-             ewoms/io/vtkcompositionmodule.hh
-             ewoms/io/structuredgridvanguard.hh
-             ewoms/io/vtkblackoilenergymodule.hh
-             ewoms/io/baseoutputmodule.hh
-             ewoms/io/vtkblackoilpolymermodule.hh
              ewoms/models/richards/richardsmodel.hh
              ewoms/models/richards/richardsextensivequantities.hh
              ewoms/models/richards/richardsratevector.hh
@@ -200,6 +176,30 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/immiscible/immiscibleextensivequantities.hh
              opm/models/immiscible/immiscibleprimaryvariables.hh
              opm/models/immiscible/immiscibleintensivequantities.hh
+             opm/models/io/vtktensorfunction.hh
+             opm/models/io/dgfvanguard.hh
+             opm/models/io/vtkscalarfunction.hh
+             opm/models/io/vtkenergymodule.hh
+             opm/models/io/restart.hh
+             opm/models/io/cubegridvanguard.hh
+             opm/models/io/baseoutputwriter.hh
+             opm/models/io/vtkmultiwriter.hh
+             opm/models/io/vtkmultiphasemodule.hh
+             opm/models/io/vtkdiscretefracturemodule.hh
+             opm/models/io/vtkdiffusionmodule.hh
+             opm/models/io/vtkphasepresencemodule.hh
+             opm/models/io/vtkblackoilmodule.hh
+             opm/models/io/vtkblackoilsolventmodule.hh
+             opm/models/io/vtkvectorfunction.hh
+             opm/models/io/vtkprimaryvarsmodule.hh
+             opm/models/io/simplexvanguard.hh
+             opm/models/io/basevanguard.hh
+             opm/models/io/vtktemperaturemodule.hh
+             opm/models/io/vtkcompositionmodule.hh
+             opm/models/io/structuredgridvanguard.hh
+             opm/models/io/vtkblackoilenergymodule.hh
+             opm/models/io/baseoutputmodule.hh
+             opm/models/io/vtkblackoilpolymermodule.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
              opm/models/parallel/gridcommhandles.hh
