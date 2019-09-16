@@ -29,7 +29,7 @@
 #define EWOMS_FLASH_INDICES_HH
 
 #include "flashproperties.hh"
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/energymodule.hh>
 
 namespace Opm {
 

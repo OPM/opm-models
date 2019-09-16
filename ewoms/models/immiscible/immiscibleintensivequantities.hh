@@ -30,7 +30,7 @@
 
 #include "immiscibleproperties.hh"
 
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/energymodule.hh>
 
 #include <opm/material/fluidstates/ImmiscibleFluidState.hpp>
 #include <opm/material/common/Valgrind.hpp>

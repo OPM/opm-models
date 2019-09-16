@@ -29,7 +29,7 @@
 #ifndef EWOMS_RICHARDS_PROPERTIES_HH
 #define EWOMS_RICHARDS_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebaseproperties.hh>
+#include <opm/models/common/multiphasebaseproperties.hh>
 
 // \{
 BEGIN_PROPERTIES

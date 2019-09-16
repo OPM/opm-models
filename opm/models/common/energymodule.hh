@@ -30,7 +30,7 @@
 #define EWOMS_ENERGY_MODULE_HH
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
-#include <ewoms/models/common/quantitycallbacks.hh>
+#include <opm/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>

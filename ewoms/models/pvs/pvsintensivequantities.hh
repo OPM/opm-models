@@ -30,8 +30,8 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/models/common/energymodule.hh>
-#include <ewoms/models/common/diffusionmodule.hh>
+#include <opm/models/common/energymodule.hh>
+#include <opm/models/common/diffusionmodule.hh>
 
 #include <opm/material/constraintsolvers/ComputeFromReferencePhase.hpp>
 #include <opm/material/constraintsolvers/MiscibleMultiPhaseComposition.hpp>

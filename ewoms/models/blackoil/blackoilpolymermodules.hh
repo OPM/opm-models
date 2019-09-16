@@ -30,7 +30,7 @@
 
 #include "blackoilproperties.hh"
 #include <ewoms/io/vtkblackoilpolymermodule.hh>
-#include <ewoms/models/common/quantitycallbacks.hh>
+#include <opm/models/common/quantitycallbacks.hh>
 
 #include <opm/material/common/Tabulated1DFunction.hpp>
 #include <opm/material/common/IntervalTabulated2DFunction.hpp>

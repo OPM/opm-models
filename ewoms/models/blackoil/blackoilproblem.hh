@@ -30,7 +30,7 @@
 
 #include "blackoilproperties.hh"
 
-#include <ewoms/models/common/multiphasebaseproblem.hh>
+#include <opm/models/common/multiphasebaseproblem.hh>
 
 #include <opm/material/common/Unused.hpp>
 

@@ -30,7 +30,7 @@
 #ifndef EWOMS_IMMISCIBLE_PROPERTIES_HH
 #define EWOMS_IMMISCIBLE_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebaseproperties.hh>
+#include <opm/models/common/multiphasebaseproperties.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 
 BEGIN_PROPERTIES

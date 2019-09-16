@@ -30,7 +30,7 @@
 
 #include "pvsproperties.hh"
 
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/energymodule.hh>
 
 namespace Opm {
 /*!

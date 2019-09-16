@@ -38,8 +38,8 @@
 #include "immiscibleboundaryratevector.hh"
 #include "immisciblelocalresidual.hh"
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/multiphasebasemodel.hh>
+#include <opm/models/common/energymodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/GasPhase.hpp>
