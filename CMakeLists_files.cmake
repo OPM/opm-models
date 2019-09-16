@@ -171,23 +171,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/ncp/ncpproperties.hh
              ewoms/models/ncp/ncplocalresidual.hh
              ewoms/models/ncp/ncpboundaryratevector.hh
-             ewoms/models/blackoil/blackoilmodel.hh
-             ewoms/models/blackoil/blackoilextensivequantities.hh
-             ewoms/models/blackoil/blackoilintensivequantities.hh
-             ewoms/models/blackoil/blackoildarcyfluxmodule.hh
-             ewoms/models/blackoil/blackoilratevector.hh
-             ewoms/models/blackoil/blackoilfoammodules.hh
-             ewoms/models/blackoil/blackoilindices.hh
-             ewoms/models/blackoil/blackoillocalresidual.hh
-             ewoms/models/blackoil/blackoilnewtonmethod.hh
-             ewoms/models/blackoil/blackoilsolventmodules.hh
-             ewoms/models/blackoil/blackoilproperties.hh
-             ewoms/models/blackoil/blackoilprimaryvariables.hh
-             ewoms/models/blackoil/blackoilproblem.hh
-             ewoms/models/blackoil/blackoilenergymodules.hh
-             ewoms/models/blackoil/blackoiltwophaseindices.hh
-             ewoms/models/blackoil/blackoilpolymermodules.hh
-             ewoms/models/blackoil/blackoilboundaryratevector.hh
              ewoms/disc/vcfv/vcfvbaseoutputmodule.hh
              ewoms/disc/vcfv/vcfvdiscretization.hh
              ewoms/disc/vcfv/p1fegradientcalculator.hh
@@ -218,6 +201,23 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/blackoil/blackoilmodel.hh
+             opm/models/blackoil/blackoilextensivequantities.hh
+             opm/models/blackoil/blackoilintensivequantities.hh
+             opm/models/blackoil/blackoildarcyfluxmodule.hh
+             opm/models/blackoil/blackoilratevector.hh
+             opm/models/blackoil/blackoilfoammodules.hh
+             opm/models/blackoil/blackoilindices.hh
+             opm/models/blackoil/blackoillocalresidual.hh
+             opm/models/blackoil/blackoilnewtonmethod.hh
+             opm/models/blackoil/blackoilsolventmodules.hh
+             opm/models/blackoil/blackoilproperties.hh
+             opm/models/blackoil/blackoilprimaryvariables.hh
+             opm/models/blackoil/blackoilproblem.hh
+             opm/models/blackoil/blackoilenergymodules.hh
+             opm/models/blackoil/blackoiltwophaseindices.hh
+             opm/models/blackoil/blackoilpolymermodules.hh
+             opm/models/blackoil/blackoilboundaryratevector.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
