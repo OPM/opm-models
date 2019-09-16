@@ -83,16 +83,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/pvs/pvsintensivequantities.hh
              ewoms/models/pvs/pvslocalresidual.hh
              ewoms/models/pvs/pvsmodel.hh
-             ewoms/models/ncp/ncpmodel.hh
-             ewoms/models/ncp/ncpindices.hh
-             ewoms/models/ncp/ncpextensivequantities.hh
-             ewoms/models/ncp/ncpnewtonmethod.hh
-             ewoms/models/ncp/ncpratevector.hh
-             ewoms/models/ncp/ncpprimaryvariables.hh
-             ewoms/models/ncp/ncpintensivequantities.hh
-             ewoms/models/ncp/ncpproperties.hh
-             ewoms/models/ncp/ncplocalresidual.hh
-             ewoms/models/ncp/ncpboundaryratevector.hh
              opm/models/blackoil/blackoilmodel.hh
              opm/models/blackoil/blackoilextensivequantities.hh
              opm/models/blackoil/blackoilintensivequantities.hh
@@ -200,6 +190,16 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/io/vtkblackoilenergymodule.hh
              opm/models/io/baseoutputmodule.hh
              opm/models/io/vtkblackoilpolymermodule.hh
+             opm/models/ncp/ncpmodel.hh
+             opm/models/ncp/ncpindices.hh
+             opm/models/ncp/ncpextensivequantities.hh
+             opm/models/ncp/ncpnewtonmethod.hh
+             opm/models/ncp/ncpratevector.hh
+             opm/models/ncp/ncpprimaryvariables.hh
+             opm/models/ncp/ncpintensivequantities.hh
+             opm/models/ncp/ncpproperties.hh
+             opm/models/ncp/ncplocalresidual.hh
+             opm/models/ncp/ncpboundaryratevector.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
              opm/models/parallel/gridcommhandles.hh
