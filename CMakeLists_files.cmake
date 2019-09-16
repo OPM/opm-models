@@ -161,16 +161,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/immiscible/immiscibleextensivequantities.hh
              ewoms/models/immiscible/immiscibleprimaryvariables.hh
              ewoms/models/immiscible/immiscibleintensivequantities.hh
-             ewoms/models/ncp/ncpmodel.hh
-             ewoms/models/ncp/ncpindices.hh
-             ewoms/models/ncp/ncpextensivequantities.hh
-             ewoms/models/ncp/ncpnewtonmethod.hh
-             ewoms/models/ncp/ncpratevector.hh
-             ewoms/models/ncp/ncpprimaryvariables.hh
-             ewoms/models/ncp/ncpintensivequantities.hh
-             ewoms/models/ncp/ncpproperties.hh
-             ewoms/models/ncp/ncplocalresidual.hh
-             ewoms/models/ncp/ncpboundaryratevector.hh
              ewoms/models/blackoil/blackoilmodel.hh
              ewoms/models/blackoil/blackoilextensivequantities.hh
              ewoms/models/blackoil/blackoilintensivequantities.hh
@@ -218,6 +208,16 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/ncp/ncpmodel.hh
+             opm/models/ncp/ncpindices.hh
+             opm/models/ncp/ncpextensivequantities.hh
+             opm/models/ncp/ncpnewtonmethod.hh
+             opm/models/ncp/ncpratevector.hh
+             opm/models/ncp/ncpprimaryvariables.hh
+             opm/models/ncp/ncpintensivequantities.hh
+             opm/models/ncp/ncpproperties.hh
+             opm/models/ncp/ncplocalresidual.hh
+             opm/models/ncp/ncpboundaryratevector.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
