@@ -114,16 +114,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/flash/flashprimaryvariables.hh
              ewoms/models/flash/flashextensivequantities.hh
              ewoms/models/flash/flashproperties.hh
-             ewoms/models/richards/richardsmodel.hh
-             ewoms/models/richards/richardsextensivequantities.hh
-             ewoms/models/richards/richardsratevector.hh
-             ewoms/models/richards/richardsprimaryvariables.hh
-             ewoms/models/richards/richardsnewtonmethod.hh
-             ewoms/models/richards/richardsindices.hh
-             ewoms/models/richards/richardsboundaryratevector.hh
-             ewoms/models/richards/richardsproperties.hh
-             ewoms/models/richards/richardsintensivequantities.hh
-             ewoms/models/richards/richardslocalresidual.hh
              ewoms/models/discretefracture/discretefractureproblem.hh
              ewoms/models/discretefracture/discretefractureprimaryvariables.hh
              ewoms/models/discretefracture/discretefractureproperties.hh
@@ -218,6 +208,16 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/richards/richardsmodel.hh
+             opm/models/richards/richardsextensivequantities.hh
+             opm/models/richards/richardsratevector.hh
+             opm/models/richards/richardsprimaryvariables.hh
+             opm/models/richards/richardsnewtonmethod.hh
+             opm/models/richards/richardsindices.hh
+             opm/models/richards/richardsboundaryratevector.hh
+             opm/models/richards/richardsproperties.hh
+             opm/models/richards/richardsintensivequantities.hh
+             opm/models/richards/richardslocalresidual.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
