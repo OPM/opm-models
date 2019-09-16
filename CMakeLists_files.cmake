@@ -61,8 +61,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 	)
 
 list (APPEND PUBLIC_HEADER_FILES
-             ewoms/nonlinear/nullconvergencewriter.hh
-             ewoms/nonlinear/newtonmethod.hh
              ewoms/io/vtktensorfunction.hh
              ewoms/io/dgfvanguard.hh
              ewoms/io/vtkscalarfunction.hh
@@ -218,6 +216,8 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/nonlinear/nullconvergencewriter.hh
+             opm/models/nonlinear/newtonmethod.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
