@@ -124,14 +124,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/richards/richardsproperties.hh
              ewoms/models/richards/richardsintensivequantities.hh
              ewoms/models/richards/richardslocalresidual.hh
-             ewoms/models/discretefracture/discretefractureproblem.hh
-             ewoms/models/discretefracture/discretefractureprimaryvariables.hh
-             ewoms/models/discretefracture/discretefractureproperties.hh
-             ewoms/models/discretefracture/fracturemapper.hh
-             ewoms/models/discretefracture/discretefractureextensivequantities.hh
-             ewoms/models/discretefracture/discretefracturemodel.hh
-             ewoms/models/discretefracture/discretefractureintensivequantities.hh
-             ewoms/models/discretefracture/discretefracturelocalresidual.hh
              ewoms/models/common/multiphasebaseproperties.hh
              ewoms/models/common/multiphasebasemodel.hh
              ewoms/models/common/quantitycallbacks.hh
@@ -218,6 +210,14 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/discretefracture/discretefractureproblem.hh
+             opm/models/discretefracture/discretefractureprimaryvariables.hh
+             opm/models/discretefracture/discretefractureproperties.hh
+             opm/models/discretefracture/fracturemapper.hh
+             opm/models/discretefracture/discretefractureextensivequantities.hh
+             opm/models/discretefracture/discretefracturemodel.hh
+             opm/models/discretefracture/discretefractureintensivequantities.hh
+             opm/models/discretefracture/discretefracturelocalresidual.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh

@@ -29,7 +29,7 @@
 
 #include <dune/grid/io/file/dgfparser/dgfparser.hh>
 #include <dune/grid/common/mcmgmapper.hh>
-#include <ewoms/models/discretefracture/fracturemapper.hh>
+#include <opm/models/discretefracture/fracturemapper.hh>
 
 #include <ewoms/io/basevanguard.hh>
 #include <ewoms/common/propertysystem.hh>
