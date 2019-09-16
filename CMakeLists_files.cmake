@@ -114,16 +114,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/discretefracture/discretefracturemodel.hh
              ewoms/models/discretefracture/discretefractureintensivequantities.hh
              ewoms/models/discretefracture/discretefracturelocalresidual.hh
-             ewoms/models/common/multiphasebaseproperties.hh
-             ewoms/models/common/multiphasebasemodel.hh
-             ewoms/models/common/quantitycallbacks.hh
-             ewoms/models/common/multiphasebaseextensivequantities.hh
-             ewoms/models/common/multiphasebaseproblem.hh
-             ewoms/models/common/diffusionmodule.hh
-             ewoms/models/common/flux.hh
-             ewoms/models/common/forchheimerfluxmodule.hh
-             ewoms/models/common/darcyfluxmodule.hh
-             ewoms/models/common/energymodule.hh
              ewoms/models/pvs/pvsboundaryratevector.hh
              ewoms/models/pvs/pvsratevector.hh
              ewoms/models/pvs/pvsindices.hh
@@ -205,6 +195,16 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/parallel/gridcommhandles.hh
              opm/models/parallel/mpibuffer.hh
              opm/models/parallel/threadedentityiterator.hh
+             opm/models/common/multiphasebaseproperties.hh
+             opm/models/common/multiphasebasemodel.hh
+             opm/models/common/quantitycallbacks.hh
+             opm/models/common/multiphasebaseextensivequantities.hh
+             opm/models/common/multiphasebaseproblem.hh
+             opm/models/common/diffusionmodule.hh
+             opm/models/common/flux.hh
+             opm/models/common/forchheimerfluxmodule.hh
+             opm/models/common/darcyfluxmodule.hh
+             opm/models/common/energymodule.hh
              opm/models/utils/start.hh
              opm/models/utils/timerguard.hh
              opm/models/utils/propertysystem.hh

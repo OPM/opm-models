@@ -39,8 +39,8 @@
 #include "flashextensivequantities.hh"
 #include "flashindices.hh"
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/multiphasebasemodel.hh>
+#include <opm/models/common/energymodule.hh>
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>

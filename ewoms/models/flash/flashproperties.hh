@@ -30,7 +30,7 @@
 #ifndef EWOMS_FLASH_PROPERTIES_HH
 #define EWOMS_FLASH_PROPERTIES_HH
 
-#include <ewoms/models/common/multiphasebaseproperties.hh>
+#include <opm/models/common/multiphasebaseproperties.hh>
 #include <ewoms/io/vtkcompositionmodule.hh>
 #include <ewoms/io/vtkenergymodule.hh>
 #include <ewoms/io/vtkdiffusionmodule.hh>

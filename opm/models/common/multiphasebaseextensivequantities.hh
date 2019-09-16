@@ -30,7 +30,7 @@
 
 #include "multiphasebaseproperties.hh"
 
-#include <ewoms/models/common/quantitycallbacks.hh>
+#include <opm/models/common/quantitycallbacks.hh>
 #include <ewoms/disc/common/fvbaseextensivequantities.hh>
 #include <opm/models/utils/parametersystem.hh>
 

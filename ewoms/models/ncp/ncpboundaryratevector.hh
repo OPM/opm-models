@@ -30,7 +30,7 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/energymodule.hh>
 #include <opm/material/common/Valgrind.hpp>
 
 namespace Opm {

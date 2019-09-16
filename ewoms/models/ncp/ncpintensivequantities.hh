@@ -30,8 +30,8 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/common/energymodule.hh>
-#include <ewoms/models/common/diffusionmodule.hh>
+#include <opm/models/common/energymodule.hh>
+#include <opm/models/common/diffusionmodule.hh>
 
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/fluidstates/CompositionalFluidState.hpp>

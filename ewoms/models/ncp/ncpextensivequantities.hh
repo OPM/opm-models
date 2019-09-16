@@ -30,9 +30,9 @@
 
 #include "ncpproperties.hh"
 
-#include <ewoms/models/common/energymodule.hh>
-#include <ewoms/models/common/diffusionmodule.hh>
-#include <ewoms/models/common/multiphasebaseextensivequantities.hh>
+#include <opm/models/common/energymodule.hh>
+#include <opm/models/common/diffusionmodule.hh>
+#include <opm/models/common/multiphasebaseextensivequantities.hh>
 
 namespace Opm {
 

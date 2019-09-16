@@ -30,7 +30,7 @@
 
 #include "richardsproperties.hh"
 
-#include <ewoms/models/common/multiphasebaseextensivequantities.hh>
+#include <opm/models/common/multiphasebaseextensivequantities.hh>
 
 namespace Opm {
 

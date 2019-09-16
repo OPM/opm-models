@@ -32,7 +32,7 @@
 
 #include <ewoms/models/blackoil/blackoilproperties.hh>
 
-#include <ewoms/models/common/darcyfluxmodule.hh>
+#include <opm/models/common/darcyfluxmodule.hh>
 #include <opm/models/utils/propertysystem.hh>
 
 namespace Opm {

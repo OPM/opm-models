@@ -40,7 +40,7 @@
 #include "richardsintensivequantities.hh"
 #include "richardsnewtonmethod.hh"
 
-#include <ewoms/models/common/multiphasebasemodel.hh>
+#include <opm/models/common/multiphasebasemodel.hh>
 
 #include <opm/material/components/NullComponent.hpp>
 #include <opm/material/fluidsystems/LiquidPhase.hpp>

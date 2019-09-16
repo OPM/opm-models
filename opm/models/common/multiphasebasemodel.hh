@@ -34,7 +34,7 @@
 #include "multiphasebaseproblem.hh"
 #include "multiphasebaseextensivequantities.hh"
 
-#include <ewoms/models/common/flux.hh>
+#include <opm/models/common/flux.hh>
 #include <ewoms/disc/vcfv/vcfvdiscretization.hh>
 
 #include <opm/material/fluidmatrixinteractions/NullMaterial.hpp>

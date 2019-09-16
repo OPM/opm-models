@@ -30,7 +30,7 @@
 
 #include "blackoilproperties.hh"
 #include <ewoms/io/vtkblackoilsolventmodule.hh>
-#include <ewoms/models/common/quantitycallbacks.hh>
+#include <opm/models/common/quantitycallbacks.hh>
 
 #include <opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>

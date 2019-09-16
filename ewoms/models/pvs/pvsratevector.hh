@@ -30,7 +30,7 @@
 
 #include "pvsindices.hh"
 
-#include <ewoms/models/common/energymodule.hh>
+#include <opm/models/common/energymodule.hh>
 #include <opm/material/constraintsolvers/NcpFlash.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
