@@ -61,8 +61,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 	)
 
 list (APPEND PUBLIC_HEADER_FILES
-             ewoms/nonlinear/nullconvergencewriter.hh
-             ewoms/nonlinear/newtonmethod.hh
              ewoms/models/richards/richardsmodel.hh
              ewoms/models/richards/richardsextensivequantities.hh
              ewoms/models/richards/richardsratevector.hh
@@ -200,6 +198,8 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/ncp/ncpproperties.hh
              opm/models/ncp/ncplocalresidual.hh
              opm/models/ncp/ncpboundaryratevector.hh
+             opm/models/nonlinear/nullconvergencewriter.hh
+             opm/models/nonlinear/newtonmethod.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
              opm/models/parallel/gridcommhandles.hh
