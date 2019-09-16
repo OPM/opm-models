@@ -27,9 +27,9 @@
 #ifndef EWOMS_SIMPLEX_GRID_VANGUARD_HH
 #define EWOMS_SIMPLEX_GRID_VANGUARD_HH
 
-#include <ewoms/common/basicproperties.hh>
-#include <ewoms/common/propertysystem.hh>
-#include <ewoms/common/parametersystem.hh>
+#include <opm/models/utils/basicproperties.hh>
+#include <opm/models/utils/propertysystem.hh>
+#include <opm/models/utils/parametersystem.hh>
 
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/common/fvector.hh>

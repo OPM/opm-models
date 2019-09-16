@@ -32,7 +32,7 @@
 #ifndef EWOMS_PARAMETER_SYSTEM_HH
 #define EWOMS_PARAMETER_SYSTEM_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/models/utils/propertysystem.hh>
 
 #include <opm/material/common/Exceptions.hpp>
 #include <opm/material/common/Unused.hpp>

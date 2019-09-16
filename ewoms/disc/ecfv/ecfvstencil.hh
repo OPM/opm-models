@@ -28,7 +28,7 @@
 #ifndef EWOMS_ECFV_STENCIL_HH
 #define EWOMS_ECFV_STENCIL_HH
 
-#include <ewoms/common/quadraturegeometries.hh>
+#include <opm/models/utils/quadraturegeometries.hh>
 
 #include <opm/material/common/ConditionalStorage.hpp>
 

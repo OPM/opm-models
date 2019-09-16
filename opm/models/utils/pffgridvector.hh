@@ -27,7 +27,7 @@
 #ifndef EWOMS_PFF_GRID_VECTOR_HH
 #define EWOMS_PFF_GRID_VECTOR_HH
 
-#include <ewoms/common/prefetch.hh>
+#include <opm/models/utils/prefetch.hh>
 
 #include <dune/grid/common/mcmgmapper.hh>
 #include <dune/common/version.hh>

@@ -30,7 +30,7 @@
 
 #include "fvbaseproperties.hh"
 
-#include <ewoms/common/alignedallocator.hh>
+#include <opm/models/utils/alignedallocator.hh>
 
 #include <opm/material/common/Unused.hpp>
 #include <opm/material/common/Exceptions.hpp>

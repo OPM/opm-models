@@ -31,7 +31,7 @@
 #include "fvbasenewtonconvergencewriter.hh"
 
 #include <ewoms/nonlinear/newtonmethod.hh>
-#include <ewoms/common/propertysystem.hh>
+#include <opm/models/utils/propertysystem.hh>
 
 namespace Opm {
 

@@ -30,7 +30,7 @@
 
 #include "blackoilproperties.hh"
 
-#include <ewoms/common/signum.hh>
+#include <opm/models/utils/signum.hh>
 
 #include <opm/material/common/Unused.hpp>
 

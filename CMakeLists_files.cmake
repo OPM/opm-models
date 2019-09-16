@@ -87,19 +87,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/io/vtkblackoilenergymodule.hh
              ewoms/io/baseoutputmodule.hh
              ewoms/io/vtkblackoilpolymermodule.hh
-             ewoms/common/start.hh
-             ewoms/common/timerguard.hh
-             ewoms/common/propertysystem.hh
-             ewoms/common/pffgridvector.hh
-             ewoms/common/prefetch.hh
-             ewoms/common/parametersystem.hh
-             ewoms/common/simulator.hh
-             ewoms/common/quadraturegeometries.hh
-             ewoms/common/alignedallocator.hh
-             ewoms/common/timer.hh
-             ewoms/common/signum.hh
-             ewoms/common/genericguard.hh
-             ewoms/common/basicproperties.hh
              ewoms/parallel/tasklets.hh
              ewoms/parallel/threadmanager.hh
              ewoms/parallel/gridcommhandles.hh
@@ -218,6 +205,19 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/utils/start.hh
+             opm/models/utils/timerguard.hh
+             opm/models/utils/propertysystem.hh
+             opm/models/utils/pffgridvector.hh
+             opm/models/utils/prefetch.hh
+             opm/models/utils/parametersystem.hh
+             opm/models/utils/simulator.hh
+             opm/models/utils/quadraturegeometries.hh
+             opm/models/utils/alignedallocator.hh
+             opm/models/utils/timer.hh
+             opm/models/utils/signum.hh
+             opm/models/utils/genericguard.hh
+             opm/models/utils/basicproperties.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh

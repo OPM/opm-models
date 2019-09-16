@@ -30,8 +30,8 @@
 
 #include "fvbaseproperties.hh"
 
-#include <ewoms/common/parametersystem.hh>
-#include <ewoms/common/alignedallocator.hh>
+#include <opm/models/utils/parametersystem.hh>
+#include <opm/models/utils/alignedallocator.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>

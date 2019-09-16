@@ -28,7 +28,7 @@
 #ifndef EWOMS_FV_BASE_CONSTRAINTS_HH
 #define EWOMS_FV_BASE_CONSTRAINTS_HH
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/models/utils/propertysystem.hh>
 #include <opm/material/common/Valgrind.hpp>
 
 BEGIN_PROPERTIES

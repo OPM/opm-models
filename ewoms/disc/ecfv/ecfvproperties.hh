@@ -31,7 +31,7 @@
 
 #include <ewoms/disc/common/fvbaseproperties.hh>
 
-#include <ewoms/common/propertysystem.hh>
+#include <opm/models/utils/propertysystem.hh>
 
 BEGIN_PROPERTIES
 

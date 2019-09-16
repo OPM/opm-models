@@ -50,10 +50,10 @@
 #include <ewoms/parallel/gridcommhandles.hh>
 #include <ewoms/parallel/threadmanager.hh>
 #include <opm/simulators/linalg/nullborderlistmanager.hh>
-#include <ewoms/common/simulator.hh>
-#include <ewoms/common/alignedallocator.hh>
-#include <ewoms/common/timer.hh>
-#include <ewoms/common/timerguard.hh>
+#include <opm/models/utils/simulator.hh>
+#include <opm/models/utils/alignedallocator.hh>
+#include <opm/models/utils/timer.hh>
+#include <opm/models/utils/timerguard.hh>
 #include <opm/simulators/linalg/matrixblock.hh>
 
 #include <opm/material/common/MathToolbox.hpp>
