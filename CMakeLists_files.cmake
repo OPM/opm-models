@@ -61,16 +61,6 @@ list (APPEND PROGRAM_SOURCE_FILES
 	)
 
 list (APPEND PUBLIC_HEADER_FILES
-             ewoms/models/richards/richardsmodel.hh
-             ewoms/models/richards/richardsextensivequantities.hh
-             ewoms/models/richards/richardsratevector.hh
-             ewoms/models/richards/richardsprimaryvariables.hh
-             ewoms/models/richards/richardsnewtonmethod.hh
-             ewoms/models/richards/richardsindices.hh
-             ewoms/models/richards/richardsboundaryratevector.hh
-             ewoms/models/richards/richardsproperties.hh
-             ewoms/models/richards/richardsintensivequantities.hh
-             ewoms/models/richards/richardslocalresidual.hh
              opm/models/blackoil/blackoilmodel.hh
              opm/models/blackoil/blackoilextensivequantities.hh
              opm/models/blackoil/blackoilintensivequantities.hh
@@ -205,6 +195,16 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/pvs/pvsintensivequantities.hh
              opm/models/pvs/pvslocalresidual.hh
              opm/models/pvs/pvsmodel.hh
+             opm/models/richards/richardsmodel.hh
+             opm/models/richards/richardsextensivequantities.hh
+             opm/models/richards/richardsratevector.hh
+             opm/models/richards/richardsprimaryvariables.hh
+             opm/models/richards/richardsnewtonmethod.hh
+             opm/models/richards/richardsindices.hh
+             opm/models/richards/richardsboundaryratevector.hh
+             opm/models/richards/richardsproperties.hh
+             opm/models/richards/richardsintensivequantities.hh
+             opm/models/richards/richardslocalresidual.hh
              opm/models/utils/start.hh
              opm/models/utils/timerguard.hh
              opm/models/utils/propertysystem.hh
