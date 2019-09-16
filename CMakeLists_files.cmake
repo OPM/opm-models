@@ -142,16 +142,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/models/common/forchheimerfluxmodule.hh
              ewoms/models/common/darcyfluxmodule.hh
              ewoms/models/common/energymodule.hh
-             ewoms/models/pvs/pvsboundaryratevector.hh
-             ewoms/models/pvs/pvsratevector.hh
-             ewoms/models/pvs/pvsindices.hh
-             ewoms/models/pvs/pvsproperties.hh
-             ewoms/models/pvs/pvsnewtonmethod.hh
-             ewoms/models/pvs/pvsprimaryvariables.hh
-             ewoms/models/pvs/pvsextensivequantities.hh
-             ewoms/models/pvs/pvsintensivequantities.hh
-             ewoms/models/pvs/pvslocalresidual.hh
-             ewoms/models/pvs/pvsmodel.hh
              ewoms/models/immiscible/immisciblelocalresidual.hh
              ewoms/models/immiscible/immiscibleproperties.hh
              ewoms/models/immiscible/immisciblemodel.hh
@@ -218,6 +208,16 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/pvs/pvsboundaryratevector.hh
+             opm/models/pvs/pvsratevector.hh
+             opm/models/pvs/pvsindices.hh
+             opm/models/pvs/pvsproperties.hh
+             opm/models/pvs/pvsnewtonmethod.hh
+             opm/models/pvs/pvsprimaryvariables.hh
+             opm/models/pvs/pvsextensivequantities.hh
+             opm/models/pvs/pvsintensivequantities.hh
+             opm/models/pvs/pvslocalresidual.hh
+             opm/models/pvs/pvsmodel.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh

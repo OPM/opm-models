@@ -29,7 +29,7 @@
 #include "config.h"
 
 #include <ewoms/common/start.hh>
-#include <ewoms/models/pvs/pvsmodel.hh>
+#include <opm/models/pvs/pvsmodel.hh>
 #include <ewoms/disc/vcfv/vcfvdiscretization.hh>
 #include "problems/co2injectionproblem.hh"
 
