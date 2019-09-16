@@ -28,7 +28,7 @@
 #include "config.h"
 
 #include <opm/models/utils/start.hh>
-#include <ewoms/models/flash/flashmodel.hh>
+#include <opm/models/flash/flashmodel.hh>
 #include "problems/diffusionproblem.hh"
 
 BEGIN_PROPERTIES

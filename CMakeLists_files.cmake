@@ -87,15 +87,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/io/vtkblackoilenergymodule.hh
              ewoms/io/baseoutputmodule.hh
              ewoms/io/vtkblackoilpolymermodule.hh
-             ewoms/models/flash/flashmodel.hh
-             ewoms/models/flash/flashintensivequantities.hh
-             ewoms/models/flash/flashindices.hh
-             ewoms/models/flash/flashlocalresidual.hh
-             ewoms/models/flash/flashratevector.hh
-             ewoms/models/flash/flashboundaryratevector.hh
-             ewoms/models/flash/flashprimaryvariables.hh
-             ewoms/models/flash/flashextensivequantities.hh
-             ewoms/models/flash/flashproperties.hh
              ewoms/models/richards/richardsmodel.hh
              ewoms/models/richards/richardsextensivequantities.hh
              ewoms/models/richards/richardsratevector.hh
@@ -200,6 +191,15 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/discretization/ecfv/ecfvbaseoutputmodule.hh
              opm/models/discretization/ecfv/ecfvdiscretization.hh
              opm/models/discretization/ecfv/ecfvproperties.hh
+             opm/models/flash/flashmodel.hh
+             opm/models/flash/flashintensivequantities.hh
+             opm/models/flash/flashindices.hh
+             opm/models/flash/flashlocalresidual.hh
+             opm/models/flash/flashratevector.hh
+             opm/models/flash/flashboundaryratevector.hh
+             opm/models/flash/flashprimaryvariables.hh
+             opm/models/flash/flashextensivequantities.hh
+             opm/models/flash/flashproperties.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
              opm/models/parallel/gridcommhandles.hh
