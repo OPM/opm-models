@@ -33,7 +33,7 @@
 #include "vtktensorfunction.hh"
 
 #include <ewoms/io/baseoutputwriter.hh>
-#include <ewoms/parallel/tasklets.hh>
+#include <opm/models/parallel/tasklets.hh>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>

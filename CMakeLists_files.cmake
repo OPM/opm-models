@@ -100,11 +100,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/common/signum.hh
              ewoms/common/genericguard.hh
              ewoms/common/basicproperties.hh
-             ewoms/parallel/tasklets.hh
-             ewoms/parallel/threadmanager.hh
-             ewoms/parallel/gridcommhandles.hh
-             ewoms/parallel/mpibuffer.hh
-             ewoms/parallel/threadedentityiterator.hh
              ewoms/models/flash/flashmodel.hh
              ewoms/models/flash/flashintensivequantities.hh
              ewoms/models/flash/flashindices.hh
@@ -218,6 +213,11 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/parallel/tasklets.hh
+             opm/models/parallel/threadmanager.hh
+             opm/models/parallel/gridcommhandles.hh
+             opm/models/parallel/mpibuffer.hh
+             opm/models/parallel/threadedentityiterator.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh

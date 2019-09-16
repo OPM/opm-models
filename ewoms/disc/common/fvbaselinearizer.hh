@@ -30,9 +30,9 @@
 
 #include "fvbaseproperties.hh"
 
-#include <ewoms/parallel/gridcommhandles.hh>
-#include <ewoms/parallel/threadmanager.hh>
-#include <ewoms/parallel/threadedentityiterator.hh>
+#include <opm/models/parallel/gridcommhandles.hh>
+#include <opm/models/parallel/threadmanager.hh>
+#include <opm/models/parallel/threadedentityiterator.hh>
 #include <ewoms/disc/common/baseauxiliarymodule.hh>
 
 #include <opm/material/common/Exceptions.hpp>
