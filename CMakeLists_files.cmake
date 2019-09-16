@@ -105,15 +105,6 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/parallel/gridcommhandles.hh
              ewoms/parallel/mpibuffer.hh
              ewoms/parallel/threadedentityiterator.hh
-             ewoms/models/flash/flashmodel.hh
-             ewoms/models/flash/flashintensivequantities.hh
-             ewoms/models/flash/flashindices.hh
-             ewoms/models/flash/flashlocalresidual.hh
-             ewoms/models/flash/flashratevector.hh
-             ewoms/models/flash/flashboundaryratevector.hh
-             ewoms/models/flash/flashprimaryvariables.hh
-             ewoms/models/flash/flashextensivequantities.hh
-             ewoms/models/flash/flashproperties.hh
              ewoms/models/richards/richardsmodel.hh
              ewoms/models/richards/richardsextensivequantities.hh
              ewoms/models/richards/richardsratevector.hh
@@ -218,6 +209,15 @@ list (APPEND PUBLIC_HEADER_FILES
              ewoms/disc/ecfv/ecfvbaseoutputmodule.hh
              ewoms/disc/ecfv/ecfvdiscretization.hh
              ewoms/disc/ecfv/ecfvproperties.hh
+             opm/models/flash/flashmodel.hh
+             opm/models/flash/flashintensivequantities.hh
+             opm/models/flash/flashindices.hh
+             opm/models/flash/flashlocalresidual.hh
+             opm/models/flash/flashratevector.hh
+             opm/models/flash/flashboundaryratevector.hh
+             opm/models/flash/flashprimaryvariables.hh
+             opm/models/flash/flashextensivequantities.hh
+             opm/models/flash/flashproperties.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
