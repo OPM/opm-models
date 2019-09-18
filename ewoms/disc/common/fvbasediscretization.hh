@@ -47,8 +47,8 @@
 #include "fvbaseextensivequantities.hh"
 #include "baseauxiliarymodule.hh"
 
-#include <ewoms/parallel/gridcommhandles.hh>
-#include <ewoms/parallel/threadmanager.hh>
+#include <opm/models/parallel/gridcommhandles.hh>
+#include <opm/models/parallel/threadmanager.hh>
 #include <opm/simulators/linalg/nullborderlistmanager.hh>
 #include <ewoms/common/simulator.hh>
 #include <ewoms/common/alignedallocator.hh>

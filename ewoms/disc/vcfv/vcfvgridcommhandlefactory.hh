@@ -30,7 +30,7 @@
 
 #include "vcfvproperties.hh"
 
-#include <ewoms/parallel/gridcommhandles.hh>
+#include <opm/models/parallel/gridcommhandles.hh>
 
 namespace Opm {
 /*!
