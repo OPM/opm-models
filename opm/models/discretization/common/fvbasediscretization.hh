@@ -1787,6 +1787,8 @@ public:
         }
         return *adaptationManager_;
     }
+
+    const DiscreteFunctionSpace& space() const { return space_; }
 #endif
 
     const Opm::Timer& prePostProcessTimer() const
