@@ -70,6 +70,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilindices.hh
              opm/models/blackoil/blackoillocalresidual.hh
              opm/models/blackoil/blackoilnewtonmethod.hh
+             opm/models/blackoil/blackoilonephaseindices.hh
              opm/models/blackoil/blackoilsolventmodules.hh
              opm/models/blackoil/blackoilproperties.hh
              opm/models/blackoil/blackoilprimaryvariables.hh
