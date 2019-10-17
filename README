@@ -1,63 +1,63 @@
-What is eWoms?
+What is opm-models?
 ==============
 
-eWoms [0] is a C++ software framework concerned with fully-implicit
+opm-models [0] is a C++ software framework concerned with fully-implicit
 numerical models for flow and transport in porous media. It gets
 developed as an integral part of the Open Porous Media (OPM)
-initiative [1]. Like all OPM software, eWoms is made available under
+initiative [1]. Like all OPM software, opm-models is made available under
 the terms of the GNU General Public License (GPL).
 
-The name "eWoms" is an acronym for the German phrase "eierlegende
+The name "opm-models" is an acronym for the German phrase "eierlegende
 Wollmilchsau" (egg-laying wool-milk pig) and reflects the fact that
 its goal is to be an all-encompassing simulation framework for flow
 and transport processes in porous media.
 
-To achieve this goal, eWoms aims to be as generic as possible, easy to
+To achieve this goal, opm-models aims to be as generic as possible, easy to
 extend, well performing, and well maintained: It is -- in principle --
 capable of simulating all macro-scale scenarios that are relevant for
 academic research and industrial applications which involve flow and
 transport processes in porous media, while performance-wise,
-simulators based on eWoms are often on-par or even faster than the
+simulators based on opm-models are often on-par or even faster than the
 best commercial solutions.
 
-eWoms uses the same agile development model as all OPM modules; in
+opm-models uses the same agile development model as all OPM modules; in
 particular the main development branch is considered to be unstable
 and it thus often incorporates "hard" API changes without a
 deprecation period. For this reason, if you are primarily interested
-in using eWoms, you are advised to stick to a stable/release version
-and to carefully read the change log before upgrading. eWoms releases
+in using opm-models, you are advised to stick to a stable/release version
+and to carefully read the change log before upgrading. opm-models releases
 are part of OPM releases, i.e., approximately two are prepared each
 year.
 
-As a base, eWoms uses the DUNE [2] numerical C++ framework, and it has
+As a base, opm-models uses the DUNE [2] numerical C++ framework, and it has
 been spun off from the source code of the Dumux [3] porous media
-simulation suite. Be aware, though, that although Dumux and eWoms have
+simulation suite. Be aware, though, that although Dumux and opm-models have
 similar goals and share quite a few concepts, their implementations
 have diverged considerably since separation.
 
 INSTALLATION
 ============
 
-For compiling and installing eWoms, DUNE's 'dunecontrol' utility is
+For compiling and installing opm-models, DUNE's 'dunecontrol' utility is
 recommended to be used. For details, confer the INSTALL file.
 
 LICENSE
 =======
 
-eWoms is licensed under the terms of the GNU General Public License
+opm-models is licensed under the terms of the GNU General Public License
 (GPL) version two or -- at your option -- any later version. The exact
 wording of the GPL can either be read online [4, 5] or it can be found
 in the COPYING file.
 
-Please note that eWoms' license -- unlike DUNE's -- does *not* feature
+Please note that opm-models' license -- unlike DUNE's -- does *not* feature
 a template exception. In particular, this means that programs which
-use eWoms header files must make the program's full source code
+use opm-models header files must make the program's full source code
 available under the GPL to everyone to whom it is distributed to.
 
 Links
 =====
 
-[0] https://github.com/OPM/ewoms
+[0] https://github.com/OPM/opm-models
 [1] http://www.opm-project.org
 [2] https://dune-project.org
 [3] http://dumux.org
