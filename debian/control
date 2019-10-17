@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 9), cmake,
  doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript,
  libboost-filesystem-dev, libboost-system-dev, libboost-date-time-dev,
  libboost-test-dev, libsuperlu3-dev (>= 3.0) | libsuperlu-dev (>= 4.3),
- gfortran, libsuitesparse-dev, libecl-dev, zlib1g-dev,
+ gfortran, libsuitesparse-dev, zlib1g-dev,
  libboost-iostreams-dev, libopm-common-dev, libopm-grid-dev,
  mpi-default-dev, mpi-default-bin, libtrilinos-zoltan-dev
 Standards-Version: 3.9.3
