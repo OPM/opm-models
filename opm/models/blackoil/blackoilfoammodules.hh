@@ -35,12 +35,10 @@
 #include <opm/material/common/Tabulated1DFunction.hpp>
 //#include <opm/material/common/IntervalTabulated2DFunction.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FoammobTable.hpp>
-#endif
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>
@@ -111,7 +109,6 @@ public:
         Scalar ep_dry = 0.0;     // FOAMFSW
     };
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize all internal data structures needed by the foam module
      */
@@ -203,7 +200,6 @@ public:
             gasMobilityMultiplierTable_[pvtReg].setXYContainers(conc, mobMult);
         }
     }
-#endif
 
     /*!
      * \brief Specify the number of saturation regions.
