@@ -1,3 +1,23 @@
+Changes in opm-models 2019.10 (formerly known as ewoms)
+=====================================================
+
+- The module has been renamed to opm-models and some files
+  have been moved to opm-simulators.
+  - namspace Ewoms renamed to Opm.
+  - header directories renamed (ewoms/models->opm/models,
+    ewoms/io->opm/models/io, ewoms/linear->opm/models/linear,
+    ewoms/common->opm/models/utils,
+    ewoms/disc->opm/models/discretization)
+    parts of ewoms/linear moved to opm-simulators
+    (opm/simulators/linalg) 
+- Removed usage and dependency on libecl
+- Added support for ROCKCOMP
+- Added support for one phase simulations
+- Added support for DUNE 2.7.0
+- Added experimental foam module.
+- Various bugfixes and improvements (polymer, time stepping, dim/dim
+  world, parameter system, maximum oil saturations)
+  
 Changes in eWoms 2018.10
 ========================
 
