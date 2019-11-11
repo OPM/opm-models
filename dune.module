@@ -3,7 +3,7 @@
 # and by the CMake build scripts.
 ####################################################################
 Module: opm-models
-Version: 2019.10-rc3
+Version: 2019.10-rc4
 Codename: Honey Bunny
 Description: OPM's numerical framework for flow and transport in porous media
 Url: http://opm-project.org
