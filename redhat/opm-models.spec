@@ -15,11 +15,12 @@ BuildRequires: opm-material-devel opm-grid-devel opm-common-devel
 BuildRequires: opm-material-openmpi-devel opm-grid-openmpi-devel opm-common-openmpi-devel
 BuildRequires: opm-material-mpich-devel opm-grid-mpich-devel opm-common-mpich-devel
 BuildRequires: dune-istl-devel dune-localfunctions-devel doxygen zlib-devel
-BuildRequires: devtoolset-6-toolchain
+%{?!el8:BuildRequires: devtoolset-6-toolchain rh-mariadb102-boost-devel}
+%{?el8:BuildRequires: boost-devel}
 BuildRequires:  openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel
 BuildRequires:  mpich-devel trilinos-mpich-devel ptscotch-mpich-devel
 Requires:      opm-models-openmpi-devel opm-models-mpich-devel
-BuildRequires: cmake3 rh-mariadb102-boost-devel
+BuildRequires: cmake3
 
 %description
 opm-models is an simulation framework which is primary focused on fully implicit
@@ -75,10 +76,9 @@ flow and transport processes in porous media.
 %setup -q -n %{name}-release-%{version}-%{tag}
 
 %build
-scl enable devtoolset-6 bash
 mkdir serial
 cd serial
-cmake3 -DENABLE_MPI=0 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include -DCMAKE_INSTALL_SYSCONFDIR=/etc ..
+cmake3 -DENABLE_MPI=0 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} -DCMAKE_INSTALL_SYSCONFDIR=/etc ..
 make %{?_smp_mflags}
 cd ..
 
@@ -86,7 +86,7 @@ mkdir openmpi
 cd openmpi
 %{?el6:module load openmpi-x86_64}
 %{?!el6:module load mpi/openmpi-x86_64}
-cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include -DZOLTAN_ROOT=/usr/lib64/openmpi -DCMAKE_CXX_FLAGS=-I/usr/include/openmpi-x86_64/trilinos -DZOLTAN_INCLUDE_DIRS=/usr/include/openmpi-x86_64/trilinos -DPTSCOTCH_ROOT=/usr/lib64/openmpi -DPTSCOTCH_INCLUDE_DIR=/usr/include/openmpi-x86_64 -DCMAKE_INSTALL_SYSCONFDIR=/etc ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} -DZOLTAN_ROOT=/usr/lib64/openmpi -DCMAKE_CXX_FLAGS=-I/usr/include/openmpi-x86_64/trilinos -DZOLTAN_INCLUDE_DIRS=/usr/include/openmpi-x86_64/trilinos -DPTSCOTCH_ROOT=/usr/lib64/openmpi -DPTSCOTCH_INCLUDE_DIR=/usr/include/openmpi-x86_64 -DCMAKE_INSTALL_SYSCONFDIR=/etc ..
 make %{?_smp_mflags}
 cd ..
 
@@ -96,7 +96,7 @@ cd mpich
 %{?el6:module load mpich-x86_64}
 %{?!el6:module rm mpi/openmpi-x86_64}
 %{?!el6:module load mpi/mpich-x86_64}
-cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include -DZOLTAN_ROOT=/usr/lib64/mpich -DCMAKE_CXX_FLAGS=-I/usr/include/mpich-x86_64/trilinos -DZOLTAN_INCLUDE_DIRS=/usr/include/mpich-x86_64/trilinos -DPTSCOTCH_ROOT=/usr/lib64/mpich -DPTSCOTCH_INCLUDE_DIR=/usr/include/mpich-x86_64 -DCMAKE_INSTALL_SYSCONFDIR=/etc ..
+cmake3 -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?!el8:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include} -DZOLTAN_ROOT=/usr/lib64/mpich -DCMAKE_CXX_FLAGS=-I/usr/include/mpich-x86_64/trilinos -DZOLTAN_INCLUDE_DIRS=/usr/include/mpich-x86_64/trilinos -DPTSCOTCH_ROOT=/usr/lib64/mpich -DPTSCOTCH_INCLUDE_DIR=/usr/include/mpich-x86_64 -DCMAKE_INSTALL_SYSCONFDIR=/etc ..
 make %{?_smp_mflags}
 
 # No symbols in a template-only library
