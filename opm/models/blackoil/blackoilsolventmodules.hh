@@ -35,7 +35,6 @@
 #include <opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp>
 #include <opm/material/common/Tabulated1DFunction.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
@@ -46,7 +45,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
-#endif
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>
@@ -92,7 +90,6 @@ class BlackOilSolventModule
 
 
 public:
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize all internal data structures needed by the solvent module
      */
@@ -349,7 +346,6 @@ public:
             }
         }
     }
-#endif
 
     /*!
      * \brief Specify the number of satuation regions.

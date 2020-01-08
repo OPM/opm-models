@@ -35,7 +35,6 @@
 #include <opm/material/common/Tabulated1DFunction.hpp>
 #include <opm/material/common/IntervalTabulated2DFunction.hpp>
 
-#if HAVE_ECL_INPUT
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
@@ -43,7 +42,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
-#endif
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Unused.hpp>
@@ -111,7 +109,6 @@ public:
         Scalar kappa;
     };
 
-#if HAVE_ECL_INPUT
     /*!
      * \brief Initialize all internal data structures needed by the polymer module
      */
@@ -364,7 +361,6 @@ public:
             }
         }
     }
-#endif
 
     /*!
      * \brief Specify the number of satuation regions.
