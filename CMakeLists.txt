@@ -301,4 +301,4 @@ opm_add_test(test_tasklets
 opm_add_test(test_mpiutil
              PROCESSORS 4
              CONDITION ${MPI_FOUND}
-             DRIVER_ARGS --parallel-simulation=4)
+             DRIVER_ARGS --parallel-program=4)
