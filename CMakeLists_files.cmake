@@ -182,6 +182,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/ncp/ncpboundaryratevector.hh
              opm/models/nonlinear/nullconvergencewriter.hh
              opm/models/nonlinear/newtonmethod.hh
+             opm/models/parallel/mpiutil.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
              opm/models/parallel/gridcommhandles.hh
