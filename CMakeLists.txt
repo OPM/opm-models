@@ -128,16 +128,19 @@ set(CMAKE_PROJECT_NAME "${PROJECT_NAME}")
 add_custom_target(opm-models_prepare)
 
 # the ART to DGF file format conversion utility
-EwomsAddApplication(art2dgf
-                    SOURCES art2dgf/art2dgf.cc
-                    EXE_NAME art2dgf)
 
-add_dependencies(test-suite art2dgf)
+if (BUILD_EXAMPLES)
+  EwomsAddApplication(art2dgf
+    SOURCES art2dgf/art2dgf.cc
+    EXE_NAME art2dgf)
 
-opm_add_test(art2dgf
-  NO_COMPILE
-  DRIVER_ARGS --plain
-  TEST_ARGS "data/fracture-raw.art")
+  add_dependencies(test-suite art2dgf)
+
+  opm_add_test(art2dgf
+    NO_COMPILE
+    DRIVER_ARGS --plain
+    TEST_ARGS "data/fracture-raw.art")
+endif()
 
 # add targets for all tests of the models. we add the water-air test
 # first because it take longest and so that we don't have to wait for
