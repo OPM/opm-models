@@ -115,33 +115,30 @@ public:
     /*!
      * \brief Initialize all internal data structures needed by the foam module
      */
-    static void initFromDeck(const Opm::Deck& deck, const Opm::EclipseState& eclState)
+    static void initFromState(const Opm::EclipseState& eclState)
     {
         // some sanity checks: if foam is enabled, the FOAM keyword must be
         // present, if foam is disabled the keyword must not be present.
-        if (enableFoam && !deck.hasKeyword("FOAM")) {
+        if (enableFoam && !eclState.runspec().phases().active(Phase::FOAM)) {
             throw std::runtime_error("Non-trivial foam treatment requested at compile time, but "
                                      "the deck does not contain the FOAM keyword");
         }
-        else if (!enableFoam && deck.hasKeyword("FOAM")) {
+        else if (!enableFoam && eclState.runspec().phases().active(Phase::FOAM)) {
             throw std::runtime_error("Foam treatment disabled at compile time, but the deck "
                                      "contains the FOAM keyword");
         }
 
-        if (!deck.hasKeyword("FOAM")) {
+        if (!eclState.runspec().phases().active(Phase::FOAM)) {
             return; // foam treatment is supposed to be disabled
         }
 
         // Check that only implemented options are used.
         // We only support the default values of FOAMOPTS (GAS, TAB).
-        if (deck.hasKeyword("FOAMOPTS")) {
-            const auto kw = deck.getKeyword("FOAMOPTS");
-            if (kw.getRecord(0).getItem("TRANSPORT_PHASE").get<std::string>(0) != "GAS") {
-                throw std::runtime_error("In FOAMOPTS, only GAS is allowed for the transport phase.");
-            }
-            if (kw.getRecord(0).getItem("MODEL").get<std::string>(0) != "TAB") {
-                throw std::runtime_error("In FOAMOPTS, only TAB is allowed for the gas mobility factor reduction model.");
-            }
+        if (eclState.getInitConfig().getFoamConfig().getTransportPhase() != Phase::GAS) {
+            throw std::runtime_error("In FOAMOPTS, only GAS is allowed for the transport phase.");
+        }
+        if (eclState.getInitConfig().getFoamConfig().getMobilityModel() != FoamConfig::MobilityModel::TAB) {
+            throw std::runtime_error("In FOAMOPTS, only TAB is allowed for the gas mobility factor reduction model.");
         }
 
         const auto& tableManager = eclState.getTableManager();
@@ -441,81 +438,6 @@ public:
     {
         unsigned satnumRegionIdx = elemCtx.problem().satnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return foamCoefficients_[satnumRegionIdx];
-    }
-
-    template<class Serializer>
-    static std::size_t packSize(Serializer& serializer)
-    {
-        std::size_t size = serializer.packSize(foamRockDensity_) +
-                           serializer.packSize(foamAllowDesorption_) +
-                           serializer.packSize(adsorbedFoamTable_) +
-                           serializer.packSize(gasMobilityMultiplierTable_);
-        size += serializer.packSize(foamCoefficients_.size());
-        for (const auto& it : foamCoefficients_) {
-            size += serializer.packSize(it.fm_min);
-            size += serializer.packSize(it.fm_mob);
-            size += serializer.packSize(it.fm_surf);
-            size += serializer.packSize(it.ep_surf);
-            size += serializer.packSize(it.fm_oil);
-            size += serializer.packSize(it.fl_oil);
-            size += serializer.packSize(it.ep_oil);
-            size += serializer.packSize(it.fm_cap);
-            size += serializer.packSize(it.ep_cap);
-            size += serializer.packSize(it.fm_dry);
-            size += serializer.packSize(it.ep_dry);
-        }
-
-        return size;
-    }
-
-    template<class Serializer>
-    static void pack(std::vector<char>& buffer, int& position,
-                     Serializer& serializer)
-    {
-        serializer.pack(foamRockDensity_, buffer, position);
-        serializer.pack(foamAllowDesorption_, buffer, position);
-        serializer.pack(adsorbedFoamTable_, buffer, position);
-        serializer.pack(gasMobilityMultiplierTable_, buffer, position);
-        serializer.pack(foamCoefficients_.size(), buffer, position);
-        for (const auto& it : foamCoefficients_) {
-            serializer.pack(it.fm_min, buffer, position);
-            serializer.pack(it.fm_mob, buffer, position);
-            serializer.pack(it.fm_surf, buffer, position);
-            serializer.pack(it.ep_surf, buffer, position);
-            serializer.pack(it.fm_oil, buffer, position);
-            serializer.pack(it.fl_oil, buffer, position);
-            serializer.pack(it.ep_oil, buffer, position);
-            serializer.pack(it.fm_cap, buffer, position);
-            serializer.pack(it.ep_cap, buffer, position);
-            serializer.pack(it.fm_dry, buffer, position);
-            serializer.pack(it.ep_dry, buffer, position);
-        }
-    }
-
-    template<class Serializer>
-    static void unpack(std::vector<char>& buffer, int& position,
-                       Serializer& serializer)
-    {
-        serializer.unpack(foamRockDensity_, buffer, position);
-        serializer.unpack(foamAllowDesorption_, buffer, position);
-        serializer.unpack(adsorbedFoamTable_, buffer, position);
-        serializer.unpack(gasMobilityMultiplierTable_, buffer, position);
-        size_t size;
-        serializer.unpack(size, buffer, position);
-        foamCoefficients_.resize(size);
-        for (auto& it : foamCoefficients_) {
-            serializer.unpack(it.fm_min, buffer, position);
-            serializer.unpack(it.fm_mob, buffer, position);
-            serializer.unpack(it.fm_surf, buffer, position);
-            serializer.unpack(it.ep_surf, buffer, position);
-            serializer.unpack(it.fm_oil, buffer, position);
-            serializer.unpack(it.fl_oil, buffer, position);
-            serializer.unpack(it.ep_oil, buffer, position);
-            serializer.unpack(it.fm_cap, buffer, position);
-            serializer.unpack(it.ep_cap, buffer, position);
-            serializer.unpack(it.fm_dry, buffer, position);
-            serializer.unpack(it.ep_dry, buffer, position);
-        }
     }
 
 private:
