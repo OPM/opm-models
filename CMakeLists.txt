@@ -54,6 +54,7 @@ endif()
 find_package(opm-common REQUIRED)
 
 include(OpmInit)
+OpmSetPolicies()
 
 # Testing
 include(OpmSatellites)
