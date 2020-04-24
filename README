@@ -7,12 +7,8 @@ developed as an integral part of the Open Porous Media (OPM)
 initiative [1]. Like all OPM software, opm-models is made available under
 the terms of the GNU General Public License (GPL).
 
-The name "opm-models" is an acronym for the German phrase "eierlegende
-Wollmilchsau" (egg-laying wool-milk pig) and reflects the fact that
-its goal is to be an all-encompassing simulation framework for flow
-and transport processes in porous media.
-
-To achieve this goal, opm-models aims to be as generic as possible, easy to
+opm-models goal is to be an all-encompassing simulation framework for flow
+and transport processes in porous media. To achieve this goal, opm-models aims to be as generic as possible, easy to
 extend, well performing, and well maintained: It is -- in principle --
 capable of simulating all macro-scale scenarios that are relevant for
 academic research and industrial applications which involve flow and
