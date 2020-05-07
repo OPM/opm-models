@@ -272,8 +272,8 @@ protected:
             nextValue[pvIdx] = currentValue[pvIdx] - delta;
 
             // keep the solvent saturation between 0 and 1
-            if (enableSolvent && pvIdx == Indices::solventSaturationIdx)
-                nextValue[pvIdx] = std::min(std::max(nextValue[pvIdx], 0.0), 1.0);
+            // if (enableSolvent && pvIdx == Indices::solventSaturationIdx)
+            //     nextValue[pvIdx] = std::min(std::max(nextValue[pvIdx], 0.0), 1.0);
 
             // keep the polymer concentration above 0
             if (enablePolymer && pvIdx == Indices::polymerConcentrationIdx)
@@ -309,6 +309,8 @@ protected:
 
         if (wasSwitched_[globalDofIdx])
             ++ numPriVarsSwitched_;
+
+        bool chopped = nextValue.chopAndNormalizeSaturations();
 
         nextValue.checkDefined();
     }
