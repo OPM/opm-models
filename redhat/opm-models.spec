@@ -1,4 +1,4 @@
-%define tag rc3
+%define tag rc4
 
 Name: opm-models
 Summary: OPM - Fully implicit models for flow and transport in porous media
