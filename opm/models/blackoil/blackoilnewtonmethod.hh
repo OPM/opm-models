@@ -101,6 +101,7 @@ public:
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, DsMax, "Maximum absolute change of any saturation in a single iteration");
         EWOMS_REGISTER_PARAM(TypeTag, Scalar, PriVarOscilationThreshold,
                              "The threshold value for the primary variable switching conditions after its meaning has switched to hinder oscilations");
+        EWOMS_REGISTER_PARAM(TypeTag,bool, ProjectSaturations, "Option for doing saturation projection");
     }
 
     /*!
