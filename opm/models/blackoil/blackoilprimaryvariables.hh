@@ -363,8 +363,8 @@ public:
         if (primaryVarsMeaning() == OnePhase_p){
             return false;
         }
-        Scalar eps_sat=eps;// eps to represent near the phase disapear 
-        Scalar eps_dis=eps*100;//eps to represent near saturated
+        Scalar eps_sat=0.0//eps;// eps to represent near the phase disapear 
+        Scalar eps_dis=0.0//eps*100;//eps to represent near saturated
         Scalar Sw = 0.0;
         if (waterEnabled)
             Sw = (*this)[Indices::waterSaturationIdx];
