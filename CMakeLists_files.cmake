@@ -224,6 +224,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
+             opm/simulators/linalg/linalgproperties.hh
              opm/simulators/linalg/linearsolverreport.hh
              opm/simulators/linalg/istlsparsematrixadapter.hh
              opm/simulators/linalg/istlpreconditionerwrappers.hh
