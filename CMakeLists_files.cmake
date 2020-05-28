@@ -211,6 +211,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/utils/start.hh
              opm/models/utils/timerguard.hh
              opm/models/utils/propertysystem.hh
+             opm/models/utils/propertysystemmacros.hh
              opm/models/utils/pffgridvector.hh
              opm/models/utils/prefetch.hh
              opm/models/utils/parametersystem.hh
@@ -224,6 +225,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
+             opm/simulators/linalg/linalgproperties.hh
              opm/simulators/linalg/linearsolverreport.hh
              opm/simulators/linalg/istlsparsematrixadapter.hh
              opm/simulators/linalg/istlpreconditionerwrappers.hh
