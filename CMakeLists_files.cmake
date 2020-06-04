@@ -123,6 +123,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/discretization/common/fvbasegradientcalculator.hh
              opm/models/discretization/common/fvbaseproblem.hh
              opm/models/discretization/common/fvbaseprimaryvariables.hh
+             opm/models/discretization/common/linearizationtype.hh
              opm/models/discretization/ecfv/ecfvgridcommhandlefactory.hh
              opm/models/discretization/ecfv/ecfvstencil.hh
              opm/models/discretization/ecfv/ecfvbaseoutputmodule.hh
