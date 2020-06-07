@@ -95,8 +95,6 @@ class FvBaseLinearizer
 
     typedef GlobalEqVector Vector;
 
-    typedef typename SparseMatrixAdapter::IstlMatrix IstlMatrix;
-
     enum { numEq = GET_PROP_VALUE(TypeTag, NumEq) };
     enum { historySize = GET_PROP_VALUE(TypeTag, TimeDiscHistorySize) };
 
