@@ -349,10 +349,18 @@ private:
 
             for (unsigned primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof(); ++primaryDofIdx) {
                 unsigned myIdx = stencil.globalSpaceIndex(primaryDofIdx);
-
                 for (unsigned dofIdx = 0; dofIdx < stencil.numDof(); ++dofIdx) {
+                    if (dofIdx > 0 && stencil.element(dofIdx).partitionType() != Dune::PartitionType::InteriorEntity) {
+                        // Skip non-diagonal elements on non-interior rows.
+                        continue;
+                    }
                     unsigned neighborIdx = stencil.globalSpaceIndex(dofIdx);
-                    sparsityPattern[myIdx].insert(neighborIdx);
+                    // When the stencil is used later (in
+                    // linearizeElement_(), via an element context) it
+                    // assumes that the stencil is column-wise,
+                    // i.e. the first index myIdx refers to the column
+                    // number.
+                    sparsityPattern[neighborIdx].insert(myIdx);
                 }
             }
         }
@@ -526,6 +534,10 @@ private:
 
             // update the global Jacobian matrix
             for (unsigned dofIdx = 0; dofIdx < elementCtx->numDof(/*timeIdx=*/0); ++ dofIdx) {
+                if (dofIdx > 0 && elementCtx->stencil(/*timeIdx=*/0).element(dofIdx).partitionType() != Dune::PartitionType::InteriorEntity) {
+                    // Skip non-diagonal elements on non-interior rows.
+                    continue;
+                }
                 unsigned globJ = elementCtx->globalSpaceIndex(/*spaceIdx=*/dofIdx, /*timeIdx=*/0);
 
                 jacobian_->addToBlock(globJ, globI, localLinearizer.jacobian(dofIdx, primaryDofIdx));
