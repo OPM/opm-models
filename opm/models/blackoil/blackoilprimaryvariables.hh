@@ -63,6 +63,7 @@ class BlackOilBrineModule;
 template <class TypeTag>
 class BlackOilPrimaryVariables : public FvBasePrimaryVariables<TypeTag>
 {
+protected:
     using ParentType = FvBasePrimaryVariables<TypeTag>;
     using Implementation = GetPropType<TypeTag, Properties::PrimaryVariables>;
 
@@ -671,7 +672,7 @@ public:
 #endif // NDEBUG
     }
 
-private:
+protected:
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
