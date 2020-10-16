@@ -33,6 +33,7 @@
 #include "blackoilproblem.hh"
 #include "blackoilindices.hh"
 #include "blackoiltwophaseindices.hh"
+#include "blackoildynindices.hh"
 #include "blackoilextensivequantities.hh"
 #include "blackoilprimaryvariables.hh"
 #include "blackoilintensivequantities.hh"
@@ -267,9 +268,6 @@ class BlackOilModel
     enum { numComponents = FluidSystem::numComponents };
     enum { numEq = getPropValue<TypeTag, Properties::NumEq>() };
 
-    static const bool compositionSwitchEnabled = Indices::gasEnabled;
-    static const bool waterEnabled = Indices::waterEnabled;
-
     using SolventModule = BlackOilSolventModule<TypeTag>;
     using PolymerModule = BlackOilPolymerModule<TypeTag>;
     using EnergyModule = BlackOilEnergyModule<TypeTag>;
@@ -307,11 +305,11 @@ public:
     {
         std::ostringstream oss;
 
-        if (pvIdx == Indices::waterSaturationIdx)
+        if (pvIdx == Indices::activeWaterSaturationIdx())
             oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
-        else if (pvIdx == Indices::pressureSwitchIdx)
+        else if (pvIdx == Indices::activePressureSwitchIdx())
             oss << "pressure_switching";
-        else if (static_cast<int>(pvIdx) == Indices::compositionSwitchIdx)
+        else if (static_cast<int>(pvIdx) == Indices::activeCompositionSwitchIdx())
             oss << "composition_switching";
         else if (SolventModule::primaryVarApplies(pvIdx))
             return SolventModule::primaryVarName(pvIdx);
@@ -357,12 +355,12 @@ public:
             return 1.0;
 
         // saturations are always in the range [0, 1]!
-        if (int(Indices::waterSaturationIdx) == int(pvIdx))
+        if (int(Indices::activeWaterSaturationIdx()) == int(pvIdx))
             return 1.0;
 
         // oil pressures usually are in the range of 100 to 500 bars for typical oil
         // reservoirs (which is the only relevant application for the black-oil model).
-        else if (int(Indices::pressureSwitchIdx) == int(pvIdx))
+        else if (int(Indices::activePressureSwitchIdx()) == int(pvIdx))
             return 1.0/300e5;
 
         // deal with primary variables stemming from the solvent module
@@ -378,7 +376,7 @@ public:
             return EnergyModule::primaryVarWeight(pvIdx);
 
         // if the primary variable is either the gas saturation, Rs or Rv
-        assert(int(Indices::compositionSwitchIdx) == int(pvIdx));
+        assert(int(Indices::activeCompositionSwitchIdx()) == int(pvIdx));
 
         auto pvMeaning = this->solution(0)[globalDofIdx].primaryVarsMeaning();
         if (pvMeaning == PrimaryVariables::Sw_po_Sg)

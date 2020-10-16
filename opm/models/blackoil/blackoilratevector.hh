@@ -66,7 +66,6 @@ class BlackOilRateVector
     enum { conti0EqIdx = Indices::conti0EqIdx };
     enum { contiEnergyEqIdx = Indices::contiEnergyEqIdx };
     enum { enableEnergy = getPropValue<TypeTag, Properties::EnableEnergy>() };
-    enum { enableSolvent = getPropValue<TypeTag, Properties::EnableSolvent>() };
     enum { enablePolymer = getPropValue<TypeTag, Properties::EnablePolymer>() };
     enum { enablePolymerMolarWeight = getPropValue<TypeTag, Properties::EnablePolymerMW>() };
     enum { enableFoam = getPropValue<TypeTag, Properties::EnableFoam>() };
@@ -106,7 +105,7 @@ public:
                 (*this)[FluidSystem::waterCompIdx] /=
                         FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
             }
-            if (enableSolvent) {
+            if (Indices::solventIsActive()) {
                 const auto& solventPvt = SolventModule::solventPvt();
                 (*this)[Indices::contiSolventEqIdx] /=
                         solventPvt.referenceDensity(pvtRegionIdx);
@@ -159,7 +158,7 @@ public:
                 (*this)[FluidSystem::waterCompIdx] /=
                         FluidSystem::referenceDensity(FluidSystem::waterPhaseIdx, pvtRegionIdx);
             }
-            if (enableSolvent) {
+            if (Indices::solventIsActive()) {
                 (*this)[Indices::contiSolventEqIdx] /=
                         solventPvt.referenceDensity(pvtRegionIdx);
             }

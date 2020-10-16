@@ -42,9 +42,9 @@ struct BlackOilIndices
     static const int numPhases = 3;
 
     //! All phases are enabled
-    static const bool oilEnabled = true;
-    static const bool waterEnabled = true;
-    static const bool gasEnabled = true;
+    static const bool enableWater = true;
+    static const bool enableOil = true;
+    static const bool enableGas = true;
 
     //! Are solvents involved?
     static const bool enableSolvent = numSolventsV > 0;
@@ -72,6 +72,26 @@ struct BlackOilIndices
 
     //! The number of equations
     static const int numEq = numPhases + numSolvents + numPolymers + numEnergy + numFoam + numBrine;
+
+    static const int numWellEq = numPhases + numSolvents;
+
+    static void init(const Phases&)
+    { }
+
+    static bool waterIsActive()
+    { return enableWater; }
+
+    static bool gasIsActive()
+    { return enableGas; }
+
+    static bool oilIsActive()
+    { return enableOil; }
+
+    static bool solventIsActive()
+    { return enableSolvent; }
+
+    static int numActivePhase()
+    { return numPhases; }
 
     //! \brief returns the index of "active" component
     static constexpr unsigned canonicalToActiveComponentIndex(unsigned compIdx)
@@ -125,6 +145,39 @@ struct BlackOilIndices
         enableEnergy ? PVOffset + numPhases + numSolvents + numPolymers + numFoam + numBrine : - 1000;
 
 
+    //! \brief returns the index of "active" primary variable
+    static int canonicalToActivePrimaryVariableIndex(unsigned pvIdx)
+    {
+        return pvIdx;
+    }
+
+    //! \brief returns the index of "canonical" primary variable
+    static int activeToCanonicalPrimaryVariableIndex(unsigned activePvIdx)
+    {
+        return activePvIdx;
+    }
+
+    static int activePressureSwitchIdx()
+    {
+        return canonicalToActivePrimaryVariableIndex(pressureSwitchIdx);
+    }
+
+    static int activeWaterSaturationIdx()
+    {
+        return canonicalToActivePrimaryVariableIndex(waterSaturationIdx);
+    }
+
+    static int activeCompositionSwitchIdx()
+    {
+        return canonicalToActivePrimaryVariableIndex(compositionSwitchIdx);
+    }
+
+    static int activeSolventSaturationIdx()
+    {
+        return canonicalToActivePrimaryVariableIndex(solventSaturationIdx);
+    }
+
+
     ////////
     // Equation indices
     ////////
@@ -157,6 +210,23 @@ struct BlackOilIndices
     //! Index of the continuity equation for energy
     static const int contiEnergyEqIdx =
         enableEnergy ? PVOffset + numPhases + numSolvents + numPolymers + numFoam + numBrine: -1000;
+
+    //! \brief returns the index of "active" component
+    static int canonicalToActiveEquationVariableIndex(unsigned eqIdx)
+    {
+        return eqIdx;
+    }
+
+    //! \brief returns the index of "canonical" component
+    static int activeToCanonicalEquationVariableIndex(unsigned activeEqIdx)
+    {
+        return activeEqIdx;
+    }
+
+    static int activeContiSolventEqIdx()
+    {
+        return canonicalToActiveEquationVariableIndex(contiSolventEqIdx);
+    }
 };
 
 } // namespace Opm
