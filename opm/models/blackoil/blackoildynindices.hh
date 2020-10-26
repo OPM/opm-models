@@ -178,9 +178,6 @@ public:
         // The equation indices
         // we always have want the pressure equation.
         int numActiveEquations = 0;
-        activePrimaryVariableMap_[pressureSwitchIdx] = numActiveEquations;
-        canonicalPrimaryVariableMap_[numActiveEquations] = pressureSwitchIdx;
-        numActiveEquations++;
 
         if (phases.active(Phase::WATER) ) {
             activePrimaryVariableMap_[waterSaturationIdx] = numActiveEquations;
@@ -189,6 +186,10 @@ public:
         } else {
             activeEquationVariableMap_[waterSaturationIdx] = -1;
         }
+
+        activePrimaryVariableMap_[pressureSwitchIdx] = numActiveEquations;
+        canonicalPrimaryVariableMap_[numActiveEquations] = pressureSwitchIdx;
+        numActiveEquations++;
 
         if (phases.active(Phase::GAS) && phases.active(Phase::OIL)) {
             activePrimaryVariableMap_[compositionSwitchIdx] = numActiveEquations;
