@@ -228,17 +228,17 @@ protected:
         Scalar deltaSg = 0.0;
         Scalar deltaSs = 0.0;
 
-        if (Indices::waterEnabled) {
-            deltaSw = update[Indices::waterSaturationIdx];
+        if (Indices::waterIsActive()) {
+            deltaSw = update[Indices::activeWaterSaturationIdx()];
             deltaSo = -deltaSw;
         }
 
-        if (Indices::gasEnabled && currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
-            deltaSg = update[Indices::compositionSwitchIdx];
+        if (Indices::gasIsActive() && currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg) {
+            deltaSg = update[Indices::activeCompositionSwitchIdx()];
             deltaSo -= deltaSg;
         }
 
-        if (enableSolvent) {
+        if (Indices::solventIsActive()) {
             deltaSs = update[Indices::solventSaturationIdx];
             deltaSo -= deltaSs;
         }
@@ -264,14 +264,14 @@ protected:
             Scalar delta = update[pvIdx];
 
             // limit pressure delta
-            if (pvIdx == Indices::pressureSwitchIdx) {
+            if (pvIdx == Indices::activePressureSwitchIdx()) {
                 if (std::abs(delta) > dpMaxRel_*currentValue[pvIdx])
                     delta = Opm::signum(delta)*dpMaxRel_*currentValue[pvIdx];
             }
             // water saturation delta
-            else if (pvIdx == Indices::waterSaturationIdx)
+            else if (pvIdx == Indices::activeWaterSaturationIdx())
                 delta *= satAlpha;
-            else if (pvIdx == Indices::compositionSwitchIdx) {
+            else if (pvIdx == Indices::activeCompositionSwitchIdx()) {
                 // the switching primary variable for composition is tricky because the
                 // "reasonable" value ranges it exhibits vary widely depending on its
                 // interpretation since it can represent Sg, Rs or Rv. For now, we only
@@ -280,11 +280,11 @@ protected:
                 if (currentValue.primaryVarsMeaning() == PrimaryVariables::Sw_po_Sg)
                     delta *= satAlpha;
                 else {
-                    if (delta > currentValue[Indices::compositionSwitchIdx])
-                        delta = currentValue[Indices::compositionSwitchIdx];
+                    if (delta > currentValue[Indices::activeCompositionSwitchIdx()])
+                        delta = currentValue[Indices::activeCompositionSwitchIdx()];
                 }
             }
-            else if (enableSolvent && pvIdx == Indices::solventSaturationIdx)
+            else if (Indices::solventIsActive() && pvIdx == Indices::solventSaturationIdx)
                 // solvent saturation updates are also subject to the Appleyard chop
                 delta *= satAlpha;
             else if (enablePolymerWeight && pvIdx == Indices::polymerMoleWeightIdx) {
@@ -300,7 +300,7 @@ protected:
             nextValue[pvIdx] = currentValue[pvIdx] - delta;
 
             // keep the solvent saturation between 0 and 1
-            if (enableSolvent && pvIdx == Indices::solventSaturationIdx)
+            if (Indices::solventIsActive() && pvIdx == Indices::solventSaturationIdx)
                 nextValue[pvIdx] = std::min(std::max(nextValue[pvIdx], 0.0), 1.0);
 
             // keep the polymer concentration above 0

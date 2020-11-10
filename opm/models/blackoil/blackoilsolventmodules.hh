@@ -100,15 +100,18 @@ public:
     {
         // some sanity checks: if solvents are enabled, the SOLVENT keyword must be
         // present, if solvents are disabled the keyword must not be present.
-        if (enableSolvent && !eclState.runspec().phases().active(Phase::SOLVENT))
-            throw std::runtime_error("Non-trivial solvent treatment requested at compile "
-                                     "time, but the deck does not contain the SOLVENT keyword");
-        else if (!enableSolvent && eclState.runspec().phases().active(Phase::SOLVENT))
+        //if (enableSolvent && !eclState.runspec().phases().active(Phase::SOLVENT))
+        //    throw std::runtime_error("Non-trivial solvent treatment requested at compile "
+        //                             "time, but the deck does not contain the SOLVENT keyword");
+        solventIsActive_ = false;
+        if (!enableSolvent && eclState.runspec().phases().active(Phase::SOLVENT))
             throw std::runtime_error("Solvent treatment disabled at compile time, but the deck "
                                      "contains the SOLVENT keyword");
 
         if (!eclState.runspec().phases().active(Phase::SOLVENT))
             return; // solvent treatment is supposed to be disabled
+
+        solventIsActive_ = true;
 
         solventPvt_.initFromState(eclState, schedule);
 
@@ -471,8 +474,8 @@ public:
      */
     static void registerParameters()
     {
-        if (!enableSolvent)
-            // solvents have disabled at compile time
+        if (!solventIsActive())
+            // solvents are not spesified in the deck
             return;
 
         Opm::VtkBlackOilSolventModule<TypeTag>::registerParameters();
@@ -484,8 +487,8 @@ public:
     static void registerOutputModules(Model& model,
                                       Simulator& simulator)
     {
-        if (!enableSolvent)
-            // solvents have disabled at compile time
+        if (!solventIsActive())
+            // solvents are not spesified in the deck
             return;
 
         model.addOutputModule(new Opm::VtkBlackOilSolventModule<TypeTag>(simulator));
@@ -493,8 +496,8 @@ public:
 
     static bool primaryVarApplies(unsigned pvIdx)
     {
-        if (!enableSolvent)
-            // solvents have disabled at compile time
+        if (!solventIsActive())
+            // solvents are not spesified in the deck
             return false;
 
         return pvIdx == solventSaturationIdx;
@@ -517,7 +520,8 @@ public:
 
     static bool eqApplies(unsigned eqIdx)
     {
-        if (!enableSolvent)
+        if (!solventIsActive())
+            // solvents are not spesified in the deck
             return false;
 
         return eqIdx == contiSolventEqIdx;
@@ -542,7 +546,8 @@ public:
     static void addStorage(Dune::FieldVector<LhsEval, numEq>& storage,
                            const IntensiveQuantities& intQuants)
     {
-        if (!enableSolvent)
+        if (!solventIsActive())
+            // solvents are not spesified in the deck
             return;
 
         if (blackoilConserveSurfaceVolume) {
@@ -565,7 +570,8 @@ public:
                             unsigned timeIdx)
 
     {
-        if (!enableSolvent)
+
+        if (!solventIsActive())
             return;
 
         const auto& extQuants = elemCtx.extensiveQuantities(scvfIdx, timeIdx);
@@ -602,7 +608,7 @@ public:
     static void assignPrimaryVars(PrimaryVariables& priVars,
                                   Scalar solventSaturation)
     {
-        if (!enableSolvent)
+        if (!solventIsActive())
             return;
 
         priVars[solventSaturationIdx] = solventSaturation;
@@ -615,7 +621,7 @@ public:
                                   const PrimaryVariables& oldPv,
                                   const EqVector& delta)
     {
-        if (!enableSolvent)
+        if (!solventIsActive())
             return;
 
         // do a plain unchopped Newton update
@@ -646,7 +652,7 @@ public:
     template <class DofEntity>
     static void serializeEntity(const Model& model, std::ostream& outstream, const DofEntity& dof)
     {
-        if (!enableSolvent)
+        if (!solventIsActive())
             return;
 
         unsigned dofIdx = model.dofMapper().index(dof);
@@ -658,7 +664,7 @@ public:
     template <class DofEntity>
     static void deserializeEntity(Model& model, std::istream& instream, const DofEntity& dof)
     {
-        if (!enableSolvent)
+        if (!solventIsActive())
             return;
 
         unsigned dofIdx = model.dofMapper().index(dof);
@@ -674,6 +680,11 @@ public:
 
     static const SolventPvt& solventPvt()
     { return solventPvt_; }
+
+    static const solventIsActive()
+    {
+        return enableSolvent && solventIsActive_;
+    }
 
     static const TabulatedFunction& ssfnKrg(const ElementContext& elemCtx,
                                             unsigned scvIdx,
@@ -778,6 +789,7 @@ public:
 
 private:
     static SolventPvt solventPvt_;
+    static bool solventIsActive_;
 
     static std::vector<TabulatedFunction> ssfnKrg_; // the krg(Fs) column of the SSFN table
     static std::vector<TabulatedFunction> ssfnKrs_; // the krs(Fs) column of the SSFN table
@@ -799,6 +811,11 @@ private:
 template <class TypeTag, bool enableSolventV>
 typename BlackOilSolventModule<TypeTag, enableSolventV>::SolventPvt
 BlackOilSolventModule<TypeTag, enableSolventV>::solventPvt_;
+
+template <class TypeTag, bool enableSolventV>
+bool
+BlackOilSolventModule<TypeTag, enableSolventV>::solventIsActive_;
+
 
 template <class TypeTag, bool enableSolventV>
 std::vector<typename BlackOilSolventModule<TypeTag, enableSolventV>::TabulatedFunction>
@@ -895,6 +912,9 @@ public:
                                   unsigned dofIdx,
                                   unsigned timeIdx)
     {
+        if (!Indices::solventIsActive())
+            return;
+
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         auto& fs = asImp_().fluidState_;
         solventSaturation_ = priVars.makeEvaluation(solventSaturationIdx, timeIdx, elemCtx.linearizationType());
@@ -920,12 +940,15 @@ public:
                                    unsigned dofIdx,
                                    unsigned timeIdx)
     {
+        solventMobility_ = 0.0;
+
+        if (!Indices::solventIsActive())
+            return;
+
         // revert the gas "saturation" of the fluid state back to the saturation of the
         // hydrocarbon gas.
         auto& fs = asImp_().fluidState_;
         fs.setSaturation(gasPhaseIdx, hydrocarbonSaturation_);
-
-        solventMobility_ = 0.0;
 
         // apply a cut-off. Don't waste calculations if no solvent
         if (solventSaturation().value() < cutOff)
@@ -948,9 +971,9 @@ public:
             //oil is the reference phase for pressure
             const auto linearizationType = elemCtx.linearizationType();
             if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
-                pgMisc = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, linearizationType);
+                pgMisc = priVars.makeEvaluation(Indices::activePressureSwitchIdx(), timeIdx, linearizationType);
             else {
-                const Evaluation& po = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, linearizationType);
+                const Evaluation& po = priVars.makeEvaluation(Indices::activePressureSwitchIdx(), timeIdx, linearizationType);
                 pgMisc = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
             }
 
@@ -1036,6 +1059,10 @@ public:
                            unsigned scvIdx,
                            unsigned timeIdx)
     {
+#warning set all members to zero before return?
+        if (!Indices::solventIsActive())
+            return;
+
         const auto& iq = asImp_();
         const auto& fs = iq.fluidState();
         const auto& solventPvt = SolventModule::solventPvt();
@@ -1082,6 +1109,9 @@ private:
                              unsigned scvIdx,
                              unsigned timeIdx)
     {
+        if (!Indices::solventIsActive())
+            return;
+
         if (!SolventModule::isMiscible())
             return;
 
@@ -1320,6 +1350,7 @@ class BlackOilSolventExtensiveQuantities
     using ExtensiveQuantities = GetPropType<TypeTag, Properties::ExtensiveQuantities>;
     using FluidSystem = GetPropType<TypeTag, Properties::FluidSystem>;
     using GridView = GetPropType<TypeTag, Properties::GridView>;
+    using Indices = GetPropType<TypeTag, Properties::Indices>;
 
     using Toolbox = Opm::MathToolbox<Evaluation>;
 
@@ -1340,6 +1371,9 @@ public:
                               unsigned scvfIdx,
                               unsigned timeIdx)
     {
+        if (!Indices::solventIsActive())
+            return;
+
         const auto& gradCalc = elemCtx.gradientCalculator();
         Opm::PressureCallback<TypeTag> pressureCallback(elemCtx);
 
@@ -1443,6 +1477,9 @@ public:
                                unsigned scvfIdx,
                                unsigned timeIdx)
     {
+        if (!Indices::solventIsActive())
+            return;
+
         const ExtensiveQuantities& extQuants = asImp_();
 
         unsigned interiorDofIdx = extQuants.interiorIndex();

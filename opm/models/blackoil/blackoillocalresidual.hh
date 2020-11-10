@@ -68,13 +68,6 @@ class BlackOilLocalResidual : public GetPropType<TypeTag, Properties::DiscLocalR
     enum { gasCompIdx = FluidSystem::gasCompIdx };
     enum { oilCompIdx = FluidSystem::oilCompIdx };
     enum { waterCompIdx = FluidSystem::waterCompIdx };
-    enum { compositionSwitchIdx = Indices::compositionSwitchIdx };
-
-    static const bool waterEnabled = Indices::waterEnabled;
-    static const bool gasEnabled = Indices::gasEnabled;
-    static const bool oilEnabled = Indices::oilEnabled;
-    static const bool compositionSwitchEnabled = (compositionSwitchIdx >= 0);
-
     static constexpr bool blackoilConserveSurfaceVolume = getPropValue<TypeTag, Properties::BlackoilConserveSurfaceVolume>();
     static constexpr bool enableEnergy = getPropValue<TypeTag, Properties::EnableEnergy>();
 
@@ -103,13 +96,13 @@ public:
 
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!FluidSystem::phaseIsActive(phaseIdx)) {
-                if (Indices::numPhases == 3) { // add trivial equation for the pseudo phase
-                    unsigned activeCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
-                    if (timeIdx == 0)
-                        storage[conti0EqIdx + activeCompIdx] = Opm::variable<LhsEval>(0.0, conti0EqIdx + activeCompIdx);
-                    else
-                        storage[conti0EqIdx + activeCompIdx] = 0.0;
-                }
+//                if (Indices::numPhases == 3) { // add trivial equation for the pseudo phase
+//                    unsigned activeCompIdx = Indices::canonicalToActiveComponentIndex(FluidSystem::solventComponentIndex(phaseIdx));
+//                    if (timeIdx == 0)
+//                        storage[conti0EqIdx + activeCompIdx] = Opm::variable<LhsEval>(0.0, conti0EqIdx + activeCompIdx);
+//                    else
+//                        storage[conti0EqIdx + activeCompIdx] = 0.0;
+//                }
                 continue;
             }
 
@@ -282,19 +275,19 @@ public:
         // not all phases are necessarily enabled. (we here assume that if a fluid phase
         // is disabled, its respective "main" component is not considered as well.)
 
-        if (waterEnabled) {
+        if (Indices::waterIsActive()) {
             unsigned activeWaterCompIdx = Indices::canonicalToActiveComponentIndex(waterCompIdx);
             container[conti0EqIdx + activeWaterCompIdx] *=
                 FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
         }
 
-        if (gasEnabled) {
+        if (Indices::gasIsActive()) {
             unsigned activeGasCompIdx = Indices::canonicalToActiveComponentIndex(gasCompIdx);
             container[conti0EqIdx + activeGasCompIdx] *=
                 FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
         }
 
-        if (oilEnabled) {
+        if (Indices::oilIsActive()) {
             unsigned activeOilCompIdx = Indices::canonicalToActiveComponentIndex(oilCompIdx);
             container[conti0EqIdx + activeOilCompIdx] *=
                 FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);

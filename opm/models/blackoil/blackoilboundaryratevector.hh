@@ -161,7 +161,7 @@ public:
             }
         }
 
-        if (enableSolvent) {
+        if (Indices::solventIsActive()) {
             (*this)[Indices::contiSolventEqIdx] = extQuants.solventVolumeFlux();
             if (blackoilConserveSurfaceVolume)
                 (*this)[Indices::contiSolventEqIdx] *= insideIntQuants.solventInverseFormationVolumeFactor();
