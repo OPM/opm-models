@@ -62,6 +62,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilmodel.hh
+             opm/models/blackoil/blackoildiffusionmodule.hh
              opm/models/blackoil/blackoilextensivequantities.hh
              opm/models/blackoil/blackoilintensivequantities.hh
              opm/models/blackoil/blackoildarcyfluxmodule.hh
