@@ -17,7 +17,7 @@
 # Mandatory call to project
 project(opm-models C CXX)
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.10)
 
 # add the current projects cmake module directory to the search
 # path. This is not required anymore once support for federated builds
