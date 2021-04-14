@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 9), cmake,
  libdune-localfunctions-dev (>= 2.6.0), libopm-material-dev,
 # Build-Depends-Indep: # broken on precise pbuilder
  doxygen, texlive-latex-extra, texlive-latex-recommended, ghostscript,
- libboost-system-dev, libboost-date-time-dev,
+ libboost-system-dev, libboost-date-time-dev, libpython3-dev,
  libboost-test-dev, libsuperlu3-dev (>= 3.0) | libsuperlu-dev (>= 4.3),
  gfortran, libsuitesparse-dev, zlib1g-dev, libscotchmetis-dev, libscotchparmetis-dev,
  libopm-common-dev, libopm-grid-dev, libtrilinos-zoltan-dev
