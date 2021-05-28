@@ -1081,10 +1081,17 @@ public:
             const Evaluation viscosityWaterEffective = pow(viscosityMixture, plymixparToddLongstaff) * pow(muWater, 1.0 - plymixparToddLongstaff);
 
             const Evaluation cbar = polymerConcentration_ / cmax;
+            const Evaluation invMixtureViscosity = ((1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective);
+
             // waterViscosity / effectiveWaterViscosity
-            waterViscosityCorrection_ = muWater * ((1.0 - cbar) / viscosityWaterEffective + cbar / viscosityPolymerEffective);
+            waterViscosityCorrection_ = muWater * invMixtureViscosity;
             // effectiveWaterViscosity / effectivePolymerViscosity
             polymerViscosityCorrection_ =  (muWater / waterViscosityCorrection_) / viscosityPolymerEffective;
+
+            // Update output parameters that are relevant for the ECLIPSE model:
+            epvis_ = viscosityPolymerEffective;
+            ewv_pol_ = viscosityWaterEffective;
+            emvis_ = 1.0 / invMixtureViscosity;
         }
         else { // based on PLYVMH
             const auto& plyvmhCoefficients = PolymerModule::plyvmhCoefficients(elemCtx, dofIdx, timeIdx);
@@ -1137,19 +1144,49 @@ public:
     const Evaluation& waterViscosityCorrection() const
     { return waterViscosityCorrection_; }
 
+    const Evaluation& epvis() const
+    {
+    if (enablePolymerMolarWeight){
+        throw std::logic_error("epvis() is only available for the ECLIPSE-type polymer model.");
+    }
+
+    return epvis_;
+    }
+
+    const Evaluation& emvis() const
+    {
+    if (enablePolymerMolarWeight){
+        throw std::logic_error("emvis() is only available for the ECLIPSE-type polymer model.");
+    }
+
+    return emvis_;
+    }
+
+    const Evaluation& ewv_pol() const
+    {
+    if (enablePolymerMolarWeight){
+        throw std::logic_error("ewvpol() is only available for the ECLIPSE-type polymer model.");
+    }
+
+    return ewv_pol_;
+    }
+
 
 protected:
     Implementation& asImp_()
     { return *static_cast<Implementation*>(this); }
 
     Evaluation polymerConcentration_;
-    // polymer molecular weight
     Evaluation polymerMoleWeight_;
     Scalar polymerDeadPoreVolume_;
     Scalar polymerRockDensity_;
     Evaluation polymerAdsorption_;
     Evaluation polymerViscosityCorrection_;
     Evaluation waterViscosityCorrection_;
+
+    Evaluation emvis_;
+    Evaluation epvis_;
+    Evaluation ewv_pol_;
 
 
 };
@@ -1187,6 +1224,16 @@ public:
 
     const Evaluation& waterViscosityCorrection() const
     { throw std::runtime_error("waterViscosityCorrection() called but polymers are disabled"); }
+
+    const Evaluation& emvis() const
+    { throw std::runtime_error("emvis() called but polymers are disabled"); }
+
+    const Evaluation& epvis() const
+    { throw std::runtime_error("epvis() called but polymers are disabled"); }
+
+    const Evaluation& ewv_pol() const
+    { throw std::runtime_error("ewv_pol() called but polymers are disabled"); }
+
 };
 
 
