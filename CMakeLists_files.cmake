@@ -225,6 +225,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/utils/signum.hh
              opm/models/utils/genericguard.hh
              opm/models/utils/basicproperties.hh
+             opm/simulators/linalg/ilufirstelement.hh
              opm/simulators/linalg/parallelistlbackend.hh
              opm/simulators/linalg/weightedresidreductioncriterion.hh
              opm/simulators/linalg/vertexborderlistfromgrid.hh
