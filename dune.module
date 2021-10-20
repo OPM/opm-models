@@ -10,4 +10,4 @@ Url: http://opm-project.org
 MaintainerName: The Open Porous Media Project
 Maintainer: opm@opm-project.org
 Depends: dune-grid (>= 2.6) dune-istl  (>= 2.6) opm-material
-Suggests: dune-localfunctions (>= 2.6) dune-fem  (>= 2.6) dune-alugrid (>= 2.6)
+Suggests: dune-localfunctions (>= 2.6) dune-fem  (>= 2.6) dune-alugrid (>= 2.6)  opm-grid
