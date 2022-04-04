@@ -62,7 +62,7 @@ class FvBaseElementContext
 
     struct DofStore_ {
         IntensiveQuantities intensiveQuantities[timeDiscHistorySize];
-        PrimaryVariables priVars[timeDiscHistorySize];
+        const PrimaryVariables* priVars[timeDiscHistorySize];
         const IntensiveQuantities *thermodynamicHint[timeDiscHistorySize];
     };
     using DofVarsVector = std::vector<DofStore_>;
@@ -449,18 +449,10 @@ public:
      * \param timeIdx The index of the solution vector used by the
      *                time discretization.
      */
-    PrimaryVariables& primaryVars(unsigned dofIdx, unsigned timeIdx)
-    {
-        assert(dofIdx < numDof(timeIdx));
-        return dofVars_[dofIdx].priVars[timeIdx];
-    }
-    /*!
-     * \copydoc primaryVars()
-     */
     const PrimaryVariables& primaryVars(unsigned dofIdx, unsigned timeIdx) const
     {
         assert(dofIdx < numDof(timeIdx));
-        return dofVars_[dofIdx].priVars[timeIdx];
+        return *dofVars_[dofIdx].priVars[timeIdx];
     }
 
     /*!
@@ -491,7 +483,7 @@ public:
         assert(dofIdx < numDof(/*timeIdx=*/0));
 
         intensiveQuantitiesStashed_ = dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0];
-        priVarsStashed_ = dofVars_[dofIdx].priVars[/*timeIdx=*/0];
+        priVarsStashed_ = *dofVars_[dofIdx].priVars[/*timeIdx=*/0];
         stashedDofIdx_ = static_cast<int>(dofIdx);
     }
 
@@ -502,7 +494,7 @@ public:
      */
     void restoreIntensiveQuantities(unsigned dofIdx)
     {
-        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = priVarsStashed_;
+        dofVars_[dofIdx].priVars[/*timeIdx=*/0] = &priVarsStashed_;
         dofVars_[dofIdx].intensiveQuantities[/*timeIdx=*/0] = intensiveQuantitiesStashed_;
         stashedDofIdx_ = -1;
     }
@@ -562,7 +554,7 @@ protected:
         for (unsigned dofIdx = 0; dofIdx < numDof; dofIdx++) {
             unsigned globalIdx = globalSpaceIndex(dofIdx, timeIdx);
             const PrimaryVariables& dofSol = globalSol[globalIdx];
-            dofVars_[dofIdx].priVars[timeIdx] = dofSol;
+            dofVars_[dofIdx].priVars[timeIdx] = &dofSol;
 
             dofVars_[dofIdx].thermodynamicHint[timeIdx] =
                 model().thermodynamicHint(globalIdx, timeIdx);
@@ -588,7 +580,7 @@ protected:
                                    "for the most-recent substep (i.e. time index 0) are available!");
 #endif
 
-        dofVars_[dofIdx].priVars[timeIdx] = priVars;
+        dofVars_[dofIdx].priVars[timeIdx] = &priVars;
         dofVars_[dofIdx].intensiveQuantities[timeIdx].update(/*context=*/asImp_(), dofIdx, timeIdx);
     }
 
