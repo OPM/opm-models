@@ -272,9 +272,6 @@ template<class TypeTag >
 class BlackOilModel
     : public MultiPhaseBaseModel<TypeTag>
 {
-public:
-    using LocalResidual = GetPropType<TypeTag, Properties::LocalResidual>;
-private:
     using Implementation = GetPropType<TypeTag, Properties::Model>;
     using ParentType = MultiPhaseBaseModel<TypeTag>;
 
@@ -302,6 +299,9 @@ private:
     using MICPModule = BlackOilMICPModule<TypeTag>;
 
 public:
+
+    using LocalResidual = GetPropType<TypeTag, Properties::LocalResidual>;
+
     BlackOilModel(Simulator& simulator)
         : ParentType(simulator)
     {}
