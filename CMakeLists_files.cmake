@@ -71,6 +71,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilfoammodules.hh
              opm/models/blackoil/blackoilindices.hh
              opm/models/blackoil/blackoillocalresidual.hh
+             opm/models/blackoil/blackoillocalresidualtpfa.hh
              opm/models/blackoil/blackoilnewtonmethod.hh
              opm/models/blackoil/blackoilonephaseindices.hh
              opm/models/blackoil/blackoilsolventmodules.hh
@@ -122,6 +123,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/discretization/common/fvbaseproperties.hh
              opm/models/discretization/common/fvbaseextensivequantities.hh
              opm/models/discretization/common/fvbaselinearizer.hh
+             opm/models/discretization/common/tpfalinearizer.hh
              opm/models/discretization/common/restrictprolong.hh
              opm/models/discretization/common/fvbasediscretization.hh
              opm/models/discretization/common/fvbasegradientcalculator.hh
