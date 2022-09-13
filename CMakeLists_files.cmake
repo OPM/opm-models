@@ -76,6 +76,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilonephaseindices.hh
              opm/models/blackoil/blackoilsolventmodules.hh
              opm/models/blackoil/blackoilextbomodules.hh
+             opm/models/blackoil/blackoilextboparams.hh
              opm/models/blackoil/blackoilproperties.hh
              opm/models/blackoil/blackoilprimaryvariables.hh
              opm/models/blackoil/blackoilproblem.hh
