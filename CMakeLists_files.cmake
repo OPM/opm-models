@@ -70,6 +70,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilbrinemodules.hh
              opm/models/blackoil/blackoilbrineparams.hh
              opm/models/blackoil/blackoilfoammodules.hh
+             opm/models/blackoil/blackoilfoamparams.hh
              opm/models/blackoil/blackoilindices.hh
              opm/models/blackoil/blackoillocalresidual.hh
              opm/models/blackoil/blackoillocalresidualtpfa.hh
