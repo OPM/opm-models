@@ -83,9 +83,10 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilproblem.hh
              opm/models/blackoil/blackoilenergymodules.hh
              opm/models/blackoil/blackoiltwophaseindices.hh
-             opm/models/blackoil/blackoilpolymermodules.hh
              opm/models/blackoil/blackoilmicpmodules.hh
              opm/models/blackoil/blackoilmicpparams.hh
+             opm/models/blackoil/blackoilpolymermodules.hh
+             opm/models/blackoil/blackoilpolymerparams.hh
              opm/models/blackoil/blackoilboundaryratevector.hh
              opm/models/common/multiphasebaseproperties.hh
              opm/models/common/multiphasebasemodel.hh
