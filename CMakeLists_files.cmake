@@ -101,6 +101,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/common/darcyfluxmodule.hh
              opm/models/common/transfluxmodule.hh
              opm/models/common/energymodule.hh
+             opm/models/common/directionalmobility.hh
              opm/models/discretefracture/discretefractureproblem.hh
              opm/models/discretefracture/discretefractureprimaryvariables.hh
              opm/models/discretefracture/discretefractureproperties.hh
