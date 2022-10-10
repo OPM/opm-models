@@ -43,6 +43,27 @@
 #include <opm/material/fluidsystems/BlackOilFluidSystem.hpp>
 #include <opm/material/common/Valgrind.hpp>
 
+namespace Opm::Properties {
+
+    //namespace TTag {
+    //struct FlowIstlSolverParams {};
+    //}
+    template<class TypeTag, class MyTypeTag>
+        struct PressureScale {
+        // using type = UndefinedProperty;
+        using type = GetPropType<TypeTag, Scalar>;
+        static constexpr type value = 1.0;
+    };
+    // template<class TypeTag>
+    // struct PressureScale<TypeTag, TTag::FlowIstlSolverParams> {
+    //     using type = GetPropType<TypeTag, Scalar>;
+    //     static constexpr type value = 1e-2;
+    // }
+    //};
+
+}
+
+
 namespace Opm {
 template <class TypeTag, bool enableSolvent>
 class BlackOilSolventModule;
@@ -56,6 +77,8 @@ class BlackOilPolymerModule;
 template <class TypeTag, bool enableBrine>
 class BlackOilBrineModule;
 
+
+  
 /*!
  * \ingroup BlackOilModel
  *
@@ -143,6 +166,7 @@ public:
     {
         Valgrind::SetUndefined(*this);
         pvtRegionIdx_ = 0;
+        //pressureScale_ = 1.0;
     }
 
     /*!
@@ -153,7 +177,7 @@ public:
     {
         Valgrind::SetUndefined(primaryVarsMeaning_);
         pvtRegionIdx_ = 0;
-        pressureScale_ = 1.0;
+        //pressureScale_ = 1.0;
     }
 
     /*!
@@ -170,11 +194,27 @@ public:
      * file format mandates them.
      */
 
+    //template <class TypeTag>                                                          
+    static void init()                                                                       
+    {                                                                                 
+        // TODO: these parameters have undocumented non-trivial dependencies          
+        pressureScale_ = EWOMS_GET_PARAM(TypeTag, double, PressureScale);
+    }
+    //template <class TypeTag>
+    static void registerParameters()
+    {
+        EWOMS_REGISTER_PARAM(TypeTag, double, PressureScale, "Scaling of pressure primary variable");
+    }
+    
+    void setPressureScale(Scalar val){
+        pressureScale_ = val;
+    }
+    
     Evaluation makeEvaluation(unsigned varIdx, unsigned timeIdx, LinearizationType linearizationType = LinearizationType()) const
     {
-        double scale = 1;
+        Scalar scale = 1.0;
         if(varIdx == pressureSwitchIdx){
-            scale = pressureScale_;
+            scale = this->pressureScale_;
         }
         if (std::is_same<Evaluation, Scalar>::value)
             return (*this)[varIdx]*scale; // finite differences
@@ -1113,10 +1153,11 @@ private:
     PrimaryVarsMeaning primaryVarsMeaning_;
     PrimaryVarsMeaningBrine primaryVarsMeaningBrine_;
     unsigned short pvtRegionIdx_;
-    Scalar pressureScale_;
+    static inline Scalar pressureScale_ = 1.0;
 };
 
-
+    //template <class TypeTag>
+    //GetPropType<TypeTag, Properties::Scalar> BlackOilPrimaryVariables<TypeTag> = 1.0;
 } // namespace Opm
 
 #endif
