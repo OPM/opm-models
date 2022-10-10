@@ -558,7 +558,7 @@ public:
                                                                                       pg);
 
                 setPrimaryVarsMeaning(Rvw_pg_Rv);
-                this->setScaledPressure(pg);
+                this->setScaledPressure_(pg);
                 (*this)[Indices::waterSaturationIdx] = RvwSat; //primary variable becomes Rvw
                 if constexpr (compositionSwitchEnabled) {
                     Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
@@ -623,7 +623,7 @@ public:
                 // we start at the Rv value that corresponds to that of oil-saturated
                 // hydrocarbon gas
                 setPrimaryVarsMeaning(Sw_pg_Rv);
-                this->setScaledPressure(pg);
+                this->setScaledPressure_(pg);
                 if constexpr (compositionSwitchEnabled) {
                     Scalar T = asImp_().temperature_();
                     Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
@@ -717,7 +717,7 @@ public:
                 computeCapillaryPressures_(pC, /*So=*/ 0.0, Sg + solventSaturation_(), /*Sw=*/ 0.0, matParams);
                 pg = po + (pC[gasPhaseIdx] - pC[oilPhaseIdx]);
                 setPrimaryVarsMeaning(Rvw_pg_Rv);
-                this->setScaledPressure(pg);
+                this->setScaledPressure_(pg);
                 if constexpr (compositionSwitchEnabled) {
                     Scalar SoMax = problem.maxOilSaturation(globalDofIdx);
                     Scalar RvMax = problem.maxOilVaporizationFactor(/*timeIdx=*/0, globalDofIdx);
@@ -778,7 +778,7 @@ public:
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
 
                 setPrimaryVarsMeaning(Rvw_po_Sg);
-                this->setScaledPressure(po);
+                this->setScaledPressure_(po);
                 (*this)[Indices::compositionSwitchIdx] = 1.0; // hydrocarbon gas saturation
 
                 return true;
@@ -811,7 +811,7 @@ public:
                 if constexpr (waterEnabled)
                     (*this)[Indices::waterSaturationIdx] = 1.0;
 
-                this->setScaledPressure(po);
+                this->setScaledPressure_(po);
                 (*this)[Indices::compositionSwitchIdx] = 0.0; // hydrocarbon gas saturation
 
                 return true;
@@ -858,7 +858,7 @@ public:
                 Scalar po = pg + (pC[oilPhaseIdx] - pC[gasPhaseIdx]);
 
                 setPrimaryVarsMeaning(Sw_po_Sg);
-                this->setScaledPressure(po);
+                this->setScaledPressure_(po);
                 (*this)[Indices::compositionSwitchIdx] = Sg; // hydrocarbon gas saturation
 
                 return true;
