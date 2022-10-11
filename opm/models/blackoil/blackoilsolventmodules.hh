@@ -904,7 +904,7 @@ private:
         const auto& linearizationType = elemCtx.linearizationType();
         unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(scvIdx, timeIdx);
         const auto& problem = elemCtx.problem();
-        this->solventPreSatFuncUpdate_(problem,priVars,linearizationType,globalSpaceIdx);
+        this->effectiveProperties(problem,priVars,linearizationType,globalSpaceIdx);
     }
     void effectiveProperties(const Problem& problem,
                              const PrimaryVariables& priVars,
@@ -925,7 +925,7 @@ private:
         const auto& params_ = SolventModule::getParams();
         // Compute effective saturations
         const auto& sorwmis = params_.sorwmis_[miscnumRegionIdx];//SolventModule::sorwmis(elemCtx, scvIdx, timeIdx);
-        const auto& sgcwmis = params_.sgrwmis_[miscnumRegionIdx];//SolventModule::sgcwmis(elemCtx, scvIdx, timeIdx);
+        const auto& sgcwmis = params_.sgcwmis_[miscnumRegionIdx];//SolventModule::sgcwmis(elemCtx, scvIdx, timeIdx);
         const Evaluation& sw = fs.saturation(waterPhaseIdx);
 
         const Evaluation zero = 0.0;
