@@ -159,14 +159,14 @@ public:
     /*!
      * \copydoc IntensiveQuantities::update
      */
-    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
-    {
-        ParentType::update(elemCtx, dofIdx, timeIdx);
-
-        const auto& problem = elemCtx.problem();
-        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
-        const auto& linearizationType = problem.model().linearizer().getLinearizationType();
-        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+    
+    //problem and global index is to avoid to many input, the variables should
+    // maybe bee only for this index
+    void updateIndexBased(const Problem& problem,
+                          const PrimaryVariables& priVars,
+                          const LinearizationType linearizationType,
+                          const unsigned globalSpaceIdx,
+                          const unsigned timeIdx){
         Scalar RvMax = FluidSystem::enableVaporizedOil()
             ? problem.maxOilVaporizationFactor(timeIdx, globalSpaceIdx)
             : 0.0;
@@ -174,12 +174,12 @@ public:
             ? problem.maxGasDissolutionFactor(timeIdx, globalSpaceIdx)
             : 0.0;
 
-        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx);
-
+        
+        // keep this to be able to call function standalone for blackoil
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
         fluidState_.setPvtRegionIndex(pvtRegionIdx);
 
-        asImp_().updateSaltConcentration_(elemCtx, dofIdx, timeIdx);
+        
 
         // extract the water and the gas saturations for convenience
         Evaluation Sw = 0.0;
@@ -240,8 +240,12 @@ public:
         if (FluidSystem::phaseIsActive(oilPhaseIdx))
             fluidState_.setSaturation(oilPhaseIdx, So);
 
-        asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-
+        //asImp_().solventPreSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().solventPreSatFuncUpdate_(problem,
+                                          priVars,
+                                          linearizationType,
+                                          globalSpaceIdx,
+                                          timeIdx);
         // now we compute all phase pressures
         std::array<Evaluation, numPhases> pC;
         const auto& materialParams = problem.materialLawParams(globalSpaceIdx);
@@ -264,10 +268,18 @@ public:
         }
 
         // update the Saturation functions for the blackoil solvent module.
-        asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
-
+        //asImp_().solventPostSatFuncUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().solventPostSatFuncUpdate_(problem,
+                                           priVars,
+                                           linearizationType,
+                                           globalSpaceIdx,
+                                           timeIdx);
+        
+        
+        
         // update extBO parameters
-        asImp_().zFractionUpdate_(elemCtx, dofIdx, timeIdx);
+        //asImp_().zFractionUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().zFractionUpdate_(priVars,timeIdx);
 
         Evaluation SoMax = 0.0;
         if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
@@ -478,7 +490,8 @@ public:
         }
 
         // retrieve the porosity from the problem
-        referencePorosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
+        //referencePorosity_ = problem.porosity(elemCtx, dofIdx, timeIdx);
+        referencePorosity_ = problem.porosity(globalSpaceIdx, timeIdx);
         porosity_ = referencePorosity_;
 
         // the porosity must be modified by the compressibility of the
@@ -515,22 +528,8 @@ public:
 
         rockCompTransMultiplier_ = problem.template rockCompTransMultiplier<Evaluation>(*this, globalSpaceIdx);
 
-        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().zPvtUpdate_();
-        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
-        asImp_().foamPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().MICPPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
-        asImp_().saltPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
-
-        // update the quantities which are required by the chosen
-        // velocity model
-        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
-
-        // update the diffusion specific quantities of the intensive quantities
-        DiffusionIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
-
-#ifndef NDEBUG
+    
+    #ifndef NDEBUG
         // some safety checks in debug mode
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             if (!FluidSystem::phaseIsActive(phaseIdx))
@@ -546,7 +545,60 @@ public:
         assert(isfinite(fluidState_.Rv()));
 #endif
     }
+    void update(const Problem& problem,
+                const PrimaryVariables& priVars,
+                const LinearizationType linearizationType,
+                const unsigned globalSpaceIdx,
+                const unsigned timeIdx){
+        // TODO: static assert that none of the not handled modules are present
+         this->updateIndexBased(problem,
+                                priVars,
+                                linearizationType,
+                                globalSpaceIdx,
+                                timeIdx);
 
+    }
+
+    void update(const ElementContext& elemCtx, unsigned dofIdx, unsigned timeIdx)
+    {
+        ParentType::update(elemCtx, dofIdx, timeIdx);
+        asImp_().updateTemperature_(elemCtx, dofIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
+        const auto& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        unsigned pvtRegionIdx = priVars.pvtRegionIndex();
+        fluidState_.setPvtRegionIndex(pvtRegionIdx);
+
+        asImp_().updateSaltConcentration_(elemCtx, dofIdx, timeIdx);
+
+        
+        const auto& linearizationType = elemCtx.linearizationType();
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+        this->updateIndexBased(problem, priVars,linearizationType,globalSpaceIdx, timeIdx);
+        asImp_().solventPvtUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().zPvtUpdate_();
+        asImp_().polymerPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
+        // redo for now when energy is included with tpfa linearizer it can probably be moved
+        typename FluidSystem::template ParameterCache<Evaluation> paramCache;
+        paramCache.setRegionIndex(pvtRegionIdx);
+        if (FluidSystem::phaseIsActive(FluidSystem::oilPhaseIdx)) {
+            Evaluation SoMax = max(fluidState_.saturation(oilPhaseIdx),
+                        problem.maxOilSaturation(globalSpaceIdx));
+            paramCache.setMaxOilSat(SoMax);
+        }
+        paramCache.updateAll(fluidState_);
+        asImp_().updateEnergyQuantities_(elemCtx, dofIdx, timeIdx, paramCache);
+        asImp_().foamPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().MICPPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
+        asImp_().saltPropertiesUpdate_(elemCtx, dofIdx, timeIdx);
+
+        // update the quantities which are required by the chosen
+        // velocity model
+        FluxIntensiveQuantities::update_(elemCtx, dofIdx, timeIdx);
+
+        // update the diffusion specific quantities of the intensive quantities
+        DiffusionIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
+    
+    }
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::fluidState
      */
