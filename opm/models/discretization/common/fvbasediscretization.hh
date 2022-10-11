@@ -765,10 +765,13 @@ public:
 
     void invalidateAndUpdateIntensiveQuantities(unsigned timeIdx) const
     {
+        // bouth linearizer and intensive quantites need the global index infrastructure
+        inline constexpr bool is_tpfa = is_same<Linearizer, TpfaLinearizer<TypeTag> >::value;
+        if( not(is_tmpfa) ){
         invalidateIntensiveQuantitiesCache(timeIdx);
 
         // loop over all elements...
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);        
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -780,6 +783,21 @@ public:
                 elemCtx.updatePrimaryStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
             }
+        }
+        } else {
+            size_t numGridDof = primaryVars.size();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+                const auto& primaryVar = primaryVars[dofIdx];
+                auto& intquant = intensiveQuantityCache_[timeIdx][dofIdx];
+                intquant.update(problem, primaryVar, dofIdx, timeIdx);
+            }
+
+            std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                      intensiveQuantityCacheUpToDate_[timeIdx].end(),
+                      /*value=*/true);
         }
     }
 
