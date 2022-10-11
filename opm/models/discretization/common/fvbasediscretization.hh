@@ -496,6 +496,7 @@ public:
         IntensiveQuantities::registerParameters();
         ExtensiveQuantities::registerParameters();
         NewtonMethod::registerParameters();
+        Linearizer::registerParameters();
 
         // register runtime parameters of the output modules
         VtkPrimaryVarsModule<TypeTag>::registerParameters();
