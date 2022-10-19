@@ -155,19 +155,6 @@ struct NewtonMaxIterations<TypeTag, TTag::NewtonMethod> { static constexpr int v
 } // namespace Opm::Properties
 
 namespace Opm {
-namespace detail
-{
-inline auto getMPIHelperCommunicator()
-{
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 7)
-    return Dune::MPIHelper::getCommunicator();
-#else
-    static Dune::MPIHelper::MPICommunicator comm;
-    return comm;
-#endif
-}
-}
-
 /*!
  * \ingroup Newton
  * \brief The multi-dimensional Newton method.
@@ -194,18 +181,14 @@ class NewtonMethod
     using ConvergenceWriter = GetPropType<TypeTag, Properties::NewtonConvergenceWriter>;
 
     using Communicator = typename Dune::MPIHelper::MPICommunicator;
-#if DUNE_VERSION_NEWER(DUNE_COMMON, 2, 7)
-    using CollectiveCommunication = typename Dune::Communication<typename Dune::MPIHelper::MPICommunicator>;
-#else
     using CollectiveCommunication = Dune::CollectiveCommunication<Communicator>;
-#endif
 
 public:
     NewtonMethod(Simulator& simulator)
         : simulator_(simulator)
         , endIterMsgStream_(std::ostringstream::out)
         , linearSolver_(simulator)
-        , comm_(detail::getMPIHelperCommunicator())
+        , comm_(Dune::MPIHelper::getCommunicator())
         , convergenceWriter_(asImp_())
     {
         lastError_ = 1e100;
