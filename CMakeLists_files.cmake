@@ -185,7 +185,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/io/vtkblackoilenergymodule.hh
              opm/models/io/baseoutputmodule.hh
              opm/models/io/vtkblackoilpolymermodule.hh
-						 opm/models/io/vtkblackoilmicpmodule.hh
+             opm/models/io/vtkblackoilmicpmodule.hh
              opm/models/ncp/ncpmodel.hh
              opm/models/ncp/ncpindices.hh
              opm/models/ncp/ncpextensivequantities.hh
@@ -198,6 +198,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/ncp/ncpboundaryratevector.hh
              opm/models/nonlinear/nullconvergencewriter.hh
              opm/models/nonlinear/newtonmethod.hh
+             opm/models/nonlinear/newtonmethodproperties.hh
              opm/models/parallel/mpiutil.hh
              opm/models/parallel/tasklets.hh
              opm/models/parallel/threadmanager.hh
