@@ -35,6 +35,7 @@
 #include <opm/models/common/quantitycallbacks.hh>
 
 #include <opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp>
+#include <opm/utility/CopyablePtr.hpp>
 
 #if HAVE_ECL_INPUT
 #include <opm/input/eclipse/EclipseState/EclipseState.hpp>
@@ -47,6 +48,8 @@
 #include <opm/input/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/input/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #endif
+
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/material/common/Exceptions.hpp>
@@ -89,7 +92,6 @@ class BlackOilSolventModule
     static constexpr unsigned numEq = getPropValue<TypeTag, Properties::NumEq>();
     static constexpr unsigned numPhases = FluidSystem::numPhases;
     static constexpr bool blackoilConserveSurfaceVolume = getPropValue<TypeTag, Properties::BlackoilConserveSurfaceVolume>();
-
 
 public:
 #if HAVE_ECL_INPUT
@@ -669,6 +671,27 @@ class BlackOilSolventIntensiveQuantities
     static constexpr int waterPhaseIdx = FluidSystem::waterPhaseIdx;
     static constexpr double cutOff = 1e-12;
 
+    struct SolventDirectionalMobility {
+        SolventDirectionalMobility(const SolventDirectionalMobility& other)
+        : mobX_{other.mobX_}, mobY_{other.mobY_}, mobZ_{other.mobZ_} {}
+        SolventDirectionalMobility(const Evaluation& mX, const Evaluation& mY, const Evaluation& mZ)
+        : mobX_{mX}, mobY_{mY}, mobZ_{mZ} {}
+        SolventDirectionalMobility() : mobX_{0.0}, mobY_{0.0}, mobZ_{0.0} {}
+
+        Evaluation& getMob(int idx) {
+            switch(idx) {
+                case 0:
+                    return mobX_;
+                case 1:
+                    return mobY_;
+                case 2:
+                    return mobZ_;
+                default:
+                    throw std::runtime_error("Unexpected mobility array index");
+            }
+        }
+        Evaluation mobX_, mobY_, mobZ_;
+    };
 
 public:
     /*!
@@ -711,8 +734,16 @@ public:
         auto& fs = asImp_().fluidState_;
         fs.setSaturation(gasPhaseIdx, hydrocarbonSaturation_);
 
-        solventMobility_ = 0.0;
-
+        const auto& problem = elemCtx.problem();
+        auto mobilities = asImp_().getMobilityVector();
+        //if (problem.materialLawManager()->hasDirectionalRelperms()) {
+        if (mobilities.size() > 1) {
+            solventDirectionalMobilities_ = std::make_unique<SolventDirectionalMobility>();
+        }
+        auto solventMobilities = getSolventMobilities();
+        for (int i=0; i<solventMobilities.size(); i++) {
+            *solventMobilities[i] = 0.0;
+        }
         // apply a cut-off. Don't waste calculations if no solvent
         if (solventSaturation().value() < cutOff)
             return;
@@ -724,7 +755,6 @@ public:
             const Evaluation& pgImisc = fs.pressure(gasPhaseIdx);
 
             // compute capillary pressure for miscible fluid
-            const auto& problem = elemCtx.problem();
             const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
             Evaluation pgMisc = 0.0;
             std::array<Evaluation, numPhases> pC;
@@ -790,14 +820,16 @@ public:
             const Evaluation mkrgt = msfnKrsg.eval(F_totalGas, /*extrapolate=*/true) * sof2Krn.eval(oilGasSolventSat, /*extrapolate=*/true);
             const Evaluation mkro = msfnKro.eval(F_totalGas, /*extrapolate=*/true) * sof2Krn.eval(oilGasSolventSat, /*extrapolate=*/true);
 
-            Evaluation& kro = asImp_().mobility_[oilPhaseIdx];
-            Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
+            for (std::size_t i = 0; i<mobilities.size(); i++) {
+                Evaluation& kro = (*mobilities[i])[oilPhaseIdx];
+                Evaluation& krg = (*mobilities[i])[gasPhaseIdx];
 
-            // combine immiscible and miscible part of the relperm
-            krg *= (1.0 - miscibility);
-            krg += miscibility * mkrgt;
-            kro *= (1.0 - miscibility);
-            kro += miscibility * mkro;
+                // combine immiscible and miscible part of the relperm
+                krg *= (1.0 - miscibility);
+                krg += miscibility * mkrgt;
+                kro *= (1.0 - miscibility);
+                kro += miscibility * mkro;
+            }
         }
 
 
@@ -805,11 +837,11 @@ public:
         // compute the mobility of the solvent "phase" and modify the gas phase
         const auto& ssfnKrg = SolventModule::ssfnKrg(elemCtx, dofIdx, timeIdx);
         const auto& ssfnKrs = SolventModule::ssfnKrs(elemCtx, dofIdx, timeIdx);
-
-        Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
-        solventMobility_ = krg * ssfnKrs.eval(Fsolgas, /*extrapolate=*/true);
-        krg *= ssfnKrg.eval(Fhydgas, /*extrapolate=*/true);
-
+        for (std::size_t i = 0; i<mobilities.size(); i++) {
+            Evaluation& krg = (*mobilities[i])[gasPhaseIdx];
+            *solventMobilities[i] = krg * ssfnKrs.eval(Fsolgas, /*extrapolate=*/true);
+            krg *= ssfnKrg.eval(Fhydgas, /*extrapolate=*/true);
+        }
     }
 
     /*!
@@ -837,9 +869,10 @@ public:
 
         effectiveProperties(elemCtx, scvIdx, timeIdx);
 
-        solventMobility_ /= solventViscosity_;
-
-
+        auto solventMobilities = getSolventMobilities();
+        for (std::size_t i=0; i<solventMobilities.size(); i++) {
+            *solventMobilities[i] /= solventViscosity_;
+        }
     }
 
     const Evaluation& solventSaturation() const
@@ -851,9 +884,40 @@ public:
     const Evaluation& solventViscosity() const
     { return solventViscosity_; }
 
+    std::vector<Evaluation *> getSolventMobilities()
+    {
+        std::vector<Evaluation *> solventMobilities = {&solventMobility_};
+        if (solventDirectionalMobilities_) {
+            for (int i=0; i<3; i++) {
+                solventMobilities.push_back(&(solventDirectionalMobilities_->getMob(i)));
+            }
+        }
+        return solventMobilities;
+    }
+
     const Evaluation& solventMobility() const
     { return solventMobility_; }
 
+    const Evaluation& solventMobility(FaceDir::DirEnum facedir) const
+    {
+        using Dir = FaceDir::DirEnum;
+        if (solventDirectionalMobilities_) {
+            switch(facedir) {
+                case Dir::XPlus:
+                    return solventDirectionalMobilities_->mobX_;
+                case Dir::YPlus:
+                    return solventDirectionalMobilities_->mobY_;
+                case Dir::ZPlus:
+                    return solventDirectionalMobilities_->mobZ_;
+                default:
+                    throw std::runtime_error("Unexpected face direction");
+            }
+        }
+        else {
+            return solventMobility_;
+        }
+
+    }
     const Evaluation& solventInverseFormationVolumeFactor() const
     { return solventInvFormationVolumeFactor_; }
 
@@ -1039,6 +1103,7 @@ protected:
     Evaluation solventDensity_;
     Evaluation solventViscosity_;
     Evaluation solventMobility_;
+    Utility::CopyablePtr<SolventDirectionalMobility> solventDirectionalMobilities_;
     Evaluation solventInvFormationVolumeFactor_;
 
     Scalar solventRefDensity_;
@@ -1129,6 +1194,7 @@ public:
         const auto& gradCalc = elemCtx.gradientCalculator();
         PressureCallback<TypeTag> pressureCallback(elemCtx);
 
+        const auto& problem = elemCtx.problem();
         const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
         const auto& faceNormal = scvf.normal();
 
@@ -1148,8 +1214,8 @@ public:
         if (EWOMS_GET_PARAM(TypeTag, bool, EnableGravity)) {
             // estimate the gravitational acceleration at a given SCV face
             // using the arithmetic mean
-            const auto& gIn = elemCtx.problem().gravity(elemCtx, i, timeIdx);
-            const auto& gEx = elemCtx.problem().gravity(elemCtx, j, timeIdx);
+            const auto& gIn = problem.gravity(elemCtx, i, timeIdx);
+            const auto& gEx = problem.gravity(elemCtx, j, timeIdx);
 
             const auto& intQuantsIn = elemCtx.intensiveQuantities(i, timeIdx);
             const auto& intQuantsEx = elemCtx.intensiveQuantities(j, timeIdx);
@@ -1208,15 +1274,20 @@ public:
         }
 
         const auto& up = elemCtx.intensiveQuantities(solventUpstreamDofIdx_, timeIdx);
+        const auto& materialLawManager = problem.materialLawManager();
+        FaceDir::DirEnum facedir = FaceDir::DirEnum::Unknown;
+        if (materialLawManager->hasDirectionalRelperms()) {
+            facedir = scvf.faceDirFromDirId();  // direction (X, Y, or Z) of the face
+        }
 
         // this is also slightly hacky because it assumes that the derivative of the
         // flux between two DOFs only depends on the primary variables in the
         // upstream direction. For non-TPFA flux approximation schemes, this is not
         // true...
         if (solventUpstreamDofIdx_ == i)
-            solventVolumeFlux_ = solventPGradNormal*up.solventMobility();
+            solventVolumeFlux_ = solventPGradNormal*up.solventMobility(facedir);
         else
-            solventVolumeFlux_ = solventPGradNormal*scalarValue(up.solventMobility());
+            solventVolumeFlux_ = solventPGradNormal*scalarValue(up.solventMobility(facedir));
     }
 
     /*!
@@ -1230,6 +1301,7 @@ public:
                                unsigned timeIdx)
     {
         const ExtensiveQuantities& extQuants = asImp_();
+        const auto& problem = elemCtx.problem();
 
         unsigned interiorDofIdx = extQuants.interiorIndex();
         unsigned exteriorDofIdx = extQuants.exteriorIndex();
@@ -1241,12 +1313,12 @@ public:
         unsigned I = elemCtx.globalSpaceIndex(interiorDofIdx, timeIdx);
         unsigned J = elemCtx.globalSpaceIndex(exteriorDofIdx, timeIdx);
 
-        Scalar thpres = elemCtx.problem().thresholdPressure(I, J);
-        Scalar trans = elemCtx.problem().transmissibility(elemCtx, interiorDofIdx, exteriorDofIdx);
-        Scalar g = elemCtx.problem().gravity()[dimWorld - 1];
+        Scalar thpres = problem.thresholdPressure(I, J);
+        Scalar trans = problem.transmissibility(elemCtx, interiorDofIdx, exteriorDofIdx);
+        Scalar g = problem.gravity()[dimWorld - 1];
 
-        Scalar zIn = elemCtx.problem().dofCenterDepth(elemCtx, interiorDofIdx, timeIdx);
-        Scalar zEx = elemCtx.problem().dofCenterDepth(elemCtx, exteriorDofIdx, timeIdx);
+        Scalar zIn = problem.dofCenterDepth(elemCtx, interiorDofIdx, timeIdx);
+        Scalar zEx = problem.dofCenterDepth(elemCtx, exteriorDofIdx, timeIdx);
         Scalar distZ = zIn - zEx;
 
         const Evaluation& rhoIn = intQuantsIn.solventDensity();
@@ -1285,16 +1357,23 @@ public:
             return;
         }
 
-        Scalar faceArea = elemCtx.stencil(timeIdx).interiorFace(scvfIdx).area();
+        const auto& scvf = elemCtx.stencil(timeIdx).interiorFace(scvfIdx);
+        Scalar faceArea = scvf.area();
+        const auto& materialLawManager = problem.materialLawManager();
+        FaceDir::DirEnum facedir = FaceDir::DirEnum::Unknown;
+        if (materialLawManager->hasDirectionalRelperms()) {
+            facedir = scvf.faceDirFromDirId();  // direction (X, Y, or Z) of the face
+        }
+
         const IntensiveQuantities& up = elemCtx.intensiveQuantities(solventUpstreamDofIdx_, timeIdx);
         if (solventUpstreamDofIdx_ == interiorDofIdx)
             solventVolumeFlux_ =
-                up.solventMobility()
+                up.solventMobility(facedir)
                 *(-trans/faceArea)
                 *pressureDiffSolvent;
         else
             solventVolumeFlux_ =
-                scalarValue(up.solventMobility())
+                scalarValue(up.solventMobility(facedir))
                 *(-trans/faceArea)
                 *pressureDiffSolvent;
     }
