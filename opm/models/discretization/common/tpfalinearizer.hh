@@ -265,6 +265,26 @@ public:
         return linearizationType_;
     };
 
+    /*!
+     * \brief Return constant reference to the flowsInfo.
+     *
+     * (This object is only non-empty if the FLOWS keyword is true.)
+     */
+    const auto& getFlowsInfo() const{
+
+        return flowsInfo_;
+    }   
+
+    /*!
+     * \brief Return constant reference to the flresInfo.
+     *
+     * (This object is only non-empty if the FLORES keyword is true.)
+     */
+    const auto& getFlresInfo() const{
+
+        return flresInfo_;
+    }
+
     void updateDiscretizationParameters()
     {
         updateStoredTransmissibilities();
@@ -311,6 +331,9 @@ private:
     void createMatrix_()
     {
         const auto& model = model_();
+        const bool& enableFlows = simulator_().problem().eclWriter()->eclOutputModule().hasFlows();
+        const bool& enableFlres = simulator_().problem().eclWriter()->eclOutputModule().hasFlres();
+        const auto& nncOutput = simulator_().problem().eclWriter()->getOutputNnc();
         Stencil stencil(gridView_(), model_().dofMapper());
 
         // for the main model, find out the global indices of the neighboring degrees of
@@ -323,13 +346,24 @@ private:
         std::vector<NeighborInfo> loc_nbinfo;
         const auto& materialLawManager = problem_().materialLawManager();
         using FaceDirection = FaceDir::DirEnum;
+
+        std::vector<FlowInfo> loc_flinfo;
+        VectorBlock flow(0.0);
+        int nncId = nncOutput.size();
+
+        if (enableFlows)
+            flowsInfo_.reserve(numCells, 6 * numCells);
+        if (enableFlres)
+            flresInfo_.reserve(numCells, 6 * numCells);
+
         for (const auto& elem : elements(gridView_())) {
             stencil.update(elem);
 
             for (unsigned primaryDofIdx = 0; primaryDofIdx < stencil.numPrimaryDof(); ++primaryDofIdx) {
                 unsigned myIdx = stencil.globalSpaceIndex(primaryDofIdx);
                 loc_nbinfo.resize(stencil.numDof() - 1); // Do not include the primary dof in neighborInfo_
-
+                if (enableFlows || enableFlres)
+                    loc_flinfo.resize(stencil.numDof() - 1);
                 for (unsigned dofIdx = 0; dofIdx < stencil.numDof(); ++dofIdx) {
                     unsigned neighborIdx = stencil.globalSpaceIndex(dofIdx);
                     sparsityPattern[myIdx].insert(neighborIdx);
@@ -338,14 +372,32 @@ private:
                         const auto scvfIdx = dofIdx - 1;
                         const auto& scvf = stencil.interiorFace(scvfIdx);
                         const double area = scvf.area();
-                        FaceDirection dirId = FaceDirection::Unknown;
-                        if (materialLawManager->hasDirectionalRelperms()) {
+                        FaceDirection dirId = FaceDirection::XMinus; // Below, the nnc faces are identified by FaceDirection::Unknown 
+                        const auto dirId_ = scvf.dirId();
+                        const int cartMyIdx = simulator_().vanguard().cartesianIndex(myIdx);
+                        const int cartNeighborIdx = simulator_().vanguard().cartesianIndex(neighborIdx);
+                        if (materialLawManager->hasDirectionalRelperms() || dirId_ != -1) {
                             dirId = scvf.faceDirFromDirId();
                         }
                         loc_nbinfo[dofIdx - 1] = NeighborInfo{neighborIdx, trans, area, dirId};
+                        if (enableFlows || enableFlres){
+                            for (unsigned nncIdx = 0; nncIdx < nncOutput.size(); ++nncIdx) {
+                                const int ci1 = nncOutput[nncIdx].cell1;
+                                const int ci2 = nncOutput[nncIdx].cell2;
+                                if (ci1 == cartMyIdx && ci2 == cartNeighborIdx){
+                                    dirId = FaceDirection::Unknown;
+                                    --nncId; // To get right the nnc order for the output
+                                }
+                            }
+                            loc_flinfo[dofIdx - 1] = FlowInfo{dirId, flow, nncId};
+                        }
                     }
                 }
                 neighborInfo_.appendRow(loc_nbinfo.begin(), loc_nbinfo.end());
+                if (enableFlows)
+                    flowsInfo_.appendRow(loc_flinfo.begin(), loc_flinfo.end());
+                if (enableFlres)
+                    flresInfo_.appendRow(loc_flinfo.begin(), loc_flinfo.end());
                 for (unsigned bfIndex = 0; bfIndex < stencil.numBoundaryFaces(); ++bfIndex) {
                     const auto& bf = stencil.boundaryFace(bfIndex);
                     const int dir_id = bf.dirId();
@@ -415,6 +467,8 @@ private:
         const bool well_local = true;
         resetSystem_();
         unsigned numCells = model_().numTotalDof();
+        const bool& enableFlows = simulator_().problem().eclWriter()->eclOutputModule().hasFlows();
+        const bool& enableFlres = simulator_().problem().eclWriter()->eclOutputModule().hasFlres();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -423,6 +477,7 @@ private:
             VectorBlock res(0.0);
             MatrixBlock bMat(0.0);
             ADVectorBlock adres(0.0);
+            ADVectorBlock darcy(0.0);
             const IntensiveQuantities* intQuantsInP = model_().cachedIntensiveQuantities(globI, /*timeIdx*/ 0);
             if (intQuantsInP == nullptr) {
                 throw std::logic_error("Missing updated intensive quantities for cell " + std::to_string(globI));
@@ -437,15 +492,27 @@ private:
                 res = 0.0;
                 bMat = 0.0;
                 adres = 0.0;
+                darcy = 0.0;
                 const IntensiveQuantities* intQuantsExP = model_().cachedIntensiveQuantities(globJ, /*timeIdx*/ 0);
                 if (intQuantsExP == nullptr) {
                     throw std::logic_error("Missing updated intensive quantities for cell " + std::to_string(globJ) + " when assembling fluxes for cell " + std::to_string(globI));
                 }
                 const IntensiveQuantities& intQuantsEx = *intQuantsExP;
                 LocalResidual::computeFlux(
-                       adres, problem_(), globI, globJ, intQuantsIn, intQuantsEx,
+                       adres, darcy, problem_(), globI, globJ, intQuantsIn, intQuantsEx,
                            nbInfo.trans, nbInfo.faceArea, nbInfo.faceDirection);
                 adres *= nbInfo.faceArea;
+                if (enableFlows){
+                    for (unsigned phaseIdx = 0; phaseIdx < numEq; ++ phaseIdx){
+                        flowsInfo_[globI][loc].flow[phaseIdx] = adres[phaseIdx].value();
+                    }
+                }
+                if (enableFlres){
+                    darcy *= nbInfo.faceArea;
+                    for (unsigned phaseIdx = 0; phaseIdx < numEq; ++ phaseIdx){
+                        flresInfo_[globI][loc].flow[phaseIdx] = darcy[phaseIdx].value();
+                    }
+                }
                 setResAndJacobi(res, bMat, adres);
                 residual_[globI] += res;
                 jacobian_->addToBlock(globI, globI, bMat);
@@ -537,6 +604,15 @@ private:
         FaceDir::DirEnum faceDirection;
     };
     SparseTable<NeighborInfo> neighborInfo_;
+
+    struct FlowInfo
+    {
+        FaceDir::DirEnum faceDirection;
+        VectorBlock flow;
+        int nncId;
+    };
+    SparseTable<FlowInfo> flowsInfo_;
+    SparseTable<FlowInfo> flresInfo_;
 
     using ScalarFluidState = typename IntensiveQuantities::ScalarFluidState;
     struct BoundaryConditionData

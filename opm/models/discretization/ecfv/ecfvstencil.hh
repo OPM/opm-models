@@ -233,12 +233,15 @@ public:
             }
             switch(dirId_) {
                 case 0:
+                    return Dir::XMinus;
                 case 1:
                     return Dir::XPlus;
                 case 2:
+                    return Dir::YMinus;
                 case 3:
                     return Dir::YPlus;
                 case 4:
+                    return Dir::ZMinus;
                 case 5:
                     return Dir::ZPlus;
                 default:

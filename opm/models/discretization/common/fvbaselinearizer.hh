@@ -37,6 +37,8 @@
 #include <opm/models/discretization/common/baseauxiliarymodule.hh>
 
 #include <opm/material/common/Exceptions.hpp>
+#include <opm/grid/utility/SparseTable.hpp>
+#include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 #include <dune/common/version.hh>
 #include <dune/common/fvector.hh>
@@ -294,6 +296,22 @@ public:
      */
     const std::map<unsigned, Constraints>& constraintsMap() const
     { return constraintsMap_; }
+
+    /*!
+     * \brief Return constant reference to the flowsInfo.
+     *
+     * (This object it has been only implemented for the tpfalinearizer.)
+     */
+    const auto& getFlowsInfo() const
+    {return flowsInfo_;}   
+
+    /*!
+     * \brief Return constant reference to the flresInfo.
+     *
+     * (This object it has been only implemented for the tpfalinearizer.)
+     */
+    const auto& getFlresInfo() const
+    {return flresInfo_;}
 
 private:
     Simulator& simulator_()
@@ -587,6 +605,16 @@ private:
     // The constraint equations (only non-empty if the
     // EnableConstraints property is true)
     std::map<unsigned, Constraints> constraintsMap_;
+
+
+    struct FlowInfo
+    {
+        FaceDir::DirEnum faceDirection;
+        VectorBlock flow;
+        int nncId;
+    };
+    SparseTable<FlowInfo> flowsInfo_;
+    SparseTable<FlowInfo> flresInfo_;
 
     // the jacobian matrix
     std::unique_ptr<SparseMatrixAdapter> jacobian_;

@@ -195,6 +195,7 @@ public:
      * read from the extensive quantities of the element context.
      */
     static void computeFlux(RateVector& flux,
+                            RateVector& darcy,
                             const Problem& problem,
                             const unsigned globalIndexIn,
                             const unsigned globalIndexEx,
@@ -205,6 +206,7 @@ public:
                             const FaceDir::DirEnum facedir)
     {
         flux = 0.0;
+        darcy = 0.0;
         Scalar Vin = problem.model().dofTotalVolume(globalIndexIn);
         Scalar Vex = problem.model().dofTotalVolume(globalIndexEx);
 
@@ -228,6 +230,7 @@ public:
         Scalar distZ = zIn - zEx; // NB could be precalculated
 
         calculateFluxes_(flux,
+                         darcy,
                          intQuantsIn,
                          intQuantsEx,
                          Vin,
@@ -252,6 +255,7 @@ public:
         assert(timeIdx == 0);
 
         flux = 0.0;
+        RateVector darcy = 0.0;
         // need for dary flux calculation
         const auto& problem = elemCtx.problem();
         const auto& stencil = elemCtx.stencil(timeIdx);
@@ -296,6 +300,7 @@ public:
         Scalar distZ = zIn - zEx;
 
         calculateFluxes_(flux,
+                         darcy,
                          intQuantsIn,
                          intQuantsEx,
                          Vin,
@@ -310,6 +315,7 @@ public:
     }
 
     static void calculateFluxes_(RateVector& flux,
+                                 RateVector& darcy,
                                  const IntensiveQuantities& intQuantsIn,
                                  const IntensiveQuantities& intQuantsEx,
                                  const Scalar& Vin,
@@ -363,6 +369,7 @@ public:
                     darcyFlux = pressureDifference *
                        (Toolbox::value(up.mobility(phaseIdx, facedir)) * Toolbox::value(transMult) * (-trans / faceArea));
             }
+            darcy[phaseIdx]=darcyFlux.value(); // This is store for the FLORES fluxes 
 
             unsigned pvtRegionIdx = up.pvtRegionIndex();
             // if (upIdx == globalFocusDofIdx){
