@@ -33,7 +33,7 @@
 #include <opm/models/blackoil/blackoilsolventparams.hh>
 #include <opm/models/io/vtkblackoilsolventmodule.hh>
 #include <opm/models/common/quantitycallbacks.hh>
-
+#include <opm/models/discretization/common/linearizationtype.hh>
 #include <opm/material/fluidsystems/blackoilpvt/SolventPvt.hpp>
 
 #if HAVE_ECL_INPUT
@@ -605,7 +605,7 @@ public:
 
     static const TabulatedFunction& tlPMixTable(const ElementContext& elemCtx,
                                             unsigned scvIdx,
-                                            unsigned timeIdx)
+                                            unsigned timeIdx)    
     {
         unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.tlPMixTable_[miscnumRegionIdx];
@@ -618,11 +618,10 @@ public:
         unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.tlMixParamViscosity_[miscnumRegionIdx];
     }
-
+    
     static const Scalar& tlMixParamDensity(const ElementContext& elemCtx,
                                            unsigned scvIdx,
-                                           unsigned timeIdx)
-    {
+                                           unsigned timeIdx){
         unsigned miscnumRegionIdx = elemCtx.problem().miscnumRegionIndex(elemCtx, scvIdx, timeIdx);
         return params_.tlMixParamDensity_[miscnumRegionIdx];
     }
@@ -632,6 +631,10 @@ public:
         return params_.isMiscible_;
     }
 
+    static const BlackOilSolventParams<Scalar>& getParams()
+    {
+        return params_;
+    }
 private:
     static BlackOilSolventParams<Scalar> params_; // the krg(Fs) column of the SSFN table
 };
@@ -659,7 +662,8 @@ class BlackOilSolventIntensiveQuantities
     using MaterialLaw = GetPropType<TypeTag, Properties::MaterialLaw>;
     using Indices = GetPropType<TypeTag, Properties::Indices>;
     using ElementContext = GetPropType<TypeTag, Properties::ElementContext>;
-
+    using Problem = GetPropType<TypeTag, Properties::Problem>;
+    
     using SolventModule = BlackOilSolventModule<TypeTag>;
 
     enum { numPhases = getPropValue<TypeTag, Properties::NumPhases>() };
@@ -682,8 +686,22 @@ public:
                                   unsigned timeIdx)
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& linearizationType = elemCtx.linearizationType();
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
+        this->solventPreSatFuncUpdate_(problem,
+                                       priVars,
+                                       linearizationType,
+                                       globalSpaceIdx,
+                                       timeIdx);
+    }
+    void solventPreSatFuncUpdate_(const Problem& problem,
+                                  const PrimaryVariables& priVars,
+                                  const LinearizationType& linearizationType,
+                                  unsigned globalSpaceIdx,
+                                  unsigned timeIdx){        
         auto& fs = asImp_().fluidState_;
-        solventSaturation_ = priVars.makeEvaluation(solventSaturationIdx, timeIdx, elemCtx.linearizationType());
+        solventSaturation_ = priVars.makeEvaluation(solventSaturationIdx, timeIdx, linearizationType);
         hydrocarbonSaturation_ = fs.saturation(gasPhaseIdx);
 
         // apply a cut-off. Don't waste calculations if no solvent
@@ -706,8 +724,22 @@ public:
                                    unsigned dofIdx,
                                    unsigned timeIdx)
     {
+        const auto linearizationType = elemCtx.linearizationType();
+        const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+        this->solventPostSatFuncUpdate_(problem,priVars,linearizationType,globalSpaceIdx,timeIdx);
+    }
+    void solventPostSatFuncUpdate_(const Problem& problem,
+                                   const PrimaryVariables& priVars,
+                                   const LinearizationType& linearizationType,
+                                   unsigned globalSpaceIdx,
+                                   unsigned timeIdx){
         // revert the gas "saturation" of the fluid state back to the saturation of the
         // hydrocarbon gas.
+        unsigned miscnumRegionIdx = problem.miscnumRegionIndex(globalSpaceIdx);
+        unsigned satnumRegionIdx = problem.satnumRegionIndex(globalSpaceIdx);
+        const auto& params_ = SolventModule::getParams(); 
         auto& fs = asImp_().fluidState_;
         fs.setSaturation(gasPhaseIdx, hydrocarbonSaturation_);
 
@@ -720,19 +752,19 @@ public:
         // Pressure effects on capillary pressure miscibility
         if (SolventModule::isMiscible()) {
             const Evaluation& p = fs.pressure(oilPhaseIdx); // or gas pressure?
-            const Evaluation pmisc = SolventModule::pmisc(elemCtx, dofIdx, timeIdx).eval(p, /*extrapolate=*/true);
+            const Evaluation pmisc = params_.pmisc_[miscnumRegionIdx].eval(p, /*extrapolate=*/true);
             const Evaluation& pgImisc = fs.pressure(gasPhaseIdx);
 
             // compute capillary pressure for miscible fluid
-            const auto& problem = elemCtx.problem();
-            const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+            //const auto& problem = elemCtx.problem();
+            //const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
             Evaluation pgMisc = 0.0;
             std::array<Evaluation, numPhases> pC;
-            const auto& materialParams = problem.materialLawParams(elemCtx, dofIdx, timeIdx);
+            const auto& materialParams = problem.materialLawParams(globalSpaceIdx);//problem.materialLawParams(elemCtx, dofIdx, timeIdx);
             MaterialLaw::capillaryPressures(pC, materialParams, fs);
 
             //oil is the reference phase for pressure
-            const auto linearizationType = elemCtx.linearizationType();
+            //const auto linearizationType = elemCtx.linearizationType();
             if (priVars.primaryVarsMeaning() == PrimaryVariables::Sw_pg_Rv)
                 pgMisc = priVars.makeEvaluation(Indices::pressureSwitchIdx, timeIdx, linearizationType);
             else {
@@ -754,22 +786,22 @@ public:
 
         // account for miscibility of oil and solvent
         if (SolventModule::isMiscible()) {
-            const auto& misc = SolventModule::misc(elemCtx, dofIdx, timeIdx);
-            const auto& pmisc = SolventModule::pmisc(elemCtx, dofIdx, timeIdx);
+            const auto& misc = params_.misc_[miscnumRegionIdx];//SolventModule::misc(elemCtx, dofIdx, timeIdx);
+            const auto& pmisc = params_.pmisc_[miscnumRegionIdx];//SolventModule::pmisc(elemCtx, dofIdx, timeIdx);
             const Evaluation& p = fs.pressure(oilPhaseIdx); // or gas pressure?
-            const Evaluation miscibility = misc.eval(Fsolgas, /*extrapolate=*/true) * pmisc.eval(p, /*extrapolate=*/true);
+            const Evaluation miscibility = misc.eval(Fsolgas, /*extrapolate=*/true) * pmisc.eval(p, /*extrapolate=*/true);//NB already calcualted previously
 
             // TODO adjust endpoints of sn and ssg
-            unsigned cellIdx = elemCtx.globalSpaceIndex(dofIdx, timeIdx);
-            const auto& materialLawManager = elemCtx.problem().materialLawManager();
+            unsigned cellIdx = globalSpaceIdx;//elemCtx.globalSpaceIndex(dofIdx, timeIdx);
+            const auto& materialLawManager = problem.materialLawManager();
             const auto& scaledDrainageInfo =
                     materialLawManager->oilWaterScaledEpsInfoDrainage(cellIdx);
 
             const Scalar& sgcr = scaledDrainageInfo.Sgcr;
             const Scalar& sogcr = scaledDrainageInfo.Sogcr;
             const Evaluation& sw = fs.saturation(waterPhaseIdx);
-            const auto& sorwmis = SolventModule::sorwmis(elemCtx, dofIdx, timeIdx);
-            const auto& sgcwmis = SolventModule::sgcwmis(elemCtx, dofIdx, timeIdx);
+            const auto& sorwmis = params_.sorwmis_[miscnumRegionIdx];//SolventModule::sorwmis(elemCtx, dofIdx, timeIdx);
+            const auto& sgcwmis = params_.sgcwmis_[miscnumRegionIdx];//SolventModule::sgcwmis(elemCtx, dofIdx, timeIdx);
 
             Evaluation sor = miscibility * sorwmis.eval(sw,  /*extrapolate=*/true) + (1.0 - miscibility) * sogcr;
             Evaluation sgc = miscibility * sgcwmis.eval(sw,  /*extrapolate=*/true) + (1.0 - miscibility) * sgcr;
@@ -783,9 +815,9 @@ public:
                 const Evaluation gasSolventEffSat = std::max(gasSolventSat - sgc, zero);
                 F_totalGas = gasSolventEffSat / oilGasSolventEffSat;
             }
-            const auto& msfnKro = SolventModule::msfnKro(elemCtx, dofIdx, timeIdx);
-            const auto& msfnKrsg = SolventModule::msfnKrsg(elemCtx, dofIdx, timeIdx);
-            const auto& sof2Krn = SolventModule::sof2Krn(elemCtx, dofIdx, timeIdx);
+            const auto& msfnKro = params_.msfnKro_[satnumRegionIdx];// SolventModule::msfnKro(elemCtx, dofIdx, timeIdx);
+            const auto& msfnKrsg = params_.msfnKrsg_[satnumRegionIdx];//SolventModule::msfnKrsg(elemCtx, dofIdx, timeIdx);
+            const auto& sof2Krn = params_.sof2Krn_[satnumRegionIdx];//SolventModule::sof2Krn(elemCtx, dofIdx, timeIdx);
 
             const Evaluation mkrgt = msfnKrsg.eval(F_totalGas, /*extrapolate=*/true) * sof2Krn.eval(oilGasSolventSat, /*extrapolate=*/true);
             const Evaluation mkro = msfnKro.eval(F_totalGas, /*extrapolate=*/true) * sof2Krn.eval(oilGasSolventSat, /*extrapolate=*/true);
@@ -803,8 +835,8 @@ public:
 
 
         // compute the mobility of the solvent "phase" and modify the gas phase
-        const auto& ssfnKrg = SolventModule::ssfnKrg(elemCtx, dofIdx, timeIdx);
-        const auto& ssfnKrs = SolventModule::ssfnKrs(elemCtx, dofIdx, timeIdx);
+        const auto& ssfnKrg = params_.ssfnKrg_[satnumRegionIdx];//SolventModule::ssfnKrg(elemCtx, dofIdx, timeIdx);
+        const auto& ssfnKrs = params_.ssfnKrs_[satnumRegionIdx];//SolventModule::ssfnKrs(elemCtx, dofIdx, timeIdx);
 
         Evaluation& krg = asImp_().mobility_[gasPhaseIdx];
         solventMobility_ = krg * ssfnKrs.eval(Fsolgas, /*extrapolate=*/true);
@@ -868,6 +900,17 @@ private:
                              unsigned scvIdx,
                              unsigned timeIdx)
     {
+        const PrimaryVariables& priVars = elemCtx.primaryVars(scvIdx, timeIdx);
+        const auto& linearizationType = elemCtx.linearizationType();
+        unsigned globalSpaceIdx = elemCtx.globalSpaceIndex(scvIdx, timeIdx);
+        const auto& problem = elemCtx.problem();
+        this->effectiveProperties(problem,priVars,linearizationType,globalSpaceIdx);
+    }
+    void effectiveProperties(const Problem& problem,
+                             const PrimaryVariables& priVars,
+                             const LinearizationType& linearizationType,
+                             unsigned globalSpaceIdx){
+        
         if (!SolventModule::isMiscible())
             return;
 
@@ -877,10 +920,12 @@ private:
             return;
 
         auto& fs = asImp_().fluidState_;
-
+        unsigned miscnumRegionIdx = problem.miscnumRegionIndex(globalSpaceIdx);
+        unsigned satnumRegionIdx = problem.satnumRegionIndex(globalSpaceIdx);
+        const auto& params_ = SolventModule::getParams();
         // Compute effective saturations
-        const auto& sorwmis = SolventModule::sorwmis(elemCtx, scvIdx, timeIdx);
-        const auto& sgcwmis = SolventModule::sgcwmis(elemCtx, scvIdx, timeIdx);
+        const auto& sorwmis = params_.sorwmis_[miscnumRegionIdx];//SolventModule::sorwmis(elemCtx, scvIdx, timeIdx);
+        const auto& sgcwmis = params_.sgcwmis_[miscnumRegionIdx];//SolventModule::sgcwmis(elemCtx, scvIdx, timeIdx);
         const Evaluation& sw = fs.saturation(waterPhaseIdx);
 
         const Evaluation zero = 0.0;
@@ -921,8 +966,8 @@ private:
         // The pressureMixingParameter represent the miscibility of the solvent while the mixingParameterViscosity the effect of the porous media.
         // The pressureMixingParameter is not implemented in ecl100.
         const Evaluation& po = fs.pressure(oilPhaseIdx);
-        const auto& tlPMixTable = SolventModule::tlPMixTable(elemCtx, scvIdx, timeIdx);
-        const Evaluation tlMixParamMu = SolventModule::tlMixParamViscosity(elemCtx, scvIdx, timeIdx) * tlPMixTable.eval(po,  /*extrapolate=*/true);
+        const auto& tlPMixTable = params_.tlPMixTable_[miscnumRegionIdx];//SolventModule::tlPMixTable(elemCtx, scvIdx, timeIdx);
+        const Evaluation tlMixParamMu = params_.tlMixParamViscosity_[miscnumRegionIdx];;//SolventModule::tlMixParamViscosity(elemCtx, scvIdx, timeIdx) * tlPMixTable.eval(po,  /*extrapolate=*/true);
 
         Evaluation muOilEff = pow(muOil,1.0 - tlMixParamMu) * pow(muMixOilSolvent, tlMixParamMu);
         Evaluation muGasEff = pow(muGas,1.0 - tlMixParamMu) * pow(muMixSolventGas, tlMixParamMu);
@@ -936,7 +981,7 @@ private:
         // Mixing parameter for density
         // The pressureMixingParameter represent the miscibility of the solvent while the mixingParameterDenisty the effect of the porous media.
         // The pressureMixingParameter is not implemented in ecl100.
-        const Evaluation tlMixParamRho = SolventModule::tlMixParamDensity(elemCtx, scvIdx, timeIdx) * tlPMixTable.eval(po,  /*extrapolate=*/true);
+        const Evaluation tlMixParamRho = params_.tlMixParamDensity_[miscnumRegionIdx];//SolventModule::tlMixParamDensity(elemCtx, scvIdx, timeIdx) * tlPMixTable.eval(po,  /*extrapolate=*/true);
 
         // compute effective viscosities for density calculations. These have to
         // be recomputed as a different mixing parameter may be used.
@@ -990,7 +1035,7 @@ private:
         const Evaluation bSolventEff = rhoSolventEff / solventRefDensity();
 
         // account for pressure effects
-        const auto& pmiscTable = SolventModule::pmisc(elemCtx, scvIdx, timeIdx);
+        const auto& pmiscTable = params_.pmisc_[miscnumRegionIdx];//SolventModule::pmisc(elemCtx, scvIdx, timeIdx);
         const Evaluation pmisc = pmiscTable.eval(po, /*extrapolate=*/true);
 
         // copy the unmodified invB factors
@@ -1047,6 +1092,8 @@ protected:
 template <class TypeTag>
 class BlackOilSolventIntensiveQuantities<TypeTag, false>
 {
+    using Problem = GetPropType<TypeTag, Properties::Problem>;
+    using PrimaryVariables = GetPropType<TypeTag, Properties::PrimaryVariables>;
     using Evaluation = GetPropType<TypeTag, Properties::Evaluation>;
     using ElementContext = GetPropType<TypeTag, Properties::ElementContext>;
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
@@ -1057,11 +1104,26 @@ public:
                                   unsigned,
                                   unsigned)
     { }
+   
+    void solventPreSatFuncUpdate_(const Problem& problem,
+                                   const PrimaryVariables& priVars,
+                                   const LinearizationType& linearizationType,
+                                   unsigned globalSpaceIdx,
+                                   unsigned timeIdx)
+    {}
 
     void solventPostSatFuncUpdate_(const ElementContext&,
                                    unsigned,
                                    unsigned)
     { }
+
+    void solventPostSatFuncUpdate_(const Problem& problem,
+                                   const PrimaryVariables& priVars,
+                                   const LinearizationType& linearizationType,
+                                   unsigned globalSpaceIdx,
+                                   unsigned timeIdx)
+    {}
+    
 
     void solventPvtUpdate_(const ElementContext&,
                            unsigned,

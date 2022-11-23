@@ -591,6 +591,11 @@ public:
                           unsigned timeIdx)
     {
         const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
+        this->zFractionUpdate_(priVars,timeIdx); 
+    }
+    void zFractionUpdate_(const PrimaryVariables& priVars,
+                          unsigned timeIdx){
+        //const PrimaryVariables& priVars = elemCtx.primaryVars(dofIdx, timeIdx);
         unsigned pvtRegionIdx = priVars.pvtRegionIndex();
         auto& fs = asImp_().fluidState_;
 
@@ -743,6 +748,7 @@ protected:
 template <class TypeTag>
 class BlackOilExtboIntensiveQuantities<TypeTag, false>
 {
+    using PrimaryVariables = GetPropType<TypeTag, Properties::PrimaryVariables>;
     using Evaluation = GetPropType<TypeTag, Properties::Evaluation>;
     using ElementContext = GetPropType<TypeTag, Properties::ElementContext>;
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
@@ -754,6 +760,10 @@ public:
 
     void zFractionUpdate_(const ElementContext&,
                           unsigned,
+                          unsigned)
+    { }
+
+    void zFractionUpdate_(const PrimaryVariables&,
                           unsigned)
     { }
 

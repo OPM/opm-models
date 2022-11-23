@@ -324,6 +324,9 @@ struct EnableExperiments<TypeTag, TTag::FvBaseDiscretization> { static constexpr
 
 namespace Opm {
 
+     
+template <class TypeTag>
+class TpfaLinearizer;
 /*!
  * \ingroup FiniteVolumeDiscretizations
  *
@@ -759,10 +762,13 @@ public:
 
     void invalidateAndUpdateIntensiveQuantities(unsigned timeIdx) const
     {
+        // bouth linearizer and intensive quantites need the global index infrastructure
+        constexpr bool is_tpfa = std::is_same<Linearizer, TpfaLinearizer<TypeTag> >::value;
+        if( not(is_tpfa) ){
         invalidateIntensiveQuantitiesCache(timeIdx);
 
         // loop over all elements...
-        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);
+        ThreadedEntityIterator<GridView, /*codim=*/0> threadedElemIt(gridView_);        
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -774,6 +780,24 @@ public:
                 elemCtx.updatePrimaryStencil(elem);
                 elemCtx.updatePrimaryIntensiveQuantities(/*timeIdx=*/0);
             }
+        }
+        } else {
+            auto& problem = simulator_.problem();
+            auto& primaryVars = simulator_.model().solution(timeIdx);
+            auto& linearizationType = simulator_.model().linearizer().getLinearizationType();                        
+            size_t numGridDof = primaryVars.size();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+            for (unsigned dofIdx = 0; dofIdx < numGridDof; ++dofIdx) {
+                const auto& primaryVar = primaryVars[dofIdx];
+                auto& intquant = intensiveQuantityCache_[timeIdx][dofIdx];
+                intquant.update(problem, primaryVar,linearizationType, dofIdx, timeIdx);
+            }
+
+            std::fill(intensiveQuantityCacheUpToDate_[timeIdx].begin(),
+                      intensiveQuantityCacheUpToDate_[timeIdx].end(),
+                      /*value=*/true);
         }
     }
 
