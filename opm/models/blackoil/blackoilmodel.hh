@@ -342,8 +342,8 @@ public:
     {
         std::ostringstream oss;
 
-        if (pvIdx == Indices::waterSaturationIdx)
-            oss << "saturation_" << FluidSystem::phaseName(FluidSystem::waterPhaseIdx);
+        if (pvIdx == Indices::waterSwitchIdx)
+            oss << "water_switching";
         else if (pvIdx == Indices::pressureSwitchIdx)
             oss << "pressure_switching";
         else if (static_cast<int>(pvIdx) == Indices::compositionSwitchIdx)
@@ -396,7 +396,7 @@ public:
             return 1.0;
 
         // saturations are always in the range [0, 1]!
-        if (int(Indices::waterSaturationIdx) == int(pvIdx))
+        if (int(Indices::waterSwitchIdx) == int(pvIdx))
             return 1.0;
 
         // oil pressures usually are in the range of 100 to 500 bars for typical oil
@@ -423,13 +423,13 @@ public:
         // if the primary variable is either the gas saturation, Rs or Rv
         assert(int(Indices::compositionSwitchIdx) == int(pvIdx));
 
-        auto pvMeaning = this->solution(0)[globalDofIdx].primaryVarsMeaning();
-        if (pvMeaning == PrimaryVariables::Sw_po_Sg)
+        auto pvMeaning = this->solution(0)[globalDofIdx].primaryVarsMeaningGas();
+        if (pvMeaning == PrimaryVariables::GasMeaning::Sg)
             return 1.0; // gas saturation
-        else if (pvMeaning == PrimaryVariables::Sw_po_Rs)
+        else if (pvMeaning == PrimaryVariables::GasMeaning::Rs)
             return 1.0/250.; // gas dissolution factor
         else {
-            assert(pvMeaning == PrimaryVariables::Sw_pg_Rv);
+            assert(pvMeaning == PrimaryVariables::GasMeaning::Rv);
             return 1.0/0.025; // oil vaporization factor
         }
 
@@ -475,7 +475,10 @@ public:
             outstream << priVars[eqIdx] << " ";
 
         // write the pseudo primary variables
-        outstream << priVars.primaryVarsMeaning() << " ";
+        outstream << static_cast<int>(priVars.primaryVarsMeaningGas()) << " ";
+        outstream << static_cast<int>(priVars.primaryVarsMeaningWater()) << " ";
+        outstream << static_cast<int>(priVars.primaryVarsMeaningPressure()) << " ";
+
         outstream << priVars.pvtRegionIndex() << " ";
 
         SolventModule::serializeEntity(*this, outstream, dof);
@@ -507,8 +510,14 @@ public:
         }
 
         // read the pseudo primary variables
-        unsigned primaryVarsMeaning;
-        instream >> primaryVarsMeaning;
+        unsigned primaryVarsMeaningGas;
+        instream >> primaryVarsMeaningGas;
+
+        unsigned primaryVarsMeaningWater;
+        instream >> primaryVarsMeaningWater;
+
+        unsigned primaryVarsMeaningPressure;
+        instream >> primaryVarsMeaningPressure;
 
         unsigned pvtRegionIdx;
         instream >> pvtRegionIdx;
@@ -521,8 +530,13 @@ public:
         PolymerModule::deserializeEntity(*this, instream, dof);
         EnergyModule::deserializeEntity(*this, instream, dof);
 
-        using PVM = typename PrimaryVariables::PrimaryVarsMeaning;
-        priVars.setPrimaryVarsMeaning(static_cast<PVM>(primaryVarsMeaning));
+        using PVM_G = typename PrimaryVariables::GasMeaning;
+        using PVM_W = typename PrimaryVariables::WaterMeaning;
+        using PVM_P = typename PrimaryVariables::PressureMeaning;
+        priVars.setPrimaryVarsMeaningGas(static_cast<PVM_G>(primaryVarsMeaningGas));
+        priVars.setPrimaryVarsMeaningWater(static_cast<PVM_W>(primaryVarsMeaningWater));
+        priVars.setPrimaryVarsMeaningPressure(static_cast<PVM_P>(primaryVarsMeaningPressure));
+
         priVars.setPvtRegionIndex(pvtRegionIdx);
     }
 
