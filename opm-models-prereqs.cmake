@@ -30,7 +30,6 @@ set (opm-models_DEPS
   "dune-grid REQUIRED"
   "dune-istl REQUIRED"
   "opm-common REQUIRED"
-  "opm-material REQUIRED"
   "dune-localfunctions"
   "dune-alugrid"
   "dune-fem"

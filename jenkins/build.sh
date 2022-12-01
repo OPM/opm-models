@@ -2,12 +2,10 @@
 
 declare -a upstreams
 upstreams=(opm-common
-           opm-material
            opm-grid)
 
 declare -A upstreamRev
 upstreamRev[opm-common]=master
-upstreamRev[opm-material]=master
 upstreamRev[opm-grid]=master
 
 if grep -q "opm-common=" <<< $ghprbCommentBody
