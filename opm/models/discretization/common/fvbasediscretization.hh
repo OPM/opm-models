@@ -699,10 +699,10 @@ public:
             !intensiveQuantityCacheUpToDate_[timeIdx][globalIdx])
             return 0;
 
-        //if (timeIdx > 0 && enableStorageCache_)
-        //    // with the storage cache enabled, only the intensive quantities for the most
-        //    // recent time step are cached!
-        //    return 0;
+        if (timeIdx > 0 && enableStorageCache_)
+            // with the storage cache enabled, only the intensive quantities for the most
+            // recent time step are cached!
+            return 0;
 
         return &intensiveQuantityCache_[timeIdx][globalIdx];
     }
@@ -790,7 +790,7 @@ public:
         if (!storeIntensiveQuantities())
             return;
 
-        if (false && enableStorageCache()) {
+        if (enableStorageCache()) {
             // if the storage term is cached, the intensive quantities of the previous
             // time steps do not need to be accessed, and we can thus spare ourselves to
             // copy the objects for the intensive quantities.
@@ -858,6 +858,31 @@ public:
     {
         assert(enableStorageCache_);
         storageCache_[timeIdx][globalIdx] = value;
+    }
+
+    /*!
+     * \brief Move the storage cache for a given time index to the back.
+     *
+     * This method should only be called by the time discretization.
+     *
+     * \param numSlots The number of time step slots for which the
+     *                 hints should be shifted.
+     */
+    void shiftStorageCache(unsigned numSlots = 1)
+    {
+        if (!enableStorageCache()) {
+            return;
+        }
+
+        if (simulator_.problem().recycleFirstIterationStorage()) {
+            return;
+        }
+
+        assert(numSlots > 0);
+
+        for (unsigned timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
+            storageCache_[timeIdx + numSlots] = storageCache_[timeIdx];
+        }
     }
 
     /*!
@@ -1440,6 +1465,8 @@ public:
         // shift the intensive quantities cache by one position in the
         // history
         asImp_().shiftIntensiveQuantityCache(/*numSlots=*/1);
+
+        asImp_().shiftStorageCache(/*numSlots=*/1);
     }
 
     /*!

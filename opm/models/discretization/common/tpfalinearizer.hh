@@ -476,17 +476,14 @@ private:
             adres = 0.0;
             LocalResidual::computeStorage(adres, intQuantsIn);
             setResAndJacobi(res, bMat, adres);
-            // TODO: check recycleFirst etc.
-            // first we use it as storage cache
-            if (model_().newtonMethod().numIterations() == 0) {
-                VectorBlock storage1(0.0);
-                const IntensiveQuantities* intQuantsInP1 = model_().cachedIntensiveQuantities(globI, /*timeIdx*/ 1);
-                if (intQuantsInP1 == nullptr) {
-                    throw std::logic_error("Missing updated intensive quantities for cell " + std::to_string(globI));
+            // use the res for timeIdx 0 if recycleFirst is true
+            // otherwise depent on storage cache
+            if (problem_().recycleFirstIterationStorage()) {
+                if (model_().newtonMethod().numIterations() == 0) {
+                    model_().updateCachedStorage(globI, /*timeIdx=*/1, res);
                 }
-                const IntensiveQuantities& intQuantsIn1 = (intQuantsInP1 == nullptr)? *intQuantsInP : *intQuantsInP1;
-                LocalResidual::computeStorage(storage1, intQuantsIn1);
-                model_().updateCachedStorage(globI, /*timeIdx=*/1, storage1);
+            } else {
+                model_().updateCachedStorage(globI, /*timeIdx=*/0, res);
             }
             res -= model_().cachedStorage(globI, 1);
             res *= storefac;
