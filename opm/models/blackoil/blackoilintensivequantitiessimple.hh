@@ -182,7 +182,7 @@ public:
         static_assert(enableExtbo == false);
         static_assert(enablePolymer == false);
         static_assert(enableFoam == false);
-        static_assert(enableBrind == false);
+        static_assert(enableBrine == false);
         static_assert(has_disgas_in_water == false);
         static_assert(enableSaltPrecipitation == false);
         static_assert(enableTemperature == false);
