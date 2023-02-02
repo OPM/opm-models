@@ -178,6 +178,19 @@ public:
                 unsigned globalSpaceIdx,
                 unsigned timeIdx)
     {
+        static_assert(enableSolvent == false);
+        static_assert(enableExtbo == false);
+        static_assert(enablePolymer == false);
+        static_assert(enableFoam == false);
+        static_assert(enableBrind == false);
+        static_assert(has_disgas_in_water == false);
+        static_assert(enableSaltPrecipitation == false);
+        static_assert(enableTemperature == false);
+        static_assert(enableEnergy == false);
+        static_assert(enableDiffusion == false);
+        static_assert(enableMICP == false);
+
+
 
         const auto& linearizationType = problem.model().linearizer().getLinearizationType();
         Scalar RvMax = FluidSystem::enableVaporizedOil()
