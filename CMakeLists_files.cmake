@@ -65,6 +65,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoildiffusionmodule.hh
              opm/models/blackoil/blackoilextensivequantities.hh
              opm/models/blackoil/blackoilintensivequantities.hh
+						 opm/models/blackoil/blackoilintensivequantitiessimple.hh
              opm/models/blackoil/blackoildarcyfluxmodule.hh
              opm/models/blackoil/blackoilratevector.hh
              opm/models/blackoil/blackoilbrinemodules.hh
