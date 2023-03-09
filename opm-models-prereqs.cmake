@@ -4,7 +4,6 @@ set(DUNE_AVOID_CAPABILITIES_IS_PARALLEL_DEPRECATION_WARNING 1)
 
 # defines that must be present in config.h for our headers
 set (opm-models_CONFIG_VAR
-  HAVE_QUAD
   HAVE_VALGRIND
   HAVE_DUNE_COMMON
   HAVE_DUNE_GEOMETRY

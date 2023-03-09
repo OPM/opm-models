@@ -225,6 +225,20 @@ foreach(tapp co2injection_flash_ni_vcfv
   opm_add_test(${tapp})
 endforeach()
 
+if(QuadMath_FOUND)
+  foreach(tapp co2injection_flash_ni_ecfv
+               co2injection_flash_ni_vcfv
+               co2injection_flash_ecfv
+               co2injection_flash_vcfv)
+    opm_add_test(${tapp}_quad
+                 ONLY_COMPILE
+                 EXE_NAME ${tapp}_quad
+                 SOURCES
+                 tests/${tapp}.cc)
+    target_link_libraries(${tapp}_quad QuadMath::QuadMath)
+  endforeach()
+endif()
+
 opm_add_test(reservoir_blackoil_vcfv TEST_ARGS --end-time=8750000)
 opm_add_test(reservoir_blackoil_ecfv TEST_ARGS --end-time=8750000)
 opm_add_test(reservoir_ncp_vcfv TEST_ARGS --end-time=8750000)
