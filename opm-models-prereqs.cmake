@@ -37,7 +37,7 @@ set (opm-models_DEPS
   # valgrind client requests
   "Valgrind"
   # quadruple precision floating point calculations
-  "Quadmath"
+  "QuadMath"
   )
 
 find_package_deps(opm-models)
