@@ -193,9 +193,10 @@ public:
     /*!
      * \brief Set the index of the region which should be used for PVT properties.
      *
-     * PVT regions represent spatial variation of the composition decribed
-     * by the pseudo-components used by the black oil model (i.e., oil, gas
-     * and water). This introduce spatially varying pvt behaviour.
+     * The concept of PVT regions is a hack to work around the fact that the
+     * pseudo-components used by the black oil model (i.e., oil, gas and water) change
+     * their composition within the spatial domain. We implement them because, the ECL
+     * file format mandates them.
      */
     void setPvtRegionIndex(unsigned value)
     { pvtRegionIdx_ = static_cast<unsigned short>(value); }
@@ -495,7 +496,8 @@ public:
      */
     bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx, Scalar eps = 0.0)
     {
-        static const Scalar thresholdWaterFilledCell = 1.0 - eps;
+        //static const Scalar thresholdWaterFilledCell = 1.0 - eps;
+        static const Scalar thresholdWaterFilledCell = 1.0 - std::max(eps,1e-5);
 
         // this function accesses quite a few black-oil specific low-level functions
         // directly for better performance (instead of going the canonical way through
