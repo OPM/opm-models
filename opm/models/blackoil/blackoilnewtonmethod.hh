@@ -289,6 +289,10 @@ protected:
         if (maxSatDelta > dsMax_)
             satAlpha = dsMax_/maxSatDelta;
 
+        if (deltaSw*satAlpha > std::max(0.0, currentValue[Indices::waterSwitchIdx])) {
+            satAlpha = std::max(0.0, currentValue[Indices::waterSwitchIdx] / deltaSw);
+        }
+
         for (int pvIdx = 0; pvIdx < int(numEq); ++pvIdx) {
             // calculate the update of the current primary variable. For the black-oil
             // model we limit the pressure delta relative to the pressure's current
@@ -321,6 +325,7 @@ protected:
                 if (currentValue.primaryVarsMeaningGas() == PrimaryVariables::GasMeaning::Sg)
                     delta *= satAlpha;
                 else {
+                    delta *= satAlpha;
                     //Ensure Rv and Rs factor does not become negative
                     if (delta > currentValue[Indices::compositionSwitchIdx])
                         delta = currentValue[Indices::compositionSwitchIdx];
