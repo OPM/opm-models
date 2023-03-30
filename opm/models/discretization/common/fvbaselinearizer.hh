@@ -192,6 +192,7 @@ public:
      */
     void linearizeDomain()
     {
+        OPM_TIMEBLOCK(linearizeDomain);
         // we defer the initialization of the Jacobian matrix until here because the
         // auxiliary modules usually assume the problem, model and grid to be fully
         // initialized...
@@ -232,6 +233,7 @@ public:
      */
     void linearizeAuxiliaryEquations()
     {
+        OPM_TIMEBLOCK(linearizeAuxiliaryEquations);
         // flush possible local caches into matrix structure
         jacobian_->commit();
 
@@ -446,6 +448,7 @@ private:
     // linearize the whole system
     void linearize_()
     {
+        OPM_TIMEBLOCK(linearize_);
         resetSystem_();
 
         // before the first iteration of each time step, we need to update the

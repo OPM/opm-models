@@ -536,11 +536,7 @@ private:
             MatrixBlock bMat(0.0);
             ADVectorBlock adres(0.0);
             ADVectorBlock darcyFlux(0.0);
-            const IntensiveQuantities* intQuantsInP = model_().cachedIntensiveQuantities(globI, /*timeIdx*/ 0);
-            if (intQuantsInP == nullptr) {
-                throw std::logic_error("Missing updated intensive quantities for cell " + std::to_string(globI));
-            }
-            const IntensiveQuantities& intQuantsIn = *intQuantsInP;
+            const IntensiveQuantities& intQuantsIn = model_().intensiveQuantities(globI, /*timeIdx*/ 0);
 
             // Flux term.
             {
@@ -554,11 +550,7 @@ private:
                 bMat = 0.0;
                 adres = 0.0;
                 darcyFlux = 0.0;
-                const IntensiveQuantities* intQuantsExP = model_().cachedIntensiveQuantities(globJ, /*timeIdx*/ 0);
-                if (intQuantsExP == nullptr) {
-                    throw std::logic_error("Missing updated intensive quantities for cell " + std::to_string(globJ) + " when assembling fluxes for cell " + std::to_string(globI));
-                }
-                const IntensiveQuantities& intQuantsEx = *intQuantsExP;
+                const IntensiveQuantities& intQuantsEx = model_().intensiveQuantities(globJ, /*timeIdx*/ 0);
                 LocalResidual::computeFlux(
                        adres, darcyFlux, problem_(), globI, globJ, intQuantsIn, intQuantsEx,
                            nbInfo.trans, nbInfo.faceArea, nbInfo.faceDirection);
@@ -596,10 +588,32 @@ private:
             setResAndJacobi(res, bMat, adres);
             // TODO: check recycleFirst etc.
             // first we use it as storage cache
-            if (model_().newtonMethod().numIterations() == 0) {
-                model_().updateCachedStorage(globI, /*timeIdx=*/1, res);
+            if(model_().enableStorageCache()){
+                bool have_stached = false;//not need for AD
+                if (model_().newtonMethod().numIterations() == 0 && !have_stached) {
+                    if(!problem_().recycleFirstIterationStorage()){
+                        Dune::FieldVector<Scalar, numEq> tmp;
+                        tmp = 0.0;
+                        IntensiveQuantities intQuantOld = model_().intensiveQuantities(globI,1);
+                        LocalResidual::computeStorage(tmp, intQuantOld);
+                        model_().updateCachedStorage(globI, /*timeIdx=*/1, tmp);
+                    }else{
+                        //assues nothing have changed in the stystem which
+                        //effect masses calculated from primary variables
+                        model_().updateCachedStorage(globI, /*timeIdx=*/1, res);
+                    }
+                    res -= model_().cachedStorage(globI, 1);                        
+                }else{
+                    res -= model_().cachedStorage(globI, 1);
+                }
+            }else{
+                OPM_TIMEBLOCK_LOCAL(computeStorage0);
+                Dune::FieldVector<Scalar, numEq> tmp;
+                IntensiveQuantities intQuantOld = model_().intensiveQuantities(globI,1);
+                LocalResidual::computeStorage(tmp, intQuantOld);
+                // assume volume do not change
+                res -= tmp;
             }
-            res -= model_().cachedStorage(globI, 1);
             res *= storefac;
             bMat *= storefac;
             // residual_[globI] -= model_().cachedStorage(globI, 1); //*storefac;
