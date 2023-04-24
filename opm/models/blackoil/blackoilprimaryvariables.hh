@@ -495,8 +495,6 @@ public:
      */
     bool adaptPrimaryVariables(const Problem& problem, unsigned globalDofIdx, Scalar eps = 0.0)
     {
-        static const Scalar thresholdWaterFilledCell = 1.0 - eps;
-
         // this function accesses quite a few black-oil specific low-level functions
         // directly for better performance (instead of going the canonical way through
         // the IntensiveQuantities). The reason is that most intensive quantities are not
@@ -548,25 +546,30 @@ public:
 
         // special case cells with almost only water
         // use both saturations (if the phase is enabled)
+        // to avoid a singular matrix.
+        // almost is defined as sw >= 1.0-1e-6.
+        static const Scalar thresholdWaterFilledCell = 1.0 - 1e-6;
+
         // if dissolved gas in water is enabled we shouldn't enter
         // here but instead switch to Rsw as primary variable
-        // as sw >= 1.0 -> gas <= 0 (i.e. gas phase disappears)
+        // as sw >= 1.0 -> sg <= 0 (i.e. gas phase disappears)
         if (sw >= thresholdWaterFilledCell && !FluidSystem::enableDissolvedGasInWater()) {
-
-            // make sure water saturations does not exceed 1.0
+            // make sure water saturations does not exceed 1.01
+            // we dont stricly force it to 1.0 to avoid convergence issue.
             if constexpr (waterEnabled) {
-                (*this)[Indices::waterSwitchIdx] = 1.0;
+                (*this)[Indices::waterSwitchIdx] = std::min(1.01, sw);
                 assert(primaryVarsMeaningWater() == WaterMeaning::Sw);
             }
+
             // the hydrocarbon gas saturation is set to 0.0
             if constexpr (compositionSwitchEnabled)
                 (*this)[Indices::compositionSwitchIdx] = 0.0;
 
             changed = primaryVarsMeaningGas() != GasMeaning::Sg;
             if(changed) {
-                if constexpr (compositionSwitchEnabled)
+                if constexpr (compositionSwitchEnabled) {
                     setPrimaryVarsMeaningGas(GasMeaning::Sg);
-
+                }
                 // use water pressure?
             }
             return changed;
