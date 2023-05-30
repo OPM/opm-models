@@ -608,22 +608,18 @@ private:
             setResAndJacobi(res, bMat, adres);
             // Either use cached storage term, or compute it on the fly.
             if (model_().enableStorageCache()) {
-                // The cached storage for timeIdx 0 (current time) is not
-                // used, but after storage cache is shifted at the end of the
-                // timestep, it will become cached storage for timeIdx 1.
-                model_().updateCachedStorage(globI, /*timeIdx=*/0, res);
-                if (model_().newtonMethod().numIterations() == 0) {
-                    // Need to update the storage cache.
-                    if (problem_().recycleFirstIterationStorage()) {
+                if (problem_().recycleFirstIterationStorage()) {
+                    if (model_().newtonMethod().numIterations() == 0) {
                         // Assumes nothing have changed in the system which
                         // affects masses calculated from primary variables.
                         model_().updateCachedStorage(globI, /*timeIdx=*/1, res);
-                    } else {
-                        Dune::FieldVector<Scalar, numEq> tmp;
-                        IntensiveQuantities intQuantOld = model_().intensiveQuantities(globI, 1);
-                        LocalResidual::computeStorage(tmp, intQuantOld);
-                        model_().updateCachedStorage(globI, /*timeIdx=*/1, tmp);
                     }
+                } else {
+                    // The cached storage for timeIdx 0 (current time) is
+                    // not used at this step, but after storage cache is
+                    // shifted at the end of the timestep, it will become
+                    // cached storage for timeIdx 1.
+                    model_().updateCachedStorage(globI, /*timeIdx=*/0, res);
                 }
                 res -= model_().cachedStorage(globI, 1);
             } else {
