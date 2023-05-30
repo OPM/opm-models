@@ -879,6 +879,31 @@ public:
     }
 
     /*!
+     * \brief Move the storage cache for a given time index to the back.
+     *
+     * This method should only be called by the time discretization.
+     *
+     * \param numSlots The number of time step slots for which the
+     *                 hints should be shifted.
+     */
+    void shiftStorageCache(unsigned numSlots = 1)
+    {
+        if (!enableStorageCache()) {
+            return;
+        }
+
+        if (simulator_.problem().recycleFirstIterationStorage()) {
+            return;
+        }
+
+        assert(numSlots > 0);
+
+        for (unsigned timeIdx = 0; timeIdx < historySize - numSlots; ++ timeIdx) {
+            storageCache_[timeIdx + numSlots] = storageCache_[timeIdx];
+        }
+    }
+
+    /*!
      * \brief Set an entry of the cache for the storage term.
      *
      * This is supposed to represent a DOF's total amount of conservation quantities per
@@ -1472,9 +1497,10 @@ public:
         // make the current solution the previous one.
         solution(/*timeIdx=*/1) = solution(/*timeIdx=*/0);
 
-        // shift the intensive quantities cache by one position in the
-        // history
+        // shift the intensive quantities and storage caches by one
+        // position in the history (if active and required)
         asImp_().shiftIntensiveQuantityCache(/*numSlots=*/1);
+        asImp_().shiftStorageCache(/*numSlots=*/1);
     }
 
     /*!
