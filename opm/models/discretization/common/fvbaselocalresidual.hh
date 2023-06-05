@@ -553,6 +553,11 @@ protected:
                         }
                     } else {
                         model.updateCachedStorage(globalDofIdx, /*timeIdx=*/0, tmp2);
+                        // If we are at the very first timestep, there has
+                        // never been a storage cache shift, and we must also set the timeIdx 1 cache here.
+                        if (elemCtx.simulator().timeStepIndex() == 0 && model.newtonMethod().numIterations() == 0) {
+                            model.updateCachedStorage(globalDofIdx, /*timeIdx=*/1, tmp2);
+                        }
                     }
                 }
                  // if the storage term at the beginning of the time step is cached

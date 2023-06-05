@@ -620,6 +620,11 @@ private:
                     // shifted at the end of the timestep, it will become
                     // cached storage for timeIdx 1.
                     model_().updateCachedStorage(globI, /*timeIdx=*/0, res);
+                    // If we are at the very first timestep, there has
+                    // never been a storage cache shift, and we must also set the timeIdx 1 cache here.
+                    if (simulator_().timeStepIndex() == 0 && model_().newtonMethod().numIterations() == 0) {
+                        model_().updateCachedStorage(globI, /*timeIdx=*/1, res);
+                    }
                 }
                 res -= model_().cachedStorage(globI, 1);
             } else {
