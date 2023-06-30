@@ -58,6 +58,11 @@ namespace Opm::Properties {
         using type = bool;
         static constexpr type value = false;
     };
+    template<class TypeTag, class MyTypeTag>
+    struct FluxDoubleSided {
+        using type = bool;
+        static constexpr type value = false;
+    };
 }
 
 namespace Opm {
@@ -86,6 +91,7 @@ class TpfaLinearizer
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
     using Evaluation = GetPropType<TypeTag, Properties::Evaluation>;
 
+    using ThreadManager = GetPropType<TypeTag, Properties::ThreadManager>;
     using SolutionVector = GetPropType<TypeTag, Properties::SolutionVector>;
     using GlobalEqVector = GetPropType<TypeTag, Properties::GlobalEqVector>;
     using SparseMatrixAdapter = GetPropType<TypeTag, Properties::SparseMatrixAdapter>;
@@ -100,6 +106,7 @@ class TpfaLinearizer
 
     using Vector = GlobalEqVector;
 
+    bool FluxDoubleSided = getPropValue<TypeTag, Properties::FluxDoubleSided>;
     enum { numEq = getPropValue<TypeTag, Properties::NumEq>() };
     enum { historySize = getPropValue<TypeTag, Properties::TimeDiscHistorySize>() };
     enum { dimWorld = GridView::dimensionworld };
@@ -469,12 +476,16 @@ private:
             diagMatAddress_[globI] = jacobian_->blockAddress(globI, globI);
             for (auto& nbInfo : nbInfos) {
                 nbInfo.matBlockAddress = jacobian_->blockAddress(nbInfo.neighbor, globI);
+                nbInfo.matBlockAddress2 = jacobian_->blockAddress(globI, nbInfo.neighbor);
             }
         }
 
         // Create dummy full domain.
         fullDomain_.cells.resize(numCells);
         std::iota(fullDomain_.cells.begin(), fullDomain_.cells.end(), 0);
+    }
+    void createOmpDomains(){
+        //omp_domains_ //need to be found
     }
 
     // reset the global linear system of equations.
@@ -593,7 +604,8 @@ private:
         const bool& enableFlores = simulator_().problem().eclWriter()->eclOutputModule().hasFlores();
         const unsigned int numCells = domain.cells.size();
         const bool on_full_domain = (numCells == model_().numTotalDof());
-
+        bool single_thread = ThreadManager::maxThreads() < 2;
+        bool fluxdoublesided = FluxDoubleSided && single_thread;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -610,30 +622,20 @@ private:
             // Flux term.
             {
             OPM_TIMEBLOCK_LOCAL(fluxCalculationForEachCell);    
-            short loc = 0;
             for (const auto& nbInfo : nbInfos) {
                 OPM_TIMEBLOCK_LOCAL(fluxCalculationForEachFace);
                 unsigned globJ = nbInfo.neighbor;
-                assert(globJ != globI);
-                res = 0.0;
-                bMat = 0.0;
-                adres = 0.0;
-                darcyFlux = 0.0;
+                assert(globJ != globI);                
+                if( !fluxdoublesided || globJ < globI){
+                //res = 0.0;
+                //bMat = 0.0;
+                //adres = 0.0;
+                //darcyFlux = 0.0;
                 const IntensiveQuantities& intQuantsEx = model_().intensiveQuantities(globJ, /*timeIdx*/ 0);
                 LocalResidual::computeFlux(
                        adres, darcyFlux, problem_(), globI, globJ, intQuantsIn, intQuantsEx,
                            nbInfo.trans, nbInfo.faceArea, nbInfo.faceDirection);
                 adres *= nbInfo.faceArea;
-                if (enableFlows) {
-                    for (unsigned phaseIdx = 0; phaseIdx < numEq; ++ phaseIdx) {
-                        flowsInfo_[globI][loc].flow[phaseIdx] = adres[phaseIdx].value();
-                    }
-                }
-                if (enableFlores) {
-                    for (unsigned phaseIdx = 0; phaseIdx < numEq; ++ phaseIdx) {
-                        floresInfo_[globI][loc].flow[phaseIdx] = darcyFlux[phaseIdx].value();
-                    }
-                }
                 setResAndJacobi(res, bMat, adres);
                 residual_[globI] += res;
                 //SparseAdapter syntax:  jacobian_->addToBlock(globI, globI, bMat);
@@ -641,7 +643,25 @@ private:
                 bMat *= -1.0;
                 //SparseAdapter syntax: jacobian_->addToBlock(globJ, globI, bMat);
                 *nbInfo.matBlockAddress += bMat;
-                ++loc;
+                //++loc;
+                if (fluxdoublesided){
+                    //res = 0.0;
+                    //bMat = 0.0;
+                    //adres = 0.0;
+                    //darcyFlux = 0.0;
+                    LocalResidual::computeFlux(
+                        adres, darcyFlux, problem_(), globJ, globI, intQuantsEx, intQuantsIn,
+                        nbInfo.trans, nbInfo.faceArea, nbInfo.faceDirection);
+                    adres *= nbInfo.faceArea;
+                    setResAndJacobi(res, bMat, adres);
+                    residual_[globJ] += res;
+                    //SparseAdapter syntax:  jacobian_->addToBlock(globI, globI, bMat);
+                    *diagMatAddress_[globJ] += bMat;
+                    bMat *= -1.0;
+                    //SparseAdapter syntax: jacobian_->addToBlock(globJ, globI, bMat);
+                    *nbInfo.matBlockAddress2 += bMat;
+                }
+                }
             }
             }
 
@@ -677,7 +697,7 @@ private:
                         }
                     } else {
                         Dune::FieldVector<Scalar, numEq> tmp;
-                        IntensiveQuantities intQuantOld = model_().intensiveQuantities(globI, 1);
+                        const IntensiveQuantities& intQuantOld = model_().intensiveQuantities(globI, 1);
                         LocalResidual::computeStorage(tmp, intQuantOld);
                         model_().updateCachedStorage(globI, /*timeIdx=*/1, tmp);
                     }
@@ -686,7 +706,7 @@ private:
             } else {
                 OPM_TIMEBLOCK_LOCAL(computeStorage0);
                 Dune::FieldVector<Scalar, numEq> tmp;
-                IntensiveQuantities intQuantOld = model_().intensiveQuantities(globI, 1);
+                const IntensiveQuantities& intQuantOld = model_().intensiveQuantities(globI, 1);
                 LocalResidual::computeStorage(tmp, intQuantOld);
                 // assume volume do not change
                 res -= tmp;
@@ -703,9 +723,9 @@ private:
             bMat = 0.0;
             adres = 0.0;
             if (separateSparseSourceTerms_) {
-                LocalResidual::computeSourceDense(adres, problem_(), globI, 0);
+                 LocalResidual::computeSourceDense(adres, problem_(), globI, 0);
             } else {
-                LocalResidual::computeSource(adres, problem_(), globI, 0);
+                 LocalResidual::computeSource(adres, problem_(), globI, 0);
             }
             adres *= -volume;
             setResAndJacobi(res, bMat, adres);
@@ -737,6 +757,70 @@ private:
             *diagMatAddress_[globI] += bMat;
         }
     }
+
+    template <class SubDomainType>
+    void addFlo_(const SubDomainType& domain)
+    {
+        OPM_TIMEBLOCK(flores_);
+
+        // We do not call resetSystem_() here, since that will set
+        // the full system to zero, not just our part.
+        // Instead, that must be called before starting the linearization.
+
+        const bool& enableFlows = simulator_().problem().eclWriter()->eclOutputModule().hasFlows();
+        const bool& enableFlores = simulator_().problem().eclWriter()->eclOutputModule().hasFlores();
+        if( ! (enableFlows || enableFlores)){
+            return;
+        }
+        const unsigned int numCells = domain.cells.size();
+        const bool on_full_domain = (numCells == model_().numTotalDof());
+        bool single_thread = ThreadManager::maxThreads() < 2;
+        bool fluxdoublesided = FluxDoubleSided && single_thread;// && 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (unsigned ii = 0; ii < numCells; ++ii) {
+            OPM_TIMEBLOCK_LOCAL(linearizationForEachCell);
+            const unsigned globI = domain.cells[ii];
+            const auto& nbInfos = neighborInfo_[globI];
+            VectorBlock res(0.0);
+            MatrixBlock bMat(0.0);
+            ADVectorBlock adres(0.0);
+            ADVectorBlock darcyFlux(0.0);
+            const IntensiveQuantities& intQuantsIn = model_().intensiveQuantities(globI, /*timeIdx*/ 0);
+
+            // Flux term.
+            {
+            OPM_TIMEBLOCK_LOCAL(fluxCalculationForEachCell);    
+            short loc = 0;
+            for (const auto& nbInfo : nbInfos) {
+                OPM_TIMEBLOCK_LOCAL(fluxCalculationForEachFace);
+                unsigned globJ = nbInfo.neighbor;
+                res = 0.0;
+                bMat = 0.0;
+                adres = 0.0;
+                darcyFlux = 0.0;
+                const IntensiveQuantities& intQuantsEx = model_().intensiveQuantities(globJ, /*timeIdx*/ 0);
+                LocalResidual::computeFlux(
+                       adres, darcyFlux, problem_(), globI, globJ, intQuantsIn, intQuantsEx,
+                           nbInfo.trans, nbInfo.faceArea, nbInfo.faceDirection);
+                adres *= nbInfo.faceArea;
+                if (enableFlows) {
+                     for (unsigned phaseIdx = 0; phaseIdx < numEq; ++ phaseIdx) {
+                         flowsInfo_[globI][loc].flow[phaseIdx] = adres[phaseIdx].value();
+                     }
+                }
+                if (enableFlores) {
+                     for (unsigned phaseIdx = 0; phaseIdx < numEq; ++ phaseIdx) {
+                         floresInfo_[globI][loc].flow[phaseIdx] = darcyFlux[phaseIdx].value();
+                     }
+                }
+                ++loc;
+            }
+            } // end of loop for cell globI.
+        }
+    }
+
 
     void updateStoredTransmissibilities()
     {
@@ -777,6 +861,7 @@ private:
         double faceArea;
         FaceDir::DirEnum faceDirection;
         MatrixBlock* matBlockAddress;
+        MatrixBlock* matBlockAddress2;
     };
     SparseTable<NeighborInfo> neighborInfo_;
     std::vector<MatrixBlock*> diagMatAddress_;
@@ -814,6 +899,7 @@ private:
         std::vector<bool> interior;
     };
     FullDomain fullDomain_;
+    std::vector<std::vector<size_t>> openmp_domains_;
 };
 
 } // namespace Opm
