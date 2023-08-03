@@ -133,6 +133,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/discretization/common/tpfalinearizer.hh
              opm/models/discretization/common/restrictprolong.hh
              opm/models/discretization/common/fvbasediscretization.hh
+             opm/models/discretization/common/fvbasediscretizationfemadapt.hh
              opm/models/discretization/common/fvbasegradientcalculator.hh
              opm/models/discretization/common/fvbaseproblem.hh
              opm/models/discretization/common/fvbaseprimaryvariables.hh
