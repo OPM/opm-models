@@ -138,9 +138,9 @@ namespace Opm {
  * \brief The base class for the vertex centered finite volume discretization scheme.
  */
 template<class TypeTag>
-class VcfvDiscretization : public FvBaseDiscretization<TypeTag>
+class VcfvDiscretization : public GetPropType<TypeTag, Properties::FvBaseDiscretizationType>
 {
-    using ParentType = FvBaseDiscretization<TypeTag>;
+    using ParentType = GetPropType<TypeTag, Properties::FvBaseDiscretizationType>;
     using Implementation = GetPropType<TypeTag, Properties::Model>;
     using DofMapper = GetPropType<TypeTag, Properties::DofMapper>;
     using GridView = GetPropType<TypeTag, Properties::GridView>;

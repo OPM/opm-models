@@ -22,10 +22,8 @@
 */
 #ifndef EWOMS_COPYRESTRICTPROLONG_HH
 #define EWOMS_COPYRESTRICTPROLONG_HH
-
 #if HAVE_DUNE_FEM
 #include <dune/fem/space/common/restrictprolonginterface.hh>
-#endif
 
 namespace Opm
 {
@@ -199,5 +197,5 @@ namespace Opm
     };
 
 } // namespace Opm
-
+#endif
 #endif
