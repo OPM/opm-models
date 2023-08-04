@@ -2052,7 +2052,7 @@ protected:
     FvBaseDiscretizationOrg(Simulator& simulator)
         : ParentType(simulator)
     {
-        if (enableGridAdaptation_)
+        if (this->enableGridAdaptation_)
             ￼            throw std::invalid_argument("Grid adaptation need to use BaseDiscretization = FvBaseDiscretizationFemAdapt"
                                                      " which currently requires the presence of the dune-fem module");
         size_t numDof = this->asImp_().numGridDof();

@@ -27,13 +27,12 @@
  */
 #ifndef EWOMS_FV_BASE_DISCRETIZATION_FEMADAPT_HH
 #define EWOMS_FV_BASE_DISCRETIZATION_FEMADAPT_HH
-#include "fvbasediscretization.hh"
 #if HAVE_DUNE_FEM
+#include "fvbasediscretization.hh"
 #include <dune/fem/space/common/adaptationmanager.hh>
 #include <dune/fem/space/common/restrictprolongtuple.hh>
 #include <dune/fem/function/blockvectorfunction.hh>
 #include <dune/fem/misc/capabilities.hh>
-#endif
 namespace Opm
 {
 /*!
@@ -135,7 +134,7 @@ public:
         : ParentType(simulator)
         , space_( simulator.vanguard().gridPart() )
     {
-        if (enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
+        if (this->enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
             throw std::invalid_argument("Grid adaptation enabled, but chosen Grid is not capable"
                                         " of adaptivity");
 
@@ -200,4 +199,5 @@ private:
     std::unique_ptr<AdaptationManager> adaptationManager_;
 };
 } // namespace Opm
+#endif
 #endif
