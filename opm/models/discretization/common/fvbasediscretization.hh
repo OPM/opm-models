@@ -27,7 +27,7 @@
  */
 #ifndef EWOMS_FV_BASE_DISCRETIZATION_HH
 #define EWOMS_FV_BASE_DISCRETIZATION_HH
-
+#include <stdexcept>
 #include <opm/material/densead/Math.hpp>
 
 #include "fvbaseproperties.hh"
@@ -2051,15 +2051,16 @@ protected:
     using LocalEvalBlockVector = typename LocalResidual::LocalEvalBlockVector;
     FvBaseDiscretizationOrg(Simulator& simulator)
         : ParentType(simulator)
-    {
-        if (this->enableGridAdaptation_)
-            ￼            throw std::invalid_argument("Grid adaptation need to use BaseDiscretization = FvBaseDiscretizationFemAdapt"
-                                                     " which currently requires the presence of the dune-fem module");
-        size_t numDof = this->asImp_().numGridDof();
-        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            this->solution_[timeIdx].reset(new DiscreteFunction("solution", numDof));
+        {
+            if (this->enableGridAdaptation_){
+                throw std::invalid_argument("Grid adaptation need to use BaseDiscretization = FvBaseDiscretizationFemAdapt which currently requires the presence of the dune-fem module");
+                size_t numDof = this->asImp_().numGridDof();
+            }
+            size_t numDof = this->asImp_().numGridDof();
+            for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+                this->solution_[timeIdx].reset(new DiscreteFunction("solution", numDof));
+            }
         }
-    }
 };
 } // namespace Opm
 
