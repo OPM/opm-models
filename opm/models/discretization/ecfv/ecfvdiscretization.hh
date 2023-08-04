@@ -99,21 +99,19 @@ public:
     using type = Dune::Fem::FiniteVolumeSpace< FunctionSpace, GridPart, 0 >;
 };
 
-#elif
-    class DummySpace{
+#else
+    template<class TypeTag>
+    struct DummySpace{
         size_t numel;
-        template<class GType>
-        DummySpace(const Gtype& G){};
-    }
+        using DiscreteFunctionSpace = GetPropType<TypeTag, Properties::DiscreteFunctionSpace>;
+        DummySpace(const DiscreteFunctionSpace& G){};
+        DummySpace(const int& i){};
+    };
 
 template<class TypeTag>
 struct DiscreteFunctionSpace<TypeTag, TTag::EcfvDiscretization>{
-    using type = DummySpace;
-}
-template<class TypeTag>
-struct DiscreteFunction<TypeTag, TTag::EcfvDiscretization>{
-    using type = BlockVectorWrapper;
-}
+    using type = DummySpace<TypeTag>;
+};
 #endif
 
 //! Set the border list creator for to the one of an element based

@@ -133,7 +133,12 @@ public:
     using AdaptationManager = Dune::Fem::AdaptationManager<Grid, RestrictProlong>;
     FvBaseDiscretizationFemAdapt(Simulator& simulator)
         : ParentType(simulator)
+        , space_( simulator.vanguard().gridPart() )
     {
+        size_t numDof = this->asImp_().numGridDof();
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            this->solution_[timeIdx].reset(new DiscreteFunction("solution", space_));
+        }
     }
     void adaptGrid()
     {
@@ -186,6 +191,7 @@ public:
     }
 
 private:
+    DiscreteFunctionSpace space_;
     std::unique_ptr<RestrictProlong> restrictProlong_;
     std::unique_ptr<AdaptationManager> adaptationManager_;
 };

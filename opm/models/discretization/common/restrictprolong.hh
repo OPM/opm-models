@@ -24,7 +24,7 @@
 #define EWOMS_COPYRESTRICTPROLONG_HH
 #if HAVE_DUNE_FEM
 #include <dune/fem/space/common/restrictprolonginterface.hh>
-
+#endif
 namespace Opm
 {
     template < class Grid, class Container >
@@ -197,5 +197,4 @@ namespace Opm
     };
 
 } // namespace Opm
-#endif
 #endif

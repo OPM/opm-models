@@ -76,6 +76,8 @@
 
 namespace Opm {
 template<class TypeTag>
+class FvBaseDiscretizationOrg;
+template<class TypeTag>
 class FvBaseDiscretization;
 
 } // namespace Opm
@@ -324,12 +326,13 @@ struct BaseDiscretizationType {
 #ifndef HAVE_DUNE_FEM
 template<class TypeTag>
 struct BaseDiscretizationType<TypeTag,TTag::FvBaseDiscretization>{
-    using type = FvBaseDiscretization<TypeTag>;
+    using type = FvBaseDiscretizationOrg<TypeTag>;
 };
 template<class TypeTag>
 struct DiscreteFunction<TypeTag, TTag::FvBaseDiscretization>{
-    using type = BlockVectorWrapper;
-}
+    using BaseDiscretization = FvBaseDiscretization<TypeTag>;
+    using type = typename BaseDiscretization::BlockVectorWrapper;
+};
 #endif
 
 
@@ -457,7 +460,6 @@ public:
         , newtonMethod_(simulator)
         , localLinearizer_(ThreadManager::maxThreads())
         , linearizer_(new Linearizer())
-        , space_( simulator.vanguard().gridPart() )
         , enableGridAdaptation_( EWOMS_GET_PARAM(TypeTag, bool, EnableGridAdaptation) )
         , enableIntensiveQuantityCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableIntensiveQuantityCache))
         , enableStorageCache_(EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache))
@@ -467,7 +469,7 @@ public:
 
         size_t numDof = asImp_().numGridDof();
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
-            solution_[timeIdx].reset(new DiscreteFunction("solution", space_));
+            //solution_[timeIdx].reset(new DiscreteFunction("solution", numDof));
 
             if (storeIntensiveQuantities()) {
                 intensiveQuantityCache_[timeIdx].resize(numDof);
@@ -1975,7 +1977,7 @@ protected:
     // while these are logically bools, concurrent writes to vector<bool> are not thread safe.
     mutable std::vector<unsigned char> intensiveQuantityCacheUpToDate_[historySize];
 
-    DiscreteFunctionSpace space_;
+    //DiscreteFunctionSpace space_;
     mutable std::array< std::unique_ptr< DiscreteFunction >, historySize > solution_;
 
     std::list<BaseOutputModule<TypeTag>*> outputModules_;
@@ -1990,6 +1992,67 @@ protected:
     bool enableIntensiveQuantityCache_;
     bool enableStorageCache_;
     bool enableThermodynamicHints_;
+};
+
+    template<class TypeTag>
+    class FvBaseDiscretizationOrg:  public FvBaseDiscretization<TypeTag>
+    {
+    public:
+    using ParentType = FvBaseDiscretization<TypeTag>;
+    using Implementation = GetPropType<TypeTag, Properties::Model>;
+    using Discretization = GetPropType<TypeTag, Properties::Discretization>;
+    using Simulator = GetPropType<TypeTag, Properties::Simulator>;
+    using Grid = GetPropType<TypeTag, Properties::Grid>;
+    using GridView = GetPropType<TypeTag, Properties::GridView>;
+    using Scalar = GetPropType<TypeTag, Properties::Scalar>;
+    using Evaluation = GetPropType<TypeTag, Properties::Evaluation>;
+    using ElementMapper = GetPropType<TypeTag, Properties::ElementMapper>;
+    using VertexMapper = GetPropType<TypeTag, Properties::VertexMapper>;
+    using DofMapper = GetPropType<TypeTag, Properties::DofMapper>;
+    using SolutionVector = GetPropType<TypeTag, Properties::SolutionVector>;
+    using GlobalEqVector = GetPropType<TypeTag, Properties::GlobalEqVector>;
+    using EqVector = GetPropType<TypeTag, Properties::EqVector>;
+    using RateVector = GetPropType<TypeTag, Properties::RateVector>;
+    using BoundaryRateVector = GetPropType<TypeTag, Properties::BoundaryRateVector>;
+    using PrimaryVariables = GetPropType<TypeTag, Properties::PrimaryVariables>;
+    using Linearizer = GetPropType<TypeTag, Properties::Linearizer>;
+    using ElementContext = GetPropType<TypeTag, Properties::ElementContext>;
+    using BoundaryContext = GetPropType<TypeTag, Properties::BoundaryContext>;
+    using IntensiveQuantities = GetPropType<TypeTag, Properties::IntensiveQuantities>;
+    using ExtensiveQuantities = GetPropType<TypeTag, Properties::ExtensiveQuantities>;
+    using GradientCalculator = GetPropType<TypeTag, Properties::GradientCalculator>;
+    using Stencil = GetPropType<TypeTag, Properties::Stencil>;
+    using DiscBaseOutputModule = GetPropType<TypeTag, Properties::DiscBaseOutputModule>;
+    using GridCommHandleFactory = GetPropType<TypeTag, Properties::GridCommHandleFactory>;
+    using NewtonMethod = GetPropType<TypeTag, Properties::NewtonMethod>;
+    using ThreadManager = GetPropType<TypeTag, Properties::ThreadManager>;
+    using DiscreteFunction = GetPropType<TypeTag, Properties::DiscreteFunction>   ;
+    using LocalLinearizer = GetPropType<TypeTag, Properties::LocalLinearizer>;
+    using LocalResidual = GetPropType<TypeTag, Properties::LocalResidual>;
+
+    enum {
+        numEq = getPropValue<TypeTag, Properties::NumEq>(),
+        historySize = getPropValue<TypeTag, Properties::TimeDiscHistorySize>(),
+    };
+
+    using IntensiveQuantitiesVector = std::vector<IntensiveQuantities, aligned_allocator<IntensiveQuantities, alignof(IntensiveQuantities)> >;
+
+    using Element = typename GridView::template Codim<0>::Entity;
+    using ElementIterator = typename GridView::template Codim<0>::Iterator;
+
+    using Toolbox = MathToolbox<Evaluation>;
+    using VectorBlock = Dune::FieldVector<Evaluation, numEq>;
+    using EvalEqVector = Dune::FieldVector<Evaluation, numEq>;
+
+    using LocalEvalBlockVector = typename LocalResidual::LocalEvalBlockVector;
+    FvBaseDiscretizationOrg(Simulator& simulator)
+        : ParentType(simulator)
+    {
+        size_t numDof = this->asImp_().numGridDof();
+        for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
+            this->solution_[timeIdx].reset(new DiscreteFunction("solution", numDof));
+        }
+    }
 };
 } // namespace Opm
 
