@@ -135,6 +135,10 @@ public:
         : ParentType(simulator)
         , space_( simulator.vanguard().gridPart() )
     {
+        if (enableGridAdaptation_ && !Dune::Fem::Capabilities::isLocallyAdaptive<Grid>::v)
+            throw std::invalid_argument("Grid adaptation enabled, but chosen Grid is not capable"
+                                        " of adaptivity");
+
         size_t numDof = this->asImp_().numGridDof();
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             this->solution_[timeIdx].reset(new DiscreteFunction("solution", space_));

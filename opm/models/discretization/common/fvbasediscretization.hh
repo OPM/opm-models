@@ -466,7 +466,11 @@ public:
         , enableThermodynamicHints_(EWOMS_GET_PARAM(TypeTag, bool, EnableThermodynamicHints))
     {
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
-
+        bool isEcfv = std::is_same<Discretization, EcfvDiscretization<TypeTag> >::value;
+        if (enableGridAdaptation_ && !isEcfv)
+            throw std::invalid_argument("Grid adaptation currently only works for the "
+                                        "element-centered finite volume discretization (is: "
+                                        +Dune::className<Discretization>()+")");
         size_t numDof = asImp_().numGridDof();
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             //solution_[timeIdx].reset(new DiscreteFunction("solution", numDof));
@@ -2048,6 +2052,9 @@ protected:
     FvBaseDiscretizationOrg(Simulator& simulator)
         : ParentType(simulator)
     {
+        if (enableGridAdaptation_)
+            ￼            throw std::invalid_argument("Grid adaptation need to use BaseDiscretization = FvBaseDiscretizationFemAdapt"
+                                                     " which currently requires the presence of the dune-fem module");
         size_t numDof = this->asImp_().numGridDof();
         for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
             this->solution_[timeIdx].reset(new DiscreteFunction("solution", numDof));
