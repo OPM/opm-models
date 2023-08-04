@@ -316,18 +316,29 @@ struct UseVolumetricResidual<TypeTag, TTag::FvBaseDiscretization> { static const
 template<class TypeTag>
 struct EnableExperiments<TypeTag, TTag::FvBaseDiscretization> { static constexpr bool value = true; };
 
+template <class TypeTag, class MyTypeTag>
+struct BaseDiscretizationType {
+    using type = UndefinedProperty;
+};
+
+#ifndef HAVE_DUNE_FEM
+template<class TypeTag>
+struct BaseDiscretizationType<TypeTag,TTag::FvBaseDiscretization>{
+    using type = FvBaseDiscretization<TypeTag>;
+};
+template<class TypeTag>
+struct DiscreteFunction<TypeTag, TTag::FvBaseDiscretization>{
+    using type = BlockVectorWrapper;
+}
+#endif
+
+
+
+
+
+
 } // namespace Opm::Properties
-#ifdef HAVE_DUNE_FEM
-template<class TypeTag>
-struct BaseDiscretizationType<TypeTag,TTag::FvBaseDiscretization>{
-    using type = FvBaseDiscretizationTypeFemAdapt<TypeTag>;
-}
-#else
-template<class TypeTag>
-struct BaseDiscretizationType<TypeTag,TTag::FvBaseDiscretization>{
-    using type = FvBaseDiscretizationTypeFemAdapt<TypeTag>;
-}
-#end
+
 
 namespace Opm {
 
@@ -1390,7 +1401,8 @@ public:
      */
     void adaptGrid()
     {
-        throw std::invalid_argument("Grid adaptation need to be implemented for spesific settings of grid and function spaces)";
+        throw std::invalid_argument(
+            "Grid adaptation need to be implemented for spesific settings of grid and function spaces");
     }
 
     /*!
@@ -1855,7 +1867,9 @@ public:
     void serializeOp(Serializer& serializer)
     {
         for (auto& sol : solution_) {
-            serializer(sol);
+#ifndef HAVE_DUNE_FEM
+            serializer(*sol); //TODO get this to work with dune fem things probably get block template function
+#endif
         }
     }
 

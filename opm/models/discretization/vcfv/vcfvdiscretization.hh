@@ -40,6 +40,7 @@
 #include <opm/models/discretization/common/fvbasediscretization.hh>
 
 #if HAVE_DUNE_FEM
+#include <opm/models/discretization/common/fvbasediscretizationfemadapt.hh>
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/space/lagrange.hh>
 #endif
@@ -138,9 +139,9 @@ namespace Opm {
  * \brief The base class for the vertex centered finite volume discretization scheme.
  */
 template<class TypeTag>
-class VcfvDiscretization : public GetPropType<TypeTag, Properties::FvBaseDiscretizationType>
+class VcfvDiscretization : public GetPropType<TypeTag, Properties::BaseDiscretizationType>
 {
-    using ParentType = GetPropType<TypeTag, Properties::FvBaseDiscretizationType>;
+    using ParentType = GetPropType<TypeTag, Properties::BaseDiscretizationType>;
     using Implementation = GetPropType<TypeTag, Properties::Model>;
     using DofMapper = GetPropType<TypeTag, Properties::DofMapper>;
     using GridView = GetPropType<TypeTag, Properties::GridView>;

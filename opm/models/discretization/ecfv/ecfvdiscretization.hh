@@ -39,6 +39,7 @@
 #include <opm/models/discretization/common/fvbasediscretization.hh>
 
 #if HAVE_DUNE_FEM
+#include <opm/models/discretization/common/fvbasediscretizationfemadapt.hh>
 #include <dune/fem/space/common/functionspace.hh>
 #include <dune/fem/space/finitevolume.hh>
 #endif
@@ -97,6 +98,22 @@ private:
 public:
     using type = Dune::Fem::FiniteVolumeSpace< FunctionSpace, GridPart, 0 >;
 };
+
+#elif
+    class DummySpace{
+        size_t numel;
+        template<class GType>
+        DummySpace(const Gtype& G){};
+    }
+
+template<class TypeTag>
+struct DiscreteFunctionSpace<TypeTag, TTag::EcfvDiscretization>{
+    using type = DummySpace;
+}
+template<class TypeTag>
+struct DiscreteFunction<TypeTag, TTag::EcfvDiscretization>{
+    using type = BlockVectorWrapper;
+}
 #endif
 
 //! Set the border list creator for to the one of an element based
@@ -129,9 +146,10 @@ namespace Opm {
  *
  * \brief The base class for the element-centered finite-volume discretization scheme.
  */
-class EcfvDiscretization : public GetPropType<TypeTag, Properties::FvBaseDiscretizationType>;
+template<class TypeTag>
+class EcfvDiscretization : public GetPropType<TypeTag, Properties::BaseDiscretizationType>
 {
-    using ParentType = GetPropType<TypeTag, Properties::FvBaseDiscretizationType>;
+    using ParentType = GetPropType<TypeTag, Properties::BaseDiscretizationType>;
     using Implementation = GetPropType<TypeTag, Properties::Model>;
     using DofMapper = GetPropType<TypeTag, Properties::DofMapper>;
     using PrimaryVariables = GetPropType<TypeTag, Properties::PrimaryVariables>;
