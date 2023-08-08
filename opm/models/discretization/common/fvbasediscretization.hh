@@ -1445,7 +1445,9 @@ public:
     void advanceTimeLevel()
     {
         // at this point we can adapt the grid
-        asImp_().adaptGrid();
+        if(this->enableGridAdaptation_){
+            asImp_().adaptGrid();
+        }
 
         // make the current solution the previous one.
         solution(/*timeIdx=*/1) = solution(/*timeIdx=*/0);
@@ -2054,7 +2056,6 @@ protected:
         {
             if (this->enableGridAdaptation_){
                 throw std::invalid_argument("Grid adaptation need to use BaseDiscretization = FvBaseDiscretizationFemAdapt which currently requires the presence of the dune-fem module");
-                size_t numDof = this->asImp_().numGridDof();
             }
             size_t numDof = this->asImp_().numGridDof();
             for (unsigned timeIdx = 0; timeIdx < historySize; ++timeIdx) {
