@@ -100,13 +100,13 @@ public:
 };
 
 #else
-    template<class TypeTag>
-    struct DummySpace{
-        size_t numel;
-        using DiscreteFunctionSpace = GetPropType<TypeTag, Properties::DiscreteFunctionSpace>;
-        DummySpace(const DiscreteFunctionSpace& G){};
-        DummySpace(const int& i){};
-    };
+template <class TypeTag>
+struct DummySpace {
+    size_t numel;
+    using DiscreteFunctionSpace = GetPropType<TypeTag, Properties::DiscreteFunctionSpace>;
+    DummySpace(const DiscreteFunctionSpace& G) {};
+    DummySpace(const int& i) {};
+};
 
 template<class TypeTag>
 struct DiscreteFunctionSpace<TypeTag, TTag::EcfvDiscretization>{

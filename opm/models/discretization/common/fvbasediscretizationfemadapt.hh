@@ -44,7 +44,7 @@ namespace Opm
     class FvBaseDiscretizationFemAdapt;
 
     namespace Properties{
-#ifdef HAVE_DUNE_FEM
+#if HAVE_DUNE_FEM
     template<class TypeTag>
     struct BaseDiscretizationType<TypeTag,TTag::FvBaseDiscretization>{
         using type = FvBaseDiscretizationFemAdapt<TypeTag>;

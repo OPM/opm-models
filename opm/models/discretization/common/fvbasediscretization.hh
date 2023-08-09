@@ -323,7 +323,7 @@ struct BaseDiscretizationType {
     using type = UndefinedProperty;
 };
 
-#ifndef HAVE_DUNE_FEM
+#if !HAVE_DUNE_FEM
 template<class TypeTag>
 struct BaseDiscretizationType<TypeTag,TTag::FvBaseDiscretization>{
     using type = FvBaseDiscretizationOrg<TypeTag>;
@@ -334,12 +334,6 @@ struct DiscreteFunction<TypeTag, TTag::FvBaseDiscretization>{
     using type = typename BaseDiscretization::BlockVectorWrapper;
 };
 #endif
-
-
-
-
-
-
 } // namespace Opm::Properties
 
 
@@ -1875,7 +1869,7 @@ public:
     void serializeOp(Serializer& serializer)
     {
         for (auto& sol : solution_) {
-#ifndef HAVE_DUNE_FEM
+#if !HAVE_DUNE_FEM
             serializer(*sol); //TODO get this to work with dune fem things probably get block template function
 #endif
         }
