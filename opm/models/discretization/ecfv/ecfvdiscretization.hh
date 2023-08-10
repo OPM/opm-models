@@ -108,8 +108,8 @@ struct DummySpace {
     DummySpace(const int& i) {};
 };
 
-template<class TypeTag>
-struct DiscreteFunctionSpace<TypeTag, TTag::EcfvDiscretization>{
+template <class TypeTag>
+struct DiscreteFunctionSpace<TypeTag, TTag::EcfvDiscretization> {
     using type = DummySpace<TypeTag>;
 };
 #endif
