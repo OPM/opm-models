@@ -239,7 +239,9 @@ public:
                          nbInfo.faceArea,
                          nbInfo.faceDirection,
                          nbInfo.inAlpha,
-                         nbInfo.outAlpha);
+                         nbInfo.outAlpha,
+                         nbInfo.diffusivity
+            );
     }
 
     // This function demonstrates compatibility with the ElementContext-based interface.
@@ -282,7 +284,7 @@ public:
         // estimate the gravity correction: for performance reasons we use a simplified
         // approach for this flux module that assumes that gravity is constant and always
         // acts into the downwards direction. (i.e., no centrifuge experiments, sorry.)
-        Scalar g = problem.gravity()[dimWorld - 1];
+        const Scalar g = problem.gravity()[dimWorld - 1];
         const auto& intQuantsIn = elemCtx.intensiveQuantities(interiorDofIdx, timeIdx);
         const auto& intQuantsEx = elemCtx.intensiveQuantities(exteriorDofIdx, timeIdx);
 
@@ -291,15 +293,15 @@ public:
         // solution would be to take the Z coordinate of the element centroids, but since
         // ECL seems to like to be inconsistent on that front, it needs to be done like
         // here...
-        Scalar zIn = problem.dofCenterDepth(elemCtx, interiorDofIdx, timeIdx);
-        Scalar zEx = problem.dofCenterDepth(elemCtx, exteriorDofIdx, timeIdx);
+        const Scalar zIn = problem.dofCenterDepth(elemCtx, interiorDofIdx, timeIdx);
+        const Scalar zEx = problem.dofCenterDepth(elemCtx, exteriorDofIdx, timeIdx);
         // the distances from the DOF's depths. (i.e., the additional depth of the
         // exterior DOF)
         Scalar distZ = zIn - zEx;
         // for thermal harmonic mean of half trans
-        Scalar inAlpha = problem.thermalHalfTransmissibility(globalIndexIn, globalIndexEx);
-        Scalar outAlpha = problem.thermalHalfTransmissibility(globalIndexEx, globalIndexIn);
-
+        const Scalar inAlpha = problem.thermalHalfTransmissibility(globalIndexIn, globalIndexEx);
+        const Scalar outAlpha = problem.thermalHalfTransmissibility(globalIndexEx, globalIndexIn);
+        const Scalar diffusivity = problem.diffusivity(globalIndexEx, globalIndexIn);
 
         calculateFluxes_(flux,
                          darcy,
@@ -315,7 +317,8 @@ public:
                          faceArea,
                          facedir,
                          inAlpha,
-                         outAlpha
+                         outAlpha,
+                         diffusivity
             );
     }
 
@@ -333,7 +336,8 @@ public:
                                  const Scalar& faceArea,
                                  const FaceDir::DirEnum facedir,
                                  Scalar inAlpha,
-                                 Scalar outAlpha
+                                 Scalar outAlpha,
+                                 Scalar diffusivity
 
         )
     {
@@ -455,9 +459,18 @@ public:
         // BrineModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
 
         // deal with diffusion (if present)
-        static_assert(!enableDiffusion, "Relevant computeFlux() method must be implemented for this module before enabling.");
-        // DiffusionModule::addDiffusiveFlux(flux, elemCtx, scvfIdx, timeIdx);
+        //static_assert(!enableDiffusion, "Relevant computeFlux() method must be implemented for this module before enabling.");
+        if constexpr(enableDiffusion){
+            typename DiffusionModule::ExtensiveQuantities::EvaluationArray effectiveDiffusionCoefficient;
+            Scalar tmpdiffusivity = diffusivity/faceArea;
+            DiffusionModule::ExtensiveQuantities::update_(tmpdiffusivity,effectiveDiffusionCoefficient,intQuantsIn,intQuantsEx);
+            DiffusionModule::addDiffusiveFlux(flux,
+                                              intQuantsIn.fluidState(),
+                                              intQuantsEx.fluidState(),
+                                              tmpdiffusivity,
+                                              effectiveDiffusionCoefficient);
 
+        }
         // deal with micp (if present)
         static_assert(!enableMICP, "Relevant computeFlux() method must be implemented for this module before enabling.");
         // MICPModule::computeFlux(flux, elemCtx, scvfIdx, timeIdx);
