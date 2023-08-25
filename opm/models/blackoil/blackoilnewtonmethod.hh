@@ -325,7 +325,11 @@ protected:
             else if (pvIdx == Indices::waterSwitchIdx)
                 if (currentValue.primaryVarsMeaningWater() == PrimaryVariables::WaterMeaning::Sw)
                     delta *= satAlpha;
+
                 else {
+                    // The damping from the saturation change also applies to the rsw/rvw factors
+                    // for consistency
+                    delta *= satAlpha;
                     //Ensure Rvw and Rsw factor does not become negative
                     if (delta > currentValue[ Indices::waterSwitchIdx]) 
                         delta = currentValue[ Indices::waterSwitchIdx];
@@ -339,6 +343,9 @@ protected:
                 if (currentValue.primaryVarsMeaningGas() == PrimaryVariables::GasMeaning::Sg)
                     delta *= satAlpha;
                 else {
+                    // The damping from the saturation change also applies to the rs/rv factors
+                    // for consistency
+                    delta *= satAlpha;
                     //Ensure Rv and Rs factor does not become negative
                     if (delta > currentValue[Indices::compositionSwitchIdx])
                         delta = currentValue[Indices::compositionSwitchIdx];
@@ -349,6 +356,7 @@ protected:
                 delta *= satAlpha;
             }
             else if (enableExtbo && pvIdx == Indices::zFractionIdx) {
+                delta *= satAlpha;
                 // z fraction updates are also subject to the Appleyard chop
                 const auto& curr = currentValue[Indices::zFractionIdx]; // or currentValue[pvIdx] given the block condition
                 delta = std::clamp(delta, curr - 1.0, curr);
