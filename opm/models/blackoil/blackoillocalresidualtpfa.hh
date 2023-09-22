@@ -487,7 +487,7 @@ public:
     static void computeBoundaryFluxFree(const Problem& problem,
                                         RateVector& bdyFlux,
                                         const BoundaryConditionData& bdyInfo,
-                                        const IntensiveQuantities& insideIntQuants,
+                                        const IntensiveQuantities& insideIntQuantsHack,
                                         unsigned globalSpaceIdx)
     {
         OPM_TIMEBLOCK_LOCAL(computeBoundaryFluxFree);
@@ -495,6 +495,7 @@ public:
         std::array<short, numPhases> dnIdx;
         RateVector volumeFlux;
         RateVector pressureDifference;
+        const auto insideIntQuants = insideIntQuantsHack;
         ExtensiveQuantities::calculateBoundaryGradients_(problem,
                                                          globalSpaceIdx,
                                                          insideIntQuants,
