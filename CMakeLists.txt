@@ -205,8 +205,8 @@ foreach(tapp co2injection_flash_ni_vcfv
              co2injection_pvs_ecfv
              co2injection_immiscible_ni_ecfv
              co2injection_ncp_ni_ecfv
-             co2injection_pvs_ni_ecfv           
-             simpletest_ptflash_ecfv
+             co2injection_pvs_ni_ecfv
+             co2_ptflash_ecfv
              powerinjection_forchheimer_fd
              powerinjection_forchheimer_ad
              powerinjection_darcy_fd
