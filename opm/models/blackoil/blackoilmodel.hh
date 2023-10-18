@@ -50,7 +50,6 @@
 #include "blackoilmicpmodules.hh"
 
 #include <opm/models/common/multiphasebasemodel.hh>
-#include <opm/models/io/vtkcompositionmodule.hh>
 #include <opm/models/io/vtkblackoilmodule.hh>
 #include "blackoildiffusionmodule.hh"
 #include <opm/models/io/vtkdiffusionmodule.hh>
@@ -72,8 +71,7 @@ namespace Opm::Properties {
 
 namespace TTag {
 //! The type tag for the black-oil problems
-struct BlackOilModel { using InheritsFrom = std::tuple<VtkComposition,
-                                                       VtkBlackOilEnergy,
+struct BlackOilModel { using InheritsFrom = std::tuple<VtkBlackOilEnergy,
                                                        VtkDiffusion,
                                                        VtkBlackOilPolymer,
                                                        VtkBlackOilSolvent,
@@ -325,7 +323,6 @@ public:
 
         // register runtime parameters of the VTK output modules
         VtkBlackOilModule<TypeTag>::registerParameters();
-        VtkCompositionModule<TypeTag>::registerParameters();
         VtkDiffusionModule<TypeTag>::registerParameters();
     }
 
@@ -595,7 +592,6 @@ protected:
         MICPModule::registerOutputModules(asImp_(), this->simulator_);
 
         this->addOutputModule(new VtkBlackOilModule<TypeTag>(this->simulator_));
-        this->addOutputModule(new VtkCompositionModule<TypeTag>(this->simulator_));
 
         if constexpr (enableDiffusion)
             this->addOutputModule(new VtkDiffusionModule<TypeTag>(this->simulator_));
