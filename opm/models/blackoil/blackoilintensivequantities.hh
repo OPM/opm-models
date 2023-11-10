@@ -39,6 +39,7 @@
 #include "blackoilmicpmodules.hh"
 
 #include <opm/common/TimingMacros.hpp>
+#include <opm/common/Exceptions.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
@@ -156,8 +157,8 @@ public:
         if (compositionSwitchEnabled) {
             fluidState_.setRs(0.0);
             fluidState_.setRv(0.0);
-        }        
-        if (enableEvaporation) { 
+        }
+        if (enableEvaporation) {
             fluidState_.setRvw(0.0);
         }
         if (has_disgas_in_water) {
@@ -472,22 +473,50 @@ public:
 
         // update the diffusion specific quantities of the intensive quantities
         DiffusionIntensiveQuantities::update_(fluidState_, paramCache, elemCtx, dofIdx, timeIdx);
-
-#ifndef NDEBUG
-        // some safety checks in debug mode
+#ifndef NOT_CHECK_STATE
+        bool is_ok = true;
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++ phaseIdx) {
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
+            if(fluidState_.density(phaseIdx)< 0){
+                is_ok = false;
+            }
+            if(fluidState_.temperature(phaseIdx) < 0){
+                is_ok = false;
+            }
+            if(fluidState_.viscosity(phaseIdx) < 0.0){
+                is_ok = false;
+            }
+            if(this->mobility(phaseIdx) < 0.0){
+                is_ok = false;
+            }
+            if(this->porosity() < 0.0){
+                is_ok = false;
+            }
+            if(this->rockCompTransMultiplier() < 0.0){
+                is_ok = false;
+            }
+            if(this->referencePorosity() < 0.0){
+                is_ok = false;
+            }
+            if(fluidState_.invB(phaseIdx) < 0.0){
+                is_ok = false;
+            }
 
-            assert(isfinite(fluidState_.density(phaseIdx)));
-            assert(isfinite(fluidState_.saturation(phaseIdx)));
-            assert(isfinite(fluidState_.temperature(phaseIdx)));
-            assert(isfinite(fluidState_.pressure(phaseIdx)));
-            assert(isfinite(fluidState_.invB(phaseIdx)));
+            is_ok = true;
+            is_ok = is_ok && isfinite(fluidState_.density(phaseIdx));
+            is_ok = is_ok && isfinite(fluidState_.saturation(phaseIdx));
+            is_ok = is_ok && isfinite(fluidState_.temperature(phaseIdx));
+            is_ok = is_ok && isfinite(fluidState_.pressure(phaseIdx));
+            is_ok = is_ok && isfinite(fluidState_.invB(phaseIdx));
+            is_ok = is_ok && isfinite(fluidState_.viscosity(phaseIdx));
+
         }
-        assert(isfinite(fluidState_.Rs()));
-        assert(isfinite(fluidState_.Rv()));
-
+        is_ok = is_ok && isfinite(fluidState_.Rs());
+        is_ok = is_ok && isfinite(fluidState_.Rv());
+        if( !is_ok ){
+            throw MaterialLawProblem("Non valid fluid state: infinite values, negative none valid values");
+        }
 #endif
     }
 
