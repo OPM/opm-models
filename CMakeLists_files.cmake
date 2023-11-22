@@ -182,6 +182,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/io/basevanguard.hh
              opm/models/io/vtktemperaturemodule.hh
              opm/models/io/vtkcompositionmodule.hh
+             opm/models/io/vtkptflashmodule.hh
              opm/models/io/structuredgridvanguard.hh
              opm/models/io/unstructuredgridvanguard.hh
              opm/models/io/vtkblackoilenergymodule.hh
