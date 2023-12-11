@@ -159,14 +159,21 @@ struct SimulationName<TypeTag, TTag::CO2PTBaseProblem> {
 template <class TypeTag>
 struct EndTime<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 60. * 60.;
+    static constexpr type value = 1.296e8;
+};
+
+// this is kinds of telling the report step length
+template <class TypeTag>
+struct EpisodeLength<TypeTag, TTag::CO2PTBaseProblem> {
+    using type = GetPropType<TypeTag, Scalar>;
+    static constexpr type value = 21600.0;
 };
 
 // convergence control
 template <class TypeTag>
 struct InitialTimeStepSize<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 0.1 * 60. * 60.;
+    static constexpr type value = 21600.0;
 };
 
 template <class TypeTag>
@@ -206,26 +213,6 @@ struct VtkWriteFilterVelocities<TypeTag, TTag::CO2PTBaseProblem> {
 };
 
 template <class TypeTag>
-struct VtkWriteViscosities<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
-struct VtkWritePorosity<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
-struct VtkWriteIntrinsicPermeabilities<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
-struct VtkWriteMobilities<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
 struct VtkWritePotentialGradients<TypeTag, TTag::CO2PTBaseProblem> {
     static constexpr bool value = true;
 };
@@ -255,26 +242,16 @@ struct VtkWriteEquilibriumConstants<TypeTag, TTag::CO2PTBaseProblem> {
     static constexpr bool value = true;
 };
 
-// this is kinds of telling the report step length
-template <class TypeTag>
-struct EpisodeLength<TypeTag, TTag::CO2PTBaseProblem> {
-    using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 0.1 * 60. * 60.;
-};
-
 // mesh grid
 template <class TypeTag>
 struct Vanguard<TypeTag, TTag::CO2PTBaseProblem> {
     using type = Opm::StructuredGridVanguard<TypeTag>;
 };
 
-//\Note: from the Julia code, the problem is a 1D problem with 3X1 cell.
-//\Note: DomainSizeX is 3.0 meters
-//\Note: DomainSizeY is 1.0 meters
 template <class TypeTag>
 struct DomainSizeX<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 300; // meter
+    static constexpr type value = 1000; // meter
 };
 
 template <class TypeTag>
@@ -287,11 +264,11 @@ struct DomainSizeY<TypeTag, TTag::CO2PTBaseProblem> {
 template <class TypeTag>
 struct DomainSizeZ<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 1.0;
+    static constexpr type value = 0.1;
 };
 
 template<class TypeTag>
-struct CellsX<TypeTag, TTag::CO2PTBaseProblem> { static constexpr int value = 30; };
+struct CellsX<TypeTag, TTag::CO2PTBaseProblem> { static constexpr int value = 1000; };
 template<class TypeTag>
 struct CellsY<TypeTag, TTag::CO2PTBaseProblem> { static constexpr int value = 1; };
 // CellsZ is not needed, while to keep structuredgridvanguard.hh compile
@@ -374,7 +351,7 @@ public:
         temperature_ = EWOMS_GET_PARAM(TypeTag, Scalar, Temperature);
         K_ = this->toDimMatrix_(9.869232667160131e-14);
 
-        porosity_ = 0.1;
+        porosity_ = 0.25;
     }
 
     template <class Context>
@@ -512,7 +489,7 @@ public:
         int inj = 0;
         int prod = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX) - 1;
         if (spatialIdx == inj || spatialIdx == prod) {
-            return 1.0;
+            return 1000.0;
         } else {
             return porosity_;
         }
@@ -556,15 +533,17 @@ private:
     template <class FluidState, class Context>
     void initialFluidState(FluidState& fs, const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     {
-        // z0 = [0.5, 0.3, 0.2]
-        // zi = [0.99, 0.01-1e-3, 1e-3]
-        // p0 = 75e5
-        // T0 = 423.25
+        // input file order
+        // 1000*0.6 -- DECANE
+        // 1000*0.1 -- CO2
+        // 1000*0.3 -- METHANE
+        // opm order:
+        // CO2, C1, C10
         int inj = 0;
         int prod = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX) - 1;
         int spatialIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
         ComponentVector comp;
-        comp[0] = Evaluation::createVariable(0.5, 1);
+        comp[0] = Evaluation::createVariable(0.1, 1);
         comp[1] = Evaluation::createVariable(0.3, 2);
         comp[2] = 1. - comp[0] - comp[1];
         if (spatialIdx == inj) {
@@ -578,13 +557,11 @@ private:
 
         Scalar p0 = EWOMS_GET_PARAM(TypeTag, Scalar, Initialpressure);
 
-        //\Note, for an AD variable, if we multiply it with 2, the derivative will also be scalced with 2,
-        //\Note, so we should not do it.
         if (spatialIdx == inj) {
-            p0 *= 2.0;
+            p0 = 100.0e5;
         }
         if (spatialIdx == prod) {
-            p0 *= 0.5;
+            p0 = 50e5;
         }
         Evaluation p_init = Evaluation::createVariable(p0, 0);
 
