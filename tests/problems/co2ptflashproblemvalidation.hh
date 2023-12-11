@@ -29,14 +29,10 @@
 #define OPM_CO2PTFLASH_PROBLEM_HH
 
 #include <opm/common/Exceptions.hpp>
-
-#include <opm/material/components/SimpleCO2.hpp>
-#include <opm/material/components/C10.hpp>
-#include <opm/material/components/C1.hpp>
 #include <opm/material/fluidmatrixinteractions/RegularizedBrooksCorey.hpp>
 #include <opm/material/fluidmatrixinteractions/BrooksCorey.hpp>
 #include <opm/material/constraintsolvers/PTFlash.hpp> 
-#include <opm/material/fluidsystems/GenericOilGasFluidSystem.hpp>
+#include <opm/material/fluidsystems/ThreeComponentFluidSystem.hh>
 #include <opm/material/common/Valgrind.hpp>
 #include <opm/models/immiscible/immisciblemodel.hh>
 #include <opm/models/discretization/ecfv/ecfvdiscretization.hh>
@@ -77,14 +73,6 @@ struct EpisodeLength { using type = UndefinedProperty;};
 template <class TypeTag, class MyTypeTag>
 struct Initialpressure { using type = UndefinedProperty;};
 
-template <class TypeTag, class MyTypeTag>
-struct NumComp { using type = UndefinedProperty; };
-
-template <class TypeTag>
-struct NumComp<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr int value = 3;
-};
-
 // Set the grid type: --->2D
 template <class TypeTag>
 struct Grid<TypeTag, TTag::CO2PTBaseProblem> { using type = Dune::YaspGrid</*dim=*/2>; };
@@ -112,10 +100,9 @@ struct FluidSystem<TypeTag, TTag::CO2PTBaseProblem>
 {
 private:
     using Scalar = GetPropType<TypeTag, Properties::Scalar>;
-    static constexpr int num_comp = getPropValue<TypeTag, Properties::NumComp>();
 
 public:
-    using type = Opm::GenericOilGasFluidSystem<Scalar, num_comp>;
+    using type = Opm::ThreeComponentFluidSystem<Scalar>;
 };
 
 // Set the material Law
@@ -172,14 +159,21 @@ struct SimulationName<TypeTag, TTag::CO2PTBaseProblem> {
 template <class TypeTag>
 struct EndTime<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 60. * 60.;
+    static constexpr type value = 1.296e8;
+};
+
+// this is kinds of telling the report step length
+template <class TypeTag>
+struct EpisodeLength<TypeTag, TTag::CO2PTBaseProblem> {
+    using type = GetPropType<TypeTag, Scalar>;
+    static constexpr type value = 21600.0;
 };
 
 // convergence control
 template <class TypeTag>
 struct InitialTimeStepSize<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 0.1 * 60. * 60.;
+    static constexpr type value = 21600.0;
 };
 
 template <class TypeTag>
@@ -219,26 +213,6 @@ struct VtkWriteFilterVelocities<TypeTag, TTag::CO2PTBaseProblem> {
 };
 
 template <class TypeTag>
-struct VtkWriteViscosities<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
-struct VtkWritePorosity<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
-struct VtkWriteIntrinsicPermeabilities<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
-struct VtkWriteMobilities<TypeTag, TTag::CO2PTBaseProblem> {
-    static constexpr bool value = true;
-};
-
-template <class TypeTag>
 struct VtkWritePotentialGradients<TypeTag, TTag::CO2PTBaseProblem> {
     static constexpr bool value = true;
 };
@@ -268,26 +242,16 @@ struct VtkWriteEquilibriumConstants<TypeTag, TTag::CO2PTBaseProblem> {
     static constexpr bool value = true;
 };
 
-// this is kinds of telling the report step length
-template <class TypeTag>
-struct EpisodeLength<TypeTag, TTag::CO2PTBaseProblem> {
-    using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 0.1 * 60. * 60.;
-};
-
 // mesh grid
 template <class TypeTag>
 struct Vanguard<TypeTag, TTag::CO2PTBaseProblem> {
     using type = Opm::StructuredGridVanguard<TypeTag>;
 };
 
-//\Note: from the Julia code, the problem is a 1D problem with 3X1 cell.
-//\Note: DomainSizeX is 3.0 meters
-//\Note: DomainSizeY is 1.0 meters
 template <class TypeTag>
 struct DomainSizeX<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 300; // meter
+    static constexpr type value = 1000; // meter
 };
 
 template <class TypeTag>
@@ -300,11 +264,11 @@ struct DomainSizeY<TypeTag, TTag::CO2PTBaseProblem> {
 template <class TypeTag>
 struct DomainSizeZ<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 1.0;
+    static constexpr type value = 0.1;
 };
 
 template<class TypeTag>
-struct CellsX<TypeTag, TTag::CO2PTBaseProblem> { static constexpr int value = 30; };
+struct CellsX<TypeTag, TTag::CO2PTBaseProblem> { static constexpr int value = 1000; };
 template<class TypeTag>
 struct CellsY<TypeTag, TTag::CO2PTBaseProblem> { static constexpr int value = 1; };
 // CellsZ is not needed, while to keep structuredgridvanguard.hh compile
@@ -354,7 +318,11 @@ class CO2PTProblem : public GetPropType<TypeTag, Properties::BaseProblem>
     enum { numPhases = FluidSystem::numPhases };
     enum { oilPhaseIdx = FluidSystem::oilPhaseIdx };
     enum { gasPhaseIdx = FluidSystem::gasPhaseIdx };
+    enum { Comp2Idx = FluidSystem::Comp2Idx };
+    enum { Comp1Idx = FluidSystem::Comp1Idx };
+    enum { Comp0Idx = FluidSystem::Comp0Idx };
     enum { conti0EqIdx = Indices::conti0EqIdx };
+    enum { contiCO2EqIdx = conti0EqIdx + Comp1Idx };
     enum { numComponents = getPropValue<TypeTag, Properties::NumComponents>() };
     enum { enableEnergy = getPropValue<TypeTag, Properties::EnableEnergy>() };
     enum { enableDiffusion = getPropValue<TypeTag, Properties::EnableDiffusion>() };
@@ -376,18 +344,6 @@ public:
     {
         const Scalar epi_len = EWOMS_GET_PARAM(TypeTag, Scalar, EpisodeLength);
         simulator.setEpisodeLength(epi_len);
-        FluidSystem::init();
-        using CompParm = typename FluidSystem::ComponentParam;
-        using CO2 = Opm::SimpleCO2<Scalar>;
-        using C1 = Opm::C1<Scalar>;
-        using C10 = Opm::C10<Scalar>;
-        FluidSystem::addComponent(CompParm {CO2::name(), CO2::molarMass(), CO2::criticalTemperature(),
-                                   CO2::criticalPressure(), CO2::criticalVolume(), CO2::acentricFactor()});
-        FluidSystem::addComponent(CompParm {C1::name(), C1::molarMass(), C1::criticalTemperature(),
-                                   C1::criticalPressure(), C1::criticalVolume(), C1::acentricFactor()});
-        FluidSystem::addComponent(CompParm{C10::name(), C10::molarMass(), C10::criticalTemperature(),
-                                   C10::criticalPressure(), C10::criticalVolume(), C10::acentricFactor()});
-        // FluidSystem::add
     }
 
     void initPetrophysics()
@@ -395,7 +351,7 @@ public:
         temperature_ = EWOMS_GET_PARAM(TypeTag, Scalar, Temperature);
         K_ = this->toDimMatrix_(9.869232667160131e-14);
 
-        porosity_ = 0.1;
+        porosity_ = 0.25;
     }
 
     template <class Context>
@@ -533,7 +489,7 @@ public:
         int inj = 0;
         int prod = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX) - 1;
         if (spatialIdx == inj || spatialIdx == prod) {
-            return 1.0;
+            return 1000.0;
         } else {
             return porosity_;
         }
@@ -577,15 +533,17 @@ private:
     template <class FluidState, class Context>
     void initialFluidState(FluidState& fs, const Context& context, unsigned spaceIdx, unsigned timeIdx) const
     {
-        // z0 = [0.5, 0.3, 0.2]
-        // zi = [0.99, 0.01-1e-3, 1e-3]
-        // p0 = 75e5
-        // T0 = 423.25
+        // input file order
+        // 1000*0.6 -- DECANE
+        // 1000*0.1 -- CO2
+        // 1000*0.3 -- METHANE
+        // opm order:
+        // CO2, C1, C10
         int inj = 0;
         int prod = EWOMS_GET_PARAM(TypeTag, unsigned, CellsX) - 1;
         int spatialIdx = context.globalSpaceIndex(spaceIdx, timeIdx);
         ComponentVector comp;
-        comp[0] = Evaluation::createVariable(0.5, 1);
+        comp[0] = Evaluation::createVariable(0.1, 1);
         comp[1] = Evaluation::createVariable(0.3, 2);
         comp[2] = 1. - comp[0] - comp[1];
         if (spatialIdx == inj) {
@@ -599,23 +557,24 @@ private:
 
         Scalar p0 = EWOMS_GET_PARAM(TypeTag, Scalar, Initialpressure);
 
-        //\Note, for an AD variable, if we multiply it with 2, the derivative will also be scalced with 2,
-        //\Note, so we should not do it.
         if (spatialIdx == inj) {
-            p0 *= 2.0;
+            p0 = 100.0e5;
         }
         if (spatialIdx == prod) {
-            p0 *= 0.5;
+            p0 = 50e5;
         }
         Evaluation p_init = Evaluation::createVariable(p0, 0);
 
         fs.setPressure(FluidSystem::oilPhaseIdx, p_init);
         fs.setPressure(FluidSystem::gasPhaseIdx, p_init);
 
-        for (unsigned compIdx = 0; compIdx < numComponents; ++compIdx) {
-            fs.setMoleFraction(FluidSystem::oilPhaseIdx, compIdx, comp[compIdx]);
-            fs.setMoleFraction(FluidSystem::gasPhaseIdx, compIdx, comp[compIdx]);
-        }
+        fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+        fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+        fs.setMoleFraction(FluidSystem::oilPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
+
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp0Idx, comp[0]);
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp1Idx, comp[1]);
+        fs.setMoleFraction(FluidSystem::gasPhaseIdx, FluidSystem::Comp2Idx, comp[2]);
 
         // It is used here only for calculate the z
         fs.setSaturation(FluidSystem::oilPhaseIdx, sat[0]);
