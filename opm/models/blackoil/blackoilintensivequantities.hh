@@ -46,11 +46,11 @@
 
 #include <opm/material/fluidstates/BlackOilFluidState.hpp>
 #include <opm/material/common/Valgrind.hpp>
+#include <opm/models/common/directionalmobility.hh>
 
 #include <opm/models/common/directionalmobility.hh>
 
 #include <opm/utility/CopyablePtr.hpp>
-
 #include <dune/common/fmatrix.hh>
 
 #include <cstring>
@@ -351,22 +351,15 @@ public:
         }
         paramCache.updateAll(fluidState_);
 
+        auto mobilities = getMobilityVector();
         // compute the phase densities and transform the phase permeabilities into mobilities
-        int nmobilities = 1;
-        std::vector<std::array<Evaluation,numPhases>*> mobilities = {&mobility_};
-        if (dirMob_) {
-            for (int i=0; i<3; i++) {
-                nmobilities += 1;
-                mobilities.push_back(&(dirMob_->getArray(i)));
-            }
-        }
         for (unsigned phaseIdx = 0; phaseIdx < numPhases; ++phaseIdx) {
             if (!FluidSystem::phaseIsActive(phaseIdx))
                 continue;
             const auto& b = FluidSystem::inverseFormationVolumeFactor(fluidState_, phaseIdx, pvtRegionIdx);
             fluidState_.setInvB(phaseIdx, b);
             const auto& mu = FluidSystem::viscosity(fluidState_, paramCache, phaseIdx);
-            for (int i = 0; i<nmobilities; i++) {
+            for (std::size_t i = 0; i<mobilities.size(); i++) {
                 if (enableExtbo && phaseIdx == oilPhaseIdx) {
                     (*mobilities[i])[phaseIdx] /= asImp_().oilViscosity();
                 }
@@ -503,6 +496,20 @@ public:
      */
     const FluidState& fluidState() const
     { return fluidState_; }
+        
+    /*!
+     * Returns a vector of pointer to the mobilities. This includes the directional mobilities if they have
+     * been enabled.
+     */
+    std::vector<std::array<Evaluation,numPhases>*> getMobilityVector() {
+        std::vector<std::array<Evaluation,numPhases>*> mobilities = {&mobility_};
+        if (dirMob_) {
+            for (int i=0; i<3; i++) {
+                mobilities.push_back(&(dirMob_->getArray(i)));
+            }
+        }
+        return mobilities;
+    }
 
     /*!
      * \copydoc ImmiscibleIntensiveQuantities::mobility
@@ -595,8 +602,12 @@ private:
 
     // Instead of writing a custom copy constructor and a custom assignment operator just to handle
     // the dirMob_ unique ptr member variable when copying BlackOilIntensiveQuantites (see for example
-    // updateIntensitiveQuantities_() in fvbaseelementcontext.hh for a copy example) we write the below
-    // custom wrapper class CopyablePtr which wraps the unique ptr and makes it copyable.
+    // updateIntensitiveQuantities_() in fvbaseelementcontext.hh for a copy example) we use the
+    // wrapper class
+    //
+    //   DirectionalMobilityPtr (aka Opm::Utility::CopyablePtr<DirectionalMobility<TypeTag, Evaluation>>)
+    //
+    // which wraps the unique ptr and makes it copyable.
     //
     // The advantage of this approach is that we avoid having to call all the base class copy constructors and
     // assignment operators explicitly (which is needed when writing the custom copy constructor and assignment
