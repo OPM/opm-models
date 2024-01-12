@@ -156,9 +156,13 @@ public:
         #pragma omp critical
         {
             std::cout << "u" << std::endl;
-            stencil_.updatePrimaryTopology(elem);
-            dofVars_.resize(stencil_.numPrimaryDof());
+        }
+        stencil_.updatePrimaryTopology(elem);
+        dofVars_.resize(stencil_.numPrimaryDof());
+        #pragma omp critical
+        {
             std::cout << "x" << std::endl;
+        }
     }
 
     /*!
