@@ -154,9 +154,6 @@ public:
 
         // update the finite element geometry
         stencil_.updatePrimaryTopology(elem);
-        std::cout << dofVars_.size()
-                  << "-" << stencil_.numPrimaryDof()
-                  << std::endl;
         dofVars_.resize(stencil_.numPrimaryDof());
     }
 
