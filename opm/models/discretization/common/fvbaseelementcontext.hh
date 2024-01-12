@@ -157,11 +157,7 @@ public:
         {
             std::cout << "u" << std::endl;
             stencil_.updatePrimaryTopology(elem);
-            auto numDof = stencil_.numPrimaryDof();
-            std::cout << dofVars_.size()
-                  << "-" << numDof
-                  << std::endl;
-            dofVars_.resize(numDof);
+            dofVars_.resize(stencil_.numPrimaryDof());
             std::cout << "x" << std::endl;
     }
 
