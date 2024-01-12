@@ -153,8 +153,9 @@ public:
         elemPtr_ = &elem;
 
         // update the finite element geometry
-        stencil_.updatePrimaryTopology(elem);
         #pragma omp critical
+        std::cout << "u" << std::endl;
+        stencil_.updatePrimaryTopology(elem);
         {
           std::cout << dofVars_.size()
                   << "-" << stencil_.numPrimaryDof()
