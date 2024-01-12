@@ -157,7 +157,8 @@ public:
         #pragma omp critical
         {
           std::cout << dofVars_.size()
-                  << "-" << stencil_.numPrimaryDof();
+                  << "-" << stencil_.numPrimaryDof()
+                  << std::endl;
         }
         dofVars_.resize(stencil_.numPrimaryDof());
     }
