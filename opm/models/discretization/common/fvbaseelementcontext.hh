@@ -98,6 +98,7 @@ public:
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
         stashedDofIdx_ = -1;
         focusDofIdx_ = -1;
+        dofVars_.resize(1);
     }
 
     static void *operator new(size_t size)
