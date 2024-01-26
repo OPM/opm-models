@@ -68,7 +68,6 @@ class BlackOilEnergyModule
     static constexpr unsigned enableEnergy = enableEnergyV;
     static constexpr unsigned numEq = getPropValue<TypeTag, Properties::NumEq>();
     static constexpr unsigned numPhases = FluidSystem::numPhases;
-
 public:
     using ExtensiveQuantities = GetPropType<TypeTag, Properties::ExtensiveQuantities>;
     /*!
@@ -210,10 +209,16 @@ public:
                                         const Eval& volumeFlux,
                                         const FluidState& upFs)
     {
-        flux[contiEnergyEqIdx] +=
-            decay<UpEval>(upFs.enthalpy(phaseIdx))
-            * decay<UpEval>(upFs.density(phaseIdx))
+        auto enthalpyflux = decay<UpEval>(upFs.density(phaseIdx))
             * volumeFlux;
+        bool use_work_term_ = true;
+        if(use_work_term_){
+            enthalpyflux *= decay<UpEval>(upFs.enthalpy(phaseIdx));
+        }else{
+            enthalpyflux *= decay<UpEval>(upFs.internalEnergy(phaseIdx));
+        }
+
+        flux[contiEnergyEqIdx] += enthalpyflux;
     }
 
     template <class UpstreamEval>
