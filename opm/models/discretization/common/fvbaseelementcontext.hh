@@ -36,6 +36,7 @@
 #include <dune/common/fvector.hh>
 
 #include <vector>
+#include <cstdlib>
 
 namespace Opm {
 
@@ -98,7 +99,6 @@ public:
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
         stashedDofIdx_ = -1;
         focusDofIdx_ = -1;
-        dofVars_.resize(1);
     }
 
     static void *operator new(size_t size)
@@ -153,16 +153,20 @@ public:
         // remember the current element
         elemPtr_ = &elem;
 
-        // update the finite element geometry
-        #pragma omp critical
-        {
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
             std::cout << "u" << std::endl;
-            stencil_.updatePrimaryTopology(elem);
-            auto numDof = stencil_.numPrimaryDof();
+        }
+        stencil_.updatePrimaryTopology(elem);
+        auto numDof = stencil_.numPrimaryDof();
+        if (debug) {
             std::cout << dofVars_.size()
                   << "-" << numDof
                   << std::endl;
-            dofVars_.resize(numDof);
+        }
+        dofVars_.resize(numDof);
+        if (debug) {
             std::cout << "x" << std::endl;
         }
     }
