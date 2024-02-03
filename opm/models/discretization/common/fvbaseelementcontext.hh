@@ -99,6 +99,12 @@ public:
         enableStorageCache_ = EWOMS_GET_PARAM(TypeTag, bool, EnableStorageCache);
         stashedDofIdx_ = -1;
         focusDofIdx_ = -1;
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "rd" << std::endl;
+            dofVars_.resize(1);
+        }
     }
 
     static void *operator new(size_t size)
