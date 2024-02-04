@@ -462,7 +462,16 @@ public:
     IntensiveQuantities& intensiveQuantities(unsigned dofIdx, unsigned timeIdx)
     {
         assert(dofIdx < numDof(timeIdx));
-        return dofVars_[dofIdx].intensiveQuantities[timeIdx];
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "iq" << std::endl;
+        }
+        auto iq = dofVars_[dofIdx].intensiveQuantities[timeIdx];
+        if (debug) {
+            std::cout << "iq2" << std::endl;
+        }
+        return iq;
     }
 
     /*!
