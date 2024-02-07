@@ -68,6 +68,7 @@ class BlackOilEnergyModule
     static constexpr unsigned enableEnergy = enableEnergyV;
     static constexpr unsigned numEq = getPropValue<TypeTag, Properties::NumEq>();
     static constexpr unsigned numPhases = FluidSystem::numPhases;
+    inline static bool use_work_term_ = true;
 public:
     using ExtensiveQuantities = GetPropType<TypeTag, Properties::ExtensiveQuantities>;
     /*!
@@ -96,6 +97,10 @@ public:
         else
             return false;
 
+    }
+
+    static void setUseWorkTerm(bool use_work_term){
+        use_work_term_ = use_work_term;
     }
 
     static std::string primaryVarName([[maybe_unused]] unsigned pvIdx)
@@ -211,7 +216,6 @@ public:
     {
         auto enthalpyflux = decay<UpEval>(upFs.density(phaseIdx))
             * volumeFlux;
-        bool use_work_term_ = true;
         if(use_work_term_){
             enthalpyflux *= decay<UpEval>(upFs.enthalpy(phaseIdx));
         }else{
