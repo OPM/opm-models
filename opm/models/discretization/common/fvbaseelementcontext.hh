@@ -467,11 +467,12 @@ public:
         if (debug) {
             std::cout << "iq" << std::endl;
         }
-        auto iq = dofVars_[dofIdx].intensiveQuantities[timeIdx];
-        if (debug) {
-            std::cout << "iq2" << std::endl;
-        }
-        return iq;
+        //auto iq = dofVars_[dofIdx].intensiveQuantities[timeIdx];
+        //if (debug) {
+        //    std::cout << "iq2" << std::endl;
+        //}
+        //return iq;
+        return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
     /*!
