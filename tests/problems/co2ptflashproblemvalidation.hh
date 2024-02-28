@@ -159,14 +159,14 @@ struct SimulationName<TypeTag, TTag::CO2PTBaseProblem> {
 template <class TypeTag>
 struct EndTime<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 1.296e8;
+    static constexpr type value = 1.296e8/2;
 };
 
 // this is kinds of telling the report step length
 template <class TypeTag>
 struct EpisodeLength<TypeTag, TTag::CO2PTBaseProblem> {
     using type = GetPropType<TypeTag, Scalar>;
-    static constexpr type value = 21600.0;
+    static constexpr type value = 5*21600.0;
 };
 
 // convergence control
