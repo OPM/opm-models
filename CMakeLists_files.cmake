@@ -231,7 +231,6 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/utils/start.hh
              opm/models/utils/timerguard.hh
              opm/models/utils/propertysystem.hh
-             opm/models/utils/propertysystemmacros.hh
              opm/models/utils/pffgridvector.hh
              opm/models/utils/prefetch.hh
              opm/models/utils/parametersystem.hh
