@@ -72,11 +72,10 @@ namespace Linear {
                                                                                 \
         static void registerParameters()                                        \
         {                                                                       \
-            EWOMS_REGISTER_PARAM(TypeTag, int, PreconditionerOrder,             \
-                                 "The order of the preconditioner");            \
-            EWOMS_REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation,     \
-                                 "The relaxation factor of the "                \
-                                 "preconditioner");                             \
+            Parameters::registerParam<TypeTag, Properties::PreconditionerOrder> \
+                ("The order of the preconditioner");                            \
+            Parameters::registerParam<TypeTag, Properties::PreconditionerRelaxation> \
+                ("The relaxation factor of the preconditioner");                \
         }                                                                       \
                                                                                 \
         void prepare(IstlMatrix& matrix)                                        \
@@ -164,8 +163,8 @@ public:
 
     static void registerParameters()
     {
-        EWOMS_REGISTER_PARAM(TypeTag, Scalar, PreconditionerRelaxation,
-                             "The relaxation factor of the preconditioner");
+        Parameters::registerParam<TypeTag, Properties::PreconditionerRelaxation>
+            ("The relaxation factor of the preconditioner");
     }
 
     void prepare(OverlappingMatrix& matrix)
