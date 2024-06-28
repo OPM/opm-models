@@ -241,6 +241,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/utils/timer.hh
              opm/models/utils/signum.hh
              opm/models/utils/genericguard.hh
+             opm/models/utils/basicparameters.hh
              opm/models/utils/basicproperties.hh
              opm/simulators/linalg/ilufirstelement.hh
              opm/simulators/linalg/parallelistlbackend.hh
