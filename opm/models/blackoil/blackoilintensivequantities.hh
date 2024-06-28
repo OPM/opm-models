@@ -403,15 +403,20 @@ public:
         // calculate the phase densities
         Evaluation rho;
         if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
-            rho = fluidState_.invB(waterPhaseIdx);
-            rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-            if (FluidSystem::enableDissolvedGasInWater()) {
-                bool ConvectiveMixingActive = ConvectiveMixingModule::active(elemCtx);
-				if(!ConvectiveMixingActive) {
-                    rho +=
-                        fluidState_.invB(waterPhaseIdx) *
-                        fluidState_.Rsw() *
-                        FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+           if (ConvectiveMixingModule::active(elemCtx)) {
+                const auto& t = fluidState_.temperature(waterPhaseIdx);
+                const auto& p = fluidState_.pressure(waterPhaseIdx);
+                const auto& salt_concentration = fluidState_.saltConcentration();
+                const auto& bw = FluidSystem::waterPvt().inverseFormationVolumeFactor(pvtRegionIdx, t, p, Evaluation(0.0), salt_concentration);
+                rho = bw*FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+            } else {
+                rho = fluidState_.invB(waterPhaseIdx);
+                rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+                if (FluidSystem::enableDissolvedGasInWater()) {
+                        rho +=
+                            fluidState_.invB(waterPhaseIdx) *
+                            fluidState_.Rsw() *
+                            FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
                 }
             }
             fluidState_.setDensity(waterPhaseIdx, rho);
@@ -436,11 +441,15 @@ public:
         }
 
         if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
-            rho = fluidState_.invB(oilPhaseIdx);
-            rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
-            if (FluidSystem::enableDissolvedGas()) {
-                bool ConvectiveMixingActive = ConvectiveMixingModule::active(elemCtx);
-				if(!ConvectiveMixingActive) {
+            if (ConvectiveMixingModule::active(elemCtx)) {
+                const auto& t = fluidState_.temperature(oilPhaseIdx);
+                const auto& p = fluidState_.pressure(oilPhaseIdx);
+                const auto& bo = FluidSystem::oilPvt().inverseFormationVolumeFactor(pvtRegionIdx, t, p, Evaluation(0.0));
+                rho = bo*FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+            } else {
+                rho = fluidState_.invB(oilPhaseIdx);
+                rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+                if (FluidSystem::enableDissolvedGas()) {
                     rho +=
                         fluidState_.invB(oilPhaseIdx) *
                         fluidState_.Rs() *
