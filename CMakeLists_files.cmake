@@ -128,6 +128,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/discretization/common/fvbaseboundarycontext.hh
              opm/models/discretization/common/fvbaseadlocallinearizer.hh
              opm/models/discretization/common/fvbaseconstraints.hh
+             opm/models/discretization/common/fvbaseparameters.hh
              opm/models/discretization/common/fvbaseproperties.hh
              opm/models/discretization/common/fvbaseextensivequantities.hh
              opm/models/discretization/common/fvbaselinearizer.hh
