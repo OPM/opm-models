@@ -92,6 +92,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoilpolymermodules.hh
              opm/models/blackoil/blackoilpolymerparams.hh
              opm/models/blackoil/blackoilboundaryratevector.hh
+             opm/models/common/multiphasebaseparameters.hh
              opm/models/common/multiphasebaseproperties.hh
              opm/models/common/multiphasebasemodel.hh
              opm/models/common/quantitycallbacks.hh
