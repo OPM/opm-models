@@ -153,6 +153,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/flash/flashboundaryratevector.hh
              opm/models/flash/flashprimaryvariables.hh
              opm/models/flash/flashextensivequantities.hh
+             opm/models/flash/flashparameters.hh
              opm/models/flash/flashproperties.hh
              opm/models/immiscible/immisciblelocalresidual.hh
              opm/models/immiscible/immiscibleproperties.hh
