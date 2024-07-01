@@ -202,6 +202,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/ncp/ncpboundaryratevector.hh
              opm/models/nonlinear/nullconvergencewriter.hh
              opm/models/nonlinear/newtonmethod.hh
+             opm/models/nonlinear/newtonmethodparameters.hh
              opm/models/nonlinear/newtonmethodproperties.hh
              opm/models/parallel/mpiutil.hh
              opm/models/parallel/tasklets.hh
