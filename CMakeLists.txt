@@ -191,7 +191,7 @@ opm_add_test(finger_immiscible_ecfv_adaptive
              EXE_NAME finger_immiscible_ecfv
              CONDITION ${DUNE_ALUGRID_FOUND} AND ${DUNE_FEM_FOUND}
              NO_COMPILE
-             TEST_ARGS --enable-grid-adaptation=true --end-time=25e3)
+             TEST_ARGS --enable-grid-adaptation=true --end-time=25e3 --enable-async-vtk-output=false)
 
 foreach(tapp co2injection_flash_ni_vcfv
              co2injection_flash_ni_ecfv
