@@ -38,6 +38,7 @@
 #include "blackoildiffusionmodule.hh"
 #include "blackoildispersionmodule.hh"
 #include "blackoilmicpmodules.hh"
+#include "blackoilconvectivemixingmodule.hh"
 
 #include <opm/common/TimingMacros.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -106,6 +107,7 @@ class BlackOilIntensiveQuantities
     enum { enableEnergy = getPropValue<TypeTag, Properties::EnableEnergy>() };
     enum { enableDiffusion = getPropValue<TypeTag, Properties::EnableDiffusion>() };
     enum { enableDispersion = getPropValue<TypeTag, Properties::EnableDispersion>() };
+    enum { enableConvectiveMixing = getPropValue<TypeTag, Properties::EnableConvectiveMixing>() };
     enum { enableMICP = getPropValue<TypeTag, Properties::EnableMICP>() };
     enum { numPhases = getPropValue<TypeTag, Properties::NumPhases>() };
     enum { numComponents = getPropValue<TypeTag, Properties::NumComponents>() };
@@ -131,6 +133,7 @@ class BlackOilIntensiveQuantities
 
     using DirectionalMobilityPtr = Opm::Utility::CopyablePtr<DirectionalMobility<TypeTag, Evaluation>>;
     using BrineModule = BlackOilBrineModule<TypeTag>;
+    using ConvectiveMixingModule = BlackOilConvectiveMixingModule<TypeTag, enableConvectiveMixing>;
 
 
 public:
@@ -188,6 +191,9 @@ public:
             ? problem.maxOilVaporizationFactor(timeIdx, globalSpaceIdx)
             : 0.0;
         Scalar RsMax = FluidSystem::enableDissolvedGas()
+            ? problem.maxGasDissolutionFactor(timeIdx, globalSpaceIdx)
+            : 0.0;
+        Scalar RswMax = FluidSystem::enableDissolvedGasInWater()
             ? problem.maxGasDissolutionFactor(timeIdx, globalSpaceIdx)
             : 0.0;
 
@@ -301,7 +307,6 @@ public:
             SoMax = max(fluidState_.saturation(oilPhaseIdx),
                         problem.maxOilSaturation(globalSpaceIdx));
         }
-
         // take the meaning of the switching primary variable into account for the gas
         // and oil phase compositions
         if (priVars.primaryVarsMeaningGas() == PrimaryVariables::GasMeaning::Rs) {
@@ -310,16 +315,15 @@ public:
         } else {
             if (FluidSystem::enableDissolvedGas()) { // Add So > 0? i.e. if only water set rs = 0)
                 const Evaluation& RsSat = enableExtbo ? asImp_().rs() :
-                    FluidSystem::saturatedDissolutionFactor(fluidState_,
-                                                            oilPhaseIdx,
-                                                            pvtRegionIdx,
-                                                            SoMax);
+                FluidSystem::saturatedDissolutionFactor(fluidState_,
+                                                        oilPhaseIdx,
+                                                        pvtRegionIdx,
+                                                        SoMax);
                 fluidState_.setRs(min(RsMax, RsSat));
             }
             else if constexpr (compositionSwitchEnabled)
                 fluidState_.setRs(0.0);
         }
-
         if (priVars.primaryVarsMeaningGas() == PrimaryVariables::GasMeaning::Rv) {
             const auto& Rv = priVars.makeEvaluation(Indices::compositionSwitchIdx, timeIdx);
             fluidState_.setRv(Rv);
@@ -356,7 +360,7 @@ public:
                 const Evaluation& RswSat = FluidSystem::saturatedDissolutionFactor(fluidState_,
                                                             waterPhaseIdx,
                                                             pvtRegionIdx);
-                fluidState_.setRsw(RswSat);
+                fluidState_.setRsw(min(RswMax, RswSat));
             }
         }
 
@@ -399,13 +403,21 @@ public:
         // calculate the phase densities
         Evaluation rho;
         if (FluidSystem::phaseIsActive(waterPhaseIdx)) {
-            rho = fluidState_.invB(waterPhaseIdx);
-            rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
-            if (FluidSystem::enableDissolvedGasInWater()) {
-                rho +=
-                    fluidState_.invB(waterPhaseIdx) *
-                    fluidState_.Rsw() *
-                    FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+           if (ConvectiveMixingModule::active(elemCtx)) {
+                const auto& t = fluidState_.temperature(waterPhaseIdx);
+                const auto& p = fluidState_.pressure(waterPhaseIdx);
+                const auto& salt_concentration = fluidState_.saltConcentration();
+                const auto& bw = FluidSystem::waterPvt().inverseFormationVolumeFactor(pvtRegionIdx, t, p, Evaluation(0.0), salt_concentration);
+                rho = bw*FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+            } else {
+                rho = fluidState_.invB(waterPhaseIdx);
+                rho *= FluidSystem::referenceDensity(waterPhaseIdx, pvtRegionIdx);
+                if (FluidSystem::enableDissolvedGasInWater()) {
+                        rho +=
+                            fluidState_.invB(waterPhaseIdx) *
+                            fluidState_.Rsw() *
+                            FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+                }
             }
             fluidState_.setDensity(waterPhaseIdx, rho);
         }
@@ -429,13 +441,20 @@ public:
         }
 
         if (FluidSystem::phaseIsActive(oilPhaseIdx)) {
-            rho = fluidState_.invB(oilPhaseIdx);
-            rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
-            if (FluidSystem::enableDissolvedGas()) {
-                rho +=
-                    fluidState_.invB(oilPhaseIdx) *
-                    fluidState_.Rs() *
-                    FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+            if (ConvectiveMixingModule::active(elemCtx)) {
+                const auto& t = fluidState_.temperature(oilPhaseIdx);
+                const auto& p = fluidState_.pressure(oilPhaseIdx);
+                const auto& bo = FluidSystem::oilPvt().inverseFormationVolumeFactor(pvtRegionIdx, t, p, Evaluation(0.0));
+                rho = bo*FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+            } else {
+                rho = fluidState_.invB(oilPhaseIdx);
+                rho *= FluidSystem::referenceDensity(oilPhaseIdx, pvtRegionIdx);
+                if (FluidSystem::enableDissolvedGas()) {
+                    rho +=
+                        fluidState_.invB(oilPhaseIdx) *
+                        fluidState_.Rs() *
+                        FluidSystem::referenceDensity(gasPhaseIdx, pvtRegionIdx);
+                }
             }
             fluidState_.setDensity(oilPhaseIdx, rho);
         }
