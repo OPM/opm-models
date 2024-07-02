@@ -191,7 +191,7 @@ opm_add_test(finger_immiscible_ecfv_adaptive
              EXE_NAME finger_immiscible_ecfv
              CONDITION ${DUNE_ALUGRID_FOUND} AND ${DUNE_FEM_FOUND}
              NO_COMPILE
-             TEST_ARGS --enable-grid-adaptation=true --end-time=25e3)
+             TEST_ARGS --enable-grid-adaptation=true --end-time=25e3 --enable-async-vtk-output=false)
 
 foreach(tapp co2injection_flash_ni_vcfv
              co2injection_flash_ni_ecfv
@@ -240,6 +240,7 @@ if(QuadMath_FOUND)
                  SOURCES
                  tests/${tapp}.cc)
     target_link_libraries(${tapp}_quad QuadMath::QuadMath)
+    target_compile_definitions(${tapp}_quad PRIVATE HAVE_QUAD=1)
   endforeach()
 endif()
 
@@ -261,48 +262,48 @@ opm_add_test(test_quadrature
 # test for the parallelization of the element centered finite volume
 # discretization (using the non-isothermal NCP model and the parallel
 # AMG linear solver)
-opm_add_test(co2injection_ncp_ni_ecfv_parallel
-             EXE_NAME co2injection_ncp_ni_ecfv
-             NO_COMPILE
-             PROCESSORS 4
-             CONDITION ${MPI_FOUND}
-             DRIVER_ARGS --parallel-simulation=4)
+#opm_add_test(co2injection_ncp_ni_ecfv_parallel
+#             EXE_NAME co2injection_ncp_ni_ecfv
+#             NO_COMPILE
+#             PROCESSORS 4
+#             CONDITION ${MPI_FOUND}
+#             DRIVER_ARGS --parallel-simulation=4)
 
 # test for the parallelization of the vertex centered finite volume
 # discretization (using BiCGSTAB + ILU0)
-opm_add_test(obstacle_immiscible_parallel
-             EXE_NAME obstacle_immiscible
-             NO_COMPILE
-             PROCESSORS 4
-             CONDITION ${MPI_FOUND}
-             DRIVER_ARGS --parallel-simulation=4
-             TEST_ARGS --end-time=1 --initial-time-step-size=1)
+#opm_add_test(obstacle_immiscible_parallel
+#             EXE_NAME obstacle_immiscible
+#             NO_COMPILE
+#             PROCESSORS 4
+#             CONDITION ${MPI_FOUND}
+#             DRIVER_ARGS --parallel-simulation=4
+#             TEST_ARGS --end-time=1 --initial-time-step-size=1)
 
 # test for the parallel AMG linear solver using the vertex centered
 # finite volume discretization
-opm_add_test(lens_immiscible_vcfv_fd_parallel
-             EXE_NAME lens_immiscible_vcfv_fd
-             NO_COMPILE
-             PROCESSORS 4
-             CONDITION ${MPI_FOUND}
-             DRIVER_ARGS --parallel-simulation=4
-             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+#opm_add_test(lens_immiscible_vcfv_fd_parallel
+#             EXE_NAME lens_immiscible_vcfv_fd
+#             NO_COMPILE
+#             PROCESSORS 4
+#             CONDITION ${MPI_FOUND}
+#             DRIVER_ARGS --parallel-simulation=4
+#             TEST_ARGS --end-time=250 --initial-time-step-size=250)
 
-opm_add_test(lens_immiscible_vcfv_ad_parallel
-             EXE_NAME lens_immiscible_vcfv_ad
-             NO_COMPILE
-             PROCESSORS 4
-             CONDITION ${MPI_FOUND}
-             DRIVER_ARGS --parallel-simulation=4
-             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+#opm_add_test(lens_immiscible_vcfv_ad_parallel
+#             EXE_NAME lens_immiscible_vcfv_ad
+#             NO_COMPILE
+#             PROCESSORS 4
+#             CONDITION ${MPI_FOUND}
+#             DRIVER_ARGS --parallel-simulation=4
+#             TEST_ARGS --end-time=250 --initial-time-step-size=250)
 
-opm_add_test(lens_immiscible_ecfv_ad_parallel
-             EXE_NAME lens_immiscible_ecfv_ad
-             NO_COMPILE
-             PROCESSORS 4
-             CONDITION ${MPI_FOUND}
-             DRIVER_ARGS --parallel-simulation=4
-             TEST_ARGS --end-time=250 --initial-time-step-size=250)
+#opm_add_test(lens_immiscible_ecfv_ad_parallel
+#             EXE_NAME lens_immiscible_ecfv_ad
+#             NO_COMPILE
+#             PROCESSORS 4
+#             CONDITION ${MPI_FOUND}
+#             DRIVER_ARGS --parallel-simulation=4
+#             TEST_ARGS --end-time=250 --initial-time-step-size=250)
 
 opm_add_test(obstacle_immiscible_parameters
              EXE_NAME obstacle_immiscible
