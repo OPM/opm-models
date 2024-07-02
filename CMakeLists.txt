@@ -240,6 +240,7 @@ if(QuadMath_FOUND)
                  SOURCES
                  tests/${tapp}.cc)
     target_link_libraries(${tapp}_quad QuadMath::QuadMath)
+    target_compile_definitions(${tapp}_quad PRIVATE HAVE_QUAD=1)
   endforeach()
 endif()
 
