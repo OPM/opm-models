@@ -323,6 +323,8 @@ opm_add_test(tutorial1
 
 opm_add_test(test_tasklets
              DRIVER_ARGS --plain)
+opm_add_test(test_tasklets_failure
+             DRIVER_ARGS --plain)
 
 opm_add_test(test_mpiutil
              PROCESSORS 4
