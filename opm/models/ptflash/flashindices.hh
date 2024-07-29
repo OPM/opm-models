@@ -53,11 +53,11 @@ public:
     static constexpr bool waterEnabled = false;
     static constexpr bool gasEnabled = true;
     static constexpr bool oilEnabled = true;
-    static constexpr bool waterPhaseIdx = -1;
-    static constexpr bool waterGasIdx = 0;
-    static constexpr bool waterOilIdx = 1;
-    static constexpr bool compositionSwitchIdx = -1;
-    static constexpr bool numPhases = 3;
+    static constexpr int waterPhaseIdx = -1;
+    // static constexpr int waterGasIdx = 0;
+    // static constexpr int waterOilIdx = 1;
+    static constexpr int compositionSwitchIdx = -1;
+    static constexpr int numPhases = 2;
     unsigned canonicalToActiveComponentIndex(unsigned solventCompIdx){return solventCompIdx;};
     //! number of equations/primary variables
     static const int numEq = numComponents + EnergyIndices::numEq_;
