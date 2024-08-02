@@ -76,6 +76,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/blackoil/blackoillocalresidual.hh
              opm/models/blackoil/blackoillocalresidualtpfa.hh
              opm/models/blackoil/blackoilnewtonmethod.hh
+             opm/models/blackoil/blackoilnewtonmethodparameters.hh
              opm/models/blackoil/blackoilonephaseindices.hh
              opm/models/blackoil/blackoilsolventmodules.hh
              opm/models/blackoil/blackoilsolventparams.hh
@@ -153,6 +154,7 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/flash/flashboundaryratevector.hh
              opm/models/flash/flashprimaryvariables.hh
              opm/models/flash/flashextensivequantities.hh
+             opm/models/flash/flashparameters.hh
              opm/models/flash/flashproperties.hh
              opm/models/immiscible/immisciblelocalresidual.hh
              opm/models/immiscible/immiscibleproperties.hh
@@ -210,6 +212,13 @@ list (APPEND PUBLIC_HEADER_FILES
              opm/models/parallel/gridcommhandles.hh
              opm/models/parallel/mpibuffer.hh
              opm/models/parallel/threadedentityiterator.hh
+             opm/models/ptflash/flashintensivequantities.hh
+             opm/models/ptflash/flashindices.hh
+             opm/models/ptflash/flashlocalresidual.hh
+             opm/models/ptflash/flashmodel.hh
+             opm/models/ptflash/flashnewtonmethod.hh
+             opm/models/ptflash/flashparameters.hh
+             opm/models/ptflash/flashprimaryvariables.hh
              opm/models/pvs/pvsboundaryratevector.hh
              opm/models/pvs/pvsratevector.hh
              opm/models/pvs/pvsindices.hh
