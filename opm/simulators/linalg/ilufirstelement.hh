@@ -23,19 +23,16 @@
 
 #ifndef EWOMS_ILU_FIRSTELEMENT_HH
 #define EWOMS_ILU_FIRSTELEMENT_HH
+
 #include <dune/common/version.hh>
 #include <opm/simulators/linalg/matrixblock.hh>
 
-namespace Opm
-{
+namespace Opm {
+
 template<class K, int n, int m>
-#if DUNE_VERSION_GTE(DUNE_GRID, 2, 8)
 K& firstMatrixElement(MatrixBlock<K, n, m>& A)
-#else
-K& firstmatrixelement(MatrixBlock<K, n, m>& A)
-#endif
 { return A[0][0]; }
+
 }
+
 #endif // EWOMS_ILU_FIRSTELEMENT_HH
-
-
