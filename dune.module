@@ -9,5 +9,5 @@ Description: OPM's numerical framework for flow and transport in porous media
 Url: http://opm-project.org
 MaintainerName: The Open Porous Media Project
 Maintainer: opm@opm-project.org
-Depends: dune-grid (>= 2.7) dune-istl  (>= 2.7) opm-common
-Suggests: dune-localfunctions (>= 2.7) dune-fem  (>= 2.7) dune-alugrid (>= 2.7)  opm-grid
+Depends: dune-grid (>= 2.9) dune-istl  (>= 2.9) opm-common
+Suggests: dune-localfunctions (>= 2.9) dune-fem  (>= 2.9) dune-alugrid (>= 2.9)  opm-grid
