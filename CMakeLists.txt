@@ -79,6 +79,21 @@ macro (config_hook)
   opm_need_version_of("dune-alugrid")
   opm_need_version_of("dune-istl")
   opm_need_version_of("dune-fem")
+
+  # The parameter system can leverage std::from_chars() for
+  # floating-point types if available.  Detect support for this
+  # feature.
+  try_compile(
+    have_float_from_chars
+    ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/cmake/test/testFloatFromChars.cpp
+    CXX_STANDARD 17
+  )
+
+  set(HAVE_FLOATING_POINT_FROM_CHARS 0)
+  if(have_float_from_chars)
+    set(HAVE_FLOATING_POINT_FROM_CHARS 1)
+  endif()
 endmacro (config_hook)
 
 macro (files_hook)
