@@ -86,7 +86,7 @@ macro (config_hook)
   try_compile(
     have_float_from_chars
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_SOURCE_DIR}/cmake/test/testFloatFromChars.cpp
+    ${PROJECT_SOURCE_DIR}/cmake/test/testFloatFromChars.cpp
     CXX_STANDARD 17
   )
 
