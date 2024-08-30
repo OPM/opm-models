@@ -40,6 +40,7 @@ namespace Opm {
  *
  * \tparam PVOffset The first index in a primary variable vector.
  */
+ // TODO: The indices class should handle whether phase is active, not the FluidSystem
 template <class TypeTag, int PVOffset>
 class FlashIndices
     : public EnergyIndices<PVOffset + getPropValue<TypeTag, Properties::NumComponents>(),
@@ -50,6 +51,15 @@ class FlashIndices
     using EnergyIndices = Opm::EnergyIndices<PVOffset + numComponents, enableEnergy>;
 
 public:
+    static constexpr bool waterEnabled = false;
+    static constexpr bool gasEnabled = true;
+    static constexpr bool oilEnabled = true;
+    static constexpr int waterPhaseIdx = -1;
+    // static constexpr int waterGasIdx = 0;
+    // static constexpr int waterOilIdx = 1;
+    static constexpr int compositionSwitchIdx = -1;
+    static constexpr int numPhases = 2;
+    unsigned canonicalToActiveComponentIndex(unsigned solventCompIdx){return solventCompIdx;};
     //! number of equations/primary variables
     static const int numEq = numComponents + EnergyIndices::numEq_;
 
@@ -60,7 +70,7 @@ public:
 
     //! Index of the molefraction of the first component
     static constexpr int z0Idx = pressure0Idx + 1;
-    
+
     // equation indices
 
     //! Index of the mass conservation equation for the first
