@@ -288,11 +288,13 @@ public:
 
         Opm::GasPvtMultiplexer<Scalar> *gasPvt = new Opm::GasPvtMultiplexer<Scalar>;
         gasPvt->setApproach(GasPvtApproach::DryGas);
-        auto& dryGasPvt = gasPvt->template getRealPvt<GasPvtApproach::DryGas>();
-        dryGasPvt.setNumRegions(/*numPvtRegion=*/1);
-        dryGasPvt.setReferenceDensities(/*regionIdx=*/0, rhoRefO, rhoRefG, rhoRefW);
-        dryGasPvt.setGasFormationVolumeFactor(/*regionIdx=*/0, Bg);
-        dryGasPvt.setGasViscosity(/*regionIdx=*/0, mug);
+        gasPvt->visit([&](Opm::DryGasPvt<Scalar>& dryGasPvt)
+                      {
+                          dryGasPvt.setNumRegions(/*numPvtRegion=*/1);
+                          dryGasPvt.setReferenceDensities(/*regionIdx=*/0, rhoRefO, rhoRefG, rhoRefW);
+                          dryGasPvt.setGasFormationVolumeFactor(/*regionIdx=*/0, Bg);
+                          dryGasPvt.setGasViscosity(/*regionIdx=*/0, mug);
+                      });
 
         Opm::OilPvtMultiplexer<Scalar> *oilPvt = new Opm::OilPvtMultiplexer<Scalar>;
         oilPvt->setApproach(OilPvtApproach::LiveOil);
