@@ -305,11 +305,13 @@ public:
 
         Opm::WaterPvtMultiplexer<Scalar> *waterPvt = new Opm::WaterPvtMultiplexer<Scalar>;
         waterPvt->setApproach(WaterPvtApproach::ConstantCompressibilityWater);
-        auto& ccWaterPvt = waterPvt->template getRealPvt<WaterPvtApproach::ConstantCompressibilityWater>();
-        ccWaterPvt.setNumRegions(/*numPvtRegions=*/1);
-        ccWaterPvt.setReferenceDensities(/*regionIdx=*/0, rhoRefO, rhoRefG, rhoRefW);
-        ccWaterPvt.setViscosity(/*regionIdx=*/0, 9.6e-4);
-        ccWaterPvt.setCompressibility(/*regionIdx=*/0, 1.450377e-10);
+        waterPvt->visit([&](Opm::ConstantCompressibilityWaterPvt<Scalar>& ccWaterPvt)
+                        {
+                            ccWaterPvt.setNumRegions(/*numPvtRegions=*/1);
+                            ccWaterPvt.setReferenceDensities(/*regionIdx=*/0, rhoRefO, rhoRefG, rhoRefW);
+                            ccWaterPvt.setViscosity(/*regionIdx=*/0, 9.6e-4);
+                            ccWaterPvt.setCompressibility(/*regionIdx=*/0, 1.450377e-10);
+                        });
 
         gasPvt->initEnd();
         oilPvt->initEnd();
