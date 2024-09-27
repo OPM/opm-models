@@ -38,6 +38,7 @@
 #include <opm/models/utils/alignedallocator.hh>
 
 #include <vector>
+#include <cstdlib>
 
 namespace Opm {
 
@@ -100,6 +101,12 @@ public:
         enableStorageCache_ = Parameters::Get<Parameters::EnableStorageCache>();
         stashedDofIdx_ = -1;
         focusDofIdx_ = -1;
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "rd" << std::endl;
+            dofVars_.resize(1);
+        }
     }
 
     static void *operator new(size_t size)
@@ -154,10 +161,22 @@ public:
         // remember the current element
         elemPtr_ = &elem;
 
-        // update the finite element geometry
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "u" << std::endl;
+        }
         stencil_.updatePrimaryTopology(elem);
-
-        dofVars_.resize(stencil_.numPrimaryDof());
+        auto numDof = stencil_.numPrimaryDof();
+        if (debug) {
+            std::cout << dofVars_.size()
+                  << "-" << numDof
+                  << std::endl;
+        }
+        dofVars_.resize(numDof);
+        if (debug) {
+            std::cout << "x" << std::endl;
+        }
     }
 
     /*!
@@ -210,7 +229,14 @@ public:
      * \param timeIdx The index of the solution vector used by the time discretization.
      */
     void updatePrimaryIntensiveQuantities(unsigned timeIdx)
-    { updateIntensiveQuantities_(timeIdx, numPrimaryDof(timeIdx)); }
+    {
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "a" << std::endl;
+        }
+        updateIntensiveQuantities_(timeIdx, numPrimaryDof(timeIdx));
+    }
 
     /*!
      * \brief Compute the intensive quantities of a single sub-control volume of the
@@ -438,6 +464,16 @@ public:
     IntensiveQuantities& intensiveQuantities(unsigned dofIdx, unsigned timeIdx)
     {
         assert(dofIdx < numDof(timeIdx));
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "iq" << std::endl;
+        }
+        //auto iq = dofVars_[dofIdx].intensiveQuantities[timeIdx];
+        //if (debug) {
+        //    std::cout << "iq2" << std::endl;
+        //}
+        //return iq;
         return dofVars_[dofIdx].intensiveQuantities[timeIdx];
     }
 
@@ -547,6 +583,11 @@ protected:
      */
     void updateIntensiveQuantities_(unsigned timeIdx, size_t numDof)
     {
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "b" << std::endl;
+        }
         // update the intensive quantities for the whole history
         const SolutionVector& globalSol = model().solution(timeIdx);
 

@@ -41,6 +41,7 @@
 #include <opm/input/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 #include <vector>
+#include <cstdlib>
 
 namespace Opm {
 /*!
@@ -293,10 +294,24 @@ public:
 
     void updatePrimaryTopology(const Element& element)
     {
+        const char* opm_debug = std::getenv("OPM_DEBUG");
+        const bool debug = opm_debug != NULL && std::string(opm_debug) == "1";
+        if (debug) {
+            std::cout << "upt1" << std::endl;
+        }
         // add the "center" element of the stencil
         subControlVolumes_.clear();
+        if (debug) {
+            std::cout << "upt2" << std::endl;
+        }
         subControlVolumes_.emplace_back(/*SubControlVolume(*/element/*)*/);
+        if (debug) {
+            std::cout << "upt3" << std::endl;
+        }
         elements_.clear();
+        if (debug) {
+            std::cout << "upt4" << std::endl;
+        }
         elements_.emplace_back(element);
     }
 
